@@ -352,8 +352,11 @@ html,body { width:100%; height:100%; overflow:hidden; background:var(--bg-deep);
   background:linear-gradient(180deg,transparent,rgba(198,158,74,.55),transparent); }
 .sk-vat { display:flex; flex-direction:column; align-items:center; justify-content:flex-end;
   background-size:74%; background-position:center 3px; background-repeat:no-repeat; }
-#sk-thuoc { background-image:url(assets/ui/ic_binhmau.png); }
-#sk-mana  { background-image:url(assets/ui/ic_lomana.png); }
+/* Hai bình đổi sang art Axie Land (`land-items/Items/Potion`): đỏ = máu, xanh = năng lượng —
+   đúng hai thứ hai ô này làm, cùng một tay vẽ với art trang bị vừa nối. Tấm cũ `ic_binhmau` /
+   `ic_lomana` là tranh chibi sinh ngoài, lạc tông với phần còn lại của thanh. */
+#sk-thuoc { background-image:url(assets/items/it_mau.png); }
+#sk-mana  { background-image:url(assets/items/it_mana.png); }
 .sk-so { position:absolute; right:3px; bottom:2px; font-size:12px; font-weight:700; color:#fff;
   text-shadow:0 1px 3px #000, 0 0 6px rgba(0,0,0,.9); font-variant-numeric:tabular-nums; }
 .sk-vat.het { filter:grayscale(1) brightness(.55); }
