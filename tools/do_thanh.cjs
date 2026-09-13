@@ -128,3 +128,58 @@ if (process.argv.includes('--dexuat')){
   console.log(xau ? `\n  ✘ ${xau} chỗ sai hình học` : '\n  ✔ hình học đề xuất sạch');
   process.exitCode = xau ? 1 : 0;
 }
+
+// ── 8. TƯỜNG VÀ CỔNG ──────────────────────────────────────────────────────
+// Xem docs/DE_XUAT_TUONG_CONG.md. Cuống cổng đọc THẲNG từ diTrong chứ không chép cứng:
+// vấu cổng là bốn chỗ đa giác thò hẳn ra mép map.
+if (process.argv.includes('--cong')){
+  const THAN = 38, NV_CAO = 132;      // bề ngang và chiều cao ô vẽ nhân vật
+  const V = M.vatTo || [];
+  const CUONG = {
+    'Bắc':  { doc:[2920,3480], ngang:[50,210],     truc:'x' },
+    'Nam':  { doc:[2920,3480], ngang:[2990,3150],  truc:'x' },
+    'Tây':  { doc:[1320,1880], ngang:[50,210],     truc:'y' },
+    'Đông': { doc:[1320,1880], ngang:[6190,6350],  truc:'y' },
+  };
+  const ANH = { 'Bắc':V[0], 'Đông':V[1], 'Nam':V[2], 'Tây':V[3] };
+
+  H1('8 · KHẨU ĐỘ CỔNG — chỗ người chơi thật sự đi qua');
+  for (const k in CUONG){
+    const kd = CUONG[k].doc[1] - CUONG[k].doc[0];
+    console.log(`  ${k.padEnd(5)} ${kd}px = ${(kd/THAN).toFixed(0)} người đứng ngang · ${(kd/NV_CAO).toFixed(1)}× chiều cao nhân vật`);
+  }
+
+  H1('8b · ẢNH CỔNG CÓ CHE ĐƯỢC KHẨU ĐỘ KHÔNG');
+  for (const k in ANH){
+    const a = ANH[k], c = CUONG[k];
+    const lo = c.truc === 'x' ? [a.x, a.x + a.w] : [a.y, a.y + a.h];
+    const phu = Math.max(0, Math.min(lo[1], c.doc[1]) - Math.max(lo[0], c.doc[0]));
+    const kd = c.doc[1] - c.doc[0];
+    console.log(`  ${k.padEnd(5)} ${a.img} ${a.w}×${a.h} tại (${a.x},${a.y}) → che ${phu}/${kd}px = ${(100*phu/kd).toFixed(0)}%`);
+  }
+
+  H1('8c · CỔNG SO VỚI CỬA HÀNG — cổng thành phải là công trình TO NHẤT');
+  const cong = V.find(v => v.img === 'ct_cong');
+  for (const b of V.filter(v => v.img !== 'ct_cong'))
+    console.log(`  cổng ${cong.w}×${cong.h} vs ${b.img} ${b.w}×${b.h}  → cổng ${((cong.w*cong.h)/(b.w*b.h)*100-100).toFixed(0)}%`);
+  const dung = {}; for (const v of V) dung[v.img] = (dung[v.img] || 0) + 1;
+  console.log('  một ảnh dùng mấy hướng: ' + Object.entries(dung).map(([a,b]) => `${a}×${b}`).join(' · '));
+
+  H1('8d · TƯỜNG THÀNH');
+  let cv = 0;
+  for (let i = 0; i < POLY.length; i++){
+    const a = POLY[i], b = POLY[(i+1) % POLY.length];
+    cv += Math.hypot(a[0]-b[0], a[1]-b[1]);
+  }
+  console.log(`  chu vi đa giác ${Math.round(cv)}px ⇒ ~${Math.ceil(cv/256)} viên nhịp 256px cho cả map`);
+  console.log(`  một cạnh màn hình 1920px = ${Math.ceil(1920/256)} viên vẽ mỗi khung`);
+  console.log(`  tấm tường trong MAP_VAT_SRC: 0 — "tường" hiện là ${M.isoCay} cây ngoài đa giác + rào vô hình`);
+
+  H1('8e · TRẦN ĐƯỜNG KÍNH CHẶN CHỖ ĐẶT CỘT MỐC BẤM G');
+  // Cột mốc Đông/Tây đang lùi 270px vào trong KHÔNG vì thẩm mỹ mà vì test_domap chặn đường
+  // kính ở 80,7% đường chéo. Dời chúng lên sát vòm cổng là vượt trần — xem §3 tài liệu.
+  const cheo = Math.hypot(W, H), tran = 0.807 * cheo;
+  console.log(`  trần = 80,7% × ${Math.round(cheo)}px đường chéo = ${Math.round(tran)}px`);
+  for (const [ten, a, b] of [['hiện nay  (480 ↔ 5920)', 480, 5920], ['sát vòm   (310 ↔ 6090)', 310, 6090]])
+    console.log(`  ${ten}  ${b-a}px  ${b-a > tran ? '✘ VƯỢT (đường ĐI BỘ còn dài hơn đường thẳng)' : '✔'}`);
+}

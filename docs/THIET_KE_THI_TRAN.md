@@ -219,6 +219,9 @@ Dải giữa 6400×1480 lấp bằng **ba thứ, không có thứ nào là nhà*
 
 ### 4.4 Đổi map sau bốn cổng
 
+> ⚠ Bản thân **cái cổng** cũng phải dựng lại — đo ra ảnh cổng che **0%** khẩu độ ở cả bốn
+> hướng, và thành **không có một tấm tường nào**. Xem `docs/DE_XUAT_TUONG_CONG.md`.
+
 Cổng gần nhất phải là cổng người chơi cấp 1 đi được:
 
 | Cổng | Nay | Đề xuất | Lý do |
