@@ -72,6 +72,148 @@ INTRO_PAGES / QUESTS / CLUES / BOSS_LORE / SECTS / NPCS / MOBS / TB_TIER_NAMES.
 
 Dark Knight · Dark Wizard · Dark Lord **giữ nguyên** — là danh từ fantasy phổ thông.
 
+## 🔄 ĐỔI VAI: AXIE LÀ AVATAR, 5 LỚP LÀ SỨC MẠNH — đang thi công
+
+> Đặc tả đầy đủ: **`docs/DOI_VAI_AXIE.md`** · Danh mục Cổ Vật: **`docs/CO_VAT_15.md`**
+> Nhìn thử: **`public/game/proto_doivai.html`** (mở bằng máy chủ tĩnh, không nạp `game.js`)
+
+**Chủ dự án chốt (nguyên văn):** *"Chỉ số tới từ 5 class. Axie chỉ đơn thuần là avatar thôi,
+khi tấn công thì ví dụ Dark Wizard sẽ xuất hiện và tung chiêu."*
+
+| | |
+|---|---|
+| **Axie** | thân NHÌN THẤY. **0 chỉ số, 0 kỹ năng, 0 trang bị.** Là ô để cắm NFT. |
+| **5 lớp** | nơi chứa **toàn bộ** chỉ số, trang bị, kỹ năng, Tiến Hoá, Di Sản |
+| **Lúc đánh** | lớp nhân vật **vật chất hoá KẾ BÊN Axie**, tung chiêu, rồi tan. Axie **không** biến mất — nhân vật đi theo bảo kê. |
+| **Khoá lớp** | chọn một lần lúc tạo nhân vật. **Avatar thì tự do** — mọi NFT đều cắm được. |
+
+### ⇒ Đây KHÔNG phải đổi kiến trúc. Là đổi LỚP VẼ.
+
+`calcDerived()` · `hurtMob()` · `castSkill()` · `SECTS` · `HERO_SETS` · `player.equip` ·
+`player.sect` — **không đụng một dòng nào.** Save cũ đọc được nguyên vẹn.
+
+### Đã thi công
+
+| Thứ | Ở đâu |
+|---|---|
+| `player.avatar` · `avatarId()` · `veAvatar()` · `chiVeChay()` · `veVongTrieu()` | `game.js`, ngay trên `chiVeNho` |
+| Móc vào `drawPlayer()` | 5 chỗ, **tất cả đều qua cửa `avatarId(p)`** |
+| Lệnh `/avatar <id> · ds · off` | bảng lệnh gỡ rối |
+| 16 bảng khung CHẠY `<id>_r.webp` | 1,29 MB, **nạp theo nhu cầu** (chỉ con đang dùng) |
+| Công cụ nướng | `tools/spine/nuong_chi_chay.py` |
+
+> ⚠ **`player.avatar` rỗng ⇒ HÀNH VI CŨ Y NGUYÊN.** Đây là chủ ý, không phải làm dở: đợt này
+> phải cắm vào một trò chơi đang chạy mà không bài nào trong 177 bài đỏ. Avatar là thứ **bật
+> lên**, không phải thứ thay thế. Đừng "dọn dẹp" cái cửa đó đi.
+
+**Cờ bài kiểm đọc được:** `window.__veThan` nay có ba giá trị — `'avatar'` · `'sprite'` ·
+`'vector'`. Bài cũ nào khẳng định nó phải là `'sprite'` thì vẫn đúng khi avatar tắt.
+
+### ⚖ TỈ LỆ: AXIE LÀ THÂN, LỚP NHÂN VẬT LÀ KẺ HỘ TỐNG — cả hai cỡ đều DƯỚI 1
+
+Chủ dự án chốt sau khi nhìn ảnh chụp: *"kéo scale Axie lớn và kéo thân người lúc ra tuyệt chiêu
+cho nó nhỏ lại"*. Ở cỡ thật (1,00) hai hình đọc ra **hai nhân vật ngang hàng**, không ra "Axie
+là thân, lớp nhân vật là sức mạnh được gọi tới".
+
+| | đi theo | ra đòn |
+|---|---|---|
+| cỡ lớp nhân vật | `AVA_THEO_CO` **0,72** | `AVA_DANH_CO` **0,90** — không còn 1,00 |
+| chỗ đứng | sau 70 · bên 34 | trước 72 · bên 56 |
+
+`AVA_TY` 0,72 → **0,95** và `AVA_TRAN` 0,95 → **1,18** (hộp Axie 90,6 → **112,6 px**).
+⚠ Lượt chỉnh đầu đẩy tới 1,08/1,40 (hộp 133,6) và chủ dự án nhìn ảnh chụp nói ngay
+*"không cân đối lắm"* — Axie nuốt mất kẻ hộ tống. Số hiện tại là lượt kéo lại: Axie to hơn
+bản gốc ~24%, người cũng to hơn ~20%, tỉ lệ giữa hai bên mới là thứ phải nhìn, không phải
+cỡ của riêng cái nào. ⚠ Đo trước khi chỉnh: **`AVA_TY` không
+bó con nào** — cả 5 con mặc định đều chạm `AVA_TRAN` ở chiều RỘNG (16 con có tỉ lệ rộng/cao
+1,07–1,52). Nới `AVA_TY` một mình là không đổi lấy một điểm ảnh; thứ thật sự điều khiển cỡ Axie
+là `AVA_TRAN`.
+
+Khoảng cách đứng phải nới THEO: tổng độ lệch phải vượt nửa hộp Axie (nay ~67px) cộng nửa bề
+ngang người. Quên bước này là Axie to ra rồi nuốt luôn kẻ hộ tống.
+
+### Sáu cái bẫy đã dẫm, ghi lại
+
+1. **`atkAnim` ĐẾM NGƯỢC** — `atkK` = 1 ở khung ĐẦU. Tiến độ vật chất hoá là `1 − atkK`. Dùng
+   thẳng `atkK` thì lớp nhân vật mờ dần ĐI trong lúc vung, tức ngược hẳn. (Cùng họ với bẫy
+   `lungeK = hSwing(1 - atkK)` đã ghi ở mục cảm giác chiến đấu.)
+2. **Avatar phải vẽ SAU `ctx.restore()`** của khối thân người. Bên trong đó là hệ toạ độ cục bộ
+   của bộ xương (đã dời về `p.x/p.y`, lật theo hướng, thu theo tỉ lệ) — avatar tự lo cả ba thứ
+   đó nên vẽ trong đấy là lật hai lần và thu hai lần.
+3. **`AVA_TY` là số trần, `avaCao()` là HÀM.** Nhân thẳng `NV_THAN_PX` ở chỗ khai (dòng ~5110)
+   là rơi vùng chết của `const` — `NV_THAN_PX` khai tận dòng 22987. Đúng cái bẫy đã ghi ở mục
+   `NV_CAO`.
+
+4. **Lớp nhân vật đứng KẾ BÊN, nên phải xếp CHIỀU SÂU.** `_avaDx/_avaDy` dời nó ra trước +
+   sang bên; ai đứng THẤP hơn thì vẽ SAU. Vẽ Axie sau cùng ở mọi hướng (bản đầu) thì quay mặt
+   xuống là con Axie che mất nửa người. Trục sâu nén 0,55 — cùng lối với bóng đổ.
+5. **`_lopHien` PHẢI luôn đúng bằng `_kind === 'a' || 'c'`.** Nó tính SỚM vì phép dời gốc toạ
+   độ nằm trên chỗ tính `_kind`. Thêm trạng thái mới vào chuỗi `_kind` phía trên `'c'` thì
+   phải sửa `_lopHien` theo — không thì thân người hiện một chỗ, vòng triệu hồi nổ chỗ khác.
+   *Đừng vá bằng "nếu lệch thì gán lại": nó làm chỗ lệch chạy được nên không ai biết mà sửa.*
+6. **CÁNH · THẦN KHÍ · THÂN NGƯỜI phải thu quanh CÙNG MỘT TÂM.** Khối thân thu quanh
+   `(p.x, p.y − NV_LECH_Y)` — đó là chỗ hộp 160×220 của bộ xương neo vào. Khối cánh/thần khí
+   từng thu quanh `(p.x, p.y)`. Ở cỡ 1,00 hai tâm cho cùng kết quả nên **không ai thấy**; thu
+   còn `co` thì sai số bung ra đúng `(1 − co)·NV_LECH_Y` — ở cỡ đi theo (0,60) là **16,8 px**,
+   tức đôi cánh rơi xuống ngang hông của một hình chỉ cao 57 px. Chủ dự án chụp lại và gọi
+   đúng tên: *"cánh chưa fit với nhân vật theo sau"*. Dùng `_lopNeoY`.
+   Và phải mang theo cả số hạng **lấy đà** `Math.cos(p.face)*lungeK*7`: `lungeK` bằng 1 lúc
+   đứng yên (xem `hSwing`), nên thiếu nó là cánh lệch 7 px **suốt**, không chỉ lúc đánh.
+
+   Cách gác: `_doNeo()` (chỉ chạy khi `TEST_MODE`) đưa gốc cắm cánh và khớp vai qua **đúng ma
+   trận vòng vẽ đang dùng** rồi phơi ra `window.__neoVe`; `tests/test_hopve.js §4` so hai điểm.
+   Đừng chép công thức biến hình sang bài kiểm — đó là dựng bản sao thứ hai của một luật đang
+   sống, sửa một bên là hai bên lệch mà bài vẫn xanh.
+
+### Trúng đòn và chết vẫn giữ AXIE — cố ý
+
+Chỉ `'a'` (đánh) và `'c'` (niệm chú) mới gọi lớp nhân vật ra. Nếu lớp nhân vật nháy ra mỗi lần
+ăn đòn thì trong một trận đông quái người chơi gần như không còn thấy avatar của mình — mà
+avatar mới là thứ họ chọn hoặc mua.
+
+**Nợ:** rig có sẵn `defense/hit-by-normal` và chưa nướng. Nướng rồi thì Axie giật được khi trúng.
+
+### 🔑 KIT AXIE CÓ 41 HOẠT CẢNH, GAME MỚI DÙNG 2
+
+Khảo sát `axieinfinity/axie-origins-asset-kit` (clone về `/home/user/axieinfinity/...`, 2,2 GB).
+Đây là thứ đáng nhớ nhất của đợt này:
+
+| Nhóm | Có sẵn trong rig |
+|---|---|
+| Di chuyển | `action/run` · `move-forward` · `move-back` · 5 idle ngẫu nhiên |
+| Đánh gần | **8 đòn** — `horn-gore` `mouth-bite` `tail-smash` `tail-roll` `tail-thrash` `multi-attack` `normal-attack` `shrimp` |
+| Đánh xa | **5 đòn** — `cast-fly` `cast-high` `cast-low` `cast-multi` `cast-tail` |
+| Phòng thủ | `evade` · `hit-by-normal`(+`crit`/`dramatic`) · `hit-by-ranged` · `hit-with-shield` |
+| Khác | `get-buff` · `get-debuff` · `evolve` · `victory-pose-back-flip` · `sleep` · `eat` · `bath` |
+
+- Bộ 41 này **giống hệt nhau ở cả 12 rig `.json`**; 26 rig `.skel` mượn được, y như
+  `nuong_chi.py` đã mượn cho idle+appear.
+- **Kit tự có rig `.json`** ⇒ `nuong_chi_chay.py` không cần repo `cc-axie-gtk2d` nữa.
+- Kit còn **108 clip VFX** xếp theo **9 lớp Axie × 7 kiểu đòn** (`bite`/`cast`/`gore`/
+  `projectile`/`slash`/`smash`/`throw`) — tức VFX và hoạt cảnh là MỘT BỘ KHỚP SẴN. Kèm
+  `shield` · `shield_boost` · `shield_break` · `taunt` · `reflect_damage` · `heal` · `cleanse`.
+- Và **8 rig Summoner** chính chủ (`clover` `mavis` `sparrow` `trunk` `mushroom` `littlerobin`
+  `fruitsloth` `truefanhermitcrab`).
+
+⚠ Nướng cần `pillow` + `numpy` (`pip install pillow numpy`) — máy sạch không có sẵn.
+
+⚠ **Hộp cắt của bảng chạy phải GIỐNG HỆT bảng nhỏ**, nếu không con vật nhảy một cái mỗi lần
+đứng ↔ chạy. `nuong_chi_chay.py` dựng lại đúng phép tính hộp của `nuong_chi.py` (bb trên
+appear+idle) rồi mới đem đi cắt khung chạy — tốn 28 khung nướng thừa mỗi con, đổi lại không
+phải tin vào một con số chép tay nào.
+
+### Còn treo
+
+| | |
+|---|---|
+| Hai kiểu hiện | **"hiện khi đánh"** đã chốt và đã thi công. Kiểu "thường trực" (xác đứng chắn) còn trong proto để so. |
+| Lớp gacha Cổ Vật | `docs/CO_VAT_15.md` mới là ĐỀ XUẤT, chưa chốt. Trần 16% chỉ quản lớp đó — **chỉ số từ 5 lớp KHÔNG có trần**. |
+| Chibi 5 class Axie ở màn tạo nhân vật | chưa thiết kế. `CHIBI_CFG` hiện phân biệt bằng bóng dáng NGƯỜI. |
+| Mốc thay "Giày +6 mở dáng chạy" | avatar bay/chạy thì mốc cũ mất ý nghĩa |
+| Ngũ Hành → tam giác Axie | chưa làm. 40 nhãn `el:` trong `data/canbang.js` vẫn là Kim/Mộc/Thuỷ/Hoả/Thổ — **tàn dư kiếm hiệp, vi phạm Quy tắc số 1**. Kèm một lỗi lệch dấu: 1 con khai `'Thuỷ'` còn 10 con khai `'Thủy'`. |
+
+---
+
 ## 📌 CHẨN ĐOÁN GỐC: NỘI DUNG ĐANG ĐƯỢC LÀM BẰNG CÁCH NHÂN BẢN
 
 Đọc mục này TRƯỚC khi nhận bất kỳ việc nào có chữ "thêm map", "thêm phó bản",
@@ -241,31 +383,43 @@ phải **thêm**.
 Đây cũng là chỗ chữa cho khắc hệ: `el:` chạy trong `hurtMob` (±20% / −12%) từ lâu nhưng người
 chơi không có cách nào biết map nào hệ gì. Nay hệ trội nằm ngay trên bảng Bản Đồ.
 
-### 📌 NHIỆM VỤ ĐÃ GỠ SẠCH — VIỆC CÒN NỢ, PHẢI DỰNG LẠI
+### 📌 CHÍNH TUYẾN ĐÃ DỰNG LẠI (33 nhiệm vụ) — PHỤ TUYẾN THÌ CHƯA
 
-`QUESTS` và `SIDE_QUESTS` nay đều **rỗng**. Đây **không phải** dọn dẹp — đây là một hệ thống bị
-tháo ra để thiết kế lại, và **nó phải được dựng lại**. Đừng đọc bảng rỗng rồi kết luận game này
-không cần nhiệm vụ.
+> ⚠ Mục này từng mở đầu bằng câu "`QUESTS` và `SIDE_QUESTS` nay đều **rỗng**". Câu đó **đã sai**
+> kể từ khi chuỗi được dựng lại, và nó vẫn nằm đây đủ lâu để làm một phiên (2026-09-11) kết luận
+> nhầm rằng bảng Đại Thành "không có cửa vào" — vì cổng đó đọc `player.mongChiTon`, và cờ ấy chỉ
+> bật khi xong chính tuyến. Đọc CLAUDE.md xong vẫn phải **đo**: `node -e` đếm thẳng `QUESTS.length`.
 
-**Vì sao gỡ:** lối chơi đã đổi quá nhiều so với lúc viết chuỗi — bỏ 7 phó bản, vai trò theo bãi,
-bản sắc map, zoom camera, cổng map bỏ `reqMain`. Chuỗi cũ dẫn người chơi đi qua một game không
-còn tồn tại. Giữ một chuỗi sai còn tệ hơn không có chuỗi nào.
+Đo được hôm nay: **`QUESTS` = 33 mục · 5 chương · cấp 1 → 118**, khai hết trong
+`data/canbang.js`. **`SIDE_QUESTS` vẫn = 0** — phụ tuyến còn nợ, và phần dưới đây nói về nó.
 
-**⚠ GỠ Ở HAI NƠI, KHÔNG PHẢI MỘT.** `data/canbang.js` khai 10 mục, rồi `game.js` `QUESTS.push(...)`
-thêm **6 chương / 25 mục nữa**. Rỗng bảng dữ liệu mà quên phần push thì `QUESTS.length` vẫn ra
-**25** — đã mắc đúng lỗi đó một lần trong chính đợt gỡ này.
+Đừng đọc `SIDE_QUESTS` rỗng rồi kết luận game này không cần phụ tuyến: đó là một hệ bị tháo ra
+để thiết kế lại, không phải bị bỏ.
 
-**Đã đổi theo:**
+**Vì sao đợt gỡ ban đầu xảy ra:** lối chơi đã đổi quá nhiều so với lúc viết chuỗi cũ — bỏ 7 phó
+bản, vai trò theo bãi, bản sắc map, zoom camera, cổng map bỏ `reqMain`. Chuỗi cũ dẫn người chơi
+đi qua một game không còn tồn tại. Giữ một chuỗi sai còn tệ hơn không có chuỗi nào.
+
+**⚠ NẾU LẠI GỠ: GỠ Ở HAI NƠI, KHÔNG PHẢI MỘT.** `game.js` từng có một `QUESTS.push(...)` nối thêm
+6 chương / 25 mục sau phần khai trong `data/canbang.js`. Rỗng bảng dữ liệu mà quên phần push thì
+`QUESTS.length` vẫn ra **25** — đã mắc đúng lỗi đó một lần. Phần push nay chỉ còn là **chú thích**
+ở `game.js` (~dòng 22489); cả 33 mục hiện tại đều từ `data/canbang.js`.
+
+**Đã đổi theo, và vẫn còn đúng:**
 - `reqMain` gỡ khỏi **mọi** map (kể cả một cái khai lẫn trong `MAPS.ngoai`). Map nay mở khoá bằng
   **cấp** là đủ. Nhánh đọc `md.reqMain` trong `mapGate()` vẫn còn — cắm lại một giá trị là khoá
   sống lại. *Cân nhắc kỹ: khoá map sau một nhiệm vụ nghĩa là nhiệm vụ hỏng thì map mất.*
 - Bảng theo dõi và Nhật Ký Nhiệm Vụ nói **"chưa có nhiệm vụ"**, không nói "hoàn tất". Một bảng
   rỗng mà khoe "chính tuyến hoàn tất, tự do làm phụ tuyến" là nói dối người chơi.
 
-**Khi dựng lại:** chủ dự án đã nói có thể **xây lại cả hệ thống lore** cùng lúc, nên đừng vá
-chuỗi cũ từ git — thiết kế lại từ đầu cùng với lore. Khuôn dữ liệu của cả hai bảng nằm trong chú
-thích ở `data/canbang.js`. Máy chạy nhiệm vụ **giữ nguyên** và chạy theo dữ liệu: điền bảng là
-chuỗi sống lại.
+**Khi dựng phụ tuyến:** chủ dự án đã nói có thể **xây lại cả hệ thống lore** cùng lúc, nên đừng
+vá chuỗi cũ từ git — thiết kế lại từ đầu cùng với lore. Khuôn dữ liệu của cả hai bảng nằm trong
+chú thích ở `data/canbang.js`. Máy chạy nhiệm vụ **giữ nguyên** và chạy theo dữ liệu: điền bảng
+là chuỗi sống lại — chính tuyến 33 mục đã sống lại đúng bằng cách đó.
+
+**Ai đọc mục này cũng nên biết:** chính tuyến nay là **cổng của bảng Đại Thành**
+(`masteryOpen()` đòi cấp 120 **và** `player.mongChiTon`). Chuỗi hỏng thì cả hệ Đại Thành mất cửa
+— đúng cái rủi ro mà dòng cảnh báo về `reqMain` ở trên đang nói, chỉ khác là nó đã thành thật.
 
 ### 🧭 NỐI MAP BẰNG RÌA (B1) + ĐIỂM DỊCH CHUYỂN MỞ BẰNG ĐI BỘ (B2)
 
@@ -359,6 +513,149 @@ vừa phá mốc định hướng vừa làm Vỉa Cốt hết đặc biệt.
 Được thêm: cụm to nhỏ khác nhau (dân số chia lệch, không đều tăm tắp), một miền mang **nhiều
 vai** (cùng loài, cụm này Xạ Thủ cụm kia Pháp Sư — đúng cơ chế A1), và bảng **Chọn Trận** gom
 theo miền thay vì một danh sách phẳng. QA: `window.debugVung(map)`.
+
+### 🔥 ĐỒ TRẠI CỦA BÃI FARM — và **BẢNG SINH RA MỘT NƠI, GAME ĐỌC MỘT NƠI KHÁC**
+
+Bãi Farm có tên trên bảng Bản Đồ, quái dày, rơi đậm — nhưng đứng trong map mà nhìn thì nó giống
+hệt ba trại quái thường đứng gần nhau. Trong MU, một *spot* nhận ra bằng **mắt** trước khi nhận
+ra bằng bảng. `traiFarmDung()` rải đống lửa · lều · thùng · cọc treo vải quanh mỗi trại farm,
+bốc theo **toạ độ trại** nên đứng yên. Đồ trại là decor `type:'iso'` ⇒ **không sinh vật cản** —
+đây là chỗ đánh nhau, vấp phải một cái thùng là lỗi chứ không phải địa hình.
+
+**Ngọn lửa KHÔNG nướng vào tranh.** Tranh chỉ có đống củi tàn; phần sáng do `veTraiLua()` vẽ đè
+bằng cộng sáng, vẽ **sau** lớp entity chứ không nằm trong danh sách xếp lớp theo y — nó là *ánh
+sáng*, mà ánh sáng hắt lên cả thứ đứng trước lẫn thứ đứng sau.
+
+**⚠ BẢNG MÀU ĐỒ TRẠI PHẢI NO MÀU BẰNG NỀN.** Bản đầu lấy tông thực tế (vải 0,74/0,66/0,48) và
+nướng ra một cái lều **xám**: cạnh viên cỏ kẹo (0,44/0,62/0,30) nó đọc thành một tảng đá. Cùng
+bài học đã ghi trong `nuong_tile.main()` — *bảng màu KẸO, lấy thẳng từ tranh Axie*.
+
+---
+
+**⚠⚠ LỖI TO NHẤT PHÁT HIỆN TRONG ĐỢT NÀY, VÀ NÓ ĐÃ SỐNG NHIỀU PHIÊN:**
+
+`ISO_NEO` (toạ độ CHÂN từng sprite lát viên) do đường nướng ghi ra `assets/iso/iso.js`, rồi phải
+**chép tay** sang `data/iso.js` — tệp mà `index.html` thật sự nạp. Bước chép tay bị quên một lần.
+Cái giá:
+
+> **Sáu map — `daohoa` · `chungnam` · `comoc` · `tuyettinh` · `mongco` · `nhanmon` — khai cây/bụi
+> theo biome mà `veVatIso()` `return` sớm vì không tra được neo, nên KHÔNG VẼ MỘT CÁI CÂY NÀO.**
+
+Cả đợt việc "cây/đá theo biome" nằm im trong kho. Không lỗi nào in ra, không bài kiểm nào đỏ, và
+ảnh chụp vẫn ra một map — chỉ là một map trống. `data/iso.js` có **15** sprite trong khi bộ nướng
+đã xuất **60**.
+
+Đã chữa **ở gốc, không ở triệu chứng**: `ghi_neo()` trong `tools/iso/nuong_tile.py` ghi thẳng vào
+`public/game/data/iso.js`; cả `nuong_biome.py` lẫn `nuong_trai.py` gọi chung hàm đó;
+`assets/iso/iso.js` **đã xoá** để không còn tệp mồi. `assets/iso/neo.json` giữ lại cho công cụ.
+
+Gác: `tests/test_isoneo.js`, **hai tầng** — vì tầng đối chiếu tên không bắt được mọi kiểu hỏng:
+1. mọi tên sprite mà `MAPS`/engine nhắc tới đều có neo, và mọi neo đều có tệp PNG;
+2. **tầng hành vi**: mỗi map `sanIso` phải rải ≥40 vật thể và **tất cả** phải vẽ được. Đây là
+   tầng bắt đúng lỗi đã xảy ra — nếu `veVatIso` hỏng vì lý do khác thì tầng 1 vẫn xanh.
+
+*Luật chung rút ra: **bảng sinh tự động chỉ được có MỘT tệp đích, và tệp đích phải là tệp mà sản
+phẩm thật sự nạp.*** Mọi bước "rồi chép sang…" là một bước sẽ bị quên, và kiểu quên đó im lặng.
+
+### 🐑 ĐÀN THÚ HOANG — thứ trong map KHÔNG phải để đánh
+
+Đo trước khi làm: **mọi thứ cựa quậy** trong một map ngoài trời đều muốn giết người chơi (quái ·
+du hiệp · trùm vùng · trại canh Rương), còn cây và đá thì đứng im tuyệt đối. Nên một vùng hoang
+đọc ra là *một cái sân có mấy bầy địch*, không đọc ra là **một nơi chốn**. Đàn thú là bằng chứng
+duy nhất rằng thế giới có sống trước khi người chơi tới.
+
+Khai bằng dữ liệu, một dòng trong `MAPS`: `thu: { loai:[…], dan: 14 }`. Hiện có **một** map —
+`ngoai` (Beast Herd Camp), mà chính `desc` của nó đã hứa *"đàn thú của người bản địa vẫn gặm cỏ
+ở đây"* từ lâu trong khi trong map không có một con thú nào. Thêm map khác = thêm một dòng.
+
+**⚠ ĐỪNG BIẾN NÓ THÀNH NỘI DUNG.** Cho săn được là nó thành một bãi quái yếu, mà bãi quái yếu
+thì AUTO dọn sạch trong một phút — mất cả cái nền lẫn cái nội dung. Nó **không** có máu, **không**
+nằm trong `mobs`, **không** bị nhắm, **không** rơi gì. Giá trị của nó nằm đúng ở chỗ nó vô dụng.
+
+Cái làm đàn thú "sống" không phải hoạt ảnh mà là **hai hành vi**:
+- mỗi con tự đổi việc đang làm (gặm · đứng ngó · đi vài bước) theo nhịp riêng;
+- và cả đàn **bỏ chạy LÂY NHAU thành SÓNG**. Lây một vòng từ những con thấy người chơi thì con ở
+  rìa xa không bao giờ động đậy — người chơi thấy "mấy con gần mình chạy", không thấy "cả đàn
+  giật mình". Nên con vừa hoảng vì lây cũng vào hàng đợi; vòng tự dừng vì `st==='chay'` là cửa vào.
+- Lây phải chạy ở **lượt riêng**, sau vòng cập nhật. Lây tại chỗ thì con cuối mảng nhận sóng ngay
+  trong khung này còn con đầu mảng đợi khung sau ⇒ cả đàn nghiêng theo **thứ tự mảng**, thứ chẳng
+  có nghĩa gì trên màn hình.
+
+**Bãi cỏ đứng yên, từng con thì không.** Bãi bốc từ *tên map* (như Rương Canh) nên là mốc định
+hướng; vị trí từng con bốc lại mỗi lần vào map, vì một con vật đứng đúng một chỗ qua nhiều phiên
+đọc ra là một bức tượng. Vỉa Cốt vẫn là thứ **duy nhất** được phép đổi chỗ theo ngày.
+
+**⚠ `thuDungDan()` phải gọi SAU khi rải decor**, không trước. Cây/đá rải sau mọc đè lên con vật
+đã đứng sẵn — đo được **3/14** con nằm trong vật cản, mà con nằm trong vật cản thì bước đầu tiên
+bị chặn nên nó đứng chết một chỗ suốt phiên, hỏng đúng cái thứ duy nhất hệ này có.
+
+Art: `tools/spine/nuong_thu.py` nướng từ rig Spine của kit Axie — cùng đường ống với
+`nuong_chi.py`. Ba loài chọn theo **bóng dáng** (cừu xù · bò đốm · sóc đuôi cong) để ở cỡ 48px
+vẫn đọc ra ba con khác nhau; ba dáng (`gam` · `dung` · `chay`), mỗi dáng 8 khung, tổng **0,35 MB**.
+
+**⚠ BỐN TRONG 38 RIG HỎNG khi mượn hoạt cảnh** (`14 · 14-1 · 20 · 20-1`): mất hẳn phần thân, chỉ
+còn mấy mảnh phụ kiện trôi lơ lửng. Quét bằng **độ đặc** (điểm ảnh đặc ÷ diện tích hộp bao) ở
+khung idle — 34 rig lành ra 0,52-0,78, bốn rig hỏng ra 0,25-0,31, hai cụm tách hẳn nhau.
+`python3 tools/spine/nuong_thu.py --quet` in lại bảng đó. **Đừng chọn rig bằng mắt trên ảnh thu
+nhỏ**: ở cỡ 60px một con mất thân trông vẫn "có gì đó".
+
+Gác: `tests/test_danthu.js` (7 mệnh đề). Mệnh đề ⑤ **tự kiểm cảnh dựng trước khi chấm** — nó
+khẳng định con cuối hàng cách người chơi > `THU_SO` rồi mới đòi nó phải chạy, nếu không thì bài
+"kiểm sóng lây" thật ra chỉ kiểm chuyện con đó nhìn thấy người chơi.
+
+### ◈ BÃI FARM — khái niệm "spot" của MU, và **HẠ SÀN KHÔNG PHẢI LÀ ĐẶT TRẦN**
+
+Một miền dân số khai `farm:true` là thành Bãi Farm. Không bảng thứ hai, không toạ độ chép cứng —
+cùng lý do `mapBanSac()` suy từ `packs`. Hiện có **một** chỗ: `bandit_vet` / *Trại Cựu Binh Gloam*
+ở Beast Herd Camp (`ngoai`).
+
+Bốn tính chất, **thiếu một là nó tụt về một bãi thường mang tên đẹp** — và kiểu hỏng đó người
+chơi không mô tả được, họ chỉ thấy "chỗ này chán":
+
+| | | máy làm ở đâu |
+|---|---|---|
+| ① DÀY | trại sát nhau, kéo liên tục | `VUNG_CUM_CACH_FARM` **+ `VUNG_FARM_BAN`** |
+| ② ĐÁNG | rơi đồ và Lumen ×1,6 | `FARM_THUONG` trong `computeKillRewards` |
+| ③ CÓ TÊN | bảng Bản Đồ gọi thẳng tên | `banSacHtml()` |
+| ④ TỚI ĐƯỢC | miền GIỮA, không phải miền xa nhất | `dai:[0.41,0.52]` trong dữ liệu |
+
+**⚠ Bản đầu của ① KHÔNG LÀM GÌ CẢ, và đo mới biết.** Tôi hạ sàn giãn cách 300 → 190 rồi tưởng
+xong. Nhưng sàn chỉ **cho phép** gần, chỗ đặt trại vẫn bốc ngẫu nhiên trong cả dải×cung. Đo ra
+ba trại cách nhau 266 · 826 · 638 (TB **577**), trong khi miền thường cùng map ra 426 và 623 —
+tức bãi farm còn **thưa hơn** một bãi thường. Phải thêm **trần**: mọi trại nằm trong
+`VUNG_FARM_BAN` quanh trại ĐẦU của miền (`datMien[0]`, khác `daDat` vốn gom cả map). Sau khi thêm:
+266 · 343 · 268, TB **292**, bán kính trại 118 ⇒ ba trại chạm nhau. *Luật chung: ràng buộc dạng
+"tối thiểu" không bao giờ tạo ra được hình dạng; nó chỉ loại bớt hình dạng.*
+
+**⚠ BA PHÉP ĐO ĐÃ THỬ, HAI CÁI MÙ.** Đừng lặp lại:
+
+| đo gì | ra gì | vì sao mù |
+|---|---|---|
+| `n/(πr²)` từng trại | 0,16 vs 0,13 | `r = 90 + n*4` ⇒ mật độ trong trại gần như hằng số |
+| con/1000px² trên hộp bao miền | 0,03 vs 0,02 (miền thường có cái 0,04!) | hộp bao theo cung rộng/hẹp, không theo trại sát hay thưa |
+| **TB khoảng cách từng cặp trại** | **292 vs 781** | đúng cái mà hằng số điều khiển |
+
+**⚠ BẪY ĐO CỦA ②, mất nguyên một vòng chẩn đoán sai.** `computeKillRewards()` là hàm **THUẦN**
+(`test_killrewards` gác), nên nó không bao giờ ghi `_daRoiMonDau`. Mà nhánh phát đầu
+`(P.kills||0) <= 3 && !P._daRoiMonDau` **bảo đảm** rơi một món. Gọi 4000 lần trên nhân vật mới ⇒
+cả 4000 lần đều là "ba con đầu đời" ⇒ ~1,0 món/con ở **cả hai** phía, tỉ lệ ra **đúng 1,00**.
+Trông y hệt "hệ số farm không chạy", trong khi nó chạy hoàn hảo. Đặt `player.kills` lớn +
+`_daRoiMonDau = true` trước khi đo.
+
+**⚠ Và đừng chấm ② bằng TỈ LỆ — CẢ HAI vế, không chỉ vế rơi đồ.** Hai vế đều cộng những khoản
+**không** nhân hệ số: `dropBonus` cộng thẳng vào tỉ lệ, cuộn phụ kiện là lượt riêng, Lumen cộng
+`+4` và 30% × `GO_HUYENTHIET`. Cùng một mã đo ra ×1,24 khi `dropBonus` lớn và ×1,53 khi nhỏ.
+Chấm bằng phần **CHÊNH**:
+
+    doFarm − doThuong  ≈  soLuot × rate × (FARM_THUONG − 1)
+    agFarm  − agThuong ≈  (agThuong − phẳng) × (FARM_THUONG − 1),  phẳng = 4 + 0,3 × GO_HUYENTHIET
+
+⚠ Tôi đã sửa vế rơi đồ mà **chừa vế Lumen lại**, và nó đỏ ngay ở lượt hồi quy kế tiếp: ×1,449 ở
+máy đang làm, ×1,399 trong hồi quy, cùng một mã — khác nhau chỉ vì `silverPct` của bộ đồ mà
+`applyTestBoost()` bốc ra. *Sửa một nửa một lỗi đo là để lại đúng cái lỗi ấy ở nửa kia.*
+
+Gác: `tests/test_baifarm.js` (4 mệnh đề, một cho mỗi tính chất). Nó cũng chặn **hai miền farm
+trên cùng một map** — nhiều chỗ thì không chỗ nào là *cái chỗ* nữa.
 
 ### ◆ VỈA CỐT (B3.3) — thứ đầu tiên trong game buộc phải ĐI TỚI một toạ độ
 
@@ -1022,6 +1319,191 @@ Gót chân neo cố định ở `mountObj.y + 12` bất kể con to nhỏ (`_chi
 `y + than*0,38` nên chỗ vẽ phải trừ ngược lại), và vũng bóng co theo chính con vật — thu nhỏ
 con thú mà để nguyên elip bóng thì nó thành ra đứng trên một cái đĩa.
 
+## 🌌 MÀN HÌNH CHỜ — ART CHÍNH CHỦ AXIE, ĐÂY LÀ NGOẠI LỆ CÓ PHẠM VI
+
+Chủ dự án chốt: **màn hình chờ phải mang hơi hướng Axie rõ nhất có thể.** Trước đợt này nó là
+một dãy núi đêm dựng bằng đường + một tấm PNG hiệp sĩ Dark Knight — người mở game lần đầu nhìn
+thấy một thế giới dark-fantasy chung chung, không một dấu hiệu nào cho biết đây là game Axie.
+
+**⚠ NGOẠI LỆ CHỈ TRONG `#sect-select`.** Phần còn lại của game vẫn là MU — Quy tắc số 1 không
+đổi. Đừng lấy khối CSS `MÀN CHỜ KIỂU AXIE` ở cuối `style.css` làm cớ để bo tròn cả game.
+
+### Ba mảnh, mỗi mảnh một chỗ
+
+| Mảnh | Ở đâu |
+|---|---|
+| Nền Lunacia tách mười lớp, có xa gần | `NEN_LOP` · `nenNhom()` · `drawTitleScene()` trong `game.js` |
+| Sân khấu: lớp nhân vật + con Axie | `ccBoCuc()` · `ccNenSan()` · `ccHeroVe()`; canvas `#cc-hero` |
+| Khung giao diện kiểu Axie | khối cuối `style.css`, scope `#sect-select` |
+
+Nướng art: `python3 tools/title/nuong_nen_axie.py` → `public/game/assets/title/lunacia/` (700 KB
+cho 10 lớp + 1 bệ đứng). Gác: `tests/test_titlefx.js` (6 mục).
+
+### Vì sao chọn cảnh TÁCH LỚP chứ không phải tấm 1920px
+
+Kit có sẵn `PvE/Backgrounds/class/bg-*.jpg` ở 1920×1080 — nhưng chúng là nền PHẲNG vẽ cho sân
+khấu đánh bài, đặt sau một màn chờ thì không có xa gần. `PvE/Backgrounds/story/9-rocky-mountain-1`
+chỉ 1024px nhưng **tách mười lớp**: trời · núi · ba tầng mây · sương · cây thế giới · mặt đất ·
+hai tầng tiền cảnh. Mây và sương trôi được, và đó mới là thứ làm màn chờ sống.
+
+> Bộ kit **không kèm prefab nào** cho mấy cảnh `story/`, nên `y` của từng lớp là **đo bằng mắt
+> trên ảnh dựng lại**, không tra được ở đâu. Bảng `LOP` trong công cụ nướng và `NEN_LOP` trong
+> `game.js` phải TRÙNG KHÍT.
+
+### ⚠ NĂM LỚP TRÊN SÂN KHẤU LÀ NHÂN VẬT THẬT, KHÔNG PHẢI `pick_*.webp`
+
+Bản đầu vẽ bộ tranh anh hùng `assets/nv/pick_<lớp>.webp` — tỉ lệ tám đầu, giáp nhiều lớp, vũ
+khí to bằng người. Chủ dự án gọi thẳng đó là "nhân vật fake": bấm Vào Game xong thì nhận một
+nhân vật KHÁC HẲN — thân nướng từ Spine, đầu to, mắt to, **cao đúng 159 điểm ảnh**.
+
+Nay sân khấu và chân dung trong ô nhân vật đều đọc `assets/title/lop/<lớp>.webp` + bảng hình
+học `data/lop_cho.js`, nướng bằng `tools/title/nuong_lop_cho.cjs`.
+
+- **Nướng bằng chính `heroSprite()` chạy trong trình duyệt thật.** Chép phép chồng lớp
+  (`NV_LOP` × `NV_LOP_HOP`) sang Python là dựng bản sao thứ hai của một luật đang sống — sửa
+  một lần là hai bên lệch, mà lệch kiểu đó chỉ lộ ra khi nhìn ảnh chụp.
+- **Vì sao phải nướng:** thân của năm lớp là các lớp rời, cộng lại **3,3 MB**. Màn chờ là thứ
+  TẢI ĐẦU TIÊN. Năm dải khung nướng sẵn chỉ **399 KB** (webp `quality=90`, `alpha_quality=100`
+  — alpha phải lossless, mất mát ở alpha hiện thành quầng xám quanh mọi mép).
+- **⚠ `CC_PHONG_TRAN` = 1,5.** 159px là TOÀN BỘ độ phân giải nhân vật này có trong kho, không
+  phải một lựa chọn. Kéo lên 400px cho đầy khung thì ra một bóng người nhoè đứng cạnh nền vẽ
+  tay sắc nét. Thà để nhân vật nhỏ trong một thế giới rộng — đó cũng đúng nhịp art Axie. Vì
+  thế `#cc-hero` là khung THẤP VÀ RỘNG (1040×420), không phải khung cao nửa màn hình.
+- **Tỉ lệ người ↔ Axie hỏi thẳng `avaCo()`**, cùng hàm mà trong màn dùng. Luật thật không phải
+  "Axie cao 0,72 lần thân người" mà là "0,72 lần VÀ hộp vẽ ra không quá 0,95 lần theo CẢ HAI
+  chiều" — 16 con có 16 tỉ lệ rộng/cao (1,07 → 1,52) nên con bè nhất bị vế thứ hai thu lại
+  đáng kể. Bỏ vế đó thì con bè nhất trông như đang dắt người đi.
+### Trang bị hiện lên người — BA tín hiệu, ba nguồn khác nhau
+
+Ô ĐANG CHỌN vẽ bằng `ccVeNguoiBo()`, gom ba thứ mà `player.equip` đổi được:
+
+| Tín hiệu | Nguồn | Phủ tới đâu |
+|---|---|---|
+| **Bộ giáp** | `heroSprite()` dựng sống, qua `NV_GIAP` | **3/35** tổ hợp `lớp\|giai` |
+| **Cánh** | `veCanh()` — art thật, KHÔNG nằm trong sprite | mọi lớp |
+| **Hào quang +N** | `nvHaoQuangSau/Truoc()` — dựng theo bóng dáng | mọi lớp |
+
+⚠ **`ccArtSan()` là cái van, đừng gỡ.** `heroSprite()` **luôn** trả về một canvas: không có
+art thì nó dựng hình bằng ĐƯỜNG — hiệp sĩ xám, mũ sừng, áo choàng đỏ, tức đúng "nhân vật fake"
+mà cả đợt này sinh ra để gỡ, chỉ khác là nay nó chớp một nhịp rồi biến. Van đóng thì lùi về
+dải nướng: **thà thân trần còn hơn một nhân vật khác hẳn.**
+
+⚠ **Đường art thật đã nướng hào quang VÀO sprite.** Nhánh đó tuyệt đối không gọi lại hai hàm
+hào quang — gọi là chồng hai lớp, +11 cháy trắng xoá.
+
+Đo được (`test_titlefx §8`, nhân vật full `applyTestBoost`): Dark Wizard 6.348 → **31.609** điểm
+ảnh (có `dwsm1`, thấy nguyên bộ giáp); Spellblade 5.602 → **34.688** (chưa có art giáp, nhưng
+cánh + hào quang +11 vẫn hiện). Van đóng đúng ở Spellblade, mở đúng ở Dark Wizard.
+
+> **Nợ thật sự nằm ở ART, không ở mã.** `NV_BO` chỉ khai `lớp|1`, nên `nvTen(lớp, giai≥2)` trả
+> `undefined`. Tức chỉ cần chưa có mục `NV_GIAP` khớp là **cả game** (không riêng màn chờ) rơi
+> về hình dựng bằng đường — đo được ở chế độ `applyTestBoost`: 4/5 lớp ra hộp vẽ 236×236 thay vì
+> 64×159. Chưa xác nhận ở nhịp chơi thường (giai 2-3), nhưng nếu đúng thì đó là một lỗ thủng
+> của Quy tắc số 3 nằm ngay trong `drawPlayer`, đáng một đợt riêng.
+
+### Chân dung ô nhân vật CHƯA mang trang bị
+
+`ccLopIcon()` cắt từ dải nướng nên nó luôn là thân trần, khoá đệm chỉ theo lớp. Ở khổ 46px thì
+gần như chỉ thấy đầu và vai, nên chênh lệch nhỏ — nhưng mũ và vương miện thì có đổi. Muốn đúng
+thì khoá đệm phải gồm `heroGearSig(gv)` và cắt từ sprite dựng sống.
+
+`tests/test_titlefx.js §7` gác: art phải đến từ `lop/*.webp`, đủ số ô, và không phóng quá trần.
+
+### ⚠ MÀN CHỜ PHẢI HỎI CÙNG CÁI HÀM MÀ TRONG MÀN DÙNG
+
+Ba thứ trên sân khấu đều là bản sao của một luật đang sống, nên cả ba phải TRA chứ không được
+chép: con Axie nào thuộc lớp nào (`AVA_MAC_DINH`), con Axie của nhân vật đang chọn
+(`avatarId(pl)`), và Axie to bằng mấy phần người (`avaCo`). Chép ra bảng riêng là màn chờ hứa
+một đằng, vào game ra một nẻo — đúng cái lỗi mà cả đợt này sinh ra để sửa.
+
+Đã suýt ship đúng lỗi đó: bản đầu khai `CC_AXIE_LOP` riêng (Dark Knight → Ironshell) trong khi
+game khai Emberjaw.
+
+**Và đây là chỗ đau: `git merge` KHÔNG báo gì cả.** Nhánh `main` trong lúc đó gỡ hẳn
+`chiCoTrongMan()` · `CHI_THAN` · `CHI_TRAN` · `tests/test_cothu.js` (con thú đi theo bị thay
+bằng avatar). Màn chờ gọi `chiCoTrongMan()`. Hai bên sửa hai vùng khác nhau của `game.js` nên
+git ghép êm ru, `node --check` xanh, và thứ còn lại là **một lời gọi tới hàm không còn tồn
+tại** — chỉ ném lỗi lúc chạy, mà lại ném trong vòng vẽ màn chờ.
+
+⇒ **Trộn nhánh xong, đừng tin `node --check`.** Đếm lại từng hàm mà mã mới dựa vào:
+`for f in <danh sách>; do grep -c "function $f" public/game/game.js; done`. Rồi chạy đủ bốn
+cổng TRÊN BẢN ĐÃ TRỘN — bản đã trộn là mã mà **chưa bên nào từng kiểm**.
+
+### Tông màu — ẤM và SÁNG, đây là chỗ "cute" của game
+
+Bản đầu dìm cả cảnh về xanh mực cho hợp HUD: đo được vùng trời/cây chỉ còn ~60/255 trong khi
+bản gốc là 94. Năm nhân vật mắt to đứng trên một vũng sáng xanh lạnh thì đọc ra **bóng ma**,
+không ra dễ thương. Nay nhuốm màu rất nhạt (`#eceafb`), viền tối chỉ còn ở đỉnh và đáy để chữ
+đọc được, và **đo lại vùng trời/cây ra 95 — đúng bằng bản gốc chưa chỉnh tông**.
+
+Đèn sân khấu đổi từ xanh lạnh sang **đào + bạc hà**, kèm một vệt hắt từ mặt đất lên chân. Đây
+là chỗ DUY NHẤT của game được phép ấm hơn phần còn lại: nó nằm SAU nhân vật, không phải trên
+khung giao diện.
+
+⚠ **Vũng sáng phải tắt dần về MỌI phía trước khi chạm mép canvas.** Đã dẫm bẫy này HAI lần:
+một lần bằng vầng sáng lớn hơn khung, một lần bằng `createLinearGradient` chạy suốt bề rộng.
+Cả hai lần thứ hiện ra là một **hình chữ nhật sáng hơn nền**, mép thẳng đứng thấy rõ mồn một.
+Nên `ccBoCuc` chừa lề ≥ `than*0.68` (bán kính đèn) và vũng sáng mặt đất lấy `r = min(cx, w−cx)`.
+
+### Hai chế độ của sân khấu — cả hai đều phải sống
+
+- **Có nhân vật đang chọn** → vẽ lớp của ô đó + con Ragoon nó đang mang. Đây là mô hình đã chốt
+  của game ("Axie là avatar, 5 lớp là sức mạnh") dựng thành hình ngay màn đầu tiên.
+- **Tài khoản trống** → cả năm lớp đứng thành hàng, mỗi lớp một con Axie (`CC_AXIE_LOP`, năm
+  con 5★ thuộc năm lớp Axie khác nhau). Màn chờ của tài khoản trống là tấm áp phích của game;
+  bốc đại một lớp ra đứng đó thì vừa không nói được gì, vừa làm người mới tưởng mình bị gán lớp.
+
+`tests/test_titlefx.js` kiểm RIÊNG hai chế độ. ⚠ Mục 3 của bài gọi `startGame` nên localStorage
+có nhân vật — nạp lại trang là rơi vào chế độ một người. Bản đầu quên điều đó rồi đi đo hàng
+năm lớp trên một khung chỉ có một người: hai cột ngoài cùng ra 0, trông y như lỗi bố cục.
+
+### Bốn cái bẫy đã dẫm, ghi lại
+
+1. **`'multiply'` trên canvas TRỐNG không ra "màu nhân", nó ra ô màu ĐẶC.** Nền trong suốt thì
+   không có gì để mà nhân, nguồn giữ nguyên. Nướng phép nhuốm màu vào tấm phủ vì thế biến tấm
+   phủ thành một mảng tím phủ kín cảnh — và triệu chứng (chỉ còn lớp trời, mất sạch núi/cây/đất)
+   trông **hệt như "art chưa tải"**. Nhân màu phải làm trên canvas ĐÃ CÓ CẢNH.
+2. **Lớp trôi phải vẽ RỘNG HƠN khung đúng 2×biên độ.** Ba tầng mây đều phủ kín 1024 điểm ảnh
+   ngang, nên đẩy ngang mà không nới bề rộng là hở một dải trời trần ở mép — lỗi chỉ lộ ra ở
+   đúng hai đầu chu kì, tức rất dễ nghiệm thu nhầm.
+3. **Đèn sân khấu phải là vầng NHỎ sau từng bóng hình, không phải một vầng lớn phủ cả khung.**
+   `#cc-hero` chỉ chiếm nửa trái màn hình, nên vầng sáng rộng hơn khung bị mép canvas cắt ngang
+   — thứ hiện ra là một HÌNH CHỮ NHẬT sáng hơn nền, thấy rõ mồn một.
+4. **Các nấc của lớp phủ CSS phải chuyển dần.** `#sect-select::before` cũ có hai nấc sát nhau;
+   trên nền núi mờ mịt thì không ai thấy, nhưng nền nay có chi tiết đều khắp khung nên chỗ nấc
+   gấp hiện ra thành một **đường kẻ ngang chạy suốt bề rộng màn hình**.
+
+### ⚠ `startGame()` PHẢI tắt cảnh màn chờ — đừng trông vào chỗ gọi
+
+`titleAlive()` tắt vòng lặp khi **cả hai** màn (`#sect-select`, `#intro-story`) đã ẩn. Mà mọi
+đường vào game chỉ ẩn đúng MỘT cái rồi gọi `startGame` — nên chỉ cần một đường quên ẩn cái kia
+là cảnh Lunacia mười lớp chạy **song song với vòng game suốt phiên**. Nay `startGame()` gọi
+`titleStop()` ngay dòng đầu: đó là cửa duy nhất vào thế giới, nên nó là chỗ đúng để tắt.
+
+Lỗi này **không ném lỗi và không hiện ra** — nó chỉ ăn CPU. Chỗ nó lộ ra là `test_sandat`: bài
+gọi thẳng `startGame` trong lúc trang dẫn truyện còn hiện, và 3600 khung mô phỏng phải chia CPU
+với cảnh nền → trình duyệt **sập** (`Target page... has been closed`), không phải đỏ một khẳng
+định nào. Nền cũ nhẹ nên chạy kèm vẫn lọt; nền mười lớp thì không.
+
+### Giảm chuyển động KHÔNG có nghĩa là gỡ mất nền
+
+Luật CSS cũ ẩn hẳn `#title-fx` ở `prefers-reduced-motion` — người bật tuỳ chọn đó nhận một trang
+đen trơn. Nay `titleStart()` vẽ đúng một khung rồi dừng (`titleItDong()`), và `titleVeLai()` vẽ
+lại một khung mỗi khi thứ cần vẽ đổi (chọn máy chủ xong, đổi ô nhân vật, art vừa tải xong qua
+`ccChoAnh`). **Thiếu một trong ba chỗ gọi đó là người dùng reduced-motion thấy nền mà không thấy
+nhân vật** — đã dẫm đúng thế: năm lớp hiện ra còn năm con Axie thì không.
+
+### Đo trước khi tối ưu — chỗ tốn không nằm ở chỗ tưởng
+
+Ở 1920×1080 chạy bằng CPU (headless, không GPU): cả cảnh + sân khấu tụt 60 → 28 fps.
+- Phép **nhân màu phủ kín màn hình** chỉ tốn **1,6 ms** — bỏ nó đi chỉ được 2 fps. Không đáng
+  đánh đổi lấy việc nướng tông màu chết vào tệp art.
+- Chỗ tốn thật là **drawImage CÓ CO GIÃN**. Dựng sẵn mỗi lớp trôi vào một tấm đúng cỡ vẽ ra
+  (mỗi khung chỉ dời chỗ) và dựng sẵn cả phần đứng yên của sân khấu (người + bóng + đèn): 28 → 32.
+
+**Đã gỡ theo:** `assets/title/{nui,rung,san_da,anhhung}.webp` · `NUI_LOP`/`_nuiChop`/`_nuiCao`
+(dãy núi dựng bằng đường — Quy tắc số 3) · vầng trăng và trường sao vẽ tay.
+
 ## Hai lối vẽ nhân vật — ĐỪNG TRỘN VÀO NHAU
 
 Game có **ba** bộ dựng nhân vật, mỗi bộ một việc. Nhầm chỗ là ra hình lạc quẻ.
@@ -1458,33 +1940,47 @@ chui vào túi giữa mấy gốc cây, vứt waypoint tính lại là thoát. B
 
 ## Map tranh isometric: chặn bằng ĐA GIÁC SÀN, không bằng ellipse
 
-> ⚠ **SÁU TRÊN TÁM TRANH NỀN ĐANG SAI PHÉP CHIẾU.** Đo được, không phải cảm giác: quét từ đáy
-> tấm lên tới hàng đầu tiên đổi chất liệu, tranh **nhìn từ trên xuống** không có dải đáy riêng
-> (cả tấm đã là đất — `daohoa` 2,9%, `comoc` 0%), còn tranh **nhìn ngang** có một dải sàn mỏng
-> 5–22% ở đáy, phần trên là trời/núi/tường cây. Sáu tấm thuộc loại sau: `tuongduong` 12,2% ·
-> `mongco` 21,9% · `nhanmon` 7,9% · `ngoai` 7,3% · `chungnam` 5,7% · `tuyettinh` 4,9%.
-> Vì `game.js` kéo tranh nền phủ kín thế giới rồi cho đi khắp mặt tranh (dòng ~10829), **tranh
-> nền CHÍNH LÀ mặt đất** — nên đi lên phía trên map là đi vào bầu trời. Đó là toàn bộ nguyên
-> nhân của lỗi "nhân vật như đang ở trên không trung".
+> ⚠ **TRANH NỀN PHẲNG ĐÃ GỠ HẾT — 12/12 map ngoài trời LÁT VIÊN.** Xem `docs/DUNG_LAI_BON_MAP.md`
+> và bảng hiện trạng `docs/BANG_MAP.md` (sinh bằng `tools/bang_map.js`, **đừng sửa tay**).
 >
-> **Hướng đã chốt: regenerate từng map rồi lắp lại.** Prompt, ràng buộc hình học và công thức
-> lắp nằm ở `docs/PROMPT_MAP_ISOMETRIC.md`.
+> Vì `game.js` kéo tranh nền phủ kín thế giới rồi cho đi khắp mặt tranh, **tranh nền CHÍNH LÀ
+> mặt đất**. Tấm nào vẽ trời ở nửa trên thì đi lên phía bắc map là đi vào bầu trời; tấm vẽ mặt
+> nước thì cả bầy quái đứng trên nước. Đó là toàn bộ nguyên nhân của lỗi "lơ lửng".
+>
+> Bảy map đã dựng lại theo khuôn Rẻo Rừng Corran (`sanIso` + `diTrong` + `isoCum` + `isoDuong`,
+> hình sinh bằng `tools/iso/vung_bon.py`), sàn đi được 72-85%: `ngoai` · `chungnam` · `daohoa` ·
+> `comoc` · `tuyettinh` · `mongco` · `nhanmon`.
+>
+> ### ⚠ HAI LẦN TÔI TỰ TẠO LẠI CHÍNH LỖI VỪA CHỮA
+>
+> 1. **Bảng cũ ở đây liệt sáu tấm "sai phép chiếu" và SAI một dòng — `chungnam`.** Đo lại thì
+>    `bg_chungnam.jpg` và `bg_corran.jpg` là **cùng một tệp** (md5 `9310c07f…`, thay từ commit
+>    `26dff8d`). Con số "5,7%" đo trên tấm đã bị thay. **Số đo có hạn dùng** — tài sản đổi thì
+>    số đo cũ thành lời nói dối, mà kiểu nói dối này nằm trong tài liệu chứ không trong bài kiểm.
+> 2. **Chữa xong lỗi lơ lửng do PHÉP CHIẾU thì tôi tạo lại đúng lỗi ấy bằng MÀU.** Viên tuyết
+>    tự chọn `(0,86 0,90 0,97)` với lối mòn chỉ đậm hơn chút, cộng đá cũng màu lam nhạt (tàng
+>    hình) ⇒ Bird Tribe Heights chụp ra đúng một khoảng TRỜI CÓ MÂY. Ba luật rút ra cho mọi mặt
+>    sàn SÁNG: ra khỏi dải trắng chói · **mở rộng khoảng cách sáng giữa nền và lối mòn** · có mốc
+>    tương phản sẫm (đá, cỏ khô) để mắt bám. Mặt phẳng sáng đều không mốc thì đọc ra khoảng không.
+>    *Đừng để màu nói một đằng còn hình học nói một nẻo* — cùng bài học với lớp phủ tối đã gỡ.
+>
+> ### ⚠ BLENDER CÓ, ĐỪNG BÁO LÀ KHÔNG
+>
+> `which blender` trượt, nhưng Blender phát hành trên PyPI dưới dạng **mô-đun Python**:
+> `pip install bpy==4.2.0` (khớp Python 3.11 của máy này). Mà `tools/iso/nuong_tile.py` vốn viết
+> theo lối `import bpy` chạy bằng `python3` chứ không phải `blender --background` — đường ống đã
+> sẵn sàng cho đúng cách cài ấy từ đầu. Đo được **1,9 giây một viên**. Tôi đã suy từ `which` ra
+> "sandbox không có Blender" và báo cáo nó như ràng buộc cứng, làm ba map phải đi mượn chất liệu
+> sàn suốt một đợt. **"Công cụ X không có" là khẳng định phải KIỂM.**
+>
+> Bộ viên + vật thể theo biome: `python3 tools/iso/nuong_biome.py`. Khai trong `MAPS` là đổi được,
+> không phải sửa engine — **`isoCo`/`isoDat`/`isoVet`** (viên nền) và **`isoCayBo`/`isoNhoBo`**
+> (vật thể). ⚠ `isoCay`/`isoNho` là **SỐ LƯỢNG**, `isoCayBo`/`isoNhoBo` là **BỘ SPRITE** — hai
+> cặp khoá rất dễ lẫn. Và `isoCayBo` không hứa phải là cây: Bug Tribe Tunnels khai cột măng đá,
+> vì tường của một cái tổ thì không làm bằng cây.
 >
 > **Đừng thử cứu bằng cách lát nền từ art có sẵn — đã thử ba lần, hỏng cả ba**, lý do từng lần
-> ghi ở §2 tài liệu trên. Tóm tắt: dải sàn ở đáy 6 tấm hiện tại là MÀU PHẲNG (sàn sân khấu 2D),
-> và lớp `*_Ground.png` của kho Axie là mặt đất vẽ theo phối cảnh cho sân khấu nhìn ngang —
-> cả hai đều không lát kín được một thế giới.
->
-> **Kho Axie vẫn còn thứ dùng được, ba đợt khảo sát trước bỏ sót** vì chỉ mở `PvE/Backgrounds/
-> class/*` rồi kết luận cả thư mục: `story/` và `events/arena/` **tách LỚP**, cho ~12 vật thể
-> cắt sẵn alpha (`5_TREE1/2/3`, `10_TREE2`, `7/8/9/10_ROCK`, `8_TEMPLE`, `13_STATUE`, `6_WATER`)
-> — lắp thẳng vào lớp `vatTo` được.
->
-> **`tests/test_sandat.js` gác hợp đồng này cho MỌI map.** Map nào khai `diTrong` là tự động bị
-> canh (điểm thả, 8 hướng đi ra, NPC/cổng/quái đứng trên sàn, đi bộ tới được cổng, và map đánh
-> nhau phải có sàn ≥55% khổ map). Dựng lại một map, chấm xong đa giác là có bảo hiểm ngay,
-> không phải viết bài kiểm mới.
-
+> ghi ở §2 của `docs/PROMPT_MAP_ISOMETRIC.md`.
 
 `bg_quangtruong.jpg` (Quảng Trường Cũ) là tranh **isometric** — nhà có chiều cao, mái là hình
 thoi, còn game thì **nhìn từ trên xuống, không có trục cao**. Hai chuyện phải xử riêng:
