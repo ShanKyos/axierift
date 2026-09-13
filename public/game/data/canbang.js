@@ -755,6 +755,21 @@ window.MAPS = {
     // mặc định của nó là w*h/3e4 = 683 cho khổ này, quá dày cho một mặt phố lát đá — hạ về 260,
     // đủ để mặt lát không trơ mà không biến quảng trường thành bãi cỏ.
     isoCay:200, isoNho:260,
+    // ── TƯỜNG THÀNH ───────────────────────────────────────────────────────────
+    // Máy lát tường đọc khối này và tự tách mép `diTrong` thành đoạn tường + cuống cổng —
+    // xem khối "TƯỜNG THÀNH" trong game.js. `anh` khai TÊN TẤM; tấm nào chưa có tệp trong
+    // assets/iso/ thì `vatTai()` trả null và máy vẽ số không viên, KHÔNG hồi quy gì.
+    // Thả bảy tệp PNG vào assets/iso/ + khai trong MAP_VAT_SRC là tường hiện lên ngay, không
+    // phải sửa một dòng máy nào. Đơn hàng art: docs/DE_XUAT_TUONG_CONG.md §5.
+    // Xem trước hình học khi chưa có art: `window.debugTuong()`.
+    //
+    // `congRong` 2,77 = 720/260: tấm cổng phủ TRỌN cuống 260px cộng hai chân tháp thò ra.
+    // `congCao` 700 ≈ 5,3× chiều cao nhân vật — cổng phải là công trình to nhất trong thành
+    // (tấm ct_cong cũ 472×435 còn NHỎ HƠN lò rèn 8%).
+    tuong: { cao:300, nhip:256, day:160, congRong:2.77, congCao:700, congDay:400,
+             anh:{ ngang:'tuong_ngang_trong', ngangSau:'tuong_ngang_ngoai',
+                   doc:'tuong_doc', goc:'tuong_goc',
+                   congNgang:'cong_bac', congNgangSau:'cong_nam', congDoc:'cong_doc' } },
     // LƯỚI PHỐ. Map rộng thì luật "đường mòn = dải xa mép nhất" biến cả thành một bãi sỏi
     // mênh mông, nên phải khai đường thật. Hai đại lộ nối thẳng bốn cổng, bốn ngõ dọc rơi
     // đúng khe 200px giữa các khối nhà, hai phố vòng chạy men dãy nhà bắc và nam.
@@ -765,17 +780,27 @@ window.MAPS = {
       [[400,370],[6000,370]],   [[400,2830],[6000,2830]],
     ],
     spawn:{ x:3200, y:1900 },
-    spawnFrom:{ ngoai:{ x:3200, y:3080 }, corran:{ x:250, y:1600 },
+    // ⚠ `corran` ĐI VỚI CỔNG NAM, `ngoai` đi với cổng TÂY — đổi chỗ so với bản cũ.
+    // Lý do ở docs/THIET_KE_THI_TRAN.md §4.4: Rẻo Rừng Corran là map cấp 1-12, mà cổng Tây
+    // là cổng XA NHẤT (2736px). Nhân vật mới tạo phải đi bộ 13 giây qua hai cái cổng gần hơn
+    // mà nó bị khoá — đó là ấn tượng đầu tiên của game. Cổng Nam cách điểm thả 1010px.
+    spawnFrom:{ corran:{ x:3200, y:3080 }, ngoai:{ x:250, y:1600 },
                 chungnam:{ x:6150, y:1600 }, tuyettinh:{ x:3200, y:120 } },
     trees:0, rocks:0, herbs:true,
     desc:'Khu phố Ardhaven rơi qua vết nứt còn nguyên khối — nguyên mái, nguyên giếng, nguyên cả biển hiệu. Dân bản địa dựng tường quanh nó và gọi chỗ này là Sapidae Chiefdom. Trong tường: Quảng Trường Atia, Phố Chợ, Phố Lò, Sân Chuồng, Sảnh Lệnh, Vách Gió và Xóm Trọ. Không Chimera nào vào được. Bốn cổng ra bốn hướng.',
+    // ⚠ KHẨU ĐỘ CỔNG LÀ 260px, KHÔNG PHẢI 560 — xem docs/DE_XUAT_TUONG_CONG.md §3.
+    // 560px là 15 người đứng ngang: đó không phải cái cổng, đó là một đoạn tường bị thiếu.
+    // 260px ≈ 7 người = 11 ô lưới tìm đường 24px, và vòng bắt cổng (bán kính 90px trong
+    // updateGate) nằm gọn trong họng. Bốn `spawnFrom` bên dưới vẫn trong đa giác và vẫn
+    // cách mép <400px như `test_noimap` đòi — đã đo, đừng chấm lại bằng tay.
+    // Đi được 82,4% → 81,5%: phần mất nằm TRỌN trong bốn cuống, không ăn vào lòng thành.
     diTrong: [
-              [3480,3150], [2920,3150], [2900,2990], [600,2990], [400,2930], [270,2800],
-              [230,2720], [230,2620], [210,2600], [210,1900], [50,1880], [50,1320],
-              [210,1300], [210,600], [270,400], [400,270], [600,210], [2900,210],
-              [2920,50], [3480,50], [3500,210], [5800,210], [6000,270], [6130,400],
-              [6170,480], [6170,580], [6190,600], [6190,1300], [6350,1320], [6350,1880],
-              [6190,1900], [6190,2600], [6130,2800], [6000,2930], [5800,2990], [3500,2990] ],
+              [3330,3150], [3070,3150], [3050,2990], [600,2990], [400,2930], [270,2800],
+              [230,2720], [230,2620], [210,2600], [210,1750], [50,1730], [50,1470],
+              [210,1450], [210,600], [270,400], [400,270], [600,210], [3050,210],
+              [3070,50], [3330,50], [3350,210], [5800,210], [6000,270], [6130,400],
+              [6170,480], [6170,580], [6190,600], [6190,1450], [6350,1470], [6350,1730],
+              [6190,1750], [6190,2600], [6130,2800], [6000,2930], [5800,2990], [3350,2990] ],
   vatTo: [
     // ── BỐN CỔNG THÀNH ────────────────────────────────────────────────────────
     // Đặt LỆCH hẳn sang MỘT BÊN cuống cổng, mép trong của ảnh CHẠM ĐÚNG mép cuống
@@ -1533,23 +1558,30 @@ window.NPCS = [
     barks:['"Ra sớm đi, quá trưa là gió trên đó đổi hướng."','"Đường lên dốc, đừng chạy. Chạy là phải dừng."',
            '"Ta đứng đây từ lúc trời còn tối."'] },
 
+  // ⚠ Lore của hai người gác Nam/Tây ĐÃ ĐỔI CHỖ cho nhau khi cổng Nam ↔ Tây đổi map
+  // (docs/THIET_KE_THI_TRAN.md §4.4). Người gác phải tả đúng vùng SAU LƯNG MÌNH — nếu không
+  // thì anh lính đứng ở cổng Nam chỉ đường sang một khu rừng nằm ở đầu kia thành phố, và
+  // không có bài kiểm nào bắt được kiểu nói dối đó. id và toạ độ GIỮ NGUYÊN.
+  //
+  // Cổng Nam là cổng của người mới: gần điểm thả nhất (1010px) và mở ra map cấp 1-12. Câu
+  // `idle` viết cho đúng vai đó — dặn dò, không doạ.
   { id:'ah_gac_nam', name:'Lính Gác Cổng Nam', map:'ardhaven', x:3200, y:2660, img:'assets/npcs/laotuong.png', talk:'quest',
     lore:{
-      idle:  '"Cổng Nam mở ra Beast Herd Camp. Đất bằng, cỏ cao ngang thắt lưng, và bầy thú ngoài đó không sợ người nữa — đó mới là chỗ đáng ngại."',
-      offer: '"Ngươi chưa quen mùi cỏ cháy ngoài kia. Ra ngó một vòng đã."',
-      active:'"Ngoài Beast Herd Camp còn việc của ngươi. Ta không đi theo được."',
-      done:  '"Về đủ chân tay. Tốt. Ngồi xuống thở đã."' },
-    barks:['"Cỏ cao che được người, cũng che được thứ khác."','"Ngoài kia không có tường. Nhớ giùm ta câu đó."',
-           '"Đếm người ra, đếm người về."'] },
-
-  { id:'ah_gac_tay', name:'Lính Gác Cổng Tây', map:'ardhaven', x:700, y:1450, img:'assets/npcs/laotuong.png', talk:'quest',
-    lore:{
-      idle:  '"Ra Cổng Tây rồi đi thẳng là tới Rẻo Rừng Corran. Rừng thấp, nhiều lối, mà lối nào cũng giống lối nào. Nhớ đường về hơn là nhớ đường đi."',
+      idle:  '"Ra Cổng Nam rồi đi thẳng là tới Rẻo Rừng Corran. Rừng thấp, nhiều lối, mà lối nào cũng giống lối nào. Nhớ đường về hơn là nhớ đường đi."',
       offer: '"Chưa cần tới ngươi. Cổng này ngày nào cũng mở, mai quay lại cũng được."',
       active:'"Trong Rẻo Rừng Corran còn thứ ngươi phải làm cho xong."',
       done:  '"Xong rồi hả. Ngồi nghỉ đi, ta rót cho ngụm nước."' },
     barks:['"Lối nào cũng giống lối nào. Nhớ đường về."','"Đừng bẻ cành làm dấu — cành mọc lại, dấu thì không."',
            '"Trong tường thì yên. Ngoài kia thì tùy hôm."'] },
+
+  { id:'ah_gac_tay', name:'Lính Gác Cổng Tây', map:'ardhaven', x:700, y:1450, img:'assets/npcs/laotuong.png', talk:'quest',
+    lore:{
+      idle:  '"Cổng Tây mở ra Beast Herd Camp. Đất bằng, cỏ cao ngang thắt lưng, và bầy thú ngoài đó không sợ người nữa — đó mới là chỗ đáng ngại."',
+      offer: '"Ngươi chưa quen mùi cỏ cháy ngoài kia. Ra ngó một vòng đã."',
+      active:'"Ngoài Beast Herd Camp còn việc của ngươi. Ta không đi theo được."',
+      done:  '"Về đủ chân tay. Tốt. Ngồi xuống thở đã."' },
+    barks:['"Cỏ cao che được người, cũng che được thứ khác."','"Ngoài kia không có tường. Nhớ giùm ta câu đó."',
+           '"Đếm người ra, đếm người về."'] },
 
   { id:'ah_gac_dong', name:'Lính Gác Cổng Đông', map:'ardhaven', x:5640, y:1600, img:'assets/npcs/laotuong.png', talk:'quest',
     lore:{

@@ -18,6 +18,7 @@ nào làm cổng trông đúng được. Mọi triệu chứng dưới đây đ�
 | 4 | Cổng so với Lò Rèn | **nhỏ hơn 8%** (472×435 vs 473×472) |
 | 5 | Số hướng dùng chung một ảnh | **`ct_cong` × 4** |
 | 6 | Cột mốc bấm G lùi vào trong | **80px** ở Bắc/Nam · **270px** ở Đông/Tây |
+| 7 | Vòm cổng **vẽ bằng vector** (`drawGateStatic`) | **166 × ~140px** — hẹp hơn khẩu độ nó đánh dấu, và chỉ cao **1,1× nhân vật** |
 
 **Vết gốc của #4 và #5 nằm ngay trong đơn hàng art.** `DAT_HANG_ART_THANH.md §2` đặt cổng
 thành **mục số 7 trong một danh sách tám công trình**, dùng chung một khuôn prompt ép mọi tấm
@@ -30,6 +31,16 @@ cửa vòm và chậu lửa trên mái** — không có tường nối hai bên,
 (CLAUDE.md đã ghi đúng luật này cho hàng nhà nam). Nên một tấm cổng chỉ đúng ở **một** hướng:
 ở cổng Nam người chơi đứng phía bắc và lẽ ra phải thấy mặt trong của tường, nhưng lại thấy đúng
 cái mặt tiền mà cổng Bắc cho thấy.
+
+**#7 chỉ lộ ra khi dựng máy lát tường — và nó nói rằng thành đang có HAI cái cổng chồng nhau.**
+`drawGateStatic()` dựng một vòm đá bằng `fillRect` / `hPoly` / `beginPath` ngay tại cột mốc bấm G,
+trong khi `ct_cong` đứng lệch sang bên cách đó 150px. Hai thứ này vẽ ở hai chỗ khác nhau, bằng
+hai ngôn ngữ hình khác nhau, và cùng tự nhận là cái cổng. Vòm vector còn **vi phạm Quy tắc số 3**
+(*"KHÔNG dùng vector. CHẤM HẾT"*) — nó có từ trước đợt này.
+
+**Không gỡ vòm vector ngay**, và đó là chủ ý: nó đang là thứ DUY NHẤT đánh dấu cái cổng, gỡ
+trước khi có `cong_*` là để lại một lỗ trống. Nó nằm trong danh sách thay ở §5b, và đo được ở
+trên chính là đặc tả cỡ cho tấm thay: 166 → **720**, cao 1,1× → **5,3× nhân vật**.
 
 **#6 là chỗ đau nhất, vì nó không phải lỗi thẩm mỹ mà là một bài kiểm rò rỉ vào thiết kế.**
 Chú thích ngay trên bảng `GATES` nói thẳng: hai cột mốc đông/tây đặt ở `x 480` và `x 5920` để
@@ -233,15 +244,43 @@ no ground beyond the contact shadow.
 
 ---
 
+## 5c · Hợp đồng neo — đơn hàng art phải vẽ đúng quy ước này
+
+Máy lát tường đặt tấm theo đúng bảng dưới. Vẽ sai neo thì mọi tấm lệch chỗ, và kiểu lệch đó
+nhìn ra là "tường hơi thấp" chứ không nhìn ra là sai neo.
+
+**Luật chung:** mép **DƯỚI** của ảnh là **đường chân** (chỗ tường chạm đất); **tâm ngang** của
+ảnh là tim đoạn tường. **Không chừa lề trong suốt dưới chân.**
+
+| Tấm | Khổ ảnh | Vì sao khổ đó |
+|---|---|---|
+| `tuong_ngang_trong` · `tuong_ngang_ngoai` · `tuong_goc` | **256 × 300** | nhịp 256 = `ISO_W`, rơi đúng lưới viên nền |
+| `tuong_doc` | **160 × 428** | cao hơn tấm ngang vì phải cõng cả đoạn chạy 128px theo trục y lẫn chiều cao tường |
+| `cong_bac` · `cong_nam` | **720 × 700** | 720 = khẩu độ 260 × 2,77 — phủ trọn cuống cộng hai chân tháp |
+| `cong_doc` | **400 × 960** | 960 = 700 + khẩu độ 260, cùng lý do với `tuong_doc` |
+
+Mấy con số này nằm trong `MAPS.ardhaven.tuong` và **là bản đặc tả kích thước cho hoạ sĩ**,
+không phải hằng số tiện tay — đổi ở đây thì phải đổi cả đơn hàng §5.
+
+---
+
 ## 6. Thứ tự làm
 
 | Đợt | Việc | Kiểm |
 |---|---|---|
 | **C1** | Sửa 16 đỉnh `diTrong` (khẩu độ 560→260), dời 4 cột mốc G lên sát vòm, miễn trần đường kính cho map thành trong `test_domap` | `do_thanh.cjs --cong` · `test_domap` · `test_noimap` · `test_sandat` |
 | **C2** | Đổi map sau cổng Nam ↔ Tây (§4) | `test_noimap` §1 — lan theo đường người chơi từ cấp 1 |
-| **C3** | Máy lát tường: đọc `diTrong`, bỏ bốn cuống, rải viên nhịp 256px, vẽ **một lượt riêng** sau sàn trước thực thể | chụp màn hình bốn cạnh + bốn góc |
+| **C3** ✅ | Máy lát tường: đọc `diTrong`, bỏ bốn cuống, rải viên nhịp 256px, vẽ **một lượt riêng** sau sàn trước thực thể | chụp màn hình bốn cạnh + bốn góc |
 | **C4** | Gen 4 viên tường (§5a), lắp | lát thử 3 viên cạnh nhau xem có lộ mạch |
-| **C5** | Gen 3 tấm cổng (§5b), thay `ct_cong`, đặt phủ trọn cuống | `do_thanh.cjs --cong` — mục 8b phải ra **100%** |
+| **C5** | Gen 3 tấm cổng (§5b), thay `ct_cong` **và gỡ `drawGateStatic`** | `do_thanh.cjs --cong` — mục 8b phải ra **100%** |
+
+**C1 · C2 · C3 đã làm.** C3 dựng ra **92 viên tường + 4 cổng** trên Ardhaven, hình học đã chụp
+kiểm cả bốn cạnh lẫn góc bo. Máy chạy hoàn toàn theo dữ liệu: khai `tuong:{…}` trong `MAPS` là
+xong, `vatTai()` trả `null` cho tên chưa có tệp nên **hiện vẽ số không viên, không hồi quy hình
+ảnh nào**. Thả bảy tệp PNG vào `assets/iso/` + khai trong `MAP_VAT_SRC` là tường hiện lên,
+**không phải sửa một dòng máy nào**. Xem trước hình học: `window.debugTuong()`.
+
+**C4 · C5 là việc gen art của chủ dự án** — sandbox không gọi được meowa/Gemini (chặn egress).
 
 **C1 và C2 không cần một tấm art nào** và chạy được ngay. C3 dựng máy trước khi có art — lát
 tạm bằng chính viên `nen_da` để kiểm hình học, rồi C4 chỉ là thay tên tấm.
@@ -258,6 +297,12 @@ tạm bằng chính viên `nen_da` để kiểm hình học, rồi C4 chỉ là 
   sẵn"*. Phóng 472→720 là 1,53×, ra viền cứng và mất nét.
 - **Một tấm cổng cho cả bốn hướng, lật cho đủ.** Lật **ngang** thì đúng (Đông/Tây là ảnh gương).
   Lật **dọc** thì sai phép chiếu: mặt tiền iso quay xuống, lật lên là ánh sáng và mái đảo ngược.
+- **Lát tạm bằng cách phóng to một sprite có sẵn, hoặc nướng tạm bằng `tools/render3d`.**
+  Bộ dựng hình 3D trong kho chạy được thật (chiếu trực giao, đệm độ sâu, ghi PNG, không cần
+  gói ngoài) và `NGHIEN_CUU_MAP_CAC_GAME.md §6` có liệt nó làm đường lùi. Nhưng chính tài liệu
+  đó ghi nó **"chỉ thiếu chất liệu bề mặt"** — mà một bức tường tô phẳng đứng cạnh art vẽ tay
+  của Axie thì đúng là lỗi CLAUDE.md đã ghi hai lần và gỡ hai lần (lớp phủ tối, rồi trụ đá
+  phóng ~3×). Thà tường chưa hiện còn hơn hiện ra một bức tường lạc quẻ.
 - **Vẽ tường bằng một tấm tranh dài.** `NGHIEN_CUU_MAP_CAC_GAME.md` §2 đã chốt: không game nào
   làm thế, và mật độ chi tiết đo được nói trước kết quả.
 - **Lùi cột mốc G để né trần `test_domap`.** Đó chính là cách chỗ bấm G rơi ra cách cổng 270px.

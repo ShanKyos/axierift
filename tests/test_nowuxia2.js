@@ -10,6 +10,18 @@
 // chú thích thì VẪN ĐƯỢC — CLAUDE.md cho phép ghi công nguồn cảm hứng, và bỏ đi thì mất luôn
 // thông tin thật (người sau không biết bố cục quảng trường lấy từ đâu).
 const { chromium } = require('playwright');
+// ⚠ ĐƯỜNG DẪN KHO SUY RA, KHÔNG CHÉP CỨNG. Hai dòng dưới từng ghi thẳng `/home/user/axie-wuxia`
+// — tên kho CŨ. Kho đã đổi thành `axiewuxia`, nên bài này ném ENOENT và CHẾT sau khi ba mục
+// A/B/C đã chạy xong và đều xanh: nhìn vào bảng tổng chỉ thấy một bài đỏ, không thấy rằng thứ
+// nó gác vẫn đang đúng. tools/reg.sh chép bài sang scratchpad rồi mới chạy, nên __dirname trỏ
+// vào bản chép chứ không vào kho — phải hỏi git.
+const KHO = (() => {
+  try { return require('child_process').execSync('git rev-parse --show-toplevel',
+    { cwd: __dirname, encoding: 'utf-8' }).trim(); } catch { /* bản chép ngoài kho */ }
+  for (const d of ['/home/user/axiewuxia', '/home/user/axie-wuxia'])
+    try { require('fs').accessSync(d + '/public/game/game.js'); return d; } catch { /* thử tiếp */ }
+  throw new Error('không tìm thấy kho — bài này cần đọc tệp nguồn, không chỉ đọc trang web');
+})();
 const fs = require('fs');
 let bad = 0; const fail = m => { bad++; console.log('FAIL ' + m); };
 const CAM = ['khinh công','Nội Đan','nội đan','xung mạch','Xung mạch','yêu thú',
@@ -22,7 +34,7 @@ const CAM = ['khinh công','Nội Đan','nội đan','xung mạch','Xung mạch'
                  'public/game/strings/vi.js','public/game/strings/en.js'];
   const dinh = [];
   for (const f of files){
-    let txt; try { txt = fs.readFileSync('/home/user/axie-wuxia/' + f, 'utf-8'); } catch { continue; }
+    let txt; try { txt = fs.readFileSync(KHO + '/' + f, 'utf-8'); } catch { continue; }
     // Bóc comment TRƯỚC rồi mới tìm. Bản đầu quét theo từng dòng và tìm trong dấu nháy — nên
     // template nhiều dòng (backtick mở ở dòng trên) lọt lưới hoàn toàn: quét tĩnh báo 0 trong
     // khi giao diện thật vẫn hiện "Nội Đan" ở hai chỗ.
@@ -88,7 +100,7 @@ const CAM = ['khinh công','Nội Đan','nội đan','xung mạch','Xung mạch'
 
   // D. quét CHÚ THÍCH của game.js — xem đầu tệp để biết vì sao mục này tồn tại
   {
-    const txt = fs.readFileSync('/home/user/axie-wuxia/public/game/game.js', 'utf-8');
+    const txt = fs.readFileSync(KHO + '/public/game/game.js', 'utf-8');
     const ct = [];
     // Lấy RA phần chú thích (ngược với mục A, vốn bóc chú thích đi)
     for (const m of txt.matchAll(/\/\*[\s\S]*?\*\//g)) ct.push(m[0]);

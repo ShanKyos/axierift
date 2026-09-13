@@ -179,8 +179,19 @@ const TRAN = {
     // dài, và chiều dài chính là thứ được đặt hàng ("đi qua một đường chỉ định để tới cuối map").
     // Thứ thật sự cần canh là NHỊP — khoảng cách giữa hai điểm nội dung KỀ NHAU — và `keNhau`
     // ngay dưới đã canh đúng thứ đó cho mọi hình dạng map.
+    //
+    // ⚠ MAP THÀNH ĐƯỢC MIỄN TRẦN NÀY, cùng cách nhận diện ("không có bãi quái") và cùng lý do
+    // với chỗ miễn sàn "đi được" ở trên: tường thành LÀ thiết kế. Một cái thành có bốn cổng
+    // trên bốn bức tường thì hai cổng đối diện BUỘC PHẢI nằm gần hai mép — đó là định nghĩa
+    // cái thành, không phải triệu chứng map rỗng.
+    //
+    // Không miễn thì hậu quả rơi thẳng vào thứ người chơi nhìn thấy: bản trước phải LÙI hai
+    // cột mốc bấm G ở cổng Đông/Tây vào 270px để khẩu độ chui dưới trần, tức là đứng ngay
+    // dưới vòm cổng thì cổng KHÔNG mở, phải lùi ra giữa sân. Ardhaven ở sát vòm cho khẩu độ
+    // 5780px so với trần 5774px — trượt đúng 6px, và 6px đó đã đủ đẩy thiết kế đi sai.
+    // Thứ thật sự cần canh cho map thành là NHỊP (`keNhau`, ngay dưới) — và nó vẫn canh.
     const tranKinh = Math.round(TRAN.duongKinhTiLe * Math.hypot(m.w, m.h));
-    if (m.hinh !== 'hanhlang' && m.duongKinh > tranKinh) fail(`${id}: đường kính ${m.duongKinh}px (trần ${tranKinh}) — đi bộ suông`);
+    if (m.hinh !== 'hanhlang' && m.soLoai > 0 && m.duongKinh > tranKinh) fail(`${id}: đường kính ${m.duongKinh}px (trần ${tranKinh}) — đi bộ suông`);
     if (m.keNhau > TRAN.keNhau) fail(`${id}: điểm kề ${m.keNhau}px (trần ${TRAN.keNhau}) — nhịp đánh thưa`);
     // Map không có bãi quái nào (thành) thì không xét số loài.
     if (m.soLoai > 0 && m.soLoai < SAN.loai) fail(`${id}: chỉ ${m.soLoai} loài (sàn ${SAN.loai})`);

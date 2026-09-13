@@ -95,11 +95,26 @@ const trai = Math.max(...tiem.map(t => t.x)) - Math.min(...tiem.map(t => t.x));
 console.log(`  ba tiệm trải ${trai}px = ${(trai/MAN[0]).toFixed(1)}× khung hình ⇒ ${trai < MAN[0] ? 'lọt' : 'KHÔNG lọt'} một màn hình`);
 
 // ── 6. CỔNG ───────────────────────────────────────────────────────────────
+// ⚠ ĐỌC THẲNG bảng GATES trong game.js. Bản đầu của tệp này chép cứng bốn dòng cổng, và
+// khi cổng Nam ↔ Tây đổi map thì nó vẫn in ra bảng CŨ mà không báo gì — đúng kiểu nói dối
+// không ai bắt được. Chép cứng dữ liệu đã có nguồn là tự tay dựng một nguồn thứ hai.
+const GSRC = fs.readFileSync(path.join(ROOT, 'public/game/game.js'), 'utf8');
+const GATES = [...GSRC.matchAll(/\{\s*map:'ardhaven',\s*x:(\d+),\s*y:(\d+),\s*to:'(\w+)',\s*name:'([^']+)'/g)]
+  .map(m => ({ x:+m[1], y:+m[2], to:m[3], name:m[4] }));
+
 H1('6 · BỐN CỔNG — khoảng cách vs cấp tối thiểu của map sau nó');
-for (const [ten, to, x, y] of [['Nam','ngoai',3200,2910], ['Bắc','tuyettinh',3200,290],
-                               ['Tây','corran',480,1600], ['Đông','chungnam',5920,1600]]){
-  const md = window.MAPS[to], s = d(M.spawn, {x, y});
-  console.log(`  ${ten.padEnd(4)} ${String(Math.round(s)).padStart(5)}px ${String(giay(s)).padStart(5)}s → ${(md.name||to).padEnd(20)} cấp ${md.min}`);
+if (!GATES.length) console.log('  ✘ không đọc được GATES từ game.js — bảng đã đổi dạng?');
+for (const g of GATES){
+  const md = window.MAPS[g.to] || {}, s = d(M.spawn, g);
+  const ten = (g.name.match(/Cổng (\S+)/) || [, '?'])[1];
+  console.log(`  ${ten.padEnd(4)} ${String(Math.round(s)).padStart(5)}px ${String(giay(s)).padStart(5)}s → ${(md.name||g.to).padEnd(20)} cấp ${md.min}`);
+}
+{ // cổng của nhân vật cấp 1 phải là cổng GẦN NHẤT
+  const xep = GATES.map(g => ({ g, d:d(M.spawn, g), min:(window.MAPS[g.to]||{}).min ?? 99 }))
+                   .sort((a, b) => a.d - b.d);
+  const deNhat = xep.reduce((a, b) => b.min < a.min ? b : a, xep[0]);
+  const ok = deNhat === xep[0];
+  console.log(`  ── cổng dễ nhất (cấp ${deNhat.min}) là cổng ${ok ? 'GẦN NHẤT ✔' : `thứ ${xep.indexOf(deNhat)+1}/4, xa ${Math.round(deNhat.d)}px ✘`}`);
 }
 
 // ── 7. LÕI ĐỀ XUẤT ────────────────────────────────────────────────────────
@@ -135,27 +150,49 @@ if (process.argv.includes('--dexuat')){
 if (process.argv.includes('--cong')){
   const THAN = 38, NV_CAO = 132;      // bề ngang và chiều cao ô vẽ nhân vật
   const V = M.vatTo || [];
-  const CUONG = {
-    'Bắc':  { doc:[2920,3480], ngang:[50,210],     truc:'x' },
-    'Nam':  { doc:[2920,3480], ngang:[2990,3150],  truc:'x' },
-    'Tây':  { doc:[1320,1880], ngang:[50,210],     truc:'y' },
-    'Đông': { doc:[1320,1880], ngang:[6190,6350],  truc:'y' },
-  };
-  const ANH = { 'Bắc':V[0], 'Đông':V[1], 'Nam':V[2], 'Tây':V[3] };
-
-  H1('8 · KHẨU ĐỘ CỔNG — chỗ người chơi thật sự đi qua');
-  for (const k in CUONG){
-    const kd = CUONG[k].doc[1] - CUONG[k].doc[0];
-    console.log(`  ${k.padEnd(5)} ${kd}px = ${(kd/THAN).toFixed(0)} người đứng ngang · ${(kd/NV_CAO).toFixed(1)}× chiều cao nhân vật`);
+  // Cuống cổng SUY TỪ ĐA GIÁC: mặt ngoài của một cổng là cạnh thẳng nằm sát mép map.
+  // Thân thành thụt vào ≥210px, còn vấu cổng thò ra tới 50px — nên ngưỡng 160px tách sạch
+  // hai loại mà không phải chép một toạ độ nào.
+  const MEP = 160;
+  const CUONG = [];
+  for (let i = 0; i < POLY.length; i++){
+    const a = POLY[i], b = POLY[(i+1) % POLY.length];
+    // PHẢI thẳng trục: cạnh vai của vấu cổng chạy chéo và một đầu của nó cũng chạm mép, nên
+    // lọc bằng "đầu nào đó gần mép" là nhận nhầm cả vai (bản đầu ra 12 cuống thay vì 4).
+    const doc = a[0] === b[0] && a[1] !== b[1];      // cạnh dọc ⇒ cổng đông/tây
+    const ngang = a[1] === b[1] && a[0] !== b[0];
+    if (!doc && !ngang) continue;
+    const truc = doc ? a[0] : a[1], bien = doc ? W : H;
+    if (Math.min(truc, bien - truc) > MEP) continue; // thân thành thụt ≥210px, vấu thò tới 50px
+    const len = doc ? Math.abs(a[1] - b[1]) : Math.abs(a[0] - b[0]);
+    const gx = (a[0] + b[0]) / 2, gy = (a[1] + b[1]) / 2;
+    const ten = doc ? (gx < W/2 ? 'Tây' : 'Đông') : (gy < H/2 ? 'Bắc' : 'Nam');
+    // MẶT TƯỜNG là vai của vấu, không phải mặt ngoài: hai đỉnh kề mặt ngoài chạy chéo vào
+    // trong và kết thúc đúng trên mặt tường. Đo "cột mốc lùi bao nhiêu" phải đo từ ĐÓ —
+    // đo từ mặt ngoài thì mọi cột mốc đều lùi thêm nguyên bề sâu vấu (160px) một cách vô hình.
+    const truoc = POLY[(i - 1 + POLY.length) % POLY.length], sau = POLY[(i + 2) % POLY.length];
+    const tuong = doc ? (truoc[0] + sau[0]) / 2 : (truoc[1] + sau[1]) / 2;
+    CUONG.push({ ten, len, doc, gx, gy, tuong, lo: doc ? [Math.min(a[1],b[1]), Math.max(a[1],b[1])]
+                                                       : [Math.min(a[0],b[0]), Math.max(a[0],b[0])] });
   }
+  H1('8 · KHẨU ĐỘ CỔNG — chỗ người chơi thật sự đi qua');
+  if (CUONG.length !== 4) console.log(`  ✘ nhận ra ${CUONG.length} cuống cổng, phải là 4`);
+  for (const c of CUONG)
+    console.log(`  ${c.ten.padEnd(5)} ${c.len}px = ${(c.len/THAN).toFixed(0)} người đứng ngang · ${(c.len/NV_CAO).toFixed(1)}× chiều cao nhân vật`);
 
   H1('8b · ẢNH CỔNG CÓ CHE ĐƯỢC KHẨU ĐỘ KHÔNG');
-  for (const k in ANH){
-    const a = ANH[k], c = CUONG[k];
-    const lo = c.truc === 'x' ? [a.x, a.x + a.w] : [a.y, a.y + a.h];
-    const phu = Math.max(0, Math.min(lo[1], c.doc[1]) - Math.max(lo[0], c.doc[0]));
-    const kd = c.doc[1] - c.doc[0];
-    console.log(`  ${k.padEnd(5)} ${a.img} ${a.w}×${a.h} tại (${a.x},${a.y}) → che ${phu}/${kd}px = ${(100*phu/kd).toFixed(0)}%`);
+  const CONG_ANH = V.filter(v => v.img === 'ct_cong');
+  for (const c of CUONG){
+    // ảnh cổng gần cuống này nhất
+    let a = null, m = Infinity;
+    for (const v of CONG_ANH){
+      const t = Math.hypot(v.x + v.w/2 - c.gx, v.y + v.h/2 - c.gy);
+      if (t < m){ m = t; a = v; }
+    }
+    if (!a){ console.log(`  ${c.ten.padEnd(5)} — không có ảnh cổng nào`); continue; }
+    const lo = c.doc ? [a.y, a.y + a.h] : [a.x, a.x + a.w];
+    const phu = Math.max(0, Math.min(lo[1], c.lo[1]) - Math.max(lo[0], c.lo[0]));
+    console.log(`  ${c.ten.padEnd(5)} ${a.img} ${a.w}×${a.h} tại (${a.x},${a.y}) → che ${phu}/${c.len}px = ${(100*phu/c.len).toFixed(0)}%`);
   }
 
   H1('8c · CỔNG SO VỚI CỬA HÀNG — cổng thành phải là công trình TO NHẤT');
@@ -175,11 +212,21 @@ if (process.argv.includes('--cong')){
   console.log(`  một cạnh màn hình 1920px = ${Math.ceil(1920/256)} viên vẽ mỗi khung`);
   console.log(`  tấm tường trong MAP_VAT_SRC: 0 — "tường" hiện là ${M.isoCay} cây ngoài đa giác + rào vô hình`);
 
-  H1('8e · TRẦN ĐƯỜNG KÍNH CHẶN CHỖ ĐẶT CỘT MỐC BẤM G');
-  // Cột mốc Đông/Tây đang lùi 270px vào trong KHÔNG vì thẩm mỹ mà vì test_domap chặn đường
-  // kính ở 80,7% đường chéo. Dời chúng lên sát vòm cổng là vượt trần — xem §3 tài liệu.
+  H1('8e · CỘT MỐC BẤM G — có đứng dưới vòm không');
+  for (const c of CUONG){
+    let g = null, m = Infinity;
+    for (const t of GATES){ const q = Math.hypot(t.x - c.gx, t.y - c.gy); if (q < m){ m = q; g = t; } }
+    if (!g) continue;
+    const lui = Math.round(Math.abs((c.doc ? g.x : g.y) - c.tuong));
+    const lech = Math.round(Math.abs((c.doc ? g.y : g.x) - (c.doc ? c.gy : c.gx)));
+    console.log(`  ${c.ten.padEnd(5)} lùi ${String(lui).padStart(3)}px sau mặt tường · lệch tâm vòm ${lech}px  ` +
+      `${lui <= 150 && lech <= 40 ? '✔ đứng dưới vòm' : '✘'}`);
+  }
+  // Trần đường kính từng ÉP hai cột mốc đông/tây lùi 270px để khẩu độ chui xuống dưới nó.
+  // test_domap nay miễn trần này cho map thành (không có bãi quái) — xem ghi chú trong bài đó.
   const cheo = Math.hypot(W, H), tran = 0.807 * cheo;
-  console.log(`  trần = 80,7% × ${Math.round(cheo)}px đường chéo = ${Math.round(tran)}px`);
-  for (const [ten, a, b] of [['hiện nay  (480 ↔ 5920)', 480, 5920], ['sát vòm   (310 ↔ 6090)', 310, 6090]])
-    console.log(`  ${ten}  ${b-a}px  ${b-a > tran ? '✘ VƯỢT (đường ĐI BỘ còn dài hơn đường thẳng)' : '✔'}`);
+  const xs = GATES.map(g => g.x), kd = Math.max(...xs) - Math.min(...xs);
+  console.log(`  ── khẩu độ Đông↔Tây ${kd}px vs trần cũ ${Math.round(tran)}px (80,7% đường chéo)`);
+  console.log(`     ${kd > tran ? 'vượt trần — và ĐÚNG là phải vượt: thành có bốn cổng trên bốn tường' : 'dưới trần'}; test_domap đã miễn trần cho map thành`);
 }
+

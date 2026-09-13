@@ -1868,6 +1868,173 @@ function raiIso(md){
   rai(md.isoNho ?? Math.round(MAP.w * MAP.h / 3e4), ISO_NHO, (trong, d) => trong && d > 60);
   raiCum(md, boc);
 }
+// ═══ TƯỜNG THÀNH — lát viên dọc mép `diTrong` ═══════════════════════════════════
+//
+// ⚠ VÌ SAO CÓ KHỐI NÀY: trước nó, Sapidae Chiefdom KHÔNG CÓ TƯỜNG. `MAP_VAT_SRC` chỉ có bốn
+// tấm công trình, và thứ đóng vai bức tường là `isoCay:200` — hai trăm cái cây rải ngoài đa
+// giác, cộng một hàng rào vô hình. Mà cổng là CÁI LỖ TRÊN MỘT BỨC TƯỜNG: không có tường thì
+// không có chỗ đặt nào làm cổng trông đúng được, và đo ra ảnh cổng che đúng 0% khẩu độ ở cả
+// bốn hướng. Xem docs/DE_XUAT_TUONG_CONG.md.
+//
+// Lát viên lặp lại chứ không vẽ một tấm tranh dài — kết luận đã chốt ở
+// docs/NGHIEN_CUU_MAP_CAC_GAME.md §2: không game nào vẽ một tấm to, tất cả đều ghép từ mảnh
+// nhỏ dùng lại. Viên tường còn dễ hơn viên nền: nó chỉ phải liền mép theo MỘT chiều.
+//
+// ⚠ HAI LUẬT XẾP LỚP, NGƯỢC NHAU, ĐỪNG TRỘN:
+//   · TƯỜNG vẽ MỘT LƯỢT RIÊNG, sau mặt sàn và TRƯỚC mọi thực thể — không xếp theo `y`.
+//     Tường nam nằm ở `y` lớn nhất map; thả nó vào danh sách thực thể là nó vẽ ĐÈ LÊN người
+//     chơi mỗi khi anh ta đứng gần, tức người chơi biến mất sau bức tường mà lẽ ra anh ta
+//     đang đứng trước. Người chơi không bao giờ ra được ngoài `diTrong`, nên không có trường
+//     hợp nào cần tường nằm trước anh ta ⇒ vẽ trước hết là đúng tuyệt đối.
+//   · CỔNG thì NGƯỢC LẠI — vào danh sách thực thể, xếp theo chân ảnh như `vatTo`, vì người
+//     chơi ĐI XUYÊN QUA nó: lúc đứng trong vòm, tháp phía trước phải che anh ta.
+//
+// ⚠ CHƯA CÓ TẤM ART NÀO. `vatTai()` trả null cho tên chưa có tệp, nên khối này hiện vẽ ra
+// SỐ KHÔNG viên — không có hồi quy hình ảnh nào. Đơn hàng 4 viên tường + 3 tấm cổng nằm ở
+// docs/DE_XUAT_TUONG_CONG.md §5; thả tệp PNG vào assets/iso/ và khai tên trong `MAP_VAT_SRC`
+// là tường hiện lên, KHÔNG phải sửa một dòng máy nào. Xem trước hình học bằng
+// `window.debugTuong()` — nó lát tạm bằng viên nền để soi bố cục khi chưa có art.
+//
+// Cố ý KHÔNG lát tạm bằng cách phóng to một sprite có sẵn: CLAUDE.md đã ghi hai lần cùng một
+// bài học (lớp phủ tối, rồi trụ đá phóng ~3×) và cả hai đều phải gỡ.
+const TUONG_MEP = 160;        // vấu cổng thò ra tới 50px, thân thành thụt vào ≥210px
+let _tuong = null;            // [{img,x,y,w,h,lat}] — dựng lại mỗi lần vào map
+let _tuongTam = false;        // debugTuong(): lát tạm bằng viên nền để soi hình học
+
+// Tách mép `diTrong` thành ĐOẠN TƯỜNG và CUỐNG CỔNG.
+// Cuống = cạnh THẲNG TRỤC nằm sát mép map. Phải thẳng trục: cạnh vai của vấu chạy chéo và một
+// đầu của nó cũng chạm mép, nên lọc bằng "đầu nào đó gần mép" là nhận nhầm cả vai — bản đầu
+// của tools/do_thanh.cjs ra 12 cuống thay vì 4 đúng vì thiếu điều kiện này.
+function tuongChiaMep(poly, w, h){
+  const cong = [], doan = [];
+  for (let i = 0; i < poly.length; i++){
+    const a = poly[i], b = poly[(i + 1) % poly.length];
+    const dc = a[0] === b[0] && a[1] !== b[1];
+    const ng = a[1] === b[1] && a[0] !== b[0];
+    if (dc || ng){
+      const truc = dc ? a[0] : a[1], bien = dc ? w : h;
+      if (Math.min(truc, bien - truc) <= TUONG_MEP){
+        cong.push({ a, b, doc: dc, i });
+        continue;
+      }
+    }
+    doan.push({ a, b });
+  }
+  return { cong, doan };
+}
+
+// ⚠ HỢP ĐỒNG NEO — đơn hàng art phải vẽ đúng quy ước này, nếu không mọi tấm lệch chỗ.
+//   · MỌI tấm tường và cổng: MÉP DƯỚI của ảnh là ĐƯỜNG CHÂN (chỗ tường chạm đất), và TÂM
+//     NGANG của ảnh là tim của đoạn tường. Không chừa lề trong suốt dưới chân.
+//   · Cạnh NGANG (bắc/nam): ảnh `nhip` × `cao` — 256 × 300.
+//   · Cạnh DỌC (đông/tây): ảnh `day` × (`cao` + nửa nhịp) — 160 × 428. Cao hơn tấm ngang vì
+//     nó phải cõng cả đoạn chạy 128px theo trục y lẫn chiều cao tường.
+//   · Cổng ngang: ảnh (`khẩu độ` × `congRong`) × `congCao` — 720 × 700, vòm đúng giữa.
+//   · Cổng dọc: ảnh `congDay` × (`congCao` + khẩu độ) — 400 × 960.
+// Đổi mấy con số này thì phải đổi cả đơn hàng ở docs/DE_XUAT_TUONG_CONG.md §5 — chúng LÀ
+// bản đặc tả kích thước cho hoạ sĩ, không phải hằng số tiện tay.
+function dungTuong(){
+  _tuong = null;
+  const md = mapDef();
+  const tw = md.tuong;
+  if (!tw || !md.diTrong) return;
+  const { cong, doan } = tuongChiaMep(md.diTrong, MAP.w, MAP.h);
+  const nhip = tw.nhip || ISO_W, cao = tw.cao || 300, day = tw.day || 160, A = tw.anh || {};
+  const buoc = nhip / 2;                 // cạnh dọc bước nửa nhịp — viên iso cao bằng nửa rộng
+  const ra = [];
+
+  for (const d of doan){
+    const dx = d.b[0] - d.a[0], dy = d.b[1] - d.a[1];
+    const dai = Math.hypot(dx, dy);
+    if (dai < 8) continue;
+    const cheo = Math.abs(dx) > 1 && Math.abs(dy) > 1;
+    const ngang = Math.abs(dx) >= Math.abs(dy);
+    // Viên NGANG nhìn từ phía nam (mặt trong) và nhìn từ phía bắc (mặt lưng) là HAI tấm khác
+    // nhau — lật DỌC một tấm iso là hỏng phép chiếu, xem §5a của tài liệu. Lật NGANG thì đúng,
+    // và đó là cách cạnh tây dùng lại tấm của cạnh đông.
+    const img = cheo ? A.goc
+              : ngang ? ((d.a[1] + d.b[1]) / 2 < MAP.h / 2 ? A.ngang : A.ngangSau)
+                      : A.doc;
+    if (!img) continue;
+    const n = Math.max(1, Math.round(dai / (ngang || cheo ? nhip : buoc)));
+    for (let k = 0; k < n; k++){
+      const t = (k + 0.5) / n;
+      const cx = d.a[0] + dx * t, cy = d.a[1] + dy * t;
+      if (ngang || cheo)
+        ra.push({ img, x: cx - nhip/2, y: cy - cao, w: nhip, h: cao, lat: false });
+      else
+        // Chân viên dọc nằm ở ĐÁY đoạn chạy (cy + buoc/2), không ở tâm: mép dưới ảnh là đường
+        // chân, nên neo vào tâm thì nửa dưới bức tường thụt xuống dưới mặt đất.
+        ra.push({ img, x: cx - day/2, y: cy + buoc/2 - cao - buoc, w: day, h: cao + buoc,
+                  lat: cx < MAP.w/2 });
+    }
+  }
+
+  // CUỐNG CỔNG: một tấm phủ TRỌN cuống, vòm đúng giữa, chân đặt trên MẶT TƯỜNG.
+  // ⚠ Mặt tường là VAI của vấu, không phải mặt ngoài. Hai đỉnh kề mặt ngoài chạy chéo vào
+  // trong và kết thúc đúng trên mặt tường; neo vào mặt ngoài thì cổng thụt ra khỏi thành
+  // nguyên bề sâu vấu (160px).
+  const P = md.diTrong;
+  for (const c of cong){
+    const gx = (c.a[0] + c.b[0]) / 2, gy = (c.a[1] + c.b[1]) / 2;
+    const img = c.doc ? A.congDoc : (gy < MAP.h/2 ? A.congNgang : A.congNgangSau);
+    if (!img) continue;
+    const truoc = P[(c.i - 1 + P.length) % P.length], sau = P[(c.i + 2) % P.length];
+    const tuong = c.doc ? (truoc[0] + sau[0]) / 2 : (truoc[1] + sau[1]) / 2;
+    const kd = c.doc ? Math.abs(c.a[1] - c.b[1]) : Math.abs(c.a[0] - c.b[0]);
+    const cCao = tw.congCao || 700;
+    if (c.doc){
+      const w = tw.congDay || 400, h = cCao + kd;
+      ra.push({ img, x: tuong - w/2, y: gy + kd/2 - h, w, h, lat: gx < MAP.w/2, cong:true });
+    } else {
+      const w = Math.round(kd * (tw.congRong || 2.77));
+      ra.push({ img, x: gx - w/2, y: tuong - cCao, w, h: cCao, lat:false, cong:true });
+    }
+  }
+  _tuong = ra;
+}
+
+// Vẽ tường — MỘT LƯỢT, trước mọi thực thể. Cổng (`cong:true`) bị bỏ qua ở đây và đi vào danh
+// sách thực thể trong render(), vì người chơi đi xuyên qua nó.
+function veTuong(){
+  if (!_tuong) return;
+  for (const t of _tuong){
+    if (t.cong) continue;
+    if (t.x + t.w < camera.x || t.x > camera.x + VW || t.y + t.h < camera.y || t.y > camera.y + VH) continue;
+    veTuongVien(t);
+  }
+}
+
+function veTuongVien(t){
+  const im = vatTai(t.img);
+  if (!im){
+    // CHƯA CÓ ART ⇒ vẽ số không. Chỉ `debugTuong()` mới bật khối khảo sát bên dưới, và nó
+    // cố ý thô — đây là chỗ trống có nhãn để soi hình học, KHÔNG phải art tường tạm.
+    if (!_tuongTam) return;
+    ctx.save();
+    ctx.globalAlpha = 0.5; ctx.fillStyle = t.cong ? '#7d7a5e' : '#5c6348';
+    ctx.fillRect(t.x, t.y, t.w, t.h);
+    ctx.globalAlpha = 1; ctx.strokeStyle = t.cong ? '#ffd76a' : '#9ad45e'; ctx.lineWidth = 4;
+    ctx.strokeRect(t.x, t.y, t.w, t.h);
+    ctx.restore();
+    return;
+  }
+  ctx.save();
+  if (t.lat){ ctx.translate(t.x + t.w, t.y); ctx.scale(-1, 1); ctx.drawImage(im, 0, 0, t.w, t.h); }
+  else ctx.drawImage(im, t.x, t.y, t.w, t.h);
+  ctx.restore();
+}
+
+// QA: xem hình học tường khi chưa có art. `/tuong` cũng gọi được.
+window.debugTuong = function(bat){
+  _tuongTam = bat === undefined ? !_tuongTam : !!bat;
+  dungTuong();
+  const n = _tuong ? _tuong.length : 0;
+  const c = _tuong ? _tuong.filter(t => t.cong).length : 0;
+  console.log(`[tường] ${_tuongTam ? 'BẬT lát tạm' : 'TẮT lát tạm'} — ${n - c} viên tường + ${c} cổng trên ${curMap}`);
+  return { vien: n - c, cong: c };
+};
+
 // LÙM CHẶN nằm TRONG lòng vùng đi được — thứ làm một map rộng có nghĩa.
 //
 // ⚠ Một map rộng mà trống thì đi đâu cũng như nhau, và cái "rộng" ấy đọc ra thành nhàm chứ
@@ -1949,20 +2116,30 @@ let zoneBanner = null; // { text, sub, color, t }
 // vốn khiến toàn bộ NPC phải chen chúc trong một góc nhỏ.
 const GATES = [
   // ── BỐN CỔNG ARDHAVEN ─────────────────────────────────────────────────────
-  // ⚠ BỐN CỘT MỐC NÀY LÙI VÀO TRONG, KHÔNG ĐỨNG NGAY MIỆNG VẤU CỔNG — và đó là một RÀNG BUỘC
-  // ĐO ĐƯỢC, không phải gu thẩm mỹ. `test_domap` chặn ĐƯỜNG KÍNH (khoảng cách xa nhất giữa hai
-  // điểm nội dung) ở 80,7% đường chéo map. Với khung 2:1, bề ngang chiếm 89,4% đường chéo — tức
-  // là BẤT KỲ map tỉ lệ 2:1 nào có nội dung trải hết bề ngang đều trượt. Đặt hai cổng đông/tây
-  // ở x 480 và 5920 cho khẩu độ 5440px, dưới trần 5777px.
+  // ⚠ BỐN CỘT MỐC ĐỨNG NGAY DƯỚI VÒM CỔNG — 100px vào trong so với mặt tường.
+  //
+  // Bản trước lùi hai cột mốc đông/tây vào tận `x 480` / `x 5920`, tức CÁCH CÁI CỔNG 270px, và
+  // lý do ghi ở đây là để khẩu độ 5440px chui dưới trần đường kính 80,7% đường chéo của
+  // `test_domap`. Tức là chỗ bấm G do một ngưỡng bài kiểm quyết định chứ không do bức tường —
+  // người chơi đứng giữa sân bấm G thì cổng mở, còn đứng ngay dưới vòm thì không.
+  //
+  // Nay cột mốc về đúng chỗ nó phải ở, và `test_domap` MIỄN trần đường kính cho map thành.
+  // Bài đó vốn đã miễn sàn "đi được ≥55%" cho thành với ghi chú "tường thành LÀ thiết kế";
+  // trần đường kính cũng vậy: một cái thành có bốn cổng trên bốn bức tường thì hai cổng đối
+  // diện BUỘC PHẢI nằm gần hai mép — đó là định nghĩa cái thành, không phải map rỗng.
   //
   // Điểm hiện ra khi đi ngược về (`spawnFrom` của MAPS.ardhaven) nằm NGOÀI cột mốc, tức trong
   // lòng vấu cổng: `test_noimap` đòi nó cách mép map dưới 400px. Đứng đó bấm G là quay lại —
   // cổng chỉ kích hoạt bằng phím G (xem updateGate), đứng gần không tự dịch chuyển, nên không
   // có chuyện vừa sang đã bị hất ngược.
-  { map:'ardhaven', x:3200, y:2910, to:'ngoai',      name:'Cổng Nam → Beast Herd Camp' },
-  { map:'ardhaven', x:3200, y:290,  to:'tuyettinh',  name:'Cổng Bắc → Bird Tribe Heights' },
-  { map:'ardhaven', x:480,  y:1600, to:'corran',     name:'Cổng Tây → Rẻo Rừng Corran' },
-  { map:'ardhaven', x:5920, y:1600, to:'chungnam',   name:'Cổng Đông → Werebear Woods' },
+  //
+  // ⚠ CỔNG NAM ĐI CORRAN, CỔNG TÂY ĐI OUTSKIRTS — đổi chỗ so với bản cũ, xem
+  // docs/THIET_KE_THI_TRAN.md §4.4. `MAPS.ardhaven.spawnFrom` đã đổi theo; hai khối lore của
+  // `ah_gac_nam` / `ah_gac_tay` cũng đổi chỗ, mỗi người tả đúng vùng sau lưng mình.
+  { map:'ardhaven', x:3200, y:2890, to:'corran',     name:'Cổng Nam → Rẻo Rừng Corran' },
+  { map:'ardhaven', x:3200, y:310,  to:'tuyettinh',  name:'Cổng Bắc → Bird Tribe Heights' },
+  { map:'ardhaven', x:310,  y:1600, to:'ngoai',      name:'Cổng Tây → Beast Herd Camp' },
+  { map:'ardhaven', x:6090, y:1600, to:'chungnam',   name:'Cổng Đông → Werebear Woods' },
   { map:'ngoai',      x:1300, y:240,  to:'ardhaven', name:'Qua Cổng Thành → Sapidae Chiefdom' },
   // ⚠ Ba cổng thành Bắc/Tây/Đông VỐN LÀ MỘT CHIỀU: đi sang Plant Tribe Glade / Werebear Woods /
   // Bird Tribe Heights rồi không có cổng nào về, phải mở bảng Bản Đồ mà dịch chuyển. Chỉ cổng Nam
@@ -7951,6 +8128,7 @@ function buildWorld(){
   // đều đọc lúc gọi, nên hai dòng này làm đúng toàn bộ cùng lúc. Camera đã kẹp theo MAP sẵn.
   MAP.w = md.w || 2600;  MAP.h = md.h || 1900;
   sanIsoDung();          // bảng viên nền — phải sau khi MAP.w/h đã đúng, xem sanIsoDung()
+  dungTuong();           // tường thành — cùng lý do: đọc MAP.w/h để tách cuống cổng khỏi mép
   capNhatKhungMinimap();   // khung bản đồ thu nhỏ chép cứng tỉ lệ 2600:1900 — xem hàm
   packsMd(md);   // A4: bung miền dân số thành bãi quái TRƯỚC mọi thứ khác đọc md.packs
   mobs = []; pickups = []; projectiles = []; effects = []; floats = []; groundLoot = []; // đồ dưới đất KHÔNG theo người sang map khác
@@ -11187,6 +11365,10 @@ function render(){
 
   // nền bản đồ — map lát viên ghép bằng hình thoi, còn lại vẫn là tranh nền một tấm
   const _latVien = veSanIso();
+  // ⚠ TƯỜNG THÀNH VẼ Ở ĐÂY, không trong danh sách thực thể — xem khối TƯỜNG THÀNH. Tường nam
+  // nằm ở `y` lớn nhất map nên xếp theo `y` là nó vẽ đè lên người chơi. Cổng thì ngược lại,
+  // nó nằm trong `ents` bên dưới vì người chơi đi xuyên qua.
+  veTuong();
   const bg = _latVien ? null : mapBgOf(curMap);
   if (bg && bg.complete && bg.naturalWidth > 0){
     // Chỉ vẽ ĐÚNG mảnh ảnh đang lọt vào khung nhìn. Vẽ cả ảnh phóng ra 2600×1900 là bảo trình
@@ -11346,6 +11528,9 @@ function render(){
   // thì bị công trình vẽ đè lên — đúng chiều sâu của tranh isometric. Lấy nóc làm khoá thì
   // ngược lại, nhân vật sẽ dán lên mái.
   for (const v of (mapDef().vatTo || [])) ents.push({ y:v.y + v.h, kind:'vat', v });
+  // Cổng thành: chân ảnh làm khoá, y như `vatTo`. Người chơi ĐI XUYÊN QUA cổng nên lúc đứng
+  // trong vòm, tháp phía trước phải che anh ta — đó là khác biệt duy nhất giữa cổng và tường.
+  if (_tuong) for (const t of _tuong) if (t.cong) ents.push({ y:t.y + t.h, kind:'tuong', t });
   ents.sort((a,b)=>a.y-b.y);
 
   // Nửa SAU của Vòng Kiếm Lửa — phải nằm dưới lớp entity, nếu không thì cả vòng lửa dán bẹt
@@ -11356,6 +11541,7 @@ function render(){
   for (const e of ents){
     switch (e.kind){
       case 'vat': { const im = vatTai(e.v.img); if (im) ctx.drawImage(im, e.v.x, e.v.y, e.v.w, e.v.h); break; }
+      case 'tuong': veTuongVien(e.t); break;   // chỉ CỔNG tới đây; đoạn tường vẽ ở lượt riêng trên kia
       case 'iso': veVatIso(e.d); break;
       case 'mob': drawMob(e.m); break;
       case 'deadmob': {
