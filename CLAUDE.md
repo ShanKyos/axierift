@@ -421,6 +421,95 @@ là chuỗi sống lại — chính tuyến 33 mục đã sống lại đúng b�
 (`masteryOpen()` đòi cấp 120 **và** `player.mongChiTon`). Chuỗi hỏng thì cả hệ Đại Thành mất cửa
 — đúng cái rủi ro mà dòng cảnh báo về `reqMain` ở trên đang nói, chỉ khác là nó đã thành thật.
 
+### 🗺 BẢNG BẢN ĐỒ HAI TAB — và tấm bản đồ thế giới DỰNG TỪ DỮ LIỆU
+
+Bấm **M** ra bảng hai tab, khuôn lấy từ bảng bản đồ của dòng MMO nhìn xuống (Võ Lâm, Ragnarok):
+
+| tab | có gì |
+|---|---|
+| **Hiện Tại** | vùng đang đứng ở khổ 660×500 — bãi quái (tên loài + số con), cổng, NPC chia ba nhóm, Rương Canh · Vỉa Cốt · bãi cỏ Đàn Thú, mũi tên người chơi. Sáu ô lọc bật/tắt từng nhóm. Bấm lên bản đồ là **tự chạy tới**. |
+| **Thế Giới** | cả mười hai vùng trên một tấm, lá cờ nhấp nháy ở vùng đang đứng, bấm một vùng là dịch chuyển. Danh sách vùng nằm cột phải. |
+
+**⚠ ẢNH THAM KHẢO CHỦ DỰ ÁN GỬI LÀ ẢNH CHỤP GAME KHÁC.** Lấy **cách bày**, không lấy tranh của
+họ — tấm bản đồ thế giới ở đây không phải một bức tranh mà **dựng từ dữ liệu đang chạy**:
+
+| thứ trên bản đồ | suy từ |
+|---|---|
+| hình của vùng | chính `md.diTrong` — đa giác đi được thật |
+| màu | `md.ground` (nâng sáng qua `tgMauVung`) |
+| cỡ to nhỏ | `md.w × md.h` thật, theo **căn bậc hai** diện tích |
+| đường nối | `GATES` |
+| khoá / mở | `mapGate()` — **cùng cửa** mà nút Dịch Chuyển dùng |
+| **chỗ đứng** | `THE_GIOI` trong `data/canbang.js` — **thứ DUY NHẤT đặt tay** |
+
+Nên nó không nói dối được: sửa đa giác một vùng là hình trên bản đồ đổi theo, thêm một cổng là
+có thêm một con đường. Vẽ tay một tấm ảnh rồi dán tên lên thì đúng một lần rồi sai mãi — cùng
+bài học `mapBanSac()`.
+
+**⭐ HƯỚNG TRÊN BIỂN CỔNG NAY LÀ RÀNG BUỘC CÓ NGƯỜI GÁC.** Mỗi cổng mang tên một hướng
+(*"Lối Bắc → Bug Tribe Tunnels"*); trước khi có bản đồ thế giới thì không chỗ nào đối chiếu được,
+nên nó chỉ là chữ. Nay người chơi đọc biển xong nhìn bản đồ là thấy ngay. `test_thegioi.js §2`
+đối chiếu **22 cạnh** — hướng ghi trên biển phải trùng hướng thật giữa hai chấm.
+
+**⚠ VÀ ĐỒ THỊ NÀY KHÔNG NHÚNG PHẲNG ĐƯỢC NẾU GIỮ NGUYÊN MỌI BIỂN CŨ.** Bird Tribe Heights buộc
+phải ở phía **Bắc** của thành (nó là một trong bốn cổng thành), Aquatic Tribe Causeway buộc phải
+ở phía **Đông** của Bug Tribe Tunnels — mà biển cũ lại ghi Causeway ở phía **Bắc** của Heights.
+Ba ràng buộc ấy không cùng đúng trên một mặt phẳng. Đã sửa đúng **một cặp biển**
+(Heights ↔ Causeway: Bắc/Nam → Đông/Tây) thay vì bẻ cong bản đồ: *biển chỉ đường là thứ người
+chơi đọc TRƯỚC, nên bản đồ phải chiều nó, không phải ngược lại.*
+
+**Bốn chỗ đã vấp, ghi lại:**
+1. **`max-width` KHÔNG đè được `width`.** `.panel` khai `width: min(520px,94vw)`; đặt
+   `#panel-map { max-width:1020px }` thì bảng vẫn 520px, tấm bản đồ 660px bị **cắt cụt** và cột
+   danh sách mất hẳn. Phải đặt `width`.
+2. **`flex: 0 0 auto` khoá cứng bề ngang** nên `max-width:100%` trên canvas không cứu được; và
+   `flex: 1 1 auto` thì ngược lại — bản đồ ăn hết chỗ, cột phải còn một chữ mỗi dòng. Đúng là
+   `flex: 0 1 660px` cho bản đồ + sàn cứng `flex: 1 0 312px` cho cột danh sách.
+3. **Lề DƯỚI phải rộng hơn ba lề kia** (`TG_KHUNG.leD`): nhãn vẽ ở `cy + r + 13` và `+24`, nên
+   vùng sát đáy thì hình lọt khung mà TÊN rơi ra ngoài. Bản đầu để lề đều và Beast Herd Camp
+   mất hẳn tên.
+4. **`md.ground` viết cho mặt đất TRONG MÀN**, rất tối (#1d2a1c…#3a4450) vì nó nằm dưới ánh sáng
+   và dưới cả một tấm nền art. Đặt nguyên lên giấy da thì mười hai vùng ra mười hai vệt gần như
+   đen như nhau. `tgMauVung()` nâng sáng ×2,05 và pha ấm nhưng **giữ nguyên sắc**. Cùng họ với
+   `itemPal`: một bảng màu không dùng chung được cho hai chỗ có nền khác nhau.
+
+**⚠ Vòng vẽ của bảng phải TỰ TẮT khi bảng đóng** (`bdVongVe` kiểm `panel-map.hidden`). Lá cờ
+nhấp nháy và mũi tên người chơi cần một vòng rAF riêng, nhưng để nó chạy song song với vòng game
+suốt phiên là đúng cái lỗi mà `startGame()` phải gọi `titleStop()` để chữa.
+
+#### Thẻ TRUYỀN TỐNG — bấm một vùng thì ĐỌC TRƯỚC, đi sau
+
+Bản đầu bấm vào vùng là dịch chuyển thẳng. Sai một nhịp: người chơi bấm để **xem** (vùng này cấp
+bao nhiêu? trùm gì? giờ nào có sự kiện?) rồi bị quăng sang map khác. Nay hiện một tấm thẻ —
+**Bản đồ · Giới hạn · Loại quái · Cấp luyện · Tướng Quân · Vệ Binh Trụ · Dòng Cốt · Bãi farm ·
+Hung Thần · Xâm Lăng Vàng** — rồi mới **Dịch Chuyển / Chạy Bộ / Huỷ**. Bấm một **cổng** trên tab
+Hiện Tại cũng mở đúng thẻ ấy cho vùng bên kia.
+
+- **"Chạy Bộ" không phải dịch chuyển lén**: nó chỉ tự chạy tới CỔNG dẫn sang vùng đó, và chỉ bật
+  khi có cổng đi thẳng từ vùng đang đứng. Qua cổng vẫn phải bấm G như mọi khi.
+- **⚠ MỌI DÒNG PHẢI TRA RA TỪ DỮ LIỆU ĐANG CHẠY.** Một tấm thẻ "thông tin vùng" chép cứng là kiểu
+  nói dối tệ nhất: nó trông đáng tin nhất và không ai đi kiểm. `md.min` · `md.range` ·
+  `bandLvText()` · `BOSS_DEFS` · `COT_DONG` · `vungFarm()`, và giờ sự kiện quét thẳng
+  `matonMapFor`/`goldenMapFor`.
+- **⚠ Quét giờ sự kiện phải quét đủ MỘT VÒNG XOAY, không phải "24 giờ tới".** Xâm Lăng Vàng xoay
+  8 vùng × 6 mốc/ngày nên một vùng chỉ tới lượt sau ~32 giờ — quét một ngày thì quá nửa số vùng
+  báo "không có", sai mà trông rất hợp lý.
+- **⚠ `bs.cot` là KHOÁ, không phải tên.** In thẳng ra thì thẻ hiện `canhhoa`; tên nằm ở
+  `COT_DONG[bs.cot].ten` (xem `banSacHtml`).
+
+**📌 Việc thẻ này làm lộ ra:** ba vùng — `loimon` · `trungnut` · `caungam` — **không nằm trong
+bất kỳ bảng xoay sự kiện thế giới nào** (`MATON_HA` · `MATON_THUONG` · `GOLDEN_FIELD`). Chúng
+thêm vào sau và không ai cập nhật ba bảng ấy. Thẻ báo "—" là báo ĐÚNG, nên đây không phải lỗi
+của thẻ; nhưng nó là một quyết định cân bằng đang bỏ ngỏ (thêm vào bảng xoay thì đổi chu kỳ và
+phải khai thêm bậc `GOLDEN_BOX`). `test_thegioi §9` in ra danh sách đó mỗi lượt chạy thay vì
+đánh đỏ — *đừng "sửa" nó thành xanh bằng cách nới ngưỡng, hãy quyết rồi sửa dữ liệu.*
+
+Gác: `tests/test_thegioi.js` (9 mệnh đề). Hai mệnh đề đáng nhớ:
+- ⑧ **tầng hành vi**: đếm điểm ảnh để chứng minh cả hai canvas vẽ ra thật và bộ lọc đổi được
+  hình — đối chiếu tên không bắt được một canvas trắng, đúng bài học `ISO_NEO`.
+- ⑨ mỗi giờ sự kiện in trên thẻ được **quét ngược lại** để chứng minh mốc ấy thật sự rơi vào
+  vùng ấy.
+
 ### 🧭 NỐI MAP BẰNG RÌA (B1) + ĐIỂM DỊCH CHUYỂN MỞ BẰNG ĐI BỘ (B2)
 
 **⚠ Đây trước hết là một BẢN VÁ LỖI.** Trước bản này, **Bug Tribe Tunnels (40) · Reptile Sunstone Flats (80) ·
