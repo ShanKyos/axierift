@@ -1837,6 +1837,53 @@ Và một luật vẽ: **art tối thì phải cộng sáng.** `cong:false` (v�
 nền — Meteorite, Inferno. Gói tối như Dragon Spirit vẽ đè thì thành vệt bóng; bỏ `cong:false`
 cho nó cộng sáng là bầy long hồn phát sáng lên ngay. Đã thử cả hai và chụp lại để so.
 
+### 🧬 HAI HỌ BỊ ĐỘNG — khoá phân biệt là trường `chiSo`, đừng nhập chúng làm một
+
+Cây kỹ năng của **cả năm lớp** nay có một **xương sống chung**: bảy bị động cộng chỉ số, khai
+`phai: null` một lần trong `data/canbang.js` rồi `KN_XUONG_SONG` nối vào đuôi `KN_ROT` của từng
+lớp. Chúng rơi đúng vào **chuỗi thẳng bảy ô ở cột 3** của `KN_HINH` (`g1`…`g7`) — cái hình mà
+ảnh mẫu chủ dự án đưa vẽ ra. Chín chiêu lớp lấp cây nhánh, bảy bị động lấp chuỗi thẳng, **đủ
+16/16 ô**.
+
+| họ | ví dụ | luật | hiện ra |
+|---|---|---|---|
+| **chỉ số** (có `chiSo`) | Increase Life · Mana · Stamina · Attack Power · Defense · Defense Rate · Critical Rate | **luôn chạy**, KHÔNG chiếm ô, **nâng cấp được** | số cấp |
+| **hiệu ứng** (không `chiSo`) | Swell Life · Iron Will · Dark Raven · Heal · Song Thủ · Bản Nguyên Công | **phải cắm vào ô 2-4** (`biDongBat`) | dấu ✚ |
+
+**Vì sao phải tách:** ô 1 khoá chủ động ⇒ chỉ còn **ba** ô trống. Bảy bị động chỉ số mà tranh ba
+ô thì người chơi vĩnh viễn chỉ bật được 3/7, trong khi cả bảy rõ ràng sinh ra để luôn bật. Ngược
+lại, cho bị động hiệu ứng chạy tự do là mất sạch cái giá của ba ô kia.
+
+**⚠ ĐƠN VỊ LÀ PHẦN TRĂM, và đây là chỗ CỐ Ý không dịch sát bản gốc.** Ảnh mẫu ghi số phẳng
+("+12 sinh lực mỗi cấp"). Đo ở đây: trang bị kéo máu trần **2.288 → 28.672** và Công Kích
+**89 → 2.118**. Số phẳng vì thế vừa vỡ đầu game vừa thành số 0 làm tròn ở cuối game. Riêng bạo
+kích và né tránh là **tỉ lệ có trần** (0,65 / 0,45) nên chúng cộng theo **điểm phần trăm** —
+nhân phần trăm lên một tỉ lệ đã có trần là vô nghĩa.
+
+**⚠ `ps_stamina` cố ý nhỏ hơn hẳn sáu cái kia** (0,10 chứ không phải 0,25-0,30). Thể Lực cộng vào
+`s.vit` **rất sớm** nên nó đi qua toàn bộ dây chuyền nhân của `calcDerived`: ở mức 0,25/cấp nó
+cho **+42% máu** ở cấp chiêu 100, tức ăn đứt chính `ps_life` (+30%) và biến nút Life thành thừa.
+*Hai nút mà một cái trội hẳn thì không còn là lựa chọn nào cả.*
+
+**⚠ Thể Lực phải cộng TRƯỚC `player.dVit`**, không phải ở khối cuối cùng như sáu cái kia — công
+thức `maxHp` đọc `s.vit`. Cộng sau thì con số trên bảng Nhân Vật nhúc nhích còn máu thì không.
+
+**⚠ `vhAutoLearn()` có cửa RIÊNG cho chúng.** Vòng cũ `if (!_v.phai) continue` bỏ qua mọi chiêu
+chung. Đừng "sửa gọn" bằng cách nới điều kiện `_v.phai` — nới ra là **mọi** chiêu chung tương lai
+(kể cả thứ định để mật tịch mở khoá) tự rơi vào tay người chơi theo cấp.
+
+**⚠ Không kéo được, và phải chặn ở CẢ HAI chỗ.** `knOHopLe` từ chối là chưa đủ: ô vẫn kéo được
+nghĩa là người chơi lôi cả chuỗi bảy ô xuống thanh rồi ăn bảy lần từ chối. `keo` trong ô cây phải
+hỏi `!n.chiSo`. Đảo ngược chỉ một trong hai thì **không bài nào đỏ** cho tới khi thêm mệnh đề đo
+thẳng `draggable` trên DOM — đã dẫm đúng thế.
+
+**Nợ đã biết, không giấu:** ở full BiS (`applyTestBoost`) `ps_defrate` và `ps_crit` cộng **0** vì
+né tránh và bạo kích đã kịch trần 45%/65% từ trang bị. Chúng có giá trị suốt chặng đi lên, chết ở
+đúng điểm cuối. **Đừng chữa bằng cách nới trần trong khối bị động** — đó là mở cửa sau cho chính
+chỉ số mà cả phần trên của `calcDerived` cẩn thận kẹp lại.
+
+Gác: `tests/test_bidongchiso.js` (7 mệnh đề, đảo ngược từng cơ chế đều đỏ).
+
 ### 🎯 THANH CHIÊU NAY TỰ GÁN — kéo thả, và ô 1 là ô duy nhất bị khoá
 
 Người chơi kéo một ô trên cây thả vào ô 1-4 (thả được cả trên bảng lẫn trên thanh HUD dưới màn).

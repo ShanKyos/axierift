@@ -2125,6 +2125,37 @@ window.VOHOC_DEFS = {
   // đổi lại có một cửa sổ bạo kích tuyệt đối.
   dl_commandaura: { name:'Increase Critical Damage', school:'Dark Lord', phai:'bug', tier:'trung', cat:'Chỉ Huy', type:'buff', unlock:15, cd:14, qi:30, color:'#ff6a5a', glyph:'★', fx:{ crit:true, dmgPct:15, t:4 }, desc:'Hô hào toàn quân: mọi đòn đều bạo kích trong 4s, kèm +15% sát thương.' },
   dl_darkraven:   { name:'Dark Raven', school:'Dark Lord', phai:'bug', tier:'than', cat:'Bị Động', type:'passive', unlock:55, color:'#6a4a8a', glyph:'☾', desc:'Bị động: bầy quạ đen bám theo đánh hôi — +12% sát thương của MỌI chiêu thức.' },
+
+  // ═══ BỊ ĐỘNG CHỈ SỐ — xương sống CHUNG của cây kỹ năng cả 5 lớp ═════════════════════
+  // `phai: null` ⇒ khai MỘT lần, rót vào tab Lớp của cả năm lớp. Chép 7 dòng × 5 lớp thì
+  // không có cách nào giữ năm bản khỏi lệch nhau, và `test_kynang5lop` (cấm hai lớp trùng
+  // tên chiêu) sẽ đỏ — đúng ra nó nên đỏ, vì nó đang gác bản sắc lớp.
+  //
+  // ⚠ HAI HỌ BỊ ĐỘNG, LUẬT KHÁC NHAU — khoá phân biệt là trường `chiSo`:
+  //   • CÓ `chiSo` (7 cái dưới đây) = bị động CHỈ SỐ → luôn chạy, KHÔNG chiếm ô, nâng cấp được.
+  //   • KHÔNG `chiSo` (Swell Life · Iron Will · Dark Raven · Heal · Song Thủ · Bản Nguyên Công)
+  //     = bị động HIỆU ỨNG → phải cắm vào ô 2-4 mới chạy (`biDongBat`).
+  // Vì sao phải tách: ô 1 khoá chủ động nên chỉ còn BA ô trống. Bảy bị động chỉ số mà tranh ba
+  // ô thì người chơi vĩnh viễn chỉ bật được 3/7, trong khi cả bảy rõ ràng sinh ra để luôn bật.
+  //
+  // ⚠ ĐƠN VỊ LÀ PHẦN TRĂM, KHÔNG PHẢI ĐIỂM PHẲNG — và đây là chỗ cố ý KHÔNG dịch sát bản gốc.
+  // Ảnh mẫu ghi số phẳng ("+12 sinh lực mỗi cấp"), nhưng thang chỉ số hai game khác hẳn: đo được
+  // ở đây trang bị kéo máu trần 2.288 → 28.672 và Công Kích 89 → 2.118 khi mặc full. Số phẳng
+  // vì thế vừa vỡ đầu game vừa thành số 0 làm tròn ở cuối game. `pt` = phần trăm mỗi cấp.
+  // Riêng bạo kích và né tránh là TỈ LỆ CÓ TRẦN (0,65 / 0,45) nên chúng cộng theo ĐIỂM PHẦN
+  // TRĂM (`pp`) — nhân phần trăm lên một tỉ lệ đã có trần là vô nghĩa.
+  //
+  // ⚠ `ps_stamina` CỐ Ý nhỏ hơn hẳn sáu cái kia (0,10 chứ không phải 0,25-0,30). Thể Lực cộng
+  // vào `s.vit` RẤT SỚM nên nó đi qua toàn bộ dây chuyền nhân của `calcDerived` — đo được ở
+  // mức 0,25/cấp nó cho **+42% máu** ở cấp chiêu 100 (trần), tức ĂN ĐỨT chính `ps_life` (+30%)
+  // và biến nút Life thành thừa. Hai nút mà một cái trội hẳn thì không còn là lựa chọn nào cả.
+  ps_life:     { name:'Increase Life',         school:'Vaeldra', phai:null, tier:'so', cat:'Bị Động', type:'passive', chiSo:{ k:'hpPct',   pt:0.30 }, unlock:15, color:'#ff7a7a', glyph:'✚', desc:'Bị động: nới Sinh Lực tối đa — mỗi cấp +0,30%. Nền tảng của mọi lớp, không riêng lớp chịu đòn.' },
+  ps_mana:     { name:'Increase Mana',         school:'Vaeldra', phai:null, tier:'so', cat:'Bị Động', type:'passive', chiSo:{ k:'qiPct',   pt:0.30 }, unlock:10, color:'#5ab8e8', glyph:'♦', desc:'Bị động: nới Mana tối đa — mỗi cấp +0,30%. Càng nhiều Mana càng tung được nhiều chiêu trước khi phải lùi.' },
+  ps_stamina:  { name:'Increase Stamina',      school:'Vaeldra', phai:null, tier:'so', cat:'Bị Động', type:'passive', chiSo:{ k:'vit',     pt:0.10 }, unlock:10, color:'#e8c87a', glyph:'▲', desc:'Bị động: rèn Thể Lực — mỗi cấp +0,10 điểm. Thể Lực nuôi Sinh Lực, nên nó cộng dồn với Increase Life.' },
+  ps_atk:      { name:'Increase Attack Power', school:'Vaeldra', phai:null, tier:'so', cat:'Bị Động', type:'passive', chiSo:{ k:'atkPct',  pt:0.25 }, unlock:10, color:'#ffcf7a', glyph:'⚔', desc:'Bị động: nâng Công Kích tối đa — mỗi cấp +0,25%. Dark Wizard đọc dòng này thành Sức Mạnh Phép Thuật.' },
+  ps_def:      { name:'Increase Defense',      school:'Vaeldra', phai:null, tier:'so', cat:'Bị Động', type:'passive', chiSo:{ k:'defPct',  pt:0.30 }, unlock:29, color:'#a0d8ff', glyph:'◆', desc:'Bị động: dày Phòng Thủ — mỗi cấp +0,30%. Mở muộn nhất trong bảy cái: nó là thứ giữ người ở map cấp cao.' },
+  ps_defrate:  { name:'Increase Defense Rate', school:'Vaeldra', phai:null, tier:'so', cat:'Bị Động', type:'passive', chiSo:{ k:'evaPP',   pt:0.05 }, unlock:10, color:'#a0ffe9', glyph:'✧', desc:'Bị động: tăng Né Tránh — mỗi cấp +0,05%. Đòn trượt hẳn thì không có giáp nào phải chịu.' },
+  ps_crit:     { name:'Increase Critical Rate',school:'Vaeldra', phai:null, tier:'so', cat:'Bị Động', type:'passive', chiSo:{ k:'critPP',  pt:0.05 }, unlock:10, color:'#ff9a4d', glyph:'★', desc:'Bị động: tăng tỉ lệ Bạo Kích — mỗi cấp +0,05%. Khác Increase Critical Damage của Dark Lord: cái kia là SÁT THƯƠNG bạo kích, cái này là TỈ LỆ.' },
 };
 
 window.HERO_METAL = [
