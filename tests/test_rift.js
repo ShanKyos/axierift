@@ -21,11 +21,13 @@ const { chromium } = require('playwright');
     player.level = 40; calcDerived();
     const hours = [], gaps = [];
     // rải 24 điểm xuất phát trong ngày, mỗi điểm lệch 37 phút cho khỏi rơi đúng đầu giờ
-    let t = new Date(); t.setHours(0, 37, 12, 0);
+    // ⚠ UTC ở cả hai đầu: mốc vực nứt neo theo UTC (xem matonNextBoundary). Bản cũ dùng
+    // setHours/getHours nên chỉ xanh khi máy chạy bộ kiểm để TZ=UTC.
+    let t = new Date(); t.setUTCHours(0, 37, 12, 0);
     let base = t.getTime();
     for (let i = 0; i < 24; i++){
       const nb = riftNextBoundary(base + i*3600000);
-      hours.push(new Date(nb).getHours());
+      hours.push(new Date(nb).getUTCHours());
       if (nb <= base + i*3600000) gaps.push('KHONG_TIEN:' + i);
     }
     // chuỗi liên tiếp
@@ -33,7 +35,7 @@ const { chromium } = require('playwright');
     for (let i = 0; i < 5; i++){ cur = riftNextBoundary(cur + 60000); seq.push(cur); }
     const deltas = seq.slice(1).map((v, i) => (v - seq[i]) / 3600000);
     return { gioDuoc: [...new Set(hours)].sort((a,b)=>a-b), khoangCach: deltas, loi: gaps,
-             soLuotMotNgay: 24 / 6, gioDauNgay: new Date(seq[0]).getHours() };
+             soLuotMotNgay: 24 / 6, gioDauNgay: new Date(seq[0]).getUTCHours() };
   });
   console.log('lịch:', JSON.stringify(sched));
   const want = [0, 6, 12, 18];
@@ -96,7 +98,7 @@ const { chromium } = require('playwright');
     const m = mobs.find(x => x.type === 'rift');
     return { active: RIFT.active, banner: zoneBanner && zoneBanner.text,
              conLai: Math.round((RIFT.endsAt - Date.now()) / 60000),
-             lichSau: new Date(RIFT.next).getHours(),
+             lichSau: new Date(RIFT.next).getUTCHours(),
              co: !!m, ten: m && m.name, cap: m && m.def.lv, mau: m && m.maxHp,
              danhDau: Object.keys(RIFT.done) };
   });

@@ -1189,6 +1189,46 @@ Không lưu state sự kiện — mốc giờ tính lại được từ đồng 
 
 ⚠ Sự kiện mới PHẢI vào `eventList()` để hiện trên Bảng Sự Kiện + chip đồng hồ.
 
+### ⏱ MỐC GIỜ NEO THEO **UTC**, và đừng bao giờ dùng `getHours()` để tính nó
+
+`matonNextBoundary` · `goldenNextBoundary` · `riftNextBoundary` là **số học thuần trên epoch**
+(`MATON_CHU_KY` 4h · `GOLDEN_LECH` +2h · `RIFT_CHU_KY` 6h). Trước bản này cả ba dùng
+`d.setHours(d.getHours()+1)` rồi `while (d.getHours() % 4 !== 0)` — mà `getHours()` trả giờ
+**ĐỊA PHƯƠNG**, nên mỗi múi giờ ra một mốc khác nhau. Đo được ở cùng khoảnh khắc
+`2026-09-14T10:30Z`:
+
+| máy người chơi để | mốc Hung Thần kế tiếp |
+|---|---|
+| UTC | `12:00Z` |
+| `Asia/Ho_Chi_Minh` | `13:00Z` — **lệch 1 giờ** |
+| `Asia/Kolkata` | `14:30Z` — **lệch 2,5 giờ** |
+| `Pacific/Chatham` | `11:15Z` |
+
+Trớ trêu là `matonMapFor()`/`goldenMapFor()` **vốn đã đúng** — chúng là số học trên epoch. Nên
+hai người ở hai múi giờ **đồng ý map nào bị đánh mà không đồng ý lúc nào**. Với game chơi một
+mình thì không ai biết; với "cùng nhau đánh một con boss" thì nó phá đúng cái tính năng đó.
+Nay mốc và map cùng đọc một con số `slot`, nên chúng không lệch được nữa.
+
+**⚠ HIỂN THỊ thì vẫn dùng giờ ĐỊA PHƯƠNG, và đó là đúng.** `ttGioSuKien()`, `fmtClock()`, chip
+`#hud-time` in `getHours()` — người chơi muốn biết mấy giờ **theo đồng hồ của họ**. Mốc là tuyệt
+đối, cách đọc nó là địa phương. Đừng "sửa" mấy chỗ hiển thị đó sang UTC.
+
+**⚠ BÀI KIỂM CŨ MÙ VỚI ĐÚNG LỖI NÓ TRÔNG NHƯ ĐANG GÁC.** `test_golden` và `test_rift` kiểm mốc
+giờ từ lâu, nhưng đọc `getHours()` và máy chạy bộ kiểm để `TZ=UTC` — ở UTC thì giờ địa phương
+BẰNG giờ UTC, nên chúng xanh y hệt nhau dù mốc neo theo địa phương hay theo UTC. Nay hai bài đó
+đọc `getUTCHours()` (nói đúng ý mình), và `tests/test_muigio.js` mới là thứ gác thật: nó mở
+**6 ngữ cảnh Playwright với 6 `timezoneId`** rồi đòi mốc trả về phải trùng khít tới mili giây.
+Đã thử trả `matonNextBoundary` về bản cũ để chắc bài đỏ được — nó đỏ, và còn bắt được cả **map
+bị lệch** ở Chatham.
+*Luật chung: một bài kiểm chạy ở đúng một cấu hình môi trường thì nó chỉ gác được cấu hình ấy.
+`test_muigio §0` tự kiểm cảnh dựng trước khi chấm — đòi 6 múi giờ phải ra ≥4 độ lệch khác nhau,
+vì nếu Playwright lặng lẽ bỏ qua `timezoneId` thì mọi con số trùng nhau và bài xanh vô nghĩa.*
+
+**Còn một chỗ cùng họ, CỐ Ý để nguyên:** `tenuiGoldenHour()` (Vực Thẳm, Giờ Vàng 12h & 20h) vẫn
+đọc giờ địa phương. Nó không phải sự kiện thế giới chung — "giờ vàng" ở đây có nghĩa là buổi
+trưa/buổi tối **của người chơi**. Neo nó theo UTC là người Việt nhận giờ vàng lúc 19h và 3h sáng,
+tệ hơn hẳn. Nếu sau này nó thành sự kiện chung thì phải đổi.
+
 ## ~~Khắc Ấn~~ — ĐÃ GỠ, đừng dựng lại
 
 Cả hệ Khắc Ấn (`SIGIL_DEFS`, `_sigilTag`, `sigilTick`, `rollSigil`…) **đã bị gỡ khỏi game**
@@ -1934,6 +1974,86 @@ nên thứ gì đang hẹn sẽ ĐÓNG BĂNG rồi chạy tiếp ở toạ độ
 map khác. `onDeath()` phải dọn: `sigilReset()` (vũng độc + sóng hẹn giờ) và `player.pendingHit`.
 Lưu ý `respawn()` chỉ gọi `buildWorld()` khi chết ở map KHÔNG an toàn, nên không thể trông
 vào nó để dọn hộ.
+
+## 🌐 ONLINE — Giai đoạn 1 "Bóng Người" ĐÃ THI CÔNG, và nó dừng đúng ở đó
+
+> Thiết kế đầy đủ: **`docs/THIET_KE_ONLINE.md`** · khảo sát + lộ trình 7 giai đoạn:
+> **`docs/KHAO_SAT_ONLINE.md`** · mẫu giao thức/lược đồ: `docs/online-samples/`
+
+**Làm được gì:** hai người mở hai trình duyệt, cùng một map, **nhìn thấy nhau chạy** — có tên,
+có thanh máu, xếp lớp đúng theo chiều sâu.
+
+**KHÔNG làm gì:** không tài khoản, không cơ sở dữ liệu, không quyền quyết định, không chống gian
+lận, không PvP, không chat, không đồng bộ quái. **Đó là chủ ý.** Đây là giai đoạn nhỏ nhất chứng
+minh được cả hướng đi. Đừng bắt `server/bongnguoi.js` gánh thêm việc — mọi thứ có giá trị lâu dài
+(sinh vật phẩm, cộng tiền tệ, máu boss chung) phải đợi tới lúc có tài khoản thật và kho đồ trên
+máy chủ, xem `docs/THIET_KE_ONLINE.md` mục "Ngã ba phải chọn".
+
+| Thứ | Ở đâu |
+|---|---|
+| Máy chủ chuyển tiếp (`ws`, ~170 dòng) | `server/bongnguoi.js` · `npm run bongnguoi` · cổng 8877 |
+| Client | `public/game/net.js`, nạp SAU `game.js` |
+| Tầng vẽ | `drawPlayer(p)` · `NETPLAYERS` · `netTaoThan()` · `veNhanNet()` · `veKhoa()` |
+| Triển khai | `deploy/bongnguoi.service` · `deploy/nginx-ws.conf` |
+| Gác | `tests/test_bongnguoi.js` (6 mục, dựng thật 2 trình duyệt + 1 máy chủ) |
+
+**⚠ MẶC ĐỊNH TẮT, và đừng gỡ cái cửa đó.** Không khai máy chủ ⇒ `net.js` `return` ngay,
+`NETPLAYERS` rỗng, bản chơi một mình chạy y nguyên — đó là thứ đang sống trên production, và cả
+185 bài hồi quy đều chạy trên đường không có mạng. Bật bằng `?net=ws://…`, `?net=1`, hoặc
+`window.NET_URL`. `test_bongnguoi §0` gác chiều ngược lại: không khai máy chủ mà vẫn nối là đỏ.
+
+### Năm cái bẫy đã dẫm, ghi lại
+
+1. **`let` ở tầng cao nhất KHÔNG gắn vào `window`.** `player` và `curMap` khai bằng `let`, nên
+   `net.js` đọc `window.player` nhận `undefined`, im lặng không gửi gì, **không một lỗi nào in
+   ra**. (`function` và `var` thì có gắn — nên `thanNhip` gọi qua `window.` được, còn `player`
+   thì không.) Cửa đọc duy nhất là **`window.netDoc()`**; thêm trường thì sửa ở đó, đừng cho
+   `net.js` với tay vào phạm vi của game.
+2. **`bayCao` từng là MỘT biến module** — hai người đeo cánh khác bậc giành nhau một ô nhớ, độ
+   cao cả hai nhấp nháy theo thứ tự vẽ. Nay là `Map` khoá theo `veKhoa(p)`. **Vẫn nằm ngoài
+   `player`** vì lý do cũ còn nguyên: nhét vào `player` là nó chui vào save.
+3. **Thân người từ xa phải cắm vào ĐÚNG danh sách xếp lớp theo `y`** (`ents`), không vẽ thành
+   một lượt riêng. Lượt riêng thì họ luôn nằm sau hết hoặc trước hết — người đứng dưới gốc cây
+   lại hiện đè lên tán.
+4. **`thanNhip()` là MỘT luật, hai nơi gọi.** Nhịp bước + quán tính phụ tách khỏi `update()` để
+   `net.js` gọi được. Chép công thức sang `net.js` là dựng bản sao thứ hai của một luật đang
+   sống — sửa một bên là bàn chân trượt đất, mà kiểu lệch đó chỉ hiện ra khi nhìn ảnh chụp.
+   Cùng họ với luật "hai chỗ phải cùng gọi `dangChay()`".
+5. **Ảnh chụp phải TỰ NÓI nó thuộc map nào.** Suy ngầm "ảnh này chắc là map mình đang đứng" thì
+   đúng lúc vừa qua cổng, một ảnh của map cũ tới sau sẽ thả vài cái bóng vào map mới.
+
+### Và hai bẫy ở BÀI KIỂM — cả hai cho ra một bài XANH VÌ LÝ DO SAI
+
+- **Đếm điểm ảnh "khác trong suốt" là vô nghĩa trên nền ĐẶC.** Mặt đất của game đục kín nên ô
+  nào cũng đủ alpha: ra đúng 84×120 = 10.080 ở cả lượt có bóng lẫn lượt không, bằng nhau, trông
+  y như "không vẽ được gì".
+- **Đổi sang đếm điểm ảnh ĐỔI MÀU thì ra 10.056/10.080 — 99,8%.** Không phải vì bóng người to
+  bằng cả ô, mà vì **cả cảnh trôi** giữa hai lần vẽ: mây, sóng cỏ, ánh sáng đều chạy theo
+  `performance.now()`, và hai lệnh `evaluate` cách nhau hàng chục mili giây.
+  Cách đúng: vẽ **cả hai lượt trong CÙNG một `evaluate`** (trôi còn ~1 ms) **và** đo thêm một ô
+  **đối chứng** ở chỗ không có ai đứng, rồi đòi ô có bóng phải đổi nhiều hơn hẳn. Đo được sau
+  khi sửa: **4.725 điểm ảnh đổi ở ô có bóng, 0 ở ô đối chứng**; gỡ nhánh vẽ đi thì còn 54.
+
+### Còn nợ, biết rõ
+
+| | |
+|---|---|
+| `wingDef(it)` lui về `player.sect` khi không tra được `it.wing` | thân người từ xa sẽ mượn cánh theo lớp của NGƯỜI CHƠI. Chưa nổ vì giai đoạn 1 không đồng bộ trang bị; phải sửa trước Giai đoạn 2 |
+| Trang bị / hành động ra đòn / cánh | chưa đồng bộ — Giai đoạn 2. Gửi **chữ ký** `gearVisual`, KHÔNG gửi `player.equip` (một món 474 byte × 11 ô = ~5 KB mỗi người mỗi ảnh chụp) |
+| `cheatExec` vẫn ship | Giai đoạn 0 chưa làm. Vô hại ở bản offline; phải gỡ trước khi có bất cứ thứ gì chung |
+| Sandbox không SSH được vào VPS | mọi bước cài nginx/systemd phải do chủ dự án chạy tay |
+
+### ⚠ CRON TRIỂN KHAI SẼ KHÔNG KHỞI ĐỘNG LẠI MÁY CHỦ
+
+`/root/deploy-axiewuxia.sh` chạy `git reset --hard` mỗi 2 phút **trên chính cây mà máy chủ đang
+chạy từ đó**. Mã đổi dưới chân một tiến trình đang chạy, mà nó không tự khởi động lại — nó sẽ
+chạy bản cũ mãi mãi và **không có gì báo**. Phải thêm một dòng vào script ấy, ngay sau `git reset`:
+
+```bash
+systemctl is-active --quiet bongnguoi && systemctl restart bongnguoi
+```
+
+Có điều kiện, không vô điều kiện: chưa bật dịch vụ thì đừng bật hộ.
 
 ## Test
 
