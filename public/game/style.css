@@ -2275,6 +2275,14 @@ html,body { width:100%; height:100%; overflow:hidden; background:var(--bg-deep);
    Nhân Vật: hai chỗ nói về cùng một túi điểm thì phải cùng một màu. */
 .kn-tn { min-width:96px; border-color:#7ecbff; color:#7ecbff; font-weight:700; }
 .kn-tn.mo { opacity:.42; border-color:var(--border-faint); color:var(--text-dim); }
+/* Hai nút hàng dưới: dùng Sách Kỹ Năng (nâng thẳng 1 cấp) và gán phím Space. Chúng từng nằm
+   trong `upBtnHtml()` ở danh sách chiêu; danh sách đã thành cây nên chúng dọn về khung chi tiết.
+   Cùng bề rộng tối thiểu với hai nút trên để hai hàng xếp thành lưới 2×2, không so le. */
+.kn-sachnut { min-width:96px; border-color:var(--orange); color:var(--orange); font-weight:700; }
+.kn-sachnut.mo { opacity:.42; border-color:var(--border-faint); color:var(--text-dim); }
+.kn-space { min-width:96px; border-color:#b9a6ff; color:#b9a6ff; font-weight:700; }
+.kn-space.mo { opacity:.42; border-color:var(--border-faint); color:var(--text-dim); }
+.kn-space.dang { border-color:#7df9ff; color:#7df9ff; box-shadow:0 0 7px rgba(125,249,255,.34); }
 .kn-chan { font-size:9.5px; color:var(--text-dim); line-height:1.45; margin-top:7px;
   border-top:1px solid rgba(255,255,255,.07); padding-top:5px; }
 .kn-ghi { font-size:9.5px; color:var(--text-dim); line-height:1.5; margin-top:8px; }
@@ -2306,3 +2314,23 @@ html,body { width:100%; height:100%; overflow:hidden; background:var(--bg-deep);
   text-align:center; color:#ff9a6a; text-shadow:0 1px 0 #000; }
 /* Ô đang nhận thả — viền xanh lá, cùng màu dấu + "nâng được" của cây. */
 .kn-bo.sk-nhan, #skillbar .sk-slot.sk-nhan { outline:2px solid #5fc96e; outline-offset:1px; }
+
+/* ── Tab KHÁC: dải bị động chung dưới cây ─────────────────────────────────────
+   Bốn hiệu ứng này đến từ Ascension/trang bị/cổ thư nên không nằm trong VOHOC_DEFS,
+   tức không có ô cây nào để đứng. Giữ chúng ở đây thay vì xoá — chúng là thứ duy
+   nhất nói cho người chơi biết mấy hiệu ứng kia từ đâu ra. */
+.kn-phu { margin-top: 8px; border-top: 1px solid #2a3350; padding-top: 7px; }
+.kn-phu-t { font-size: 10.5px; color: #9aa8d4; margin-bottom: 5px; }
+.kn-phu-o { display: grid; grid-template-columns: 1fr 1fr; gap: 5px; }
+/* ⚠ `min-width: 0` là thứ BẮT BUỘC ở đây. Ô lưới/flex mặc định `min-width: auto` nên nó
+   KHÔNG co xuống dưới bề rộng nội dung — `text-overflow: ellipsis` vì thế vô hiệu và hai ô
+   cột phải tràn hẳn ra ngoài khung bảng. Chỉ nhìn ảnh chụp mới thấy. */
+.kn-phu-1 { display: flex; align-items: baseline; gap: 5px; font-size: 10.5px; min-width: 0;
+  background: #171d31; border: 1px solid #2a3350; border-radius: 5px; padding: 5px 7px; }
+.kn-phu-1 b { color: #a0ffe9; font-size: 11px; white-space: nowrap; }
+.kn-phu-1 > span:last-child { color: #8f9ec4; overflow: hidden; text-overflow: ellipsis;
+  white-space: nowrap; min-width: 0; flex: 1 1 auto; }
+.kn-phu-1.mo { opacity: .5; }
+.kn-phu-1.mo b { color: #8a8a8a; }
+.kn-phu-g { color: #5fc96e; }
+.kn-tt { font-size: 10.5px; color: #9aa8d4; padding: 0 2px 6px; }

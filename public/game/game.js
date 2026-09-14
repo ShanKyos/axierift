@@ -3549,27 +3549,6 @@ function evoBadgeHtml(id){
   }
   return out;
 }
-function upBtnHtml(id){
-  const lv = skLv(id);
-  const _spB = `<button class="mini-btn" style="margin-right:3px;${player.spaceSkill === id ? 'border-color:#7df9ff !important;color:#7df9ff !important;' : ''}" title="Gán chiêu này vào phím Space (thay đòn đánh thường; hồi chiêu/thiếu Mana thì tự quay về đòn thường)" onclick="window.assignSpaceUI('${id}')">${player.spaceSkill === id ? '⌨✓' : '⌨'}</button>`;
-  if (lv >= 120){
-    const _mm = skMile(id), _me = skEvoMult(id);
-    const _dPct = Math.round((_mm.dmg * _me.dmg - 1) * 100);
-    const _cPct = Math.round((1 - _mm.cd * _me.cd * skCdScale(id)) * 100);
-    const _tip = `Đã tối đa 120/120 · +${_dPct}% sát thương · −${_cPct}% hồi chiêu (tính riêng cho chiêu này, gồm cả nhánh tiến hóa đã chọn)`;
-    return `${_spB}<span style="font-size:10px;color:#ffd76a;margin-right:4px" title="${_tip}">cấp 120</span>${evoBadgeHtml(id)}`;
-  }
-  const nm = SK_MILESTONES.find(x => x.lv > lv);
-  const cur = [...SK_MILESTONES].reverse().find(x => lv >= x.lv);
-  const _msNext = SK_MILESTONES.find(x => x.lv === lv + 1); // cấp kế tiếp có phải cấp mốc không
-  const _mult = skMileMult(id);
-  const _stg = evoStage(id);
-  // 📜 Sách Kỹ Năng: nâng thẳng 1 cấp. Đây là chỗ tiêu MỚI của sách sau khi bỏ "di sản ngoại lớp" —
-  // nó không còn mua được chiêu của lớp khác, mà đổ vào chính cây chiêu của lớp mình.
-  const _bk = (player.bikipVH || 0) > 0 && lv < 120 && lv < player.level
-    ? `<button class="mini-btn" style="margin-right:3px;border-color:#ffb15c;color:#ffb15c" title="Dùng 1 Sách Kỹ Năng nâng thẳng ${skName(id)} lên cấp ${lv+1} (đang có ${player.bikipVH||0} quyển)" onclick="window.useSkillBookUI('${id}')">📜</button>` : '';
-  return `${_spB}${_bk}<button class="mini-btn vh-learn-btn" style="margin-right:3px" title="Cấp ${lv}/120${cur ? ' · ' + cur.name : ''} · ⚡tiến hóa bậc ${_stg}/3 (mốc 40/80/120, mỗi mốc chọn nhánh Bá Đạo/Tốc Chiến) — nâng: ${skUpCost(id).toLocaleString()} Lumen + ${skUpKhi(id).toLocaleString()} Bản Năng${_msNext ? ` (cấp mốc ${_msNext.name}: Instinct ×${_mult})` : ''}, +2,5% Sát Thương, −0,25% hồi chiêu${nm ? ` · mốc kế ${nm.name} (cấp ${nm.lv}): ${milestoneTxt(nm)}` : ''} · cấp kỹ năng ≤ cấp nhân vật" onclick="window.upgradeSkillUI('${id}')">⬆${lv}${_stg ? '⚡' + _stg : ''}${_msNext ? '◆' : ''}</button>${evoBadgeHtml(id)}`;
-}
 window.assignSpaceUI = function(id){
   if (!player) return;
   player.spaceSkill = (player.spaceSkill === id) ? null : id;
@@ -22433,41 +22412,10 @@ function heroCastAct(id, d){
   if (t === 'selfaoe' || t === 'dash') return heroActOf(sk, 'tp');
   return heroActOf(sk, 'a');
 }
-// 4 ô cố định (chính/phụ/buff/tuyệt chiêu — xem defaultSkillBar()): không gán/gỡ, chỉ xem + nâng cấp.
-// NĂM thông số bắt buộc của mọi chiêu (xem CLAUDE.md · Quy ước kỹ năng). Dark Wizard đọc Công
-// Kích thành Sức Mạnh Phép Thuật — cùng một con số, nhưng gọi đúng tên thứ lớp ấy dùng để đánh.
-function skThongSo(info){
-  const stTen = player.sect === 'baidasan' ? 'Phép Thuật' : 'Công Kích';
-  const tam = info.tam > 0 ? `${Math.round(info.tam)}` : 'tại chỗ';
-  const pham = info.pham > 0 ? `${Math.round(info.pham)}` : '1 mục tiêu';
-  return `<span>⇥ Tầm <b>${tam}</b></span><span>⟳ Hồi <b>${effCd(info.id, info.cd).toFixed(1)}s</b></span>`
-       + `<span>✦ ${stTen} <b>×${(info.he || 1).toFixed(1)}</b></span>`
-       + `<span>◎ Phạm vi <b>${pham}</b></span><span>◈ Mana <b>${info.qi}</b></span>`;
-}
-function equippedSkillRowHtml(id, roleLabel){
-  const info = skillInfo(id);
-  return `<div class="skill-row${info.unlocked?'':' locked'}">
-    <img src="${info.icon}" onerror="this.outerHTML='<span class=\\'sk-glyph\\'>${id==='a'?'⚔':id==='tp'?'⚔':'✚'}</span>'" alt="">
-    <span class="sk-info"><b style="color:${info.unlocked?'#7ecbff':'#8a8a8a'}">${roleLabel} — ${info.name}</b>
-      <div class="sk-thongso">${skThongSo(info)}</div>
-      <div class="sk-desc">${info.unlocked ? info.desc : '🔒 ' + info.lockTxt}</div></span>
-    <span class="assign-btns">${info.unlocked ? upBtnHtml(id) : ''}</span></div>`;
-}
-// Di sản của lớp: chiêu tự ngộ theo cấp, không nằm trong 4 ô, quy đổi thành % Công Kích vĩnh viễn.
-// Không còn nhánh "mua chiêu lớp khác" — xem ghi chú ở useSkillBookUI.
-function legacySkillRowHtml(_vid){
-  const _v = VOHOC_DEFS[_vid], _t = VH_TIER[_v.tier];
-  const learned = vhLearned(_vid), pct = LEGACY_TIER_PCT[_v.tier] || 0;
-  const right = learned
-    ? `<span style="font-size:11px;color:#a0ffe9">+${pct}% Sát Thương ✓</span>`
-    : `<span style="font-size:10.5px;opacity:.5">🔒 cấp ${_v.unlock}</span>`;
-  return `<div class="skill-row${learned?'':' locked'}">
-    <img src="${_v.icon}" onerror="this.style.display='none'" alt="">
-    <span class="sk-info"><b style="color:${learned?_t.color:'#8a8a8a'}">${_v.name}</b>
-      <span style="font-size:10px;color:${_t.color}"> · ${_v.cat}</span>
-      <div class="sk-desc">${_v.desc}</div></span>
-    ${right}</div>`;
-}
+// Di sản của lớp: chiêu tự ngộ theo cấp, KHÔNG nằm trên thanh chiêu, quy đổi thành % Công Kích
+// vĩnh viễn (xem LEGACY_SECT_SKILLS). Hai hàm dựng hàng danh sách cho nó — equippedSkillRowHtml,
+// legacySkillRowHtml — đã gỡ cùng đợt tab Khác chuyển sang khung cây: cây + khung chi tiết nay
+// dựng mọi ô, nên giữ đường vẽ thứ hai là bảo đảm hai bên nói khác nhau sau vài đợt sửa.
 // 4 hệ Tấn Chức phụ (Ám Khí/Đạn Chỉ/Linh Tiễn/Tiêu Hồn) — vẫn giữ nguyên điều kiện đầu tư cũ, chỉ đổi
 // từ "chiêu bấm được" thành "% Công Kích vĩnh viễn" khi đủ điều kiện.
 function legacyUniversalRowHtml(id){
@@ -22564,8 +22512,21 @@ for (const _lop in KN_ROT) KN_ROT[_lop] = KN_ROT[_lop].concat(KN_XUONG_SONG);
 const KN_ROT_CHUNG = { vaeldra: ['danchi','tieuhon',
   'tp_crush','tp_para','tp_stead','tp_venom','tp_unbound','tp_anti'] };   // tab Vaeldra dùng chung cho mọi lớp
 function knHinh(tab){ return KN_HINH_RIENG[(player && player.sect) + '|' + tab] || KN_HINH; }
+// Tab KHÁC rót ĐỘNG theo lớp — Di Sản và bị động riêng đều là chiêu của chính lớp đang chơi,
+// nên không khai được thành một danh sách phẳng như `KN_ROT_CHUNG`. Suy thẳng từ hai bảng đang
+// sống (`LEGACY_SECT_SKILLS` · `CLASS_PASSIVES`) chứ không chép sang bảng thứ ba: chép là lần
+// sau ai đó đổi một bảng thì tab này nói dối, mà kiểu nói dối đó không ai phát hiện được.
+function knDsKhac(){
+  if (!player) return [];
+  const lop = player.sect;
+  const ds = LEGACY_SECT_SKILLS.filter(x => VOHOC_DEFS[x] && VOHOC_DEFS[x].phai === lop);
+  const bd = CLASS_PASSIVES.filter(x => VOHOC_DEFS[x] && VOHOC_DEFS[x].phai === lop);
+  return ds.concat(bd);
+}
 function knMa(tab, i){
-  const ds = tab === 'lop' ? (KN_ROT[player && player.sect] || []) : (KN_ROT_CHUNG[tab] || []);
+  const ds = tab === 'lop'  ? (KN_ROT[player && player.sect] || [])
+           : tab === 'khac' ? knDsKhac()
+           : (KN_ROT_CHUNG[tab] || []);
   return ds[i] || null;
 }
 // Một ô của cây → mọi thứ phần vẽ cần. Ô TRỐNG vẫn trả về một vật thể hợp lệ (`trong:true`) chứ
@@ -22803,6 +22764,7 @@ function renderSkillPanelCT(tab, ds){
   // người chơi thấy mình đang chọn giữa cái gì với cái gì.
   const _tn = skTn(n.id), _tnDay = _tn >= SK_TN_TRAN;
   const _tnDuoc = n.mo && !_tnDay && (player.free || 0) > 0;
+  const bar = (player.skillBar || []).indexOf(n.id);
   let h = `<div class="kn-ct">
     <div class="kn-ct-dau"><img src="${i.icon}" alt="">
       <div><b>${n.ten}</b><span>Cấp: ${n.lv}</span></div></div>
@@ -22823,32 +22785,53 @@ function renderSkillPanelCT(tab, ds){
     <div class="kn-d"><span>Lumen tiêu hao:</span> <b class="${duBac?'ok':'no'}">${cost.toLocaleString('vi-VN')}</b></div>
     <div class="kn-d"><span>Bản Năng tiêu hao:</span> <b class="${duKhi?'ok':'no'}">${khi.toLocaleString('vi-VN')}</b></div>`;
   if ((player.bikipVH || 0) > 0)
-    h += `<div class="kn-sach">📜 Dùng Sách Kỹ Năng — nâng thẳng 1 cấp, khỏi tốn gì (còn ${player.bikipVH})</div>`;
+    h += `<div class="kn-sach">📜 Sách Kỹ Năng nâng thẳng 1 cấp, khỏi tốn Lumen lẫn Bản Năng (còn ${player.bikipVH})</div>`;
+  // ⚠ BA NÚT, KHÔNG PHẢI MỘT. Khi tab Khác chuyển sang khung cây, `upBtnHtml()` — chỗ DUY NHẤT
+  // treo nút 📜 (dùng Sách Kỹ Năng) và nút ⌨ (gán phím Space) — mất hết chỗ gọi. Hai cơ chế ấy
+  // vẫn sống trong mã (`useSkillBookUI` · `assignSpaceUI`) nhưng người chơi không còn cửa nào
+  // bấm, mà dòng `kn-sach` thì vẫn ngồi đó MỜI dùng sách. Đúng cái bẫy "nút chết" đã ghi trong
+  // CLAUDE.md, chỉ khác là lần này không có nút để mà chết — chỉ còn lời mời suông.
+  const _duSach = (player.bikipVH || 0) > 0 && n.mo && !max && !tran;
+  const _spSan = player.spaceSkill === n.id;
+  const _spDuoc = n.mo && !n.biDong && bar >= 0;
   h += `<div class="kn-nut">
       <button class="mini-btn kn-nang${nangDuoc?'':' mo'}" onclick="window.upgradeSkillUI('${n.id}')">Nâng Cấp</button>
       <button class="mini-btn kn-tn${_tnDuoc?'':' mo'}" onclick="window.rotTiemNang('${n.id}')"
         title="${mstEsc(_tnDay ? `Đã đủ ${SK_TN_TRAN}/${SK_TN_TRAN} điểm` : `Rót 1 điểm tiềm năng — +${Math.round(SK_TN_DMG*100)}% sát thương chiêu này, trần ${SK_TN_TRAN} điểm`)}">+1 Tiềm Năng</button>
+    </div>
+    <div class="kn-nut">
+      <button class="mini-btn kn-sachnut${_duSach?'':' mo'}" onclick="window.useSkillBookUI('${n.id}')"
+        title="${mstEsc(_duSach ? `Dùng 1 Sách Kỹ Năng nâng ${n.ten} lên cấp ${n.lv + 1} — không tốn Lumen hay Bản Năng` : max ? 'Đã tối đa 120/120' : tran ? 'Cấp kỹ năng không vượt được cấp nhân vật' : 'Chưa có Sách Kỹ Năng nào')}">📜 Dùng Sách</button>
+      <button class="mini-btn kn-space${_spSan ? ' dang' : _spDuoc ? '' : ' mo'}" onclick="window.assignSpaceUI('${n.id}')"
+        title="${mstEsc(_spSan ? 'Đang gán phím Space — bấm để trả Space về đòn đánh thường'
+          : _spDuoc ? 'Gán chiêu này vào phím Space (hồi chiêu hay thiếu Mana thì tự quay về đòn thường)'
+          : 'Phím Space chỉ nhận chiêu chủ động ĐANG nằm trên thanh chiêu')}">⌨ ${_spSan ? 'Space ✓' : 'Space'}</button>
     </div>`;
   // Thanh chiêu nay GÁN ĐƯỢC (kéo thả), nên dòng này phải nói đúng cái giá của việc gán: chiêu
   // Di Sản lên thanh thì mất khoản %Công Kích của nó. Đừng viết lại "4 ô cố định" — đó là mô tả
   // của bản trước và nó sẽ nói dối ngay ở ô mà người chơi vừa tự kéo vào.
-  const bar = (player.skillBar || []).indexOf(n.id);
   const _diSan = LEGACY_SECT_SKILLS.includes(n.id);
   h += `<div class="kn-chan">${bar >= 0
     ? `Đang nằm ở <b>ô ${bar + 1}</b> trên thanh chiêu — bấm phím <b>${bar + 1}</b> để tung.`
       + (_diSan ? ` Đang bỏ khoản %Công Kích Di Sản của chiêu này để đổi lấy ô.` : '')
     : `Chưa nằm trên thanh chiêu — <b>kéo thả</b> ô này vào ô 1-4 để bấm được.`
-      + (_diSan ? ` Để ngoài thì nó cộng %Công Kích vĩnh viễn (Di Sản — xem tab Khác).` : '')
+      + (_diSan ? ` Để ngoài thì nó cộng %Công Kích vĩnh viễn (Di Sản${tab === 'khac' ? '' : ' — xem tab Khác'}).` : '')
       + (n.biDong ? ` Bị động <b>chỉ chạy khi nằm trên thanh</b>.` : '')}</div>`;
   return h + `</div>`;
 }
-// Năm thông số bắt buộc, viết gọn một dòng cho khung hẹp. Đọc thẳng skillInfo() nên không có
-// cách nào lệch với ô kỹ năng đầy đủ.
+// NĂM thông số bắt buộc của mọi chiêu (xem CLAUDE.md · Quy ước kỹ năng), viết gọn một dòng cho
+// khung chi tiết. Đây nay là chỗ DUY NHẤT in chúng — bản lưới 3 cột (`skThongSo`) đã gỡ cùng
+// đợt bảng kỹ năng chuyển sang cây. Đọc thẳng `skillInfo()` nên không có cách nào lệch với
+// thứ `castSkill()` thật sự dùng. Dark Wizard đọc Công Kích thành Sức Mạnh Phép Thuật — cùng
+// một con số, nhưng gọi đúng tên thứ lớp ấy dùng để đánh.
+// ⚠ Hồi chiêu in qua `effCd()`, KHÔNG in `i.cd` trần. `skillInfo()` trả cd GỐC, còn mọi mốc/
+// tiến hoá/`vhCdMult` đều nhân vào sau — in số gốc thì bảng hứa "−0,25% hồi chiêu mỗi cấp" mà
+// con số ngay bên trên nó thì đứng im suốt 120 cấp.
 function skThongSoGon(i){
   const dw = player.sect === 'baidasan';
   return `${dw ? 'Sức Mạnh Phép Thuật' : 'Công Kích'} ×${(i.he||1).toFixed(2)}`
     + ` · tầm ${Math.round(i.tam||0)}` + ` · phạm vi ${Math.round(i.pham||0)}`
-    + ` · hồi ${(i.cd||0)}s · ${Math.round(i.qi||0)} Mana`;
+    + ` · hồi ${effCd(i.id, i.cd).toFixed(1)}s · ${Math.round(i.qi||0)} Mana`;
 }
 function renderSkillPanel(){
   vhAutoLearn(); // save cũ / test mode: quét tự ngộ kỹ năng lớp
@@ -22863,55 +22846,51 @@ function renderSkillPanel(){
   // tay. Nút chết thì không ném lỗi, không ai thấy, nên phải kiểm tên hàm chứ đừng đoán.
   html += `<div class="kn-goc"><button class="mini-btn" onclick="window.openMastery()"
       title="Bảng ${MASTERY_NAME} — mở ở cấp ${MASTERY_LV} sau khi xong chính tuyến">✦ ${MASTERY_NAME}</button></div>`;
+  // ⚠ Tab KHÁC nay dùng ĐÚNG khung cây + chi tiết của hai tab kia. Trước bản này nó là một
+  // cuộn chữ dài xếp năm khối rời — cùng một bảng mà hai tab vẽ kiểu này, một tab vẽ kiểu kia,
+  // nên người chơi phải học lại cách đọc khi bấm sang. Chủ dự án chốt: cho đồng nhất.
+  //
+  // Ba thứ ở tab này KHÔNG phải chiêu nên không vào cây được — chúng ở lại thành một dải gọn
+  // bên dưới: Sách Kỹ Năng (vật phẩm), bị động chung từ Ascension/trang bị (`PASSIVE_SKILLS`,
+  // không nằm trong `VOHOC_DEFS` nên không có ô cây), và hệ tấn chức phụ.
   if (tab === 'khac'){
-    html += `<div style="font-size:10.5px;color:#9aa8d4;line-height:1.5;margin-bottom:8px">⬆ +2,5% Sát Thương/cấp (Lumen) · mốc 20/40/60/80/100/120 thêm phù trợ · <b style="color:#7df9ff">40/80/120 ⚡Tiến Hóa</b> · <span style="color:#7fd8e0">Bản Năng <b>${Math.floor(player.khi || 0).toLocaleString('vi-VN')}</b></span> · ⌨ Space: <b>${(player.spaceSkill && skillInfo(player.spaceSkill)) ? skillInfo(player.spaceSkill).name : 'đánh thường'}</b></div>`;
-  {
-    html += `<div class="stat-sec">${SECTS[player.sect].name} — 1 chính · 1 phụ · 1 ${BUFF_SKILL_ID[player.sect] ? 'phù trợ' : 'chiêu phụ nữa'} · 1 tuyệt chiêu</div>`;
-    html += equippedSkillRowHtml('a', 'Chính');
-    html += equippedSkillRowHtml('tp', 'Phụ');
-    const o3Id = O3_SKILL_ID[player.sect], sigId = SIGNATURE_SKILL[player.sect];
-    html += o3Id ? equippedSkillRowHtml(o3Id, BUFF_SKILL_ID[player.sect] ? 'Phù Trợ' : 'Phụ 2')
-      : `<div style="font-size:11px;color:#9aa8d4;padding:8px 4px">Lớp này chưa khai chiêu cho ô thứ ba.</div>`;
-    if (sigId) html += equippedSkillRowHtml(sigId, '★ Tuyệt Chiêu');
-    html += `<div class="shop-row" title="${consumTip('sach')}"><span class="sr-ic">${consumIcon('sach', 'sr-img')}</span>
-        <span class="sr-body"><b style="color:#ffb15c">Sách Kỹ Năng</b>
-          <span class="sr-desc">Bấm nút sách ở dòng chiêu bất kỳ phía trên để nâng thẳng 1 cấp — khỏi tốn Lumen lẫn Bản Năng</span>
-          <span class="sr-stat">${CONSUM_DB.sach.info()}</span></span>
-        <b style="color:#ffb15c;font-size:15px">${player.bikipVH || 0}</b></div>`;
-    html += `<div class="stat-sec">BỊ ĐỘNG CHUNG — mở từ Ascension, trang bị và Sách Kỹ Năng</div>`;
-    for (const ps of PASSIVE_SKILLS){
-      const on = ps.req();
-      html += `<div class="skill-row${on?'':' locked'}"><span class="sk-glyph">✚</span>
-        <span class="sk-info"><b style="color:${on?'#a0ffe9':'#8a8a8a'}">${ps.name}</b>
-        <div class="sk-desc">${on ? ps.desc : '🔒 chưa đạt điều kiện'}</div></span></div>`;
-    }
-  }
-  {
-    html += `<div style="font-size:11px;color:#9aa8d4;padding:2px 4px 8px">Thanh chiêu chỉ có 4 ô, nhưng các chiêu dưới đây không hề mất giá trị — tự động dồn thành % Công Kích vĩnh viễn (hiện <b style="color:#ffd76a">+${(player.legacyAtkPct||0).toFixed(1)}%</b>), tự ngộ theo cấp, không cần bấm nút.</div>`;
-    html += `<div class="stat-sec">DI SẢN LỚP — ${SECTS[player.sect].name}</div>`;
-    const own = LEGACY_SECT_SKILLS.filter(sid => VOHOC_DEFS[sid] && VOHOC_DEFS[sid].phai === player.sect);
-    html += own.length ? own.map(legacySkillRowHtml).join('') : `<div style="font-size:11px;color:#9aa8d4;padding:8px 4px">Lớp này chưa có chiêu Di Sản nào.</div>`;
-    // Bị động riêng của lớp — có tác dụng THẬT (xem CLASS_PASSIVES trong calcDerived), không quy
-    // đổi thành %ST, nên phải tách khỏi mục di sản để người chơi không tưởng chúng cũng chỉ là %ST.
-    const _pas = CLASS_PASSIVES.filter(sid => VOHOC_DEFS[sid] && VOHOC_DEFS[sid].phai === player.sect);
-    if (_pas.length){
-      html += `<div class="stat-sec">BỊ ĐỘNG RIÊNG CỦA LỚP — chỉ lớp này mới có</div>`;
-      for (const sid of _pas){
-        const _v = VOHOC_DEFS[sid], on = vhLearned(sid);
-        html += `<div class="skill-row${on?'':' locked'}"><span class="sk-glyph">${_v.glyph}</span>
-          <span class="sk-info"><b style="color:${on?_v.color:'#8a8a8a'}">${_v.name}</b>
-          <div class="sk-desc">${on ? _v.desc : '🔒 tự ngộ ở cấp ' + _v.unlock}</div></span></div>`;
-      }
-    }
-    html += `<div class="stat-sec">HỆ TẤN CHỨC PHỤ</div>`;
-    for (const id of ['danchi','tieuhon']) html += legacyUniversalRowHtml(id);
-  }
-    el('panel-skill').innerHTML = html;
-    return;
+    // ⚠ ĐỪNG in lại %Di Sản ở đây — hàng thanh chiêu ngay bên dưới (`knOBarHtml`) đã nói đúng
+    // con số đó rồi. Bản đầu tôi thêm một dòng nữa và chụp ra hai chỗ cùng ghi "+13,0%" cách
+    // nhau ba dòng; người chơi phải tự đoán hai số ấy có phải một không.
+    html += `<div class="kn-tt">Bản Năng <b style="color:#7fd8e0">${Math.floor(player.khi || 0).toLocaleString('vi-VN')}</b>
+      · 📜 Sách Kỹ Năng <b style="color:#ffb15c">${player.bikipVH || 0}</b>
+      · ⌨ Space: <b>${(player.spaceSkill && skillInfo(player.spaceSkill)) ? skillInfo(player.spaceSkill).name : 'đánh thường'}</b></div>`;
   }
   const cay = renderSkillPanelCay(tab);
   html += knOBarHtml();
   html += `<div class="kn-wrap">${cay.html}${renderSkillPanelCT(tab, cay.ds)}</div>`;
+  // Bị động CHUNG (Ascension / trang bị / cổ thư) không nằm trong `VOHOC_DEFS` nên không có ô
+  // cây nào để mà đứng — nhưng bỏ chúng đi là mất thông tin thật. Giữ thành một dải gọn dưới
+  // cây, chỉ ở tab Khác. ⚠ Đừng "gọn" bằng cách xoá: bốn dòng này là thứ duy nhất nói cho
+  // người chơi biết mấy hiệu ứng kia từ đâu ra.
+  if (tab === 'khac'){
+    // ⚠ BA THỨ DƯỚI ĐÂY LÀ NỘI DUNG THẬT, ĐỪNG "GỌN" BẰNG CÁCH XOÁ. Bản đầu tôi thay cả khối
+    // danh sách cũ bằng cây và làm mất: thẻ Sách Kỹ Năng (có hình, có lời giải thích cách
+    // dùng), hệ tấn chức phụ, và bốn bị động chung. Bốn bài kiểm đỏ ngay và chúng đỏ ĐÚNG.
+    // Cây lo phần CHIÊU; ba mục này không phải chiêu nên không có ô nào để đứng, nhưng vẫn
+    // phải ở lại. Tab vẫn đồng nhất vì nó MỞ ĐẦU bằng đúng khung cây như hai tab kia.
+    html += `<div class="stat-sec">${SECTS[player.sect].name} — 1 chính · 1 phụ · 1 ${BUFF_SKILL_ID[player.sect] ? 'phù trợ' : 'chiêu phụ nữa'} · 1 tuyệt chiêu · DI SẢN LỚP ở cây trên</div>`;
+    html += `<div class="shop-row" title="${consumTip('sach')}"><span class="sr-ic">${consumIcon('sach', 'sr-img')}</span>
+        <span class="sr-body"><b style="color:#ffb15c">Sách Kỹ Năng</b>
+          <span class="sr-desc">Bấm nút sách ở khung chi tiết của một chiêu để nâng thẳng 1 cấp — khỏi tốn Lumen lẫn Bản Năng</span>
+          <span class="sr-stat">${CONSUM_DB.sach.info()}</span></span>
+        <b style="color:#ffb15c;font-size:15px">${player.bikipVH || 0}</b></div>`;
+    html += `<div class="stat-sec">HỆ TẤN CHỨC PHỤ</div>`;
+    for (const id of ['danchi','tieuhon']) html += legacyUniversalRowHtml(id);
+    html += `<div class="kn-phu"><div class="kn-phu-t">Bị động chung — từ Ascension · trang bị · cổ thư</div><div class="kn-phu-o">`;
+    for (const ps of PASSIVE_SKILLS){
+      const on = ps.req();
+      html += `<div class="kn-phu-1${on?'':' mo'}" title="${mstEsc(ps.desc)}">
+        <span class="kn-phu-g">✚</span><b>${ps.name.replace(' (bị động)','')}</b>
+        <span>${on ? ps.desc : '🔒 chưa đạt điều kiện'}</span></div>`;
+    }
+    html += `</div></div>`;
+  }
   html += `<div class="kn-ghi"><b style="color:#5fc96e">+</b> góc ô = nâng được ngay ·
     ô mờ = chưa mở khoá · ô viền đứt = chưa gán kỹ năng</div>`;
 
