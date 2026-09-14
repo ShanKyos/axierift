@@ -2299,53 +2299,31 @@ kiểu đó không ai thấy bằng mắt. `test_taitro §1` đối chiếu từ
 Mẹo ở `TAI_MEO` là **mẹo THẬT**, rút từ cơ chế đang chạy. Một dòng mẹo bịa ở màn tải là thứ
 người chơi thử ngay trong mười phút đầu rồi phát hiện ra là sai.
 
-## 🐾 CHỌN AXIE ĐẠI DIỆN — ở màn tạo nhân vật
+## 🐾 CHỌN AXIE Ở MÀN TẠO NHÂN VẬT — ĐÃ DỰNG XONG RỒI GIỮ LẠI, đọc trước khi làm lại
 
-Mô hình đã chốt của game là *"Chỉ số tới từ 5 class. Axie chỉ đơn thuần là avatar thôi."* Trước
-bản này mô hình đó **không có mặt nào**: `player.avatar` chỉ đổi được bằng lệnh gỡ rối
-`/avatar <id>`, tức người chơi thường không có cửa nào để chọn con mình mang.
-
+Một lưới chọn avatar ở màn tạo nhân vật **đã được thi công đầy đủ và có bài kiểm**, rồi
+**cố ý không đưa lên `main`**. Nằm ở nhánh `claude/focused-cannon-k4o6gk` (commit `4568bb1`):
 `#cc-avatar` · `ccAvaRender()` · `ccAvaChon()` · `ccAvaDang()` · `ccAvaKeCo()` ·
-gác bằng `tests/test_avachon.js`.
+`tests/test_avachon.js` (5 mục, xanh).
 
-- **TỰ DO, không khoá theo lớp và không khoá theo sở hữu.** Avatar mang 0 chỉ số, 0 kỹ năng,
-  0 trang bị nên nó không mua được lợi thế nào; thứ khoá một lần lúc tạo nhân vật là **LỚP**.
-  Khế Ước Chimera bán **chỉ số + chiêu** (`player.chimera.co`), không bán hình dáng — lấy hình
-  dáng ra làm phần thưởng gacha là âm thầm đổi thứ đang bán.
-- **`undefined` ≠ `null`, và đây là cả cơ chế.** `startGame` **chỉ** ghi `player.avatar` khi
-  người chơi thật sự chọn một con hợp lệ. Gán bừa `quze.avatar || null` là biến MỌI nhân vật mới
-  thành đã-tắt-avatar, mà triệu chứng chỉ là *"tự nhiên không thấy con Axie đâu"*.
-- **Danh sách suy từ `CHIMERA`**, lọc theo `CHI_ANH.o` (chỉ con đã nướng art). Bày một con chưa
-  nướng thì ô nó trống trơn và không ai biết đó là lỗi hay chủ ý.
-- **Lưới im lặng cho tới khi chọn lớp.** 16 ô bày ra trước khi người chơi biết mình là ai chỉ
-  làm loãng bước quan trọng hơn hẳn ở ngay trên.
-- **`openCreate()` đặt lại `ccAva = null`.** Giữ lại lựa chọn của lần trước thì người tạo nhân
-  vật thứ hai nhận con Axie của nhân vật thứ nhất mà không hiểu vì sao mặc định lại là con đó.
+**Vì sao không đưa lên:** lúc dựng, ghi chú trong kho còn nói *"Khế Ước bán chỉ số + chiêu,
+không bán hình dáng"* — nên lưới cho chọn tự do cả 16 con. Trong lúc đó `main` đã chốt ngược
+lại: *"Bỏ luôn phần Ragoon. Nếu gacha là sẽ gacha nhân vật."* và `chiChon()` gác bằng
+`if (!C.co[id]) return;` — **chỉ con đã quay được mới cắm làm avatar**. Một lưới phát không cả
+16 con ở màn tạo nhân vật là phát không đúng thứ gacha đang bán.
 
-### Hai cái bẫy đã dẫm ở con Axie đứng cạnh thẻ lớp
+**Đây là câu hỏi cho chủ dự án, không phải câu hỏi kỹ thuật.** Không có phiên bản nào vừa có
+ích vừa trung tính với nền kinh tế, vì `avatarId()` đã cho mỗi lớp MỘT con miễn phí
+(`AVA_MAC_DINH`) và gacha bán 15 con còn lại:
 
-1. **Neo trong HỘP TRANH (`.cc-art-o`), không trong thẻ.** Gót của lớp nhân vật rơi ở **0,84**
-   chiều cao tấm tranh — hằng số của `ccLopThe()`, không phải số đo bằng mắt — mà tấm tranh thì
-   co giãn theo bề rộng cột. Bản đầu neo `bottom:52px` vào thẻ và con Axie **tụt xuống đè lên
-   tên lớp**.
-2. **Cỡ phải hỏi `avaCo()`, và `ccAvaKeCo()` phải ĐO bề cao tranh lúc chạy.** Ở đúng tỉ lệ thật
-   con Axie vẽ ra **170×134** trên một thẻ rộng 246 và che mất nửa dưới nhân vật — nên có
-   `CC_KE_CO = 0,60` thu cả nhóm lại. **Ô đó là HUY HIỆU "con nào", không phải mô hình tỉ lệ**;
-   chỗ xem tỉ lệ thật là sân khấu màn chờ. Nhưng hệ số thu **nhân vào kết quả của `avaCo`**, chứ
-   không thay nó bằng một con số px — 16 con có 16 tỉ lệ rộng/cao (1,07 → 1,52) và chênh lệch
-   đó phải giữ. `test_avachon §4` chứng minh bằng cách đo **hệ số chung** của hai con lệch nhau
-   nhất: dẫn xuất thật thì hai con ra cùng một hệ số, chép cứng px thì không.
+| Lưới bày gì | Phát không thêm | Dùng được không |
+|---|---|---|
+| Cả 16 con | 15 con | có, nhưng rỗng ruột gacha |
+| 5 con mặc định của 5 lớp | 4 con | có |
+| Chỉ con mặc định của lớp mình | 0 | không — một lựa chọn duy nhất |
 
-### Còn nợ — nói thẳng
+⇒ **Đừng tự dựng lại.** Hỏi chủ dự án chọn hàng nào trước, rồi mở lại mã từ nhánh trên.
 
-**Đổi avatar SAU khi tạo nhân vật vẫn chỉ có `/avatar <id>`.** Cửa mới này chỉ mở ở màn tạo.
-Người chơi đổi ý ở cấp 40 thì không có đường nào. Đây là việc còn lại, không phải thiết kế.
-
-### ⚠ `i.chi-anh` KHÔNG còn khoá trong `.skill-row`
-
-Ô ảnh Chimera (dải 16 khung chạy bằng hai `animation steps()` lồng nhau) nay dùng ở **hai** chỗ:
-bảng Khế Ước và lưới chọn Axie. Khoá selector trong `.skill-row` thì chỗ thứ hai phải chép lại
-nguyên khối, và hai bản sao sẽ lệch nhau. `chiO34(c)` nay chỉ là `chiOAnh(c, 34)`.
 
 ## Hai lối vẽ nhân vật — ĐỪNG TRỘN VÀO NHAU
 
