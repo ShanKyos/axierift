@@ -24684,21 +24684,32 @@ function tgBoCuc(){
   const key = TG_KHUNG.w + 'x' + TG_KHUNG.h + '|' + Object.keys(THE_GIOI).join(',');
   if (_tgBoCuc && _tgKey === key) return _tgBoCuc;
   const ids = Object.keys(THE_GIOI).filter(id => MAPS[id]);
-  let x0 = 1e9, y0 = 1e9, x1 = -1e9, y1 = -1e9;
-  for (const id of ids){ const p = THE_GIOI[id];
-    if (p.x<x0) x0=p.x; if (p.x>x1) x1=p.x; if (p.y<y0) y0=p.y; if (p.y>y1) y1=p.y; }
-  const le = TG_KHUNG.le, leD = TG_KHUNG.leD;
-  const sc = Math.min((TG_KHUNG.w - le*2) / Math.max(0.001, x1-x0),
-                      (TG_KHUNG.h - le - leD) / Math.max(0.001, y1-y0));
   // Cỡ vẽ ra tỉ lệ với CĂN BẬC HAI của diện tích map thật — dùng thẳng diện tích thì map lớn
   // nhất nuốt cả tấm (4,7 lần map nhỏ nhất về diện tích, chỉ 2,2 lần về cạnh).
   let dMax = 1;
   for (const id of ids) dMax = Math.max(dMax, Math.sqrt((MAPS[id].w||2600) * (MAPS[id].h||1900)));
+  // ⚠ HỘP BAO PHẢI TÍNH CẢ BÁN KÍNH, KHÔNG CHỈ TÂM. Bản đầu fit khung theo hộp bao của riêng
+  // TÂM rồi mới vẽ một hình bán kính `r` quanh mỗi tâm — nên vùng ngoài cùng luôn thò ra ngoài
+  // đúng `r` và bị mép canvas xén. Rẻo Rừng Corran (tâm trái nhất) vẽ ra sát x=3px, nhãn của nó
+  // thì tràn hẳn ra âm. Chủ dự án nhìn ảnh chụp gọi đúng tên: *"bị cụt"*.
+  // Bán kính TÍNH THEO ĐƠN VỊ LAYOUT là hằng số (nó tỉ lệ thuận với `sc`, nên `r/sc` không phụ
+  // thuộc `sc`) ⇒ cộng nó vào hộp bao trước khi tính `sc` là xong, không phải lặp cho hội tụ.
+  const ruy = id => 0.40 * (0.62 + 0.38 * Math.sqrt((MAPS[id].w||2600) * (MAPS[id].h||1900)) / dMax);
+  let x0 = 1e9, y0 = 1e9, x1 = -1e9, y1 = -1e9;
+  for (const id of ids){ const p = THE_GIOI[id], ru = ruy(id);
+    if (p.x-ru<x0) x0=p.x-ru; if (p.x+ru>x1) x1=p.x+ru;
+    if (p.y-ru<y0) y0=p.y-ru; if (p.y+ru>y1) y1=p.y+ru; }
+  const le = TG_KHUNG.le, leD = TG_KHUNG.leD;
+  const sc = Math.min((TG_KHUNG.w - le*2) / Math.max(0.001, x1-x0),
+                      (TG_KHUNG.h - le - leD) / Math.max(0.001, y1-y0));
+  // Căn giữa phần dư: `sc` bị một chiều bó, chiều kia còn thừa chỗ. Dồn hết phần thừa về một
+  // bên là tấm bản đồ lệch hẳn sang trái (hoặc lên trên) mà không ai chỉ ra được vì sao.
+  const duX = (TG_KHUNG.w - le*2) - (x1-x0)*sc, duY = (TG_KHUNG.h - le - leD) - (y1-y0)*sc;
   const o = {};
   for (const id of ids){
     const md = MAPS[id], p = THE_GIOI[id];
     const d = Math.sqrt((md.w||2600) * (md.h||1900)) / dMax;
-    o[id] = { cx: le + (p.x-x0)*sc, cy: le + (p.y-y0)*sc,
+    o[id] = { cx: le + duX/2 + (p.x-x0)*sc, cy: le + duY/2 + (p.y-y0)*sc,
               r: sc * 0.40 * (0.62 + 0.38*d), hinh: tgHinhVung(md) };
   }
   _tgBoCuc = o; _tgKey = key;

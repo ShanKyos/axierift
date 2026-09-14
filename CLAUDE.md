@@ -473,6 +473,37 @@ chơi đọc TRƯỚC, nên bản đồ phải chiều nó, không phải ngư�
    đen như nhau. `tgMauVung()` nâng sáng ×2,05 và pha ấm nhưng **giữ nguyên sắc**. Cùng họ với
    `itemPal`: một bảng màu không dùng chung được cho hai chỗ có nền khác nhau.
 
+**⚠ FIT KHUNG PHẢI TÍNH CẢ BÁN KÍNH — và bài kiểm "trong khung" KHÔNG đủ để gác chuyện đó.**
+`tgBoCuc()` bản đầu fit theo hộp bao của riêng **TÂM**, rồi mới vẽ một hình bán kính `r` quanh
+mỗi tâm ⇒ vùng ngoài cùng luôn thò ra đúng `r`. Rẻo Rừng Corran vẽ ra sát **x = 3,5px** và nhãn
+của nó tràn hẳn sang âm. `test_thegioi §3` **vẫn xanh** suốt, vì nó hỏi `cx − r < 0` — mà 3,5
+thì lớn hơn 0. Chủ dự án phải tự nhìn ảnh chụp và gọi tên: *"bị cụt"*.
+
+Chữa ở gốc: bán kính tính theo **đơn vị layout** là hằng số (`r ∝ sc` nên `r/sc` không phụ thuộc
+`sc`), nên chỉ cần cộng nó vào hộp bao TRƯỚC khi tính `sc` — không phải lặp cho hội tụ. Kèm
+căn giữa phần dư (`duX/duY`): `sc` bị một chiều bó, chiều kia còn thừa, dồn hết về một bên là
+tấm bản đồ lệch mà không ai chỉ ra được vì sao. Ngưỡng bài kiểm nay là **lề thật** (`TG_KHUNG.le
+× 0,9`), không phải `> 0`.
+
+*Luật chung: một bài kiểm hỏi "có nằm trong khung không" chỉ gác được chuyện tràn hẳn ra ngoài.
+Thứ người chơi thấy là **ép sát mép**, và cái đó phải hỏi bằng LỀ.*
+
+**⚠ NHÁNH ĐI RA RỒI CỤT ĐỌC RA "CHƯA LÀM XONG".** `corran` (vùng khởi đầu, cấp 1-12) từng đứng
+một mình ngoài rìa trái, nối vào thành bằng một nét đứt dài, còn cả góc tây-nam thì trống trơn.
+Nay nhánh tây có **hai chặng**: `ngoai` (Beast Herd Camp — đúng nghĩa *vùng ngoại ô*, cấp 10)
+lùi xuống **tây-nam** nên nó nằm ngay bên phải Rẻo Rừng Corran, và mạch cấp đọc được thành một
+đường liền: **1-12 → 10 → thành → 20 → … → 100**.
+
+Nó **vẫn là "Cổng Nam → Beast Herd Camp"**: hướng chấm theo **trục trội**, nên tây-nam vẫn ra
+`Nam` miễn `|dy| > |dx|` (1,45 > 1,00). Đừng kéo `ngoai` sang tây thêm — qua mốc đó là biển
+cổng nói dối, và `§2` sẽ đỏ chứ không im.
+
+⚠ **Sửa một toạ độ thì CHẤM LẠI BẰNG MÁY, đừng chấm bằng mắt.** Ba cạnh `chungnam→comoc` ·
+`daohoa→trungnut` · `trungnut→comoc` chỉ còn dư rất mỏng, vì đồ thị bắt đi **Đông → Bắc → Đông**
+rồi cạnh khép lại phải là **Nam** thuần — tức `comoc` buộc phải bắc hơn là đông so với
+`chungnam` trong khi vẫn nằm sau hai bước sang đông. Đó là ràng buộc của ĐỒ THỊ, không phải của
+bố cục; đừng "nắn cho đẹp" rồi tưởng nới được.
+
 **⚠ Vòng vẽ của bảng phải TỰ TẮT khi bảng đóng** (`bdVongVe` kiểm `panel-map.hidden`). Lá cờ
 nhấp nháy và mũi tên người chơi cần một vòng rAF riêng, nhưng để nó chạy song song với vòng game
 suốt phiên là đúng cái lỗi mà `startGame()` phải gọi `titleStop()` để chữa.
