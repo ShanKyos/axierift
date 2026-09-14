@@ -1962,7 +1962,30 @@ window.VOHOC_DEFS = {
   songthu:        { name:'Arcane Insight', school:'Dark Wizard', phai:'baidasan', tier:'than', cat:'Bị Động', type:'passive', unlock:60, color:'#d8d8f0', glyph:'✧', desc:'Bị động: 30% chiêu vừa tung không tốn hồi chiêu.' },
 
   // ── Spellblade — nửa kiếm nửa phép; MU cho lớp lai KẾ THỪA chiêu của hai lớp gốc ──
-  mg_powerslash:  { name:'Power Slash', school:'Spellblade', phai:'minhgiao', tier:'so', cat:'Lai', type:'cone', unlock:15, cd:6, qi:20, mult:1.8, color:'#ffcf7a', glyph:'⚔', fx:{}, desc:'Một nhát chém quét ngang, sóng sáng rời khỏi lưỡi thép bay tiếp.' },
+  // TUYỆT CHIÊU ô 4 của Spellblade. Bốn ô-4 kia đều là vòng tròn quanh thân (dk_cyclone r170 ·
+  // dw_dragonspirit r150 · dl_chaoticdiseier r190) hoặc mũi xuyên hàng (elf_penetration); riêng
+  // chiêu này là QUẠT 120° bán kính 135 — diện tích 19.085 px² so với 70.686-113.411 px² của bốn
+  // lớp kia, tức hụt 3,7-5,9 LẦN số mục tiêu mỗi lần tung. Nó cũng từng là ô-4 duy nhất mang
+  // tier 'so', mult thấp nhất bảng (1,8 so với 2,0-2,6) và `fx` RỖNG trong khi bốn chiêu kia
+  // đều có ít nhất một hiệu ứng. Đo 3 lượt × 30 giây game (dt cố định 1/60, đồ rơi +0 đúng cấp,
+  // bãi Bird Tribe Heights): Spellblade ra 32.743 ST / 3,0 mạng, trong khi Dark Lord — cũng cận
+  // chiến, cũng quạt ở ô 1 — ra 50.743 ST / 17,3 mạng. Chênh 8,2 lần về mạng là do đây.
+  //
+  // Chỗ sửa THẬT SỰ ăn thua là `fx.r`. Đo "mult × diện tích phủ / giây" — tức một giây tung chiêu
+  // thì phủ được bao nhiêu sức mạnh lên bao nhiêu mặt sàn — ra Dark Lord 32.776 còn Spellblade
+  // 7.023, chênh 4,7 lần; đó mới là con số khớp với chênh lệch đo ngoài trận. Nâng mult và thêm
+  // pierce chỉ kéo ST lên 6% vì vấn đề không nằm ở lực một nhát mà ở SỐ CON trúng mỗi nhát.
+  // r 230 cho quạt 120° ⇒ 55.392 px², vẫn là ô-4 HẸP NHẤT trong năm lớp (bốn lớp kia 70.686 -
+  // 113.411 px² hoặc xuyên cả hàng) nên Spellblade giữ nguyên chất "chém một hướng", chỉ là nhát
+  // chém nay vươn đúng tầm mà chính lời mô tả của nó đã hứa.
+  //
+  // `pierce` trong castVohoc là XUYÊN GIÁP (+30% ST), không phải xuyên nhiều mục tiêu — nhưng nó
+  // đúng với chính lời mô tả sẵn có của chiêu ("sóng sáng rời khỏi lưỡi thép bay tiếp") và đúng
+  // với Power Slash bên MU. mult 2,2 lấy đúng bằng dk_cyclone, chiêu ô-4 cùng bậc 'trung'.
+  // ⚠ Đổi tier ở đây KHÔNG đụng bất biến "4 chiêu Di Sản = +8,0%": mg_powerslash nằm ở
+  // SIGNATURE_SKILL chứ không nằm trong LEGACY_SECT_SKILLS (Di Sản của Spellblade là fireball
+  // sơ + powerwave trung + twistingslash trung + giganticstorm cao = 1,5+2+2+2,5 = 8,0).
+  mg_powerslash:  { name:'Power Slash', school:'Spellblade', phai:'minhgiao', tier:'trung', cat:'Lai', type:'cone', unlock:15, cd:6, qi:20, mult:2.2, color:'#ffcf7a', glyph:'⚔', fx:{ r:230, pierce:true, kb:30 }, desc:'Một nhát chém quét ngang, sóng sáng rời khỏi lưỡi thép bay tiếp.' },
   mg_fireball:    { name:'Fireball', school:'Spellblade', phai:'minhgiao', tier:'so', cat:'Kế Thừa · Dark Wizard', type:'proj', unlock:18, cd:5, qi:16, mult:1.5, color:'#ff9a5a', glyph:'☼', desc:'Quả cầu lửa học lỏm từ pháp sư — Spellblade niệm được mà không cần bỏ kiếm.' },
   mg_powerwave:   { name:'Power Wave', school:'Spellblade', phai:'minhgiao', tier:'trung', cat:'Kế Thừa · Dark Wizard', type:'proj', unlock:28, cd:5, qi:18, mult:1.7, color:'#ffcf7a', glyph:'⚡', fx:{ pierce:true }, desc:'Sóng lực dội thẳng theo hướng nhìn — chiêu nhập môn của pháp sư, trong tay kẻ cầm kiếm.' },
   mg_twistingslash:{ name:'Twisting Slash', school:'Spellblade', phai:'minhgiao', tier:'trung', cat:'Kế Thừa · Dark Knight', type:'aoe', unlock:35, cd:7, qi:22, mult:1.9, color:'#ffb060', glyph:'◉', fx:{ r:150 }, desc:'Vòng chém quanh thân mượn của hiệp sĩ — thép nặng thay cho thép mỏng.' },

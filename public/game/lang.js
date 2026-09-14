@@ -680,6 +680,331 @@ const RULES = [
 // input never changes within a page load — memoize it. Canvas text (mob nameplates, floating
 // damage numbers) redraws the same strings every frame at 60fps, and without this each call
 // falls through the EXACT dictionary miss into a full linear scan of the RULES regex list.
+/* ══ ĐỢT BỔ SUNG: 257 chuỗi còn sót khi bật English ═══════════════════════════════════
+   Đo bằng cách bật English rồi quét MỌI text node đang hiển thị trên 9 màn (dẫn truyện ·
+   chọn lớp · HUD · Nhân Vật · Túi · Kỹ Năng · Bản Đồ · Nhật Ký · Cài Đặt · Bảng Sự Kiện):
+   257 chuỗi còn dấu tiếng Việt, và cả 257 đều là THIẾU MỤC TỪ — không chuỗi nào đã nằm
+   trong EXACT mà vẫn lọt, tức cơ chế dịch chạy đúng, chỉ là chưa ai điền.
+   Giữ đúng giọng đã chốt ở khối trên: mộc, hơi cổ, không một chữ kiếm hiệp; danh từ riêng
+   Corran · Gloam · Sapidae · Atia · Lunacia · Vaeldra giữ nguyên. */
+Object.assign(EXACT, {
+  // ── Dẫn truyện & màn chọn lớp ──
+  'VAELDRA — Lục Địa Thép Và Tro': 'VAELDRA — Continent of Steel and Ash',
+  'Bỏ qua ▸▸': 'Skip ▸▸',
+  'Lunacia · Bên dưới vết nứt': 'Lunacia · Beneath the rift',
+  'Bầu trời nứt ra, và ngươi rơi qua.': 'The sky tore open, and you fell through.',
+  'Lunacia sinh ra từ ánh chớp đầu tiên của quả trứng thế giới Atia. Một thế giới non trẻ, chưa từng biết đến chiến tranh.':
+    'Lunacia was born from the first flash of the Atia world-egg. A young world, one that had never known war.',
+  'Ở phía bên kia của mọi thứ, có một thế giới khác:': 'On the far side of everything lies another world:',
+  '. Nơi đó có hiệp sĩ, có pháp sư, có tiên tộc — và có một thứ bị chôn dưới lòng đất suốt một nghìn năm.':
+    '. A place of knights, of sorcerers, of woodland kin — and of something buried underground for a thousand years.',
+  'Chọn một lớp để xem chi tiết.': 'Pick a class to see details.',
+  'Hãy chọn một lớp.': 'Choose a class.',
+  'Tên nhân vật': 'Character name',
+  'Tạo Nhân Vật': 'Create Character',
+  '🧪 Chế độ thử nghiệm — vào game ở cấp tối đa, đầy đủ trang bị & mọi tính năng mở sẵn':
+    '🧪 Test mode — enter at max level with full gear and every feature unlocked',
+  'Chế độ thử nghiệm — vào game ở cấp tối đa, đầy đủ trang bị & vật liệu':
+    'Test mode — enter at max level with full gear and materials',
+
+  // ── Vai trò 5 lớp (dòng ngay dưới tên lớp ở màn đầu tiên) ──
+  'Chịu Đòn / Liên Đòn cận chiến': 'Tank / Melee Chains',
+  'Tầm xa / Hỗ trợ': 'Ranged / Support',
+  'Pháp thuật / Độc tố': 'Sorcery / Venom',
+  'Lai / Bộc phát Hoả': 'Hybrid / Fire Burst',
+  'Chỉ huy / Triệu hồi': 'Command / Summoning',
+
+  // ── HUD & tên bảng ──
+  'ĐANG DIỄN RA': 'LIVE NOW',
+  '⚔ TỰ ĐÁNH': '⚔ AUTO',
+  '📜 Nhiệm Vụ': '📜 Quests',
+  '☀ Mục Tiêu Hôm Nay': "☀ Today's Goals",
+  'Nhân Vật': 'Character', 'Túi Đồ': 'Inventory', 'Kỹ Năng': 'Skills',
+  'Nhiệm Vụ': 'Quests', 'Bản Đồ': 'Map',
+  'Đã biết ✕': 'Got it ✕', 'Đi ngay': 'Go now', 'Tới Ngay': 'Go Now', 'Đóng': 'Close',
+  '🔒 ✦ Nâng Cấp': '🔒 ✦ Upgrade',
+  'Người Giữ Lunacia': 'Keeper of Lunacia',
+  'Kẻ Mở Trụ Cuối': 'Opener of the Last Pillar',
+
+  // ── Hướng dẫn 6 bước (mỗi mảnh là một text node riêng vì có thẻ <b>) ──
+  'Bấm': 'Click', 'chuột phải': 'right-click',
+  'trên nền đất hoặc bấm vào': 'on the ground, or click',
+  'bản đồ thu nhỏ': 'the minimap',
+  '— nhân vật sẽ tự chạy tới đó, hãy thử một lần': '— your character runs there. Try it once',
+
+  // ── Bảng Nhân Vật ──
+  '◈ DẤU ẤN KHAI SINH · ◑ Điềm Tĩnh': '◈ BIRTH SIGN · ◑ Composed',
+  'Sức Vóc': 'Stature', 'Linh Lực': 'Energy', 'Hồi Mana': 'Mana Regen',
+  'Thân Thể Cứng Cáp': 'Hardy Frame', 'Tay Nghề Rèn': 'Smithing Hand',
+  '[THƯỜNG]': '[COMMON]',
+  'Bản Năng (nâng kỹ năng)': 'Instinct (skill upgrades)',
+  'Hệ đòn đánh': 'Attack element',
+  '(Công kích (tùy lớp), sát thương phi tiêu)': '(ATK (class-dependent), throwing damage)',
+  '(Máu tối đa và tốc hồi phục)': '(Max HP and regen rate)',
+  '(Mana tối đa + Công kích (tùy lớp))': '(Max Mana + ATK (class-dependent))',
+  '(Tốc đánh, bạo kích, né tránh + Công kích (tùy phái))': '(Attack speed, crit, dodge + ATK (class-dependent))',
+  '— dồn điểm tiềm năng vào đây là hiệu quả nhất.': '— putting potential points here is most effective.',
+
+  // ── Túi Đồ ──
+  'Vật Liệu': 'Materials', '⚙ Tự động': '⚙ Auto', '🧩 Xếp Gọn': '🧩 Tidy',
+  'Dọn từ phẩm': 'Clear from rarity', '🗑 Vứt 1 món': '🗑 Drop 1 item',
+  'bấm hai lần để xác nhận': 'click twice to confirm',
+  'bấm ô = mặc · kéo để dời chỗ ·': 'click a slot = equip · drag to move ·',
+  '= bán / phân giải / vứt': '= sell / salvage / drop',
+  'Bấm viên ngọc rồi bấm món đồ để ép thẳng — không cần tới lò.':
+    'Click a jewel, then click an item to socket it directly — no forge needed.',
+
+  // ── Bảng Kỹ Năng ──
+  '4 ô cố định · phím 1-4': '4 fixed slots · keys 1-4',
+  '40/80/120 ⚡Tiến Hóa': '40/80/120 ⚡Evolution',
+  'Bản Năng': 'Instinct',
+  '⇥ Tầm': '⇥ Range', '⟳ Hồi': '⟳ Cooldown', '✦ Công Kích': '✦ ATK', '◎ Phạm vi': '◎ Area',
+  'tại chỗ': 'self', '1 mục tiêu': '1 target',
+  '🔒 chưa đạt điều kiện': '🔒 requirements not met',
+  '), tự ngộ theo cấp, không cần bấm nút.': '), learned automatically by level — no button needed.',
+  'BỊ ĐỘNG RIÊNG CỦA LỚP — chỉ lớp này mới có': 'CLASS PASSIVE — only this class has it',
+  'BỊ ĐỘNG CHUNG — mở từ Ascension, trang bị và Sách Kỹ Năng':
+    'SHARED PASSIVES — unlocked from Ascension, gear and Tomes',
+  'Phản lại một phần sát thương — Ascension bậc 5 / trang bị.':
+    'Reflects part of the damage taken — Ascension tier 5 / gear.',
+  'Đang có 0 quyển · rơi từ tinh anh/trùm & Vực Thẳm':
+    'You hold 0 tomes · drops from elites/bosses & the Ravine',
+  'Bấm nút sách ở dòng chiêu bất kỳ phía trên để nâng thẳng 1 cấp — khỏi tốn Lumen lẫn Bản Năng':
+    'Press the book button on any skill row above to raise it one level — costing neither Lumen nor Instinct',
+
+  // ── Bảng Bản Đồ ──
+  'Bản Đồ Lunacia': 'Map of Lunacia',
+  'Đang ở:': 'You are in:', 'ĐANG Ở ĐÂY': 'YOU ARE HERE',
+  'Nhiệm vụ: phím Q': 'Quests: press Q',
+  '[CHẾ ĐỘ TEST — dịch chuyển tự do]': '[TEST MODE — free teleport]',
+  'Dịch Chuyển': 'Teleport',
+  '◆ Đất của': '◆ Land of', '· hệ': '· element',
+  '· nơi': '· only', 'duy nhất': 'source', 'rơi Cốt': 'of Bone',
+  '▣ Rương Canh:': '▣ Warded Chest:', '🧭 Đi bộ:': '🧭 On foot:',
+  'mọc ở vùng này — mỗi ngày một lần': 'surfaces in this region — once per day',
+  'BÃI FARM — Trại Cựu Binh Gloam': 'FARM SPOT — Gloam Veteran Camp',
+
+  // ── Tên Dòng Cốt (đứng một mình trên bảng Bản Đồ và danh sách sự kiện) ──
+  // ── DẤU ẤN KHAI SINH: trọn 18 nét + 4 bậc. Nét bốc NGẪU NHIÊN mỗi nhân vật, nên chỉ dịch
+  //    mấy cái tình cờ gặp lúc đo là kiểu sửa không bao giờ hết — liệt kê hết một lần.
+  'Ăn May': 'Lucky Find', 'Đầu Óc Sắc Bén': 'Sharp Mind', 'Sải Chân Dài': 'Long Stride',
+  'Bước Chân Nhẹ': 'Light Step', 'Tay Xuyên Giáp': 'Armour-Piercing Hand', 'Máu Lạnh': 'Cold Blood',
+  'Thể Chất Kháng Độc': 'Poison-Hardened', 'Hồn Chiến': 'Battle Spirit', 'Số Trời': 'Fated',
+  'Duyên May': 'Good Fortune', 'Ngay Thẳng': 'Upright', 'Tàn Nhẫn': 'Merciless', 'Điềm Tĩnh': 'Composed',
+  '[HIẾM]': '[RARE]', '[QUÝ]': '[PRECIOUS]', '[THẦN]': '[DIVINE]',
+  'HIẾM': 'RARE', 'QUÝ': 'PRECIOUS', 'THẦN': 'DIVINE',
+  'Tro Tàn': 'Ash', 'Sách Kỹ Năng': 'Tome', 'Mắt Tinh': 'Keen Eye', 'Mana Dồi Dào': 'Deep Mana',
+  'Cánh Hoa': 'Petal', 'Đồng Cỏ': 'Meadow', 'Rễ Gai': 'Thornroot', 'Vỏ Trứng': 'Eggshell',
+  'Băng Vụn': 'Frostshard', 'Sấm Vụn': 'Stormshard', 'Mầm Cội': 'Rootling',
+  'Vỏ Mòn': 'Wornshell', 'Mảnh Nứt': 'Riftshard', 'Bọt Ngầm': 'Deepfoam',
+
+  // ── Bốn map Corran + Tầng Sâu ──
+  'Rẻo Rừng Corran': 'Corran Woodstrip', 'Lối Mòn Corran': 'Corran Trail',
+  'Trũng Nứt Corran': 'Corran Riftbasin', 'Tầng Sâu': 'The Deeps',
+
+  // ── Chương chính tuyến ──
+  'I · Ngọn Đèn Tắt': 'I · The Lamp Gone Out',
+  'II · Lửa Của Thợ Rèn': "II · The Smith's Fire",
+  'III · Rune Chôn': 'III · Buried Runes',
+  'IV · Cây Hồn': 'IV · The Soul Tree',
+  'V · Vết Nứt': 'V · The Rift',
+
+  // ── Sự kiện thế giới ──
+  'Hung Thần Giáng Thế': 'The Dread One Descends',
+  'Chúa Tể Vực Nứt': 'Rift Overlord',
+  'Xâm Lăng Vàng': 'Golden Invasion',
+  'Truy Nã Lệnh & Mục Tiêu Ngày': 'Bounty Orders & Daily Goals',
+  'Chúa Tể Vực Nứt 0h·6h·12h·18h': 'Rift Overlord 00·06·12·18',
+  '(4 lượt/ngày, nứt ở mọi bãi săn)': '(4 times a day, rifts open at every hunting ground)',
+
+  // ── Cài Đặt ──
+  '🔭 Tầm nhìn': '🔭 View distance', 'ĐẦY': 'FULL', 'Đầy': 'Full', 'Vừa': 'Medium', 'Thấp': 'Low',
+  '💥 Số sát thương trên đầu quái': '💥 Damage numbers above monsters',
+  '📈 Bảng đo hiệu năng': '📈 Performance meter', '🍃 Hiệu ứng': '🍃 Effects',
+  'Tự Chỉnh': 'Auto', '(tự chỉnh)': '(auto)',
+  '(Tự Chỉnh sẽ hạ mức khi máy đuối)': '(Auto lowers this when the machine struggles)',
+  '🔍 Độ nét': '🔍 Sharpness',
+  'Màn hình này là': 'This display is', '— đang vẽ ở': '— rendering at',
+  'điểm ảnh thật.': 'real pixels.', 'Đang chạy:': 'Running:',
+  '🌐 Ngôn ngữ / Language': '🌐 Language',
+  '🚪 Đổi nhân vật': '🚪 Switch character',
+  'VỀ MÀN CHỌN NHÂN VẬT': 'BACK TO CHARACTER SELECT',
+
+  // ── Quái (tên vẽ thẳng lên canvas, đi qua bản vá fillText) ──
+  'Axie Heo Rừng': 'Boar Axie', 'Axie Gai Tím': 'Thistle Axie', 'Axie Bí Ngô': 'Pumpkin Axie',
+  'Axie Cỏ Dại': 'Weed Axie', 'Axie Sa Ngã': 'Fallen Axie', 'Axie Cuồng Bão': 'Tempest Axie',
+  'Cướp Đường Gloam': 'Gloam Highwayman', 'Thủ Lĩnh Gloam': 'Gloam Chieftain',
+  'Gloam Cựu Binh': 'Gloam Veteran', 'Trinh Sát Gloam': 'Gloam Scout',
+  'Thủ Lĩnh Đoàn Gloam': 'Gloam Warband Chieftain',
+  'Tượng Đá Canh Cổng': 'Gate Sentinel Statue', 'Tượng Đá Vỡ Lệnh': 'Oathbroken Statue',
+  'Heo Rừng Nhiễm Khí': 'Tainted Boar', 'Gai Tím Đầu Đàn': 'Thistle Pack-Leader',
+  'Cỏ Dại Bén Lửa': 'Emberweed', 'Bộ Xương Phản Loạn': 'Rebel Skeleton',
+  'Chimera Phun Độc': 'Venomspitter Chimera', 'Oan Hồn Ổ Ấp': 'Brooding Wraith',
+  'Dơi Chimera': 'Chimera Bat', 'Chimera Rêu Nước': 'Watermoss Chimera',
+  'Kẻ Cuồng Tín Lạc Lối': 'Lost Zealot', 'Chimera Cầu Gai': 'Urchin Chimera',
+  'Sát Thủ Sương Mù': 'Mistblade Assassin', 'Trinh Sát Tro Tàn': 'Ashen Scout',
+  'Cung Thủ Tro Tàn': 'Ashen Archer', 'Kỵ Sĩ Tro Tàn': 'Ashen Knight',
+  'Cuồng Binh Tro Tàn': 'Ashen Berserker', 'Chó Ngao Lửa': 'Fire Mastiff',
+  'Cao Thủ Lang Thang': 'Wandering Master', 'Thủ Lĩnh Sói Hoang': 'Wild Wolf Chieftain',
+  'Đại Tướng Phản Loạn': 'Rebel Warlord', 'Chúa Tể Hầm Mộ': 'Crypt Overlord',
+  'Xoáy Lá Nguyền': 'Cursed Leaf-Vortex', 'Chúa Sói Thảo Nguyên': 'Steppe Wolf Lord',
+  'Thống Soái Thiên Giáp': 'Skyplate Marshal', 'Cốt Tướng': 'Bone General',
+  'Nữ Vu Bóng Tối': 'Shadow Witch', 'Tướng Quân Vàng': 'Golden Warden',
+  'Ác Thần Bóng Tối': 'Shadow Fiend',
+
+  // ── Nhiệm vụ chính tuyến (33 mục) ──
+  'Ra Bìa Rẻo Rừng Corran': 'Out to the Corran Woodstrip',
+  'Ngọn Đèn Bên Giếng': 'The Lamp by the Well', 'Người Giữ Đèn': 'The Lampkeeper',
+  'Dầu Cho Ngọn Đèn': 'Oil for the Lamp', 'Thứ Ăn Hồn Kẹt': 'What Eats Trapped Souls',
+  'Thép Chịu Được Bóng': 'Steel That Holds Shadow', 'Ngồi Ở Miếu Atia': 'Sit at the Atia Shrine',
+  'Đòn Của Riêng Ngươi': 'A Blow of Your Own', 'Kẻ Canh Miếu': 'The Shrine Warden',
+  'Tin Từ Trại Chăn': 'Word from the Herding Camp', 'Kẻ Đi Trước': 'The One Who Went Ahead',
+  'Dầu Cho Cả Vùng': 'Oil for the Whole Region', 'Đàn Bị Dồn': 'The Herd Driven In',
+  'Lò Của Reptile': 'The Reptile Forge', 'Thứ Sinh Ra Từ Vết Nứt': 'Born of the Rift',
+  'Rừng Của Werebear': 'The Werebear Wood', 'Kẻ Đổi Phe': 'The Turncoat',
+  'Đường Xuống Địa Đạo': 'The Way Down to the Tunnels', 'Bẫy Bị Đọc Vị': 'The Trap Read Through',
+  'Tầng Dưới Cùng': 'The Lowest Floor', 'Rune Trong Thép': 'Runes in the Steel',
+  'Kẻ Đào Ngược': 'The Backward Digger', 'Nhà Trên Ngọn Thông': 'House in the Pine Crown',
+  'Bài Hát Bị Cắt': 'The Song Cut Short', 'Kẻ Săn Người Giữ Đèn': 'Hunter of Lampkeepers',
+  'Đủ Sức Đi Tiếp': 'Strong Enough to Go On', 'Đá Nóng Quanh Năm': 'Stone Hot All Year',
+  'Mỏ Đã Tắt Lửa': 'The Mine Whose Fire Died', 'Đếm Ngược Tới Đầm': 'Countdown to the Marsh',
+  'Đầm Của Dusk': 'The Marsh of Dusk', 'Vòng Trong Cùng': 'The Innermost Ring',
+  'Chỗ Hồn Quay Về': 'Where Souls Return',
+
+  // Lời thoại mở chuỗi (hiện trên dải nhiệm vụ ngay khi vào game)
+  'Lính Gác Cổng Tây chặn ngươi lại: "Bầy heo rừng lấn tới sát chân tường ba đêm nay." Ra Cổng Tây, vào bìa Rẻo Rừng Corran mà dọn chúng.':
+    'The West Gate Guard stops you: "The boars have pressed right up to the wall three nights running." Head out the West Gate into the Corran Woodstrip and clear them.',
+});
+
+/* Mẫu lặp lại — dùng RULES thay vì chép hàng trăm mục từ.
+   Bảng Bản Đồ sinh mỗi map 6-8 dòng cùng khuôn (dải cấp · ba miền · lối đi bộ), nên một dòng
+   regex thay cho 13 map × 8 dòng.
+
+   ⚠⚠ QUY TẮC HẸP PHẢI `unshift`, KHÔNG ĐƯỢC `push` — và đây là chỗ đã mất một vòng để tìm ra.
+   trCompute trả về ngay ở quy tắc ĐẦU TIÊN khớp, mà mảng sẵn có đã chứa mấy cái bắt-tất rất rộng:
+       /^◈ (.+)$/            (dòng ~597)
+       /^(.+?) (\d+)\/(\d+)$/ (dòng ~605)
+       /^\s*· (.+)$/          (dòng ~636)
+   Ba cái đó nuốt trọn '◈ Bán 1 món (+623)', 'HƯỚNG DẪN 1/6' và '· cấp 38 - 48' rồi trả lại
+   nguyên văn tiếng Việt (phần chúng bắt được không tra ra gì). Lần đầu tôi `push` cả khối này
+   xuống cuối mảng: mục từ có, quy tắc có, regex thử ngoài trình duyệt thì khớp — mà người chơi
+   vẫn thấy tiếng Việt, và KHÔNG một lỗi nào báo ra.
+   ⇒ Hẹp thì unshift (chen lên trước), rộng thì push (để lại sau cùng). */
+RULES.unshift(
+  [/^· cấp (\d+) - (\d+)$/, '· Lv $1 - $2'],
+  [/^· cấp —$/, '· Lv —'],
+  [/^(Tây|Đông|Nam|Bắc) → (.+)$/, (m, h, d) => `${({ 'Tây':'West', 'Đông':'East', 'Nam':'South', 'Bắc':'North' })[h]} → ${tr(d)}`],
+  [/^(Ngoại Vi|Trung Tâm|Hạt Nhân) C(\d+)–(\d+)( ·)?$/, (m, v, a, c, d) =>
+    `${({ 'Ngoại Vi':'Outer', 'Trung Tâm':'Middle', 'Hạt Nhân':'Core' })[v]} Lv${a}–${c}${d ? ' ·' : ''}`],
+  [/^Vỉa Cốt (.+?)( HÔM NAY)?$/, (m, a, b) => `${tr(a)} Bone Vein${b ? ' TODAY' : ''}`],
+  [/^HƯỚNG DẪN (\d+)\/(\d+)$/, 'TUTORIAL $1/$2'],
+  [/^(\d+)\/(\d+) ô$/, '$1/$2 slots'],
+  [/^◈ Bán 1 món \(\+(\d+)\)$/, '◈ Sell 1 item (+$1)'],
+  [/^🔒 tự ngộ ở cấp (\d+)$/, '🔒 learned automatically at Lv $1'],
+  [/^Làm mới lúc 00:00 — còn (\d+)g(\d+)$/, 'Resets at 00:00 — $1h$2 left'],
+  [/^💡 (.+) ra Công Kích từ$/, (m, a) => `💡 ${a} draws ATK from`],
+  [/^(.+) — 1 chính · 1 phụ · 1 phù trợ · 1 tuyệt chiêu$/, (m, a) => `${a} — 1 main · 1 sub · 1 support · 1 signature`],
+  [/^(Chính|Phụ|Phù Trợ|★ Tuyệt Chiêu) — (.+)$/, (m, a, b) =>
+    `${({ 'Chính':'Main', 'Phụ':'Sub', 'Phù Trợ':'Support', '★ Tuyệt Chiêu':'★ Signature' })[a]} — ${tr(b)}`],
+);
+
+/* Nhóm RỘNG — bắt gần như mọi chuỗi có tiền tố, nên phải để SAU cùng mảng. */
+RULES.push(
+  [/^(.+) · Cấp (\d+)$/, (m, a, b) => `${tr(a)} · Lv ${b}`],
+  [/^🗺 (.+) · (.+)$/, (m, a, c) => `🗺 ${tr(a)} · ${tr(c)}`],
+  [/^★ (.+)$/, (m, a) => `★ ${tr(a)}`],
+  [/^Săn (.+)$/, (m, a) => `Hunt ${tr(a)}`],
+  // Đuôi 🔒 (cổng chưa mở trên bảng Bản Đồ): bóc ra rồi mới tra tên map.
+  [/^(.+) 🔒$/, (m, a) => `${tr(a)} 🔒`],
+);
+
+/* Đợt 2 — phần văn xuôi dài: mô tả 13 map, mô tả chiêu Di Sản, dòng sự kiện, chú thích Cài Đặt.
+   Đây là phần còn lại sau khi 218 chuỗi ngắn đã xong; gom riêng để dễ đối chiếu khi lore đổi. */
+Object.assign(EXACT, {
+  'Chúng gọi nó là': 'They call it',
+  'Dòng Máu Thức Tỉnh': 'Awakened Bloodline',
+  'Mở nhánh Bản Năng nhanh hơn +25%': 'Unlocks Instinct branches +25% faster',
+  '⬆ +2,5%Sát Thương/cấp (Lumen) · mốc 20/40/60/80/100/120 thêm phù trợ ·':
+    '⬆ +2.5% Damage/level (Lumen) · milestones 20/40/60/80/100/120 add support ·',
+  'Thanh chiêu chỉ có 4 ô, nhưng các chiêu dưới đây không hề mất giá trị — tự động dồn thành % Công Kích vĩnh viễn (hiện':
+    'The bar holds only 4 slots, but the skills below are not wasted — they fold into permanent % ATK (shown',
+  'chưa mở — mỗi cái một trại canh, mở một lần duy nhất':
+    'unopened — each has its own warding camp, and opens only once',
+  ': 3 trại sát nhau · 21 con · rơi đồ và Lumen ×1.6':
+    ': 3 camps side by side · 21 monsters · item and Lumen drops ×1.6',
+
+  // ── Mô tả chiêu Di Sản ──
+  'Giáng vũ khí xuống đất — chấn động, hất văng & choáng nhẹ.':
+    'Drives the weapon into the ground — a shockwave that flings back and briefly stuns.',
+  'Cú đâm ngắn và nhanh, mũi kiếm lách qua khe giáp thay vì bổ vào mặt giáp.':
+    'A short, quick thrust — the point slips through the gap in the armour instead of striking its face.',
+  'Quay ngang cán giáo, đâm trọn một vòng — mọi kẻ đứng sát đều dính.':
+    'Sweeps the polearm level and stabs a full circle — everything standing close is caught.',
+  'Nhấc rìu quá đầu rồi bổ thẳng xuống — dồn cả trọng lượng người vào một nhát.':
+    'Lifts the axe overhead and brings it straight down — the whole weight of the body in one blow.',
+  'Tia lực xuyên giáp — sát thương ×2 và khóa chiêu địch 2.5s.':
+    'An armour-piercing bolt of force — ×2 damage and locks the enemy out of skills for 2.5s.',
+  'Sóng xung kích bóng tối quét sạch quanh người (sát thương lan lớn).':
+    'A shadow shockwave sweeps everything around you (wide spreading damage).',
+
+  // ── Mô tả 13 map (bảng Bản Đồ) ──
+  'Plant Tribe Glade — trảng đất Plant Tribe bỏ lại từ hôm trời nứt, nay Axie Sa Ngã chiếm. Chưa có trụ nào ở đây, chỉ có hậu quả.':
+    'Plant Tribe Glade — ground the Plant Tribe abandoned the day the sky split, now held by Fallen Axies. No pillar stands here, only the aftermath.',
+  'Lối mòn men theo rẻo rừng, chạy mãi về đông. Cây khép hai bên, không có đường tắt.':
+    'A trail hugging the woodstrip, running ever eastward. Trees close in on both sides; there is no shortcut.',
+  'Khoảnh rừng Corran giữ riêng — bãi săn của người mới. Chimera yếu, đồ rơi nhập môn, chỗ hiền lành để học cách chơi. Ông ấy không nói vì sao lại giữ.':
+    'The patch of woodland Corran kept for himself — a hunting ground for newcomers. Weak Chimeras, starter drops, a gentle place to learn the game. He never said why he kept it.',
+  'Đất trũng xuống nơi vết nứt đi qua. Không ai giữ chỗ này, nên ai cũng lấy được — kể cả lấy của nhau.':
+    'Land sunk in where the rift passed through. Nobody holds this place, so anybody may take from it — including from each other.',
+  'Trụ Roost đóng thẳng xuống giữa ổ ấp. Bug Tribe Tunnels thì thầm: thứ nở ra ở đây không còn là Axie nữa.':
+    'The Roost Pillar was driven straight down into the middle of the brood. Bug Tribe Tunnels whispers: what hatches here is no longer Axie.',
+  'Nhịp đá vắt qua một hồ ngầm không đáy. Một lối, không có đường vòng — thứ chặn đường bạn phải dọn, không né được.':
+    'A span of stone across a bottomless underground lake. One way across, no way around — whatever blocks you must be cleared, not avoided.',
+  'Băng của Bird Tribe Heights là vết sẹo, không phải thời tiết. Bãi EXP khổng lồ — mang theo kháng độc, Chimera ở đây cắn có nọc.':
+    'The ice of Bird Tribe Heights is a scar, not weather. A vast EXP ground — bring poison resistance; the Chimeras here bite with venom.',
+  'Tướng Quân dựng đại bản doanh ngay trên Trụ Ashmark — hắn thôi không giấu nữa. Thảo nguyên đá nung, Chimera trâu bò đánh đau.':
+    'The Warden raised his headquarters right on top of the Ashmark Pillar — he has stopped hiding. Kiln-baked steppe, and brutish Chimeras that hit hard.',
+  'Trụ Dusk Marsh — trụ cuối cùng. Gỡ nó xuống là mở đúng cánh cửa Morvahn đang chờ. PK ở đây không cộng Tai Tiếng.':
+    'The Dusk Marsh Pillar — the last one. Pulling it down opens exactly the door Morvahn is waiting for. PK here adds no Infamy.',
+  'Đường nứt Thủ Hộ Vaeldra không kịp bịt, ăn thẳng xuống dưới lớp đá nền. Càng xuống sâu khí Morvahn càng đặc, và không tầng nào giống tầng nào.':
+    "A fissure the Warders of Vaeldra could not seal in time, eating straight down beneath the bedrock. The deeper you go the thicker Morvahn's breath, and no two floors are alike.",
+  'Khu phố Ardhaven rơi qua vết nứt còn nguyên khối — nguyên mái, nguyên giếng, nguyên cả biển hiệu. Dân bản địa dựng tường quanh nó và gọi chỗ này là Sapidae Chiefdom. Trong tường: Quảng Trường Atia, Phố Chợ, Phố Lò, Sân Chuồng, Sảnh Lệnh, Vách Gió và Xóm Trọ. Không Chimera nào vào được. Bốn cổng ra bốn hướng.':
+    'The Ardhaven quarter fell through the rift in one piece — roofs intact, well intact, even the shop signs. The local people walled it round and named the place Sapidae Chiefdom. Within the walls: Atia Square, Market Row, Forge Row, the Stable Yard, the Hall of Orders, the Windwall and the Lodging Quarter. No Chimera can get in. Four gates, one to each quarter of the compass.',
+  'Đất ngoài thành đang rung — chưa phải trụ, nhưng là dấu hiệu đầu tiên rằng có trụ đang lung lay. Đàn thú của người bản địa vẫn gặm cỏ ở đây, và vẫn chưa ai nói cho chúng biết.':
+    'The ground outside the walls is trembling — not a pillar yet, but the first sign that one is working loose. The herds of the local people still graze here, and nobody has told them yet.',
+  '"Trụ Werebear Woods do ta giữ." Một Tướng Quân đơn độc chống đỡ cả cánh rừng — trụ thứ nhất trong năm. Werebear vẫn sống theo bầy ở đây, và chúng hiền cho tới lúc bị chọc.':
+    '"The Werebear Woods Pillar is mine to hold." A lone Warden braces an entire forest — the first of the five. Werebears still live in packs here, and they are gentle until provoked.',
+
+  // ── Cài Đặt ──
+  '(kéo gần thì mỗi khung hình chứa ít thế giới hơn — map thấy rộng hơn)':
+    '(zoom in and each frame holds less world — the map feels larger)',
+  '(Gọn: chỉ trùm, tinh anh, Tiếp Sức và con dưới con trỏ)':
+    '(Compact: only bosses, elites, Relayers and whatever is under the cursor)',
+  '(hạ xuống để chạy mượt trên máy yếu — chữ sẽ mềm hơn)':
+    '(lower it to run smoothly on a weaker machine — text will look softer)',
+  '— mức thấp tắt quầng sáng và lớp phủ, đổi lại khung hình mượt hơn nhiều.':
+    '— the low setting drops glows and overlays, and buys a far smoother frame rate in return.',
+  '(lưu lại rồi về màn chọn — xóa nhân vật chỉ làm được ở đó)':
+    '(saves, then returns to the select screen — deleting a character can only be done there)',
+
+  // ── Bảng Sự Kiện ──
+  'Chạy theo giờ thật: Hung Thần 0h·4h·8h… · Xâm Lăng Vàng 2h·6h·10h… ·':
+    'Runs on real time: The Dread One 00·04·08… · Golden Invasion 02·06·10… ·',
+  '04:00 · Plant Tribe Glade — hạ trùm nhận Box Kundun lớn':
+    '04:00 · Plant Tribe Glade — fell the boss for a large Box Kundun',
+  '06:00 · 6 tiếng/lần (0h·6h·12h·18h) — nứt ở mọi bãi săn (cấp 15+), trùm luôn trên tầm bạn 6 cấp':
+    '06:00 · every 6 hours (00·06·12·18) — rifts at every hunting ground (Lv 15+), the boss always 6 levels above you',
+  '06:00 · Bird Tribe Heights — mỗi quái vàng rơi 1 Box Kundun (I-V theo map)':
+    '06:00 · Bird Tribe Heights — every golden monster drops 1 Box Kundun (I-V by map)',
+});
+
+/* Ba dòng Vỉa Cốt trên Bảng Sự Kiện chỉ khác nhau tên map và tên Cốt — một quy tắc thay ba mục từ.
+   Hẹp (neo cả hai đầu) nên unshift cho chắc, khỏi bị mấy cái bắt-tất nuốt như đợt trước. */
+RULES.unshift(
+  [/^(.+) — mỗi ngày MỘT lần, 3 mảnh Cốt (.+) \(28% ra Cổ\)\. Xem chấm kim cương trên bản đồ nhỏ\.$/,
+    (m, map, cot) => `${tr(map)} — ONCE per day, 3 ${tr(cot)} Bone shards (28% Ancient). Look for the diamond dot on the minimap.`],
+);
+
 const _trCache = new Map();
 function tr(s) {
   if (lang !== 'en' || !s || typeof s !== 'string') return s;
@@ -702,6 +1027,16 @@ function trCompute(s) {
   for (const [re, rep] of RULES) {
     const m = s.match(re);
     if (m) return typeof rep === 'function' ? rep(...m) : s.replace(re, rep);
+  }
+  // Thử lại trên bản ĐÃ TRIM rồi trả về đúng phần lề cũ. Text node sinh từ template literal
+  // gần như luôn dính '\n' + thụt lề, nên mọi quy tắc neo ^…$ trượt hết nếu chỉ thử trên `s`.
+  // Đo được: 'HƯỚNG DẪN 1/6', '· cấp 38 - 48', '◈ Bán 1 món (+1437)' đều có mục từ/quy tắc
+  // đúng mà vẫn ra tiếng Việt chỉ vì chỗ này.
+  if (t2 !== s && t2) {
+    for (const [re, rep] of RULES) {
+      const m = t2.match(re);
+      if (m) return s.replace(t2, typeof rep === 'function' ? rep(...m) : t2.replace(re, rep));
+    }
   }
   return s;
 }
