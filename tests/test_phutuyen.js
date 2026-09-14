@@ -130,16 +130,16 @@ const { chromium } = require('playwright');
     const xong = sideStates[sq.id].st;
     // thưởng: gắn đủ bốn nhánh rồi trả, xem có nhánh nào câm không
     const rewCu = sq.rew;
-    sq.rew = { xp:10, silver:100, item:'tay', ngoc:{ chucPhuc:2 }, gk:3,
-               cot:{ dong:'bangvun', n:1, pham:'tinh' } };
+    // ⚠ `cot` đã thay bằng `khi` (Bản Năng) — hệ Cốt gỡ hẳn chỉ số.
+    sq.rew = { xp:10, silver:100, item:'tay', ngoc:{ chucPhuc:2 }, gk:3, khi:500 };
     player.jewels = { chucPhuc:0, linhHon:0, sinhMenh:0, honDon:0 };
-    player.cotKho = []; player.inv = []; player.silver = 0;
+    player.khi = 0; player.inv = []; player.silver = 0;
     if (!player.chimera) chiState(); player.chimera.ve.gk = 0;
     const moTa = rewMoTa(sq.rew);
     turnInSide(sq.id);
     const ra = { xong, moTa,
       silver: player.silver, do: player.inv.length,
-      ngoc: player.jewels.chucPhuc, cot: player.cotKho.length, gk: player.chimera.ve.gk };
+      ngoc: player.jewels.chucPhuc, khi: player.khi, gk: player.chimera.ve.gk };
     sq.rew = rewCu;
     return ra;
   });
@@ -150,11 +150,11 @@ const { chromium } = require('playwright');
     else pass('`moc` phụ tuyến đếm từ TRẠNG THÁI qua mocTick');
     const cam = [];
     if (!r4.silver) cam.push('silver'); if (!r4.do) cam.push('item');
-    if (!r4.ngoc) cam.push('ngọc');     if (!r4.cot) cam.push('Cốt');
+    if (!r4.ngoc) cam.push('ngọc');     if (!r4.khi) cam.push('Bản Năng');
     if (!r4.gk) cam.push('Ấn Giao Kết');
     if (cam.length) fail(`turnInSide nuốt mất phần thưởng: ${cam.join(', ')}`);
-    else pass('turnInSide trao đủ silver · đồ · ngọc · Cốt · Ấn Giao Kết');
-    for (const k of ['Tay','Chúc Phúc','Mảnh Cốt','Ấn Giao Kết'])
+    else pass('turnInSide trao đủ silver · đồ · ngọc · Bản Năng · Ấn Giao Kết');
+    for (const k of ['Tay','Chúc Phúc','Bản Năng','Ấn Giao Kết'])
       if (!r4.moTa.includes(k)) fail(`dòng thưởng không nhắc "${k}" — người chơi không biết trước mình sẽ nhận gì`);
   }
 

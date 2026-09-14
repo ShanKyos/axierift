@@ -1,4 +1,4 @@
-// B3.3 · VỈA CỐT — mỏ Cốt trồi lên chỗ khác mỗi ngày.
+// B3.3 · VỈA — mỏ trồi lên chỗ khác mỗi ngày, nay trả BẢN NĂNG (hệ Cốt đã gỡ hẳn chỉ số).
 // Cái phải giữ được là ba điều, và cả ba đều dễ vỡ khi ai đó "tối ưu" sau này:
 //   ① vỉa ở XA bãi quái — nếu nó rơi cạnh bãi thì cả thiết kế mất nghĩa, AUTO nhặt luôn
 //   ② vị trí ĐỔI theo ngày và ỔN ĐỊNH trong ngày — tải lại trang không được đổi chỗ
@@ -91,18 +91,18 @@ const { chromium } = require('playwright');
     viaThemPickup();
     const coPickup = pickups.filter(x => x.type === 'via').length;
     player.x = v.x + 10; player.y = v.y;
-    const khoTruoc = cotKho().length;
+    // ⚠ Vỉa nay trả **Bản Năng**, không trả mảnh Cốt — hệ Cốt đã gỡ hẳn chỉ số.
+    const khoTruoc = player.khi || 0;
     const lan1 = viaKhai();
-    const khoGiua = cotKho().length;
+    const khoGiua = player.khi || 0;
     const lan2 = viaKhai();
-    const khoSau = cotKho().length;
+    const khoSau = player.khi || 0;
     // đứng xa thì không khai được
     if (player.via) delete player.via[v.map];
     player.x = v.x + 400; player.y = v.y;
     const xa = viaKhai();
     return { map:v.map, coPickup, lan1, lan2, xa, khoTruoc, khoGiua, khoSau,
-             dong: cotKho().slice(khoTruoc, khoGiua).map(c => c.dong),
-             dungDong: cotKho().slice(khoTruoc, khoGiua).every(c => c.dong === v.dong),
+             dong: v.dong, banNang: VIA_BAN_NANG,
              heo: pickups.filter(x => x.type === 'via' && x.respawn > 0).length };
   });
   console.log('4) khai vỉa:', JSON.stringify(r4));
@@ -110,12 +110,14 @@ const { chromium } = require('playwright');
   else pass('vào vùng có vỉa: đúng một vỉa hiện trên mặt đất');
   if (!r4.lan1) fail('đứng sát vỉa nhấn khai mà không ăn thua');
   else pass('khai được khi đứng trong tầm');
-  if (r4.khoGiua - r4.khoTruoc !== 3) fail(`khai xong chỉ được ${r4.khoGiua - r4.khoTruoc} mảnh Cốt, phải 3`);
-  else pass('mỗi vỉa cho đúng 3 mảnh Cốt');
-  if (!r4.dungDong) fail('Cốt rơi ra sai Dòng: ' + r4.dong.join('/'));
-  else pass('Cốt rơi đúng Dòng của vùng');
-  // ⚠ Bỏ khẳng định "khai vỉa kèm Đất Hồn": Đất Hồn là nhiên liệu của vòng nuôi Ragoon và đã
-  // gỡ cùng nó. Thứ vỉa cho nay chỉ có Cốt — đúng ba mảnh, đúng Dòng, đã kiểm ở hai mục trên.
+  // ⚠ MỐC NÀY ĐÃ ĐỔI HAI LẦN, giữ ghi chú để đừng ai "sửa ngược".
+  //   ① bỏ khẳng định "khai vỉa kèm Đất Hồn" — Đất Hồn là nhiên liệu vòng nuôi Ragoon, đã gỡ;
+  //   ② bỏ khẳng định "đúng 3 mảnh Cốt, đúng Dòng" — hệ Cốt đã gỡ HẲN chỉ số. Vỉa nay trả
+  //      **Bản Năng**, và đó phải là một con số THẬT: một vòng chơi mỗi ngày buộc người chơi
+  //      đi tới một toạ độ mà trả ra hư không thì thà đừng có nó.
+  if (r4.khoGiua - r4.khoTruoc !== r4.banNang)
+    fail(`khai xong được ${r4.khoGiua - r4.khoTruoc} Bản Năng, phải ${r4.banNang}`);
+  else pass(`mỗi vỉa cho đúng ${r4.banNang} Bản Năng`);
   if (r4.lan2 || r4.khoSau !== r4.khoGiua) fail('khai lần hai trong cùng ngày VẪN ăn — AUTO đứng đó là xong');
   else pass('lần hai trong ngày: không ăn gì (một lần/ngày/vùng)');
   if (!r4.heo) fail('khai xong vỉa vẫn sáng như chưa khai');

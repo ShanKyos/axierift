@@ -19327,7 +19327,6 @@ function cheatHelp(){
     `/gen <giai 1-${GIAI_MAX}> [+rèn 0-11] [cánh 0-3] — MẶC THẲNG cả bộ, ví dụ: /gen 1 +11`,
     '── Khế Ước (thân Axie) & Cốt ──',
     '/chi <id|all> — nhận thân Axie · /ve <n> — thêm vé quay · /avatar <id|off|ds> — đổi thân',
-    '/cot <' + COT_DONG_IDS.join('|') + '|all> [n] — nhặt Cốt vào bốn ô của NGƯỜI CHƠI',
     '── tiến trình (mở nội dung hậu kỳ) ──',
     '/mo — mở HẾT cổng: xong chính tuyến, cấp đỉnh 120, phá phong ấn mọi map, mở bảng ' + MASTERY_NAME,
     `/quest <1-${QUESTS.length}|all> — nhảy tới một nhiệm vụ chính tuyến · /chuong — xem mốc từng chương`,
@@ -19616,7 +19615,9 @@ window.cheatExec = function(raw){
       case 'deep': deepStart(); cheatLog('Tầng Sâu: bắt đầu', '#c07fe0'); return;
       // ⚠ /dat và /chilv đã GỠ cùng vòng nuôi Ragoon (Đất Hồn · cấp 80 · sáu lần Hoá). Đừng
       // thêm lại một lệnh đặt cấp cho con Axie: nó không có cấp nữa, nó là một cái thân.
-      // ⚠ /cot đã GỠ cùng hệ Cốt. Bản Năng thay chỗ nó — dùng /bn hoặc đi khai vỉa.
+      // ⚠ /cot đã GỠ cùng hệ Cốt. Bản Năng thay chỗ nó — dùng `/khi <n>` hoặc đi khai vỉa.
+      // ⚠ Gỡ một lệnh thì phải gỡ CẢ DÒNG TRONG /help: `test_console` quét tên lệnh từ chính
+      //   bảng help rồi chạy từng cái, nên help hứa một lệnh không còn là bài đỏ ngay.
       case 'mo': {                       // /mo — mở HẾT cổng tiến trình, giữ nguyên sức mạnh
         moHetCong(); calcDerived();
         cheatLog(`Mở hết cổng: chính tuyến ${QUESTS.length}/${QUESTS.length} · cấp đỉnh ${lvPeak()} · phong ấn ${Object.keys(BOSS_DEFS).length} map · bảng ${MASTERY_NAME} mở (${player.mpts} điểm)`, '#7ecbff');

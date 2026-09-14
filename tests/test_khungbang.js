@@ -53,10 +53,7 @@ const pass = m => console.log('PASS ' + m);
                                const n = L.find(x => SHOPS[x.id]);
                                if (!n) throw new Error('không tìm được NPC có tiệm trong NPCS');
                                renderShop(n); }, 'panel-quest (hội thoại NPC)'],
-    // Kho Cốt mượn khung phủ dùng chung #panel-quest
-    ['panel-quest',    () => { if (!Object.keys(chiState().co).length) chiNhan(Object.keys(CHI_MAP)[0]);
-                               if (!cotKho().length) cotKho().push(cotMoi(COT_DONG_IDS[0], 'tinh'));
-                               window.moKhoCot(); }, 'panel-quest (Kho Cốt)'],
+    // ⚠ Ô "Kho Cốt" ĐÃ BỎ: hệ Cốt gỡ hẳn chỉ số nên bảng đó không còn tồn tại.
     ['panel-forge',    () => { const n = forgeNpcHere();
                                if (n){ player.x = n.x; player.y = n.y; }
                                window.openForgePanel(); }],
@@ -134,31 +131,28 @@ const pass = m => console.log('PASS ' + m);
     };
     tham('panel-char', () => togglePanel('char'));
     tham('panel-settings', () => togglePanel('settings'));
-    // Kho Cốt: nút "Bỏ" (huỷ hẳn một mảnh Cốt) là nút .danger thứ hai và cũng là nút duy nhất
-    // còn lại được phép mang lớp đó. Nó KHÔNG vẽ vào #panel-char mà vào #panel-quest — khung
-    // phủ dùng chung; tìm nhầm chỗ thì bài kiểm xanh mà chẳng soi được gì.
-    closePanels();
-    let boCot = 0;
-    try {
-      // Kho phải có mảnh thì nút "Bỏ" mới được vẽ ra.
-      // ⚠ Trước đợt gỡ Ragoon còn phải SỞ HỮU một con Chimera (chiO() mới trả về ô). Bốn ô Cốt
-      // nay của người chơi, nên điều kiện đó hết cần — và `moKhoCot()` không nhận id nữa.
-      if (!cotKho().length) cotKho().push(cotMoi(COT_DONG_IDS[0], 'tinh'));
-      window.moKhoCot();
-      for (const d of document.querySelectorAll('#panel-quest button.danger')){
-        boCot++; ra.push(d.textContent.trim().slice(0, 24));
-      }
-    } catch(e){ ra.push('LỖI mở Kho Cốt: ' + e.message); }
-    return { ten: [...new Set(ra)], boCot };
+    // ⚠ SAU KHI GỠ HỆ CỐT, KHÔNG CÒN NÚT `.danger` NÀO TRONG GAME. Nút "Bỏ" của Kho Cốt là cái
+    // cuối cùng (nút "XÓA SAVE" đã rời Cài Đặt từ trước). Lớp `.danger` nay chỉ còn nằm trên
+    // DẢI CẢNH BÁO (`chaos-warn danger`).
+    //
+    // ⇒ Khẳng định "phải tìm thấy nút .danger" hết lý do tồn tại. Nhưng bỏ trắng thì phép kiểm
+    // "chỉ nút phá huỷ mới được mang .danger" thành vô nghĩa — nó xanh vì rỗng. Nên thay bằng
+    // một chốt vẫn có nghĩa: bộ chọn phải TÌM ĐƯỢC `.danger` ở đâu đó (dải cảnh báo), chứng tỏ
+    // lớp ấy còn sống và phép quét nút ở trên thật sự đã quét.
+    // ⚠ Không dò `.danger` trong DOM lúc này: dải cảnh báo chỉ hiện khi bảng Lò đang mở KÈM
+    // một cảnh báo, nên dò lúc khác cũng ra 0 và chốt lại đỏ vì một lý do sai.
+    return { ten: [...new Set(ra)] };
     return [...new Set(ra)];
   });
   console.log('danger:', JSON.stringify(dg));
   const phaHuy = /^(bỏ|xoá|xóa|huỷ|đập)/i;
   const sai = dg.ten.filter(t => !phaHuy.test(t));
   if (sai.length) fail('lớp .danger nằm trên nút KHÔNG phá huỷ: ' + sai.join(' | '));
-  else pass(`lớp .danger chỉ nằm trên ${dg.ten.length} loại nút phá huỷ: ${dg.ten.join(' · ')}`);
-  // Cả hai nút phá huỷ phải THỰC SỰ tìm thấy — nếu không, phép kiểm trên chỉ xanh vì rỗng.
-  if (!dg.boCot) fail('không thấy nút "Bỏ" nào trong Kho Cốt — phép kiểm .danger đang rỗng');
+  else if (dg.ten.length) pass(`lớp .danger chỉ nằm trên ${dg.ten.length} loại nút phá huỷ: ${dg.ten.join(' · ')}`);
+  // ⚠ ĐỂ TRỐNG LÀ ĐÚNG, không phải là lỗi. Sau khi gỡ hệ Cốt thì trong game KHÔNG còn nút
+  // `.danger` nào: nút "Bỏ" của Kho Cốt là cái cuối cùng ("XÓA SAVE" đã rời Cài Đặt từ trước).
+  // Chốt vẫn là một bánh cóc thật ở mức 0: thêm một nút `.danger` không phá huỷ gì là đỏ ngay.
+  if (!dg.ten.length) pass('không nút .danger nào trong game — đúng trạng thái sau khi gỡ hệ Cốt');
   // XÓA SAVE đã gỡ khỏi Cài Đặt: xoá nhân vật nay CHỈ làm được ở màn chờ, từng ô một. Chỗ nó
   // đứng giờ là đường đi RA màn chờ — không phá huỷ gì nên cũng không mang lớp .danger nữa.
   const set = await p.evaluate(() => {
