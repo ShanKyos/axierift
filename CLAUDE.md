@@ -1364,6 +1364,41 @@ Một chiêu **không được vừa bấm được vừa cộng %ST vĩnh viễ
 đồng thời gỡ nó khỏi `LEGACY_SECT_SKILLS`, và đẩy một chiêu khác vào thế chỗ sao cho mỗi lớp
 vẫn đúng **4 chiêu Di Sản = +8,0% Công Kích** (`test_kynang5lop` bắt lỗi lệch giữa các lớp).
 
+### 💠 ĐIỂM TIỀM NĂNG NAY CÓ **HAI** CHỖ TIÊU — trần 5 điểm mỗi chiêu
+
+Chủ dự án chốt: *"Giữ điểm tiềm năng lại và sẽ nâng được 5 điểm mỗi skill."*
+
+Trước bản này `player.free` (mỗi cấp +5) có ĐÚNG một chỗ tiêu: năm chỉ số trong bảng Nhân Vật.
+Nay có hai, và **hai chỗ giành nhau cùng một túi điểm** — đó mới là chỗ có lựa chọn.
+
+| | |
+|---|---|
+| trần | `SK_TN_TRAN` = **5 điểm mỗi chiêu** |
+| tác dụng | `SK_TN_DMG` = **+3% sát thương mỗi điểm** ⇒ đầy trần là **+15%** |
+| lưu ở | `player.skillTn[id]` |
+| cửa DUY NHẤT | `window.rotTiemNang(id)` |
+| ăn vào đâu | `skTnMult(id)`, nhân cạnh `skLvMult(id)` ở **đúng một dòng** trong `castSkill()` |
+
+- **Đây KHÔNG phải cấp kỹ năng.** Cấp (1-120) vẫn mua bằng Lumen + Bản Năng qua
+  `upgradeSkillUI()`. Hai trục khác nhau, nhân dồn với nhau. Đừng gộp — Lumen/Bản Năng là thứ
+  **farm ra được**, điểm tiềm năng thì **chỉ lên cấp mới có** và năm chỉ số cũng đang tranh.
+- **Trần 5 là thứ giữ cho lựa chọn còn nghĩa.** Không có trần thì người chơi dồn hết vào đúng
+  một chiêu và mọi chiêu khác thành đồ trang trí.
+- Bị động không nhận điểm (khung chi tiết của bị động đi nhánh riêng, không in năm thông số).
+- `loadGame()` vá `player.skillTn` cho save đời trước — **thiếu dòng đó là cú bấm đầu tiên nổ**.
+
+Gác: `tests/test_tiemnang.js` (7 mệnh đề, cả bảy đã thử ngược). Ba chỗ đáng nhớ:
+- ⑤ **tầng hành vi**: bọc `window.hurtMob` để bắt `player.atk` ĐÃ nhân ngay trong cú tung, rồi
+  so hai lượt 0 điểm / đầy trần. Hỏi mã nguồn không bắt được ca "nhân nhầm chỗ".
+  ⚠ Phải đặt `player.atk` đủ LỚN trước khi đo: `castSkill` làm tròn, nên ở mức 50 thì
+  50×1,15 = 57,5 → 57 và tỉ lệ đo ra **1,140** — sai số làm tròn nuốt mất 2/3 độ chính xác.
+- ⑥ đi đúng đường của save cũ: xoá trường → `saveGame()` → `loadGame()`. Xoá tại chỗ rồi bấm
+  nút thì chỉ kiểm được cái chốt trong chính hàm rót, không kiểm được dòng vá ở `loadGame`.
+- ⑦ hỏi **DOM** chứ không hỏi chuỗi `innerHTML`: bản đầu của mục này XANH trong lúc nút bị ẩn,
+  vì tên hàm vẫn nằm đâu đó trong HTML. Và **đừng hỏi thuộc tính `hidden`** — bảng có lúc
+  `hidden=false` mà CSS vẫn `display:none`, lúc đó lời gọi mở bảng bị bỏ qua và mục này đỏ vì
+  một lý do chẳng liên quan gì tới nút.
+
 ### 🗂 BẢNG KỸ NĂNG LÀ MỘT CÂY — và `KN_ROT` là chỗ ĐIỀN KỸ NĂNG
 
 Dựng theo ảnh mẫu chủ dự án đưa: hàng tab trên cùng · **cây biểu tượng nối bằng mũi tên** ở nửa
