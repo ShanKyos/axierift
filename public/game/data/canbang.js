@@ -1753,14 +1753,25 @@ window.MAP_OBSTACLES = {
     { x:4340, y:520, wd:460, ht:340 }, { x:5000, y:520, wd:460, ht:340 }, { x:5660, y:520, wd:460, ht:340 },
     { x:3680, y:2340, wd:460, ht:340 }, { x:4340, y:2340, wd:460, ht:340 }, { x:5000, y:2340, wd:460, ht:340 },
     { x:5660, y:2340, wd:460, ht:340 },
+    // ⚠⚠ HAI HÀNG NÀY TỪNG NUỐT MẤT BỐN NPC — và tôi đã dẫm lại đúng cái bẫy "lùm chặn nuốt
+    // mất Rương Canh" đã ghi ở khối trên. Lượt đầu để y=1100 (cao 340) và y=1800 (cao 340):
+    //   · Thợ Mộc (1100,2100) · Người Luyện Chimera (2500,2100) nằm GỌN trong khối
+    //   · Quan Truy Nã (4150,2100) và Lính Gác Cổng Tây (700,1450) chạm mép
+    // NPC nằm trong vật cản là NPC **không bao giờ nói chuyện được** — mà Lính Gác Cổng Tây là
+    // người giao nhiệm vụ ĐẦU TIÊN của cả trò chơi. `test_sandat` và `test_diahinh` bắt được,
+    // `test_domap` thì không: sàn đi được vẫn thừa, chỉ là có bốn người bị chôn trong đó.
+    //
+    // Nay hàng bắc lùi lên (1060, cao 320) và hàng nam co lại (1760, cao 240) — cách NPC gần
+    // nhất ≥70px. ⚠ THÊM MỘT KHỐI THÌ QUÉT LẠI BẰNG MÁY, đừng chấm bằng mắt: ràng buộc là mọi
+    // NPC phải cách mọi khối, và ô 460×340 thì mắt không ước lượng nổi.
     // hàng trong, bắc đại lộ
-    { x:280, y:1100, wd:460, ht:340 }, { x:940, y:1100, wd:460, ht:340 }, { x:1600, y:1100, wd:460, ht:340 },
-    { x:2260, y:1100, wd:460, ht:340 }, { x:3680, y:1100, wd:460, ht:340 }, { x:4340, y:1100, wd:460, ht:340 },
-    { x:5000, y:1100, wd:460, ht:340 }, { x:5660, y:1100, wd:460, ht:340 },
+    { x:280, y:1060, wd:460, ht:320 }, { x:940, y:1060, wd:460, ht:320 }, { x:1600, y:1060, wd:460, ht:320 },
+    { x:2260, y:1060, wd:460, ht:320 }, { x:3680, y:1060, wd:460, ht:320 }, { x:4340, y:1060, wd:460, ht:320 },
+    { x:5000, y:1060, wd:460, ht:320 }, { x:5660, y:1060, wd:460, ht:320 },
     // hàng trong, nam đại lộ
-    { x:280, y:1800, wd:460, ht:340 }, { x:940, y:1800, wd:460, ht:340 }, { x:1600, y:1800, wd:460, ht:340 },
-    { x:2260, y:1800, wd:460, ht:340 }, { x:3680, y:1800, wd:460, ht:340 }, { x:4340, y:1800, wd:460, ht:340 },
-    { x:5000, y:1800, wd:460, ht:340 }, { x:5660, y:1800, wd:460, ht:340 },
+    { x:280, y:1760, wd:460, ht:240 }, { x:940, y:1760, wd:460, ht:240 }, { x:1600, y:1760, wd:460, ht:240 },
+    { x:2260, y:1760, wd:460, ht:240 }, { x:3680, y:1760, wd:460, ht:240 }, { x:4340, y:1760, wd:460, ht:240 },
+    { x:5000, y:1760, wd:460, ht:240 }, { x:5660, y:1760, wd:460, ht:240 },
     // BỐN QUẦY CHỢ giữa Quảng Trường Atia. Chúng là vật cản THẬT chứ không phải decor: đồ trại
     // của Bãi Farm cố ý đi xuyên qua được vì đó là chỗ đánh nhau, nhưng ở thị trấn thì đi xuyên
     // qua một cái quầy hàng là lỗi. Đặt lệch khỏi đại lộ dọc (x=3200) và ngang (y=1600), và

@@ -2342,6 +2342,29 @@ thật sự giao việc, và 11 cái nhãn ấy đè lên đúng những chỗ n
 đứng đó và vẫn là thứ làm thành phố sống (cùng lý do Đàn Thú Hoang tồn tại) — chỉ là bảng bản đồ
 trả lời *"tôi LÀM được gì ở đâu"*, không phải *"ai đang đứng đâu"*.
 
+**⚠⚠ HAI HÀNG KHỐI MỚI TỪNG NUỐT MẤT BỐN NPC — tôi dẫm lại đúng cái bẫy "lùm chặn nuốt mất
+Rương Canh" ghi ngay phía trên.** Lượt đầu để y=1100 và y=1800, cao 340: **Thợ Mộc** (1100,2100)
+và **Người Luyện Chimera** (2500,2100) nằm GỌN trong khối, **Quan Truy Nã** và **Lính Gác Cổng
+Tây** chạm mép. NPC nằm trong vật cản là NPC **không bao giờ nói chuyện được** — mà Lính Gác
+Cổng Tây là người giao nhiệm vụ ĐẦU TIÊN của cả trò chơi.
+
+`test_domap` **không** bắt được (sàn đi được vẫn thừa, chỉ là có bốn người bị chôn trong đó);
+`test_sandat` và `test_diahinh` mới bắt. Nay hàng bắc lùi lên (1060, cao 320), hàng nam co lại
+(1760, cao 240), NPC gần nhất cách **50px**. *Thêm một khối thì QUÉT LẠI BẰNG MÁY mọi cặp
+NPC × khối — ô 460×340 thì mắt không ước lượng nổi.*
+
+**⚠⚠ VÀ NÓ LÀM ĐỎ MỘT BÀI CHẲNG LIÊN QUAN GÌ: `test_ngamchuot`.** Bài ấy ghi thẳng
+`player.x = 1300; player.y = 1250` kèm chú thích *"đứng giữa map"* — đúng vào ngày thị trấn được
+dựng lại, chỗ ấy thành **bên trong một ngôi nhà**. Cả **năm** mệnh đề đỏ cùng lúc với những
+triệu chứng trông chẳng dính gì nhau: thiên thạch lệch 34px · chiêu không bám quái · cột lửa đốt
+cả con đứng cạnh chân · chuột phải đi sai chỗ. Không một dòng nào trong đó gợi ra *"nhân vật
+đang đứng trong tường"*.
+
+Chữa ở bài kiểm, không ở map: nay nó `travelTo` vùng hoang dã rồi **quét tìm một chỗ thật sự
+thoáng** (16 hướng × bán kính 700, lề 950px cho camera khỏi bị kẹp). *Luật chung, và là lần thứ
+ba nó xuất hiện trong tệp này: một toạ độ chép cứng trong bài kiểm là một quả mìn hẹn giờ — nó
+đúng cho tới khi ai đó sửa thế giới, rồi nổ ở một chỗ chẳng liên quan.*
+
 Gác: `tests/test_thitran.js` (7 mệnh đề). Mệnh đề đắt nhất là **⑥ ĐỨNG Ở ĐIỂM THẢ PHẢI THẤY
 CÔNG TRÌNH**: nó hỏi bằng **tầm nhìn thật** (`VW`/`VH`), vì không có gì trong dữ liệu nói lên
 được chuyện một thành có đủ 36 khối mà người mới vào vẫn nhìn ra một sân đá trống. Trước bản
