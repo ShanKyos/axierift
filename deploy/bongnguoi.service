@@ -1,5 +1,14 @@
 # systemd unit cho máy chủ Bóng Người (Giai đoạn 1 online).
 #
+# ⚠ CÀI NODE TRƯỚC. VPS không có sẵn, và `apt install nodejs` cho Node 12 — quá cũ cho ESM +
+#   tiền tố `node:`. Dùng NodeSource:
+#       curl -fsSL https://deb.nodesource.com/setup_20.x | bash -
+#       apt install -y nodejs
+#       node --version        # phải ra v20.x
+#
+# ⚠ KHÔNG cần `npm install`. Máy chủ không có phụ thuộc nào — WebSocket tự viết ở
+#   server/wsnho.js bằng thư viện chuẩn. Xem lý do ở đầu tệp đó.
+#
 #   sudo cp /var/www/axiewuxia/deploy/bongnguoi.service /etc/systemd/system/
 #   sudo systemctl daemon-reload
 #   sudo systemctl enable --now bongnguoi

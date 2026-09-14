@@ -2380,11 +2380,61 @@ máy chủ, xem `docs/THIET_KE_ONLINE.md` mục "Ngã ba phải chọn".
 
 | Thứ | Ở đâu |
 |---|---|
-| Máy chủ chuyển tiếp (`ws`, ~170 dòng) | `server/bongnguoi.js` · `npm run bongnguoi` · cổng 8877 |
+| Máy chủ chuyển tiếp | `server/bongnguoi.js` · `npm run bongnguoi` · cổng 8877 |
+| WebSocket tự viết, **0 phụ thuộc** | `server/wsnho.js` |
 | Client | `public/game/net.js`, nạp SAU `game.js` |
 | Tầng vẽ | `drawPlayer(p)` · `NETPLAYERS` · `netTaoThan()` · `veNhanNet()` · `veKhoa()` |
-| Triển khai | `deploy/bongnguoi.service` · `deploy/nginx-ws.conf` |
-| Gác | `tests/test_bongnguoi.js` (6 mục, dựng thật 2 trình duyệt + 1 máy chủ) |
+| Triển khai | `deploy/bongnguoi.service` · `deploy/nginx-ws.conf` · `deploy/capnhat-deploy.sh` |
+| Gác | `tests/test_bongnguoi.js` (Chromium thật) + `tests/test_wsnho.js` (giao thức) |
+
+### ⚠ MÁY CHỦ KHÔNG PHỤ THUỘC GÌ — chỉ cần `node`, KHÔNG cần `npm install`
+
+Bản đầu dùng thư viện `ws`. Đưa lên VPS mới lộ ra cái giá: **VPS chưa bao giờ có Node** (nó là
+nginx phục vụ tệp tĩnh, vỏ tRPC trong `api/` chưa từng chạy), và `npm install ws` trong
+`/var/www/axiewuxia` thì npm hoà lại **toàn bộ** cây phụ thuộc của repo — đo được **63 gói prod,
+467 MB `node_modules`** (aws-sdk, react, trpc, drizzle, radix…) chỉ để chạy một relay 170 dòng.
+Kèm ba rủi ro vận hành: `npm install` viết lại `package-lock.json` (**có trong git** ⇒ giằng co
+với `git reset --hard` mỗi 2 phút); đặt một `package.json` riêng cạnh tệp máy chủ để cô lập thì
+Node đọc **package.json gần nhất** và coi `bongnguoi.js` là CommonJS ⇒ mọi `import` nổ; và thêm
+một thứ phải cài lại mỗi khi dựng máy mới.
+
+Nhu cầu thật rất nhỏ — **khung TEXT, gói dưới vài KB** — nên `server/wsnho.js` làm tay bắt tay
++ đóng/bóc khung bằng `node:crypto` + `node:http`. Máy chủ thành **một thư mục không cần cài gì**.
+
+⚠ **ĐỪNG mở rộng `wsnho.js` thành thư viện đầy đủ.** Nó cố ý không làm: nén
+(permessage-deflate), khung nhị phân, phân mảnh do chính máy chủ gửi. Ngày nào cần một trong ba
+thì đem `ws` về — lúc ấy cái giá kia đáng trả.
+
+**Ba chỗ đóng khung dễ sai, cả ba đã có bài gác riêng** (`tests/test_wsnho.js`, client THÔ bằng
+`node:net` — trình duyệt là client LỊCH SỰ nên nó không dựng được mấy đường này):
+
+1. **Khung máy chủ gửi KHÔNG được che mặt nạ; khung client gửi lên BẮT BUỘC che.** Ngược một
+   trong hai là trình duyệt đóng với mã 1002.
+2. **TCP không bảo toàn ranh giới gói.** Một lượt `data` có thể mang nửa khung hoặc ba khung
+   rưỡi. §3 gửi **từng byte một** để ép đúng đường đó; triệu chứng khi sai là "thỉnh thoảng mất
+   một gói", không phải một lỗi đọc ra được.
+3. **Nhánh độ dài 2 byte (`126`) là nhánh CHẠY THẬT**, không phải phòng xa — ảnh chụp của vài
+   người đã vượt 125 byte. Sai nhánh đó thì game hỏng đúng lúc đông người, tức lúc khó gỡ nhất.
+
+**⚠ VÀ MỘT LỖI THẬT MÀ BÀI KIỂM BẮT ĐƯỢC, Chromium thì không:** `http.Server` của Node dựng
+`net.Server` với **`allowHalfOpen: true`** (để còn viết nốt hồi đáp sau khi client đóng nửa
+đường), và socket nâng cấp lên WebSocket **thừa hưởng** tính chất đó. Nên client gửi FIN mà
+không gửi khung close thì `'close'` **không bao giờ nổ** — người đó nằm lại trong danh sách và
+bóng của họ đứng chết giữa map tới 30 giây (tới khi bộ lọc im lặng dọn hộ). Trình duyệt gửi
+khung close tử tế nên đường này không lộ khi thử bằng Chromium. Phải bắt **cả `'end'`**.
+
+### ⚠ VPS CẦN CÀI NODE — `apt install nodejs` cho bản QUÁ CŨ
+
+`node` và `npm` không có sẵn trên VPS. Và `apt install nodejs` của Debian/Ubuntu cho Node 12,
+trong khi mã dùng **ESM + tiền tố `node:`** (cần ≥ 14.18, thực tế nên ≥ 18). Cài từ NodeSource:
+
+```bash
+curl -fsSL https://deb.nodesource.com/setup_20.x | bash -
+apt install -y nodejs
+node --version      # phải ra v20.x
+```
+
+`npm` đi kèm gói đó, nhưng **không dùng tới** — máy chủ không có phụ thuộc nào.
 
 **⚠ MẶC ĐỊNH TẮT, và đừng gỡ cái cửa đó.** Không khai máy chủ ⇒ `net.js` `return` ngay,
 `NETPLAYERS` rỗng, bản chơi một mình chạy y nguyên — đó là thứ đang sống trên production, và cả
@@ -2430,7 +2480,7 @@ máy chủ, xem `docs/THIET_KE_ONLINE.md` mục "Ngã ba phải chọn".
 | `wingDef(it)` lui về `player.sect` khi không tra được `it.wing` | thân người từ xa sẽ mượn cánh theo lớp của NGƯỜI CHƠI. Chưa nổ vì giai đoạn 1 không đồng bộ trang bị; phải sửa trước Giai đoạn 2 |
 | Trang bị / hành động ra đòn / cánh | chưa đồng bộ — Giai đoạn 2. Gửi **chữ ký** `gearVisual`, KHÔNG gửi `player.equip` (một món 474 byte × 11 ô = ~5 KB mỗi người mỗi ảnh chụp) |
 | `cheatExec` vẫn ship | Giai đoạn 0 chưa làm. Vô hại ở bản offline; phải gỡ trước khi có bất cứ thứ gì chung |
-| Sandbox không SSH được vào VPS | mọi bước cài nginx/systemd phải do chủ dự án chạy tay |
+| Sandbox không SSH được vào VPS | mọi bước cài Node/nginx/systemd phải do chủ dự án chạy tay |
 
 ### ⚠ CRON TRIỂN KHAI SẼ KHÔNG KHỞI ĐỘNG LẠI MÁY CHỦ
 
