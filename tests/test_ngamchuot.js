@@ -129,16 +129,24 @@ const pass = m => console.log('PASS ' + m);
       return { gan: { x: Math.round(gan.x), y: Math.round(gan.y), hp: gan.hp },
                xa:  { x: Math.round(xa.x),  y: Math.round(xa.y),  hp: xa.hp } };
     });
+    // ⚠ ĐỪNG hỏi `.pop()` của danh sách hiệu ứng. `effects` là danh sách CHUNG và nó còn nhận
+    // thêm hiệu ứng SAU cú bấm này: tâm pháp bộ 3 (Venom) nổ trong `hurtMob` khi cột lửa chạm
+    // quái, và nó bắn `poison_apply` NẰM SAU `fire_pillar`. Tỉ lệ nổ là ~nửa ăn nửa thua ở cấp
+    // chiêu cao ⇒ bài này đỏ theo XÚC XẮC, trong khi hai con số ngay bên cạnh (xaMat 169 ·
+    // ganMat 0) chứng minh cơ chế đang chạy đúng. Chụp danh sách TRƯỚC rồi tìm cái MỚI: hỏi
+    // đúng "cú bấm này sinh ra gì", không hỏi "cái gì còn sót lại cuối mảng".
+    await page.evaluate(() => { window.__vfxTruoc = new Set(effects.filter(e => e.type === 'atlasVfx')); });
     await page.mouse.move(...mh(r.xa.x, r.xa.y, p.cx, p.cy));
     await page.keyboard.press('3');
     await page.waitForTimeout(120);
     const sau = await page.evaluate(() => {
       const [gan, xa] = mobs.slice(-2);
+      const moi = effects.filter(e => e.type === 'atlasVfx' && !window.__vfxTruoc.has(e)).map(e => e.id);
       return { ganMat: 1e9 - gan.hp, xaMat: 1e9 - xa.hp,
-               no: (effects.filter(e => e.type === 'atlasVfx').pop() || {}).id };
+               moi, no: moi.includes('fire_pillar') ? 'fire_pillar' : (moi[0] || null) };
     });
     console.log('4) Inferno:', JSON.stringify(sau));
-    if (sau.no !== 'fire_pillar') fail(`bấm phím 3 sinh ra ${sau.no}, phải là fire_pillar`);
+    if (sau.no !== 'fire_pillar') fail(`bấm phím 3 không sinh ra fire_pillar (hiệu ứng mới: ${JSON.stringify(sau.moi)})`);
     else if (!(sau.xaMat > 0)) fail('cột lửa nổ chỗ con trỏ mà con quái ở đó không mất máu — hình một đằng, sát thương một nẻo');
     else if (sau.ganMat > 0) fail('con quái cạnh chân cũng mất máu — vùng sát thương vẫn neo ở người niệm');
     else pass(`cột lửa chỉ đốt con quái ở chỗ con trỏ (−${Math.round(sau.xaMat)}), con cạnh chân không hề hấn`);
