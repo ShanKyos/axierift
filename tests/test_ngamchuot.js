@@ -27,38 +27,10 @@ const pass = m => console.log('PASS ' + m);
     player.hp = player.maxHp; player.qi = player.maxQi;
     mobs.length = 0; effects.length = 0;
     for (const k in player.cd) player.cd[k] = 0;
-    // ⚠ CHỖ ĐỨNG PHẢI ĐO, ĐỪNG CHÉP CỨNG — và bài này đã trả giá đúng một lần.
-    // Bản cũ ghi thẳng `player.x = 1300; player.y = 1250` kèm chú thích "đứng giữa map". Đúng
-    // vào ngày thị trấn khởi đầu được dựng lại, chỗ ấy thành BÊN TRONG MỘT NGÔI NHÀ — và cả
-    // năm mệnh đề đỏ cùng lúc với những triệu chứng trông chẳng liên quan gì nhau: thiên thạch
-    // lệch 34px, chiêu không bám quái, cột lửa đốt cả con đứng cạnh chân. Không có gì trong đó
-    // gợi ra "nhân vật đang đứng trong tường".
-    //
-    // Nay: sang vùng hoang dã trống nhất rồi QUÉT tìm một chỗ thật sự thoáng. Bài kiểm chiêu
-    // thức không có lý do gì phải chạy trong phố, mà phố thì mỗi đợt việc lại đổi.
-    travelTo('mongco');
-    mobs.length = 0; effects.length = 0;
-    const md = MAPS[curMap];
-    const thoang = (x, y, r) => {
-      if (inObstacle(curMap, x, y, 14)) return false;
-      for (let a = 0; a < 16; a++){
-        const t = a * Math.PI / 8;
-        for (let d = 60; d <= r; d += 70)
-          if (inObstacle(curMap, x + Math.cos(t) * d, y + Math.sin(t) * d, 14)) return false;
-      }
-      return true;
-    };
-    // Lề 950px mỗi phía: gần mép thì camera bị kẹp, nhân vật lệch hẳn sang một bên màn hình và
-    // chỗ còn lại không đủ để ngắm ra ngoài tầm chiêu.
-    let px = null, py = null;
-    for (let gy = 950; gy < md.h - 950 && px === null; gy += 70)
-      for (let gx = 950; gx < md.w - 950; gx += 70)
-        if (thoang(gx, gy, 700)) { px = gx; py = gy; break; }
-    player.x = px === null ? md.spawn.x : px;
-    player.y = py === null ? md.spawn.y : py;
-    snapCamera();
-    return { x: player.x, y: player.y, cx: camera.x, cy: camera.y, chan: chanDy(),
-             map: curMap, doTim: px !== null };
+    // Đứng GIỮA MAP: đứng gần mép thì camera bị kẹp, nhân vật lệch hẳn sang một bên màn hình và
+    // lề trái còn lại không đủ để ngắm ra ngoài tầm chiêu.
+    player.x = 1300; player.y = 1250; snapCamera();
+    return { x: player.x, y: player.y, cx: camera.x, cy: camera.y, chan: chanDy() };
   });
 
   // ĐỔI TOẠ ĐỘ THẾ GIỚI → ĐIỂM ẢNH MÀN HÌNH. Camera CÓ zoom (ZOOM_MUC), nên screen =

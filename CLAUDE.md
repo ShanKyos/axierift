@@ -2243,6 +2243,88 @@ nhân vật** — đã dẫm đúng thế: năm lớp hiện ra còn năm con Ax
 **Đã gỡ theo:** `assets/title/{nui,rung,san_da,anhhung}.webp` · `NUI_LOP`/`_nuiChop`/`_nuiCao`
 (dãy núi dựng bằng đường — Quy tắc số 3) · vầng trăng và trường sao vẽ tay.
 
+## ⏳ MÀN TẢI — thanh cân theo BYTE THẬT, không theo đồng hồ
+
+Trước bản này **không có màn tải nào** (`grep` ra 0 chỗ trong `game.js`). Hậu quả nhìn thấy được:
+cảnh Lunacia mười lớp lắp dần ngay trước mắt người chơi — trời trước, núi sau, nhân vật cuối.
+Trên mạng chậm nó trông như trang hỏng.
+
+| | |
+|---|---|
+| Khung | `#preload` trong `index.html` · khối cuối `style.css` |
+| Máy | `taiTroChay()` · `taiTroAnh()` · `taiTroDong()` trong `game.js`, ngay trên `vaoManDau()` |
+| Bản kê | `data/taitro.js` — **sinh bằng `tools/title/liet_ke_taitro.cjs`, đừng sửa tay** |
+| Gác | `tests/test_taitro.js` (6 mục) |
+
+Đo được: **21 tệp / 1,63 MB** — cảnh Lunacia 10 lớp + bệ đá (701 KB), 5 dải khung lớp (399 KB),
+5 con Axie mặc định (533 KB). Nhạc và art trong màn **không** nằm trong đó: chặn người chơi sau
+17 MB nhạc là đổi một lỗi lấy một lỗi tệ hơn.
+
+**⚠ CÂN THEO BYTE, KHÔNG THEO SỐ TỆP.** Một lớp mây 12 KB và một dải khung 98 KB mà nhảy bằng
+nhau thì thanh chạy vọt tới 80% rồi đứng im — nói dối theo đúng kiểu khó bắt nhất. Vì thế bản kê
+mang kích thước THẬT của từng tệp.
+
+**⚠ VÀ TUYỆT ĐỐI KHÔNG CHẠY THEO ĐỒNG HỒ.** Dự án này đã gỡ một thanh giả rồi — thanh
+"Tiếp nhận 28%…82%" ở màn chọn máy chủ, lý do ghi ngay trên `SERVERS`. Một thanh tải chạy bằng
+`setTimeout` là đúng con vật đó mọc lại ở màn khác. `test_taitro §3` ghìm art lại 700 ms rồi bắt
+thanh phải đứng dưới 100%.
+
+### Năm chỗ phải nhớ
+
+1. **`window.__gameReady` NAY BẬT Ở CUỐI MÀN TẢI**, không ở cuối tệp (cuối tệp là `__manDaNap`).
+   177 bài kiểm đều chờ cờ đó rồi mới bấm vào màn chờ — để nguyên chỗ cũ là chúng bấm vào một
+   màn còn bị lớp phủ che, mà triệu chứng lại là *"không tìm thấy nút"*. Giá phải trả: mỗi bài
+   chậm thêm **~300–480 ms** (đo được), đổi lấy việc không phải sửa 177 bài.
+2. **Cờ đó PHẢI luôn bật, kể cả khi hỏng.** Ba lớp bảo hiểm, thiếu lớp nào cũng là 177 bài
+   **treo chứ không đỏ**: `error` của ảnh tính là xong · trần cứng `TAI_TRAN` 9 giây ·
+   `try/catch` quanh chính lời gọi. `test_taitro §4` chặn `mountain.webp` thành 404 để chứng minh.
+3. **`taiTroAnh()` hỏi ĐÚNG cái hàm mà trong màn dùng** (`nenTai` · `ccLopAnh` · `chiImg`), nên
+   tấm tải về nằm luôn trong bộ đệm của nó. Tải bằng một `Image()` riêng thì lần dùng sau tuy
+   hứng được bộ đệm HTTP nhưng vẫn phải **GIẢI MÃ lại** — mà giải mã webp mới là phần tốn.
+4. **Nhóm "Axie đại diện" đọc `AVA_MAC_DINH` từ `game.js`**, không chép tay. Công cụ đọc bằng
+   regex và **dừng hẳn** nếu không khớp. `test_taitro §2` đối chiếu lại lúc chạy — đây là chỗ
+   duy nhất bắt được chuyện regex trượt rồi im lặng sinh ra một danh sách khác.
+5. **`taiTroDong()` phải HUỶ phần còn lại của màn tải, không chỉ giấu cái khung đi.** Có một
+   đường vào game chạy **song song** với màn tải: `?sect=<lớp>` tự gọi `startGame` trong một
+   `setTimeout` đăng ký sau `setTimeout` của màn tải, nên game khởi động trong lúc màn tải còn
+   đang chờ ảnh. `hoanTat()` sau đó vẫn chạy tiếp thì nó gọi `vaoManDau()` và **bật trang dẫn
+   truyện đè lên game đang chạy** — người chơi đang đứng trong bản đồ thì bị ném về màn ngoài
+   sau chừng một giây, *không có lỗi nào ném ra*. Hai chốt: `_taiXong = true` trong
+   `taiTroDong()`, và `if (player) return;` ở đầu `vaoManDau()`. Gỡ một chốt ra là
+   `test_taitro §6` đỏ ngay — đã thử.
+
+**Nướng lại art màn chờ thì chạy lại công cụ**, nếu không thanh về đích sớm hoặc muộn — mà lệch
+kiểu đó không ai thấy bằng mắt. `test_taitro §1` đối chiếu từng byte của bản kê với đĩa.
+
+Mẹo ở `TAI_MEO` là **mẹo THẬT**, rút từ cơ chế đang chạy. Một dòng mẹo bịa ở màn tải là thứ
+người chơi thử ngay trong mười phút đầu rồi phát hiện ra là sai.
+
+## 🐾 CHỌN AXIE Ở MÀN TẠO NHÂN VẬT — ĐÃ DỰNG XONG RỒI GIỮ LẠI, đọc trước khi làm lại
+
+Một lưới chọn avatar ở màn tạo nhân vật **đã được thi công đầy đủ và có bài kiểm**, rồi
+**cố ý không đưa lên `main`**. Nằm ở nhánh `claude/focused-cannon-k4o6gk` (commit `4568bb1`):
+`#cc-avatar` · `ccAvaRender()` · `ccAvaChon()` · `ccAvaDang()` · `ccAvaKeCo()` ·
+`tests/test_avachon.js` (5 mục, xanh).
+
+**Vì sao không đưa lên:** lúc dựng, ghi chú trong kho còn nói *"Khế Ước bán chỉ số + chiêu,
+không bán hình dáng"* — nên lưới cho chọn tự do cả 16 con. Trong lúc đó `main` đã chốt ngược
+lại: *"Bỏ luôn phần Ragoon. Nếu gacha là sẽ gacha nhân vật."* và `chiChon()` gác bằng
+`if (!C.co[id]) return;` — **chỉ con đã quay được mới cắm làm avatar**. Một lưới phát không cả
+16 con ở màn tạo nhân vật là phát không đúng thứ gacha đang bán.
+
+**Đây là câu hỏi cho chủ dự án, không phải câu hỏi kỹ thuật.** Không có phiên bản nào vừa có
+ích vừa trung tính với nền kinh tế, vì `avatarId()` đã cho mỗi lớp MỘT con miễn phí
+(`AVA_MAC_DINH`) và gacha bán 15 con còn lại:
+
+| Lưới bày gì | Phát không thêm | Dùng được không |
+|---|---|---|
+| Cả 16 con | 15 con | có, nhưng rỗng ruột gacha |
+| 5 con mặc định của 5 lớp | 4 con | có |
+| Chỉ con mặc định của lớp mình | 0 | không — một lựa chọn duy nhất |
+
+⇒ **Đừng tự dựng lại.** Hỏi chủ dự án chọn hàng nào trước, rồi mở lại mã từ nhánh trên.
+
+
 ## Hai lối vẽ nhân vật — ĐỪNG TRỘN VÀO NHAU
 
 Game có **ba** bộ dựng nhân vật, mỗi bộ một việc. Nhầm chỗ là ra hình lạc quẻ.
@@ -2535,6 +2617,31 @@ không gửi khung close thì `'close'` **không bao giờ nổ** — người �
 bóng của họ đứng chết giữa map tới 30 giây (tới khi bộ lọc im lặng dọn hộ). Trình duyệt gửi
 khung close tử tế nên đường này không lộ khi thử bằng Chromium. Phải bắt **cả `'end'`**.
 
+### 🔧 CÀI TRÊN VPS: MỘT DÒNG, và một dòng là vì **SERIAL CONSOLE LÀM RỚT KÝ TỰ**
+
+```
+bash /var/www/axiewuxia/deploy/caidat.sh
+```
+
+Chủ dự án vào VPS bằng **serial console** của nhà cung cấp (`starting serial terminal on
+interface serial0`). Loại terminal đó gõ lại từng ký tự qua cổng nối tiếp, nên **dán nhiều dòng
+là rớt ký tự và dính dòng** — đã xảy ra hai lần: `/var/www/axiewuxia` dính thành
+`/var/www/axiewuxisudo`, và một khối bốn dòng dán ra thành một dòng vô nghĩa. Một dòng ngắn thì
+**gõ tay được**. ⇒ Mọi hướng dẫn chạy trên VPS phải gói về một dòng, đừng đưa một danh sách lệnh.
+
+`caidat.sh` làm cả bốn bước (Node ≥18 · systemd · bước restart trong cron deploy · nginx `/ws`),
+chạy lại nhiều lần vô hại, và mỗi bước tự kiểm trước khi làm.
+
+**⚠ NÓ TỰ CHÉP MÌNH RA `/root` RỒI `exec` LẠI.** Cron chạy `git reset --hard` trên chính cây này
+2 phút một lần, mà **bash đọc script theo từng đoạn TRONG LÚC chạy** — tệp đổi giữa chừng là
+bash đọc lệch byte rồi làm một chuyện không ai từng viết. Cài Node có thể lâu hơn 2 phút, nên
+cửa sổ đó không phải giả thuyết. *(Cùng bài học: tôi đã sửa `tools/reg.sh` ngay giữa một lượt
+chạy hồi quy trong đúng phiên viết cái guard này. Thoát vì tệp dưới 8 KB nên bash đã nạp trọn.)*
+
+**⚠ Bước nginx là bước ĐỘNG VÀO TỆP ĐANG CHẠY**, nên: sao lưu → sửa bằng python → `nginx -t` →
+hỏng thì **trả lại bản cũ và KHÔNG reload**. Và nó **từ chối** nếu `sites-available/axiewuxia`
+có nhiều hơn một `server {` — đoán sai block ở một tệp đang chạy là mất trang.
+
 ### ⚠ VPS CẦN CÀI NODE — `apt install nodejs` cho bản QUÁ CŨ
 
 `node` và `npm` không có sẵn trên VPS. Và `apt install nodejs` của Debian/Ubuntu cho Node 12,
@@ -2547,6 +2654,8 @@ node --version      # phải ra v20.x
 ```
 
 `npm` đi kèm gói đó, nhưng **không dùng tới** — máy chủ không có phụ thuộc nào.
+(`caidat.sh` bước 1 làm đúng ba dòng trên, kèm kiểm `curl` có sẵn chưa — bản Debian tối giản
+không có, và khi thiếu thì lỗi báo ra là "không tải được script NodeSource", tức sai chỗ.)
 
 **⚠ MẶC ĐỊNH TẮT, và đừng gỡ cái cửa đó.** Không khai máy chủ ⇒ `net.js` `return` ngay,
 `NETPLAYERS` rỗng, bản chơi một mình chạy y nguyên — đó là thứ đang sống trên production, và cả
@@ -2938,97 +3047,6 @@ sau này mở sân sau phía nam cho đi được thì mới cần, và lúc đ�
 từng mép. Đừng dò bằng phân loại màu — art này tối và đục, cobble/mái/tường/đá cùng dải sáng
 55–150, tôi đã thử flood-fill lẫn ngưỡng màu và cả hai đều lem. Mắt trên ảnh có lưới 100px là
 cách nhanh nhất và đúng nhất. Đặt NPC thì dùng `/diem` rồi kiểm lại bằng phép điểm-trong-đa-giác.
-
-### 🏘 THỊ TRẤN KHỞI ĐẦU — 16 khối chặn VÔ HÌNH, và bốn phép đo tìm ra nó
-
-Chủ dự án đưa ảnh chụp bảng bản đồ một MMO khác và hỏi *"làm sao để tạo ra 1 map sống động như
-thế này ở điểm bắt đầu?"*. Đo Sapidae Chiefdom trước khi làm, và cả bốn con số chỉ về một chỗ:
-
-| Đo cái gì | Trước | Nghĩa là |
-|---|---|---|
-| Khối "nhà" | **16 khối `460×340` GIỐNG HỆT NHAU** | chúng chỉ CHẶN. `rimBuild()` viền chúng bằng một hàng **đá cuội** — đó là toàn bộ thứ người chơi thấy |
-| Bộ decor | `isoCayBo`/`isoNhoBo` **không khai** | rơi về mặc định ⇒ **200 cây RỪNG** mọc trên mặt phố lát đá |
-| Chỗ đặt khối | hai hàng, đều sát rìa bắc–nam | dải giữa cao 1480px trống trơn. Camera 1,0× chỉ thấy 1500×950 ⇒ **đứng giữa quảng trường không thấy một cái nhà nào** |
-| `drawMinimapStatic()` | không vẽ vật cản, **trên cả 12 map** | bảng bản đồ là một mảng `md.ground` phẳng: hồ, vách núi, tường thành, nhà cửa đều vô hình |
-
-Không lỗi nào in ra, không bài kiểm nào đỏ. **Cùng họ với `ISO_NEO`**: dữ liệu có đủ, chỉ là
-không có gì vẽ ra.
-
-**Bộ art: `tools/iso/nuong_nha.py`** — 10 khối nướng bằng Blender qua đúng đường ống của
-`nuong_trai.py` (`nuong_vat` + `ghi_neo` một tệp đích). `nha_o` · `nha_lau` · `nha_lo` ·
-`quay_cho` · `chuong` · `sanh_lenh` · `thap_canh` · `gieng` · `den_pho` · `hang_rao`.
-
-**⚠⚠ MẶT NHÌN THẤY LÀ `+X` VÀ `−Y`. ĐỪNG ĐẶT MẶT TIỀN Ở `+Y`.** `_cam()` xoay `(60°, 0, 45°)`
-⇒ máy ảnh đứng ở `+X, −Y, +Z`. Lượt nướng đầu tôi đặt hết cửa · cửa sổ · hàng cột · miệng lò ở
-`y = +1,5` — đúng mặt KHUẤT. Mười tệp PNG ghi ra hợp lệ, `_kiem_khong_rong` xanh, và thứ nhận
-được là **mười cái hộp trơn, không một cánh cửa nào trong cả thị trấn**. Kiểu hỏng này không có
-cách nào bắt bằng mã — phải nướng ra rồi NHÌN.
-
-**⚠ TỈ LỆ ĐO THEO `CAO_NV = 95`**, không chọn bằng cảm giác: nhà một tầng 2,6× thân người, hai
-tầng 3,6×, tháp canh 4,4×, giếng 1,15×. Và **bóng dáng hai mốc phải khác nhau**: bản đầu tháp
-canh dựng thân 1,9 trên đế 2,6 nên ở cỡ thu nhỏ nó trùng bóng với ống khói của lò rèn — hai mốc
-định hướng lẫn vào nhau thì mất cả hai. Nay tháp có **sàn quan sát nhô hẳn ra ngoài thân**.
-
-**Bảy khu phố nay là DỮ LIỆU, không phải chữ trong lore.** `MAPS.ardhaven.khu` là **một nguồn**
-cho cả ba việc: nhà nào mọc trên khối nào (`phoDung`), NPC thuộc khu nào, và tên khu in ở đâu
-trên bản đồ. Đoạn lore đã gọi tên bảy chỗ này từ lâu mà bản đồ không hề nhắc — đúng kiểu *bảng
-nói dối* mà `mapBanSac()` sinh ra để chữa. `test_thitran §4` khoá hai bên phải nói cùng một thứ.
-
-⚠ **Ranh khu vẽ theo CHỖ NPC CHỨC NĂNG ĐANG ĐỨNG, không theo la bàn** — Thợ Rèn (5230,990) và
-Binh Khí Chủ (5890,990) nằm trong Phố Lò, Người Giữ Chuồng (2160,2450) trong Sân Chuồng. Dời một
-NPC ra khỏi khu của nó thì nhà của nghề ấy mọc một nơi còn người làm nghề ấy đứng một nơi.
-
-**Bố cục khối: 16 → 36.** Hai hàng trong (y=1100 · y=1800) rơi đúng khe giữa các tuyến
-`isoDuong`, cộng 4 quầy chợ `200×140` giữa quảng trường. ⚠ Quầy chợ là **vật cản THẬT**, khác
-đồ trại của Bãi Farm: đồ trại cố ý đi xuyên qua được vì đó là chỗ đánh nhau, còn đi xuyên qua
-một cái quầy hàng giữa phố là lỗi. ⚠ Thêm khối là bớt đất đi được — chạy lại `test_domap`
-(sàn 55%, đường kính ≤81% đường chéo) sau mỗi lần đụng vào bảng ấy.
-
-**`drawMinimapStatic()` nay vẽ ba lớp**, và cả ba suy thẳng từ dữ liệu đang chạy nên không nói
-dối được: phần NGOÀI `diTrong` tô tối (hình dáng của vùng) · `isoDuong` thành mặt đường ·
-`MAP_OBSTACLES` thành khối, có dải **mái ngói** khi map khai `khu`. ⚠ Dải mái **chỉ** tô cho map
-có khu phố: ở map hoang dã thì khối trong `MAP_OBSTACLES` là hồ và vách núi, tô mái ngói lên một
-cái hồ là bản đồ nói dối ngay. Cả khối nằm trong `_miniStaticCache` — mỗi map dựng đúng một lần.
-
-**⚠ 11 NPC TẢ CẢNH ĐANG KHAI `talk:'quest'`.** Đó là giá trị mặc định để mở hộp thoại, không
-phải lời hứa có nhiệm vụ — nhưng `_npcNhom()` hỏi `talk` nên họ được tô **VÀNG** y như người
-thật sự giao việc, và 11 cái nhãn ấy đè lên đúng những chỗ người chơi cần tìm. Nay có cờ
-`taCanh:true` và nhóm **`npcTa` mặc định TẮT**; cờ phải hỏi **TRƯỚC** `talk`. Trong MÀN họ vẫn
-đứng đó và vẫn là thứ làm thành phố sống (cùng lý do Đàn Thú Hoang tồn tại) — chỉ là bảng bản đồ
-trả lời *"tôi LÀM được gì ở đâu"*, không phải *"ai đang đứng đâu"*.
-
-**⚠⚠ HAI HÀNG KHỐI MỚI TỪNG NUỐT MẤT BỐN NPC — tôi dẫm lại đúng cái bẫy "lùm chặn nuốt mất
-Rương Canh" ghi ngay phía trên.** Lượt đầu để y=1100 và y=1800, cao 340: **Thợ Mộc** (1100,2100)
-và **Người Luyện Chimera** (2500,2100) nằm GỌN trong khối, **Quan Truy Nã** và **Lính Gác Cổng
-Tây** chạm mép. NPC nằm trong vật cản là NPC **không bao giờ nói chuyện được** — mà Lính Gác
-Cổng Tây là người giao nhiệm vụ ĐẦU TIÊN của cả trò chơi.
-
-`test_domap` **không** bắt được (sàn đi được vẫn thừa, chỉ là có bốn người bị chôn trong đó);
-`test_sandat` và `test_diahinh` mới bắt. Nay hàng bắc lùi lên (1060, cao 320), hàng nam co lại
-(1760, cao 240), NPC gần nhất cách **50px**. *Thêm một khối thì QUÉT LẠI BẰNG MÁY mọi cặp
-NPC × khối — ô 460×340 thì mắt không ước lượng nổi.*
-
-**⚠⚠ VÀ NÓ LÀM ĐỎ MỘT BÀI CHẲNG LIÊN QUAN GÌ: `test_ngamchuot`.** Bài ấy ghi thẳng
-`player.x = 1300; player.y = 1250` kèm chú thích *"đứng giữa map"* — đúng vào ngày thị trấn được
-dựng lại, chỗ ấy thành **bên trong một ngôi nhà**. Cả **năm** mệnh đề đỏ cùng lúc với những
-triệu chứng trông chẳng dính gì nhau: thiên thạch lệch 34px · chiêu không bám quái · cột lửa đốt
-cả con đứng cạnh chân · chuột phải đi sai chỗ. Không một dòng nào trong đó gợi ra *"nhân vật
-đang đứng trong tường"*.
-
-Chữa ở bài kiểm, không ở map: nay nó `travelTo` vùng hoang dã rồi **quét tìm một chỗ thật sự
-thoáng** (16 hướng × bán kính 700, lề 950px cho camera khỏi bị kẹp). *Luật chung, và là lần thứ
-ba nó xuất hiện trong tệp này: một toạ độ chép cứng trong bài kiểm là một quả mìn hẹn giờ — nó
-đúng cho tới khi ai đó sửa thế giới, rồi nổ ở một chỗ chẳng liên quan.*
-
-Gác: `tests/test_thitran.js` (7 mệnh đề). Mệnh đề đắt nhất là **⑥ ĐỨNG Ở ĐIỂM THẢ PHẢI THẤY
-CÔNG TRÌNH**: nó hỏi bằng **tầm nhìn thật** (`VW`/`VH`), vì không có gì trong dữ liệu nói lên
-được chuyện một thành có đủ 36 khối mà người mới vào vẫn nhìn ra một sân đá trống. Trước bản
-này nó trả về **0**; nay **4**.
-
-**Còn nợ, nói thẳng:** NPC tả cảnh vẫn đứng yên một chỗ. Thứ làm ảnh mẫu sống là đám chấm xanh —
-người chơi thật — mà game này chơi đơn, nên thứ thay thế đúng là cho 11 người ấy **đi theo
-tuyến**. Đó là đúng bài học của Đàn Thú Hoang: *cái làm một nơi sống không phải hoạt ảnh, mà là
-có thứ đang làm việc gì đó.*
 
 ### Quảng Trường Cũ là thị trấn KHỞI ĐẦU
 Nhân vật mới hiện ra giữa sân (`newGame()` đặt `curMap = 'quangtruong'`), 10 NPC quanh sân,
