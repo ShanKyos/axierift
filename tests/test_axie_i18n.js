@@ -10,8 +10,10 @@ const { chromium } = require('playwright');
   await page.waitForFunction(() => window.__gameReady).catch(()=>{});
   await page.waitForTimeout(1500);
   const r1 = await page.evaluate(() => ({
-    locale: window.i18nLocale(), hintBar: document.getElementById('hint-bar').textContent,
-    tDirect: t('hud.hint.move'),
+    // Dải `#hint-bar` đã gỡ; lát cắt i18n nay là bảng Hướng Dẫn (F6), cụm khoá `help.*`.
+    locale: window.i18nLocale(),
+    hintBar: (() => { renderHelpPanel(); return (document.getElementById('panel-help') || {}).textContent || ''; })(),
+    tDirect: t('help.k.attack'),
   }));
 
   // Force VN locale, reload
@@ -22,8 +24,10 @@ const { chromium } = require('playwright');
   await page.evaluate(() => { window.TEST_MODE = true; window.cheatExec('/max'); });
   await page.waitForTimeout(500);
   const r2 = await page.evaluate(() => ({
-    locale: window.i18nLocale(), hintBar: document.getElementById('hint-bar').textContent,
-    tDirect: t('hud.hint.move'),
+    // Dải `#hint-bar` đã gỡ; lát cắt i18n nay là bảng Hướng Dẫn (F6), cụm khoá `help.*`.
+    locale: window.i18nLocale(),
+    hintBar: (() => { renderHelpPanel(); return (document.getElementById('panel-help') || {}).textContent || ''; })(),
+    tDirect: t('help.k.attack'),
   }));
 
   console.log('DEFAULT_EN', JSON.stringify(r1));

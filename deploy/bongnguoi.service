@@ -1,0 +1,56 @@
+# systemd unit cho máy chủ Bóng Người (Giai đoạn 1 online).
+#
+# ⚠ CÀI NODE TRƯỚC. VPS không có sẵn, và `apt install nodejs` cho Node 12 — quá cũ cho ESM +
+#   tiền tố `node:`. Dùng NodeSource:
+#       curl -fsSL https://deb.nodesource.com/setup_20.x | bash -
+#       apt install -y nodejs
+#       node --version        # phải ra v20.x
+#
+# ⚠ KHÔNG cần `npm install`. Máy chủ không có phụ thuộc nào — WebSocket tự viết ở
+#   server/wsnho.js bằng thư viện chuẩn. Xem lý do ở đầu tệp đó.
+#
+#   sudo cp /var/www/axiewuxia/deploy/bongnguoi.service /etc/systemd/system/
+#   sudo systemctl daemon-reload
+#   sudo systemctl enable --now bongnguoi
+#   systemctl status bongnguoi
+#   journalctl -u bongnguoi -f
+#
+# ⚠ CRON TRIỂN KHAI CHẠY `git reset --hard` TRÊN CHÍNH CÂY NÀY, mỗi 2 phút. Nghĩa là mã dưới
+#   chân tiến trình đổi mà tiến trình KHÔNG tự khởi động lại — nó sẽ chạy bản cũ mãi mãi, và
+#   không có gì báo. Phải thêm bước khởi động lại vào /root/deploy-axiewuxia.sh — chạy MỘT LẦN:
+#
+#       bash /var/www/axiewuxia/deploy/capnhat-deploy.sh
+#
+#   ⚠ ĐỪNG dán một dòng `systemctl restart` TRƠN: cron chạy script deploy 2 phút một lần BẤT KỂ
+#   có commit mới hay không, nên restart vô điều kiện là đá mọi người ra khỏi game mỗi 2 phút.
+#   Đoạn trong capnhat-deploy.sh so theo commit cuối chạm `server/`/`package.json`, nên deploy
+#   chỉ đổi art/game.js thì không ai bị ngắt.
+#
+# ⚠ Máy chủ này KHÔNG giữ trạng thái nào cần lưu — không cơ sở dữ liệu, không tệp. Khởi động
+#   lại là mất đúng danh sách ai đang nối, và client tự nối lại sau 3 giây. Đó là chủ ý: ở
+#   giai đoạn này, gián đoạn vài giây rẻ hơn mọi thứ khác.
+#   Khi nào có tài khoản và nhân vật trên máy chủ thì tệp CSDL **tuyệt đối không** được nằm
+#   trong /var/www/axiewuxia — git reset sẽ xoá nó.
+
+[Unit]
+Description=Axie Rift — Bong Nguoi (WebSocket relay vi tri nguoi choi)
+After=network.target
+
+[Service]
+Type=simple
+WorkingDirectory=/var/www/axiewuxia
+ExecStart=/usr/bin/node server/bongnguoi.js
+Environment=PORT=8877
+Environment=NODE_ENV=production
+Restart=always
+RestartSec=3
+# Chỉ cần đọc mã; không ghi gì ra đĩa.
+ProtectSystem=strict
+ProtectHome=yes
+PrivateTmp=yes
+NoNewPrivileges=yes
+StandardOutput=journal
+StandardError=journal
+
+[Install]
+WantedBy=multi-user.target
