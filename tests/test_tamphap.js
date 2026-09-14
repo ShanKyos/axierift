@@ -30,13 +30,20 @@ const PORT = process.argv[2] || '8853';
     const IDS = Object.keys(VOHOC_DEFS).filter(x => laTamPhap(x));
     const o = { ids:IDS, lop:{} };
 
-    // ① KHÔNG tự ngộ theo cấp, ở cả 5 lớp, kể cả cấp trần
+    // ① CẦU TẠM `TP_MO_THEO_CAP`: đang bật thì tự ngộ theo cấp, tắt đi thì khoá lại.
+    // ⚠ Gác CẢ HAI trạng thái, không chỉ trạng thái đang chạy. Cầu này rồi sẽ bị lật sang
+    // `false` lúc có Orb; nếu bài chỉ gác một phía thì lúc lật, nửa còn lại đi vào production
+    // mà chưa ai từng chạy thử một lần nào.
+    o.cauTam = TP_MO_THEO_CAP;
     for (const sc of LOP){
       startGame(sc, null); player.level = 120; player.lvPeak = 120; vhAutoLearn();
       o.lop[sc] = { ngo: IDS.filter(x => vhLearned(x)).length,
                     tren: IDS.filter(x => (KN_ROT_CHUNG.vaeldra||[]).includes(x)).length,
                     bo: (VO_CONG_BO[sc]||[]).length };
     }
+    // Cấp thấp thì CHƯA được ngộ dù cầu đang bắc — mốc cấp phải là mốc thật, không trang trí.
+    startGame('thieulam', null); player.level = 10; player.lvPeak = 10; vhAutoLearn();
+    o.capThap = IDS.filter(x => vhLearned(x)).map(x => [x, VOHOC_DEFS[x].unlock]);
     // mở bảng Kỹ Năng cũng không được ngộ hộ — `vhAutoLearn` chạy ở dòng đầu renderSkillPanel
     startGame('thieulam', null); player.level = 120; player.lvPeak = 120;
     togglePanel('skill'); window.knTab('vaeldra');
@@ -45,13 +52,18 @@ const PORT = process.argv[2] || '8853';
     // `vhAutoLearn` vốn đã `continue` qua mọi chiêu không có `phai`. Tức gỡ cờ `matTich` đi
     // thì bài vẫn xanh — đã thử đảo ngược và nó không đỏ. Phải lái THẲNG vào cờ: tạm gán
     // `phai` bằng lớp đang chơi rồi quét lại; còn chặn được thì mới đúng là cờ đang làm việc.
-    const _phaiCu = VOHOC_DEFS.tp_crush.phai;
+    // Lái thẳng vào cờ `matTich`: tắt cầu tạm cho ĐÚNG một chiêu (bằng cách bỏ `tp` đi nên
+    // `laTamPhap` trả false) rồi gán `phai` — nếu `matTich` đang làm việc thì nó vẫn phải chặn.
+    const _phaiCu = VOHOC_DEFS.tp_crush.phai, _tpCu = VOHOC_DEFS.tp_crush.tp;
+    startGame('thieulam', null); player.level = 120; player.lvPeak = 120;
+    delete VOHOC_DEFS.tp_crush.tp;
     VOHOC_DEFS.tp_crush.phai = player.sect;
     vhAutoLearn();
     o.coMatTich = !vhLearned('tp_crush');
-    VOHOC_DEFS.tp_crush.phai = _phaiCu;
+    VOHOC_DEFS.tp_crush.phai = _phaiCu; VOHOC_DEFS.tp_crush.tp = _tpCu;
 
     // ④ trần hai vế
+    startGame('thieulam', null); player.level = 120; player.lvPeak = 120; vhAutoLearn();
     IDS.forEach(x => player.vohoc[x] = true);
     player.skillLv = player.skillLv || {}; IDS.forEach(x => player.skillLv[x] = 100);
     calcDerived();
@@ -153,14 +165,21 @@ const PORT = process.argv[2] || '8853';
   if (r.ids.length !== 6) fail(`có ${r.ids.length} tâm pháp, mong 6`); else pass('6 tâm pháp');
 
   let e1 = 0;
+  const mong = r.cauTam ? r.ids.length : 0;
   for (const [sc, d] of Object.entries(r.lop)){
-    if (d.ngo !== 0){ fail(`① ${sc}: cấp 120 đã tự ngộ ${d.ngo} tâm pháp — cờ matTich hỏng, hệ Orb thành trang trí`); e1++; }
+    if (d.ngo !== mong){
+      fail(r.cauTam
+        ? `① ${sc}: cầu tạm ĐANG BẬT mà cấp 120 chỉ ngộ ${d.ngo}/${r.ids.length} — sáu ô khoá vĩnh viễn, hệ không có cửa nào`
+        : `① ${sc}: cầu tạm đã TẮT mà cấp 120 vẫn tự ngộ ${d.ngo} — cờ matTich hỏng, hệ Orb thành trang trí`);
+      e1++;
+    }
     if (d.tren !== r.ids.length){ fail(`① ${sc}: tab Vaeldra chỉ rót ${d.tren}/${r.ids.length}`); e1++; }
     if (d.bo !== 3){ fail(`① ${sc}: VO_CONG_BO có ${d.bo} bộ, mong 3`); e1++; }
   }
-  if (r.sauMoBang !== 0){ fail(`① mở bảng Kỹ Năng xong tự ngộ ${r.sauMoBang} tâm pháp — vhAutoLearn ở đầu renderSkillPanel`); e1++; }
+  if (r.capThap.length){ fail(`① cấp 10 đã ngộ ${JSON.stringify(r.capThap)} — mốc cấp chỉ là số trang trí`); e1++; }
+  if (r.sauMoBang !== mong){ fail(`① mở bảng Kỹ Năng xong ra ${r.sauMoBang}, mong ${mong} — vhAutoLearn chạy ở đầu renderSkillPanel`); e1++; }
   if (!r.coMatTich){ fail('① cờ `matTich` KHÔNG chặn gì cả — gán cho nó một `phai` là nó tự ngộ ngay'); e1++; }
-  if (!e1) pass('① không tự ngộ theo cấp ở cả 5 lớp (kể cả sau khi mở bảng), đủ 6 ô + 3 bộ');
+  if (!e1) pass(`① cầu tạm ${r.cauTam ? 'BẬT — tự ngộ đúng mốc cấp' : 'TẮT — khoá, chỉ mở bằng Orb'} ở cả 5 lớp; cấp 10 chưa có gì; đủ 6 ô + 3 bộ`);
 
   const T = r.tran;
   let e4 = 0;

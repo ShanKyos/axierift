@@ -3165,6 +3165,15 @@ const VO_CONG_BO = {
 // Quái gây lại ba hiệu ứng ấy — CỐ Ý để thấp. Đây là một cú đổi độ khó thật, và nó phải
 // chỉnh được bằng ba con số chứ không phải đi lục trong thân hàm.
 const TP_QUAI_DAY = 0.10, TP_QUAI_DINH = 0.07, TP_QUAI_DINH_GIAY = 0.8;
+// ⚠ CẦU TẠM, KHÔNG PHẢI THIẾT KẾ — cùng loại với `cotBossVung` đã ghi ở đầu tài liệu.
+// Sáu tâm pháp khai `matTich` (chỉ mở bằng vật phẩm), nhưng vật phẩm Orb thì CHƯA làm, nên nếu
+// để nguyên thì người chơi nhận sáu ô khoá vĩnh viễn — một hệ không có cửa nào là một hệ chết.
+// Chủ dự án chốt: tạm mở theo cấp, xong Orb thì đổi.
+//
+// ⇒ ĐỔI SANG ORB = LẬT ĐÚNG MỘT DÒNG NÀY về `false`. Đừng gỡ cờ `matTich` trong dữ liệu —
+// cờ đó mới là lời khai đúng về lâu dài; hằng này chỉ là thứ bắc qua chỗ còn thiếu.
+// `tests/test_tamphap.js §①` gác CẢ HAI trạng thái, nên lật xong mà quên chỗ nào là nó đỏ.
+const TP_MO_THEO_CAP = true;
 const TP_KHANG_TRAN = 0.75;   // trần kháng — chủ dự án chốt, thay cho "miễn dịch" của ảnh gốc
 const TP_GAY_NEN    = 0.08;   // tỉ lệ gây ở cấp 1
 const TP_GAY_CAP    = 0.02;   // +2%/cấp, đúng ảnh
@@ -3621,7 +3630,16 @@ function vhAutoLearn(){ // kỹ năng riêng của lớp tự học khi đạt c
     // trước cả nhánh theo lớp — sáu tâm pháp khai `phai: null` nên nếu để lọt xuống thì nhánh
     // chiêu chung sẽ ngộ hộ chúng. Quên cờ này ở đây là cả hệ Orb thành trang trí, và kiểu
     // hỏng ấy im lặng: người chơi lên cấp là có sẵn, không ai biết mình đáng lẽ phải đi gom.
-    if (_v.matTich) continue;
+    // `matTich` chặn tự ngộ — TRỪ lúc cầu tạm `TP_MO_THEO_CAP` đang bắc cho riêng tâm pháp.
+    // Cửa hẹp đúng bằng họ tâm pháp: mọi chiêu `matTich` khác (thứ sẽ mở bằng mật tịch sau này)
+    // vẫn bị chặn như thường, nên cầu tạm này không mở hộ cái gì ngoài phạm vi của nó.
+    // ⚠ Cầu tạm phải NGỘ THẲNG ở đây, không chỉ "đừng bỏ qua". Tâm pháp khai `phai: null` nên
+    // nếu để nó rơi xuống thì dòng `if (!_v.phai) continue` bên dưới nuốt mất — đúng cái bẫy đã
+    // ghi cho bị động chỉ số, và nó im lặng: cấp 120 vẫn 0/6, không lỗi nào.
+    if (_v.matTich){
+      if (!(TP_MO_THEO_CAP && laTamPhap(_vid))) continue;
+      learnVohoc(_vid); continue;
+    }
     if (laBiDongChiSo(_vid)){ learnVohoc(_vid); continue; }
     if (!_v.phai) continue;
     if (_v.phai !== player.sect) continue;
@@ -22468,7 +22486,7 @@ function legacyUniversalRowHtml(id){
 // thành "Tiến Hoá" và "Bản Năng" — mà Bản Năng vốn ĐÃ là thứ `skUpKhi()` trừ đi.
 const KN_TAB = [
   { id:'lop',     ten:'Lớp',     dong:'chiêu riêng của lớp + 7 bị động chỉ số chung — tự ngộ theo cấp' },
-  { id:'vaeldra', ten:'Vaeldra', dong:'kỹ năng chung + 6 tâm pháp — mở bằng cuốn ghép từ 3 Orb' },
+  { id:'vaeldra', ten:'Vaeldra', dong:'kỹ năng chung + 6 tâm pháp, ba cặp khắc chế nhau' },
   { id:'khac',    ten:'Khác',    dong:'Di Sản · bị động · hệ phụ' },
 ];
 // HÌNH của cây — 16 ô, dùng chung cho mọi lớp và mọi tab. `c` = cột (0-3), `h` = hàng (0-6),
@@ -22727,7 +22745,7 @@ function renderSkillPanelCT(tab, ds){
       return `<div class="kn-ct">
         <div class="kn-ct-dau"><img src="${n.inf.icon}" alt="">
           <div><b>${n.ten}</b><span>${n.mo ? 'Cấp: ' + n.lv : 'Chưa học'}</span></div></div>
-        <div class="kn-ct-tt ${n.mo?'ok':'no'}">${n.mo ? '◆ Đã ngộ' : '🔒 cần ghép đủ 3 Orb thành một cuốn'}</div>
+        <div class="kn-ct-tt ${n.mo?'ok':'no'}">${n.mo ? '◆ Đã ngộ' : (TP_MO_THEO_CAP ? '🔒 tự ngộ ở cấp ' + (n.v.unlock || '?') : '🔒 cần ghép đủ 3 Orb thành một cuốn')}</div>
         <div class="kn-d"><span>Loại:</span> Tâm pháp — ${gay ? 'gây' : 'kháng'} (bộ ${tp.bo})</div>
         <div class="kn-d kn-mo"><span>Hiệu quả:</span> ${n.inf.desc || '—'}</div>
         <div class="kn-d"><span>${gay ? 'Tỉ lệ thi triển:' : 'Mức kháng:'}</span>
@@ -22736,7 +22754,9 @@ function renderSkillPanelCT(tab, ds){
         ${doi ? `<div class="kn-d"><span>Bị khắc chế bởi:</span> <b>${VOHOC_DEFS[doi].name}</b></div>` : ''}
         <div class="kn-vach">Điều kiện</div>
         <div class="kn-d"><span>Cấp nhân vật:</span> <b class="${player.level >= (n.v.unlock||0) ? 'ok' : 'no'}">${n.v.unlock || '?'}</b> <i>(đang ${player.level})</i></div>
-        <div class="kn-d"><span>Mở khoá:</span> <b>không tự ngộ theo cấp</b> — ghép 3 Orb thành cuốn rồi dùng</div>
+        <div class="kn-d"><span>Mở khoá:</span> ${TP_MO_THEO_CAP
+          ? `<b>tự ngộ ở cấp ${n.v.unlock}</b> <i>(tạm — sau sẽ đổi sang ghép Orb)</i>`
+          : '<b>không tự ngộ theo cấp</b> — ghép 3 Orb thành cuốn rồi dùng'}</div>
         ${n.mo ? `<div class="kn-nut"><button class="mini-btn kn-nang${(n.lv < 120 && n.lv < player.level && player.silver >= skUpCost(n.id) && (player.khi||0) >= skUpKhi(n.id)) ? '' : ' mo'}" onclick="window.upgradeSkillUI('${n.id}')">Nâng Cấp</button></div>` : ''}
         <div class="kn-chan">Tâm pháp <b>luôn có hiệu lực</b> và <b>không chiếm ô</b> nào trên thanh chiêu.</div>
       </div>`;
