@@ -184,6 +184,32 @@ const { chromium } = require('playwright');
     }
     player.level = 120; player.lvPeak = 120; calcDerived();
 
+    // ── CỬA `moc` PHẢI TĂNG NGHIÊM NGẶT THEO CẤP ─────────────────────────────
+    // `moc` đếm từ TRẠNG THÁI (chủ ý — xem MOC_NV), nên một ô đòi ÍT HƠN HOẶC BẰNG một ô cùng
+    // cửa ở cấp thấp hơn sẽ bật `done` NGAY LÚC NHẬN. Không lỗi, không sai — chỉ là một ô đóng
+    // cửa chương xong trước khi người chơi kịp đọc hết mô tả, tức nó không gác gì cả.
+    {
+      const gom = {};
+      for (const q of [...QUESTS, ...SIDE_QUESTS].filter(x => x.type === 'moc'))
+        (gom[q.moc] = gom[q.moc] || []).push({ id:q.id, lv:q.lv || q.reqLv, need:q.need || 1 });
+      for (const k in gom){
+        const d = gom[k].sort((a, b) => a.lv - b.lv);
+        for (let i = 1; i < d.length; i++)
+          if (d[i].need <= d[i-1].need)
+            hong.push(`cửa '${k}': ${d[i].id}(lv${d[i].lv}) đòi ${d[i].need} mà ${d[i-1].id}(lv${d[i-1].lv}) đã đòi ${d[i-1].need} ⇒ XONG NGAY lúc nhận`);
+      }
+    }
+
+    // ── QUÃNG ĐƯỜNG TRONG CÙNG MỘT MAP ───────────────────────────────────────
+    // Không phải lỗi, nhưng là thứ người chơi CẢM được — map dựng lại khổ lớn (tới 5200×3800)
+    // nên một ô có thể bắt băng ngang ba màn hình. Ghi vào mục "hành người chơi" để còn thấy.
+    for (const q of QUESTS){
+      const g = npcCua(q.npc), d = questTarget ? questTarget(q) : null;
+      if (!g || !d || d.map !== g.map) continue;
+      const px = Math.hypot(d.x - g.x, d.y - g.y);
+      if (px > 3500) dau.push(`${q.id}(lv${q.lv}): đi ${Math.round(px)}px ≈ ${(px/1280).toFixed(1)} màn hình trong ${g.map}`);
+    }
+
     // ── ba phép đo "hành người chơi" trên toàn chuỗi ──────────────────────────
     const hoCap = [];
     for (let i = 1; i < QUESTS.length; i++){ const g = QUESTS[i].lv - QUESTS[i-1].lv; if (g > 4) hoCap.push(`${QUESTS[i-1].id}→${QUESTS[i].id} hở ${g} cấp`); }

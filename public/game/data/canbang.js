@@ -276,7 +276,10 @@ window.QUESTS = [
     //
     // ⇒ Trước khi gate một cửa cơ chế, hỏi CỬA ẤY MỞ Ở CẤP NÀO — đừng chỉ hỏi nó có đếm được
     // không. Box Kundun mở từ đầu game (rơi từ quái, mua ở tiệm) nên gate được ở cấp 56.
-    type:'moc', moc:'hap', need:1,
+    // ⚠ `need` PHẢI LỚN HƠN MỌI Ô CÙNG CỬA Ở CẤP THẤP HƠN. `moc` đếm từ TRẠNG THÁI, nên `need:1`
+    // ở đây là XONG NGAY lúc nhận — `sd_ch2` (cấp 30) đã bắt mở một hộp rồi. Một ô đóng cửa
+    // chương mà bật `done` trước khi người chơi kịp đọc xong mô tả thì không gác gì cả.
+    type:'moc', moc:'hap', need:2,
     name:'Thứ Không Ai Dạy Được', desc:'"Nét khắc không dán lên đồ, và nghề không dán lên người. Thứ người ta khoá trong hộp cũng vậy — mở ra rồi mới biết bên trong là nghề hay là rác." Mở một Box Kundun.',
     rew:{ xp:49883, silver:12000, cot:{ dong:'votrung',n:1, pham:'co' } } },
   { id:'c4q4', chapter:'IV · Rune Giữ Tên', lv:58, npc:'thumo', map:'comoc',
@@ -2339,7 +2342,7 @@ window.SIDE_QUESTS = [
     name:'Đường Về Cây Hồn Đã Tối',
     desc:'"Ta đánh trận sáu mươi năm. Chuyện duy nhất ta sợ là chết ở chỗ không có đèn." Hai mươi bốn tên đang đứng chắn đúng đoạn đường hồn phải đi qua. Chúng không biết chúng đang chắn cái gì — nhưng kẻ sai chúng thì biết.',
     rew:{ xp:515451, silver:66000 } },
-  { id:'sd_nm2', map:'nhanmon', npc:'laotuong', reqLv:110, reqMain:39, type:'moc', moc:'hap', need:5,
+  { id:'sd_nm2', map:'nhanmon', npc:'laotuong', reqLv:110, reqMain:39, type:'moc', moc:'hap', need:9,   // > 6 của c6q4 (cấp 92), nếu không thì xong ngay lúc nhận
     name:'Đếm Xem Còn Lại Gì',
     desc:'"Mỗi cái hộp khoá kín là một người đã không quay lại lấy nó." Mở năm cái. Ta không cần đồ trong đó — ta muốn biết năm người ấy mang theo gì khi họ nghĩ mình sẽ về.',
     rew:{ xp:642017, silver:74000, ngoc:{ chucPhuc:3, linhHon:2 } } },
