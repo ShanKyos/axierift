@@ -2156,6 +2156,43 @@ window.VOHOC_DEFS = {
   ps_def:      { name:'Increase Defense',      school:'Vaeldra', phai:null, tier:'so', cat:'Bị Động', type:'passive', chiSo:{ k:'defPct',  pt:0.30 }, unlock:29, color:'#a0d8ff', glyph:'◆', desc:'Bị động: dày Phòng Thủ — mỗi cấp +0,30%. Mở muộn nhất trong bảy cái: nó là thứ giữ người ở map cấp cao.' },
   ps_defrate:  { name:'Increase Defense Rate', school:'Vaeldra', phai:null, tier:'so', cat:'Bị Động', type:'passive', chiSo:{ k:'evaPP',   pt:0.05 }, unlock:10, color:'#a0ffe9', glyph:'✧', desc:'Bị động: tăng Né Tránh — mỗi cấp +0,05%. Đòn trượt hẳn thì không có giáp nào phải chịu.' },
   ps_crit:     { name:'Increase Critical Rate',school:'Vaeldra', phai:null, tier:'so', cat:'Bị Động', type:'passive', chiSo:{ k:'critPP',  pt:0.05 }, unlock:10, color:'#ff9a4d', glyph:'★', desc:'Bị động: tăng tỉ lệ Bạo Kích — mỗi cấp +0,05%. Khác Increase Critical Damage của Dark Lord: cái kia là SÁT THƯƠNG bạo kích, cái này là TỈ LỆ.' },
+
+  // ═══ TÂM PHÁP — BA CẶP KHẮC CHẾ NHAU ═══════════════════════════════════════════════
+  // Chung cho cả 5 lớp (`phai: null`), mỗi cặp treo trên MỘT bộ võ công môn phái:
+  //   bộ 1 (đơn · gần)  Crushing Force  ↔ Steadfast
+  //   bộ 2 (đơn · xa)   Paralyze        ↔ Unbound
+  //   bộ 3 (AoE quanh)  Venom           ↔ Antidote
+  //
+  // ⚠ HỌ THỨ BA CỦA BỊ ĐỘNG — đừng gộp vào hai họ kia. Khoá phân biệt là trường `tp`:
+  //   • `chiSo`  → cộng chỉ số, luôn chạy, tự ngộ theo cấp   (7 cái Increase X ở trên)
+  //   • không có → bị động HIỆU ỨNG, phải cắm vào ô 2-4      (Swell Life · Iron Will…)
+  //   • `tp`     → tâm pháp, luôn chạy, KHÔNG chiếm ô, và **chỉ mở bằng vật phẩm**
+  //
+  // ⚠ `matTich: true` ⇒ `vhAutoLearn()` KHÔNG tự ngộ chúng dù đủ cấp. Mốc `unlock` ở đây là
+  // cấp TỐI THIỂU để dùng cuốn, không phải cấp tự có. Bỏ cờ này là cả hệ Orb thành trang trí:
+  // người chơi lên cấp là có sẵn, chẳng ai đi gom mảnh nữa.
+  //
+  // ⚠ VẾ KHÁNG CÓ TRẦN `TP_KHANG_TRAN` (75%). Chủ dự án chốt sau khi tôi nêu: ảnh gốc ghi
+  // "có thể đạt đến hiệu quả miễn dịch", mà miễn dịch cứng biến cả cơ chế khắc chế thành nhị
+  // phân — ai max kháng thì tâm pháp đối phương vô dụng tuyệt đối, không còn gì để mà cân.
+  tp_crush:   { name:'Crushing Force', school:'Vaeldra', phai:null, tier:'trung', cat:'Tâm Pháp', type:'passive', matTich:true,
+                tp:{ bo:1, kieu:'gay', hieu:'day' }, unlock:11, color:'#ff8a5a', glyph:'✹',
+                desc:'Tâm pháp: đòn của võ công bộ 1 đẩy lùi mục tiêu và nện thêm sát thương bạo kích. Bị Steadfast của đối phương kháng lại.' },
+  tp_stead:   { name:'Steadfast',      school:'Vaeldra', phai:null, tier:'trung', cat:'Tâm Pháp', type:'passive', matTich:true,
+                tp:{ bo:1, kieu:'khang', hieu:'day' }, unlock:21, color:'#a0d8ff', glyph:'◆',
+                desc:'Tâm pháp: đứng vững trước đòn nện — kháng đẩy lùi và kháng sát thương bạo kích giáng xuống mình.' },
+  tp_para:    { name:'Paralyze',       school:'Vaeldra', phai:null, tier:'trung', cat:'Tâm Pháp', type:'passive', matTich:true,
+                tp:{ bo:2, kieu:'gay', hieu:'dinh' }, unlock:17, color:'#ffe08a', glyph:'⚡',
+                desc:'Tâm pháp: đòn của võ công bộ 2 khoá cứng mục tiêu — không đi được, không ra chiêu. Bị Unbound của đối phương kháng lại.' },
+  tp_unbound: { name:'Unbound',        school:'Vaeldra', phai:null, tier:'trung', cat:'Tâm Pháp', type:'passive', matTich:true,
+                tp:{ bo:2, kieu:'khang', hieu:'dinh' }, unlock:27, color:'#a0ffe9', glyph:'✧',
+                desc:'Tâm pháp: không gì khoá được chân mình — kháng mọi đòn định thân giáng xuống mình.' },
+  tp_venom:   { name:'Venom',          school:'Vaeldra', phai:null, tier:'trung', cat:'Tâm Pháp', type:'passive', matTich:true,
+                tp:{ bo:3, kieu:'gay', hieu:'doc' }, unlock:24, color:'#7ec850', glyph:'☠',
+                desc:'Tâm pháp: đòn của võ công bộ 3 rải độc — mục tiêu mất máu dần theo tỉ lệ. Bị Antidote của đối phương kháng lại.' },
+  tp_anti:    { name:'Antidote',       school:'Vaeldra', phai:null, tier:'trung', cat:'Tâm Pháp', type:'passive', matTich:true,
+                tp:{ bo:3, kieu:'khang', hieu:'doc' }, unlock:34, color:'#c8e87a', glyph:'✚',
+                desc:'Tâm pháp: máu tự lọc lấy chất độc — kháng mọi loại độc giáng xuống mình.' },
 };
 
 window.HERO_METAL = [

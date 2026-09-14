@@ -3147,6 +3147,72 @@ function biDongBat(id){
 // ═══ BỊ ĐỘNG CHỈ SỐ ═══════════════════════════════════════════════════════════════════
 // Khoá phân biệt hai họ bị động là trường `chiSo` (xem chú thích dài ở `data/canbang.js`).
 // CÓ `chiSo` ⇒ luôn chạy, không chiếm ô, nâng cấp được. KHÔNG có ⇒ phải cắm vào ô.
+// ═══ TÂM PHÁP — ba cặp khắc chế, treo trên ba BỘ võ công môn phái ═════════════════════
+// Ảnh mẫu chủ dự án đưa: mỗi lớp có ba "võ công môn phái" (đơn·gần → đơn·xa → AoE quanh
+// người), và sáu tâm pháp CHUNG mọi lớp bám vào ba bộ ấy. Bảng dưới nói bộ nào gồm chiêu nào.
+//
+// ⚠ ĐỪNG ĐẶT CHIÊU MỚI CHO BA BỘ NÀY. Game đã có 36 chiêu mang tên MU chính chủ; ba bộ chỉ là
+// cách GOM chúng lại. Đẻ thêm 15 chiêu nữa là đúng bệnh nhân bản ghi ở đầu tài liệu.
+// ⚠ Sylvan Ranger bộ 3 hiện mượn `elf_fiveshot` — nó là bắn nhiều mũi, KHÔNG phải nổ quanh
+// người. Lớp này chưa có AoE thật; đây là chỗ khuyết đã báo chủ dự án, không phải sơ ý.
+const VO_CONG_BO = {
+  thieulam: ['a', 'dk_impale',       'dk_ragefulblow'],
+  toanchan: ['a', 'elf_penetration', 'elf_fiveshot'],
+  baidasan: ['a', 'dw_lightning',    'dw_inferno'],
+  minhgiao: ['a', 'mg_powerwave',    'mg_giganticstorm'],
+  bug:      ['a', 'dl_electricspark','dl_fireburst'],
+};
+// Quái gây lại ba hiệu ứng ấy — CỐ Ý để thấp. Đây là một cú đổi độ khó thật, và nó phải
+// chỉnh được bằng ba con số chứ không phải đi lục trong thân hàm.
+const TP_QUAI_DAY = 0.10, TP_QUAI_DINH = 0.07, TP_QUAI_DINH_GIAY = 0.8;
+const TP_KHANG_TRAN = 0.75;   // trần kháng — chủ dự án chốt, thay cho "miễn dịch" của ảnh gốc
+const TP_GAY_NEN    = 0.08;   // tỉ lệ gây ở cấp 1
+const TP_GAY_CAP    = 0.02;   // +2%/cấp, đúng ảnh
+const TP_KHANG_CAP  = 0.02;   // +2%/cấp, đúng ảnh
+// ⚠ VẾ GÂY CŨNG PHẢI CÓ TRẦN, và đây là lỗi tôi đo ra chứ không lo xa: +2%/cấp mà không chặn
+// thì ở cấp chiêu 50 tỉ lệ ra **106%** — mọi nhát đều choáng, đều độc, đều nện văng. Lúc đó ba
+// bộ võ công không còn là ba lựa chọn nữa mà là ba cái nút bấm cho vui, và vế kháng của đối
+// phương (trần 75%) cũng không kéo nổi nó xuống dưới 26%.
+const TP_GAY_TRAN   = 0.50;
+// Chiêu `id` thuộc bộ mấy của lớp đang chơi — 0 nghĩa là không thuộc bộ nào.
+function voCongBo(id){
+  if (!player) return 0;
+  const ds = VO_CONG_BO[player.sect] || [];
+  const i = ds.indexOf(id);
+  return i < 0 ? 0 : i + 1;
+}
+function laTamPhap(id){
+  const v = VOHOC_DEFS[id];
+  return !!(v && v.type === 'passive' && v.tp);
+}
+// Tra tâm pháp theo (bộ, kiểu). Một cửa duy nhất — cả phần gây, phần kháng lẫn phần vẽ đều
+// hỏi nó, nên không có bảng tra thứ hai nào để mà lệch.
+function tamPhapCua(bo, kieu){
+  for (const id in VOHOC_DEFS){
+    const v = VOHOC_DEFS[id];
+    if (v.tp && v.tp.bo === bo && v.tp.kieu === kieu) return id;
+  }
+  return null;
+}
+// Tỉ lệ GÂY của vế tấn công trong bộ `bo`. 0 khi chưa ngộ.
+function tpTyLeGay(bo){
+  const id = tamPhapCua(bo, 'gay');
+  if (!id || !vhLearned(id)) return 0;
+  return Math.min(TP_GAY_TRAN, TP_GAY_NEN + TP_GAY_CAP * (skLv(id) - 1));
+}
+// Mức KHÁNG của người chơi với một loại hiệu ứng ('day' · 'dinh' · 'doc').
+// ⚠ TRẦN CỨNG `TP_KHANG_TRAN`. Ảnh gốc hứa "miễn dịch"; chủ dự án đã chốt bỏ vế đó — kháng
+// 100% biến cơ chế khắc chế thành nhị phân và không còn gì cân được nữa.
+function tpKhang(hieu){
+  let t = 0;
+  for (const id in VOHOC_DEFS){
+    const v = VOHOC_DEFS[id];
+    if (!v.tp || v.tp.kieu !== 'khang' || v.tp.hieu !== hieu) continue;
+    if (!vhLearned(id)) continue;
+    t += TP_KHANG_CAP * skLv(id);
+  }
+  return Math.min(TP_KHANG_TRAN, t);
+}
 function laBiDongChiSo(id){
   const v = VOHOC_DEFS[id];
   return !!(v && v.type === 'passive' && v.chiSo);
@@ -3176,6 +3242,7 @@ function knOHopLe(slot, id){
   // ⚠ Bị động CHỈ SỐ đã luôn chạy rồi — cho cắm vào ô là dựng một cái BẪY: người chơi đốt một
   // trong ba ô trống để đổi lấy đúng con số không, và không có gì trên màn hình nói cho họ biết.
   if (laBiDongChiSo(id)) return 'bị động chỉ số luôn chạy — không cần cắm vào ô';
+  if (laTamPhap(id)) return 'tâm pháp luôn chạy — không cần cắm vào ô';
   const cu = (player.skillBar || []).indexOf(id);
   if (cu >= 0 && cu !== slot) return null;        // đổi chỗ trong thanh: hợp lệ, xử ở knGan
   return null;
@@ -3550,6 +3617,11 @@ function vhAutoLearn(){ // kỹ năng riêng của lớp tự học khi đạt c
     // bỏ qua chúng — chủ dự án chốt "học default, không cần mật tịch", nên chúng phải tự ngộ
     // theo CẤP y như chiêu lớp. Cửa riêng ở đây, không nới điều kiện `_v.phai` bên dưới:
     // nới ra là mọi chiêu chung tương lai (kể cả thứ định để mật tịch mở) tự rơi vào tay.
+    // ⚠ `matTich` ⇒ CHỈ mở bằng vật phẩm. Phải chặn TRƯỚC nhánh bị động chỉ số bên dưới, và
+    // trước cả nhánh theo lớp — sáu tâm pháp khai `phai: null` nên nếu để lọt xuống thì nhánh
+    // chiêu chung sẽ ngộ hộ chúng. Quên cờ này ở đây là cả hệ Orb thành trang trí, và kiểu
+    // hỏng ấy im lặng: người chơi lên cấp là có sẵn, không ai biết mình đáng lẽ phải đi gom.
+    if (_v.matTich) continue;
     if (laBiDongChiSo(_vid)){ learnVohoc(_vid); continue; }
     if (!_v.phai) continue;
     if (_v.phai !== player.sect) continue;
@@ -4343,7 +4415,7 @@ function castVohoc(id){
     const _vc = VH_VFX[id] || null;
     for (let i = 0; i < n; i++){
       const off = n > 1 ? (i - (n-1)/2) * 0.18 : 0;
-      projectiles.push({ x:player.x, y:player.y, ang:base + off, speed:spd, dmg:player.atk * v.mult * _mul, kind:'skill', life:0.95, color:(_vc && _vc.rainbow) ? `hsl(${Math.round(i*360/Math.max(n,1))},85%,66%)` : col, pierce:!!fx.pierce, vhfx:fx, style:(_vc && _vc.proj) || undefined, seed:i });
+      projectiles.push({ x:player.x, y:player.y, ang:base + off, speed:spd, dmg:player.atk * v.mult * _mul, kind:'skill', bo:player._tpBo||0, life:0.95, color:(_vc && _vc.rainbow) ? `hsl(${Math.round(i*360/Math.max(n,1))},85%,66%)` : col, pierce:!!fx.pierce, vhfx:fx, style:(_vc && _vc.proj) || undefined, seed:i });
     }
     spawnSkillVfx(id, v, 'cast', base, 56);
     // Sourced per-class projectile-launch SFX — VOHOC/FUSION 'proj' skills only ever got the
@@ -6181,6 +6253,11 @@ const SK_ICON_FOR = {
   // Bị động chỉ số (chung cả 5 lớp)
   ps_life:'gem', ps_mana:'manaorb', ps_stamina:'fist', ps_atk:'greatsword',
   ps_def:'helm', ps_defrate:'wind', ps_crit:'fireslash',
+  // Tâm pháp — sáu ô này chủ dự án sẽ đưa icon riêng sau; tạm gán hình phân biệt được nhau
+  // chứ không để cả sáu rơi về `blade_up`, vì sáu thanh kiếm giống hệt nhau thì không đọc ra
+  // cặp nào khắc cặp nào (đúng bài học đã ghi ở chính bảng này).
+  tp_crush:'hammer', tp_stead:'anvil', tp_para:'hourglass',
+  tp_unbound:'halo', tp_venom:'poison', tp_anti:'heal',
 };
 
 // Màu Ổ theo NGUYÊN TỐ của chiêu, không theo màu lớp — Fire Scream của Dark Lord phải ra lửa cam
@@ -6188,6 +6265,8 @@ const SK_ICON_FOR = {
 const SK_ICON_COLOR = {
   ps_life:'#ff7a7a', ps_mana:'#5ab8e8', ps_stamina:'#e8c87a', ps_atk:'#ffcf7a',
   ps_def:'#a0d8ff', ps_defrate:'#a0ffe9', ps_crit:'#ff9a4d',
+  tp_crush:'#ff8a5a', tp_stead:'#a0d8ff', tp_para:'#ffe08a',
+  tp_unbound:'#a0ffe9', tp_venom:'#7ec850', tp_anti:'#c8e87a',
   dk_cyclone:'#4c8dff', dk_lunge:'#6aa0ff', dk_impale:'#8ab8ff', dk_fallingslash:'#3a6fd8',
   dk_ragefulblow:'#3a6fd8', dk_fortitude:'#a0d8ff', dk_bulwark:'#6aa8ff', tienthiencong:'#ffe9a8',
   elf_poisonarrow:'#7ec850', elf_greaterdef:'#5ac8b8', elf_holybolt:'#ffe9a8', elf_fiveshot:'#a0ffe9',
@@ -7529,6 +7608,10 @@ function calcDerived(){
   if (biDongBat('dk_fortitude')) player.maxHp = Math.round(player.maxHp * 1.15);        // Swell Life
   if (biDongBat('mg_ironwill'))  player.hpLeech = (player.hpLeech || 0) + 0.06;         // Iron Will
   if (biDongBat('dl_darkraven')) player.skillDmgPct = (player.skillDmgPct || 0) + 0.12; // Dark Raven
+  // Kháng độc của tâm pháp dồn thẳng vào `vhPoisonRes` — trường đó ĐÃ được ba chỗ gây độc đọc
+  // (đòn quái `poisonHit`, Dị Biến Nhiễm Độc, và vũng độc). Cộng vào đây là cả ba chỗ ăn theo
+  // miễn phí; thêm một trường kháng thứ hai là bảo đảm có chỗ quên đọc nó.
+  player.vhPoisonRes = Math.min(TP_KHANG_TRAN, (player.vhPoisonRes || 0) + tpKhang('doc'));
   player.healRegenPct = biDongBat('elf_heal') ? 0.01 : 0;                               // Heal — đọc ở update()
   // ── Bị động CHỈ SỐ (có `chiSo`) ────────────────────────────────────────
   // Cộng SAU mọi hệ số nhân, nên `%` ở đây là phần trăm của chỉ số đã thành hình — đúng thứ
@@ -9921,6 +10004,31 @@ function hurtMob(m, dmg, source){
     const _kb = (2 + 10 * _w) * (14 / Math.max(14, m.def.size || 14));
     if (_kb > 0.4) vhKnockback(m, Math.atan2(m.y - player.y, m.x - player.x), _kb);
   }
+  // ── TÂM PHÁP, vế GÂY ───────────────────────────────────────────────────────────────
+  // Đặt ở `hurtMob` vì đây là điểm áp sát thương DUY NHẤT của cả game — mọi đường (đòn chém,
+  // AoE, đạn bay) đều chui qua đây, nên không có đường nào lọt mà không nổ tâm pháp.
+  // ⚠ Cửa là `player._tpBo`, tức chỉ nổ khi đòn này đến từ một VÕ CÔNG MÔN PHÁI. Bỏ cửa đó
+  // thì đòn thường cũng gây choáng/độc, và ba bộ võ công mất sạch lý do tồn tại.
+  if (player._tpBo > 0 && !m.dead){
+    const _tl = tpTyLeGay(player._tpBo);
+    if (_tl > 0 && Math.random() < _tl){
+      if (player._tpBo === 1){
+        vhKnockback(m, Math.atan2(m.y - player.y, m.x - player.x), 3.5);
+        m.hp -= Math.max(1, Math.round(dmg * 0.35));
+        addFloat(m.x, m.y - (m.def.size||14) - 26, 'NGHIỀN!', '#ff8a5a', 12);
+      } else if (player._tpBo === 2){
+        m.stunT = Math.max(m.stunT || 0, (m.def.bossKind ? 0.4 : 1) * 1.2);
+        addFloat(m.x, m.y - (m.def.size||14) - 26, 'KHOÁ!', '#ffe08a', 12);
+        playStatusFx('stunned', 'stunned', m.x, m.y, 0.5, 0.3);
+      } else {
+        m.poisonT = Math.max(m.poisonT || 0, 4);
+        m.poisonDps = Math.max(1, Math.round(m.maxHp * 0.012));
+        addFloat(m.x, m.y - (m.def.size||14) - 26, 'ĐỘC!', '#7ec850', 12);
+        playStatusFx('poison', 'poison_apply', m.x, m.y, 0.5, 0.3);
+      }
+      if (m.hp <= 0) killMob(m, source);
+    }
+  }
   // Khựng hình / rung / loé bạo kích KHÔNG đặt ở đây nữa — xem swingFeel(). Đặt trong hurtMob
   // nghĩa là AoE trúng 8 con thì kích hoạt 8 lần, và đạn multishot làm hitstop nối đuôi nhau
   // khiến game giật liên tục thay vì "khựng một nhịp rồi bung".
@@ -11246,6 +11354,14 @@ function update(dt){
   // (bấm phải trên nền đất / bấm minimap / đèn hiệu nhiệm vụ) rồi nhân vật tự chạy tới,
   // né vật cản dọc đường — đây là cách di chuyển DUY NHẤT còn lại, không ghi đè khi đang Auto Farm
   // (auto tự dẫn đường riêng tới quái, xem dưới)
+  // ── TÂM PHÁP, vế bị GÂY: ĐỊNH THÂN ──────────────────────────────────────────────────
+  // Đặt NGAY TRƯỚC khối di chuyển vì đây là cửa duy nhất còn lại (WASD đã bỏ). Gác ở chỗ khác
+  // — ví dụ chỉ chặn `moveTarget` — thì AUTO vẫn tự dẫn đường đi tiếp, và "định thân" chỉ khoá
+  // được người chơi bấm tay chứ không khoá được máy.
+  if ((player.dinhT || 0) > 0){
+    player.dinhT -= dt;
+    if (player.dinhT <= 0) player.dinhT = 0;
+  }
   let mx = 0, my = 0;
   if (moveTarget && !player.auto){
     const _mtd = dist(player.x, player.y, moveTarget.x, moveTarget.y);
@@ -11456,7 +11572,11 @@ function update(dt){
     player._unstickT -= dt;
     mx = Math.cos(player._unstickA); my = Math.sin(player._unstickA);
   }
-  const ml = Math.hypot(mx,my);
+  // Định thân phải tính TRƯỚC `player.moving` — cờ đó lái khối vẽ ĐI/CHẠY. Chặn sau nó thì
+  // nhân vật đứng yên một chỗ mà chân vẫn guồng, và lỗi đó chỉ lộ ra khi nhìn ảnh chụp.
+  const _bang = (player.dinhT || 0) > 0;
+  if (_bang){ mx = 0; my = 0; }
+  const ml = _bang ? 0 : Math.hypot(mx,my);
   player.moving = ml > 0.01;
   // NHỊP BƯỚC THEO TỐC ĐỘ THẬT, không phải một hằng số.
   // Số 11 cũ là con số dò tay cho hình vector đời trước, và mọi lớp mọi trạng thái dùng chung.
@@ -11464,6 +11584,9 @@ function update(dt){
   // 1,74 vòng/giây × 94 px = 165 px/giây — tức 35% quãng đường là TRƯỢT CHÂN. Nhìn ra ngay.
   // Nay nhịp = quãng đường / sải chân, nên nhanh chậm gì bàn chân cũng bám đất: bị làm chậm
   // thì bước ngắn lại, có Cánh tăng tốc thì sải dài ra, không phải dò lại con số nào.
+  // Định thân: chặn Ở ĐÂY, ngay trước khi `mx/my` được tiêu thụ. Mọi đường chọn hướng —
+  // chuột phải, minimap, đèn hiệu, AUTO tự dẫn — đều đổ về đúng hai biến này, nên chặn một
+  // chỗ là chặn hết; gác ở từng nguồn thì sót đúng cái nguồn quên gác.
   thanNhip(player, dt, mx, my, ml);
   if (ml > 0.01){
     mx /= Math.max(1,ml); my /= Math.max(1,ml);
@@ -11815,6 +11938,28 @@ function update(dt){
           player.poisonDps = Math.max(1, Math.round(player.maxHp * 0.008 * (1 - (player.vhPoisonRes || 0))));
           if (_freshPoison) playStatusFx('poison', 'poison_apply', player.x, player.y, 0.5, 0.3);
         }
+        // ── TÂM PHÁP, phía QUÁI gây ────────────────────────────────────────────────
+        // Chủ dự án chốt "kháng cho cả PvE". Nhưng trước bản này quái KHÔNG đẩy lùi và KHÔNG
+        // định thân người chơi — chỉ có độc. Nên chỉ thêm vế kháng thì nó vẫn là chỉ số chết,
+        // chỉ chết vì lý do khác. Hai đòn dưới đây là nguồn để vế kháng có việc mà làm.
+        // ⚠ Gắn vào VAI quái (A1) chứ không rải đều mọi con: Trọng Giáp nện văng người, Pháp Sư
+        // khoá chân. Rải đều là mọi con quái trong game đổi hành vi cùng lúc — một cú đổi độ khó
+        // rất lớn mà không ai đo được là do đâu.
+        // ⚠ Trường là `m.role`, KHÔNG phải `m.vai` — dữ liệu map khai `pk.vai` nhưng `spawnMob`
+        // nhận nó vào dưới tên `role`. Viết nhầm thì hai nhánh này im lặng không bao giờ nổ, và
+        // cả hai vế kháng trông như "đã nối" trong khi chẳng có gì để mà kháng.
+        if (m.role === 'nang' && Math.random() < TP_QUAI_DAY * (1 - tpKhang('day'))){
+          const _a = Math.atan2(player.y - m.y, player.x - m.x);
+          player.x = clamp(player.x + Math.cos(_a) * 46, 20, MAP.w - 20);
+          player.y = clamp(player.y + Math.sin(_a) * 46, 20, MAP.h - 20);
+          collideObstacles(player, 14);
+          addFloat(player.x, player.y - 52, '↯ BỊ NỆN VĂNG!', '#ff8a5a', 13);
+        }
+        if (m.role === 'phap' && Math.random() < TP_QUAI_DINH * (1 - tpKhang('dinh'))){
+          player.dinhT = Math.max(player.dinhT || 0, TP_QUAI_DINH_GIAY);
+          addFloat(player.x, player.y - 52, '✧ BỊ KHOÁ CHÂN!', '#ffe08a', 13);
+          playStatusFx('stunned', 'stunned', player.x, player.y, 0.5, 0.3);
+        }
         AudioSys.sfx('hurt', 0.7);
         logCombat(`🩸 ${mobCounter ? 'KHẮC CHẾ ' : ''}-${dmg} ← ${m.def.name}`, mobCounter ? '#ff9a3a' : '#ff7a6a');
         // Thái Cực hộ thể (Lưỡng Nghi Cảnh): phản 5% sát thương
@@ -11915,6 +12060,7 @@ function update(dt){
     player.pendingHit.t -= dt;
     if (player.pendingHit.t <= 0){
       const ph = player.pendingHit; player.pendingHit = null;
+      player._tpBo = 0;   // đòn thường KHÔNG thuộc bộ nào — để nguyên cờ là nó ăn ké bộ của chiêu vừa tung
       const tgt = nearestMob(ph.reach);
       if (tgt){
         let dmg = ph.dmg, src = 'hit';
@@ -11940,6 +12086,9 @@ function update(dt){
         // bỏ qua với MỌI đòn bắn ra — Sylvan Ranger/Dark Wizard (đòn thường + chiêu chính đều là proj)
         // gần như toàn bộ sát thương không ăn chỉ số này, khiến đầu tư Vận thành bẫy với 2 lớp đó.
         if (src==='hit' && Math.random() < player.crit){ dmg *= (player.critDmgMult || 2); src='crit'; }
+        // Đạn nổ TRỄ: cờ `_tpBo` đặt lúc tung đã cũ (người chơi có thể đã tung chiêu khác).
+        // Viên đạn tự mang bộ của mình, nên khôi phục lại đúng nó ngay trước khi áp sát thương.
+        player._tpBo = p.bo || 0;
         hurtMob(m, dmg, src);
         // Sourced per-class projectile-impact SFX — the generic "this ranged attack landed" moment,
         // shared by every player-fired projectile kind (skill/danchi) that reaches this loop.
@@ -22319,7 +22468,7 @@ function legacyUniversalRowHtml(id){
 // thành "Tiến Hoá" và "Bản Năng" — mà Bản Năng vốn ĐÃ là thứ `skUpKhi()` trừ đi.
 const KN_TAB = [
   { id:'lop',     ten:'Lớp',     dong:'chiêu riêng của lớp + 7 bị động chỉ số chung — tự ngộ theo cấp' },
-  { id:'vaeldra', ten:'Vaeldra', dong:'kỹ năng chung, học ngoài thế giới bằng Sách Kỹ Năng' },
+  { id:'vaeldra', ten:'Vaeldra', dong:'kỹ năng chung + 6 tâm pháp — mở bằng cuốn ghép từ 3 Orb' },
   { id:'khac',    ten:'Khác',    dong:'Di Sản · bị động · hệ phụ' },
 ];
 // HÌNH của cây — 16 ô, dùng chung cho mọi lớp và mọi tab. `c` = cột (0-3), `h` = hàng (0-6),
@@ -22386,7 +22535,11 @@ const KN_ROT = {
 // đúng thứ tự khai — nên chín chiêu lớp rơi vào cây nhánh và bảy bị động chỉ số rơi đúng vào
 // chuỗi thẳng. Chuỗi thẳng ấy chính là hình mà ảnh mẫu của chủ dự án vẽ ra.
 for (const _lop in KN_ROT) KN_ROT[_lop] = KN_ROT[_lop].concat(KN_XUONG_SONG);
-const KN_ROT_CHUNG = { vaeldra: ['danchi','tieuhon'] };   // tab Vaeldra dùng chung cho mọi lớp
+// Sáu tâm pháp là chiêu CHUNG cả năm lớp ⇒ đúng chỗ của tab Vaeldra, vốn dựng ra cho việc này
+// và tới giờ mới có 2/16 ô. Xếp theo THỨ TỰ MỞ: mỗi vế kháng đứng sau vế gây của nó — người
+// chơi ăn đòn trước rồi mới học được cách đỡ, đúng nhịp mà ảnh mẫu của chủ dự án bày ra.
+const KN_ROT_CHUNG = { vaeldra: ['danchi','tieuhon',
+  'tp_crush','tp_para','tp_stead','tp_venom','tp_unbound','tp_anti'] };   // tab Vaeldra dùng chung cho mọi lớp
 function knHinh(tab){ return KN_HINH_RIENG[(player && player.sect) + '|' + tab] || KN_HINH; }
 function knMa(tab, i){
   const ds = tab === 'lop' ? (KN_ROT[player && player.sect] || []) : (KN_ROT_CHUNG[tab] || []);
@@ -22406,11 +22559,11 @@ function knNut(tab, n, i){
   if (v && v.type === 'passive'){
     // Bị động CHỈ SỐ nâng cấp được nên phải hiện SỐ CẤP như chiêu chủ động; bị động hiệu ứng
     // thì không có cấp, hiện dấu ✚. Hai họ, hai cách đọc — xem `laBiDongChiSo`.
-    const cs = laBiDongChiSo(id);
-    return { k:n.k, c:n.c, h:n.h, tu:n.tu, trong:false, id, v, biDong:true, chiSo:cs,
+    const cs = laBiDongChiSo(id), tp = laTamPhap(id);
+    return { k:n.k, c:n.c, h:n.h, tu:n.tu, trong:false, id, v, biDong:true, chiSo:cs || tp, tamPhap:tp,
       inf:{ id, name:v.name, icon:v.icon, desc:v.desc },
-      ten:v.name, lv: cs ? skLv(id) : 0, mo: vhLearned(id),
-      loai: cs ? 'Bị động — chỉ số' : 'Bị động' };
+      ten:v.name, lv: (cs || tp) ? skLv(id) : 0, mo: vhLearned(id),
+      loai: tp ? 'Tâm pháp' : cs ? 'Bị động — chỉ số' : 'Bị động' };
   }
   const inf = skillInfo(id);
   if (!inf) return { k:n.k, c:n.c, h:n.h, tu:n.tu, trong:true, ten:'Ô Trống', loi:id };
@@ -22566,6 +22719,28 @@ function renderSkillPanelCT(tab, ds){
     const csCost = skUpCost(n.id), csKhi = skUpKhi(n.id);
     const csDuBac = player.silver >= csCost, csDuKhi = (player.khi || 0) >= csKhi;
     const csNang = n.mo && !csMax && !csTran && csDuBac && csDuKhi;
+    if (n.tamPhap){
+      const tp = n.v.tp, gay = tp.kieu === 'gay';
+      const val = gay ? tpTyLeGay(tp.bo) * 100 : tpKhang(tp.hieu) * 100;
+      const tran = gay ? TP_GAY_TRAN * 100 : TP_KHANG_TRAN * 100;
+      const doi = tamPhapCua(tp.bo, gay ? 'khang' : 'gay');
+      return `<div class="kn-ct">
+        <div class="kn-ct-dau"><img src="${n.inf.icon}" alt="">
+          <div><b>${n.ten}</b><span>${n.mo ? 'Cấp: ' + n.lv : 'Chưa học'}</span></div></div>
+        <div class="kn-ct-tt ${n.mo?'ok':'no'}">${n.mo ? '◆ Đã ngộ' : '🔒 cần ghép đủ 3 Orb thành một cuốn'}</div>
+        <div class="kn-d"><span>Loại:</span> Tâm pháp — ${gay ? 'gây' : 'kháng'} (bộ ${tp.bo})</div>
+        <div class="kn-d kn-mo"><span>Hiệu quả:</span> ${n.inf.desc || '—'}</div>
+        <div class="kn-d"><span>${gay ? 'Tỉ lệ thi triển:' : 'Mức kháng:'}</span>
+          <b>${val.toFixed(1)}%</b> <i>(trần ${tran.toFixed(0)}%)</i></div>
+        <div class="kn-d"><span>Thêm 1 cấp:</span> +${(gay ? TP_GAY_CAP : TP_KHANG_CAP) * 100}%</div>
+        ${doi ? `<div class="kn-d"><span>Bị khắc chế bởi:</span> <b>${VOHOC_DEFS[doi].name}</b></div>` : ''}
+        <div class="kn-vach">Điều kiện</div>
+        <div class="kn-d"><span>Cấp nhân vật:</span> <b class="${player.level >= (n.v.unlock||0) ? 'ok' : 'no'}">${n.v.unlock || '?'}</b> <i>(đang ${player.level})</i></div>
+        <div class="kn-d"><span>Mở khoá:</span> <b>không tự ngộ theo cấp</b> — ghép 3 Orb thành cuốn rồi dùng</div>
+        ${n.mo ? `<div class="kn-nut"><button class="mini-btn kn-nang${(n.lv < 120 && n.lv < player.level && player.silver >= skUpCost(n.id) && (player.khi||0) >= skUpKhi(n.id)) ? '' : ' mo'}" onclick="window.upgradeSkillUI('${n.id}')">Nâng Cấp</button></div>` : ''}
+        <div class="kn-chan">Tâm pháp <b>luôn có hiệu lực</b> và <b>không chiếm ô</b> nào trên thanh chiêu.</div>
+      </div>`;
+    }
     const cs = n.v.chiSo, tong = (cs.pt * n.lv);
     const donVi = (cs.k === 'vit') ? ' điểm Thể Lực' : (cs.k === 'evaPP' || cs.k === 'critPP') ? '%' : '%';
     return `<div class="kn-ct">
@@ -22727,6 +22902,7 @@ function castSkill(id){
   const _sm = skMile(id), _se = skEvoMult(id), _qiNeed = Math.max(1, Math.round(info.qi * _sm.qi * _se.qi)); // GDD Đợt 2 B6: mốc 80 −12% Mana · Tiến Hóa Bá/Tốc
   const _st = evoStage(id); // bậc tiến hóa chiêu (Lv 40/80/120)
   if (!info.unlocked){ addFloat(player.x, player.y-34, info.lockTxt, '#8a8a8a', 12); return; }
+  if ((player.dinhT || 0) > 0){ addFloat(player.x, player.y-34, 'Bị khoá — không ra chiêu được!', '#ffe08a', 12); return; }
   if ((player.cd[id] || 0) > 0) return;
   // LIÊN TRẢM: trong cửa sổ 2.5s, chiêu kế tiếp theo miễn phí Mana (ám khí không ăn cửa sổ)
   const _ltFree = (player.ltT || 0) > 0;
@@ -22734,6 +22910,10 @@ function castSkill(id){
     if (player.qi < _qiNeed){ addFloat(player.x, player.y-34, 'Không đủ Mana!', '#7fa8e0', 12); return; }
     player.qi -= _qiNeed;
   } else addFloat(player.x, player.y-48, '⚡ Liên Trảm — miễn phí Mana!', '#ffd76a', 12);
+  // Tâm pháp: ghi BỘ của chiêu đang tung để `hurtMob` biết có được nổ vế gây hay không.
+  // ⚠ Phải là cờ quanh CÚ TUNG, không phải một trường sống mãi: đòn thường (`source:'hit'`)
+  // cũng đi qua `hurtMob`, mà ảnh gốc ghi rõ "kích hoạt khi dùng VÕ CÔNG MÔN PHÁI N".
+  player._tpBo = voCongBo(id);
   player.cd[id] = info.cd * (player.vhCdMult || 1) * _sm.cd * _se.cd * skCdScale(id); // mốc 40 −10% · Tẩy Tủy −30% · cấp chiêu −0,25%/cấp (tối đa −30%) · nhánh Tốc Chiến
   const _atk0 = player.atk; player.atk = Math.round(player.atk * skLvMult(id) * skTnMult(id) * _sm.dmg * _se.dmg); // GDD Đợt 2 B6: mốc ST nhân dồn · nhánh Bá Đạo // cấp kỹ năng 1-120: +2.5% ST mỗi cấp
   player.comboT = 3; // mở/duy trì chuỗi combo — ám khí trúng trong lúc này sẽ kích Liên Trảm
@@ -22828,7 +23008,7 @@ function castSkill(id){
       const _nP = (def.count || 1) + _st; // Multi-Shot (Sylvan Ranger) bắn 5 tên/loạt; các phái khác mặc định 1, +1 mỗi bậc tiến hóa
       for (let _pi = 0; _pi < _nP; _pi++){
         const _off = _nP > 1 ? (_pi - (_nP - 1) / 2) * 0.15 : 0;
-        projectiles.push({ x:player.x, y:player.y, ang:ang + _off, speed:420, dmg:player.atk*def.mult, kind:'skill', life:1.0, color:sect.color, pierce:true, tag:'a', style:(_svc && _svc.proj) || undefined });
+        projectiles.push({ x:player.x, y:player.y, ang:ang + _off, speed:420, dmg:player.atk*def.mult, kind:'skill', bo:player._tpBo||0, life:1.0, color:sect.color, pierce:true, tag:'a', style:(_svc && _svc.proj) || undefined });
       }
       spawnSkillVfx(_sva, { color:sect.color, glyph:'✹' }, 'cast', ang, 60);
       // Sylvan Ranger / Dark Wizard bắn đạn từ xa — không có lưỡi kiếm nào quét ra, chỉ loé đầu nòng
