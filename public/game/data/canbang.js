@@ -2135,3 +2135,39 @@ window.BOSS_LORE = {
   nm4:{ name:'Tướng Quân Dusk Marsh', intro:['Ta mở cổng không phải vì hàng — mà vì đằng nào nó cũng mở.','Trụ Khóa cuối cùng… để ta xem ngươi dám gỡ không!'],
         sect:{ bug:'Dark Lord. Morvahn cũng từng là Dark Lord đấy — hắn chỉ đi xa hơn ngươi một chút thôi.' } },
 };
+
+// ═══════════ BẢN ĐỒ THẾ GIỚI — chỗ đứng của từng vùng trên tấm bản đồ lớn ═══════════
+//
+// Đây là **thứ DUY NHẤT phải đặt tay** của cả tấm bản đồ thế giới. Mọi phần còn lại suy từ dữ
+// liệu đang chạy: HÌNH của vùng lấy từ chính `diTrong` của nó, MÀU lấy từ `ground`, CỠ lấy từ
+// `w×h` thật, ĐƯỜNG NỐI lấy từ `GATES`, KHOÁ lấy từ `mapGate()`. Nhờ vậy tấm bản đồ không thể
+// nói dối: sửa đa giác một vùng là hình trên bản đồ đổi theo, thêm một cổng là có thêm một con
+// đường. Chép cứng hình vùng ra đây thì đúng một lần rồi sai mãi.
+//
+// ⚠ TOẠ ĐỘ Ở ĐÂY PHẢI KHỚP VỚI HƯỚNG GHI TRÊN BIỂN CỔNG. Cổng nào cũng mang tên một hướng
+// ("Lối Bắc → …"), nên một tấm bản đồ đặt sai chỗ sẽ CÃI NHAU với biển chỉ đường mà người chơi
+// vừa đọc. `tests/test_thegioi.js §2` đối chiếu từng cạnh: hướng trên biển phải trùng hướng
+// thật giữa hai chấm.
+//
+// ⚠ VÀ ĐỒ THỊ NÀY KHÔNG NHÚNG PHẲNG ĐƯỢC NẾU GIỮ NGUYÊN MỌI BIỂN CŨ. Bird Tribe Heights phải ở
+// phía BẮC của thành (nó là một trong bốn cổng thành, không đổi được), còn Aquatic Tribe
+// Causeway phải ở phía ĐÔNG của Bug Tribe Tunnels — mà biển cũ lại ghi Causeway ở phía BẮC của
+// Heights. Ba ràng buộc ấy không cùng đúng trên một mặt phẳng. Đã sửa đúng MỘT cặp biển
+// (Heights ↔ Causeway: Bắc/Nam → Đông/Tây) thay vì bẻ cong bản đồ — biển chỉ đường là thứ người
+// chơi đọc trước, nên bản đồ phải chiều nó, không phải ngược lại.
+//
+// Đơn vị là trừu tượng (một "bước" ≈ một vùng); trình vẽ tự co cho vừa khung.
+window.THE_GIOI = {
+  corran:    { x:-1.50, y: 0.05 },
+  ardhaven:  { x: 0.00, y: 0.00 },   // thành — trục của cả tấm bản đồ
+  ngoai:     { x:-0.10, y: 1.20 },
+  tuyettinh: { x: 0.00, y:-1.30 },
+  chungnam:  { x: 1.35, y: 0.35 },
+  daohoa:    { x: 2.55, y: 0.80 },
+  loimon:    { x: 3.70, y: 1.00 },
+  trungnut:  { x: 1.40, y:-0.92 },
+  comoc:     { x: 2.35, y:-0.80 },
+  caungam:   { x: 3.45, y:-1.30 },
+  mongco:    { x: 1.85, y:-2.15 },
+  nhanmon:   { x: 3.15, y:-2.55 },
+};

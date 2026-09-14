@@ -2020,6 +2020,11 @@ let zoneBanner = null; // { text, sub, color, t }
 // Bố cục kiểu Lorencia (MU Online): quảng trường vuông rộng ở giữa, tường bao 4 mặt, MỖI MẶT MỘT
 // CỔNG (Bắc/Nam/Đông/Tây) toả ra 4 hướng thế giới — thay cho thành hộp kín chỉ có 1 cổng Nam cũ,
 // vốn khiến toàn bộ NPC phải chen chúc trong một góc nhỏ.
+// ⚠ HƯỚNG TRÊN BIỂN CỔNG NAY LÀ MỘT RÀNG BUỘC CÓ NGƯỜI GÁC, không còn là chữ trang trí.
+// Bảng Bản Đồ có tab THẾ GIỚI vẽ cả mười hai vùng lên một tấm, nên biển ghi "Lối Bắc" mà vùng
+// kia nằm phía đông là người chơi bắt được ngay. `tests/test_thegioi.js §2` đối chiếu từng cạnh.
+// Đã phải sửa đúng một cặp biển để đồ thị nhúng phẳng được — xem `window.THE_GIOI` trong
+// `data/canbang.js`, chỗ ghi vì sao Heights ↔ Causeway đổi từ Bắc/Nam sang Đông/Tây.
 const GATES = [
   // ── BỐN CỔNG ARDHAVEN ─────────────────────────────────────────────────────
   // ⚠ BỐN CỘT MỐC NÀY LÙI VÀO TRONG, KHÔNG ĐỨNG NGAY MIỆNG VẤU CỔNG — và đó là một RÀNG BUỘC
@@ -2127,8 +2132,8 @@ const GATES = [
   // theo đúng nếp cũ: Bug Tribe Tunnels 'Lối Đông' ↔ Nhịp Đá 'Lối Tây'.
   { map:'comoc',       x:4480, y:1024,  to:'caungam',   name:'Lối Đông → Aquatic Tribe Causeway' },
   { map:'caungam',  x:320,  y:900,  to:'comoc',     name:'Lối Tây → Bug Tribe Tunnels' },
-  { map:'caungam',  x:1850, y:2380, to:'tuyettinh', name:'Lối Nam → Bird Tribe Heights' },
-  { map:'tuyettinh',x:2112, y:256, to:'caungam',   name:'Lối Bắc → Aquatic Tribe Causeway' },
+  { map:'caungam',  x:1850, y:2380, to:'tuyettinh', name:'Lối Tây → Bird Tribe Heights' },
+  { map:'tuyettinh',x:2112, y:256, to:'caungam',   name:'Lối Đông → Aquatic Tribe Causeway' },
   { map:'comoc',       x:1728, y:3264, to:'chungnam', name:'Lối Nam → Werebear Woods' },
   { map:'comoc',       x:2816, y:256,  to:'mongco',   name:'Lối Bắc → Reptile Sunstone Flats' },
   { map:'mongco',      x:1792, y:3328, to:'comoc',    name:'Lối Nam → Bug Tribe Tunnels' },
@@ -24335,10 +24340,400 @@ function noiMapHtml(mid){
   }).filter(Boolean).join(' · ');
   return bit ? `<div class="m-desc" style="margin-top:2px;opacity:.9">🧭 Đi bộ: ${bit}</div>` : '';
 }
-function renderMapPanel(){
-  const zt = zoneType();
-  let html = moBang({ tieu:'Bản Đồ Lunacia' });
-  html += `<div style="font-size:12px;color:#9aa8d4;margin-bottom:6px">Đang ở: <b style="color:${zt.color}">${mapDef().name}</b> · ${zt.name} · <span style="opacity:.7">Nhiệm vụ: phím Q</span>${window.TEST_MODE ? ' · <span style="color:#7fd4ff">[CHẾ ĐỘ TEST — dịch chuyển tự do]</span>' : ''}</div>`;
+// ═══════════ TAB THẾ GIỚI CỦA BẢNG BẢN ĐỒ ═══════════
+//
+// Trước bản này bấm M ra một DANH SÁCH CHỮ mười hai dòng. Danh sách nói được "vùng nào cấp bao
+// nhiêu" nhưng không nói được thứ mà một bản đồ sinh ra để nói: **cái gì nằm cạnh cái gì**. Người
+// chơi đọc xong vẫn không biết mình đang ở đâu trong thế giới, và biển chỉ đường trong map ("Lối
+// Bắc → Bug Tribe Tunnels") thì không có chỗ nào đối chiếu.
+//
+// ⚠ TẤM BẢN ĐỒ NÀY KHÔNG PHẢI MỘT BỨC TRANH — nó DỰNG TỪ DỮ LIỆU ĐANG CHẠY:
+//
+//   | thứ trên bản đồ | suy từ |
+//   |---|---|
+//   | hình của vùng   | chính `md.diTrong` (đa giác đi được thật) |
+//   | màu             | `md.ground` |
+//   | cỡ to nhỏ       | `md.w × md.h` thật |
+//   | đường nối       | `GATES` |
+//   | khoá / mở       | `mapGate()` — cùng cửa mà nút Dịch Chuyển dùng |
+//   | chỗ đứng        | `THE_GIOI` trong `data/canbang.js` — thứ DUY NHẤT đặt tay |
+//
+// Nên nó không thể nói dối. Sửa đa giác một vùng là hình trên bản đồ đổi theo; thêm một cổng là
+// có thêm một con đường. Vẽ tay một tấm ảnh rồi dán tên lên thì đúng đúng một lần, rồi sai mãi —
+// và kiểu sai đó không ai phát hiện được, y như bài học `mapBanSac()` đã ghi.
+// ⚠ `leD` (lề DƯỚI) rộng hơn ba lề kia: nhãn tên + dải cấp vẽ ở `cy + r + 13` và `+24`, tức
+// vùng nằm sát đáy thì HÌNH lọt khung mà TÊN thì rơi ra ngoài. Bản đầu để lề đều và Beast Herd
+// Camp mất hẳn tên.
+// Bảng chỗ đứng của từng vùng, nạp bằng thẻ script riêng như CHI_ANH / THU_ANH.
+const THE_GIOI = window.THE_GIOI || {};
+const TG_KHUNG = { w:660, h:500, le:44, leD:74 };
+let _tgBoCuc = null, _tgKey = null, _tgHover = null;
+// Hình của một vùng: lấy `diTrong`, chuẩn hoá về hộp bao của CHÍNH NÓ, rồi thu theo cỡ map thật.
+// Chuẩn hoá theo hộp bao chứ không theo khổ map: map nào cũng có lề trống quanh đa giác, giữ lề
+// thì vùng nào cũng teo lại thành một chấm giữa một ô vuông rỗng.
+function tgHinhVung(md){
+  const dg = md.diTrong;
+  if (!dg || dg.length < 3) return null;
+  let x0 = 1e9, y0 = 1e9, x1 = -1e9, y1 = -1e9;
+  for (const p of dg){ if (p[0]<x0) x0=p[0]; if (p[0]>x1) x1=p[0]; if (p[1]<y0) y0=p[1]; if (p[1]>y1) y1=p[1]; }
+  const w = Math.max(1, x1-x0), h = Math.max(1, y1-y0), m = Math.max(w, h);
+  return { pts: dg.map(p => [ (p[0]-x0-w/2)/m, (p[1]-y0-h/2)/m ]), ti: w/h };
+}
+function tgBoCuc(){
+  const key = TG_KHUNG.w + 'x' + TG_KHUNG.h + '|' + Object.keys(THE_GIOI).join(',');
+  if (_tgBoCuc && _tgKey === key) return _tgBoCuc;
+  const ids = Object.keys(THE_GIOI).filter(id => MAPS[id]);
+  let x0 = 1e9, y0 = 1e9, x1 = -1e9, y1 = -1e9;
+  for (const id of ids){ const p = THE_GIOI[id];
+    if (p.x<x0) x0=p.x; if (p.x>x1) x1=p.x; if (p.y<y0) y0=p.y; if (p.y>y1) y1=p.y; }
+  const le = TG_KHUNG.le, leD = TG_KHUNG.leD;
+  const sc = Math.min((TG_KHUNG.w - le*2) / Math.max(0.001, x1-x0),
+                      (TG_KHUNG.h - le - leD) / Math.max(0.001, y1-y0));
+  // Cỡ vẽ ra tỉ lệ với CĂN BẬC HAI của diện tích map thật — dùng thẳng diện tích thì map lớn
+  // nhất nuốt cả tấm (4,7 lần map nhỏ nhất về diện tích, chỉ 2,2 lần về cạnh).
+  let dMax = 1;
+  for (const id of ids) dMax = Math.max(dMax, Math.sqrt((MAPS[id].w||2600) * (MAPS[id].h||1900)));
+  const o = {};
+  for (const id of ids){
+    const md = MAPS[id], p = THE_GIOI[id];
+    const d = Math.sqrt((md.w||2600) * (md.h||1900)) / dMax;
+    o[id] = { cx: le + (p.x-x0)*sc, cy: le + (p.y-y0)*sc,
+              r: sc * 0.40 * (0.62 + 0.38*d), hinh: tgHinhVung(md) };
+  }
+  _tgBoCuc = o; _tgKey = key;
+  return o;
+}
+// Cạnh của đồ thị thế giới, gộp hai chiều thành một. Đọc thẳng `GATES` nên thêm cổng là có
+// thêm đường, không phải nhớ sửa ở đây.
+function tgCanh(){
+  const bc = tgBoCuc(), da = {}, ra = [];
+  for (const g of GATES){
+    if (!bc[g.map] || !bc[g.to]) continue;
+    const k = g.map < g.to ? g.map+'|'+g.to : g.to+'|'+g.map;
+    if (da[k]) continue; da[k] = 1;
+    ra.push({ a:g.map, b:g.to });
+  }
+  return ra;
+}
+// Hướng THẬT giữa hai vùng trên bản đồ, trả về 'Bắc'/'Nam'/'Đông'/'Tây'. Bài kiểm dùng chung
+// hàm này với phần vẽ nên không có chuyện bài kiểm và bản đồ hiểu "hướng" khác nhau.
+window.tgHuong = tgHuong;   // bài kiểm đối chiếu hướng biển cổng dùng CHUNG hàm này
+function tgHuong(a, b){
+  const bc = tgBoCuc(); if (!bc[a] || !bc[b]) return null;
+  const dx = bc[b].cx - bc[a].cx, dy = bc[b].cy - bc[a].cy;
+  return Math.abs(dx) >= Math.abs(dy) ? (dx > 0 ? 'Đông' : 'Tây') : (dy > 0 ? 'Nam' : 'Bắc');
+}
+let _tgNen = null;
+function tgNen(){
+  if (_tgNen) return _tgNen;
+  const c = document.createElement('canvas'); c.width = TG_KHUNG.w; c.height = TG_KHUNG.h;
+  const g = c.getContext('2d');
+  const gr = g.createLinearGradient(0, 0, TG_KHUNG.w, TG_KHUNG.h);
+  gr.addColorStop(0, '#2a2418'); gr.addColorStop(0.5, '#332b1c'); gr.addColorStop(1, '#241f16');
+  g.fillStyle = gr; g.fillRect(0, 0, TG_KHUNG.w, TG_KHUNG.h);
+  // vân giấy: nhiễu thưa, hạt CỐ ĐỊNH nên tấm nền không nhấp nháy giữa hai lần mở bảng
+  const ra = _hatRng(_bamChuoi('bandothegioi'));
+  for (let i = 0; i < 2600; i++){
+    g.globalAlpha = 0.02 + ra()*0.05;
+    g.fillStyle = ra() < 0.5 ? '#6b5c3c' : '#171208';
+    g.fillRect(ra()*TG_KHUNG.w, ra()*TG_KHUNG.h, 1 + ra()*2, 1 + ra()*2);
+  }
+  g.globalAlpha = 1;
+  // viền cháy sém quanh mép
+  const vg = g.createRadialGradient(TG_KHUNG.w/2, TG_KHUNG.h/2, TG_KHUNG.h*0.30,
+                                    TG_KHUNG.w/2, TG_KHUNG.h/2, TG_KHUNG.w*0.72);
+  vg.addColorStop(0, 'rgba(0,0,0,0)'); vg.addColorStop(1, 'rgba(10,7,3,.75)');
+  g.fillStyle = vg; g.fillRect(0, 0, TG_KHUNG.w, TG_KHUNG.h);
+  _tgNen = c;
+  return c;
+}
+// Màu `ground` viết cho MẶT ĐẤT TRONG MÀN — rất tối (#1d2a1c…#3a4450) vì nó nằm dưới ánh sáng
+// và dưới cả một tấm nền art. Đặt nguyên màu ấy lên giấy da thì mười hai vùng ra mười hai vệt
+// gần như đen như nhau. Nâng sáng và pha ấm cho tách khỏi giấy, nhưng GIỮ NGUYÊN sắc — vùng nào
+// xanh vẫn xanh, vùng nào nâu vẫn nâu, nên bản đồ vẫn nói đúng vùng ấy trông thế nào.
+// (Cùng bài học với `itemPal`: icon nằm trên nền panel TỐI nên cần sàn sáng riêng — một bảng màu
+//  không dùng chung được cho hai chỗ có nền khác nhau.)
+function tgMauVung(md){
+  const h = (md.ground || '#3a4230').replace('#', '');
+  let r = parseInt(h.slice(0,2),16), gg = parseInt(h.slice(2,4),16), b = parseInt(h.slice(4,6),16);
+  const K = 2.05, AM = 26;
+  r = Math.min(255, Math.round(r*K + AM)); gg = Math.min(255, Math.round(gg*K + AM*0.85));
+  b = Math.min(255, Math.round(b*K + AM*0.45));
+  return `rgb(${r},${gg},${b})`;
+}
+// Nhãn sát mép khung thì bị cắt cụt — và cắt cụt một cái TÊN thì người chơi đọc ra một tên khác.
+// Kẹp tâm chữ vào trong khung theo đúng bề rộng chữ đó. Dùng chung cho cả hai tab.
+function _nhanKep(g, t, x, y, w){
+  const nua = g.measureText(t).width / 2 + 3;
+  g.fillText(t, clamp(x, nua, w - nua), y);
+}
+function _nhanVien(g, t, x, y, w){
+  const nua = g.measureText(t).width / 2 + 3;
+  g.strokeText(t, clamp(x, nua, w - nua), y);
+}
+function veTheGioi(g){
+  const bc = tgBoCuc();
+  g.clearRect(0, 0, TG_KHUNG.w, TG_KHUNG.h);
+  g.drawImage(tgNen(), 0, 0);
+  // ── đường nối, vẽ TRƯỚC vùng để nó chui xuống dưới mép đất ──
+  for (const c of tgCanh()){
+    const A = bc[c.a], B = bc[c.b];
+    const moA = mapGate(c.a).ok, moB = mapGate(c.b).ok;
+    g.strokeStyle = (moA && moB) ? 'rgba(226,196,128,.42)' : 'rgba(120,106,78,.22)';
+    g.lineWidth = 2.4; g.setLineDash([7, 5]);
+    g.beginPath(); g.moveTo(A.cx, A.cy); g.lineTo(B.cx, B.cy); g.stroke();
+    g.setLineDash([]);
+  }
+  // ── từng vùng ──
+  const ids = Object.keys(bc);
+  for (const id of ids){
+    const md = MAPS[id], o = bc[id], cur = id === curMap;
+    const mo = mapGate(id).ok, hv = _tgHover === id;
+    g.save();
+    g.translate(o.cx, o.cy);
+    if (o.hinh){
+      g.beginPath();
+      for (let i = 0; i < o.hinh.pts.length; i++){
+        const p = o.hinh.pts[i];
+        if (i) g.lineTo(p[0]*o.r*2, p[1]*o.r*2); else g.moveTo(p[0]*o.r*2, p[1]*o.r*2);
+      }
+      g.closePath();
+    } else { g.beginPath(); g.arc(0, 0, o.r, 0, 7); }
+    // bóng đổ nhẹ cho vùng đất nổi lên khỏi mặt giấy
+    g.save(); g.translate(2.5, 3.5); g.fillStyle = 'rgba(10,7,3,.45)'; g.fill(); g.restore();
+    g.fillStyle = mo ? tgMauVung(md) : '#241f18';
+    g.globalAlpha = mo ? (hv ? 1 : 0.92) : 0.5;
+    g.fill();
+    g.globalAlpha = 1;
+    g.lineWidth = cur ? 2.6 : hv ? 2 : 1.2;
+    g.strokeStyle = cur ? '#8ef0a0' : hv ? '#ffe9a8' : mo ? 'rgba(226,196,128,.55)' : 'rgba(120,106,78,.35)';
+    g.stroke();
+    g.restore();
+    // nhãn: tên + dải cấp, đặt DƯỚI vùng
+    const ten = mo ? md.name : md.name;
+    g.font = `${cur ? 'bold ' : ''}11.5px "Be Vietnam Pro", sans-serif`;
+    g.textAlign = 'center';
+    g.lineWidth = 3; g.strokeStyle = 'rgba(12,8,3,.9)';
+    _nhanVien(g, ten, o.cx, o.cy + o.r + 13, TG_KHUNG.w);
+    g.fillStyle = cur ? '#8ef0a0' : mo ? '#f0e2bd' : '#8a8275';
+    _nhanKep(g, ten, o.cx, o.cy + o.r + 13, TG_KHUNG.w);
+    // Thành khai `range:'—'`; in ra "cấp —" thì trông như dữ liệu thiếu chứ không ra "chỗ này
+    // không có quái". Gọi đúng tên nó.
+    const phu = !mo ? `🔒 cấp ${md.min}` : (!md.range || md.range === '—') ? 'Thành · An Toàn' : `cấp ${md.range}`;
+    g.font = '9.5px "Be Vietnam Pro", sans-serif';
+    g.lineWidth = 3; g.strokeStyle = 'rgba(12,8,3,.9)';
+    _nhanVien(g, phu, o.cx, o.cy + o.r + 24, TG_KHUNG.w);
+    g.fillStyle = mo ? 'rgba(226,196,128,.75)' : 'rgba(138,130,117,.8)';
+    _nhanKep(g, phu, o.cx, o.cy + o.r + 24, TG_KHUNG.w);
+  }
+  // ── ĐANG Ở ĐÂY: lá cờ nhấp nháy, vẽ SAU CÙNG để không vùng nào che ──
+  const cur = bc[curMap];
+  if (cur){
+    const t = performance.now() / 1000;
+    const nh = 0.5 + 0.5 * Math.sin(t * 3.2);
+    g.save();
+    g.globalAlpha = 0.30 + nh * 0.35;
+    g.beginPath(); g.arc(cur.cx, cur.cy, cur.r + 6 + nh * 5, 0, 7);
+    g.strokeStyle = '#8ef0a0'; g.lineWidth = 2; g.stroke();
+    g.globalAlpha = 1;
+    // cán cờ + lá cờ
+    const fy = cur.cy - cur.r - 4;
+    g.strokeStyle = '#e8f5ea'; g.lineWidth = 2;
+    g.beginPath(); g.moveTo(cur.cx, fy); g.lineTo(cur.cx, fy - 20); g.stroke();
+    g.fillStyle = '#57d97a';
+    g.beginPath(); g.moveTo(cur.cx, fy - 20); g.lineTo(cur.cx + 14, fy - 15.5);
+    g.lineTo(cur.cx, fy - 11); g.closePath(); g.fill();
+    g.restore();
+  }
+}
+function tgTaiDiem(mx, my){
+  const bc = tgBoCuc();
+  let tot = null, totD = 1e9;
+  for (const id in bc){
+    const o = bc[id], d = Math.hypot(mx - o.cx, my - o.cy);
+    // Bắt theo KHOẢNG CÁCH TỚI TÂM chứ không theo đa giác: đa giác của vùng có eo và vịnh, bấm
+    // trúng một cái vịnh thì hụt — mà người chơi đang bấm vào "vùng đất này", không bấm vào
+    // đúng một điểm ảnh của bờ biển.
+    if (d < o.r * 1.12 && d < totD){ tot = id; totD = d; }
+  }
+  return tot;
+}
+// ═══════════ BẢNG BẢN ĐỒ — HAI TAB: HIỆN TẠI · THẾ GIỚI ═══════════
+// Khuôn lấy từ bảng bản đồ của dòng MMO nhìn xuống (Võ Lâm / Ragnarok): tab đầu là vùng ĐANG
+// đứng có đủ mốc và bộ lọc, tab sau là cả thế giới có chấm "mình đang ở đây".
+// ⚠ Ảnh tham khảo chủ dự án gửi là ảnh chụp game khác — lấy CÁCH BÀY, không lấy tranh của họ.
+// Tấm bản đồ thế giới ở đây dựng từ chính dữ liệu map của game này (xem khối TAB THẾ GIỚI).
+let _banDoTab = 'tg';
+const _htLoc = { npcNv:1, npcCn:1, npcBb:1, quai:1, cong:1, moc:1 };
+const _HT_KHUNG = { w:660, h:476 };
+window.banDoTab = function(id){ _banDoTab = id; renderMapPanel(); AudioSys.sfx('ui', 0.5); };
+window.banDoLoc = function(k, v){ _htLoc[k] = v ? 1 : 0; renderMapPanel(); };
+// NPC chia nhóm theo `talk` — đúng ba nhóm mà bảng bản đồ của dòng game này vẫn chia.
+function _npcNhom(n){
+  if (n.talk === 'quest') return 'npcNv';
+  if (n.talk === 'shop')  return 'npcBb';
+  return 'npcCn';
+}
+// ── Tab HIỆN TẠI ────────────────────────────────────────────────────────────────────────
+// Lớp nền dùng lại NGUYÊN `drawMinimapStatic()` của bản đồ thu nhỏ, chỉ truyền khổ lớn hơn —
+// hàm đó đã nhận `(mw, mh, sx, sy, md)` và nhớ theo khoá `curMap|WxH`, nên khổ khác là một ô
+// nhớ khác, không đụng gì tới bản đồ góc màn hình. Chép lại phần vẽ nền sang đây là dựng bản
+// sao thứ hai của một luật đang sống — thứ mà tệp này đã trả giá vài lần vì làm thế.
+function veHienTai(g){
+  const md = mapDef();
+  const mw = _HT_KHUNG.w, mh = _HT_KHUNG.h;
+  const sx = mw / MAP.w, sy = mh / MAP.h;
+  g.clearRect(0, 0, mw, mh);
+  g.drawImage(drawMinimapStatic(mw, mh, sx, sy, md), 0, 0);
+  // ⚠ Lớp nền kia phủ tối 40% vì nó vẽ cho ô 200×146 ở góc màn hình, nơi nền phải LÙI lại sau
+  // các chấm. Ở khổ 660×500 thì cùng độ tối ấy ra một tấm gần như đen — bản đồ vùng mà không
+  // đọc được địa hình thì chỉ còn là một cái nền cho mấy chấm. Kéo sáng lại đúng ở đây, không
+  // sửa lớp nền chung: hai chỗ dùng có hai nền khác nhau nên cần hai mức sáng khác nhau.
+  g.save(); g.globalCompositeOperation = 'lighter'; g.globalAlpha = 0.16;
+  g.fillStyle = md.ground || '#3a4230'; g.fillRect(0, 0, mw, mh); g.restore();
+  // ── điểm đánh quái: vòng tròn bãi + số con ──
+  if (_htLoc.quai) for (const pk of packsOf(curMap)){
+    const x = pk.x*sx, y = pk.y*sy, r = Math.max(6, (pk.r||110)*sx);
+    g.beginPath(); g.arc(x, y, r, 0, 7);
+    g.fillStyle = pk.farm ? 'rgba(255,150,60,.16)' : 'rgba(224,90,74,.11)';
+    g.fill();
+    g.strokeStyle = pk.farm ? 'rgba(255,170,80,.75)' : 'rgba(224,90,74,.45)';
+    g.lineWidth = pk.farm ? 1.8 : 1; g.stroke();
+    const d = MOBS[pk.mob];
+    if (d){
+      g.font = '9px "Be Vietnam Pro", sans-serif'; g.textAlign = 'center';
+      g.lineWidth = 3; g.strokeStyle = 'rgba(10,8,4,.85)';
+      const t = `${d.name} ×${pk.n}`;
+      _nhanVien(g, t, x, y + 3, mw); g.fillStyle = pk.farm ? '#ffca86' : '#e8b0a6'; _nhanKep(g, t, x, y + 3, mw);
+    }
+  }
+  // ── mốc thế giới: Rương Canh · Vỉa Cốt · bãi cỏ Đàn Thú ──
+  if (_htLoc.moc){
+    for (const r of ruongCuaMap(curMap)){
+      const mo = ruongDaMo(r.id);
+      g.fillStyle = mo ? 'rgba(150,140,120,.7)' : '#ffd76a';
+      g.strokeStyle = 'rgba(0,0,0,.7)'; g.lineWidth = 1;
+      g.beginPath(); g.rect(r.x*sx - 4, r.y*sy - 3, 8, 6); g.fill(); g.stroke();
+    }
+    const v = viaCuaMap(curMap);
+    if (v){
+      g.save(); g.translate(v.x*sx, v.y*sy); g.rotate(Math.PI/4);
+      g.fillStyle = '#8ef0a0'; g.strokeStyle = 'rgba(0,0,0,.7)'; g.lineWidth = 1;
+      g.fillRect(-4, -4, 8, 8); g.strokeRect(-4, -4, 8, 8); g.restore();
+    }
+    const bai = thuBaiCo(curMap);
+    if (bai){
+      g.beginPath(); g.arc(bai.x*sx, bai.y*sy, Math.max(8, 300*sx), 0, 7);
+      g.strokeStyle = 'rgba(140,220,150,.45)'; g.lineWidth = 1; g.setLineDash([4,4]); g.stroke();
+      g.setLineDash([]);
+    }
+  }
+  // ── cổng / điểm truyền tống ──
+  if (_htLoc.cong) for (const gt of GATES){
+    if (gt.map !== curMap) continue;
+    g.fillStyle = '#7fd4ff'; g.strokeStyle = 'rgba(0,0,0,.7)'; g.lineWidth = 1;
+    g.beginPath(); g.arc(gt.x*sx, gt.y*sy, 4.5, 0, 7); g.fill(); g.stroke();
+    g.font = '9px "Be Vietnam Pro", sans-serif'; g.textAlign = 'center';
+    g.lineWidth = 3; g.strokeStyle = 'rgba(10,8,4,.85)';
+    _nhanVien(g, gt.name, gt.x*sx, gt.y*sy - 8, mw);
+    g.fillStyle = '#bfe6ff'; _nhanKep(g, gt.name, gt.x*sx, gt.y*sy - 8, mw);
+  }
+  // ── NPC theo ba nhóm ──
+  for (const n of NPCS){
+    if (n.map !== curMap) continue;
+    const nh = _npcNhom(n);
+    if (!_htLoc[nh]) continue;
+    const col = nh === 'npcNv' ? '#ffd76a' : nh === 'npcBb' ? '#9fe89f' : '#d8c8a0';
+    g.fillStyle = col; g.strokeStyle = 'rgba(0,0,0,.7)'; g.lineWidth = 1;
+    g.beginPath(); g.arc(n.x*sx, n.y*sy, 4, 0, 7); g.fill(); g.stroke();
+    g.font = '9px "Be Vietnam Pro", sans-serif'; g.textAlign = 'center';
+    g.lineWidth = 3; g.strokeStyle = 'rgba(10,8,4,.85)';
+    _nhanVien(g, n.name, n.x*sx, n.y*sy + 13, mw);
+    g.fillStyle = col; _nhanKep(g, n.name, n.x*sx, n.y*sy + 13, mw);
+  }
+  // ── người chơi: mũi tên trắng, vẽ SAU CÙNG ──
+  g.save();
+  g.translate(player.x*sx, player.y*sy); g.rotate(player.face);
+  g.fillStyle = '#fff'; g.strokeStyle = 'rgba(0,0,0,.8)'; g.lineWidth = 1.2;
+  g.beginPath(); g.moveTo(7, 0); g.lineTo(-5, 4.5); g.lineTo(-5, -4.5); g.closePath();
+  g.fill(); g.stroke();
+  g.restore();
+}
+// Bấm lên bản đồ vùng = chạy tới đó. Cùng đường mà bấm bản đồ thu nhỏ đang dùng (`moveTarget`),
+// nên không có luật đi lại thứ hai.
+window.htBamBanDo = function(ev){
+  const c = ev.currentTarget, b = c.getBoundingClientRect();
+  const x = (ev.clientX - b.left) / b.width * MAP.w;
+  const y = (ev.clientY - b.top)  / b.height * MAP.h;
+  moveTarget = { x, y }; moveWaypoint = null; movePlanClear();
+  addFloat(player.x, player.y - 40, '🧭 Đang đi tới…', '#7fd4ff', 12);
+  AudioSys.sfx('ui', 0.5);
+};
+function htHtml(){
+  const md = mapDef(), zt = zoneType();
+  const ck = (k, ten) => `<label class="bd-loc"><input type="checkbox" ${_htLoc[k]?'checked':''} onchange="banDoLoc('${k}',this.checked)"> ${ten}</label>`;
+  const npcs = NPCS.filter(n => n.map === curMap);
+  const dsNpc = npcs.length
+    ? npcs.map(n => `<button class="bd-npc" onclick="htDiToi(${Math.round(n.x)},${Math.round(n.y)})" title="Tự đi tới chỗ ${n.name}">${n.name}</button>`).join('')
+    : '<div style="opacity:.55;font-size:11px;padding:6px">Vùng này không có ai.</div>';
+  return `<div class="bd-hai">
+    <div class="bd-trai">
+      <canvas id="bd-ht" width="${_HT_KHUNG.w}" height="${_HT_KHUNG.h}" onclick="htBamBanDo(event)" title="Bấm để tự chạy tới"></canvas>
+      <div class="bd-loc-hang">${ck('npcCn','NPC chức năng')}${ck('npcNv','NPC nhiệm vụ')}${ck('npcBb','NPC buôn bán')}${ck('quai','Điểm đánh quái')}${ck('cong','Điểm truyền tống')}${ck('moc','Rương · Vỉa · Đàn thú')}</div>
+    </div>
+    <div class="bd-phai">
+      <div class="bd-ten" style="color:${zt.color}">${md.name}</div>
+      <div class="bd-phu">${zt.name} · cấp ${md.range}</div>
+      <div class="bd-ds">${dsNpc}</div>
+      <div class="m-desc" style="margin-top:6px">${md.desc}</div>
+      ${banSacHtml(curMap)}${noiMapHtml(curMap)}${bandSummaryHtml(md)}
+    </div></div>`;
+}
+window.htDiToi = function(x, y){
+  moveTarget = { x, y }; moveWaypoint = null; movePlanClear();
+  closePanels();
+  addFloat(player.x, player.y - 40, '🧭 Đang đi tới…', '#7fd4ff', 12);
+};
+// ── Vòng vẽ của bảng: chỉ chạy khi bảng đang mở ──────────────────────────────────────────
+// Lá cờ "đang ở đây" nhấp nháy và mũi tên người chơi phải đi theo nhân vật, nên bảng cần một
+// vòng vẽ riêng. Nó TỰ TẮT khi bảng đóng — không được để một vòng rAF thứ hai chạy suốt phiên
+// song song với vòng game, đúng bài học `startGame()` phải gọi `titleStop()`.
+let _bdVongId = 0;
+function bdVongVe(){
+  const p = el('panel-map');
+  if (!p || p.classList.contains('hidden')){ _bdVongId = 0; return; }
+  const c = el(_banDoTab === 'tg' ? 'bd-tg' : 'bd-ht');
+  if (c){ const g = c.getContext('2d'); if (_banDoTab === 'tg') veTheGioi(g); else veHienTai(g); }
+  _bdVongId = requestAnimationFrame(bdVongVe);
+}
+function bdBatVong(){ if (!_bdVongId) _bdVongId = requestAnimationFrame(bdVongVe); }
+window.tgBamBanDo = function(ev){
+  const c = ev.currentTarget, b = c.getBoundingClientRect();
+  const id = tgTaiDiem((ev.clientX - b.left) / b.width * TG_KHUNG.w,
+                       (ev.clientY - b.top)  / b.height * TG_KHUNG.h);
+  if (!id) return;
+  window.tgChon(id);
+};
+window.tgReBanDo = function(ev){
+  const c = ev.currentTarget, b = c.getBoundingClientRect();
+  _tgHover = tgTaiDiem((ev.clientX - b.left) / b.width * TG_KHUNG.w,
+                       (ev.clientY - b.top)  / b.height * TG_KHUNG.h);
+  c.style.cursor = _tgHover ? 'pointer' : 'default';
+};
+// MỘT cửa duy nhất cho "bấm vào một vùng", dùng chung cho cả chấm trên bản đồ lẫn nút trong
+// danh sách — nếu tách hai đường thì sớm muộn hai bên cho phép hai thứ khác nhau.
+window.tgChon = function(id){
+  if (id === curMap) return;
+  const g = mapGate(id);
+  if (!g.ok && !window.TEST_MODE){ addFloat(player.x, player.y - 40, '🔒 ' + (g.msg || 'Chưa mở vùng này'), '#f0a03a', 13); AudioSys.sfx('ui', 0.4); return; }
+  if (!window.TEST_MODE && !(player.wpUnlocked && player.wpUnlocked[id])){
+    addFloat(player.x, player.y - 40, '🚩 Chưa mở điểm dịch chuyển — đi bộ tới một lần', '#f0a03a', 13);
+    AudioSys.sfx('ui', 0.4); return;
+  }
+  travelTo(id);
+};
+function tgDanhSachHtml(){
+  let html = '';
   // GDD Đợt 2 B2: badge mục tiêu NV trên từng vùng
   const _qt = questTarget(currentQuest());
   const _sqMaps = {};
@@ -24347,7 +24742,6 @@ function renderMapPanel(){
     if (_st && _st.st !== 'claimed'){ const _t2 = sideQuestTarget(sq); if (_t2) _sqMaps[_t2.map] = true; }
   }
   const _badge = (mid) => `${_qt && _qt.map === mid ? ' <span title="Mục tiêu nhiệm vụ chính tuyến" style="color:#ffd76a;font-weight:700">❗</span>' : ''}${_sqMaps[mid] ? ' <span title="Mục tiêu phụ tuyến đang làm" style="color:#7fd4ff;font-weight:700">◈</span>' : ''}`;
-
   for (const id in MAPS){
     const m = MAPS[id], z2 = ZONE_TYPES[m.type];
     if (m.dungeon && !window.TEST_MODE) continue; // phó bản chỉ vào qua cổng dịch chuyển — không hiện ở đây (trừ chế độ test)
@@ -24392,7 +24786,27 @@ function renderMapPanel(){
         ${!wpOk ? '<span style="font-size:11px;color:#6a6255" title="Đã đủ cấp, nhưng chưa từng đặt chân tới — đi bộ tới một lần là mở">🚩 Đi bộ tới để mở</span>' : ''}
         ${wpOk && m.packs && m.packs.length ? `<button class="mini-btn" style="margin-left:4px" onclick="openStageSelect('${id}')" title="Vào đánh ngay 1 cụm quái — không cần đi bộ tới">⚔ Chọn Trận</button>` : ''}</span></div>`;
   }
+  return html;
+}
+function renderMapPanel(){
+  const zt = zoneType();
+  const tabs = [{ id:'ht', ten:'Hiện Tại' }, { id:'tg', ten:'Thế Giới' }];
+  let html = moBang({ tieu:'Bản Đồ Lunacia', dong: mapDef().name, tabs, chon:_banDoTab, ham:'banDoTab' });
+  html += `<div style="font-size:12px;color:#9aa8d4;margin-bottom:6px">Đang ở: <b style="color:${zt.color}">${mapDef().name}</b> · ${zt.name} · <span style="opacity:.7">Nhiệm vụ: phím Q</span>${window.TEST_MODE ? ' · <span style="color:#7fd4ff">[CHẾ ĐỘ TEST — dịch chuyển tự do]</span>' : ''}</div>`;
+  if (_banDoTab === 'ht'){
+    html += htHtml();
+  } else {
+    html += `<div class="bd-hai">
+      <div class="bd-trai">
+        <canvas id="bd-tg" width="${TG_KHUNG.w}" height="${TG_KHUNG.h}"
+                onclick="tgBamBanDo(event)" onmousemove="tgReBanDo(event)"
+                onmouseleave="_tgHover=null" title="Bấm vào một vùng để dịch chuyển"></canvas>
+        <div class="bd-chu">Đường nối là lối ĐI BỘ thật giữa hai vùng — suy thẳng từ cổng trong game.</div>
+      </div>
+      <div class="bd-phai bd-cuon">` + tgDanhSachHtml() + `</div></div>`;
+  }
   el('panel-map').innerHTML = html;
+  bdBatVong();
 }
 // ═══════════ Chọn Trận (GDD Đợt 3 — kiểu NGU Idle): chọn thẳng 1 cụm quái từ danh sách,
 // vào là dịch chuyển tới + tự bật AUTO luôn — bỏ hẳn việc phải đi bộ/né vật cản để tìm bãi quái. ═══════════
