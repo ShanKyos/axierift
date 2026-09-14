@@ -7,6 +7,7 @@ import {
   mediumtext,
   timestamp,
   bigint,
+  unique,
 } from "drizzle-orm/mysql-core";
 
 export const users = mysqlTable("users", {
@@ -62,6 +63,39 @@ export type LeaderboardEntry = typeof leaderboard.$inferSelect;
 
 export type Save = typeof saves.$inferSelect;
 export type InsertSave = typeof saves.$inferInsert;
+
+/**
+ * BẠN BÈ — quan hệ MỘT CHIỀU, mỗi hàng là "tôi thấy người kia thế nào".
+ *
+ * ⚠ CỐ Ý không dùng một hàng cho một cặp. Kết bạn thì hai hàng (mỗi bên một hàng, `trangThai`
+ * = 'ban'); lời mời là MỘT hàng 'cho' bên người gửi, bên nhận đọc nó bằng cách hỏi những hàng
+ * trỏ TỚI mình. Chặn cũng là một hàng một chiều — chặn ai thì không cần người ấy đồng ý, và
+ * người bị chặn không được biết. Gộp thành một hàng hai chiều là mất hết ba việc đó.
+ *
+ * `thanThiet` (Độ Thân Thiết) tăng bằng lời chào MỖI NGÀY MỘT LẦN (xem `chaoBan`), nên nó đo
+ * một thứ có thật — số ngày hai người còn nhớ nhau — chứ không phải một con số trang trí.
+ */
+export const friends = mysqlTable("friends", {
+  id: serial("id").primaryKey(),
+  userId: bigint("userId", { mode: "number", unsigned: true })
+    .notNull()
+    .references(() => users.id),
+  friendId: bigint("friendId", { mode: "number", unsigned: true })
+    .notNull()
+    .references(() => users.id),
+  trangThai: mysqlEnum("trangThai", ["cho", "ban", "chan"]).default("cho").notNull(),
+  thanThiet: bigint("thanThiet", { mode: "number" }).notNull().default(0),
+  chaoNgay: varchar("chaoNgay", { length: 16 }).default(""),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+  updatedAt: timestamp("updatedAt")
+    .defaultNow()
+    .notNull()
+    .$onUpdate(() => new Date()),
+}, (t) => ({
+  capUnique: unique("friends_cap").on(t.userId, t.friendId),
+}));
+
+export type Friend = typeof friends.$inferSelect;
 
 // TODO: Add your tables here. See docs/Database.md for schema examples and patterns.
 //

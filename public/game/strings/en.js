@@ -30,6 +30,8 @@ window.I18N_EN = {
   'help.k.map': 'World Map',
   'help.k.quest': 'Quest Log',
   'help.k.minimap': 'Show/hide the small map',
+  'help.k.party': 'Party',
+  'help.k.friend': 'Friends',
   'help.k.settings': 'Settings',
   'help.k.help': 'This panel',
   'help.k.esc': 'Close the most recently opened panel',

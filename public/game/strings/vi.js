@@ -30,6 +30,8 @@ window.I18N_VI = {
   'help.k.map': 'Bản Đồ',
   'help.k.quest': 'Nhật Ký Nhiệm Vụ',
   'help.k.minimap': 'Ẩn/hiện bản đồ thu nhỏ',
+  'help.k.party': 'Tổ Đội',
+  'help.k.friend': 'Bạn Bè',
   'help.k.settings': 'Cài Đặt',
   'help.k.help': 'Chính bảng này',
   'help.k.esc': 'Đóng bảng mở sau cùng',
