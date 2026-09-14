@@ -1116,6 +1116,50 @@ RULES.unshift(
   [/^♥ (\d+)$/, '♥ $1'],
 );
 
+/* Đợt 5 — thanh chiêu KÉO THẢ từ thượng nguồn (`knGan` · `knGo` · `knOHopLe` + phần vẽ thanh
+   trong bảng Kỹ Năng). Đây là đợt giao diện mới thứ ba liên tiếp; cách bắt vẫn thế.
+
+   ⚠ BA ĐƯỜNG CHỮ KHÁC NHAU, và phép quét text node chỉ thấy MỘT:
+     ① text node thường  → quét thấy (3 chuỗi)
+     ② thuộc tính `title` → `trAttrs()` gọi `tr()` trên CẢ giá trị, mà giá trị là chuỗi GHÉP
+        (tên chiêu + hậu tố + `\n` + câu nhắc) ⇒ phải bắt bằng RULES, không phải mục từ.
+     ③ chữ bay trên canvas (`addFloat`) → sáu câu lý do của `knOHopLe`, chỉ hiện khi người chơi
+        thả sai chỗ. Không lần nào quét thấy.
+   Nên khối này lấy từ NGUỒN; quét chỉ dùng để xác nhận phần ① đã sạch. */
+Object.assign(EXACT, {
+  // ① thanh chiêu
+  'Thanh chiêu — kéo chiêu từ cây thả vào ô · chuột phải để gỡ':
+    'Skill bar — drag a skill from the tree into a slot · right-click to remove',
+  'Di Sản còn': 'Legacy still grants',
+  'Công Kích. Chiêu để ngoài thanh thì cộng %ST vĩnh viễn; kéo lên thanh thì bấm được nhưng mất khoản đó.':
+    'ATK. A skill left off the bar grants permanent %DMG; drag it onto the bar and it becomes castable, but that bonus is gone.',
+  'Công Kích — đã bỏ': 'ATK — gave up',
+  'để bấm được. Chiêu để ngoài thanh thì cộng %ST vĩnh viễn; kéo lên thanh thì bấm được nhưng mất khoản đó.':
+    'to make it castable. A skill left off the bar grants permanent %DMG; drag it onto the bar and it becomes castable, but that bonus is gone.',
+  // ② tooltip ô trống
+  'Ô 1 — chỉ nhận chiêu chủ động': 'Slot 1 — active skills only',
+  'Ô trống — kéo chiêu vào': 'Empty slot — drag a skill here',
+  // ③ lý do của knOHopLe, hiện thành chữ bay trên canvas
+  'không có chiêu': 'no skill', 'ô không hợp lệ': 'invalid slot',
+  'chiêu không có thật': 'no such skill', 'chưa mở khoá chiêu này': 'skill not unlocked yet',
+  'ô 1 phải là chiêu chủ động': 'slot 1 must be an active skill',
+  'ô 1 không được để trống': 'slot 1 cannot be empty',
+});
+
+/* Tooltip là chuỗi GHÉP quanh tên chiêu, và phần nhắc nằm sau một `\n` ĐƠN — nhánh tách đoạn
+   `\n\s*\n` của trCompute không đụng tới, nên phải bắt cả cụm bằng `[\s\S]`.
+   ⚠ THỨ TỰ TRONG LỜI GỌI unshift ĐƯỢC GIỮ (RULES thành [a,b,c,…cũ]), nên hai quy tắc có `\n`
+   phải đứng TRƯỚC: chúng gọi `tr()` lại trên phần đầu, và chính lượt đệ quy ấy mới áp được
+   `— bị động` / `— cấp N`. Đảo lại thì phần đầu không bao giờ được dịch. */
+RULES.unshift(
+  [/^([\s\S]+)\nĐang bỏ ([\d.,]+)% Công Kích Di Sản để bấm được$/,
+    (m, dau, pct) => `${tr(dau)}\nGiving up ${pct}% Legacy ATK to make it castable`],
+  [/^([\s\S]+)\nKéo xuống ô 1-4 để gán$/,
+    (m, dau) => `${tr(dau)}\nDrag down to slot 1-4 to assign`],
+  [/^(.+) — bị động$/, (m, ten) => `${tr(ten)} — passive`],
+  [/^(.+) — cấp (\d+)$/, (m, ten, lv) => `${tr(ten)} — Lv ${lv}`],
+);
+
 const _trCache = new Map();
 function tr(s) {
   if (lang !== 'en' || !s || typeof s !== 'string') return s;
