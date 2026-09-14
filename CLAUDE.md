@@ -1313,6 +1313,110 @@ nhân vật** — đã dẫm đúng thế: năm lớp hiện ra còn năm con Ax
 **Đã gỡ theo:** `assets/title/{nui,rung,san_da,anhhung}.webp` · `NUI_LOP`/`_nuiChop`/`_nuiCao`
 (dãy núi dựng bằng đường — Quy tắc số 3) · vầng trăng và trường sao vẽ tay.
 
+## ⏳ MÀN TẢI — thanh cân theo BYTE THẬT, không theo đồng hồ
+
+Trước bản này **không có màn tải nào** (`grep` ra 0 chỗ trong `game.js`). Hậu quả nhìn thấy được:
+cảnh Lunacia mười lớp lắp dần ngay trước mắt người chơi — trời trước, núi sau, nhân vật cuối.
+Trên mạng chậm nó trông như trang hỏng.
+
+| | |
+|---|---|
+| Khung | `#preload` trong `index.html` · khối cuối `style.css` |
+| Máy | `taiTroChay()` · `taiTroAnh()` · `taiTroDong()` trong `game.js`, ngay trên `vaoManDau()` |
+| Bản kê | `data/taitro.js` — **sinh bằng `tools/title/liet_ke_taitro.cjs`, đừng sửa tay** |
+| Gác | `tests/test_taitro.js` (5 mục) |
+
+Đo được: **21 tệp / 1,63 MB** — cảnh Lunacia 10 lớp + bệ đá (701 KB), 5 dải khung lớp (399 KB),
+5 con Axie mặc định (533 KB). Nhạc và art trong màn **không** nằm trong đó: chặn người chơi sau
+17 MB nhạc là đổi một lỗi lấy một lỗi tệ hơn.
+
+**⚠ CÂN THEO BYTE, KHÔNG THEO SỐ TỆP.** Một lớp mây 12 KB và một dải khung 98 KB mà nhảy bằng
+nhau thì thanh chạy vọt tới 80% rồi đứng im — nói dối theo đúng kiểu khó bắt nhất. Vì thế bản kê
+mang kích thước THẬT của từng tệp.
+
+**⚠ VÀ TUYỆT ĐỐI KHÔNG CHẠY THEO ĐỒNG HỒ.** Dự án này đã gỡ một thanh giả rồi — thanh
+"Tiếp nhận 28%…82%" ở màn chọn máy chủ, lý do ghi ngay trên `SERVERS`. Một thanh tải chạy bằng
+`setTimeout` là đúng con vật đó mọc lại ở màn khác. `test_taitro §3` ghìm art lại 700 ms rồi bắt
+thanh phải đứng dưới 100%.
+
+### Bốn chỗ phải nhớ
+
+1. **`window.__gameReady` NAY BẬT Ở CUỐI MÀN TẢI**, không ở cuối tệp (cuối tệp là `__manDaNap`).
+   177 bài kiểm đều chờ cờ đó rồi mới bấm vào màn chờ — để nguyên chỗ cũ là chúng bấm vào một
+   màn còn bị lớp phủ che, mà triệu chứng lại là *"không tìm thấy nút"*. Giá phải trả: mỗi bài
+   chậm thêm **~300–480 ms** (đo được), đổi lấy việc không phải sửa 177 bài.
+2. **Cờ đó PHẢI luôn bật, kể cả khi hỏng.** Ba lớp bảo hiểm, thiếu lớp nào cũng là 177 bài
+   **treo chứ không đỏ**: `error` của ảnh tính là xong · trần cứng `TAI_TRAN` 9 giây ·
+   `try/catch` quanh chính lời gọi. `test_taitro §4` chặn `mountain.webp` thành 404 để chứng minh.
+3. **`taiTroAnh()` hỏi ĐÚNG cái hàm mà trong màn dùng** (`nenTai` · `ccLopAnh` · `chiImg`), nên
+   tấm tải về nằm luôn trong bộ đệm của nó. Tải bằng một `Image()` riêng thì lần dùng sau tuy
+   hứng được bộ đệm HTTP nhưng vẫn phải **GIẢI MÃ lại** — mà giải mã webp mới là phần tốn.
+4. **Nhóm "Axie đại diện" đọc `AVA_MAC_DINH` từ `game.js`**, không chép tay. Công cụ đọc bằng
+   regex và **dừng hẳn** nếu không khớp. `test_taitro §2` đối chiếu lại lúc chạy — đây là chỗ
+   duy nhất bắt được chuyện regex trượt rồi im lặng sinh ra một danh sách khác.
+5. **`taiTroDong()` phải HUỶ phần còn lại của màn tải, không chỉ giấu cái khung đi.** Có một
+   đường vào game chạy **song song** với màn tải: `?sect=<lớp>` tự gọi `startGame` trong một
+   `setTimeout` đăng ký sau `setTimeout` của màn tải, nên game khởi động trong lúc màn tải còn
+   đang chờ ảnh. `hoanTat()` sau đó vẫn chạy tiếp thì nó gọi `vaoManDau()` và **bật trang dẫn
+   truyện đè lên game đang chạy** — người chơi đang đứng trong bản đồ thì bị ném về màn ngoài
+   sau chừng một giây, *không có lỗi nào ném ra*. Hai chốt: `_taiXong = true` trong
+   `taiTroDong()`, và `if (player) return;` ở đầu `vaoManDau()`. Gỡ một chốt ra là
+   `test_taitro §6` đỏ ngay — đã thử.
+
+**Nướng lại art màn chờ thì chạy lại công cụ**, nếu không thanh về đích sớm hoặc muộn — mà lệch
+kiểu đó không ai thấy bằng mắt. `test_taitro §1` đối chiếu từng byte của bản kê với đĩa.
+
+Mẹo ở `TAI_MEO` là **mẹo THẬT**, rút từ cơ chế đang chạy. Một dòng mẹo bịa ở màn tải là thứ
+người chơi thử ngay trong mười phút đầu rồi phát hiện ra là sai.
+
+## 🐾 CHỌN AXIE ĐẠI DIỆN — ở màn tạo nhân vật
+
+Mô hình đã chốt của game là *"Chỉ số tới từ 5 class. Axie chỉ đơn thuần là avatar thôi."* Trước
+bản này mô hình đó **không có mặt nào**: `player.avatar` chỉ đổi được bằng lệnh gỡ rối
+`/avatar <id>`, tức người chơi thường không có cửa nào để chọn con mình mang.
+
+`#cc-avatar` · `ccAvaRender()` · `ccAvaChon()` · `ccAvaDang()` · `ccAvaKeCo()` ·
+gác bằng `tests/test_avachon.js`.
+
+- **TỰ DO, không khoá theo lớp và không khoá theo sở hữu.** Avatar mang 0 chỉ số, 0 kỹ năng,
+  0 trang bị nên nó không mua được lợi thế nào; thứ khoá một lần lúc tạo nhân vật là **LỚP**.
+  Khế Ước Chimera bán **chỉ số + chiêu** (`player.chimera.co`), không bán hình dáng — lấy hình
+  dáng ra làm phần thưởng gacha là âm thầm đổi thứ đang bán.
+- **`undefined` ≠ `null`, và đây là cả cơ chế.** `startGame` **chỉ** ghi `player.avatar` khi
+  người chơi thật sự chọn một con hợp lệ. Gán bừa `quze.avatar || null` là biến MỌI nhân vật mới
+  thành đã-tắt-avatar, mà triệu chứng chỉ là *"tự nhiên không thấy con Axie đâu"*.
+- **Danh sách suy từ `CHIMERA`**, lọc theo `CHI_ANH.o` (chỉ con đã nướng art). Bày một con chưa
+  nướng thì ô nó trống trơn và không ai biết đó là lỗi hay chủ ý.
+- **Lưới im lặng cho tới khi chọn lớp.** 16 ô bày ra trước khi người chơi biết mình là ai chỉ
+  làm loãng bước quan trọng hơn hẳn ở ngay trên.
+- **`openCreate()` đặt lại `ccAva = null`.** Giữ lại lựa chọn của lần trước thì người tạo nhân
+  vật thứ hai nhận con Axie của nhân vật thứ nhất mà không hiểu vì sao mặc định lại là con đó.
+
+### Hai cái bẫy đã dẫm ở con Axie đứng cạnh thẻ lớp
+
+1. **Neo trong HỘP TRANH (`.cc-art-o`), không trong thẻ.** Gót của lớp nhân vật rơi ở **0,84**
+   chiều cao tấm tranh — hằng số của `ccLopThe()`, không phải số đo bằng mắt — mà tấm tranh thì
+   co giãn theo bề rộng cột. Bản đầu neo `bottom:52px` vào thẻ và con Axie **tụt xuống đè lên
+   tên lớp**.
+2. **Cỡ phải hỏi `avaCo()`, và `ccAvaKeCo()` phải ĐO bề cao tranh lúc chạy.** Ở đúng tỉ lệ thật
+   con Axie vẽ ra **170×134** trên một thẻ rộng 246 và che mất nửa dưới nhân vật — nên có
+   `CC_KE_CO = 0,60` thu cả nhóm lại. **Ô đó là HUY HIỆU "con nào", không phải mô hình tỉ lệ**;
+   chỗ xem tỉ lệ thật là sân khấu màn chờ. Nhưng hệ số thu **nhân vào kết quả của `avaCo`**, chứ
+   không thay nó bằng một con số px — 16 con có 16 tỉ lệ rộng/cao (1,07 → 1,52) và chênh lệch
+   đó phải giữ. `test_avachon §4` chứng minh bằng cách đo **hệ số chung** của hai con lệch nhau
+   nhất: dẫn xuất thật thì hai con ra cùng một hệ số, chép cứng px thì không.
+
+### Còn nợ — nói thẳng
+
+**Đổi avatar SAU khi tạo nhân vật vẫn chỉ có `/avatar <id>`.** Cửa mới này chỉ mở ở màn tạo.
+Người chơi đổi ý ở cấp 40 thì không có đường nào. Đây là việc còn lại, không phải thiết kế.
+
+### ⚠ `i.chi-anh` KHÔNG còn khoá trong `.skill-row`
+
+Ô ảnh Chimera (dải 16 khung chạy bằng hai `animation steps()` lồng nhau) nay dùng ở **hai** chỗ:
+bảng Khế Ước và lưới chọn Axie. Khoá selector trong `.skill-row` thì chỗ thứ hai phải chép lại
+nguyên khối, và hai bản sao sẽ lệch nhau. `chiO34(c)` nay chỉ là `chiOAnh(c, 34)`.
+
 ## Hai lối vẽ nhân vật — ĐỪNG TRỘN VÀO NHAU
 
 Game có **ba** bộ dựng nhân vật, mỗi bộ một việc. Nhầm chỗ là ra hình lạc quẻ.

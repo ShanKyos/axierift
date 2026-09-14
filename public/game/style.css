@@ -1008,7 +1008,10 @@ html,body { width:100%; height:100%; overflow:hidden; background:var(--bg-deep);
    animation steps() lồng nhau: một cái nhảy cột trong 0,889s, một cái nhảy hàng ở nhịp chậm gấp
    đôi, nên hết một vòng cột là sang hàng — đúng 16 khung trong 1,778s, khớp CHI_THO_FPS = 9.
    --w/--h do chiO34() ghi vào thẻ vì mỗi con một tỉ lệ ô riêng. */
-.skill-row i.chi-anh {
+/* Ô ảnh Chimera — dải 16 khung chạy bằng hai animation steps() lồng nhau. Dùng ở bảng Khế
+   Ước VÀ ở lưới chọn Axie đại diện (màn tạo nhân vật), nên KHÔNG khoá trong .skill-row:
+   khoá rồi thì chỗ thứ hai phải chép lại nguyên khối, và hai bản sao sẽ lệch nhau. */
+i.chi-anh {
   display:block; flex:0 0 auto; width:var(--w); height:var(--h);
   border:2px solid; border-radius:var(--r-sm);
   background:rgba(18,20,44,.9) var(--sh) no-repeat 0 0;
@@ -1017,7 +1020,7 @@ html,body { width:100%; height:100%; overflow:hidden; background:var(--bg-deep);
 }
 @keyframes chi-tho-x { from { background-position-x:0 } to { background-position-x:calc(var(--w) * -8) } }
 @keyframes chi-tho-y { from { background-position-y:0 } to { background-position-y:calc(var(--h) * -2) } }
-@media (prefers-reduced-motion: reduce) { .skill-row i.chi-anh { animation:none } }
+@media (prefers-reduced-motion: reduce) { i.chi-anh { animation:none } }
 /* Huy hiệu lớp Axie chính chủ — dải 9 ô 48px, thứ tự khớp LOP_DAI trong game.js. */
 .lop-hd { display:inline-block; width:13px; height:13px; vertical-align:-2px; margin-right:3px;
   background:url(assets/ui/lop.webp) no-repeat; background-size:calc(13px * 9) 13px;
@@ -1903,3 +1906,76 @@ html,body { width:100%; height:100%; overflow:hidden; background:var(--bg-deep);
   -webkit-background-clip:text; background-clip:text; color:transparent;
   -webkit-text-stroke:3.5px rgba(10,14,30,.92); paint-order:stroke fill;
   filter:drop-shadow(0 4px 0 rgba(8,11,26,.55)) drop-shadow(0 0 26px rgba(255,190,90,.34)); }
+
+/* ═══════════ MÀN TẢI ═══════════
+   Màn đầu tiên người chơi thấy. Trước bản này không có nó: cảnh Lunacia mười lớp lắp dần ngay
+   trước mắt, trời trước núi sau nhân vật cuối — trên mạng chậm trông như trang hỏng.
+
+   ⚠ THANH CÂN THEO BYTE THẬT (data/taitro.js), không theo đồng hồ. Xem taiTroChay() trong
+   game.js. Một thanh chạy theo setTimeout là đúng thứ dự án này đã gỡ một lần ở màn máy chủ.
+
+   Khung thép vát cạnh, KHÔNG bo tròn: ngoại lệ art kiểu Axie chỉ mở trong #sect-select, và
+   màn này không phải chỗ đó. Riêng cái LOGO thì dùng chung một cách vẽ với màn chờ — nó là
+   cùng một logo, hiện cách nhau chưa tới một giây, ra hai kiểu là mắt đọc thành hai game. */
+#preload { position:fixed; inset:0; z-index:90; display:flex; align-items:center; justify-content:center;
+  background:radial-gradient(120% 90% at 50% 34%, #131a34 0%, #0a0d1e 52%, #05060f 100%);
+  transition:opacity .34s ease; }
+#preload.xong { opacity:0; pointer-events:none; }
+#preload.tat { display:none; }
+.pl-inner { display:flex; flex-direction:column; align-items:center; width:min(460px, 82vw); }
+/* Cùng một cách vẽ chữ với logo màn chờ — xem khối MÀN CHỜ KIỂU AXIE ở cuối tệp. */
+#preload .sv-logo { font-family:var(--font-chi); font-weight:800; gap:.50em; margin-bottom:26px; }
+#preload .sv-logo span {
+  background:linear-gradient(180deg,#fff6df 6%,#ffd98a 42%,#f0a93f 62%,#ffe7b4 96%);
+  -webkit-background-clip:text; background-clip:text; color:transparent;
+  -webkit-text-stroke:3.5px rgba(10,14,30,.92); paint-order:stroke fill;
+  filter:drop-shadow(0 4px 0 rgba(8,11,26,.55)) drop-shadow(0 0 26px rgba(255,190,90,.34)); }
+/* Rãnh thanh: vát bốn góc bằng clip-path chứ không bo tròn — cùng ngôn ngữ hình với khung
+   thép đinh tán của HUD. Viền vẽ bằng một lớp nền thứ hai để clip-path không cắt mất nét. */
+.pl-bar { position:relative; width:100%; height:16px; overflow:hidden;
+  background:linear-gradient(180deg, #05070f, #0d1122);
+  box-shadow:inset 0 0 0 1px rgba(198,158,74,.34), inset 0 2px 6px rgba(0,0,0,.8);
+  clip-path:polygon(5px 0, 100% 0, 100% calc(100% - 5px), calc(100% - 5px) 100%, 0 100%, 0 5px); }
+#pl-fill { display:block; height:100%; width:0;
+  background:linear-gradient(180deg, #ffe9b8 0%, #f2bd62 46%, #d9902c 54%, #ffdf9f 100%);
+  box-shadow:0 0 12px rgba(255,196,104,.45);
+  transition:width .18s linear; }
+.pl-hang { display:flex; justify-content:space-between; align-items:baseline; width:100%; margin-top:9px; }
+#pl-nhom { font-size:12px; color:var(--text-dim); letter-spacing:.06em; }
+#pl-pct { font-family:var(--font-display); font-size:13px; font-weight:700; color:var(--accent-light); }
+.pl-byte { width:100%; margin-top:3px; font-size:10.5px; color:#6f6754; letter-spacing:.04em; }
+/* Mẹo chơi — mẹo THẬT, rút từ cơ chế đang chạy. Một dòng mẹo bịa ở màn tải là thứ người chơi
+   thử ngay trong mười phút đầu rồi phát hiện ra là sai. */
+.pl-tip { margin-top:30px; min-height:34px; max-width:400px; text-align:center;
+  font-size:12px; line-height:1.6; color:#8d8570; }
+@media (prefers-reduced-motion: reduce){ #pl-fill { transition:none; } }
+
+/* ═══════════ LƯỚI CHỌN AXIE ĐẠI DIỆN (màn tạo nhân vật) ═══════════
+   Song song với lưới chân dung của các game cùng thể loại — khác ở chỗ ô này không phải ảnh
+   trang trí: nó chọn con Axie sẽ chạy theo người chơi suốt hành trình.
+   Ô ảnh dùng chung `i.chi-anh` với bảng Khế Ước, không dựng bản vẽ thứ hai. */
+#cc-avatar { margin:2px auto 10px; max-width:560px; }
+.cc-ava-nhan { font-size:12px; color:var(--text-dim); letter-spacing:.04em; margin-bottom:7px; }
+.cc-ava-nhan b { font-weight:700; }
+.cc-ava-lop { margin-left:8px; font-size:11px; color:var(--text-dimmer); }
+.cc-ava-luoi { display:flex; flex-wrap:wrap; gap:6px; justify-content:center; }
+.cc-ava-o { display:flex; align-items:center; justify-content:center; padding:3px;
+  min-width:52px; height:50px; cursor:pointer;
+  background:linear-gradient(180deg, rgba(28,32,60,.88), rgba(12,14,32,.92));
+  border:1px solid var(--border-faint); border-radius:var(--r-sm);
+  transition:border-color .14s, transform .12s, box-shadow .14s; }
+.cc-ava-o:hover { transform:translateY(-2px); border-color:var(--border-strong); }
+.cc-ava-o.sel { border-color:var(--accent-light); box-shadow:0 0 14px rgba(var(--rgb-vang),.38); }
+/* Ô trong lưới bỏ viền riêng của .chi-anh: viền đang-chọn là của Ô, không phải của con vật —
+   hai đường viền lồng nhau thì không đường nào đọc ra là "đang chọn". */
+.cc-ava-o .cc-ava-hinh { border:none; background-color:transparent; }
+.cc-ava-ghi { display:block; margin-top:8px; font-size:10.5px; color:var(--text-dimmer); font-style:normal; }
+/* Con Axie đứng cạnh thẻ lớp đang chọn.
+   ⚠ NEO TRONG HỘP TRANH (.cc-art-o), KHÔNG trong thẻ. Gót của lớp nhân vật rơi ở 85,7% chiều
+   cao tấm tranh — đo trên bản dựng thật — nên `bottom:14.3%` đặt gót con Axie ngang gót người
+   ở MỌI bề rộng cột. Bản đầu neo vào thẻ bằng `bottom:52px` và nó tụt xuống đè lên tên lớp. */
+.cc-art-o { position:relative; display:block; }
+.cc-card .cc-ava-ke { position:absolute; right:1%; bottom:16%; z-index:3;
+  border:none; background-color:transparent; pointer-events:none;
+  filter:drop-shadow(0 3px 6px rgba(0,0,0,.55)); }
+@media (max-width:720px){ .cc-card .cc-ava-ke { display:none; } }
