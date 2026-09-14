@@ -1005,6 +1005,43 @@ RULES.unshift(
     (m, map, cot) => `${tr(map)} — ONCE per day, 3 ${tr(cot)} Bone shards (28% Ancient). Look for the diamond dot on the minimap.`],
 );
 
+/* Đợt 3 — giao diện mới từ thượng nguồn (bảng Kỹ Năng thành CÂY có tab, bảng Bản Đồ hai tab,
+   hai nút HUD mới). Gộp riêng để lần sau đối chiếu được: mỗi đợt giao diện mới là một đợt
+   mục từ mới, và cách bắt vẫn là bật English rồi quét text node đang hiển thị. */
+Object.assign(EXACT, {
+  '🗺 Bản Đồ': '🗺 Map', '⏱ Sự Kiện': '⏱ Events',
+  'Hiện Tại': 'Current', 'Thế Giới': 'World',
+  'Đường nối là lối ĐI BỘ thật giữa hai vùng — suy thẳng từ cổng trong game.':
+    'The lines are real ON-FOOT routes between regions — derived straight from the in-game gates.',
+  // ── Bảng Kỹ Năng dạng cây ──
+  'Lớp': 'Class', 'Khác': 'Other', '✦ Đại Thành': '✦ Mastery',
+  'kỹ năng riêng của lớp, tự ngộ theo cấp': 'class-only skills, learned automatically by level',
+  '◆ Đã đủ điều kiện': '◆ Requirements met',
+  'Loại:': 'Type:', 'Chủ động': 'Active', 'Tiến độ:': 'Progress:', 'tới mốc': 'to milestone',
+  'Hiệu quả:': 'Effect:', 'Tác dụng:': 'Does:', 'Thêm 1 cấp:': 'Per extra level:',
+  'Tiến Hoá:': 'Evolution:', 'chưa — mốc đầu ở cấp 40': 'not yet — first milestone at Lv 40',
+  'Điều kiện': 'Requirements', 'Cấp nhân vật:': 'Character level:',
+  'Lumen tiêu hao:': 'Lumen cost:', 'Bản Năng tiêu hao:': 'Instinct cost:', 'Nâng Cấp': 'Upgrade',
+  'Đang nằm ở': 'Sitting in', 'trên thanh chiêu — bấm phím': 'on the bar — press', 'để tung.': 'to cast.',
+  '+2,5% Sát Thương · −0,25% hồi chiêu': '+2.5% Damage · −0.25% cooldown',
+  'Chuột phải': 'Right-click',
+});
+
+/* Mấy dòng sinh theo dữ liệu — một quy tắc thay cho hàng chục mục từ. HẸP nên unshift. */
+RULES.unshift(
+  [/^Cấp: (\d+)$/, 'Lv: $1'],
+  [/^\(đang (\d+)\)$/, '(now $1)'],
+  [/^ô (\d+)$/, 'slot $1'],
+  [/^Công Kích ×([\d.]+) · tầm (\d+) · phạm vi (\d+) · hồi (\d+)s · (\d+) Mana$/,
+    'ATK ×$1 · range $2 · area $3 · cooldown $4s · $5 Mana'],
+  [/^(\d{2}:\d{2}) · (.+) — hạ trùm nhận Box Kundun lớn$/,
+    (m, gio, map) => `${gio} · ${tr(map)} — fell the boss for a large Box Kundun`],
+  // Chú giải ô kỹ năng nằm TRÊN NHIỀU DÒNG trong một text node (xuống dòng đơn, không phải
+  // dòng trống) nên nhánh tách đoạn của trCompute không đụng tới — phải khớp cả cụm bằng \s+.
+  [/^\s*góc ô = nâng được ngay ·\s+ô mờ = chưa mở khoá · ô viền đứt = chưa gán kỹ năng\s*$/,
+    'corner mark = upgradable now · dimmed = locked · dashed border = no skill assigned'],
+);
+
 const _trCache = new Map();
 function tr(s) {
   if (lang !== 'en' || !s || typeof s !== 'string') return s;
