@@ -1972,10 +1972,18 @@ tệ hơn hẳn không có nút — cùng bài học `openEvoPanel` của `test_
 `renderLenhNhat()` mà tự `return` khi bảng còn `.hidden` thì mở ra một **cái khung TRỐNG**.
 Cửa hỏi `.hidden` là `ngocVeLai()` / `nhatVeLai()` — hàm vẽ thì vẽ vô điều kiện.
 
-Và hai bảng ấy là lý do hai hàm kia tồn tại: **ngăn ngọc nay hiện ở HAI cửa** (bảng riêng phím N
-*và* tab Kho của Túi Đồ), bốn công tắc nhặt cũng vậy (Lệnh Nhặt *và* cụm "⚙ Tự động" của Túi Đồ).
-Mọi hàm gửi/rút/bật-tắt phải vẽ lại **cả hai** — sáu chỗ từng chỉ gọi `renderBag()`. Bấm ở cửa
-này mà số ở cửa kia đứng im thì người chơi đọc ra là *"bấm không ăn"*, và **không lỗi nào báo**.
+Và hai bảng ấy là lý do hai hàm kia tồn tại. ⚠ **Ngăn ngọc VẼ ở đúng MỘT nơi** — bảng phím N.
+Tab Kho của Túi Đồ chỉ còn **một con số "đang cất" + một nút chỉ đường**; dựng lại khối ngọc ở
+đó là hai cửa cùng vẽ một thứ, tức hai chỗ phải nhớ sửa. Nhưng con số kia thì vẫn phải VẼ LẠI
+khi gửi/rút, và bốn công tắc nhặt thì **thật sự có ở hai nơi** (Lệnh Nhặt *và* cụm "⚙ Tự động"
+của Túi Đồ). Mọi hàm gửi/rút/bật-tắt phải vẽ lại cả hai — sáu chỗ từng chỉ gọi `renderBag()`.
+Bấm ở cửa này mà số ở cửa kia đứng im thì người chơi đọc ra là *"bấm không ăn"*, và **không lỗi
+nào báo**.
+
+⚠ **Nút `♪` đã gỡ theo `#mc-drop`**, và đó là chủ ý: thanh trượt 🎵 trong Cài Đặt là cửa đầy đủ
+hơn một cái nút bật/tắt. `test_nhacnen` **không xoá mệnh đề cho xanh** — nó đi theo sang cửa mới
+và mạnh lên: mệnh đề cũ chỉ hỏi nút có `.hidden` không (nút chết vẫn xanh), mệnh đề mới **kéo
+thanh trượt thật** rồi đòi `SETTINGS.bgm` phải đổi.
 
 ### Ngân Hàng Ngọc: sáu ICON TRANH THẬT, không phải một hình vẽ đổi màu
 
@@ -2002,7 +2010,10 @@ Chưa có chat người-với-người; ghi nhận chỗ trước để khi làm
 nạp trang** và giết mọi lượt đăng ký phía sau. Cùng cái bẫy đã ghi cho `btn-inv`.
 
 Gác: `tests/test_thanhcum.js` (8 mệnh đề) · `tests/test_hethong.js` (18 khẳng định, **chín** phép
-thử ngược đều đỏ).
+thử ngược đều đỏ). Ba bài CŨ phải theo nội dung sang nhà mới — `test_huongdan §2` (bảng phím nay
+ở tab Cài Đặt) · `test_kho B4` (tab Kho nay chỉ đường) · `test_nhacnen` (thanh trượt thay nút ♪);
+cả ba **mạnh lên chứ không nhẹ đi**, và cả năm phép thử ngược của chúng đều đỏ. *Một bài kiểm đỏ
+vì nội dung DỜI CHỖ thì sửa bằng cách đi theo nó, không phải bằng cách xoá mệnh đề.*
 ⚠ `test_hethong §7` bản đầu chốt *"nhãn khớp `BẬT|TẮT`"* — xanh ở **cả hai** trạng thái, tức không
 gác gì. Đổi thành *"nhãn phải ĐỔI"*, và đúng phép thử ngược đó mới bắt được `toggleAutoNgoc` quên
 gọi `nhatVeLai()`. *Một cái chốt đúng ở mọi trạng thái là một cái chốt không chốt gì* — cùng bệnh
