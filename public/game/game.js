@@ -16740,19 +16740,12 @@ function renderChar(){
   let html = `<div class="stat-sec">${sect.name} · Cấp ${p.level}</div>`;
   // chân dung = chính nhân vật trong game, ở đúng bậc trang bị đang mặc
   html += `<img class="char-portrait" src="${heroCardUrl(p.sect, heroTier(p), gearVisual(p))}" alt="${sect.name}">`;
-  // The Hatching: 3 trait + tính cách
-  if (p.traits && p.traits.length){
-    const pers = PERSONALITIES[p.personality] || PERSONALITIES.trung;
-    html += `<div style="margin:6px 0 2px;font-size:12px;color:#7ecbff;letter-spacing:1px">◈ DẤU ẤN KHAI SINH · ${pers.glyph} ${pers.name}</div>`;
-    for (const tid of p.traits){
-      const tr = TRAITS.find(t => t.id === tid);
-      if (!tr) continue;
-      const tier = TRAIT_TIERS[tr.tier];
-      html += `<div class="trait-row"><span class="t-glyph">${tr.glyph}</span>
-        <span class="t-name" style="color:${tier.color}">${tr.name} <small style="opacity:.6">[${tier.name}]</small></span>
-        <span class="t-desc">${tr.desc}</span></div>`;
-    }
-  }
+  // ⚠ BA KHỐI ĐÃ GỠ KHỎI BẢNG NÀY, CHỈ GỠ PHẦN BÀY — Dấu Ấn Khai Sinh · Chiêu Thức · Danh Hiệu.
+  // Chủ dự án chốt: bảng Nhân Vật làm đơn giản lại, và danh hiệu sẽ có danh sách mới.
+  // Cơ chế bên dưới GIỮ NGUYÊN và vẫn chạy: `p.traits` + `PERSONALITIES` vẫn cộng chỉ số trong
+  // `calcDerived()`, `TITLES` vẫn mở khoá và vẫn cộng dồn vĩnh viễn qua `checkTitles()`. Gỡ mã
+  // đó theo là phá cân bằng của một trò chơi đang chạy để dọn một khối giao diện.
+  // Cắm lại chỗ bày = thêm lại mấy dòng html ở đây, không phải dựng lại hệ thống.
   html += `<div style="font-size:12px;color:#9aa8d4;margin-bottom:8px">Điểm tiềm năng còn: <b style="color:#7ecbff">${p.free}</b> (mỗi cấp +5)</div>`;
   // Gợi ý build: điểm nào quy đổi ra Công Kích cho ĐÚNG phái này (xem SECTS[x].atkSrc trong calcDerived())
   const _atkSrc = sect.atkSrc || { str:2.0 };
@@ -16789,32 +16782,9 @@ function renderChar(){
   ];
   if (_ae) stats.push(['Hệ đòn đánh', `<span style="color:${elColor(_ae)}">${ELEM[_ae].glyph} ${elName(_ae)}</span>`]);
   for (const [n,v] of stats) html += `<div class="stat-row"><span>${n}</span><b>${v}</b></div>`;
-  html += `<div class="stat-sec">CHIÊU THỨC</div>`;
-  html += `<div class="stat-row"><span>1 — ${sect.skillA.name}</span><b>${p.level>=2?'×'+sect.skillA.mult:'Cấp 2'}</b></div>`;
-  html += `<div class="stat-row"><span>3 — Trấn Phái: ${sect.tp.name}</span><b>${p.level>=9?'×'+sect.tp.mult:'Cấp 9'}</b></div>`;
-  if (p.bikip && p.bikip.hmtp)
-    html += `<div class="stat-row"><span style="color:#e84a6a">☠ Huyết Ma Thôn Phệ (sách kỹ năng)</span><b>hút 10% Sát Thương</b></div>`;
-  // Danh hiệu — chỉ số cộng dồn vĩnh viễn, chọn 1 hiển thị trên đầu
-  html += `<div class="stat-sec">DANH HIỆU — bấm để chọn danh hiệu hiển thị trên đỉnh đầu</div>`;
-  html += `<div style="font-size:11px;color:#9aa8d4;margin-bottom:6px">Mở khóa = cộng dồn chỉ số vĩnh viễn (không cần trang bị). Bấm lần nữa vào danh hiệu đang hiển thị để ẩn.</div>`;
-  for (const t of TITLES){
-    const un = p.titles.unlocked.includes(t.id);
-    const eq = p.titles.equipped === t.id;
-    html += `<div class="slot-row title-row${eq?' equipped':''}" style="${un?'cursor:pointer;':'opacity:.45;'}${eq?'border-color:'+t.color+';background:rgba(76,141,255,.10);':''}" ${un?`onclick="equipTitle('${t.id}')"`:''}>
-      <span class="s-name"><b style="color:${un?t.color:'#8a8a8a'}">${un?'['+t.name+']':t.name}</b>
-      <span style="opacity:.6;font-size:11px"> — ${un ? titleStatText(t.stats) : '🔒 '+t.desc}</span></span>
-      ${eq?`<span style="color:${t.color};font-size:11px">✔ ĐANG HIỂN THỊ</span>`:`<span style="opacity:.4;font-size:11px">${un?'chọn':''}</span>`}</div>`;
-  }
+  // Khối CHIÊU THỨC đã gỡ: bảng Kỹ Năng (phím K) vốn đã in đủ năm thông số của từng chiêu,
+  // nên ba dòng ở đây là bản tóm tắt thứ ba của cùng một thứ.
   CE().innerHTML = html;
-}
-function titleStatText(st){
-  const parts = [];
-  if (st.hp) parts.push(`+${st.hp} Sinh Lực`);
-  if (st.atkPct) parts.push(`+${Math.round(st.atkPct*100)}% Công`);
-  if (st.crit) parts.push(`+${st.crit}% Bạo`);
-  if (st.allPct) parts.push(`+${Math.round(st.allPct*100)}% Toàn TT`);
-  if (st.forgeRate) parts.push(`+${st.forgeRate}% tỉ lệ rèn`);
-  return parts.join(' · ');
 }
 window.equipTitle = function(id){
   if (!player.titles.unlocked.includes(id)) return;
@@ -19994,7 +19964,9 @@ window.charTab = 'info';
 const CHAR_TABS = [
   { id:'info',     name:'Thông Tin',  lv:1 },
   { id:'mount',    name:'✦ Chimera',  lv:6 },   // id giữ 'mount' — sysUnlocked/refreshCharTab và bài kiểm cũ tra theo mã này
-  { id:'taytuy',   name:'🔄 Tái Sinh', lv:MAX_LV },
+  // Tab 'taytuy' (Tái Sinh) đã gỡ — chủ dự án sẽ thiết kế lại. `renderTayTuy()` và
+  // `window.doTayTuy()` GIỮ NGUYÊN: `player.resetCount` đang nằm trong mọi bản lưu và còn cộng
+  // chỉ số vĩnh viễn trong `calcDerived()`. Trả tab về = thêm lại đúng dòng này.
   // Đại Thành ló tab ở cấp MASTERY_LV (120); bên trong còn cần xong chính tuyến — xem masteryOpen().
   { id:'mastery',  name:'✦ Đại Thành', lv:MASTERY_LV },
 ];
@@ -20025,8 +19997,6 @@ function renderCharPanel(){
       { id:CHAR_NHOM_ID, ten:'✦ Nâng Cấp', khoa:!charNhomMo(),
         title: charNhomMo() ? 'Chimera · Linh Thú · Đại Thành'
                             : `Mở khóa ở cấp ${Math.min(...CHAR_NHOM.map(i => charTabDef(i).lv))}` },
-      { id:'taytuy', ten:charTabDef('taytuy').name, khoa:!sysUnlocked('taytuy'),
-        title: sysUnlocked('taytuy') ? '' : `Mở khóa ở cấp ${charTabDef('taytuy').lv}` },
     ] });
   // Hàng 2 chỉ hiện KHI đang ở trong nhóm — không thì nó là bốn nút thừa trên mọi trang khác.
   if (trongNhom){
