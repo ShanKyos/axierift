@@ -2047,13 +2047,29 @@ máy chủ, xem `docs/THIET_KE_ONLINE.md` mục "Ngã ba phải chọn".
 
 `/root/deploy-axiewuxia.sh` chạy `git reset --hard` mỗi 2 phút **trên chính cây mà máy chủ đang
 chạy từ đó**. Mã đổi dưới chân một tiến trình đang chạy, mà nó không tự khởi động lại — nó sẽ
-chạy bản cũ mãi mãi và **không có gì báo**. Phải thêm một dòng vào script ấy, ngay sau `git reset`:
+chạy bản cũ mãi mãi và **không có gì báo**.
+
+Cài bằng **`deploy/capnhat-deploy.sh`** — chạy một lần trên VPS bằng root, tự sao lưu, tự kiểm
+cú pháp, chạy lại nhiều lần vô hại.
+
+**⚠ ĐỪNG dán một dòng `systemctl restart` trơn vào đó.** Tôi đã viết đúng cái sai ấy một lần:
+cron chạy script deploy **2 phút một lần, BẤT KỂ có commit mới hay không**, nên một dòng restart
+vô điều kiện là **đá mọi người đang chơi ra khỏi game mỗi 2 phút**. Triệu chứng người chơi mô tả
+sẽ là "cứ vài phút lại mất kết nối", và không ai nghĩ tới script deploy.
+
+Mốc so sánh đúng là **commit cuối cùng chạm `server/` hoặc `package.json`**:
 
 ```bash
-systemctl is-active --quiet bongnguoi && systemctl restart bongnguoi
+MOC_BN=/root/.bongnguoi-ver
+VER_BN=$(git -C /var/www/axiewuxia log -1 --format=%H -- server/ package.json 2>/dev/null)
+if [ -n "$VER_BN" ] && [ "$VER_BN" != "$(cat "$MOC_BN" 2>/dev/null)" ]; then
+  echo "$VER_BN" > "$MOC_BN"
+  /usr/bin/systemctl is-active --quiet bongnguoi && /usr/bin/systemctl restart bongnguoi
+fi
 ```
 
-Có điều kiện, không vô điều kiện: chưa bật dịch vụ thì đừng bật hộ.
+Nhờ vậy deploy chỉ đổi art/`game.js` — **trường hợp thường gặp nhất của dự án này** — không ngắt
+kết nối của ai. `is-active` giữ nguyên: chưa bật dịch vụ thì đừng bật hộ.
 
 ## Test
 

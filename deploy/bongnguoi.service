@@ -8,11 +8,14 @@
 #
 # ⚠ CRON TRIỂN KHAI CHẠY `git reset --hard` TRÊN CHÍNH CÂY NÀY, mỗi 2 phút. Nghĩa là mã dưới
 #   chân tiến trình đổi mà tiến trình KHÔNG tự khởi động lại — nó sẽ chạy bản cũ mãi mãi, và
-#   không có gì báo. Phải thêm một dòng vào /root/deploy-axiewuxia.sh, NGAY SAU git reset:
+#   không có gì báo. Phải thêm bước khởi động lại vào /root/deploy-axiewuxia.sh — chạy MỘT LẦN:
 #
-#       systemctl is-active --quiet bongnguoi && systemctl restart bongnguoi
+#       bash /var/www/axiewuxia/deploy/capnhat-deploy.sh
 #
-#   (Không vô điều kiện: chưa bật dịch vụ thì đừng bật nó lên hộ.)
+#   ⚠ ĐỪNG dán một dòng `systemctl restart` TRƠN: cron chạy script deploy 2 phút một lần BẤT KỂ
+#   có commit mới hay không, nên restart vô điều kiện là đá mọi người ra khỏi game mỗi 2 phút.
+#   Đoạn trong capnhat-deploy.sh so theo commit cuối chạm `server/`/`package.json`, nên deploy
+#   chỉ đổi art/game.js thì không ai bị ngắt.
 #
 # ⚠ Máy chủ này KHÔNG giữ trạng thái nào cần lưu — không cơ sở dữ liệu, không tệp. Khởi động
 #   lại là mất đúng danh sách ai đang nối, và client tự nối lại sau 3 giây. Đó là chủ ý: ở
