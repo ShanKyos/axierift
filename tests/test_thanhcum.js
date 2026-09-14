@@ -37,7 +37,7 @@ const PORT = process.argv[2] || '8853';
     const PHAI = ['btn-party','btn-friend','btn-map','btn-settings'];
     // nút nào thiếu nhãn rê chuột
     const camNut = [...hud.querySelectorAll('.mc-btn')]
-      .filter(e => !e.querySelector('span') && !e.classList.contains('mc-menu'))
+      .filter(e => !e.querySelector('span'))   // nút Menu nay cũng có nhãn ⇒ không còn ngoại lệ nào
       .map(e => e.id || '(không id)');
     return {
       hienTrai: hienRa(trai), hienPhai: hienRa(phai),
@@ -92,6 +92,34 @@ const PORT = process.argv[2] || '8853';
     if (o.thieu) fail(`§6 ${ten}: thiếu nút hoặc thiếu bảng`);
     else if (o.mo && o.dong && o.sang) pass(`§6 ${ten}: bấm mở được bảng, nút sáng lên, bấm lại thì đóng`);
     else fail(`§6 ${ten} hỏng — mở:${o.mo} · nút sáng:${o.sang} · đóng lại:${o.dong}`);
+  }
+
+  // ── §7 CỠ Ô MENU và ĐỘ GỌN CỦA THANH ────────────────────────────────────────
+  // Chủ dự án nhìn ảnh chụp bản 40px và gọi đúng tên: "sao nó dài quá vậy, UI bên hình mẫu
+  // gọn lắm mà". Nên hợp đồng ở đây có HAI vế, và vế thứ hai mới là vế người chơi thấy:
+  //   ① ô menu phải NHỎ HƠN ô chiêu — nhưng có SÀN, không thì "gọn" trượt thành "bấm không trúng";
+  //   ② cả thanh phải nằm dưới một phần bề ngang màn hình.
+  // Chỉ có ① thì hạ cỡ ô mà nới lề vẫn qua; chỉ có ② thì thu nhỏ ô tới mức vô dụng cũng qua.
+  const r7 = await p.evaluate(() => {
+    const R = e => e.getBoundingClientRect();
+    const hud = document.getElementById('bottom-hud');
+    const oMenu = document.querySelector('#mc-trai .mc-btn'), oChieu = document.getElementById('sk-0');
+    if (!hud || !oMenu || !oChieu) return { thieu: true };
+    return { menu: Math.round(R(oMenu).width), chieu: Math.round(R(oChieu).width),
+             tong: Math.round(R(hud).width), man: innerWidth,
+             pc: +(R(hud).width / innerWidth * 100).toFixed(1) };
+  });
+  // ⚠ Trần đo bằng PX, không bằng % bề ngang màn. Thanh là một hàng ô CỠ CỐ ĐỊNH nên nó không
+  // co theo cửa sổ: cùng một thanh 756px ra 47,3% ở màn 1600 và 52,5% ở màn 1440. Đặt ngưỡng
+  // theo % là ngưỡng đổi theo khổ cửa sổ của người chạy bài — đã đỏ đúng vì lý do đó một lần.
+  const SAN_O = 26, TRAN_PX = 800;   // đo được: ô menu 30px · cả thanh 756px (bản 40px: 865px)
+  if (r7.thieu) fail('§7 thiếu phần tử — không chấm được');
+  else {
+    if (r7.menu < r7.chieu && r7.menu >= SAN_O)
+      pass(`§7① ô menu ${r7.menu}px — nhỏ hơn ô chiêu ${r7.chieu}px và trên sàn ${SAN_O}px`);
+    else fail(`§7① cỡ ô menu sai — ${r7.menu}px so với ô chiêu ${r7.chieu}px (phải nhỏ hơn, và ≥ ${SAN_O}px để còn bấm trúng)`);
+    if (r7.tong <= TRAN_PX) pass(`§7② cả thanh rộng ${r7.tong}px (trần ${TRAN_PX}px) — ${r7.pc}% màn ${r7.man}px`);
+    else fail(`§7② thanh rộng ${r7.tong}px, quá trần ${TRAN_PX}px — ${r7.pc}% màn ${r7.man}px`);
   }
 
   if (errs.length) fail('lỗi trang: ' + errs.slice(0,3).join(' | '));
