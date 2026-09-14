@@ -57,6 +57,17 @@ Tab này dựng cho kỹ năng chung học ngoài thế giới. Đo: **không ch
   Di Sản lên thanh làm `legacyAtkPct` tụt đúng bằng bậc của chiêu đó, gỡ ra thì trả lại).
 - Bị động **chỉ chạy khi cắm vào ô** — mỗi lớp 1-2 cái, nên cắm một bị động là bỏ một ô chủ động.
 
+**⚠ Một hệ quả đáng để chủ dự án biết và quyết:** `tienthiencong` (Bản Nguyên Công — chết thì tự
+hồi sinh 50% HP, hồi 300s) cũng là bị động, nên nay nó **chỉ cứu khi đang nằm trên thanh**. Trước
+đợt này ngộ được là có, khỏi tốn ô nào. Đây là đúng luật chung (bị động phải trả bằng một ô), và
+nó biến "một mạng dự phòng" thành một lựa chọn xây nhân vật thật — nhưng nó cũng là thứ âm thầm
+làm nhân vật yếu đi với người đang quen có nó. Ba đường đi, chủ dự án chọn:
+① giữ nguyên (bị động nào cũng phải trả bằng một ô — nhất quán nhất);
+② cho nó là ngoại lệ, chạy chỉ cần ngộ được;
+③ thêm ô bị động RIÊNG, không tranh chỗ với bốn ô chủ động.
+Đo được: chính vì vế này mà `test_dungeon2` đỏ — mục kiểm cổng Tầng Sâu của nó vốn dựa vào việc
+nhân vật tự hồi sinh, một thứ chẳng liên quan gì tới phó bản.
+
 ---
 
 ## 2. CÒN THIẾU — danh sách để chủ dự án bổ sung

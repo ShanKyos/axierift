@@ -1371,9 +1371,10 @@ hồi chiêu, nên in năm thông số cho nó là hứa suông.
 sang cột 2 mà để nguyên `4*KN_COT` là thừa một cột rỗng 58px — cây dãn ra, khung chi tiết bị bóp,
 và không có gì báo lỗi.
 
-**Ảnh mẫu ghi "Kéo biểu tượng đến thanh phím tắt" — game này KHÔNG cho kéo** (thanh chiêu 4 ô cố
-định). Dòng chân khung nói đúng sự thật thay vì chép câu đó sang: chiêu nằm ô mấy, hoặc nó đang
-là Di Sản.
+**Ảnh mẫu ghi "Kéo biểu tượng đến thanh phím tắt" — và nay game LÀM ĐÚNG THẾ.** Câu này trước
+đây viết ngược lại ("game này KHÔNG cho kéo, thanh chiêu 4 ô cố định"); nó đã sai kể từ đợt thanh
+chiêu tự gán — xem mục **🎯 THANH CHIÊU NAY TỰ GÁN** bên dưới. Dòng chân khung chi tiết nói chiêu
+đang nằm ô mấy, hoặc mời kéo vào ô, kèm cái giá %Công Kích Di Sản phải trả.
 
 ### 🌳 ĐẠI THÀNH LÀ MỘT CÂY HAI NHÁNH — đừng biến nó lại thành danh sách
 
