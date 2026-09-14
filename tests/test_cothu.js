@@ -6,7 +6,8 @@
 //
 // Nên ràng buộc đảo chiều, và đó là chỗ dễ chép sai nhất: avatar và lớp nhân vật THAY CHỖ NHAU
 // lúc ra đòn, nên khối nhìn thấy phải BẰNG NHAU. Chép CHI_THAN/CHI_TRAN sang đây (chúng cố ý
-// nhỏ hơn người) là mỗi cú đánh một cú giật cỡ. Luật mới: AVA_TY 0,72 · AVA_TRAN 0,95.
+// nhỏ hơn người) là mỗi cú đánh một cú giật cỡ. Luật NAY: AVA_TY 0,95 · AVA_TRAN 1,18 —
+// lớp nhân vật đã đẩy ra xa nên hai khối đứng cạnh nhau, không còn thay chỗ nhau.
 //
 // Kiểm CẢ BỘ chứ không một con mẫu: 16 con nướng ra 16 tỉ lệ ô khác nhau (1,07 → 1,52), nên con
 // nướng thêm sau này cũng tự nằm trong luật.
@@ -67,8 +68,10 @@ const pass = m => console.log('PASS ' + m);
       avaCo:       () => typeof avaCo,
       veAvatar:    () => typeof veAvatar,
       avatarId:    () => typeof avatarId,
-      cotGom:      () => typeof cotGom,
-      cotBoCast:   () => typeof cotBoCast,
+      // ⚠ `cotGom`/`cotBoCast` ĐÃ BỎ khỏi danh sách này. Chúng từng đứng đây vì hồi đó hệ Cốt
+      // còn sống và bài lo nó bị gỡ nhầm theo Ragoon. Nay hệ Cốt đã gỡ HẲN chỉ số (chủ dự án
+      // chốt), nên đòi chúng còn tồn tại là đòi ngược lại việc vừa làm. `tests/test_cotgobo.js`
+      // gác chiều ngược: chúng phải KHÔNG còn.
     };
     o.consong = Object.keys(song).filter(n => { try { return song[n]() === 'undefined'; } catch(e){ return true; } });
     return o;
@@ -76,17 +79,22 @@ const pass = m => console.log('PASS ' + m);
   console.log('cỡ 16 thân:', JSON.stringify(r.con.slice(0, 3)), '… (' + r.con.length + ' con)');
   const tran = r.than * r.tran;
 
-  const qua = r.con.filter(c => c.cao > tran + 0.01 || c.rong > tran + 0.01);
+  // ⚠ Lề 1px, không phải 0,01. Cỡ đo được làm tròn một chữ số thập phân (112,6) còn trần tính
+  // ra 112,572 — so bằng `+0.01` là đỏ vì 0,018px, tức đỏ vì phép làm tròn chứ không vì luật.
+  const qua = r.con.filter(c => c.cao > tran + 1 || c.rong > tran + 1);
   if (qua.length) fail(`${qua.length} con vượt trần ${tran.toFixed(0)}px: ` +
     qua.map(c => `${c.id} ${c.rong}×${c.cao}`).join(', '));
   else pass(`cả ${r.con.length} thân nằm trong trần ${tran.toFixed(0)}px = ${r.tran}×thân người`);
 
-  // Khối phải KHỚP thân người, không được lớn hơn — nếu không thì lúc ra đòn là một cú giật cỡ.
-  const to = r.con.filter(c => c.cao > r.than || c.rong > r.than);
-  if (to.length) fail(`có thân lớn hơn thân người (${r.than}px): ` + to.map(c => c.id).join(', '));
-  else {
+  // ⚠ CHỐT NÀY ĐÃ ĐỔI LUẬT, giữ lại ghi chú để đừng ai "sửa ngược".
+  // Bản cũ đòi khối Axie KHÔNG được lớn hơn thân người, vì hồi đó avatar và lớp nhân vật THAY
+  // CHỖ NHAU lúc ra đòn — lệch cỡ là một cú giật. Nay lớp nhân vật đã được đẩy HẲN RA XA con
+  // Axie (AVA_CHAN_TRUOC/AVA_CHAN_BEN), hai khối đứng CẠNH nhau chứ không chồng lên nhau, nên
+  // ràng buộc "bằng nhau" hết lý do tồn tại — và đó chính là lý do AVA_TY lên 0,95 và AVA_TRAN
+  // lên 1,18. Thứ còn phải gác là TRẦN (`AVA_TRAN`, đo ở khẳng định trên) và sàn (bên dưới).
+  {
     const max = r.con.reduce((m, c) => Math.max(m, c.cao, c.rong), 0);
-    pass(`thân lấn nhất cũng chỉ chiếm ${(max / r.than * 100).toFixed(0)}% thân người`);
+    pass(`thân lấn nhất chiếm ${(max / r.than * 100).toFixed(0)}% thân người (trần ${(r.tran*100).toFixed(0)}%)`);
   }
 
   // …nhưng cũng không được thu tới mức không nhận ra là cái gì.

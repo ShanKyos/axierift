@@ -224,36 +224,70 @@ avatar do `AVA_TY` 0,72 / `AVA_TRAN` 0,95 quản, và hai số đó khớp theo 
 và lớp nhân vật THAY CHỖ NHAU lúc ra đòn nên khối nhìn thấy phải **bằng nhau**, không nhỏ hơn.
 Chép `CHI_THAN`/`CHI_TRAN` sang đấy là mỗi cú đánh một cú giật cỡ. `tests/test_cothu.js` gác.
 
-### ◆ BỐN Ô CỐT NAY CẮM TRÊN NGƯỜI CHƠI
+### ◆ ~~BỐN Ô CỐT~~ — ĐÃ GỠ HẲN CHỈ SỐ, đừng dựng lại
 
-`player.cot` (4 ô) + `player.cotKho`, thay cho `player.chimera.co[id].cot`. Năm khoá `c*` của
-Ragoon đổi sang khoá thật: `cAtk→atkPct` · `cCrit→crit` · `cCritDmg→critDmg` · `cSkill→skillPct`
-· `cCd→cdCut`. Dải lấy theo **dải người chơi** (thấp hơn dải Ragoon cũ) — Cốt nay cộng thẳng vào
-đòn của chính mình, không đi qua một con thú có sát thương riêng.
+> ⚠ Giữ đúng cái tiêu đề này để cảnh báo, thay vì xoá trắng rồi để người sau đọc `COT_O` trong
+> lịch sử git mà tưởng nó còn. Cùng kiểu bẫy đã ghi ở mục "~~Khắc Ấn~~" và "~~Chimera đi theo~~".
 
-- `chiCotGom(id)` → **`cotGom()`**: MỘT sổ, không còn sổ `c` mất đích. Đừng dựng lại sổ thứ hai.
-- ⚠ **Tám khoá `COT_PHU` phải KHÁC NHAU đôi một.** `cAtk→atkPct` trùng dòng `atkPct` có sẵn thì
-  `cotThemPhu()` (lọc trùng theo khoá) chỉ còn **bảy** khoá để bốc trong khi trần là bốn dòng
-  phụ — không lỗi, không báo gì, chỉ là bể hẹp đi. Dòng dôi ra đổi sang `pierce`.
-- ⚠ **`skillPct` và `cdCut` KHÔNG có ngăn trong sổ P** — chúng đi đường riêng vào
-  `player.skillDmgPct` / `player.vhCdMult`, đúng đường Đại Thành đã dùng.
-- ⚠ **Mười một hiệu ứng "đủ 4 mảnh" đã DỜI** từ `chiCastChieu()` sang chiêu NGƯỜI CHƠI:
-  `cotBoCast(id)` gọi **một lần** ở cuối `castSkill` (hơn mười nhánh, vài nhánh thoát bằng
-  `return` — rắc vào từng nhánh là đảm bảo bỏ sót) · `cotBoTick(dt)` · `cotDmgMul()` ·
-  `cotCdMul()`; Tro Tàn trong `killMob`, Mầm Cội trong `hurtMob`. Không dời thì bốn ô Cốt chỉ
-  còn là bốn dòng chỉ số, mất đúng cái làm Cốt khác trang bị.
-- ⚠ **`cotDiTru()` phải TRẢ MẢNH VỀ KHO.** Save cũ có một bộ bốn ô cho TỪNG con; nay chỉ còn một
-  bộ. Giữ bộ của con đang cắm, mọi mảnh khác về kho. Bỏ bước đó là người chơi mất trắng.
+Chủ dự án chốt: **gỡ hẳn chỉ số.** Cốt là trục sức mạnh CUỐI CÙNG còn sót lại từ nhánh Ragoon —
+bốn ô mang đúng tên bộ phận Axie (Sừng · Vuốt · Vảy · Đuôi), 4 dòng chính + 8 dòng phụ + 11 hiệu
+ứng đủ bộ. Dời nó sang người chơi đã KHÔNG cứu được vấn đề gốc: nó vẫn là **sức mạnh đến từ phía
+Axie**, mà luật Đổi Vai nói thẳng — *Axie 0 chỉ số, 0 kỹ năng, 0 trang bị; toàn bộ chỉ số nằm ở
+5 lớp*.
 
-**Hai lỗi CÓ SẴN, lộ ra lúc dời** — cả hai đều im lặng:
-1. Băng Vụn đủ 4 mảnh ghi `m.freezeT`, mà **không chỗ nào trong game đọc `freezeT`**. Cơ chế
-   đứng hình thật là `m.stunT`. Bảng Cốt hứa "đóng băng 1,2 giây" và chưa con quái nào từng đứng
-   lại. Trước khi thêm một trạng thái mới lên quái, grep xem có ai ĐỌC nó không.
-2. Gacha trùng con chỉ trả Nguyệt Trần **sau** khi đủ C6, vì sáu lần đầu còn nuôi Huyết Thống.
-   Ba hệ số đó gỡ rồi nên sáu lần trùng đầu thành trắng tay. Nay trùng có thưởng ngay từ lần đầu.
+**Đây là lần thứ BA cùng một trục bị tháo ra**, và lần nào nó cũng quay lại dưới dạng "chỉ vài
+dòng chỉ số nhỏ thôi":
 
-Bài kiểm: **`tests/test_cotnguoi.js`** (thay cho `test_dinhhinh.js` đã gỡ — bài cũ gác hệ Định
-Hình Chimera, tức gác một cái xác: nó xanh mãi mãi và không bảo vệ gì).
+| đời | trục | gỡ ở đâu |
+|---|---|---|
+| 1 | bị động `thu` × `chiThuMul` (Huyết Thống) | đợt gỡ Ragoon |
+| 2 | cấp Chimera × `chiLvThuMul` + kỹ năng đồng hành `chiTam` | đợt gộp `main` |
+| 3 | **bốn ô Cốt** | đợt này |
+
+⇒ Đã gỡ: `COT_O` · `COT_PHU` · `COT_PHAM` · `COT_KHO_MAX` · `COT_BO_R` · `cotGom` · `cotO` ·
+`cotKho` · `cotMoi` · `cotDeo`/`cotThao`/`cotNang`/`cotBo` · `cotBoCast`/`cotBoTick`/`cotDmgMul`/
+`cotCdMul` · `cotRoi` · `cotBossVung` · bảng Kho Cốt · lệnh `/cot`. **`tests/test_cotgobo.js` gác
+chiều NGƯỢC LẠI**: chúng phải không còn, và cắm dữ liệu Cốt giả vào `player` phải đổi **0 điểm**
+chỉ số (đo chỉ số THẬT trước/sau — `applyLine()` lặng lẽ bỏ khoá lạ nên đọc bảng thì không thấy).
+
+**`COT_DONG` GIỮ LẠI** nhưng chỉ còn là **bản sắc của VỈA** ở từng vùng: một cái tên và một màu
+cho chấm kim cương trên bản đồ nhỏ. Phần chỉ số (`hai`/`haiTxt`/`bonTxt`) hết tác dụng.
+
+#### Thứ thay chỗ nó: VỈA TRẢ **BẢN NĂNG**
+
+Vỉa là vòng chơi mỗi ngày DUY NHẤT buộc người chơi đi tới một toạ độ — không thể để nó trả ra thứ
+vô dụng. Nay nó trả **600 Bản Năng**, và con số neo vào thứ đã có chứ không bịa: một Trùm Vùng
+cho 200, còn chú thích của chính hàm ấy nói Vỉa "hào phóng hơn Trùm Vùng một bậc" với ba mảnh
+⇒ 3 × 200. Chỗ tiêu là **nâng cấp kỹ năng** (`30 × cấp^1,1` mỗi bậc) — tức sức mạnh của chính
+5 lớp, đúng nơi luật Đổi Vai nói nó phải nằm.
+
+Và nó hợp canon hơn thứ nó thay: qua Nhát Gọi thì **mất ký ức chứ không mất NGHỀ**. Đào lên tàn
+tích của những kẻ đi trước mà lấy lại được bản năng là đúng câu chuyện đang kể.
+
+#### Di trú: hoàn lại, đừng xoá trắng
+
+`cotDiTru()` chạy một lần trong `loadGame`. Mọi thứ quy về đơn vị CÒN CHỖ TIÊU, tỉ giá neo vào
+nguồn rơi:
+
+| đã đổ vào | hoàn bằng | tỉ giá, và nó từ đâu ra |
+|---|---|---|
+| mảnh Cốt | Bản Năng | 1 mảnh = **200** (một lượt vỉa rơi 3 mảnh, nay trả 600) |
+| Đất Hồn (+ cấp/Hoá quy ra) | Ấn Giao Kết | **5 : 1** (trùm vùng rơi 4-6 Đất Hồn *và* 1 Ấn) |
+| Lumen đổ vào Hoá | Lumen | đúng số — Lumen chưa bao giờ đổi đơn vị |
+
+- ⚠ **Quét MỌI chỗ từng cất mảnh**: kho người chơi · bốn ô người chơi · kho và bốn ô của TỪNG
+  con Chimera đời cũ. Sót một chỗ là một khoản mất trắng không ai thấy.
+- ⚠ **Ghi nhận `lv`/`hoa` TRƯỚC khi xoá.** Bản đầu xoá thẳng rồi mới tính hoàn ⇒ mọi người chơi
+  được hoàn đúng 0, không một lỗi nào báo.
+- ⚠ **Cờ `player._diTruCot` chặn hoàn hai lần** — nạp save nhiều lần mà thiếu cờ là in tiền.
+- ⚠ **Phải BÁO ra một dòng đọc được.** Một khoản hoàn không ai thấy thì với người chơi không
+  khác gì mất trắng.
+
+#### Nhiệm vụ phải trỏ lại
+
+`c3q3` từng gate bốn ô Cốt ⇒ nay gate **Vỉa** (`need:2`, nằm đúng giữa c2q2 cấp 26 = 1 và sd_tt2
+cấp 68 = 3). 11 nhiệm vụ thưởng mảnh Cốt ⇒ thưởng **Bản Năng**, quy theo `số mảnh × phẩm × 200 ×
+max(1, cấp/20)` để theo kịp giá nâng chiêu.
 
 ### Còn treo
 
