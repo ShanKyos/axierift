@@ -3297,6 +3297,17 @@ const FUSION_DEFS = {};
 // ═══════════ CẤP KỸ NĂNG 1-120 — +2,5% ST & −0,25% hồi chiêu mỗi cấp · mốc theo cấp · ⚡tiến hóa 40/80/120 ═══════════
 function skLv(id){ return (player && player.skillLv && player.skillLv[id]) || 1; }
 function skLvMult(id){ return 1 + (skLv(id) - 1) * 0.025; }
+// ═══ ĐIỂM TIỀM NĂNG RÓT VÀO CHIÊU — trần 5 điểm MỖI chiêu ═══════════════════════════
+// Trước bản này `player.free` có ĐÚNG một chỗ tiêu: năm chỉ số trong bảng Nhân Vật. Nay nó là
+// chỗ tiêu thứ hai, và hai chỗ đó GIÀNH NHAU cùng một túi điểm — đó mới là chỗ có lựa chọn.
+// Trần 5/chiêu là thứ giữ cho lựa chọn ấy còn nghĩa: không có trần thì người chơi dồn hết vào
+// đúng một chiêu và mọi chiêu khác thành đồ trang trí.
+// ⚠ Đây KHÔNG phải cấp kỹ năng. Cấp (1-120) vẫn mua bằng Lumen + Bản Năng qua upgradeSkillUI()
+// — hai trục khác nhau, nhân dồn với nhau ở đúng một chỗ (xem castSkill).
+const SK_TN_TRAN = 5;      // trần điểm tiềm năng mỗi chiêu
+const SK_TN_DMG  = 0.03;   // mỗi điểm +3% sát thương chiêu ⇒ đầy trần là +15%
+function skTn(id){ return (player && player.skillTn && player.skillTn[id]) || 0; }
+function skTnMult(id){ return 1 + skTn(id) * SK_TN_DMG; }
 function skUpCost(id){ return Math.round(150 * Math.pow(skLv(id), 1.45)); }
 // Instinct (player.khi) — nơi tiêu DUY NHẤT của chỉ số này. Trước đây nó tích lũy từ đánh quái/thiền/
 // nhiệm vụ rồi hiện thường trực trên HUD mà không tiêu được ở đâu cả (nơi tiêu cũ là tự tay xung Kinh
@@ -3403,6 +3414,23 @@ function canCastSilent(id){
   return true;
 }
 function milestoneTxt(m){ return m.dmg ? `+${m.dmg*100}% sát thương` : m.cd ? `−${m.cd*100}% hồi chiêu` : `−${m.qi*100}% tiêu hao Mana`; }
+// Rót MỘT điểm tiềm năng vào một chiêu. Cửa DUY NHẤT — bảng kỹ năng và mọi chỗ gọi sau này
+// đều đi qua đây, nên lý do người chơi ĐỌC trên nút và luật máy THỰC THI không thể lệch nhau
+// (cùng lối với knOHopLe / masteryKhoa).
+window.rotTiemNang = function(id){
+  if (!player || !SKILL_DEFS[id]) return;
+  if (!skillInfo(id).unlocked){ addFloat(player.x, player.y-40, 'Chưa ngộ chiêu này', '#8a8a8a', 12); return; }
+  if (skTn(id) >= SK_TN_TRAN){ addFloat(player.x, player.y-40, `${skName(id)} đã đủ ${SK_TN_TRAN}/${SK_TN_TRAN} điểm tiềm năng`, '#8a8a8a', 12); return; }
+  if ((player.free || 0) <= 0){ addFloat(player.x, player.y-40, 'Hết điểm tiềm năng — lên cấp để có thêm (mỗi cấp +5)', '#7ecbff', 12); return; }
+  if (!player.skillTn) player.skillTn = {};
+  player.free -= 1;
+  player.skillTn[id] = skTn(id) + 1;
+  addFloat(player.x, player.y-52, `\u{1F4A0} ${skName(id)} \u2192 ${player.skillTn[id]}/${SK_TN_TRAN} tiềm năng (+${Math.round(player.skillTn[id]*SK_TN_DMG*100)}% ST)`, '#7ecbff', 13);
+  AudioSys.sfx('ui', 0.6);
+  saveGame(); renderSkillPanel();
+  // Bảng Nhân Vật in số điểm còn lại — mở thì phải vẽ lại, không thì nó nói dối ngay sau một cú bấm.
+  { const _pc = el('panel-char'); if (_pc && !_pc.hidden) renderChar(); }
+};
 window.upgradeSkillUI = function(id){
   const lv = skLv(id);
   if (lv >= 120){ addFloat(player.x, player.y-40, 'Kỹ năng đã đạt cấp tối đa (120)!', '#8a8a8a', 12); return; }
@@ -7539,7 +7567,8 @@ function newPlayer(sectKey){
     autoCfg: { skill:true, potion:true, potionPct:40, range:430, boss:false }, // Cài đặt Auto Farm (panel O)
     autoEquip: true,   // nhân vật MỚI cũng bật — trước đây chỉ backfill trong loadGame nên tân thủ cởi trần tới khi tải lại trang
     vohoc: {}, bikipVH: 0,
-    skillLv: {},                                 // cấp từng kỹ năng 1-120                       // Sổ Kỹ Năng: kỹ năng đã học + Sách Kỹ Năng
+    skillLv: {},                                 // cấp từng kỹ năng 1-120
+    skillTn: {},                                 // điểm tiềm năng đã rót vào từng chiêu (trần SK_TN_TRAN)                       // Sổ Kỹ Năng: kỹ năng đã học + Sách Kỹ Năng
     skillEvo: {},                                // Tiến Hóa Chiêu Thức: {[skillId]: ['power'|'swift', ...]} theo bậc 40/80/120
     tenuiTT: 0,                                    // Té Núi: hết hạn Trọng Thương (timestamp)
     gt: { t: GT_DAY*0.30 },                          // Lịch Thế Giới: đồng hồ thế giới (giây game) — mở màn canh Thìn
@@ -7860,6 +7889,7 @@ function loadGame(idx){
     delete player.gkBuffT;   // đồng hồ buff của chiêu Defense đã gỡ
     if (!player.vohoc) player.vohoc = {};
     if (!player.skillLv) player.skillLv = {};
+    if (!player.skillTn) player.skillTn = {};   // save đời trước không có trục điểm tiềm năng
     // ⚠ PHẢI đứng SAU `player.vohoc` — `knRaSoat` hỏi `knDaNgo()`, mà bị động thì `knDaNgo` đọc
     // `player.vohoc`. Save đời cũ không có trường đó, nên rà soát sớm một dòng là mọi bị động
     // trên thanh bị coi như chưa ngộ và bị gỡ sạch, im lặng.
@@ -16764,6 +16794,7 @@ function skMau(id){
 // NGAY LÚC NẠP TRANG và giết chết mọi thứ đăng ký phía sau nó.
 for (const [_id, _pn] of [['btn-char','char'], ['btn-inv','inv'], ['btn-bag','bag'],
                           ['btn-skill','skill'], ['btn-map','map'],
+                          ['btn-party','party'], ['btn-friend','friend'],
                           ['btn-settings','settings'], ['btn-help','help']]){
   const _b = el(_id);
   if (_b) _b.addEventListener('click', () => togglePanel(_pn));
@@ -16901,7 +16932,7 @@ function renderChar(){
   // `calcDerived()`, `TITLES` vẫn mở khoá và vẫn cộng dồn vĩnh viễn qua `checkTitles()`. Gỡ mã
   // đó theo là phá cân bằng của một trò chơi đang chạy để dọn một khối giao diện.
   // Cắm lại chỗ bày = thêm lại mấy dòng html ở đây, không phải dựng lại hệ thống.
-  html += `<div style="font-size:12px;color:#9aa8d4;margin-bottom:8px">Điểm tiềm năng còn: <b style="color:#7ecbff">${p.free}</b> (mỗi cấp +5)</div>`;
+  html += `<div style="font-size:12px;color:#9aa8d4;margin-bottom:8px">Điểm tiềm năng còn: <b style="color:#7ecbff">${p.free}</b> (mỗi cấp +5) — cộng chỉ số bên dưới, hoặc rót vào chiêu ở bảng Kỹ Năng (<b>K</b>, trần ${SK_TN_TRAN} điểm mỗi chiêu)</div>`;
   // Gợi ý build: điểm nào quy đổi ra Công Kích cho ĐÚNG phái này (xem SECTS[x].atkSrc trong calcDerived())
   const _atkSrc = sect.atkSrc || { str:2.0 };
   const _dmgStatNames = Object.keys(_atkSrc).map(k => ATTR_INFO[k].name);
@@ -19141,7 +19172,8 @@ function startGame(sectKey, quze){
   el('sect-select').classList.add('hidden'); titleStop();
   el('hud').classList.remove('hidden');
   el('bottom-hud').classList.remove('hidden');
-  { const mc = el('menu-cot'); if (mc) mc.classList.remove('hidden'); }
+  { const mc = el('menu-cot'); if (mc) mc.classList.remove('hidden');
+    const mt = el('mc-trai'); if (mt) mt.classList.remove('hidden'); }
   renderQlog();   // khối cắm trong cột phải: vẽ ngay, không đợi ai bấm phím
   el('xp-strip').classList.remove('hidden');
   el('combat-log-wrap').classList.remove('hidden');
@@ -19271,7 +19303,8 @@ else setTimeout(showIntro, 0);        // người mới → cốt truyện (defe
       el('sect-select').classList.add('hidden'); titleStop(); titleStop();
       el('hud').classList.remove('hidden');
       el('bottom-hud').classList.remove('hidden');
-  { const mc = el('menu-cot'); if (mc) mc.classList.remove('hidden'); }
+  { const mc = el('menu-cot'); if (mc) mc.classList.remove('hidden');
+    const mt = el('mc-trai'); if (mt) mt.classList.remove('hidden'); }
   renderQlog();   // khối cắm trong cột phải: vẽ ngay, không đợi ai bấm phím
       el('xp-strip').classList.remove('hidden');
       el('combat-log-wrap').classList.remove('hidden');
@@ -20307,7 +20340,8 @@ window.closePanels = closePanels;
 // Không có cái này thì người chơi không đọc được mình đang đứng ở cửa nào — mà đó chính là
 // việc của một thanh menu.
 const MC_BANG = { 'btn-char':'panel-char', 'btn-bag':'panel-bag', 'btn-skill':'panel-skill',
-                  'btn-map':'panel-map', 'btn-settings':'panel-settings' };
+                  'btn-map':'panel-map', 'btn-settings':'panel-settings',
+                  'btn-party':'panel-party', 'btn-friend':'panel-friend' };
 function capNhatMenuCot(){
   for (const bid in MC_BANG){
     const b = el(bid), pn = el(MC_BANG[bid]);
@@ -22563,6 +22597,12 @@ function renderSkillPanelCT(tab, ds){
   const sanTruoc = mocTruoc ? mocTruoc.lv : 1;
   const pc = mocKe ? Math.round((n.lv - sanTruoc) / (mocKe.lv - sanTruoc) * 100) : 100;
   const i = n.inf;
+  // Trục thứ hai của một chiêu: điểm tiềm năng (trần SK_TN_TRAN). Nó KHÔNG dùng chung tài
+  // nguyên với nút Nâng Cấp bên dưới — Lumen/Bản Năng là thứ farm ra, điểm tiềm năng thì
+  // chỉ lên cấp mới có và năm chỉ số cũng đang tranh, nên hai nút phải đứng cạnh nhau để
+  // người chơi thấy mình đang chọn giữa cái gì với cái gì.
+  const _tn = skTn(n.id), _tnDay = _tn >= SK_TN_TRAN;
+  const _tnDuoc = n.mo && !_tnDay && (player.free || 0) > 0;
   let h = `<div class="kn-ct">
     <div class="kn-ct-dau"><img src="${i.icon}" alt="">
       <div><b>${n.ten}</b><span>Cấp: ${n.lv}</span></div></div>
@@ -22575,6 +22615,8 @@ function renderSkillPanelCT(tab, ds){
     <div class="kn-d kn-mo"><span>Thêm 1 cấp:</span> +2,5% Sát Thương · −0,25% hồi chiêu${
       mocKe && mocKe.lv === n.lv + 1 ? ` · <b style="color:#ffd76a">đạt mốc ${mocKe.name}</b>` : ''}</div>
     <div class="kn-d"><span>Tiến Hoá:</span> ${evoStage(n.id) ? evoBadgeHtml(n.id) + ` bậc ${evoStage(n.id)}/3` : `<i>chưa — mốc đầu ở cấp ${EVO_LVS[0]}</i>`}</div>
+    <div class="kn-d"><span>Tiềm Năng:</span> <b class="${_tnDay?'ok':''}">${_tn}/${SK_TN_TRAN}</b>
+      <i>(+${Math.round(_tn*SK_TN_DMG*100)}% sát thương · còn <b style="color:#7ecbff">${player.free||0}</b> điểm)</i></div>
     <div class="kn-vach">Điều kiện</div>
     <div class="kn-d"><span>Cấp nhân vật:</span> <b class="${tran?'no':'ok'}">${n.lv + 1}</b>
       <i>(đang ${player.level})</i></div>
@@ -22584,6 +22626,8 @@ function renderSkillPanelCT(tab, ds){
     h += `<div class="kn-sach">📜 Dùng Sách Kỹ Năng — nâng thẳng 1 cấp, khỏi tốn gì (còn ${player.bikipVH})</div>`;
   h += `<div class="kn-nut">
       <button class="mini-btn kn-nang${nangDuoc?'':' mo'}" onclick="window.upgradeSkillUI('${n.id}')">Nâng Cấp</button>
+      <button class="mini-btn kn-tn${_tnDuoc?'':' mo'}" onclick="window.rotTiemNang('${n.id}')"
+        title="${mstEsc(_tnDay ? `Đã đủ ${SK_TN_TRAN}/${SK_TN_TRAN} điểm` : `Rót 1 điểm tiềm năng — +${Math.round(SK_TN_DMG*100)}% sát thương chiêu này, trần ${SK_TN_TRAN} điểm`)}">+1 Tiềm Năng</button>
     </div>`;
   // Thanh chiêu nay GÁN ĐƯỢC (kéo thả), nên dòng này phải nói đúng cái giá của việc gán: chiêu
   // Di Sản lên thanh thì mất khoản %Công Kích của nó. Đừng viết lại "4 ô cố định" — đó là mô tả
@@ -22691,7 +22735,7 @@ function castSkill(id){
     player.qi -= _qiNeed;
   } else addFloat(player.x, player.y-48, '⚡ Liên Trảm — miễn phí Mana!', '#ffd76a', 12);
   player.cd[id] = info.cd * (player.vhCdMult || 1) * _sm.cd * _se.cd * skCdScale(id); // mốc 40 −10% · Tẩy Tủy −30% · cấp chiêu −0,25%/cấp (tối đa −30%) · nhánh Tốc Chiến
-  const _atk0 = player.atk; player.atk = Math.round(player.atk * skLvMult(id) * _sm.dmg * _se.dmg); // GDD Đợt 2 B6: mốc ST nhân dồn · nhánh Bá Đạo // cấp kỹ năng 1-120: +2.5% ST mỗi cấp
+  const _atk0 = player.atk; player.atk = Math.round(player.atk * skLvMult(id) * skTnMult(id) * _sm.dmg * _se.dmg); // GDD Đợt 2 B6: mốc ST nhân dồn · nhánh Bá Đạo // cấp kỹ năng 1-120: +2.5% ST mỗi cấp
   player.comboT = 3; // mở/duy trì chuỗi combo — ám khí trúng trong lúc này sẽ kích Liên Trảm
   player.castT = 0.38; // animation tung tuyệt chiêu
   player.castAct = heroCastAct(id, d);           // tư thế phải khớp VFX của chiêu
