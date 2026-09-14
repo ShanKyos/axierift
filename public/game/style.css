@@ -1633,11 +1633,17 @@ html,body { width:100%; height:100%; overflow:hidden; background:var(--bg-deep);
 
 /* ═══ Thanh EXP dưới đáy màn hình — đúng chỗ MU đặt nó ═══
    Trước đây nó nằm góc trên trái, kẹp giữa dòng tên dài ba dòng và dòng Instinct. */
-#xp-strip { position:fixed; left:50%; transform:translateX(-50%); bottom:6px; z-index:12;
-  width:min(520px, 62vw); pointer-events:none; }
+/* ⚠ NEO VÀO #bottom-hud, KHÔNG neo vào khung nhìn. `left:0; right:0` trên một con của thanh
+   ⇒ bề ngang EXP **bằng đúng** bề ngang thanh, ở mọi khổ màn và với mọi số ô, mãi mãi.
+   Bản cũ `position:fixed` + `width:min(520px,62vw)` là một con số rời hẳn: ở màn 1600 nó ra
+   520px nằm cạnh một thanh 756px — hai vật cùng căn giữa mà khác bề ngang thì đọc ra hai thứ
+   chồng hờ lên nhau, chứ không ra một khối. Chủ dự án gọi đúng tên và nó chữa luôn cảm giác
+   "thanh dài quá": có một đường chân cùng bề ngang thì cái thanh mới có hình dạng.
+   `top: calc(100% + 3px)` — nằm DƯỚI thanh, không cắt ngang ô chiêu (test_thanhchien §3). */
+#xp-strip { position:absolute; left:0; right:0; top:calc(100% + 3px); z-index:1;
+  pointer-events:none; }
 #xp-strip .bar.xp { height:9px; }
 #xp-strip .bar.xp span { line-height:9px; font-size:8px; }
-@media (max-width:760px){ #xp-strip { width:74vw; bottom:4px; } }
 
 /* Dấu "còn điểm chưa cộng" cạnh tên — thứ duy nhất của bảng V cần liếc giữa trận */
 #hud-name .hud-free { color:#0d0a16; background:#ffd76a; border-radius:8px; padding:0 6px;

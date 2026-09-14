@@ -151,10 +151,15 @@
       <button id="btn-music" title="Nhạc nền">♪ Nhạc Nền</button>
     </div>
   </div>
+  <!-- ⚠ THANH EXP NẰM TRONG #bottom-hud, và đó là cách DUY NHẤT giữ nó bằng ngang dải icon.
+       Chủ dự án chốt: "kéo thanh EXP cho bằng ngang dải icon đi". Bề ngang thanh chiến đấu là
+       KẾT QUẢ của số ô nhân cỡ ô — không có con số nào chép sang được. Bản cũ khai
+       `width: min(520px, 62vw)`, tức một con số rời hẳn: ở màn 1600 nó ra 520px cạnh một thanh
+       756px, và mỗi lần thêm hay bớt một ô là hai bên lệch thêm mà không gì báo.
+       Cắm vào trong rồi `left:0; right:0` thì hai bề ngang BẰNG NHAU THEO CẤU TRÚC. -->
+  <div id="xp-strip" class="hidden"><div class="bar xp"><div id="bar-xp" class="fill"></div><span id="txt-xp"></span></div></div>
 </div>
 
-<!-- Thanh EXP nằm NGAY DƯỚI viên đá Máu, mép dưới màn hình — đúng chỗ MU đặt nó. -->
-<div id="xp-strip" class="hidden"><div class="bar xp"><div id="bar-xp" class="fill"></div><span id="txt-xp"></span></div></div>
 <!-- Tầng Sâu: nút rút lui. Không có nút này thì kho tạm không có cách nào mang về, cả chế độ
      chỉ còn là "cày tới chết" — đúng thứ nó KHÔNG nên là. -->
 <button id="deep-leave" class="hidden" onclick="deepLeave()">⬆ RÚT LUI <i>mang kho tạm về</i></button>
