@@ -1324,7 +1324,7 @@ Trên mạng chậm nó trông như trang hỏng.
 | Khung | `#preload` trong `index.html` · khối cuối `style.css` |
 | Máy | `taiTroChay()` · `taiTroAnh()` · `taiTroDong()` trong `game.js`, ngay trên `vaoManDau()` |
 | Bản kê | `data/taitro.js` — **sinh bằng `tools/title/liet_ke_taitro.cjs`, đừng sửa tay** |
-| Gác | `tests/test_taitro.js` (5 mục) |
+| Gác | `tests/test_taitro.js` (6 mục) |
 
 Đo được: **21 tệp / 1,63 MB** — cảnh Lunacia 10 lớp + bệ đá (701 KB), 5 dải khung lớp (399 KB),
 5 con Axie mặc định (533 KB). Nhạc và art trong màn **không** nằm trong đó: chặn người chơi sau
@@ -1339,7 +1339,7 @@ mang kích thước THẬT của từng tệp.
 `setTimeout` là đúng con vật đó mọc lại ở màn khác. `test_taitro §3` ghìm art lại 700 ms rồi bắt
 thanh phải đứng dưới 100%.
 
-### Bốn chỗ phải nhớ
+### Năm chỗ phải nhớ
 
 1. **`window.__gameReady` NAY BẬT Ở CUỐI MÀN TẢI**, không ở cuối tệp (cuối tệp là `__manDaNap`).
    177 bài kiểm đều chờ cờ đó rồi mới bấm vào màn chờ — để nguyên chỗ cũ là chúng bấm vào một
