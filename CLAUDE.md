@@ -2553,8 +2553,21 @@ chạy lại nhiều lần vô hại, và mỗi bước tự kiểm trước khi
 **⚠ NÓ TỰ CHÉP MÌNH RA `/root` RỒI `exec` LẠI.** Cron chạy `git reset --hard` trên chính cây này
 2 phút một lần, mà **bash đọc script theo từng đoạn TRONG LÚC chạy** — tệp đổi giữa chừng là
 bash đọc lệch byte rồi làm một chuyện không ai từng viết. Cài Node có thể lâu hơn 2 phút, nên
-cửa sổ đó không phải giả thuyết. *(Cùng bài học: tôi đã sửa `tools/reg.sh` ngay giữa một lượt
-chạy hồi quy trong đúng phiên viết cái guard này. Thoát vì tệp dưới 8 KB nên bash đã nạp trọn.)*
+cửa sổ đó không phải giả thuyết.
+
+**⚠ VÀ NÓ ĐÃ XẢY RA THẬT, ngay trong phiên viết cái guard này — với `tools/reg.sh`.** Tôi sửa
+một khối CHÚ THÍCH trong đó giữa một lượt hồi quy đang chạy, rồi tự trấn an *"tệp 6,4 KB, dưới
+8 KB, chắc bash đã nạp trọn"*. Sai. Lượt chạy kết thúc bằng:
+
+```
+tools/reg.sh: line 106: syntax error near unexpected token `('
+```
+
+— dòng 106 là khối TỔNG KẾT ở cuối script, và `bash -n` trên chính tệp đó ngay sau đó thì **xanh**.
+Tức bash đọc tiếp sau khi tôi sửa, và đọc lệch. Cái giá: mất bảng tổng kết **và** mất bước tự
+chạy lại bài `rc=124` — đúng hai thứ mà lượt chạy ấy sinh ra để cho. *Luật chung: đang chạy một
+script thì đừng sửa tệp của nó, kể cả chỉ sửa chú thích, kể cả tệp nhỏ. "Chắc là không sao" ở đây
+không phải một phép đo.*
 
 **⚠ Bước nginx là bước ĐỘNG VÀO TỆP ĐANG CHẠY**, nên: sao lưu → sửa bằng python → `nginx -t` →
 hỏng thì **trả lại bản cũ và KHÔNG reload**. Và nó **từ chối** nếu `sites-available/axiewuxia`
@@ -2685,6 +2698,13 @@ bộ kiểm nói ra là nó đã phải chạy lại.*
 ⚠ **Dọn trình duyệt mồ côi bằng lọc `ppid=1`, TUYỆT ĐỐI không `pkill -f chrom`.** Mẫu đó khớp
 luôn dòng lệnh của chính shell đang chạy rồi giết nó (thoát 144) — cùng vết sẹo đã ghi ở mục
 git bên dưới, và nó đã bị dẫm lại một lần nữa trong phiên gần đây.
+
+⚠ **Biến thể độc nhất của cùng cái bẫy: `pkill -f` NẰM CHUNG DÒNG LỆNH với thứ mình muốn chạy.**
+`pkill -f "http.server 8853"; bash tools/reg.sh …` — chuỗi `http.server 8853` có mặt trong dòng
+lệnh của chính shell đang chạy cả hai, nên `pkill` giết luôn shell và **`reg.sh` không bao giờ
+khởi động**. Triệu chứng: thoát **144**, `$OUT` không tồn tại, không một dòng log nào. Rất dễ đọc
+nhầm thành "bộ kiểm hỏng". Tắt server thì tìm pid **theo CỔNG** (`ss -lptn "sport = :8853"`), đừng
+tìm theo chuỗi lệnh.
 
 ⚠ **Bài kiểm mỏng mẫu thì đỏ theo xúc xắc, không phải theo lỗi.** Hai chỗ đã phải sửa:
 - `test_bayquai` đo vị trí Kẻ Tiếp Sức trên **6 bãi của một map** rồi đòi "không quá 25% lọt vào
