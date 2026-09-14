@@ -71,7 +71,11 @@ let bad = 0; const fail = m => { bad++; console.log('FAIL ' + m); };
     // Thẻ Sách Kỹ Năng nay nằm ở tab CHIÊU ĐANG DÙNG, không ở tab di sản nữa: sau khi bỏ "học
     // di sản ngoại lớp", sách dùng để nâng cấp chiêu của chính mình, và nút 📜 nằm ngay cạnh
     // từng dòng chiêu ở tab đó (xem docs/KY_NANG_5_LOP.md §5).
-    closePanels(); togglePanel('skill');   // bảng Kỹ Năng nay MỘT trang, không còn tab
+    closePanels(); togglePanel('skill');
+    // Bảng Kỹ Năng nay là CÂY CÓ TAB. Thẻ Sách Kỹ Năng + mục "thanh chiêu 4 ô" nằm ở tab Khác,
+    // không còn hiện mặc định. Chuyển tab rồi mới soi — vẫn gác đúng thứ bài này vốn gác
+    // (thẻ có hình thật, và bảng không nói dối về số ô thanh chiêu).
+    if (typeof KN_TAB !== 'undefined') window.knTab('khac');
     const sk = el('panel-skill').innerHTML;
     // Chỉ soi THẺ Sách Kỹ Năng. 📜 ở chỗ khác là ký hiệu ĐƠN VỊ trong nút giá ("Học · 3📜"),
     // giống ◈ cho bạc — nó render bình thường, khác ⚔/🛡 vốn ra ô vuông. Cấm nó khắp nơi là

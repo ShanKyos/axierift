@@ -12,14 +12,16 @@ const { chromium } = require('playwright');
   await page.waitForTimeout(800);
   await page.screenshot({ path: '/tmp/hud_full.png' });
 
-  // damage the player to see the orb drain + accent bar shrink
+  // damage the player to see the bars drain + accent bar shrink
   await page.evaluate(() => { player.hp = Math.round(player.maxHp * 0.35); player.qi = Math.round(player.maxQi * 0.6); });
   await page.waitForTimeout(300);
   await page.screenshot({ path: '/tmp/hud_damaged.png' });
 
   const state = await page.evaluate(() => ({
-    hpHeight: document.getElementById('bar-hp').style.height,
-    qiHeight: document.getElementById('bar-qi').style.height,
+    // Hai thanh đã rời khỏi thanh chiến đấu (viên cầu, dâng theo `height`) và về khung chân
+    // dung góc trái (thanh ngang, chạy theo `width`).
+    hpWidth: document.getElementById('bar-hp').style.width,
+    qiWidth: document.getElementById('bar-qi').style.width,
     accentWidth: document.getElementById('hp-accent-fill').style.width,
     skillbarVisible: !document.getElementById('bottom-hud').classList.contains('hidden'),
   }));

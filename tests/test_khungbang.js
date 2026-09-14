@@ -40,7 +40,9 @@ const pass = m => console.log('PASS ' + m);
     ['panel-skill',    () => togglePanel('skill')],
     ['panel-map',      () => togglePanel('map')],
     ['panel-settings', () => togglePanel('settings')],
-    ['panel-qlog',     () => togglePanel('qlog')],
+    // `panel-qlog` KHÔNG còn trong danh sách: nó thôi là cửa sổ nổi và đã cắm vào cột phải
+    // (class `.bang-cam`). Bài này soi khung của CỬA SỔ — tiêu đề, nút ✕, viền — mà một khối
+    // cắm thì cố ý không có nút ✕: đóng nó đi là không còn cách nào mở lại bằng chuột.
     // Lò Hỗn Độn chỉ mở khi ĐỨNG CẠNH Thợ Rèn (atRoyalForge < 220px) — dịch nhân vật tới đó
     // trước, chứ không phải cứ gọi hàm là ra bảng.
     // Hội thoại NPC — bảng cuối cùng còn in tiêu đề trần, vì <h3> của nó nằm trong .npc-head.

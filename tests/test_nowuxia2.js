@@ -11,35 +11,25 @@
 // thông tin thật (người sau không biết bố cục quảng trường lấy từ đâu).
 const { chromium } = require('playwright');
 const fs = require('fs');
+// ⚠ GỐC KHO PHẢI SUY RA, ĐỪNG CHÉP CỨNG. Hai dòng dưới từng ghi thẳng '/home/user/axie-wuxia/'.
+// Kho đã đổi tên, và bộ chạy hồi quy còn chép bài kiểm sang thư mục khác trước khi chạy — nên
+// mục A âm thầm bỏ qua mọi tệp (`catch { continue }`) còn mục D ném ENOENT. Nhìn vào log thì
+// ba mục đầu vẫn XANH, y như một bài kiểm khoẻ mạnh. Tìm ngược lên từ chính tệp này.
 const path = require('path');
-// ⚠ ĐƯỜNG DẪN PHẢI DÒ, KHÔNG CHÉP CỨNG — VÀ PHẢI ĐÚNG Ở CẢ HAI BỐ CỤC.
-// Bản đầu đọc '/home/user/axie-wuxia/...' chép cứng: thư mục đó không tồn tại (kho nằm ở
-// /home/user/axiewuxia) nên readFileSync ném ENOENT và bài đỏ vì LÝ DO MÔI TRƯỜNG.
-// Bản sửa thứ hai dùng path.resolve(__dirname,'..') — đúng khi chạy từ tests/, nhưng SAI dưới
-// tools/reg.sh: bộ đó chép bài sang $OUT/src và phục vụ một BẢN CHỤP ở $OUT/snap, mà snap CHÍNH
-// LÀ thư mục public/game (cp -r public/game "$SNAP"). Nên '..' trỏ vào $OUT, chỗ không có
-// public/. Lỗi y hệt lần đầu, chỉ khác đường dẫn — nên lần này DÒ thay vì đoán.
-// Trả về hàm giải đường dẫn: nhận đường dẫn kho-tương-đối, tìm ở cả hai bố cục.
-const GOC = (() => {
-  const thu = [];
-  for (let i = 0; i <= 4; i++){
-    const b = path.resolve(__dirname, ...Array(i).fill('..'));
-    thu.push({ goc:b, tien:'' });                       // bố cục KHO:  <goc>/public/game/x
-    thu.push({ goc:path.join(b, 'snap'), tien:'snap' }); // bố cục CHỤP: <goc>/snap/x
+function timGoc(){
+  let d = __dirname;
+  for (let i = 0; i < 6; i++){
+    if (fs.existsSync(path.join(d, 'public/game/game.js'))) return d;
+    d = path.dirname(d);
   }
-  for (const t of thu){
-    const p1 = t.tien ? path.join(t.goc, 'game.js') : path.join(t.goc, 'public/game/game.js');
-    if (fs.existsSync(p1)) return t;
-  }
-  return { goc:path.resolve(__dirname, '..'), tien:'' };
-})();
-// `f` luôn viết dạng kho-tương-đối ('public/game/game.js'); bố cục chụp thì bỏ tiền tố đó đi.
-const R = f => GOC.tien ? path.join(GOC.goc, f.replace(/^public\/game\//, '')) : path.join(GOC.goc, f);
-if (!fs.existsSync(R('public/game/game.js'))){
-  console.log('FAIL không tìm được game.js để quét tĩnh (đã dò cả bố cục kho và bản chụp)');
-  process.exit(1);
+  // Bài chạy từ bản chép ngoài kho (tools/reg.sh) — thử vài chỗ quen thuộc.
+  for (const g of ['/home/user/axiewuxia', '/home/user/axie-wuxia'])
+    if (fs.existsSync(path.join(g, 'public/game/game.js'))) return g;
+  return null;
 }
 let bad = 0; const fail = m => { bad++; console.log('FAIL ' + m); };
+const GOC = timGoc();
+if (!GOC) fail('không dò ra gốc kho — hai mục quét tệp sẽ rỗng ruột');
 const CAM = ['khinh công','Nội Đan','nội đan','xung mạch','Xung mạch','yêu thú',
              'Hồ Lô','hồ lô','Thôn phệ','thôn phệ','chân khí','Chân Khí','cảnh giới',
              'đan điền','kinh mạch','độ kiếp','phi thăng','tiên hiệp','Bí Kíp'];
@@ -48,9 +38,13 @@ const CAM = ['khinh công','Nội Đan','nội đan','xung mạch','Xung mạch'
   // A. quét TĨNH: chỉ trong chuỗi, bỏ qua comment
   const files = ['public/game/game.js','public/game/lang.js','public/game/index.html',
                  'public/game/strings/vi.js','public/game/strings/en.js'];
-  const dinh = [];
+  const dinh = []; let daDoc = 0;
   for (const f of files){
-    let txt; try { txt = fs.readFileSync(R(f), 'utf-8'); } catch { continue; }
+    // ⚠ Đọc hỏng là ĐỎ, KHÔNG `continue`. Bỏ qua lặng lẽ chính là nửa còn lại của cái bẫy mà
+    // timGoc() vừa gỡ: dò sai gốc thì mục này quét 0 tệp rồi vẫn in "0 chuỗi dính từ cấm".
+    let txt;
+    try { txt = fs.readFileSync(path.join(GOC || '', f), 'utf-8'); daDoc++; }
+    catch { fail('không đọc được ' + f + ' — mục A rỗng ruột, không phải sạch'); continue; }
     // Bóc comment TRƯỚC rồi mới tìm. Bản đầu quét theo từng dòng và tìm trong dấu nháy — nên
     // template nhiều dòng (backtick mở ở dòng trên) lọt lưới hoàn toàn: quét tĩnh báo 0 trong
     // khi giao diện thật vẫn hiện "Nội Đan" ở hai chỗ.
@@ -68,7 +62,7 @@ const CAM = ['khinh công','Nội Đan','nội đan','xung mạch','Xung mạch'
         dinh.push(`${f.split('/').pop()}:${i+1} [${w}] ${l.trim().slice(0,70)}`);
     });
   }
-  console.log(`A) quét tĩnh: ${dinh.length} chuỗi dính từ cấm`);
+  console.log(`A) quét tĩnh: ${daDoc}/${files.length} tệp · ${dinh.length} chuỗi dính từ cấm`);
   dinh.slice(0,8).forEach(d => console.log('   ' + d));
   if (dinh.length) fail(`${dinh.length} chuỗi người chơi thấy còn từ vựng tu tiên`);
 
@@ -116,7 +110,7 @@ const CAM = ['khinh công','Nội Đan','nội đan','xung mạch','Xung mạch'
 
   // D. quét CHÚ THÍCH của game.js — xem đầu tệp để biết vì sao mục này tồn tại
   {
-    const txt = fs.readFileSync(R('public/game/game.js'), 'utf-8');
+    const txt = fs.readFileSync(path.join(GOC, 'public/game/game.js'), 'utf-8');
     const ct = [];
     // Lấy RA phần chú thích (ngược với mục A, vốn bóc chú thích đi)
     for (const m of txt.matchAll(/\/\*[\s\S]*?\*\//g)) ct.push(m[0]);

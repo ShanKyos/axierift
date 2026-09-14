@@ -32,6 +32,7 @@ const PORT = process.argv[2] || '8853';
 
   await page.evaluate(() => {
     window.TEST_MODE = true; startGame('thieulam', null); travelTo('chungnam');
+    player.avatar = null;   // bài này đo THÂN NGƯỜI; avatar bật mặc định nên phải tắt đi
     // ⚠ BÀI NÀY TỪNG ĐỨNG ĐO GIỮA BÃI QUÁI SỐNG, và đó là cả nguyên nhân chập chờn: 3/5 lượt
     // đỏ trên CÙNG một commit, đỏ theo hai kiểu khác nhau ("vẽ 1 nhát — phải 2" và "chưa vào
     // được khối CHẠY (khối=h)"). Cả hai là một chuyện: quái đánh trúng thì `p.hurtT > 0`, mà
@@ -66,7 +67,13 @@ const PORT = process.argv[2] || '8853';
   const r1 = await page.evaluate(() => {
     const ghi = [];
     const cu = ctx.drawImage.bind(ctx);
-    ctx.drawImage = function(...a){ ghi.push(+ctx.globalAlpha.toFixed(3)); return cu(...a); };
+    // Bỏ qua tấm VÀNH TÁCH NỀN (dấu neo nhân vật, mục 05): nó cũng đi qua drawImage nhưng
+    // không phải nhát vẽ THÂN — mà thân mới là thứ bài này đếm. Không lọc thì mọi con số dưới
+    // đây lệch đúng 1 và bài đỏ vì một lý do chẳng liên quan tới hoà hình.
+    ctx.drawImage = function(...a){
+      if (a[0] && a[0]._vanh) return cu(...a);
+      ghi.push(+ctx.globalAlpha.toFixed(3)); return cu(...a);
+    };
     const chup = () => { ghi.length = 0; drawPlayer(); return { a: ghi.slice(), khoi: window.__khoiVe }; };
     window.__cachLy();
     player.moving = false; player._phaSau = null;

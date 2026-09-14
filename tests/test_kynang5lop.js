@@ -34,8 +34,11 @@ const PORT = process.argv[2] || '8853';
     for (const sect of LOP){
       startGame(sect, null); player.traits = []; player.level = 60; player.lvPeak = 60;
       vhAutoLearn(); calcDerived();
-      renderSkillPanel();   // một trang, không còn tab
-      const html = el('panel-skill').innerHTML;
+      // Bảng nay là cây có tab — gom HTML cả ba tab, nếu không thì phép quét rò chiêu chỉ soi
+      // được một phần ba bảng và một chiêu lớp khác nằm ở tab kia sẽ lọt.
+      togglePanel('skill');
+      let html = el('panel-skill').innerHTML;
+      if (typeof KN_TAB !== 'undefined') for (const x of KN_TAB){ window.knTab(x.id); html += el('panel-skill').innerHTML; }
       o.lop[sect] = {
         ten: SECTS[sect].name,
         bar: player.skillBar.map(id => id ? skName(id) : null),
@@ -43,7 +46,20 @@ const PORT = process.argv[2] || '8853';
         biDong: CLASS_PASSIVES.filter(x => VOHOC_DEFS[x].phai === sect).map(x => VOHOC_DEFS[x].name),
         // chiêu của lớp KHÁC mà nhân vật này học được / nhìn thấy trên bảng
         hocLan: Object.keys(VOHOC_DEFS).filter(x => VOHOC_DEFS[x].phai !== sect && vhLearned(x)).map(x => VOHOC_DEFS[x].name),
-        hienLan: Object.keys(VOHOC_DEFS).filter(x => VOHOC_DEFS[x].phai !== sect && html.includes('>' + VOHOC_DEFS[x].name + '<')).map(x => VOHOC_DEFS[x].name),
+        // ⚠ TRÙNG TÊN KHÔNG PHẢI RÒ CHIÊU. Phép đo là so chuỗi `>tên<`, mà "Twisting Slash"
+        // vừa là `skillA` của Dark Knight vừa là `mg_twistingslash` của Spellblade. Bảng kỹ năng
+        // kiểu cây in tên dạng `<b>Tên</b>` nên khớp đúng khuôn đó, và Dark Knight bị báo oan là
+        // đang hiện chiêu Spellblade. Nên trừ ra trước những tên mà CHÍNH lớp này sở hữu.
+        hienLan: (() => {
+          const cuaMinh = new Set([SECTS[sect].skillA && SECTS[sect].skillA.name,
+                                   SECTS[sect].tp && SECTS[sect].tp.name]
+            .concat(Object.keys(VOHOC_DEFS).filter(x => VOHOC_DEFS[x].phai === sect).map(x => VOHOC_DEFS[x].name))
+            .filter(Boolean));
+          return Object.keys(VOHOC_DEFS)
+            .filter(x => VOHOC_DEFS[x].phai !== sect && !cuaMinh.has(VOHOC_DEFS[x].name)
+                      && html.includes('>' + VOHOC_DEFS[x].name + '<'))
+            .map(x => VOHOC_DEFS[x].name);
+        })(),
         stDiSan: player.legacyAtkPct,
         conNutHoc: /learnVohocUI/.test(html) || /NGOẠI LỚP/.test(html),
       };
@@ -88,11 +104,15 @@ const PORT = process.argv[2] || '8853';
     }
 
     // ── 4. bị động nối vào chỉ số thật ──
+    // ⚠ BỊ ĐỘNG NAY CHỈ CHẠY KHI NẰM TRÊN THANH CHIÊU (`biDongBat`). Ngộ được là chưa đủ —
+    // đó là cả cái giá của ba ô còn lại. Nên phép đo phải CẮM nó vào ô rồi mới đo, không thì
+    // bài này đo đúng thứ mà thiết kế cố ý không cho chạy, và đỏ ở một chỗ chẳng nói lên gì.
+    // Vẫn giữ nguyên độ chặt: vế "chỉ là dòng chữ" vẫn bị bắt, chỉ khác ở chỗ đo cho đúng cửa.
     const doPas = (sect, id, f) => {
       startGame(sect, null); player.traits = []; player.level = 60; player.lvPeak = 60;
-      player.vohoc = {}; calcDerived(); const truoc = f();
-      player.vohoc[id] = true; calcDerived(); const sau = f();
-      o.pas[id] = { ten:VOHOC_DEFS[id].name, truoc, sau };
+      player.vohoc = {}; knRaSoat(); calcDerived(); const truoc = f();
+      player.vohoc[id] = true; knGan(1, id); calcDerived(); const sau = f();
+      o.pas[id] = { ten:VOHOC_DEFS[id].name, truoc, sau, tren: player.skillBar.includes(id) };
     };
     doPas('thieulam','dk_fortitude', () => player.maxHp);
     doPas('minhgiao','mg_ironwill',  () => +(player.hpLeech || 0).toFixed(2));
@@ -169,7 +189,8 @@ const PORT = process.argv[2] || '8853';
 
   // ── 4. bị động ──
   for (const [id, d] of Object.entries(r.pas)){
-    if (d.truoc === d.sau) fail(`bị động ${d.ten} không đổi chỉ số nào (${d.truoc} → ${d.sau}) — chỉ là dòng chữ`);
+    if (!d.tren) fail(`bị động ${d.ten}: không cắm được vào ô — phép đo dưới đây sẽ vô nghĩa`);
+    else if (d.truoc === d.sau) fail(`bị động ${d.ten} không đổi chỉ số nào (${d.truoc} → ${d.sau}) — chỉ là dòng chữ`);
     else pass(`${d.ten}: ${d.truoc} → ${d.sau}`);
   }
 
