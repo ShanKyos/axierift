@@ -977,7 +977,6 @@ html,body { width:100%; height:100%; overflow:hidden; background:var(--bg-deep);
   background:rgba(18,20,44,.4); border:1px solid rgba(var(--rgb-vang),.3); border-radius:999px; padding:2px 9px; display:inline-block; }
 #hud-buff { color:var(--orange); font-size:11.5px; text-shadow:0 1px 3px #000; margin-top:2px; letter-spacing:.5px; }
 #hud-loidon { color:var(--gold); font-size:11.5px; text-shadow:0 1px 3px #000; margin-top:2px; letter-spacing:.5px; }
-#hud-name .title-tag { color:var(--accent-light); }
 #hud-name.toiac { color:#ff5a4a; }
 #hud-map { position:absolute; top:12px; left:50%; transform:translateX(-50%); text-align:center;
   color:var(--text-bright); font-size:14px; letter-spacing:.5px; text-shadow:0 1px 3px #000; font-weight:600; }

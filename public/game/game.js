@@ -16423,7 +16423,8 @@ function drawPlayer(){
   }
   ctx.restore();
   // ── Danh hiệu trên đỉnh đầu (chọn trong bảng Nhân Vật → tab Thông Tin) ──
-  drawOverheadTitle(p, yOff, riding, maxed);
+  // Danh hiệu trên đỉnh đầu đã gỡ (chủ dự án chốt — nó sẽ hiện ở một chỗ khác). Giữ lại lời
+  // gọi dưới dạng chú thích thì tệ hơn xoá: người sau đọc sẽ tưởng nó chỉ tạm tắt.
 }
 function drawTitleBackdrop(){
   ctx.fillStyle = '#ece2c8'; ctx.fillRect(0,0,W,H);
@@ -22593,11 +22594,18 @@ function veChanDung(){
 // ---------- HUD (override): mana · danh hiệu/lớp/cấp trên thanh ----------
 function updateHud(){
   const sect = SECTS[player.sect];
-  const tt = player.titles && player.titles.equipped && TITLES.find(x=>x.id===player.titles.equipped);
   const nameEl = el('hud-name');
   // Góc trái chỉ giữ thứ đổi liên tục và cần liếc giữa trận: danh hiệu, tên, và hai cảnh báo.
   // Lớp / cấp / điểm cộng là thứ tra chứ không phải liếc — đã chuyển sang bảng Nhân Vật (V).
-  const _nameHtml = `${tt?`<span class="title-tag">[${tt.name}]</span> `:''}${player.name ? `<span class="char-name">${player.name}</span>` : sect.name}${player.free>0?` <span class="hud-free" title="Còn ${player.free} điểm chưa cộng — bấm V">+${player.free}</span>`:''}${player.toiac>0?` · <b>TỘI ÁC ${player.toiac}</b>`:''}`;
+  // ⚠ DANH HIỆU KHÔNG CÒN Ở ĐÂY. Chủ dự án chốt: chỗ này chỉ hiện TÊN. Lý do đo được ngay
+  // trên ảnh chụp — ô tên trong khung chân dung rộng chừng 150px, mà "[Kẻ Báo Thù] Wavecrest"
+  // thì riêng cái ngoặc đã ăn hơn nửa, nên thứ bị cắt mất bằng dấu `…` luôn luôn là CÁI TÊN.
+  // Một cái nhãn đẩy đúng thứ nó đi kèm ra khỏi màn hình thì nó không còn là nhãn nữa.
+  // Danh hiệu sẽ có chỗ riêng. Biến `tt` tra danh hiệu đang đeo cũng gỡ theo: sau khi bỏ thẻ
+  // ra khỏi chuỗi thì KHÔNG còn ai đọc nó (`.toiac` phía dưới đọc `player.toiac`, không đọc
+  // `tt`). Lint bắt được đúng chỗ đó — và nó cũng bắt được rằng chú thích đầu tiên tôi viết ở
+  // đây ("giữ nguyên vì còn dùng cho .toiac") là sai.
+  const _nameHtml = `${player.name ? `<span class="char-name">${player.name}</span>` : sect.name}${player.free>0?` <span class="hud-free" title="Còn ${player.free} điểm chưa cộng — bấm V">+${player.free}</span>`:''}${player.toiac>0?` · <b>TỘI ÁC ${player.toiac}</b>`:''}`;
   if (window._lastHudName !== _nameHtml){ window._lastHudName = _nameHtml; nameEl.innerHTML = _nameHtml; } // dirty-check: innerHTML rewrite is real DOM churn if done every frame
   nameEl.classList.toggle('toiac', (player.toiac||0) > 0);
   // ⚠ THANH NGANG, KHÔNG CÒN LÀ VIÊN CẦU. Hai thứ này từng là cầu ở hai đầu thanh chiến đấu
@@ -23930,30 +23938,6 @@ function drawThanHiepSeal(p, now){
   }
   ctx.restore();
 }
-// ── Danh hiệu hiển thị trên đỉnh đầu nhân vật ──
-function drawOverheadTitle(p, yOff, riding, maxed){
-  const tdef = p.titles && p.titles.equipped && TITLES.find(t => t.id === p.titles.equipped);
-  if (!tdef) return;
-  const ty = p.y + yOff - (riding ? 92 : 88);
-  ctx.save();
-  ctx.font = 'bold 12px "Be Vietnam Pro", sans-serif';
-  ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
-  const label = `[${tdef.name}]`;
-  const tw = ctx.measureText(label).width;
-  // nền trầm + viền màu danh hiệu
-  ctx.fillStyle = 'rgba(8,6,4,.48)';
-  ctx.beginPath();
-  if (ctx.roundRect) ctx.roundRect(p.x - tw/2 - 8, ty - 10, tw + 16, 18, 9);
-  else ctx.rect(p.x - tw/2 - 8, ty - 10, tw + 16, 18);
-  ctx.fill();
-  ctx.globalAlpha = 0.8; ctx.strokeStyle = tdef.color; ctx.lineWidth = 1; ctx.stroke();
-  ctx.globalAlpha = 1;
-  fxShadow(tdef.color, maxed ? 12 : 8);
-  ctx.fillStyle = tdef.color;
-  ctx.fillText(label, p.x, ty + 1);
-  ctx.restore();
-}
-
 // ---------- Minimap ----------
 // Everything in this static layer only depends on curMap (background art, level-band rings +
 // labels, spring/herb dots, city wall, gates) — none of it changes frame to frame, but it used
