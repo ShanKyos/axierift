@@ -21131,7 +21131,7 @@ function avatarHtml(id, px){
     return `<i class="chi-anh av-chi" style="--sh:url(assets/chimera/${a.chi}.webp);`
          + `--w:${rong}px;--h:${px}px"></i>`;
   }
-  if (a.loai === 'thu') return `<img class="av-img" src="assets/pets/${a.thu}.png" alt="">`;
+  if (a.loai === 'anh') return `<img class="av-img" src="${a.src}" alt="">`;
   // ⚠ Thẻ nhân vật là khung 160×220 mà thân người chỉ chiếm phần giữa — thu vừa hộp 52px thì
   // nhân vật còn vài điểm ảnh, nhìn ra một cái chấm. Lớp `av-lop` phóng lên rồi neo đỉnh để
   // hộp cắt lấy đầu và vai, đúng kiểu một tấm chân dung.
@@ -21154,14 +21154,20 @@ function avatarChonHtml(){
   const cur = avatarHienTai();
   let h = `<div class="stat-sec">Ảnh Đại Diện</div>`
         + `<div style="font-size:11.5px;color:var(--text-dim);margin:-2px 0 6px;line-height:1.5">`
-        + `Hiện ở góc trái màn hình. "Chính mình" vẽ lại theo trang bị đang mặc.</div>`
-        + `<div class="av-luoi">`;
+        + `Hiện ở góc trái màn hình. "Chính mình" vẽ lại theo trang bị đang mặc.</div>`;
+  // ⚠ CHIA NHÓM, có tiêu đề. 61 ô xếp thành một lưới phẳng thì đúng bằng không chia gì cả —
+  // người chơi cuộn qua sáu hàng mà không biết mình đang nhìn cái gì.
+  let nhomCu = null;
   for (const a of window.avatarDs()){
-    const ten = a.loai === 'lop' ? 'Chính mình' : (a.ten || a.thu || a.chi);
-    h += `<button class="av-o${a.id === cur ? ' on' : ''}" title="${ten}" `
+    if (a.nhom !== nhomCu){
+      if (nhomCu !== null) h += `</div>`;
+      nhomCu = a.nhom;
+      h += `<div class="av-nhom">${window.AVATAR_NHOM[a.nhom] || ''}</div><div class="av-luoi">`;
+    }
+    h += `<button class="av-o${a.id === cur ? ' on' : ''}" title="${a.ten}" `
        + `onclick="doiAvatar('${a.id}')">${avatarHtml(a.id, 40)}</button>`;
   }
-  return h + `</div>`;
+  return h + (nhomCu !== null ? `</div>` : '');
 }
 
 // ---------- HUD (override): mana · danh hiệu/lớp/cấp trên thanh ----------

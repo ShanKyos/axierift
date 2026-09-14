@@ -1520,14 +1520,43 @@ window.MAP_OBSTACLES = {
 // sai 8 cái (frostmane/gloomtail/ironhide/riftclaw/sablewing/thornhoof/verdantix/wispfang —
 // không con nào có thật). Suy từ bảng gốc thì thêm một Chimera là avatar tự có mặt, và không
 // có cách nào lệch.
-window.AVATAR_THU = ['acorntail', 'bloomveil', 'hexhorn'];
+window.AVATAR_THU_NHA = ['acorntail', 'bloomveil', 'hexhorn'];
+
+// 19 Axie khởi nguyên — ảnh tròn có nền sẵn, TÊN LẤY TỪ `Catalogs/pve-starters.json` của gói
+// gốc chứ không đặt lại: tệp nguồn đánh số (1.png…25.png, có lỗ) nên để nguyên số thì bảng
+// chọn ra một dãy chữ số vô nghĩa.
+window.AVATAR_AXIE = ['buba','olek','puffy','tripp','venoki','shillin','momo','temujin','shufen',
+                      'ena','pomodoro','machito','hope','bard','xia','bing','noir','rouge','mit'];
+
+// 22 chân dung sinh vật — nền trong, đầu và vai. Tên hiển thị dùng danh từ fantasy PHƯƠNG TÂY
+// (Dryad · Treant · Slime · Sói), không dịch sang từ vựng kiếm hiệp — Quy tắc số 1.
+window.AVATAR_SINHVAT = {
+  'alpha-wolf':'Sói Đầu Đàn', 'aqua-alpha-wolf':'Sói Nước Đầu Đàn', 'aqua-wolf':'Sói Nước',
+  'gray-wolf':'Sói Xám', 'werewolf':'Người Sói',
+  'slime':'Slime', 'aqua-slime-atk':'Slime Nước · Công', 'aqua-slime-def':'Slime Nước · Thủ',
+  'aqua-slime-sup':'Slime Nước · Trợ', 'aqua-slime-boss':'Chúa Slime Nước',
+  'forest-slime-fighter':'Slime Rừng Chiến Binh', 'forest-slime-flower':'Slime Rừng Hoa',
+  'dryad-fighter':'Dryad Chiến Binh', 'dryad-mage':'Dryad Pháp Sư', 'dryad-ranger':'Dryad Xạ Thủ',
+  'treant':'Treant', 'treant-fighter':'Treant Chiến Binh', 'flowering-treant':'Treant Trổ Hoa',
+  'daddy-bear':'Gấu Bố', 'mommy-bear':'Gấu Mẹ', 'machito':'Machito', 'shilin':'Shilin',
+};
+
+// Bốn nhóm. `nhom` chỉ để bảng chọn kẻ tiêu đề — 61 ô không chia nhóm thì đúng bằng không
+// chia gì cả, người chơi không biết mình đang nhìn cái gì.
+window.AVATAR_NHOM = { toi:'Chính Mình', chi:'Chimera Đồng Hành', axie:'Axie Khởi Nguyên', sv:'Sinh Vật' };
 window.avatarDs = function(){
   return [
-    { id:'lop', loai:'lop' },
-    ...window.CHIMERA.map(c => ({ id:'chi:' + c.id, loai:'chi', chi:c.id, ten:c.ten })),
-    ...window.AVATAR_THU.map(id => ({ id:'thu:' + id, loai:'thu', thu:id })),
+    { id:'lop', loai:'lop', nhom:'toi', ten:'Chính mình' },
+    ...window.CHIMERA.map(c => ({ id:'chi:' + c.id, loai:'chi', nhom:'chi', chi:c.id, ten:c.ten })),
+    ...window.AVATAR_AXIE.map(id => ({ id:'axie:' + id, loai:'anh', nhom:'axie',
+        src:'assets/avatar/axie/' + id + '.png', ten: id.charAt(0).toUpperCase() + id.slice(1) })),
+    ...Object.keys(window.AVATAR_SINHVAT).map(id => ({ id:'sv:' + id, loai:'anh', nhom:'sv',
+        src:'assets/avatar/thu/' + id + '.png', ten: window.AVATAR_SINHVAT[id] })),
+    ...window.AVATAR_THU_NHA.map(id => ({ id:'thu:' + id, loai:'anh', nhom:'sv',
+        src:'assets/pets/' + id + '.png', ten: id.charAt(0).toUpperCase() + id.slice(1) })),
   ];
 };
+
 window.NPCS = [
   { id:'truonglang', name:'Trưởng Làng', map:'corran', x:400, y:400, img:'assets/npcs/truonglang.png', talk:'quest',
     // Ông giao 9 trong 10 nhiệm vụ đầu và dẫn truyện gọi ông là người "nhặt ngươi về nuôi" —

@@ -1812,6 +1812,9 @@ html,body { width:100%; height:100%; overflow:hidden; background:var(--bg-deep);
   transform:translateY(6%); }
 .av-lv { font-size:12px; font-weight:700; color:var(--gold); letter-spacing:.04em; }
 
+.av-nhom { font-size:10.5px; font-weight:700; letter-spacing:.11em; text-transform:uppercase;
+  color:var(--text-dim); margin:8px 0 4px; }
+.av-nhom:first-of-type { margin-top:2px; }
 .av-luoi { display:grid; grid-template-columns:repeat(auto-fill,minmax(50px,1fr));
   gap:5px; margin-bottom:8px; }
 .av-o { display:flex; align-items:center; justify-content:center; overflow:hidden;

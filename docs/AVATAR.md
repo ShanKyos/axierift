@@ -21,11 +21,9 @@
 > **Bài học:** đừng kết luận "cả kho không có X" sau khi mở ba thư mục. Lần này quét bằng
 > `find` trên toàn kho rồi mới nói.
 >
-> **Chưa lắp vào game**, và cố ý: 20 avatar hiện tại lấy từ art ĐÃ CÓ trong repo nên không
-> vướng gì; 41 tấm kia nằm trong gói `axie-origins-asset-kit` mà giấy phép ghi *"do not ship
-> these files"* nếu không thuộc chương trình Sky Mavis duyệt (xem `KHAO_SAT_AXIE_KIT.md` §1).
-> Game đã ship art từ nguồn này rồi, nên có lẽ ổn — nhưng đó là **chủ dự án chốt**, không phải
-> tôi tự lấy thêm 41 tệp.
+> **ĐÃ LẮP** — chủ dự án chốt dùng. Tôi có nêu trước rủi ro giấy phép (gói ghi *"do not ship
+> these files"* nếu không thuộc chương trình Sky Mavis duyệt — `KHAO_SAT_AXIE_KIT.md` §1) và
+> chủ dự án vẫn quyết lấy. 41 tấm nằm ở `assets/avatar/` (**1,0 MB**).
 
 ## 1. Kết luận khảo sát GitHub: kho Axie KHÔNG có chân dung dùng được
 
@@ -50,13 +48,27 @@ lại chuyện giấy phép của gói kia (xem `docs/KHAO_SAT_AXIE_KIT.md` §1)
 
 ## 2. Nguồn art thật: ĐÃ NẰM SẴN TRONG REPO
 
-| Loại | Nguồn | Số | Ghi chú |
+| Nhóm | Nguồn | Số | Ghi chú |
 |---|---|--:|---|
-| `lop` | `heroCardUrl()` | **1** | Thẻ nhân vật của chính lớp mình |
-| `chi` | `assets/chimera/<id>.webp` | **16** | Dải **16 khung**, chạy được |
-| `thu` | `assets/pets/<id>.png` | **3** | |
+| **Chính Mình** | `heroCardUrl()` | **1** | vẽ lại theo trang bị đang mặc |
+| **Chimera Đồng Hành** | `assets/chimera/<id>.webp` | **16** | dải 16 khung ⇒ avatar **thở** |
+| **Axie Khởi Nguyên** | `assets/avatar/axie/<tên>.png` | **19** | ảnh tròn có nền, 200×200 |
+| **Sinh Vật** | `assets/avatar/thu/<id>.png` + `assets/pets/` | **25** | chân dung nền trong |
 
-**20 lựa chọn, 0 byte art mới.**
+**61 lựa chọn**, trong đó 20 lấy từ art đã có trong repo và 41 lấy từ gói Axie (1,0 MB).
+
+⚠ **Tên 19 Axie lấy từ `Catalogs/pve-starters.json` của gói gốc, không đặt lại.** Tệp nguồn
+đánh số `1.png`…`25.png` (có lỗ: thiếu 4·6·8·9·10·13), để nguyên số thì bảng chọn ra một dãy
+chữ số vô nghĩa. Catalog cho đủ 19 tên thật: Buba · Olek · Puffy · Tripp · Venoki · Shillin ·
+Momo · Temujin · Shufen · Ena · Pomodoro · Machito · Hope · Bard · Xia · Bing · Noir · Rouge ·
+Mit.
+
+⚠ **Tên 22 sinh vật dùng danh từ fantasy PHƯƠNG TÂY** — Dryad · Treant · Slime · Sói · Gấu —
+không dịch sang từ vựng kiếm hiệp (Quy tắc số 1). Id gốc mang hậu tố vai (`-atk`/`-def`/`-sup`/
+`-boss`) vô nghĩa với người chơi, nên dịch thành "Công/Thủ/Trợ/Chúa".
+
+⚠ **Bảng chọn CHIA NHÓM có tiêu đề.** 61 ô xếp thành một lưới phẳng thì đúng bằng không chia
+gì cả — người chơi cuộn qua sáu hàng mà không biết đang nhìn cái gì.
 
 **Avatar Chimera ĐỘNG.** Art Chimera là dải 16 khung, và `style.css` đã có lớp `.chi-anh` chạy
 nó bằng hai `animation: steps()` lồng nhau. Avatar dùng lại đúng kỹ thuật đó nên nó **thở** —
