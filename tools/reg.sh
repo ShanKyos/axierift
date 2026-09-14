@@ -55,9 +55,8 @@ export NODE_PATH="${NODE_PATH:-/opt/node22/lib/node_modules}"
 #
 # ⚠ Tệp dưới server/ KHÔNG được đóng băng cùng public/game. Chủ ý: lý do đóng băng là bộ chạy
 # đọc game qua HTTP nên sửa file giữa chừng làm hỏng kết quả — `server/` thì được nạp một lần
-# lúc spawn, không phục vụ qua HTTP, và nó `import 'ws'` nên buộc phải nằm trong cây có
-# node_modules (ESM không tra NODE_PATH). Sửa server/ giữa một lượt chạy thì bài nào chạy sau
-# dùng bản mới; ở một tệp 170 dòng thì đó là đánh đổi chấp nhận được, nhưng đừng quên nó.
+# lúc spawn và không phục vụ qua HTTP. Sửa server/ giữa một lượt chạy thì bài nào chạy sau dùng
+# bản mới; ở một tệp 170 dòng thì đó là đánh đổi chấp nhận được, nhưng đừng quên nó.
 export AXIE_REPO="$ROOT"
 
 # `timeout` giết node nhưng KHÔNG giết trình duyệt con — nó thành mồ côi (ppid=1) và vẫn giữ
