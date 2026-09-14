@@ -510,6 +510,59 @@ Gác: `tests/test_thegioi.js` (9 mệnh đề). Hai mệnh đề đáng nhớ:
 - ⑨ mỗi giờ sự kiện in trên thẻ được **quét ngược lại** để chứng minh mốc ấy thật sự rơi vào
   vùng ấy.
 
+### 👥 BẠN BÈ CHẠY THẬT · TỔ ĐỘI LÀ CÁI VỎ THÀNH THẬT
+
+Chủ dự án chốt phạm vi: **"UI + Hảo Hữu chạy thật"** — Bạn Bè nối thẳng vào máy chủ có sẵn, Tổ
+Đội thì dựng đủ mặt tiền nhưng **nói thẳng ra là chưa có máy chủ**, chờ tầng realtime
+(`docs/BOSS_TO_DOI.md §2`). Khuôn lấy từ ảnh chụp MMO khác chủ dự án gửi; **đổi tên và art** cho
+hợp thế giới này, giữ nguyên cách bày.
+
+| | phím | trạng thái |
+|---|---|---|
+| **Bạn Bè** (`panel-friend`) | **H** | chạy thật: `friend.*` qua tRPC + bảng `friends` |
+| **Tổ Đội** (`panel-party`) | **P** | vỏ — 1 ô đội trưởng + 4 "Chỗ trống", 3 ô cài đặt có lưu |
+
+Bốn tab của Bạn Bè: **Bạn Bè · Lời Mời · Tìm Người Chơi · Sổ Đen**. Mỗi hàng hiện tên · cấp ·
+lớp · **♥ Độ Thân Thiết**; nút **Chào** một ngày một lần (`CHAO_THEM = 10`, khoá ngày tính theo
+**UTC** ở cả hai phía), xong thì chuyển sang trạng thái tắt `✓ Đã chào`.
+
+**⚠ MỘT CÁI VỎ KHÔNG ĐƯỢC GIẢ VỜ LÀ MÁY CHẠY.** Ô "Chỗ trống" của Tổ Đội mà bấm vào rồi im lặng
+thì người chơi tưởng game hỏng. Nên bảng có hẳn một khối `⏳ Tổ đội cần máy chủ` nói ra điều
+đó, và mọi nút phụ thuộc máy chủ đều **tắt sẵn** chứ không phải bấm được rồi không làm gì. Ba ô
+cài đặt (`tuNhan` · `choVao` · `hienHUD`) thì **lưu thật** vào save — chúng là lựa chọn của
+người chơi, không phải thứ chờ máy chủ.
+
+**⚠ BA ĐƯỜNG HỎNG KHÁC NHAU, BA CÂU KHÁC NHAU.** Bản live trên VPS **chỉ phục vụ tệp tĩnh** nên
+`/api/trpc/*` ở đó thật sự không tồn tại — đây không phải ca hiếm, đây là ca **thường gặp nhất**:
+
+| `_bbTrang` | khi nào | bảng nói gì |
+|---|---|---|
+| `tatMay` | không gọi được `/api/trpc` (404/mạng) | "Bản này chưa nối máy chủ" + nút **Thử Lại** |
+| `caiDangNhap` | gọi được nhưng `UNAUTHORIZED` | mời đăng nhập |
+| `xong` | có dữ liệu | danh sách thật |
+
+Gộp ba thứ đó thành một câu "lỗi" là lấy mất của người chơi cách duy nhất để biết phải làm gì.
+
+**⚠ MỌI NÚT PHẢI TẢI LẠI TỪ MÁY CHỦ, ĐỪNG SỬA MẢNG TẠI CHỖ.** `bbLam(duong, friendId, khiXong)`
+gọi mutation rồi **luôn** `bbTai()` lại. Sửa `_bbData` tại chỗ thì nhanh hơn một nhịp nhưng chấp
+nhận hai mô hình dữ liệu cùng tồn tại — mà quan hệ bạn bè là **hai chiều**: nhận lời mời đổi
+trạng thái của cả hai hàng, xoá bạn xoá hai hàng. Đoán kết quả ở phía trình duyệt là sẽ đoán sai
+đúng những ca đó.
+
+**⚠ HỢP ĐỒNG superjson: MỌI THỨ BỌC TRONG `{json: …}`.** Cả hai chiều, cả GET lẫn POST, kể cả
+input rỗng (`{"json":null}`) và cả **mã lỗi** (`d.error.json.data.code`). `trpcGoi()` là cửa duy
+nhất; viết `fetch` thẳng ở chỗ khác là lần nào cũng quên một trong ba chỗ đó.
+`test_banbe.js §5` khoá đúng chuỗi URL và thân POST — hợp đồng nối hai tầng thì phải có người gác.
+
+**⚠ Lint: `caughtErrorsIgnorePattern` KHÔNG hiểu `^_`.** `catch (_e) {}` vẫn đỏ `no-unused-vars`
+y như `catch (e) {}`. Cách đúng là **bỏ hẳn tham số**: `catch { … }` (optional catch binding).
+Mất một vòng sửa vì tưởng quy ước `_` dùng được ở mọi chỗ.
+
+Máy chủ: `db/schema.ts` thêm bảng `friends` (`userId` · `friendId` · `trangThai` cho/ban/chan ·
+`thanThiet` · `chaoNgay`, khoá duy nhất theo cặp) + di trú `0002`; truy vấn ở
+`api/queries/friends.ts`, router ở `api/friendRouter.ts`. Gác: `tests/test_banbe.js` (6 mệnh đề,
+trong đó ba mệnh đề đầu dựng lại **đủ ba đường hỏng** ở trên).
+
 ### 🧭 NỐI MAP BẰNG RÌA (B1) + ĐIỂM DỊCH CHUYỂN MỞ BẰNG ĐI BỘ (B2)
 
 **⚠ Đây trước hết là một BẢN VÁ LỖI.** Trước bản này, **Bug Tribe Tunnels (40) · Reptile Sunstone Flats (80) ·

@@ -4,6 +4,7 @@ import { leaderboardRouter } from "./leaderboardRouter";
 import { walletRouter } from "./walletRouter";
 import { googleRouter } from "./googleRouter";
 import { npcRouter } from "./npcRouter";
+import { friendRouter } from "./friendRouter";
 import { createRouter, publicQuery } from "./middleware";
 
 export const appRouter = createRouter({
@@ -16,6 +17,7 @@ export const appRouter = createRouter({
   wallet: walletRouter,
   google: googleRouter,
   npc: npcRouter,
+  friend: friendRouter,
 });
 
 export type AppRouter = typeof appRouter;
