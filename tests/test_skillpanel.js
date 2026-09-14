@@ -32,11 +32,30 @@ const pass = m => console.log('PASS ' + m);
       player.level = 60; calcDerived();
       closePanels(); togglePanel('skill');
       const el = document.getElementById('panel-skill');
-      const h = el.innerHTML, t = el.innerText || '';
+      // ⚠ HỢP ĐỒNG ĐÃ ĐỔI. Bảng này từng bị gộp về MỘT TRANG, và bài kiểm gác đúng chuyện đó.
+      // Chủ dự án nay chốt dựng lại thành CÂY có tab (xem CLAUDE.md · BẢNG KỸ NĂNG LÀ MỘT CÂY),
+      // nên "không tab" hết hiệu lực. Thứ phải giữ là lời hứa THẬT bên dưới nó: không lớp nào
+      // mở bảng ra thấy trống, và ba mục cũ không được bốc hơi — nay chúng nằm ở tab Khác.
+      // Gom chữ của CẢ BA tab rồi mới chấm, để "mất mục" vẫn bị bắt dù mục dời sang tab khác.
+      const tabs = typeof KN_TAB !== 'undefined' ? KN_TAB.map(x => x.id) : [null];
+      let h = '', t = '', dongTab = {}, oCay = 0;
+      // ⚠ GOM CHỮ TỪNG DÒNG NGAY TRONG VÒNG DUYỆT TAB. Truy vấn `.skill-row` sau vòng lặp là soi
+      // một DOM chỉ còn tab cuối — mấy dòng "Kế Thừa" nằm ở tab Khác biến mất sạch, và phép kiểm
+      // rò tên lớp báo oan. Gom vào mảng thì nó soi được cả ba tab.
+      const chuDong = [];
+      for (const tb of tabs){
+        if (tb) window.knTab(tb);
+        h += el.innerHTML; t += '\n' + (el.innerText || '');
+        for (const d of el.querySelectorAll('.skill-row')) chuDong.push(d.textContent);
+        dongTab[tb] = el.querySelectorAll('.skill-row').length + el.querySelectorAll('.kn-o:not(.kn-trong)').length;
+        oCay += el.querySelectorAll('.kn-o').length;
+      }
+      if (tabs[0]) window.knTab(tabs[0]);
       out.push({ lop,
         tab: el.querySelectorAll('.bang-tab').length,
         dai: h.length,
-        dong: el.querySelectorAll('.skill-row').length,
+        dong: Math.min(...Object.values(dongTab)),   // TAB NGHÈO NHẤT, không phải tổng
+        dongTab, oCay,
         mucs: [...el.querySelectorAll('.stat-sec')].map(x => x.textContent.trim().split('—')[0].trim()),
         // Cả hai nửa của bảng cũ phải cùng có mặt trên MỘT trang
         coBonO: /1 chính · 1 phụ/.test(t),
@@ -52,9 +71,9 @@ const pass = m => console.log('PASS ' + m);
             if (k === lop) continue;
             const ten = SECTS[k].name;
             if (!t.includes(ten)) continue;
-            // Mọi dòng nhắc tên lớp đó có ghi "Kế Thừa" không?
-            const dong = [...el.querySelectorAll('.skill-row')].filter(d => d.textContent.includes(ten));
-            if (!dong.length || !dong.every(d => /Kế Thừa/.test(d.textContent))) xau.push(ten);
+            // Mọi dòng nhắc tên lớp đó có ghi "Kế Thừa" không? Soi trên chữ đã gom từ CẢ BA tab.
+            const dong = chuDong.filter(x => x.includes(ten));
+            if (!dong.length || !dong.every(x => /Kế Thừa/.test(x))) xau.push(ten);
           }
           return xau;
         })(),
@@ -66,8 +85,10 @@ const pass = m => console.log('PASS ' + m);
   for (const r of ra){
     if (r.loi){ fail(`${r.lop}: startGame ném lỗi — ${r.loi}`); continue; }
     console.log(`  ${r.lop}: ${r.dong} dòng chiêu · ${r.mucs.length} mục · ${r.dai} ký tự`);
-    if (r.tab !== 0)        fail(`${r.lop}: bảng còn ${r.tab} tab — phải gộp về một trang`);
-    if (r.dong < 6)         fail(`${r.lop}: chỉ ${r.dong} dòng chiêu, bảng gần như rỗng`);
+    if (r.tab !== 3)        fail(`${r.lop}: bảng có ${r.tab} tab — phải đúng 3 (Lớp · Vaeldra · Khác)`);
+    // Chấm TAB NGHÈO NHẤT: cộng dồn cả ba tab thì một tab rỗng trơn vẫn lọt.
+    if (r.dong < 2)         fail(`${r.lop}: có tab gần như rỗng (${JSON.stringify(r.dongTab)})`);
+    if (!r.oCay)            fail(`${r.lop}: không tab nào vẽ ra cây kỹ năng`);
     if (!r.coBonO)          fail(`${r.lop}: thiếu mục bốn ô chiêu`);
     if (!r.coDiSan)         fail(`${r.lop}: thiếu mục DI SẢN LỚP`);
     if (!r.coTanChuc)       fail(`${r.lop}: thiếu mục HỆ TẤN CHỨC PHỤ`);
