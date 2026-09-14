@@ -10031,7 +10031,12 @@ function hurtMob(m, dmg, source){
     const _tl = tpTyLeGay(player._tpBo);
     if (_tl > 0 && Math.random() < _tl){
       if (player._tpBo === 1){
-        vhKnockback(m, Math.atan2(m.y - player.y, m.x - player.x), 3.5);
+        // ⚠ PHẢI HỎI `_aoeHit` Y NHƯ CÚ HẤT LÙI CÓ SẴN Ở DƯỚI. Luật trong CLAUDE.md: chiêu
+        // diện rộng mà đẩy địch ra thì chính nó phá tan đội hình cho đòn kế tiếp của mình.
+        // Bộ 1 của Dark Knight là chiêu QUẠT (`cone`) — nó bọc trong `aoeHit`, nên cú nện này
+        // bỏ qua cờ đó là cả đàn dạt ra 114px sau 12 lượt và chiêu tự trượt mất mục tiêu.
+        // `test_qablock` bắt được, và nó đã xanh trước khi tôi thêm nhánh này.
+        if (!_aoeHit) vhKnockback(m, Math.atan2(m.y - player.y, m.x - player.x), 3.5);
         m.hp -= Math.max(1, Math.round(dmg * 0.35));
         addFloat(m.x, m.y - (m.def.size||14) - 26, 'NGHIỀN!', '#ff8a5a', 12);
       } else if (player._tpBo === 2){
