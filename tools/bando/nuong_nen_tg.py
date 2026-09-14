@@ -57,6 +57,11 @@ CAT = {
     'dam':     (2, 5,   10, 420, 420),
     'nuoc':    (2, 0, 0, 0, 0),   # QUÉT ra lúc chạy — xem _timNuoc()
     'rungtham':(2, 1210, 30, 500, 500),
+    # CẦU ĐÁ — thứ duy nhất trong cả hai tấm do NGƯỜI dựng. Dùng làm chất liệu cho thị trấn:
+    # một huy hiệu có công trình đọc ra "chỗ có người ở" ngay, mà không phải vẽ thêm gì.
+    'thanh':   (2, 215,  45, 300, 200),
+    # ĐƯỜNG MÒN — dải nhạt uốn qua đồng cỏ, cho Lối Mòn Corran.
+    'duong':   (1, 100, 120, 340, 340),
 }
 
 
@@ -137,7 +142,36 @@ def main():
     # TRO: ấm + tối, giữ nguyên nét đá trụi của vùng đá chết.
     ra['tro'] = _doiSac(ra['dahoang'], 1.26, 1.06, 0.84, sang=0.98, bao=0.90)
     # BIỂN: mặt hồ dìm sâu, dùng cho phần NGOÀI mọi vùng.
-    ra['bien'] = _doiSac(ra['nuoc'], 0.72, 0.84, 1.02, sang=0.86, bao=1.05)
+    # ⚠ BIỂN PHẢI LÀM MỀM. Mảng nước sạch lá lớn nhất chỉ 180×100, mà nó bị kéo phủ cả khung
+    # 660×500 — tức phóng ~3,7 lần, nên mấy gợn sóng trong tranh thành những vòng cung to đùng
+    # chạy ngang mép trên. Làm nhoè nhẹ thì chúng về đúng vai trò nền, không tranh chỗ với đất.
+    from PIL import ImageFilter
+    ra['bien'] = _doiSac(ra['nuoc'], 0.72, 0.84, 1.02, sang=0.86, bao=1.05) \
+                 .filter(ImageFilter.GaussianBlur(7))
+    # ── HUY HIỆU: ô ĐẶC SẮC NHẤT của từng mảng ──────────────────────────────────────────────
+    # ⚠ CẮT Ở GIỮA MẢNG LÀ CHẤM MÒ. Lượt đầu tôi lấy đúng tâm 384px làm huy hiệu, và SÁU vùng ra
+    # cùng một cái cây — vì tâm của mảng cỏ, mảng rừng, mảng vườn đều rơi vào một khoảng cỏ có
+    # một cái cây. Huy hiệu mà không phân biệt được thì nó thôi làm huy hiệu.
+    # Nay dò bằng PHƯƠNG SAI: ô nào lệch sáng nhiều nhất thì ô đó có vật thể (rặng cây, vách đá,
+    # lá súng) chứ không phải một khoảng nền trơn. Không phải "đẹp", nhưng là ĐẶC TRƯNG — mà
+    # huy hiệu cần đúng cái đó.
+    import numpy as np
+    IC, N = 96, 132
+    for ten, im in list(ra.items()):
+        a = np.asarray(im.convert('L')).astype(np.float32)
+        ii, ii2 = a.cumsum(0).cumsum(1), (a * a).cumsum(0).cumsum(1)
+        ii = np.pad(ii, ((1, 0), (1, 0))); ii2 = np.pad(ii2, ((1, 0), (1, 0)))
+        best, bx, by = -1, 0, 0
+        for y in range(0, O - N, 8):
+            for x in range(0, O - N, 8):
+                s1 = ii[y+N, x+N] - ii[y, x+N] - ii[y+N, x] + ii[y, x]
+                s2 = ii2[y+N, x+N] - ii2[y, x+N] - ii2[y+N, x] + ii2[y, x]
+                v = s2 / (N*N) - (s1 / (N*N)) ** 2
+                if v > best: best, bx, by = v, x, y
+        ic = im.crop((bx, by, bx + N, by + N)).resize((IC, IC), Image.LANCZOS)
+        ic.save(os.path.join(RA, 'tg_ic_%s.webp' % ten), quality=90, method=6)
+        print('  tg_ic_%-9s ô (%3d,%3d) phương sai %6.0f' % (ten, bx, by, best))
+
     for ten, im in ra.items():
         p = os.path.join(RA, 'tg_%s.webp' % ten)
         im.save(p, quality=88, method=6)
