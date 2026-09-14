@@ -1106,13 +1106,35 @@ const MAP_BG_SRC = {
 const MAP_VAT_SRC = {
   // Công trình Ardhaven — cắt từ tranh Gemini bằng tools/iso/cat_congtrinh.py. Ảnh đã ép về
   // đúng phép chiếu 2:1 và thu theo số ô chân đế, nên drawImage vẽ 1:1 không co giãn.
-  ct_cong:  'assets/iso/ct_cong.png',    // cổng thành — dùng cho cả bốn hướng
+  ct_cong:  'assets/iso/ct_cong.png',    // chòi gác — KHÔNG phải cái cổng, xem MAP_VAT_CHO
   ct_loren: 'assets/iso/ct_loren.png',   // Lò Rèn Hoàng Gia
   ct_duoc:  'assets/iso/ct_duoc.png',    // Tiệm Thuốc
   ct_vukhi: 'assets/iso/ct_vukhi.png',   // Vũ Khí Phường
+  // ── TƯỜNG THÀNH VÀ BỐN CỔNG · ĐANG CHỜ ART ────────────────────────────────
+  // Bảy tên dưới đây đã khai sẵn để THẢ TỆP VÀO LÀ CHẠY, không phải sửa một dòng mã nào.
+  // Chừng nào tên còn nằm trong MAP_VAT_CHO thì `vatTai()` trả null và máy vẽ số không viên.
+  // Đặc tả khổ ảnh + hợp đồng neo: docs/DE_XUAT_TUONG_CONG.md §5 và §5c.
+  tuong_ngang_trong: 'assets/iso/tuong_ngang_trong.png',   // 256×300 · cạnh Bắc
+  tuong_ngang_ngoai: 'assets/iso/tuong_ngang_ngoai.png',   // 256×300 · cạnh Nam
+  tuong_doc:         'assets/iso/tuong_doc.png',           // 160×428 · cạnh Tây, lật cho Đông
+  tuong_goc:         'assets/iso/tuong_goc.png',           // 256×300 · bốn góc bo
+  cong_bac:          'assets/iso/cong_bac.png',            // 720×700 · Cổng Bắc
+  cong_nam:          'assets/iso/cong_nam.png',            // 720×700 · Cổng Nam
+  cong_doc:          'assets/iso/cong_doc.png',            // 400×960 · Cổng Tây, lật cho Đông
 };
+// ⚠ DANH SÁCH "CHƯA VỀ". Khai tên trong MAP_VAT_SRC mà tệp chưa có thì trình duyệt nạp hụt và
+// ném 404 — bảy dòng đỏ trong devtools trên BẢN PHÁT HÀNH, cho một thứ cố ý chưa tồn tại.
+// Tên nằm đây thì không nạp gì cả.
+//
+// ⇒ THẢ TỆP PNG VÀO assets/iso/ RỒI XOÁ TÊN ĐÓ KHỎI ĐÂY. Đúng một dòng, không sửa gì thêm.
+//   Kiểm ngay sau đó: `node tools/do_thanh.cjs --cong` — mục 8b phải ra 100%.
+const MAP_VAT_CHO = new Set([
+  'tuong_ngang_trong', 'tuong_ngang_ngoai', 'tuong_doc', 'tuong_goc',
+  'cong_bac', 'cong_nam', 'cong_doc',
+]);
 const _vatIm = {};
 function vatTai(ten){
+  if (MAP_VAT_CHO.has(ten)) return null;   // art chưa về — đừng nạp, tránh 404 trên bản phát hành
   const src = MAP_VAT_SRC[ten];
   if (!src) return null;
   let im = _vatIm[ten];

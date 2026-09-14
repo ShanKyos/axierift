@@ -163,6 +163,27 @@ MU Online cũng không hứa. Dời cổng Corran là quét lại đa giác 68 �
 
 ---
 
+## 4b. Chốt: ĐÚNG BỐN CỔNG, bốn hướng
+
+Chủ dự án chốt **bốn cổng Bắc · Nam · Đông · Tây, không thêm cái nào**. Đó đúng là con số
+`diTrong` đang khai và `GATES` đang chạy — không phải sửa gì về số lượng.
+
+Trạng thái hình học bốn cổng, đo bằng `node tools/do_thanh.cjs --cong`:
+
+| | |
+|---|---|
+| Khẩu độ | **260px** cả bốn — 7 người đứng ngang |
+| Cột mốc bấm G | lùi **100px** sau mặt tường, **lệch tâm vòm 0px**, cả bốn ✔ |
+| Cổng của nhân vật cấp 1 | **gần nhất** (1090px · 5,2s) ✔ |
+| Ảnh cổng che khẩu độ | **0%** ← *thứ duy nhất còn thiếu, và nó là ART* |
+
+⇒ **Hình học xong. Chỉ còn art.** Bảy tên tệp đã khai sẵn trong `MAP_VAT_SRC`; thả PNG vào
+`assets/iso/` rồi **xoá tên khỏi `MAP_VAT_CHO`** là tường và cổng hiện lên — đúng một dòng,
+không sửa gì thêm. Chừng nào tên còn trong danh sách chờ thì `vatTai()` trả `null`, nên bản
+phát hành **không có một dòng 404 nào** (đã đo).
+
+---
+
 ## 5. Đơn hàng art — 7 tấm
 
 Nối vào `docs/DAT_HANG_ART_THANH.md` thành mục §2b. **Không dùng lại khuôn prompt §2** — chính
@@ -307,3 +328,43 @@ tạm bằng chính viên `nen_da` để kiểm hình học, rồi C4 chỉ là 
   làm thế, và mật độ chi tiết đo được nói trước kết quả.
 - **Lùi cột mốc G để né trần `test_domap`.** Đó chính là cách chỗ bấm G rơi ra cách cổng 270px.
   Bài kiểm phải miễn cho map thành, như nó đã miễn sàn "đi được".
+
+---
+
+## 9. Kho Axie có "item nhà cửa" không? — **KHÔNG**, và lý do là cấu trúc
+
+Quét toàn bộ, không phải mở vài thư mục: `find` trên **2 970 tệp PNG** của
+`axie-origins-asset-kit` với `build|house|hut|shop|stall|tent|barn|farm|home|prop|furnit|`
+`barrel|crate|fence|table|chair|sign|lamp|torch|well|cart|box|chest|door|roof|tile|decor`,
+cộng `search_code org:axieinfinity path:prop` trên cả **54 repo**.
+
+**Không một tấm nhà, một món đồ đạc, hay một bộ tile môi trường nào.**
+
+Thư mục lớn nhất của gói nói hết:
+
+| Thư mục | Số tệp |
+|---|--:|
+| `Resources/ImportedVfx` | 424 |
+| `Materials/Mats_*` (VFX chiêu thức) | ~3 000 |
+| `Animations` | 210 |
+| `Audio` | 152 |
+
+**Vì sao lại thế — và đây mới là phần đáng nhớ:** mọi kho Axie công khai đều là kho của một
+**game đánh bài theo lượt** (Origins). Sân đấu của nó là **một tấm tranh nền nhìn ngang**, hai
+bên đứng hai đội. Một game như vậy **không cần** nhà, không cần bàn ghế, không cần tile — nên
+không ai vẽ.
+
+Game có nhà cửa là **Homeland** (đất đai / nông trại), và Sky Mavis **chưa bao giờ công bố**
+tài nguyên của nó: không có org `axie-homeland`, và tìm toàn GitHub chỉ ra công cụ của
+người ngoài (xem `ASSET_SOURCING.md`, nguồn thứ mười hai).
+
+⇒ **Nhà cửa, tường, cổng và vật nhỏ đều phải gen.** Không có đường vòng nào. Prompt sẵn ở §5
+(tường + cổng) và `DE_XUAT_THANH_DAC_SAC.md §6` (công trình + tấm 12 vật nhỏ).
+
+### Thứ kho Axie THỰC SỰ có, và ta chưa lấy
+
+| | Số | Ghi chú |
+|---|--:|---|
+| `PvE/Avatars/` chân dung 200×200 nền trong | **41** | dùng ngay được làm avatar — xem `AVATAR.md`, mục đính chính |
+| `PvE/Starters/` gói Spine Axie khởi đầu | 114 tệp | rig, không phải tranh dẹp |
+| `PvE/UI/HpBar2`, `Frames`, `Icons` | ~94 | khung UI, thanh máu |

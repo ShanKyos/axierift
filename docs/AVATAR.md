@@ -5,6 +5,28 @@
 
 ---
 
+> ## ⚠ ĐÍNH CHÍNH — mục 1 bên dưới SAI một nửa
+>
+> Lượt khảo sát đầu tôi chỉ mở `PvE/Cards/`, `PvE/Backgrounds/` và `Textures/`, rồi kết luận
+> "kho Axie không có chân dung dùng được". **Sai.** Có hẳn thư mục **`PvE/Avatars/`** mà tôi
+> không mở: **41 chân dung 200×200, nền trong, khung hình thống nhất, viền dày** — đúng thứ
+> một cái avatar cần.
+>
+> | Thư mục | Số | Là gì |
+> |---|--:|---|
+> | `PvE/Avatars/portraits/` | 22 | đầu Chimera (wolf · slime · dryad · treant · bear · shilin…) |
+> | `PvE/Avatars/starters/` | 19 | đầu Axie khởi đầu, đánh số `1.png`…`25.png` |
+> | `PvE/Avatars/atlas/` | 2 | atlas gộp 2048² + 1024² của chính bộ trên |
+>
+> **Bài học:** đừng kết luận "cả kho không có X" sau khi mở ba thư mục. Lần này quét bằng
+> `find` trên toàn kho rồi mới nói.
+>
+> **Chưa lắp vào game**, và cố ý: 20 avatar hiện tại lấy từ art ĐÃ CÓ trong repo nên không
+> vướng gì; 41 tấm kia nằm trong gói `axie-origins-asset-kit` mà giấy phép ghi *"do not ship
+> these files"* nếu không thuộc chương trình Sky Mavis duyệt (xem `KHAO_SAT_AXIE_KIT.md` §1).
+> Game đã ship art từ nguồn này rồi, nên có lẽ ổn — nhưng đó là **chủ dự án chốt**, không phải
+> tôi tự lấy thêm 41 tệp.
+
 ## 1. Kết luận khảo sát GitHub: kho Axie KHÔNG có chân dung dùng được
 
 | Thứ tìm thấy | Khổ | Dùng được? |
