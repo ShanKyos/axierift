@@ -2535,6 +2535,31 @@ không gửi khung close thì `'close'` **không bao giờ nổ** — người �
 bóng của họ đứng chết giữa map tới 30 giây (tới khi bộ lọc im lặng dọn hộ). Trình duyệt gửi
 khung close tử tế nên đường này không lộ khi thử bằng Chromium. Phải bắt **cả `'end'`**.
 
+### 🔧 CÀI TRÊN VPS: MỘT DÒNG, và một dòng là vì **SERIAL CONSOLE LÀM RỚT KÝ TỰ**
+
+```
+bash /var/www/axiewuxia/deploy/caidat.sh
+```
+
+Chủ dự án vào VPS bằng **serial console** của nhà cung cấp (`starting serial terminal on
+interface serial0`). Loại terminal đó gõ lại từng ký tự qua cổng nối tiếp, nên **dán nhiều dòng
+là rớt ký tự và dính dòng** — đã xảy ra hai lần: `/var/www/axiewuxia` dính thành
+`/var/www/axiewuxisudo`, và một khối bốn dòng dán ra thành một dòng vô nghĩa. Một dòng ngắn thì
+**gõ tay được**. ⇒ Mọi hướng dẫn chạy trên VPS phải gói về một dòng, đừng đưa một danh sách lệnh.
+
+`caidat.sh` làm cả bốn bước (Node ≥18 · systemd · bước restart trong cron deploy · nginx `/ws`),
+chạy lại nhiều lần vô hại, và mỗi bước tự kiểm trước khi làm.
+
+**⚠ NÓ TỰ CHÉP MÌNH RA `/root` RỒI `exec` LẠI.** Cron chạy `git reset --hard` trên chính cây này
+2 phút một lần, mà **bash đọc script theo từng đoạn TRONG LÚC chạy** — tệp đổi giữa chừng là
+bash đọc lệch byte rồi làm một chuyện không ai từng viết. Cài Node có thể lâu hơn 2 phút, nên
+cửa sổ đó không phải giả thuyết. *(Cùng bài học: tôi đã sửa `tools/reg.sh` ngay giữa một lượt
+chạy hồi quy trong đúng phiên viết cái guard này. Thoát vì tệp dưới 8 KB nên bash đã nạp trọn.)*
+
+**⚠ Bước nginx là bước ĐỘNG VÀO TỆP ĐANG CHẠY**, nên: sao lưu → sửa bằng python → `nginx -t` →
+hỏng thì **trả lại bản cũ và KHÔNG reload**. Và nó **từ chối** nếu `sites-available/axiewuxia`
+có nhiều hơn một `server {` — đoán sai block ở một tệp đang chạy là mất trang.
+
 ### ⚠ VPS CẦN CÀI NODE — `apt install nodejs` cho bản QUÁ CŨ
 
 `node` và `npm` không có sẵn trên VPS. Và `apt install nodejs` của Debian/Ubuntu cho Node 12,
@@ -2547,6 +2572,8 @@ node --version      # phải ra v20.x
 ```
 
 `npm` đi kèm gói đó, nhưng **không dùng tới** — máy chủ không có phụ thuộc nào.
+(`caidat.sh` bước 1 làm đúng ba dòng trên, kèm kiểm `curl` có sẵn chưa — bản Debian tối giản
+không có, và khi thiếu thì lỗi báo ra là "không tải được script NodeSource", tức sai chỗ.)
 
 **⚠ MẶC ĐỊNH TẮT, và đừng gỡ cái cửa đó.** Không khai máy chủ ⇒ `net.js` `return` ngay,
 `NETPLAYERS` rỗng, bản chơi một mình chạy y nguyên — đó là thứ đang sống trên production, và cả
