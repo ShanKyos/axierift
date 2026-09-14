@@ -135,9 +135,13 @@ const PORT = process.argv[2] || '8853';
   if (r.renderLoi.length) fail(`tab ném lỗi: ${r.renderLoi.join(' · ')}`);
   else pass(`5 lớp × ${r.tab.length} tab đều vẽ được`);
 
-  const thieu = Object.entries(r.soO).filter(([k, v]) => k.split('/')[1] !== 'khac' && v !== r.soOHinh);
+  // ⚠ KHÔNG loại trừ tab nào nữa. Trước đây tab Khác được miễn vì nó vẽ kiểu khác hẳn — một
+  // cuộn chữ dài thay vì cây — nên ba tab của cùng một bảng bắt người chơi học ba cách đọc.
+  // Chủ dự án chốt cho đồng nhất, và chỗ miễn trừ này chính là thứ sẽ lặng lẽ cho phép nó
+  // lệch ra lần nữa.
+  const thieu = Object.entries(r.soO).filter(([, v]) => v !== r.soOHinh);
   if (thieu.length) fail(`số ô lệch hình: ${thieu.map(([k,v])=>k+'='+v).join(' ')} (mong ${r.soOHinh})`);
-  else pass(`mọi tab cây vẽ đủ ${r.soOHinh} ô`);
+  else pass(`CẢ BA tab vẽ cùng một khung, đủ ${r.soOHinh} ô`);
 
   if (r.giau.cong !== r.giau.that || r.ngheo.cong !== r.ngheo.that)
     fail(`dấu + nói dối: đủ tiền ${r.giau.cong} dấu/${r.giau.that} nâng được · hết tiền ${r.ngheo.cong}/${r.ngheo.that}`);
@@ -161,6 +165,61 @@ const PORT = process.argv[2] || '8853';
 
   if (!r.khacRows || !r.khacDiSan) fail(`tab Khác mất nội dung cũ (${r.khacRows} dòng, Di Sản ${r.khacDiSan})`);
   else pass(`tab Khác giữ nguyên nội dung cũ (${r.khacRows} dòng)`);
+
+  // ⑤ HAI NÚT CỦA KHUNG CHI TIẾT PHẢI LÀM THẬT — 📜 dùng Sách Kỹ Năng và ⌨ gán phím Space.
+  // Cả hai cơ chế vẫn sống trong mã (`useSkillBookUI` · `assignSpaceUI`) nhưng chỗ DUY NHẤT
+  // treo nút của chúng là `upBtnHtml()`, dựng hàng cho danh sách chiêu — và danh sách đã thành
+  // cây. Mất chỗ gọi thì không lỗi nào báo: bảng vẫn còn dòng "📜 Sách Kỹ Năng nâng thẳng 1
+  // cấp" MỜI người chơi dùng, mà không có gì để bấm. Nên mệnh đề này không hỏi "có nút không",
+  // nó BẤM rồi đo trạng thái người chơi, và đo cả chiều ngược lại (hết sách thì nút phải mờ).
+  const r5 = await p.evaluate(() => {
+    player.level = 80; player.bikipVH = 7; vhAutoLearn();
+    const cay = KN_ROT[player.sect] || [];
+    const id = cay.find(x => x && SKILL_DEFS[x] && skillInfo(x).unlocked);
+    if (!id) return { canh:'không tìm được chiêu chủ động nào đã mở' };
+    player.skillLv[id] = 10;
+    closePanels(); togglePanel('skill'); window.knTab('lop');
+    window._knChon = 'c' + cay.indexOf(id);
+    renderSkillPanel();
+    const ns = document.querySelector('#panel-skill .kn-sachnut');
+    const sachMo = !!(ns && ns.classList.contains('mo'));
+    const lvTruoc = skLv(id), sachTruoc = player.bikipVH;
+    if (ns) ns.click();
+    const lvSau = skLv(id), sachSau = player.bikipVH;
+    player.bikipVH = 0; renderSkillPanel();
+    const ns2 = document.querySelector('#panel-skill .kn-sachnut');
+    const moKhiHet = !!(ns2 && ns2.classList.contains('mo'));
+    // ⌨ Space: chỉ nhận chiêu ĐANG nằm trên thanh; bấm lần hai trả về đòn thường
+    const idBar = player.skillBar.find(x => x && SKILL_DEFS[x]);
+    player.spaceSkill = null;
+    window._knChon = 'c' + cay.indexOf(idBar);
+    renderSkillPanel();
+    const nsp = document.querySelector('#panel-skill .kn-space');
+    if (nsp) nsp.click();
+    const spSau1 = player.spaceSkill;
+    renderSkillPanel();
+    const nsp2 = document.querySelector('#panel-skill .kn-space');
+    const sang = !!(nsp2 && nsp2.classList.contains('dang'));
+    if (nsp2) nsp2.click();
+    return { id, idBar, coSach:!!ns, sachMo, lvTruoc, lvSau, sachTruoc, sachSau, moKhiHet,
+             coSpace:!!nsp, spSau1, sang, spSau2: player.spaceSkill };
+  });
+  console.log('⑤ hai nút khung chi tiết:', JSON.stringify(r5));
+  if (r5.canh) fail('cảnh dựng chưa đủ: ' + r5.canh);
+  else {
+    if (!r5.coSach) fail('khung chi tiết không có nút 📜 Dùng Sách — cơ chế Sách Kỹ Năng mất cửa bấm');
+    else if (r5.sachMo) fail('có sách + chiêu chưa tối đa mà nút 📜 vẫn mờ');
+    else if (r5.lvSau !== r5.lvTruoc + 1) fail(`bấm 📜 không nâng cấp: ${r5.lvTruoc} → ${r5.lvSau}`);
+    else if (r5.sachSau !== r5.sachTruoc - 1) fail(`bấm 📜 không trừ đúng 1 quyển: ${r5.sachTruoc} → ${r5.sachSau}`);
+    else if (!r5.moKhiHet) fail('hết Sách Kỹ Năng mà nút 📜 vẫn sáng — nút hứa suông');
+    else pass(`nút 📜 nâng thật (cấp ${r5.lvTruoc}→${r5.lvSau}, sách ${r5.sachTruoc}→${r5.sachSau}) và tắt khi hết sách`);
+
+    if (!r5.coSpace) fail('khung chi tiết không có nút ⌨ Space — cơ chế gán phím Space mất cửa bấm');
+    else if (r5.spSau1 !== r5.idBar) fail(`bấm ⌨ không gán được Space: ${r5.spSau1}`);
+    else if (!r5.sang) fail('gán Space rồi mà nút không sáng lên');
+    else if (r5.spSau2 !== null) fail(`bấm ⌨ lần hai không trả Space về đòn thường: ${r5.spSau2}`);
+    else pass('nút ⌨ gán được phím Space và bấm lần hai thì gỡ ra');
+  }
 
   if (r.tenCam.length) fail(`tên tab mang từ vựng Quy tắc số 1 cấm: ${r.tenCam.join(', ')}`);
   else pass('tên tab sạch từ vựng bị cấm');

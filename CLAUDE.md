@@ -1705,6 +1705,38 @@ thừa thì bỏ qua — cả hai đều không ném lỗi, nên điền dần t
 | `KN_HINH` | hình cây: 16 ô, `c` cột · `h` hàng · `tu` là ô cha (vẽ mũi tên tới) |
 | `KN_HINH_RIENG` | `<lớp>\|<tab>` → hình riêng; không khai thì dùng `KN_HINH` |
 | `KN_ROT` / `KN_ROT_CHUNG` | **mã chiêu rót vào ô** |
+| `knDsKhac()` | tab **Khác** SUY RA, không điền tay — xem ngay dưới |
+
+**⚠ TAB KHÁC KHÔNG ĐIỀN TAY.** Nó suy từ `LEGACY_SECT_SKILLS` + `CLASS_PASSIVES` của lớp đang
+chơi qua `knDsKhac()`. Chép thành một bảng `KN_ROT_CHUNG.khac` thứ ba là bảo đảm nó lệch với hai
+bảng kia ngay lần đầu ai đó đổi Di Sản mà quên sửa — cùng lối với `mapBanSac()` suy từ `packs`.
+
+**Cả BA tab nay dùng CHUNG một khung** (cây + khung chi tiết). Tab Khác từng là một cuộn chữ dài
+xếp năm khối rời: cùng một bảng mà hai tab vẽ kiểu này, một tab vẽ kiểu kia, nên bấm sang tab là
+người chơi phải học lại cách đọc. `test_cayky` đã bỏ chỗ miễn trừ `!== 'khac'` — chính chỗ miễn
+trừ đó là thứ sẽ lặng lẽ cho phép nó lệch ra lần nữa.
+
+Ba thứ ở tab Khác **không phải chiêu** nên không vào cây được, và ở lại thành một dải gọn bên
+dưới: Sách Kỹ Năng (vật phẩm), `PASSIVE_SKILLS` (đến từ Ascension/trang bị, **không** nằm trong
+`VOHOC_DEFS` nên không có ô cây), và hệ tấn chức phụ.
+
+#### ⚠ ĐỔI CÁCH VẼ MỘT BẢNG ⇒ ĐẾM LẠI MỌI NÚT NÓ TỪNG TREO
+
+Khi danh sách chiêu thành cây, `upBtnHtml()` mất sạch chỗ gọi. Nó là chỗ **DUY NHẤT** treo nút
+📜 (dùng Sách Kỹ Năng — nâng thẳng 1 cấp) và nút ⌨ (gán phím Space). Hai cơ chế vẫn sống nguyên
+trong mã (`useSkillBookUI` · `assignSpaceUI`), `node --check` xanh, không lỗi nào in ra — mà
+người chơi thì **không còn cửa nào bấm**, trong khi bảng vẫn ngồi đó in dòng *"📜 Sách Kỹ Năng
+nâng thẳng 1 cấp"* MỜI dùng. Cùng họ với bẫy "nút chết" ở mục trên, chỉ khác là lần này không
+có nút để mà chết — chỉ còn lời mời suông, thứ mà không bài kiểm nào hỏi tới.
+
+⇒ `test_cayky §⑤` **BẤM** hai nút rồi đo trạng thái người chơi (cấp +1 · sách −1 · Space gán rồi
+gỡ được), và đo cả chiều NGƯỢC LẠI (hết sách thì nút phải mờ). Hỏi "có nút không" là chưa đủ:
+một nút trỏ vào hàm không tồn tại vẫn có mặt trong DOM.
+
+**⚠ `skThongSoGon()` in hồi chiêu qua `effCd()`, đừng in `i.cd`.** `skillInfo()` trả cd **GỐC**;
+mọi mốc / tiến hoá / `vhCdMult` nhân vào sau. In số gốc thì bảng hứa *"−0,25% hồi chiêu mỗi cấp"*
+ngay bên dưới một con số đứng im suốt 120 cấp. Đây nay là chỗ **duy nhất** in năm thông số —
+lưới 3 cột `skThongSo()` đã gỡ cùng đợt này.
 
 **⚠ Ảnh mẫu là game kiếm hiệp, ba chữ trong đó Quy tắc số 1 cấm.** Đã đổi, và đây là bảng quy đổi
 để đừng ai "sửa ngược" tưởng là sót: `Phái` → **Lớp** · `Giang Hồ` → **Vaeldra** (đúng cái thế
