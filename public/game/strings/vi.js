@@ -24,8 +24,8 @@ window.I18N_VI = {
 
   'help.g.panels': 'BẢNG & CỬA SỔ',
   'help.k.char': 'Nhân Vật — chỉ số và các hệ con',
-  'help.k.gear': 'Trang Bị',
-  'help.k.bag': 'Túi Đồ',
+  'help.k.gear': 'Trang Bị + Túi Đồ — hình nhân vật mặc đồ cạnh lưới túi',
+  'help.k.bag': 'Cùng cửa sổ với V',
   'help.k.skillp': 'Kỹ Năng',
   'help.k.map': 'Bản Đồ',
   'help.k.quest': 'Nhật Ký Nhiệm Vụ',

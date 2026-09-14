@@ -75,10 +75,14 @@
         <button class="cp-nut" title="Bảng Sự Kiện" onclick="openEventBoard()">⏱ Sự Kiện</button>
         <button class="cp-nut" id="btn-minimap" title="Ẩn/hiện bản đồ thu nhỏ (U)">👁 Ẩn</button>
       </div>
-      <div id="quest-tracker-wrap">
-        <button id="btn-questtracker" title="Ẩn/hiện bảng nhiệm vụ">📜 Nhiệm Vụ <span id="qt-arrow">▾</span></button>
-        <div id="quest-tracker"></div>
-      </div>
+      <!-- NHẬT KÝ NHIỆM VỤ CẮM THẲNG VÀO CỘT, không còn là cửa sổ nổi giữa màn.
+           Trước bản này có HAI chỗ nói về nhiệm vụ: bảng theo dõi ở cột phải (mục tiêu đang
+           làm) và Nhật Ký mở bằng Q (cả chuỗi, 3 tab) — hai cửa đọc cùng một dữ liệu, và
+           người chơi phải nhớ cái nào ở đâu. Nay gộp: khối này CHÍNH LÀ Nhật Ký, và bảng theo
+           dõi cũ thành tab đầu của nó.
+           ⚠ Nó KHÔNG còn đi qua togglePanel: một khối cắm trong HUD mà mở Túi Đồ là biến mất
+           thì đọc ra như lỗi. Phím Q gọi `toggleQlog()` — thu/mở tại chỗ. -->
+      <div id="panel-qlog" class="panel bang-cam"></div>
     </div>
   </div>
 </div>
@@ -164,7 +168,6 @@
 <div id="panel-skill" class="panel hidden"></div>
 <div id="panel-map" class="panel hidden"></div>
 <div id="panel-settings" class="panel hidden"></div>
-<div id="panel-qlog" class="panel hidden"></div>
 <div id="panel-help" class="panel hidden"></div>
 <div id="panel-quest" class="panel hidden"></div>
 <!-- Lò rèn: bảng RIÊNG, chỉ mở khi đứng cạnh Thợ Rèn (không còn là tab trong bảng Nhân Vật) -->

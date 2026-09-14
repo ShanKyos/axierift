@@ -9189,11 +9189,11 @@ function phimXuong(e){
   // Lưu ý: trên màn ≥1000px, togglePanel('inv') mở CẢ Trang Bị lẫn Túi Đồ cạnh nhau — kéo-thả
   // HTML5 cần cả hai cùng có mặt trên DOM. Nên V và B rơi vào cùng một cặp bảng; đó là hành vi
   // có sẵn, không phải do đổi phím. Bỏ alias I để khỏi thành BA phím cho một việc.
-  if (e.key.toLowerCase()==='v') togglePanel('inv');                                // Trang Bị
+  if (e.key.toLowerCase()==='v') togglePanel('inv');                                // Trang Bị + Túi Đồ
   if (e.key.toLowerCase()==='b') togglePanel('bag');
   if (e.key.toLowerCase()==='k') togglePanel('skill');
   if (e.key.toLowerCase()==='m') togglePanel('map');
-  if (e.key.toLowerCase()==='q') togglePanel('qlog');
+  if (e.key.toLowerCase()==='q') toggleQlog();
   if (e.key.toLowerCase()==='u'){ SETTINGS.minimap = !SETTINGS.minimap; saveSettings(); }
   if (e.key.toLowerCase()==='o') togglePanel('settings');
   // F6 — bảng Hướng Dẫn & Phím Tắt. preventDefault vì F6 mặc định của trình duyệt là nhảy
@@ -10523,7 +10523,7 @@ function currentQuest(){ return questIdx < QUESTS.length ? QUESTS[questIdx] : nu
 
 // ---------- GDD Đợt 2 B3: Nhắc Việc Bấm Ngay ----------
 function anyPanelOpen(){
-  return ['panel-char','panel-inv','panel-bag','panel-skill','panel-map','panel-quest','panel-settings','panel-qlog','panel-stage','panel-forge']
+  return ['panel-char','panel-inv','panel-bag','panel-skill','panel-map','panel-quest','panel-settings','panel-stage','panel-forge']
     .some(id => { const e2 = document.getElementById(id); return e2 && !e2.classList.contains('hidden'); });
 }
 function hintCandidates(){
@@ -16463,8 +16463,7 @@ function skMau(id){
 // NGAY LÚC NẠP TRANG và giết chết mọi thứ đăng ký phía sau nó.
 for (const [_id, _pn] of [['btn-char','char'], ['btn-inv','inv'], ['btn-bag','bag'],
                           ['btn-skill','skill'], ['btn-map','map'],
-                          ['btn-settings','settings'], ['btn-qlog','qlog'],
-                          ['btn-help','help']]){
+                          ['btn-settings','settings'], ['btn-help','help']]){
   const _b = el(_id);
   if (_b) _b.addEventListener('click', () => togglePanel(_pn));
 }
@@ -16513,18 +16512,21 @@ if (btnMini) btnMini.addEventListener('click', ()=>{
   SETTINGS.minimap = !SETTINGS.minimap; saveSettings();
   AudioSys.sfx('ui', 0.5);
 });
-const btnQt = el('btn-questtracker');
-if (btnQt) btnQt.addEventListener('click', ()=>{
-  SETTINGS.questTracker = !SETTINGS.questTracker; saveSettings();
-  el('quest-tracker').classList.toggle('qt-closed', !SETTINGS.questTracker);
-  el('qt-arrow').textContent = SETTINGS.questTracker ? '▾' : '▸';
-  AudioSys.sfx('ui', 0.5);
+// ⚠ NỐI BẰNG UỶ QUYỀN, không `addEventListener` vào nút. Nút `#btn-questtracker` nay do
+// `renderQlog()` vẽ lại mỗi lần đổi tab, nên phần tử cũ bị vứt đi cùng với cái listener của
+// nó — nối thẳng là bấm được đúng một lần rồi câm, mà cái kiểu câm đó không ném lỗi.
+document.addEventListener('click', (e2) => {
+  if (e2.target && e2.target.id === 'btn-questtracker') toggleQlog();
 });
-// khôi phục trạng thái đóng/mở đã lưu (mặc định mở) — không đợi tới lần bấm đầu tiên
-if (el('quest-tracker')){
-  el('quest-tracker').classList.toggle('qt-closed', !SETTINGS.questTracker);
-  if (el('qt-arrow')) el('qt-arrow').textContent = SETTINGS.questTracker ? '▾' : '▸';
+// Khai bằng `function` chứ không phải `window.x = function`: phím Q gọi thẳng `toggleQlog()`
+// và eslint không truy được thuộc tính gán lên window (`no-undef` đỏ ngay). Gán thêm lên
+// window để bảng gỡ rối và bài kiểm gọi được.
+function toggleQlog(){
+  SETTINGS.questTracker = !SETTINGS.questTracker; saveSettings();
+  renderQlog();
+  AudioSys.sfx('ui', 0.5);
 }
+window.toggleQlog = toggleQlog;
 const btnCl = el('btn-combatlog');
 if (btnCl) btnCl.addEventListener('click', ()=>{
   SETTINGS.combatLog = !SETTINGS.combatLog; saveSettings();
@@ -18963,6 +18965,7 @@ function startGame(sectKey, quze){
   el('hud').classList.remove('hidden');
   el('bottom-hud').classList.remove('hidden');
   { const mc = el('menu-cot'); if (mc) mc.classList.remove('hidden'); }
+  renderQlog();   // khối cắm trong cột phải: vẽ ngay, không đợi ai bấm phím
   el('xp-strip').classList.remove('hidden');
   el('combat-log-wrap').classList.remove('hidden');
   fxLoad();   // mức hiệu ứng đã lưu (hoặc Tự Chỉnh) + bật lớp phủ CSS đúng bản đồ
@@ -19092,6 +19095,7 @@ else setTimeout(showIntro, 0);        // người mới → cốt truyện (defe
       el('hud').classList.remove('hidden');
       el('bottom-hud').classList.remove('hidden');
   { const mc = el('menu-cot'); if (mc) mc.classList.remove('hidden'); }
+  renderQlog();   // khối cắm trong cột phải: vẽ ngay, không đợi ai bấm phím
       el('xp-strip').classList.remove('hidden');
       el('combat-log-wrap').classList.remove('hidden');
       if (el('ghha-lang-toggle')) el('ghha-lang-toggle').style.display = 'none';
@@ -19956,7 +19960,7 @@ function togglePanel(which){
   // trả null và câu kế ném "Cannot read properties of null". Mọi chỗ gọi togglePanel('forge') cũ
   // đều vỡ theo.
   if (which === 'forge'){ window.openForgePanel(); return; }
-  const map = { char:'panel-char', inv:'panel-inv', bag:'panel-bag', skill:'panel-skill', map:'panel-map', settings:'panel-settings', qlog:'panel-qlog', help:'panel-help' };
+  const map = { char:'panel-char', inv:'panel-inv', bag:'panel-bag', skill:'panel-skill', map:'panel-map', settings:'panel-settings', help:'panel-help' };
   const id = map[which];
   const p = el(id);
   if (!p) return;                     // khoá lạ thì im lặng bỏ qua, không ném lỗi giữa lượt chơi
@@ -19980,8 +19984,11 @@ function togglePanel(which){
     // Màn hình hẹp/mobile giữ nguyên hành vi cũ (1 bảng tại 1 thời điểm — kéo-thả vốn không chạy trên chạm).
     // Nhân Vật ⇄ Trang Bị là HAI NỬA của một cửa sổ: mở nửa nào cũng kéo nửa kia ra cùng.
     // Màn hẹp thì thôi — hai nửa cạnh nhau cần bề ngang, mà kéo-thả vốn không chạy trên chạm.
-    if ((which === 'char' || which === 'inv') && window.innerWidth >= 1000){
-      const otherKey = which === 'char' ? 'inv' : 'char';
+    // ⚠ CẶP MỞ KÈM NAY LÀ inv ↔ bag. Đổi chỗ này mà quên `BANG_NHOM` ở trên (hoặc ngược
+    // lại) thì một nửa mở ra còn nửa kia bị chính vòng lặp phía trên tắt đi ngay sau đó —
+    // triệu chứng là "bấm V thấy nhấp nháy rồi mất bảng", rất khó lần ra nguyên nhân.
+    if ((which === 'inv' || which === 'bag') && window.innerWidth >= 1000){
+      const otherKey = which === 'inv' ? 'bag' : 'inv';
       renderPanel(otherKey);
       const po = el(map[otherKey]);
       po.classList.remove('hidden');
@@ -20010,9 +20017,17 @@ function togglePanel(which){
 // Cho `inv` cùng nhóm 'nv' với `char`: hai bảng vẫn mở KÈM nhau (kéo-thả HTML5 cần cả hai
 // cùng có mặt trên DOM), nhưng chúng đọc ra như MỘT cửa sổ hai nửa. Túi Đồ tách hẳn ra nhóm
 // riêng nên mở Túi Đồ là bộ đôi kia đóng, và ngược lại.
-const BANG_NHOM = { char:'nv', inv:'nv', bag:'tui', skill:'kn', map:'bd', settings:'cd', qlog:'nv2', help:'hd' };
+// ⚠ KHUÔN MU ONLINE, chủ dự án chốt: **C ra CHỈ SỐ, V ra TRANG BỊ + TÚI ĐỒ.**
+// Trước đây `char` và `inv` chung nhóm 'nv' nên bấm C là kéo luôn bảng Trang Bị ra — tức
+// phím xem chỉ số cũng mở đồ, và không có phím nào cho "chỉ xem chỉ số". Nay:
+//   · `char` một mình một nhóm → C ra ĐÚNG một cửa sổ chỉ số;
+//   · `inv` + `bag` chung nhóm 'do' → V (và B) ra hình nhân vật mặc đồ CẠNH lưới túi, đúng
+//     một cửa sổ hai nửa như MU. Kéo-thả HTML5 vốn đã cần cả hai cùng có mặt trên DOM.
+const BANG_NHOM = { char:'nv', inv:'do', bag:'do', skill:'kn', map:'bd', settings:'cd', help:'hd' };
 // CHỈ nhóm 'nv' được ở chung màn hình, và nó là hai nửa của cùng một cửa sổ.
-const BANG_SONG = { nv:1 };
+// Nhóm được phép ở chung màn hình với nhóm khác. 'do' là hai NỬA của một cửa sổ nên nó tự
+// mở kèm nhau qua BANG_NHOM; không khai ở đây, nếu không mở Túi Đồ là bảng Bản Đồ nằm lại.
+const BANG_SONG = {};
 // Ba bảng mở cùng lúc thì phải xếp thành ba cột, không chồng lên nhau. Gắn class lên <body>
 // để CSS lo phần xếp chỗ — JS không nên biết toạ độ.
 function capNhatCotBang(){
@@ -20024,7 +20039,6 @@ function capNhatCotBang(){
 window.capNhatCotBang = capNhatCotBang;
 function renderPanel(which){
   if (which==='settings'){ renderSettings(); return; }
-  if (which==='qlog'){ renderQlog(); return; }
   if (which==='help'){ renderHelpPanel(); return; }
   if (which==='char'){ window.charTab = 'info'; renderCharPanel(); }
   else if (which==='inv') renderInv();
@@ -20036,8 +20050,10 @@ function renderPanel(which){
 // CHỒNG CỬA SỔ. Ghi thứ tự MỞ để ESC biết cái nào là trên cùng. Chỉ chứa id bảng, và luôn
 // lọc lại theo thực tế trước khi dùng — bảng có thể bị đóng bằng nút ✕ mà không qua đây.
 let _bangChong = [];
+// ⚠ `panel-qlog` KHÔNG có trong danh sách này (và không có trong `map` của togglePanel):
+// nó đã thành khối cắm trong cột phải. Cắm lại vào đây là ESC đóng mất một mảnh HUD.
 const _MOI_BANG = ['panel-char','panel-inv','panel-bag','panel-skill','panel-map','panel-quest',
-                   'panel-settings','panel-qlog','panel-stage','panel-forge','panel-help'];
+                   'panel-settings','panel-stage','panel-forge','panel-help'];
 function bangDangMo(){ return _MOI_BANG.filter(id => { const e2 = el(id); return e2 && !e2.classList.contains('hidden'); }); }
 function bangGhiChong(id){
   _bangChong = _bangChong.filter(x => x !== id);
@@ -20116,7 +20132,7 @@ window.closePanels = closePanels;
 // Không có cái này thì người chơi không đọc được mình đang đứng ở cửa nào — mà đó chính là
 // việc của một thanh menu.
 const MC_BANG = { 'btn-char':'panel-char', 'btn-bag':'panel-bag', 'btn-skill':'panel-skill',
-                  'btn-qlog':'panel-qlog', 'btn-map':'panel-map', 'btn-settings':'panel-settings' };
+                  'btn-map':'panel-map', 'btn-settings':'panel-settings' };
 function capNhatMenuCot(){
   for (const bid in MC_BANG){
     const b = el(bid), pn = el(MC_BANG[bid]);
@@ -22417,7 +22433,11 @@ function updateHud(){
   const autoBtn = el('btn-auto');
   if (autoBtn){ autoBtn.classList.remove('hidden'); updateAutoBtn(); }
   // quest tracker — chính tuyến + tối đa 2 phụ tuyến
-  { const _th = trackerHtml(); if (window._lastTrack !== _th){ window._lastTrack = _th; el('quest-tracker').innerHTML = _th; } } // GDD Đợt 2 B2: cache để nút bấm không bị render đè
+  // ⚠ PHẢI hỏi phần tử trước. `#quest-tracker` nay chỉ có mặt khi Nhật Ký đang ở tab "Đang
+  // Làm"; đọc thẳng `el(...)` như trước là ném lỗi mỗi khung ngay khi người chơi bấm sang tab
+  // khác — tức là vỡ vòng vẽ, không phải một dòng sai.
+  { const _qt = el('quest-tracker');
+    if (_qt){ const _th = trackerHtml(); if (window._lastTrack !== _th){ window._lastTrack = _th; _qt.innerHTML = _th; } } } // cache để nút bấm không bị render đè
   // taskbar: 4 ô kỹ năng cố định (chính/phụ/buff/tuyệt chiêu)
   for (let i = 0; i < 4; i++){
     const b = el('sk-'+i); if (!b) continue;
@@ -23567,7 +23587,7 @@ function updateTut(){
   if (!box) return;
   const cur = (!player || player.tutStep == null || player.tutStep < 0 || player.tutStep >= TUT_STEPS.length) ? -99 : player.tutStep;
   // ẩn hướng dẫn khi đang mở bảng — tránh đè nội dung
-  const anyPanel = ['panel-char','panel-inv','panel-bag','panel-skill','panel-map','panel-quest','panel-settings','panel-qlog','panel-forge'].some(id => { const e2 = document.getElementById(id); return e2 && !e2.classList.contains('hidden'); });
+  const anyPanel = ['panel-char','panel-inv','panel-bag','panel-skill','panel-map','panel-quest','panel-settings','panel-forge'].some(id => { const e2 = document.getElementById(id); return e2 && !e2.classList.contains('hidden'); });
   const key = cur * 10 + (anyPanel ? 1 : 0);
   if (window._tutShown === key) return; // chỉ vẽ lại khi đổi bước/trạng thái — tránh reset nút ✕
   window._tutShown = key;
@@ -25050,11 +25070,14 @@ function drawNpc(){
    sau mà không tìm được chỗ trống thì THÔI KHÔNG VẼ, chứ không vẽ đè: một nhãn đọc được đáng
    giá hơn hai nhãn chồng nhau. Người gần nhất luôn có nhãn.                                  */
 const NHAN_CAO   = 15;   // chiều cao một dòng nhãn để tính đụng nhau
-const HUD_CHE    = 64;   // dải trên cùng màn hình có chữ HUD (tên nhân vật, tên map) đè xuống
-// DẢI TRÁI cũng bị chắn, và trước bản này không ai chừa chỗ cho nó: cột biểu tượng #menu-cot
-// (left:10px, rộng ~56px) nằm đè lên canvas, nên tên NPC đứng gần mép trái bị cắt cụt — chụp
-// được ở Sapidae Chiefdom: 'Người Luyện Chimera' hiện ra thành 'ời Luyện Chimera'.
-const HUD_TRAI   = 76;   // 10 (lề) + 56 (cột) + 10 (khoảng thở)
+// Dải TRÊN cao lên 64 → 80: góc trái nay là KHUNG CHÂN DUNG (10 lề + ~58 khung + lề) chứ
+// không còn là một dòng tên trần. Nhãn NPC lọt vào đó là nằm dưới một tấm nền đục.
+const HUD_CHE    = 80;
+// ⚠ DẢI TRÁI ĐÃ ĐƯỢC TRẢ LẠI. Con số 76 cũ chừa chỗ cho cột biểu tượng `#menu-cot` khi nó
+// còn dựng dọc ở mép trái — chụp được ở Sapidae Chiefdom: 'Người Luyện Chimera' hiện ra
+// thành 'ời Luyện Chimera'. Cột đó nay nằm ngang ở đáy phải, nên giữ 76 là tự bỏ phí một
+// dải 76px mà không còn gì che ở đó. Chỉ còn đúng lề mép màn hình.
+const HUD_TRAI   = 12;
 function veNhanNpc(ds){
   if (!ds.length) return;
   ctx.font = '12px "Be Vietnam Pro", sans-serif';
@@ -25166,7 +25189,7 @@ function trackerHtml(){
 }
 
 // ---------- Nhật Ký Nhiệm Vụ (phím Q) — phân theo vùng ----------
-window.qlogTab = 'main';
+window.qlogTab = 'track';
 // ═══════════ CỐT TRUYỆN NGŨ ẤN × TÔNG MÔN — manh mối, lời thoại trấn thủ, kết mở ═══════════
 // CLUES đã dời sang data/canbang.js — sửa cân bằng không phải mở tệp 26k dòng này.
 const CLUES = window.CLUES;
@@ -25288,11 +25311,25 @@ function showKetMo(){
 window.setQlogTab = function(t){ window.qlogTab = t; AudioSys.sfx('ui', 0.5); renderQlog(); };
 function renderQlog(){
   const p = el('panel-qlog'); if (!p) return;
+  p.classList.toggle('ql-thu', !SETTINGS.questTracker);
   // Ba tab này trước đây dùng .mini-btn.danger — CÙNG class với nút "XÓA SAVE", nên tab chưa
   // chọn trông y hệt nút xoá dữ liệu và người chơi cẩn thận sẽ không dám bấm.
-  let html = moBang({ tieu:'Nhật Ký Nhiệm Vụ', chon:window.qlogTab, ham:'setQlogTab',
-    tabs:[{ id:'main', ten:'★ Chính Tuyến' }, { id:'side', ten:'◈ Phụ Tuyến' }, { id:'story', ten:'📜 Nhật Ký' }] });
-  if (window.qlogTab === 'main'){
+  // ⚠ `dongX:false` — khối này CẮM trong cột phải, không phải cửa sổ nổi. Một nút ✕ ở đây
+  // đóng nó đi rồi không còn cách nào mở lại bằng chuột: nó không nằm trong chồng cửa sổ nên
+  // `dongBangTrenCung()` cũng không biết tới. Thu/mở bằng nút ▾ ở ngay dưới, và bằng phím Q.
+  // Tên tab rút còn một hai chữ: cột rộng 190px, tên đầy đủ ("★ Chính Tuyến") xuống dòng và
+  // hàng tab cao gấp đôi phần nội dung nó dẫn vào.
+  let html = moBang({ tieu:'Nhiệm Vụ', mat:'📜', chon:window.qlogTab, ham:'setQlogTab', dongX:false,
+    tabs:[{ id:'track', ten:'Đang Làm' }, { id:'main', ten:'Chính' },
+          { id:'side', ten:'Phụ' }, { id:'story', ten:'Ký Sự' }] });
+  html += `<button id="btn-questtracker" title="Thu/mở Nhật Ký (Q)">${
+    SETTINGS.questTracker ? '▾ Thu gọn' : '▸ Mở ra'}</button>`;
+  // Tab ĐANG LÀM giữ nguyên `trackerHtml()` — mục tiêu chính tuyến đang chạy, phụ tuyến đang
+  // nhận, và Mục Tiêu Hôm Nay. `updateHud()` ghi đè nội dung `#quest-tracker` mỗi khung (có
+  // so chuỗi trước khi ghi), nên phần này phải là MỘT thẻ riêng có id đó.
+  if (window.qlogTab === 'track'){
+    html += `<div id="quest-tracker"${SETTINGS.questTracker ? '' : ' class="qt-closed"'}>${trackerHtml()}</div>`;
+  } else if (window.qlogTab === 'main'){
     if (!QUESTS.length) html += `<div class="ql-row" style="opacity:.7">Chưa có nhiệm vụ chính tuyến. Chuỗi cũ đã gỡ để dựng lại theo lối chơi mới.</div>`;
     let lastCh = '';
     QUESTS.forEach((q, i) => {

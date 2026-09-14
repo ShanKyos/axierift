@@ -24,8 +24,8 @@ window.I18N_EN = {
 
   'help.g.panels': 'PANELS',
   'help.k.char': 'Character — stats and sub-systems',
-  'help.k.gear': 'Equipment',
-  'help.k.bag': 'Inventory',
+  'help.k.gear': 'Equipment + Inventory — the paper doll next to the bag grid',
+  'help.k.bag': 'The same window as V',
   'help.k.skillp': 'Skills',
   'help.k.map': 'World Map',
   'help.k.quest': 'Quest Log',
