@@ -224,23 +224,25 @@ html,body { width:100%; height:100%; overflow:hidden; background:var(--bg-deep);
    Mép phải đã kín: ví ba loại tiền, nút PK/TỰ ĐÁNH, bản đồ thu nhỏ, bảng theo dõi nhiệm vụ.
    Đặt cột menu vào đó là nó nằm đè lên bảng nhiệm vụ (đã thấy đúng vậy ở ảnh chụp đầu tiên).
    Mép trái chỉ có cụm tên + đồng hồ ở sát đỉnh, từ đó xuống dưới trống trơn. */
-/* ── MENU HỆ THỐNG: HÀNG NGANG Ở ĐÁY, không còn cột dọc bên trái ────────────────────────
-   Chủ dự án chốt sau khi nhìn ảnh chụp: cột dọc bên trái chiếm một dải cao giữa màn hình,
-   đúng chỗ nhân vật hay đứng, và nó là thứ DUY NHẤT của giao diện nằm ở sườn trái — nên nó
-   đọc ra như một thanh công cụ dán thêm chứ không ra một phần của HUD.
-   Nay nó nằm cùng làn với thanh chiến đấu, sát mép phải: cả HUD gom về ba khối (góc trái là
-   mình, đáy là thao tác, cột phải là thế giới) thay vì bốn mảnh rải bốn phía.
-   ⚠ `bottom` phải bằng `#bottom-hud` (20px) để hai khối thẳng hàng — lệch vài pixel ở hai
-   khối cạnh nhau thì mắt đọc ra là hỏng, không đọc ra là thiết kế. */
-#menu-cot { position:fixed; right:10px; bottom:20px; z-index:12;
-  display:flex; flex-direction:row-reverse; align-items:center; gap:4px; pointer-events:auto; }
-#mc-thu { width:26px; height:22px; padding:0; cursor:pointer; font-size:11px; line-height:1;
+/* ── MENU HỆ THỐNG: CẮM TRONG CỘT PHẢI ─────────────────────────────────────────────────
+   Ba chặng, ghi cả ba vì mỗi chặng hỏng một kiểu:
+   · cột dọc mép TRÁI — chiếm một dải cao giữa màn hình đúng chỗ nhân vật hay đứng, và là
+     thứ duy nhất của giao diện nằm ở sườn trái nên đọc ra như thanh công cụ dán thêm;
+   · hàng ngang đáy PHẢI — hết chắn màn, nhưng vẫn là một khối ĐỨNG RIÊNG, tức giao diện có
+     thêm một chỗ nữa phải nhớ;
+   · nay nằm TRONG `#cot-phai`. Chủ dự án chốt: "để UI qua bên phải cho đồng nhất".
+   ⇒ Cả bên phải là MỘT cột: ví · tự đánh · bản đồ nhỏ · nhiệm vụ · menu.
+   ⚠ `position:static` — nó là con của một khối đã có chỗ; để `fixed` thì nó rơi khỏi cột và
+   hai bên tự trôi mỗi lần cột cao thấp khác đi. */
+#menu-cot { position:relative; display:flex; flex-direction:column; gap:4px; pointer-events:auto; }
+/* Bảy nút xếp LƯỚI 4 cột: một hàng ngang bảy nút cần 4×36+… = 264px, quá bề ngang cột (180px
+   lọt lòng). Bốn cột ăn 156px, còn thở được. */
+#mc-list { display:grid; grid-template-columns:repeat(4, 1fr); gap:4px; justify-items:center; }
+#mc-thu { width:100%; height:16px; padding:0; cursor:pointer; font-size:9px; line-height:1;
   color:var(--gold); background:linear-gradient(180deg,rgba(38,32,22,.92),rgba(18,15,10,.94));
   border:1px solid rgba(198,158,74,.55); border-radius:4px; }
 #mc-thu:hover { border-color:var(--gold); background:rgba(58,46,28,.95); }
-#mc-list { display:flex; flex-direction:row; gap:4px; }
-/* 52 → 36px: cùng lý do đã ghi ở `.skill`. Sáu nút 52px xếp ngang chiếm 340px cạnh một thanh
-   chiến đấu vừa thu còn 430 — nó sẽ to ngang thứ chính. */
+/* 52 → 36px: cùng lý do đã ghi ở `.skill`. */
 .mc-btn { position:relative; width:36px; height:36px; padding:0; cursor:pointer; border:none;
   background:none; border-radius:7px; display:flex; align-items:center; justify-content:center;
   font-family:inherit; color:var(--gold); font-size:11px; font-weight:700; }
@@ -262,11 +264,11 @@ html,body { width:100%; height:100%; overflow:hidden; background:var(--bg-deep);
 .mc-btn.khoa img { filter:grayscale(1) brightness(.5); }
 .mc-btn.khoa::after { content:'🔒'; position:absolute; right:1px; bottom:0; font-size:10px;
   line-height:1; text-shadow:0 1px 2px #000; }
-.mc-menu { font-size:10px; letter-spacing:.2px; height:36px; width:40px; border-radius:5px;
+.mc-menu { font-size:9px; letter-spacing:.2px; height:36px; width:36px; border-radius:5px;
   background:linear-gradient(180deg,rgba(38,32,22,.94),rgba(18,15,10,.96));
   box-shadow:inset 0 0 0 1px rgba(198,158,74,.5); }
 .mc-menu:hover { box-shadow:inset 0 0 0 1px var(--gold); color:#ffe9b0; }
-#mc-drop { position:absolute; right:0; bottom:calc(100% + 6px); display:flex; flex-direction:column;
+#mc-drop { position:absolute; right:calc(100% + 6px); bottom:0; display:flex; flex-direction:column;
   gap:3px; min-width:200px; padding:6px; border-radius:6px;
   background:linear-gradient(180deg,rgba(28,23,16,.97),rgba(14,11,8,.98));
   box-shadow:inset 0 0 0 1px rgba(198,158,74,.55), 0 8px 24px rgba(0,0,0,.7); }

@@ -16487,6 +16487,10 @@ for (const [_id, _pn] of [['btn-char','char'], ['btn-inv','inv'], ['btn-bag','ba
     if (!drop.classList.contains('hidden') && !drop.contains(e2.target) && e2.target !== bmenu)
       drop.classList.add('hidden');
   });
+  // ⚠ `btn-qlog` KHÔNG còn đi qua togglePanel: Nhật Ký đã cắm vào cột nên `map['qlog']` là
+  // `undefined`, và togglePanel gặp khoá lạ thì IM LẶNG bỏ qua — nút vẫn bấm được, vẫn kêu,
+  // và không làm gì cả. Kiểu hỏng đó không ném lỗi nên không ai phát hiện.
+  { const bq = el('btn-qlog'); if (bq) bq.addEventListener('click', () => toggleQlog()); }
   const bsk = el('btn-sukien');
   if (bsk) bsk.addEventListener('click', () => { if (window.openEventBoard) window.openEventBoard(); });
   // Khôi phục trạng thái thu gọn đã lưu

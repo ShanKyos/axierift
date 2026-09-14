@@ -159,6 +159,28 @@ const ok = m => console.log('  ok  ' + m);
   if (ql.coX) fail('§6 khối cắm vẫn còn nút ✕ — bấm vào là mất hẳn, không có đường mở lại bằng chuột');
   else ok('§6 khối cắm không có nút ✕');
 
+  // ── 7. CẢ BÊN PHẢI LÀ MỘT CỘT ─────────────────────────────────────────────────────────
+  // Menu hệ thống đã đi ba chặng (mép trái → đáy phải → trong cột). Mệnh đề này khoá chặng
+  // cuối: nó phải nằm TRONG `#cot-phai`, và nút Nhiệm Vụ của nó phải thật sự làm gì đó —
+  // `togglePanel('qlog')` nay là lệnh CÂM (khoá lạ thì hàm im lặng bỏ qua), nên một cái nút
+  // trỏ nhầm vào đó vẫn bấm được, vẫn kêu, và không đổi một pixel nào.
+  const mc = await p.evaluate(() => {
+    const m = document.getElementById('menu-cot'), c = document.getElementById('cot-phai');
+    const q = document.getElementById('panel-qlog');
+    if (!m || !c || !q) return { loi:'thiếu phần tử' };
+    const truoc = q.classList.contains('ql-thu');
+    const b = document.getElementById('btn-qlog');
+    if (b) b.click();
+    return { trongCot: c.contains(m), doiTrangThai: !!b && q.classList.contains('ql-thu') !== truoc };
+  });
+  if (mc.loi) fail('§7 ' + mc.loi);
+  else {
+    if (!mc.trongCot) fail('§7 menu hệ thống nằm ngoài cột phải — giao diện lại có thêm một khối rời phải nhớ chỗ');
+    else ok('§7 menu hệ thống nằm trong cột phải');
+    if (!mc.doiTrangThai) fail('§7 nút Nhiệm Vụ trong menu không đổi được trạng thái Nhật Ký — gần như chắc chắn nó còn trỏ vào togglePanel(\'qlog\'), mà khoá đó nay không tồn tại nên hàm im lặng bỏ qua');
+    else ok('§7 nút Nhiệm Vụ trong menu thu/mở được Nhật Ký');
+  }
+
   console.log('errors:', errs.slice(0, 5));
   if (errs.length) fail('có lỗi JS trên trang');
   await b.close();
