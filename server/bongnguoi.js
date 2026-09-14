@@ -14,6 +14,11 @@
 // Chạy:   node server/bongnguoi.js            (cổng 8877, đổi bằng PORT=…)
 // Sức khoẻ: curl http://localhost:8877/health
 //
+// ── KHÔNG PHỤ THUỘC GÌ NGOÀI NODE ───────────────────────────────────────────────────────
+// Chỉ cần `node`, không cần `npm install`. VPS production chưa bao giờ có Node (nó là nginx
+// phục vụ tệp tĩnh), nên thêm `ws` là kéo theo cả cây phụ thuộc của repo — đo được 63 gói
+// prod / 467 MB — chỉ để chạy tệp này. Lý do đầy đủ ở đầu `server/wsnho.js`.
+//
 // ── Vì sao thư mục riêng, không cắm vào `api/` ──────────────────────────────────────────
 // `api/` là vỏ Hono+tRPC có sẵn (đăng nhập Google/ví Ronin, lưu cloud, bảng xếp hạng) và nó
 // KHÔNG chạy trên production — nginx trỏ thẳng vào `public/game`. Trộn hai thứ vào nhau nghĩa
@@ -21,7 +26,7 @@
 // (`p.dantian?.realm`). Để riêng thì bật được từng cái một.
 
 import { createServer } from 'node:http';
-import { WebSocketServer } from 'ws';
+import { taoWS } from './wsnho.js';
 
 const PORT      = parseInt(process.env.PORT || '8877', 10);
 const NHIP_MS   = 100;     // 10 Hz. Đo trong khảo sát: 9 người chơi đóng gói JSON thô là 528 byte
@@ -78,11 +83,11 @@ const http = createServer((req, res) => {
   res.end('bongnguoi: chi co /health va /ws\n');
 });
 
-const wss = new WebSocketServer({ server: http, path: '/ws', maxPayload: 4096 });
+const wss = taoWS(http, { duong: '/ws', maxGoi: 4096 });
 
-wss.on('connection', (ws) => {
+wss.khiNoi((ws) => {
   if (nguoi.size >= NGUOI_MAX) {
-    ws.close(1013, 'day');   // 1013 = try again later
+    ws.dong(1013, 'day');   // 1013 = try again later
     return;
   }
   const id = idKe++;
@@ -93,21 +98,20 @@ wss.on('connection', (ws) => {
   };
   nguoi.set(id, st);
   ws.__id = id;
-  ws.send(JSON.stringify({ t: 'chao', id }));
+  ws.gui(JSON.stringify({ t: 'chao', id }));
   console.log(`[+] ${id} vao — dang co ${nguoi.size}`);
 
-  ws.on('message', (raw) => {
+  ws.khiTin((raw) => {
     let tin;
     try { tin = JSON.parse(raw); } catch { return; }   // rác thì bỏ qua, đừng đá
     if (!tin || typeof tin !== 'object') return;
     if (tin.t === 'pos') capNhat(st, tin);
   });
 
-  ws.on('close', () => {
+  ws.khiDong(() => {
     nguoi.delete(id);
     console.log(`[-] ${id} roi — con ${nguoi.size}`);
   });
-  ws.on('error', () => { /* close sẽ dọn */ });
 });
 
 /* ── Vòng phát ảnh chụp ──────────────────────────────────────────────────────────────────
@@ -132,7 +136,7 @@ setInterval(() => {
   }
 
   for (const ws of wss.clients) {
-    if (ws.readyState !== ws.OPEN) continue;
+    if (!ws.dangMo) continue;
     const ta = nguoi.get(ws.__id);
     if (!ta || !ta.map) continue;
     const cung = theoMap.get(ta.map) || [];
@@ -149,7 +153,7 @@ setInterval(() => {
     // Gửi kèm `map` dù client cũng biết map của chính nó: ảnh chụp phải TỰ NÓI nó thuộc bản đồ
     // nào. Không thì client suy ngầm "ảnh này chắc là map mình đang đứng", và đúng lúc người
     // chơi vừa qua cổng thì một ảnh của map cũ tới sau sẽ thả vài cái bóng vào map mới.
-    ws.send(JSON.stringify({ t: 'anh', ts: gio, map: ta.map, ds }));
+    ws.gui(JSON.stringify({ t: 'anh', ts: gio, map: ta.map, ds }));
   }
 }, NHIP_MS);
 
@@ -161,7 +165,7 @@ http.listen(PORT, '0.0.0.0', () => {
 for (const sig of ['SIGINT', 'SIGTERM']) {
   process.on(sig, () => {
     console.log(`nhan ${sig}, dong ${wss.clients.size} ket noi`);
-    for (const ws of wss.clients) ws.close(1001, 'bao tri');
+    for (const ws of wss.clients) ws.dong(1001, 'bao tri');
     http.close(() => process.exit(0));
     setTimeout(() => process.exit(0), 2000).unref();
   });
