@@ -50,6 +50,15 @@ fi
 echo "cổng $PORT · commit $(cat "$OUT/commit.txt")" >> "$OUT/all.log"
 
 export NODE_PATH="${NODE_PATH:-/opt/node22/lib/node_modules}"
+# Bài nào cần dựng một TIẾN TRÌNH của repo (test_bongnguoi dựng server/bongnguoi.js) thì phải
+# biết thư mục repo — bài chạy từ $OUT/src nên `__dirname/..` trỏ vào thư mục kết quả.
+#
+# ⚠ Tệp dưới server/ KHÔNG được đóng băng cùng public/game. Chủ ý: lý do đóng băng là bộ chạy
+# đọc game qua HTTP nên sửa file giữa chừng làm hỏng kết quả — `server/` thì được nạp một lần
+# lúc spawn, không phục vụ qua HTTP, và nó `import 'ws'` nên buộc phải nằm trong cây có
+# node_modules (ESM không tra NODE_PATH). Sửa server/ giữa một lượt chạy thì bài nào chạy sau
+# dùng bản mới; ở một tệp 170 dòng thì đó là đánh đổi chấp nhận được, nhưng đừng quên nó.
+export AXIE_REPO="$ROOT"
 # Tệp phụ trợ trong tests/ (không phải test_*.js) phải đi theo: bài kiểm require chúng theo
 # đường dẫn tương đối, mà bài thì chạy từ $OUT/src chứ không phải từ tests/.
 for h in "$ROOT"/tests/*.js; do

@@ -838,7 +838,16 @@ const BAY_TOCDO = [0.06, 0.10, 0.14];
 // Giữ ở biến MODULE chứ không nhét vào `player`: đây là trạng thái VẼ, không phải trạng thái
 // trò chơi. Nhét vào player thì nó chui vào save, rồi lần nạp sau nhân vật xuất hiện lơ lửng ở
 // một độ cao cũ chẳng liên quan gì tới đôi cánh đang mặc.
-let bayCao = 0;
+// Độ cao bay đang nội suy. Là trạng thái VẼ chứ không phải trạng thái trò chơi (xem ghi chú
+// dài trong drawPlayer), nên nó nằm ngoài `player` — nhét vào đó là nó chui vào save.
+// ⚠ Nhưng nó cũng KHÔNG được là một ô nhớ dùng chung: từ lúc có người chơi thứ hai trên màn,
+// hai người đeo cánh khác bậc sẽ giành nhau đúng một biến và độ cao của cả hai nhấp nháy theo
+// thứ tự vẽ. Khoá theo `veKhoa(p)` — mỗi thân người một ô.
+const _bayCao = new Map();
+function veKhoa(p){ return (p && p._netId != null) ? 'n' + p._netId : 'ta'; }
+// ⚠ Kiểm `!= null`, KHÔNG dùng `||`: id 0 là giá trị giả nên `||` sẽ trả 'ta' và thân người
+// từ xa số 0 dùng chung ô nhớ với người chơi của mình. Máy chủ hiện cấp id từ 1 nên chưa nổ —
+// tức là đúng kiểu lỗi ngủ yên cho tới khi ai đó sửa `idKe` ở một tệp khác.
 // Bậc của một đôi cánh, đọc từ chính món đồ. Món đời cũ mang id 'thienthan'/'tieuquy'
 // (bậc 1) hoặc 'phuongduc'/'hacma' (bậc 2) — loadGame() đổi chúng sang đôi của lớp.
 function wingBac(it){ return (it && it.wingBac) || 1; }
@@ -11383,26 +11392,7 @@ function update(dt){
   // 1,74 vòng/giây × 94 px = 165 px/giây — tức 35% quãng đường là TRƯỢT CHÂN. Nhìn ra ngay.
   // Nay nhịp = quãng đường / sải chân, nên nhanh chậm gì bàn chân cũng bám đất: bị làm chậm
   // thì bước ngắn lại, có Cánh tăng tốc thì sải dài ra, không phải dò lại con số nào.
-  {
-    const _v = player.speed || 209;
-    const _sai = SAI_CHAN[dangChay(player) ? 'r' : 'w'];   // CÙNG luật với khối vẽ, xem dangChay()
-    player.walkPh = (player.walkPh || 0) + dt * (player.moving ? (_v / _sai) * Math.PI * 2 : 2.2);
-  }
-  // ── QUÁN TÍNH PHỤ (secondary motion) ──
-  // Trước đây áo choàng đọc thẳng tư thế tức thời nên nó DÍNH vào chân: dừng là dừng ngay,
-  // đổi hướng là bật ngay, không có sức nặng. Hai con lò xo dưới đây chạy TRỄ sau chuyển
-  // động thật, nên vải/lông/mảnh phép đi thêm một nhịp rồi mới lắng — đúng cảm giác có khối
-  // lượng. Chỉ 2 số, tính trong update() một lần, mọi bộ phận cùng đọc.
-  {
-    const tgt = player.moving ? ml : 0;            // đích: đang chạy hay đứng
-    const K = 9.5, D = 5.2;                        // độ cứng · giảm chấn (tinh chỉnh bằng mắt)
-    player.sway = player.sway || 0; player.swayV = player.swayV || 0;
-    player.swayV += ((tgt - player.sway) * K - player.swayV * D) * dt;
-    player.sway += player.swayV * dt;
-    // hướng bạt: vải luôn hất về phía NGƯỢC hướng đang đi, và cũng trễ theo
-    const fx = player.moving ? -mx / Math.max(1, ml) : 0;
-    player.swayDir = (player.swayDir || 0) + (fx - (player.swayDir || 0)) * Math.min(1, dt * 6.5);
-  }
+  thanNhip(player, dt, mx, my, ml);
   if (ml > 0.01){
     mx /= Math.max(1,ml); my /= Math.max(1,ml);
     let spd = player.speed || 190;
@@ -12248,6 +12238,9 @@ function render(){
     else if (m.deadT > 0) ents.push({ y:m.y, kind:'deadmob', m }); // xác quái tan dần thành vệt mực loang
   }
   ents.push({ y:player.y, kind:'player' });
+  // Người chơi khác: CÙNG danh sách, cùng luật xếp theo y — xem khối "Bóng Người".
+  for (const np of window.NETPLAYERS) if (np.map === curMap) ents.push({ y:np.y, kind:'netplayer', np });
+  netDonBayCao();
   for (const h of horses) ents.push({ y:h.y, kind:'horse', h }); // GDD Đợt 2 B5
   for (const t of thuDan) ents.push({ y:t.y, kind:'thu', t });   // thú nền xếp lớp như mọi thứ khác
   for (const d of sortedDecor) if (d.type==='tree') ents.push({ y:d.y, kind:'tree', d });
@@ -12277,6 +12270,7 @@ function render(){
         ctx.restore();
         break;
       }
+      case 'netplayer': drawPlayer(e.np); veNhanNet(e.np); break;
       case 'player':
         drawPlayer();
         // vòng sáng tịnh tâm quanh người khi đang đứng trong suối hồi phục
@@ -13891,6 +13885,34 @@ const SAI_CHAN = { w: SAI_CHAN_NUONG.w * NV_CAO / HERO_H,
 // đọc một ngưỡng tốc độ; tách chúng ra hai luật khác nhau là bàn chân trượt đất — vẽ khối đi mà
 // tính sải chân của khối chạy thì mỗi vòng hụt ~40% quãng đường.
 const CHAY_TOCDO = 131;          // px/giây = 2,4 bước/giây × SAI_CHAN.w — xem tính toán ở trên
+// ═══ NHỊP BƯỚC + QUÁN TÍNH PHỤ — MỘT luật, hai nơi gọi ═══════════════════════════════════
+// Tách ra khỏi `update()` khi có người chơi thứ hai trên màn: thân người của người khác cũng
+// phải bước và cũng phải có vải bay, mà chép công thức sang chỗ khác là dựng bản sao thứ hai
+// của một luật đang sống — sửa một bên là hai bên lệch, và kiểu lệch ấy hiện ra thành "bàn chân
+// trượt đất" chứ không thành lỗi nào đọc được. `update()` gọi nó cho người chơi của mình,
+// `net.js` gọi nó cho từng thân người từ xa.
+//
+// `mx,my` là hướng đi đã chuẩn hoá chưa cũng được — `ml` mới là độ dài dùng làm đích lò xo.
+function thanNhip(p, dt, mx, my, ml){
+  // Nhịp = quãng đường / sải chân, nên nhanh chậm gì bàn chân cũng bám đất. ⚠ `dangChay` phải
+  // là CÙNG hàm mà khối vẽ dùng để chọn bảng khung; tách ra hai luật là trượt chân ~40%.
+  const _v = p.speed || 209;
+  const _sai = SAI_CHAN[dangChay(p) ? 'r' : 'w'];
+  p.walkPh = (p.walkPh || 0) + dt * (p.moving ? (_v / _sai) * Math.PI * 2 : 2.2);
+  // ── QUÁN TÍNH PHỤ (secondary motion) ──
+  // Trước đây áo choàng đọc thẳng tư thế tức thời nên nó DÍNH vào chân: dừng là dừng ngay,
+  // đổi hướng là bật ngay, không có sức nặng. Hai con lò xo dưới đây chạy TRỄ sau chuyển
+  // động thật, nên vải/lông/mảnh phép đi thêm một nhịp rồi mới lắng — đúng cảm giác có khối
+  // lượng. Chỉ 2 số, mọi bộ phận mềm cùng đọc.
+  const tgt = p.moving ? ml : 0;                 // đích: đang chạy hay đứng
+  const K = 9.5, D = 5.2;                        // độ cứng · giảm chấn (tinh chỉnh bằng mắt)
+  p.sway = p.sway || 0; p.swayV = p.swayV || 0;
+  p.swayV += ((tgt - p.sway) * K - p.swayV * D) * dt;
+  p.sway += p.swayV * dt;
+  // hướng bạt: vải luôn hất về phía NGƯỢC hướng đang đi, và cũng trễ theo
+  const fx = p.moving ? -mx / Math.max(1, ml) : 0;
+  p.swayDir = (p.swayDir || 0) + (fx - (p.swayDir || 0)) * Math.min(1, dt * 6.5);
+}
 function dangChay(p){
   return !!p && (p.speed || 0) >= CHAY_TOCDO;
 }
@@ -16098,9 +16120,85 @@ function heroVienVe(g, spr){
   g.drawImage(v, v._ox, v._oy, v._ow, v._oh);
 }
 
-function drawPlayer(){
-  const sect = SECTS[player.sect];
-  const p = player;
+// ═══════════ NGƯỜI CHƠI KHÁC — Giai đoạn 1 "Bóng Người" ═══════════════════════════════════
+//
+// `net.js` đổ thân người từ xa vào `window.NETPLAYERS`; `game.js` chỉ VẼ chúng. Không có net.js
+// (hoặc chưa khai máy chủ) thì mảng rỗng và **bản chơi một mình chạy y nguyên** — đó là chủ ý,
+// không phải làm dở: cả 170 bài hồi quy hiện có đều chạy trên đường không có mạng.
+//
+// ⚠ Thân người từ xa cắm vào ĐÚNG danh sách xếp lớp theo `y` cùng với quái, cây và người chơi
+// của mình. Vẽ chúng thành một lượt riêng trước/sau vòng vẽ thì chúng luôn nằm sau hết hoặc
+// trước hết mọi thứ — người đứng dưới gốc cây lại hiện đè lên tán, đúng lỗi mà cả hệ xếp lớp
+// sinh ra để tránh.
+window.NETPLAYERS = [];
+
+// Thân người từ xa phải có ĐỦ trường mà drawPlayer đọc (32 trường), nếu không nó ném giữa vòng
+// vẽ. Phần lớn là số đếm nội bộ do chính drawPlayer ghi, nên chỉ cần mồi 0; `equip` phải là một
+// đối tượng thật vì `p.equip && p.equip.canh` đọc thẳng vào nó.
+function netTaoThan(nid){
+  return { _netId: nid, map: '', x: 0, y: 0, face: 0, moving: false, sect: 'thieulam',
+           level: 1, name: '', hp: 1, maxHp: 1, speed: 190,
+           equip: {}, walkPh: 0, sway: 0, swayV: 0, swayDir: 0,
+           atkAnim: 0, castT: 0, hurtT: 0, poisonT: 0, deadT: 0,
+           nhayT: 0, noiT: 0, ltT: 0, nhat2: 0, buffAtkT: 0 };
+}
+window.netTaoThan = netTaoThan;
+
+// ⚠ CỬA ĐỌC BẮT BUỘC — `net.js` không tự lấy được `player` và `curMap`.
+// Cả hai khai bằng `let` ở tầng cao nhất của một script THƯỜNG, mà `let` ở tầng ấy **không** gắn
+// vào `window` (khác `var` và khác `function`). Đo được: `typeof window.player` → "undefined"
+// trong khi `typeof player` → "object". Nên `net.js` đọc `window.player` sẽ nhận `undefined`,
+// im lặng không gửi gì, không một lỗi nào in ra — đúng kiểu hỏng tệ nhất.
+// Ai đọc tới đây và định thêm trường: sửa ở ĐÂY, đừng cho net.js với tay vào phạm vi của game.
+window.netDoc = function(){ return { p: player, map: curMap }; };
+
+// Nhãn tên + thanh máu. ⚠ Đo bề rộng chữ MỘT LẦN rồi nhớ — cùng bài học đã ghi ở nhãn NPC:
+// ctx.measureText dựng lại hộp chữ mỗi lần gọi, đặt trong vòng vẽ là mỗi người mỗi khung một
+// lần đo.
+function veNhanNet(np){
+  // ⚠ BỌC save/restore. Hàm này đổi `font`, `fillStyle`, `textAlign`, `textBaseline` — mà nó
+  // chạy GIỮA vòng vẽ thực thể, nên thứ vẽ sau nó (quái, cây, cổng) sẽ thừa hưởng trạng thái
+  // canvas đã đổi. Kiểu rò này không ném lỗi, chỉ làm một nhãn nào đó lệch canh rồi thôi.
+  ctx.save();
+  const cao = NV_CAO * 0.78;
+  ctx.font = '12px "Be Vietnam Pro", sans-serif';
+  if (np._nhanW == null || np._nhanTen !== np.name){
+    np._nhanW = ctx.measureText(np.name || '?').width; np._nhanTen = np.name;
+  }
+  const w = np._nhanW, x = np.x, y = np.y - cao - 10;
+  // thanh máu — rẻ, và đứng cạnh một người không biết họ còn bao nhiêu máu thì vô nghĩa
+  const bw = 34, bh = 3, hpK = clamp((np.hp || 0) / Math.max(1, np.maxHp || 1), 0, 1);
+  ctx.fillStyle = 'rgba(8,10,14,.62)';
+  ctx.fillRect(x - bw/2 - 1, y + 3, bw + 2, bh + 2);
+  ctx.fillStyle = hpK > 0.3 ? '#5fd07a' : '#d05f5f';
+  ctx.fillRect(x - bw/2, y + 4, bw * hpK, bh);
+  // nền chữ: tên trắng trên cỏ sáng là mất hút — cùng lý do món đồ dưới đất phải có tấm nền tối
+  ctx.fillStyle = 'rgba(8,10,14,.55)';
+  ctx.fillRect(x - w/2 - 4, y - 12, w + 8, 15);
+  ctx.textAlign = 'center'; ctx.textBaseline = 'alphabetic';
+  ctx.fillStyle = '#dfe6f5';
+  ctx.fillText(np.name || '?', x, y);
+  ctx.restore();
+}
+
+// Dọn ô nhớ độ cao bay của người đã rời đi. Ở 10 người thì bảng này bé tí, nhưng một phiên dài
+// có nhiều lượt vào/ra thì nó phình mãi — và một Map phình mãi là rò rỉ, dù chậm.
+function netDonBayCao(){
+  if (_bayCao.size < 48) return;
+  const con = new Set(['ta']);
+  for (const np of window.NETPLAYERS) con.add(np._netId);
+  for (const k of _bayCao.keys()) if (!con.has(k)) _bayCao.delete(k);
+}
+
+// ⚠ `p` là THÂN NGƯỜI phải vẽ, không nhất thiết là `player`. Trước bản nối mạng hàm này không
+// nhận tham số nào và dòng thứ ba là `const p = player` — tức cả tầng vẽ khẳng định thế giới chỉ
+// có một người chơi. Nay người chơi khác đi qua cùng một cửa này, nên hai luật:
+//   · không đọc `player` trong thân hàm, chỉ đọc `p`;
+//   · mọi trạng thái NHỚ GIỮA HAI KHUNG phải khoá theo `veKhoa(p)`, không để ở biến module.
+// Gọi không tham số vẫn vẽ người chơi của mình — 12144 và mọi lời gọi cũ chạy y nguyên.
+function drawPlayer(p){
+  p = p || player;
+  const sect = SECTS[p.sect];
   // ═══ LAYERING: đất → sau lưng → người → vũ khí → aura quỹ đạo → danh hiệu ═══
   const riding = false; // không còn cơ chế cưỡi; giữ cờ vì vài phép tính bóng đổ đọc nó
   const now = performance.now();
@@ -16109,15 +16207,18 @@ function drawPlayer(){
   // và mọi thứ dính tới mặt đất phải theo: bóng đổ co lại, nhịp bước chân tắt, bụi gót không
   // còn chỗ để nổ. Bậc cánh càng cao thì bay càng cao.
   //
-  // Giữ ở biến MODULE chứ không nhét vào `player`: đây là trạng thái VẼ, không phải trạng thái
-  // trò chơi. Nhét vào player thì nó chui vào save, rồi lần nạp sau nhân vật xuất hiện ở một
-  // độ cao cũ chẳng liên quan gì tới đôi cánh đang mặc.
+  // Giữ NGOÀI `player`: đây là trạng thái VẼ, không phải trạng thái trò chơi. Nhét vào player
+  // thì nó chui vào save, rồi lần nạp sau nhân vật xuất hiện ở một độ cao cũ chẳng liên quan
+  // gì tới đôi cánh đang mặc. Nhưng cũng không để ở MỘT biến module — xem `_bayCao`.
   const _canhIt = p.equip && p.equip.canh;
   const _bayDich = _canhIt ? BAY_CAO[clamp(wingBac(_canhIt), 1, 3) - 1] : 0;
   // Xấp xỉ hàm mũ theo KHUNG HÌNH: giá trị chỉ dùng để vẽ, lệch vài phần trăm giữa 60 và
   // 144 Hz không ai thấy được, mà đổi lại không phải luồn dt xuống tận đây.
+  const _bayK0 = veKhoa(p);
+  let bayCao = _bayCao.get(_bayK0) || 0;
   bayCao += (_bayDich - bayCao) * 0.08;
   if (Math.abs(_bayDich - bayCao) < 0.05) bayCao = _bayDich;
+  _bayCao.set(_bayK0, bayCao);
   const bayK = bayCao / Math.max(1, BAY_CAO[2]);        // 0 = chạm đất, 1 = bay cao nhất
   let yOff = -bayCao;
   // Nhịp bước chân chỉ có nghĩa khi chân còn chạm đất. Đang bay mà vẫn nhún như đang chạy bộ
@@ -27967,11 +28068,17 @@ window.onBoxDragStart = function(ev, t){
 
 // ---------- Ma Tôn Giáng Thế — 4 giờ/lần (0h 4h 8h 12h 16h 20h), luân phiên Hạ/Thượng Giới ----------
 let MATON = { next: 0, warned: false, active: false, map: null, endsAt: 0 };
+// ⚠ MỐC GIỜ TÍNH BẰNG SỐ HỌC TRÊN EPOCH, KHÔNG QUA getHours().
+// `getHours()` trả giờ ĐỊA PHƯƠNG, nên bản cũ cho ra mốc khác nhau ở mỗi múi giờ: đo được cùng
+// một khoảnh khắc `2026-09-14T10:30Z` ra 12:00Z ở UTC, 13:00Z ở Asia/Ho_Chi_Minh và 14:30Z ở
+// Asia/Kolkata. Trớ trêu là `matonMapFor()` ngay dưới đây LẠI đúng — nó là số học thuần trên
+// epoch — nên hai người ở hai múi giờ đồng ý MAP nào bị đánh mà không đồng ý LÚC NÀO.
+// Với game chơi một mình thì không ai biết; với "cùng nhau đánh một con boss" thì nó phá đúng
+// cái tính năng đó. Nay cả mốc lẫn map cùng đọc một con số `slot`, nên chúng không lệch được.
+// Epoch 0 = 1970-01-01T00:00:00Z, tức đúng một mốc 0h ⇒ chia thẳng cho MATON_CHU_KY là ra.
+const MATON_CHU_KY = 14400000;   // 4 giờ — 0h · 4h · 8h · 12h · 16h · 20h UTC
 function matonNextBoundary(after){
-  const d = new Date(after); d.setMinutes(0, 0, 0);
-  d.setHours(d.getHours() + 1);
-  while (d.getHours() % 4 !== 0) d.setHours(d.getHours() + 1);
-  return d.getTime();
+  return (Math.floor(after / MATON_CHU_KY) + 1) * MATON_CHU_KY;
 }
 function matonMapFor(t){
   const slot = Math.floor(t / 14400000);
@@ -28039,10 +28146,11 @@ const GOLDEN_FIELD = ['corran','ngoai','chungnam','daohoa','comoc','tuyettinh','
 // Bug Tribe Tunnels (42-56); Rẻo Rừng Corran nhận bậc 1 cùng với dải 1-12.
 const GOLDEN_BOX = { corran:1, ngoai:2, chungnam:2, daohoa:3, comoc:3, tuyettinh:4, mongco:4, nhanmon:5 };
 let GOLDEN = { next: 0, warned: false, active: false, map: null, endsAt: 0, spawnedOn: null, left: 0 };
+// Lệch pha 2 giờ so với Hung Thần ⇒ cứ 2 giờ thật có một sự kiện thế giới. Số học trên epoch,
+// KHÔNG dùng getHours() — xem ghi chú dài ở `matonNextBoundary`.
+const GOLDEN_LECH = 7200000;     // 2h · 6h · 10h · 14h · 18h · 22h UTC
 function goldenNextBoundary(after){
-  const d = new Date(after); d.setMinutes(0, 0, 0); d.setHours(d.getHours() + 1);
-  while (d.getHours() % 4 !== 2) d.setHours(d.getHours() + 1); // 2h · 6h · 10h · 14h · 18h · 22h
-  return d.getTime();
+  return (Math.floor((after - GOLDEN_LECH) / MATON_CHU_KY) + 1) * MATON_CHU_KY + GOLDEN_LECH;
 }
 function goldenMapFor(t){ return GOLDEN_FIELD[Math.floor(t / 14400000) % GOLDEN_FIELD.length]; }
 function goldenPal(){ // bảng màu dát vàng cho quái khung xương
@@ -28131,11 +28239,10 @@ const RIFT_WARN_MS   = 15*60000;   // báo trước 15 phút — sự kiện l�
 const RIFT_MAX_KILLS = 3;          // chạy map kiếm thêm được, nhưng tối đa 3 con/lượt
 const RIFT_MIN_LV    = 15;         // dưới cấp này vực không nứt — xem ghi chú ở riftCanSpawn()
 let RIFT = { next: 0, warned: false, active: false, endsAt: 0, done: {}, kills: 0 };
+// Số học trên epoch, KHÔNG dùng getHours() — xem ghi chú dài ở `matonNextBoundary`.
+const RIFT_CHU_KY = 21600000;    // 6 giờ — 0h · 6h · 12h · 18h UTC
 function riftNextBoundary(after){
-  const d = new Date(after); d.setMinutes(0, 0, 0);
-  d.setHours(d.getHours() + 1);
-  while (d.getHours() % 6 !== 0) d.setHours(d.getHours() + 1); // 0h · 6h · 12h · 18h
-  return d.getTime();
+  return (Math.floor(after / RIFT_CHU_KY) + 1) * RIFT_CHU_KY;
 }
 function riftBoxTier(){ return clamp(Math.floor(player.level/15) + 2, 1, 7); }
 // Ảnh chụp cho thấy vì sao hai chốt dưới đây là bắt buộc: bản đầu boss aggro toàn map + spawn
