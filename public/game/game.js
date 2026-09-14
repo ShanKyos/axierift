@@ -9121,7 +9121,13 @@ document.getElementById('btn-music').addEventListener('click', ()=>{
 });
 
 // ---------- Input ----------
-window.addEventListener('keydown', e=>{
+// ⚠ HÀM CÓ TÊN, VÀ PHƠI RA `window`. Không phải để gọi từ ngoài — để bài kiểm ĐỌC ĐƯỢC nó.
+// Bảng Hướng Dẫn (F6) liệt kê phím bằng dữ liệu tay, nên nó có thể nói dối ngay lần đầu ai đó
+// đổi một phím ở dưới đây mà quên sửa bảng — mà một bảng dạy chơi nói sai phím thì tệ hơn hẳn
+// không có bảng nào. `tests/test_huongdan.js §3` lấy `phimXuong.toString()` rồi soi từng chữ
+// cái trong HD_BANG có thật sự được bắt hay không. Đổi arrow này về vô danh là gỡ mất cái chốt
+// đó, và nó sẽ gỡ trong im lặng.
+function phimXuong(e){
   if (e.target && e.target.tagName === 'INPUT') return; // đang gõ console playtest
   keys[e.key.toLowerCase()] = true;
   if (e.key === ' ') { e.preventDefault(); doSpace(); }
@@ -9148,6 +9154,9 @@ window.addEventListener('keydown', e=>{
   if (e.key.toLowerCase()==='q') togglePanel('qlog');
   if (e.key.toLowerCase()==='u'){ SETTINGS.minimap = !SETTINGS.minimap; saveSettings(); }
   if (e.key.toLowerCase()==='o') togglePanel('settings');
+  // F6 — bảng Hướng Dẫn & Phím Tắt. preventDefault vì F6 mặc định của trình duyệt là nhảy
+  // focus sang thanh địa chỉ: không chặn thì bấm một cái là mất luôn bàn phím khỏi game.
+  if (e.key === 'F6'){ e.preventDefault(); togglePanel('help'); }
   // F không còn mở lò từ xa nữa — nó ĐƯA NGƯỜI CHƠI TỚI thợ rèn. Đứng cạnh rồi bấm F thì mở.
   if (e.key.toLowerCase()==='f') window.openForgePanel();
   if (e.key.toLowerCase()==='z' && player && !dead) toggleAuto();
@@ -9165,7 +9174,9 @@ window.addEventListener('keydown', e=>{
   // nên mở Túi Đồ lên xem giữa lúc đang dở bảng Kỹ Năng thì bấm ESC là mất cả hai. Nay đóng
   // đúng cửa MỞ SAU CÙNG (đỉnh chồng `_bangChong`), muốn dọn sạch thì bấm tiếp.
   if (e.key === 'Escape'){ if (window.ngocCam) window.buongNgoc(); else dongBangTrenCung(); }
-});
+}
+window.addEventListener('keydown', phimXuong);
+window.phimXuong = phimXuong;
 window.addEventListener('keyup', e=> keys[e.key.toLowerCase()] = false);
 // Giữ ALT: hiện nhãn tên MỌI món dưới đất, không chỉ món gần. Nhả ra là về như cũ.
 window.addEventListener('keydown', e => { if (e.key === 'Alt'){ window._lootShowAll = true; e.preventDefault(); } });
@@ -16410,7 +16421,8 @@ function skMau(id){
 // NGAY LÚC NẠP TRANG và giết chết mọi thứ đăng ký phía sau nó.
 for (const [_id, _pn] of [['btn-char','char'], ['btn-inv','inv'], ['btn-bag','bag'],
                           ['btn-skill','skill'], ['btn-map','map'],
-                          ['btn-settings','settings'], ['btn-qlog','qlog']]){
+                          ['btn-settings','settings'], ['btn-qlog','qlog'],
+                          ['btn-help','help']]){
   const _b = el(_id);
   if (_b) _b.addEventListener('click', () => togglePanel(_pn));
 }
@@ -19902,7 +19914,7 @@ function togglePanel(which){
   // trả null và câu kế ném "Cannot read properties of null". Mọi chỗ gọi togglePanel('forge') cũ
   // đều vỡ theo.
   if (which === 'forge'){ window.openForgePanel(); return; }
-  const map = { char:'panel-char', inv:'panel-inv', bag:'panel-bag', skill:'panel-skill', map:'panel-map', settings:'panel-settings', qlog:'panel-qlog' };
+  const map = { char:'panel-char', inv:'panel-inv', bag:'panel-bag', skill:'panel-skill', map:'panel-map', settings:'panel-settings', qlog:'panel-qlog', help:'panel-help' };
   const id = map[which];
   const p = el(id);
   if (!p) return;                     // khoá lạ thì im lặng bỏ qua, không ném lỗi giữa lượt chơi
@@ -19956,7 +19968,7 @@ function togglePanel(which){
 // Cho `inv` cùng nhóm 'nv' với `char`: hai bảng vẫn mở KÈM nhau (kéo-thả HTML5 cần cả hai
 // cùng có mặt trên DOM), nhưng chúng đọc ra như MỘT cửa sổ hai nửa. Túi Đồ tách hẳn ra nhóm
 // riêng nên mở Túi Đồ là bộ đôi kia đóng, và ngược lại.
-const BANG_NHOM = { char:'nv', inv:'nv', bag:'tui', skill:'kn', map:'bd', settings:'cd', qlog:'nv2' };
+const BANG_NHOM = { char:'nv', inv:'nv', bag:'tui', skill:'kn', map:'bd', settings:'cd', qlog:'nv2', help:'hd' };
 // CHỈ nhóm 'nv' được ở chung màn hình, và nó là hai nửa của cùng một cửa sổ.
 const BANG_SONG = { nv:1 };
 // Ba bảng mở cùng lúc thì phải xếp thành ba cột, không chồng lên nhau. Gắn class lên <body>
@@ -19971,6 +19983,7 @@ window.capNhatCotBang = capNhatCotBang;
 function renderPanel(which){
   if (which==='settings'){ renderSettings(); return; }
   if (which==='qlog'){ renderQlog(); return; }
+  if (which==='help'){ renderHelpPanel(); return; }
   if (which==='char'){ window.charTab = 'info'; renderCharPanel(); }
   else if (which==='inv') renderInv();
   else if (which==='bag') renderBag();
@@ -19982,7 +19995,7 @@ function renderPanel(which){
 // lọc lại theo thực tế trước khi dùng — bảng có thể bị đóng bằng nút ✕ mà không qua đây.
 let _bangChong = [];
 const _MOI_BANG = ['panel-char','panel-inv','panel-bag','panel-skill','panel-map','panel-quest',
-                   'panel-settings','panel-qlog','panel-stage','panel-forge'];
+                   'panel-settings','panel-qlog','panel-stage','panel-forge','panel-help'];
 function bangDangMo(){ return _MOI_BANG.filter(id => { const e2 = el(id); return e2 && !e2.classList.contains('hidden'); }); }
 function bangGhiChong(id){
   _bangChong = _bangChong.filter(x => x !== id);
@@ -22238,6 +22251,45 @@ function flashSkillSlot(skillId){
   if (b){ b.classList.add('flash'); setTimeout(()=>b.classList.remove('flash'), 220); }
 }
 
+// ---------- CHÂN DUNG GÓC TRÁI ----------
+// Vẽ con Axie người chơi đang mang; chưa mang con nào (hoặc `/avatar off`) thì lui về chân
+// dung của LỚP — cùng tấm art mà thẻ chọn lớp dùng, nên hai chỗ không thể lệch nhau.
+//
+// ⚠ VẼ THEO NHU CẦU, KHÔNG VẼ MỖI KHUNG HÌNH. `updateHud()` chạy mỗi khung; dựng lại một
+// tấm 128×128 sáu chục lần mỗi giây chỉ để ra đúng một bức là trả tiền cho không.
+// Khoá đệm phải gồm CẢ id avatar LẪN lớp: đổi avatar mà không đổi lớp (thường xuyên) hay
+// đổi lớp mà không đổi avatar (đổi nhân vật) đều phải vẽ lại.
+let _cdKhoa = '';
+function veChanDung(){
+  const cv = el('cd-ava'), img = el('cd-lop');
+  if (!cv || !img || !player) return;
+  const id = avatarId(player);
+  const khoa = (id || '-') + '|' + player.sect;
+  if (khoa === _cdKhoa) return;
+  const N = cv.width;
+  const g = cv.getContext('2d');
+  g.clearRect(0, 0, N, N);
+  if (id){
+    const A = CHI_ANH.o[id];
+    // Ràng CẢ HAI chiều rồi mới thu — đúng khuôn `chiCoTrongMan()` đã dùng cho thú đi theo.
+    // Chỉ ràng chiều cao thì con bè nhất (tỉ lệ rộng/cao tới 1,52) tràn ra khỏi ô vuông và
+    // bị cắt mất đúng hai bên — mà hai bên là chỗ có càng, cánh, sừng.
+    const hh = N / Math.max(1, A.nhoRong / A.nhoCao);
+    const thanPx = hh * A.thanCao;
+    // `_chiVe` neo theo GÓT (`y + thanPx*0,38`) rồi lùi lên `hh*A.neoY`. Giải ngược ra `y`
+    // sao cho mép trên tấm rơi đúng giữa ô. Đừng dò tay con số này: 16 con có 16 `neoY`.
+    const y = (N - hh) / 2 + hh * A.neoY - thanPx * 0.38;
+    if (!chiVeNho(g, id, 0, N / 2, y, thanPx)) return;   // art chưa về — thử lại khung sau
+    cv.style.display = ''; img.style.display = 'none';
+    _cdKhoa = khoa;
+    return;
+  }
+  const u = (typeof ccLopIcon === 'function') ? ccLopIcon(player.sect) : '';
+  if (!u) return;                                        // art chưa về — thử lại khung sau
+  img.src = u; img.style.display = ''; cv.style.display = 'none';
+  _cdKhoa = khoa;
+}
+
 // ---------- HUD (override): mana · danh hiệu/lớp/cấp trên thanh ----------
 function updateHud(){
   const sect = SECTS[player.sect];
@@ -22248,14 +22300,19 @@ function updateHud(){
   const _nameHtml = `${tt?`<span class="title-tag">[${tt.name}]</span> `:''}${player.name ? `<span class="char-name">${player.name}</span>` : sect.name}${player.free>0?` <span class="hud-free" title="Còn ${player.free} điểm chưa cộng — bấm V">+${player.free}</span>`:''}${player.toiac>0?` · <b>TỘI ÁC ${player.toiac}</b>`:''}`;
   if (window._lastHudName !== _nameHtml){ window._lastHudName = _nameHtml; nameEl.innerHTML = _nameHtml; } // dirty-check: innerHTML rewrite is real DOM churn if done every frame
   nameEl.classList.toggle('toiac', (player.toiac||0) > 0);
-  // Viên đá Máu/Mana kiểu MU Online: chất lỏng dâng từ dưới lên, nên đổi width → height
+  // ⚠ THANH NGANG, KHÔNG CÒN LÀ VIÊN CẦU. Hai thứ này từng là cầu ở hai đầu thanh chiến đấu
+  // nên chất lỏng dâng theo `height`; nay chúng nằm trong khung chân dung góc trái và chạy
+  // theo `width`. Đổi một chỗ mà quên chỗ kia thì thanh đứng im ở 100% — trông y hệt "máu
+  // không tụt", tức là một lỗi cân bằng chứ không ra một lỗi giao diện.
   const hpPct = clamp(100*player.hp/player.maxHp, 0, 100), qiPct = clamp(100*player.qi/player.maxQi, 0, 100);
-  el('bar-hp').style.height = hpPct+'%';
-  el('txt-hp').textContent = `${Math.ceil(player.hp)}`;
+  el('bar-hp').style.width = hpPct+'%';
+  el('txt-hp').textContent = `${Math.ceil(player.hp)} / ${player.maxHp}`;
   el('orb-hp').title = `Sinh Lực ${Math.ceil(player.hp)} / ${player.maxHp}`;
-  el('bar-qi').style.height = qiPct+'%';
-  el('txt-qi').textContent = `${Math.floor(player.qi)}`;
+  el('bar-qi').style.width = qiPct+'%';
+  el('txt-qi').textContent = `${Math.floor(player.qi)} / ${player.maxQi}`;
   el('orb-qi').title = `Mana ${Math.floor(player.qi)} / ${player.maxQi}`;
+  { const _lv = el('hud-lv'); if (_lv) _lv.textContent = 'LV.' + player.level; }
+  veChanDung();
   el('hp-accent-fill').style.width = hpPct+'%';
   if (player.level >= MAX_LV){ el('bar-xp').style.width='100%'; el('txt-xp').textContent='MAX'; }
   else { el('bar-xp').style.width = (100*player.xp/XP_TABLE[player.level-1])+'%';
@@ -22319,8 +22376,6 @@ function updateHud(){
   if (autoBtn){ autoBtn.classList.remove('hidden'); updateAutoBtn(); }
   // quest tracker — chính tuyến + tối đa 2 phụ tuyến
   { const _th = trackerHtml(); if (window._lastTrack !== _th){ window._lastTrack = _th; el('quest-tracker').innerHTML = _th; } } // GDD Đợt 2 B2: cache để nút bấm không bị render đè
-  // hint — theo tầng cấp, tân thủ chỉ thấy phím cốt lõi
-  el('hint-bar').textContent = hintText();
   // taskbar: 4 ô kỹ năng cố định (chính/phụ/buff/tuyệt chiêu)
   for (let i = 0; i < 4; i++){
     const b = el('sk-'+i); if (!b) continue;
@@ -23725,8 +23780,14 @@ function drawMiniSeal(sc, sx, sy){
 function drawMinimap(){
   if (!miniCtx || !miniCvs) return;
   miniCvs.style.display = SETTINGS.minimap ? 'block' : 'none';
+  // Nút đổi CHỮ theo nấc, không chỉ đổi độ mờ — một nút mờ đi đọc ra "hỏng", còn một nút
+  // đổi chữ thì tự nói nó là công tắc và đang ở nấc nào.
   const btnMini = el('btn-minimap');
-  if (btnMini) btnMini.classList.toggle('off', !SETTINGS.minimap);
+  if (btnMini){
+    btnMini.classList.toggle('off', !SETTINGS.minimap);
+    const _t = SETTINGS.minimap ? '👁 Ẩn' : '👁 Hiện';
+    if (btnMini.textContent !== _t) btnMini.textContent = _t;
+  }
   if (!SETTINGS.minimap) return;
   const mw = miniCvs.width, mh = miniCvs.height;
   const sx = mw / MAP.w, sy = mh / MAP.h;
@@ -26127,19 +26188,76 @@ function sysUnlocked(id){
   return lvPeak() >= lv;
 }
 
-// ---------- Hint bar theo cấp ----------
-function hintText(){
-  // Migrated to i18n.js's t() — proof-of-pattern slice, see docs/I18N_MIGRATION_GUIDE.md.
-  const lv = player.level;
-  const parts = [t('hud.hint.clickmove'), t('hud.hint.attack'), t('hud.hint.talk'), t('hud.hint.potion')];
-  if (lv >= 3) parts.push(t('hud.hint.quest'));
-  // C, V, B nay là BA bảng khác nhau (Nhân Vật · Trang Bị · Túi Đồ) nên in đủ ba. Trước đây
-  // C và V mở cùng một cửa sổ, in cả hai thì dòng gợi ý tự mâu thuẫn.
-  if (lv >= 5) parts.push(t('hud.hint.character'), t('hud.hint.gear'), t('hud.hint.bag'));
-  if (lv >= 8) parts.push(t('hud.hint.map'), t('hud.hint.skills'));
-  // 'hud.hint.tame' đã bỏ — hệ Thú Thuần Hóa gỡ rồi, phím T không còn làm gì.
-  parts.push(t('hud.hint.loot'));
-  return parts.join(' · ');
+// ---------- BẢNG HƯỚNG DẪN (F6) ----------
+// Thay cho DẢI GỢI Ý cũ (`#hint-bar`). Dải đó đặt ở `bottom:96px`, giữa màn — tức NGAY SAU
+// thanh chiến đấu, nên gần như lúc nào cũng bị chính thanh che mất. Nó lại chỉ in được một
+// dòng không xuống hàng (`white-space:nowrap`), nên càng lên cấp càng nhiều phím thì nó càng
+// tràn ra ngoài. Một dòng vừa bị che vừa tràn thì không dạy được ai cái gì.
+//
+// ⚠ BẢNG DỮ LIỆU, không phải HTML chép tay. Thêm một phím = thêm một dòng ở đây.
+// Cột `phim` là chữ trên mặt phím nên KHÔNG dịch ('R' ở tiếng nào cũng là 'R'); cột thứ hai
+// là KHOÁ i18n. Dải gợi ý cũ là lát cắt i18n duy nhất của game (xem docs/I18N_MIGRATION_GUIDE.md)
+// — gỡ nó mà chép cứng tiếng Việt vào đây là người chơi tiếng Anh mở đúng cái bảng dạy chơi
+// ra thì thấy toàn tiếng Việt.
+const HD_BANG = [
+  { ten:'help.g.battle', hang:[
+    ['Chuột phải', 'help.k.move'],
+    ['Space',      'help.k.attack'],
+    ['1 2 3 4',    'help.k.skills'],
+    ['R',          'help.k.hp'],
+    ['T',          'help.k.mp'],
+    ['Z',          'help.k.auto'],
+    ['J',          'help.k.pick'],
+    ['E',          'help.k.talk'],
+    ['G',          'help.k.gate'],
+    ['F',          'help.k.forge'],
+    ['Alt',        'help.k.alt'],
+  ]},
+  { ten:'help.g.panels', hang:[
+    ['C',   'help.k.char'],
+    ['V',   'help.k.gear'],
+    ['B',   'help.k.bag'],
+    ['K',   'help.k.skillp'],
+    ['M',   'help.k.map'],
+    ['Q',   'help.k.quest'],
+    ['U',   'help.k.minimap'],
+    ['O',   'help.k.settings'],
+    ['F6',  'help.k.help'],
+    ['Esc', 'help.k.esc'],
+  ]},
+];
+// ⚠ ĐỌC THẲNG `player.autoCfg`, ĐỪNG CHÉP LẠI MẤY CON SỐ MẶC ĐỊNH. Bảng này nói về một cái
+// cờ đang chạy; chép giá trị mặc định vào đây thì người chơi kéo thanh trượt trong Cài Đặt
+// xong mở F6 ra vẫn thấy con số cũ, mà kiểu sai đó trông y hệt "bảng chưa vẽ lại".
+// Nhánh lui chỉ để phòng gọi lúc chưa có nhân vật — dùng đúng khuôn của renderSettings.
+function autoCfgNow(){
+  return (typeof player !== 'undefined' && player && player.autoCfg)
+    ? player.autoCfg : { skill:true, potion:true, potionPct:40, range:430, boss:false };
+}
+window.HD_BANG = HD_BANG;   // bài kiểm đọc thẳng bảng này, đừng chép sang chỗ khác
+function renderHelpPanel(){
+  const p = el('panel-help'); if (!p) return;
+  const ac = autoCfgNow();
+  const co = v => v ? '<b style="color:#7ec850">BẬT</b>' : '<b style="color:#c08a6a">TẮT</b>';
+  let h = moBang({ tieu: t('help.title'), mat:'❓' });
+  for (const nhom of HD_BANG){
+    h += `<div class="stat-sec">${t(nhom.ten)}</div><div class="hd-luoi">`;
+    for (const [phim, khoa] of nhom.hang)
+      h += `<div class="hd-hang"><kbd class="hd-phim">${phim}</kbd><span>${t(khoa)}</span></div>`;
+    h += `</div>`;
+  }
+  // ⚠ MỤC NÀY CHỈ ĐỌC, KHÔNG CHỨA CÔNG TẮC. Công tắc Tự Đánh đã có một nhà ở Cài Đặt (O);
+  // dựng bộ thứ hai ở đây là hai cửa cùng sửa một cờ, và tới lúc thêm một tuỳ chọn thì chắc
+  // chắn có một bên bị quên. Số hiện ra đọc thẳng từ `player.autoCfg` nên nó không nói dối
+  // được, còn nút ở dưới đưa người chơi tới đúng chỗ sửa.
+  h += `<div class="stat-sec">${t('help.g.auto')}</div>`
+     + `<div class="bonus-list">${t('help.auto.intro')}<br>`
+     + `• ${t('help.auto.skill')}: ${co(ac.skill)}<br>`
+     + `• ${t('help.auto.potion')}: ${co(ac.potion)} — ${t('help.auto.below')} <b style="color:#ffd76a">${ac.potionPct}%</b><br>`
+     + `• ${t('help.auto.range')}: <b style="color:#ffd76a">${ac.range}px</b><br>`
+     + `• ${t('help.auto.boss')}: ${co(ac.boss)}</div>`
+     + `<div class="forge-actions"><button class="mini-btn" onclick="togglePanel('settings')">⚙ ${t('help.auto.open')}</button></div>`;
+  p.innerHTML = h;
 }
 
 // ---------- Mục Tiêu Hôm Nay ----------
