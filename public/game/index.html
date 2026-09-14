@@ -96,6 +96,19 @@
        · #bottom-hud  = CHIẾN TRƯỜNG — chỉ thứ dùng lúc đánh: hai viên đá, ô chiêu, thuốc, Trợ Thủ
        · #menu-cot    = MENU HỆ THỐNG — cột dọc sát mép phải, thu gọn được về một tab nhỏ -->
 <div id="bottom-hud" class="hidden">
+  <!-- ⚠ BA CỤM, DÀN ĐỀU HAI BÊN Ô CHIÊU. Chủ dự án đưa ảnh mẫu MU và chốt: "phải dàn trải đều
+       2 bên thì UI mới cân đối" — Nhân Vật · Túi Đồ · Kỹ Năng · Nhiệm Vụ sang TRÁI, ô chiêu ở
+       GIỮA, Tổ Đội · Hảo Hữu · Bản Đồ · Cài Đặt · Menu ở PHẢI.
+       Trước bản này cả chín nút menu dồn hết vào đuôi bên phải: thanh nặng hẳn một bên, và ô
+       chiêu — thứ người chơi nhìn nhiều nhất — bị đẩy lệch khỏi tâm màn hình.
+       Cụm trái là CỬA (mở bảng của chính mình), cụm phải là NGƯỜI KHÁC + hệ thống. -->
+  <div id="mc-trai" class="hidden">
+    <button class="mc-btn" id="btn-char"  title="Nhân Vật (C) — chỉ số"><img src="assets/ui/ic_nhanvat.png" alt=""><span>Nhân Vật</span></button>
+    <button class="mc-btn" id="btn-bag"   title="Túi Đồ (B)"><img src="assets/ui/ic_tuido.png" alt=""><span>Túi Đồ</span></button>
+    <button class="mc-btn" id="btn-skill" title="Kỹ Năng (K)"><img src="assets/ui/ic_kynang.png" alt=""><span>Kỹ Năng</span></button>
+    <button class="mc-btn" id="btn-qlog"  title="Nhiệm Vụ (Q)"><img src="assets/ui/ic_nhiemvu.png" alt=""><span>Nhiệm Vụ</span></button>
+  </div>
+  <i class="sk-vach"></i>
   <div id="skillbar">
     <button class="skill" id="sk-basic"><span class="sk-ico">⚔</span><span class="sk-key">Space</span><span class="sk-cd"></span></button>
     <button class="skill sk-slot" data-slot="0" id="sk-0" title="Chiêu chính"><span class="sk-ico">+</span><span class="sk-key">1</span><span class="sk-cd"></span></button>
@@ -120,10 +133,11 @@
        đánh, bản đồ, nhiệm vụ, rồi menu. -->
   <div id="menu-cot" class="hidden">
     <div id="mc-list">
-      <button class="mc-btn" id="btn-char"     title="Nhân Vật (C) — chỉ số"><img src="assets/ui/ic_nhanvat.png" alt=""><span>Nhân Vật</span></button>
-      <button class="mc-btn" id="btn-bag"      title="Túi Đồ (B)"><img src="assets/ui/ic_tuido.png" alt=""><span>Túi Đồ</span></button>
-      <button class="mc-btn" id="btn-skill"    title="Kỹ Năng (K)"><img src="assets/ui/ic_kynang.png" alt=""><span>Kỹ Năng</span></button>
-      <button class="mc-btn" id="btn-qlog"     title="Nhiệm Vụ (Q)"><img src="assets/ui/ic_nhiemvu.png" alt=""><span>Nhiệm Vụ</span></button>
+      <!-- Tổ Đội và Hảo Hữu CHƯA có tranh trong bộ ic_*.png, nên dùng ký hiệu chữ (gold, cùng
+           cỡ ô). Đừng mượn tạm một tranh của nút khác: hai nút cùng hình là hai nút không phân
+           biệt được, mà nhãn thì chỉ hiện lúc rê chuột. -->
+      <button class="mc-btn mc-chu" id="btn-party"  title="Tổ Đội (P)">⚑<span>Tổ Đội</span></button>
+      <button class="mc-btn mc-chu" id="btn-friend" title="Hảo Hữu (H)">♥<span>Hảo Hữu</span></button>
       <button class="mc-btn" id="btn-map"      title="Bản Đồ (M)"><img src="assets/ui/ic_bando.png" alt=""><span>Bản Đồ</span></button>
       <button class="mc-btn" id="btn-settings" title="Cài Đặt (O)"><img src="assets/ui/ic_caidat.png" alt=""><span>Cài Đặt</span></button>
       <button class="mc-btn mc-menu" id="btn-menu" title="Thêm">Menu ▾</button>

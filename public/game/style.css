@@ -236,7 +236,17 @@ html,body { width:100%; height:100%; overflow:hidden; background:var(--bg-deep);
    thu một lần thì không còn đường mở lại bằng chuột — `SETTINGS.menuCot` cũ còn trong bản
    lưu nên phần nối trong game.js phải CHỦ ĐỘNG bỏ qua nó, xem ghi chú tại chỗ. */
 #menu-cot { position:relative; display:flex; align-items:center; pointer-events:auto; }
-#mc-list { display:flex; flex-direction:row; gap:5px; }
+/* Cụm TRÁI — cùng luật bày với #mc-list, chỉ khác chỗ đứng. Khai chung một quy tắc để hai
+   bên không bao giờ lệch cỡ hay lệch lề: thanh cân đối là chuyện của HAI cụm, sửa một bên
+   thôi là cân đối biến mất mà không ai thấy ngay. */
+#mc-trai, #mc-list { display:flex; flex-direction:row; align-items:center; gap:5px; }
+#mc-trai { pointer-events:auto; }
+/* Nút chỉ có ký hiệu chữ (Tổ Đội · Hảo Hữu): đè cỡ chữ 11px của .mc-btn, vốn viết cho
+   nhãn chứ không cho biểu tượng. */
+.mc-chu { font-size:23px; line-height:1; color:#f2d493;
+  text-shadow:0 0 6px rgba(255,206,110,.35), 0 1px 2px rgba(0,0,0,.8); }
+.mc-chu:hover { color:#ffe9b0; }
+.mc-chu.on { color:#ffd76a; box-shadow:inset 0 0 0 1px var(--gold), 0 0 9px rgba(255,206,110,.55); }
 /* 40px = ĐÚNG cỡ `.skill`, và mượn luôn khung của nó. Lệch cỡ giữa hai cụm cạnh nhau thì
    mắt đọc ra hai thanh dán vào nhau chứ không ra một thanh chia cụm. */
 .mc-btn { position:relative; width:40px; height:40px; padding:0; cursor:pointer;

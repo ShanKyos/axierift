@@ -16737,6 +16737,7 @@ function skMau(id){
 // NGAY LÚC NẠP TRANG và giết chết mọi thứ đăng ký phía sau nó.
 for (const [_id, _pn] of [['btn-char','char'], ['btn-inv','inv'], ['btn-bag','bag'],
                           ['btn-skill','skill'], ['btn-map','map'],
+                          ['btn-party','party'], ['btn-friend','friend'],
                           ['btn-settings','settings'], ['btn-help','help']]){
   const _b = el(_id);
   if (_b) _b.addEventListener('click', () => togglePanel(_pn));
@@ -19209,7 +19210,8 @@ function startGame(sectKey, quze){
   el('sect-select').classList.add('hidden'); titleStop();
   el('hud').classList.remove('hidden');
   el('bottom-hud').classList.remove('hidden');
-  { const mc = el('menu-cot'); if (mc) mc.classList.remove('hidden'); }
+  { const mc = el('menu-cot'); if (mc) mc.classList.remove('hidden');
+    const mt = el('mc-trai'); if (mt) mt.classList.remove('hidden'); }
   renderQlog();   // khối cắm trong cột phải: vẽ ngay, không đợi ai bấm phím
   el('xp-strip').classList.remove('hidden');
   el('combat-log-wrap').classList.remove('hidden');
@@ -19339,7 +19341,8 @@ else setTimeout(showIntro, 0);        // người mới → cốt truyện (defe
       el('sect-select').classList.add('hidden'); titleStop(); titleStop();
       el('hud').classList.remove('hidden');
       el('bottom-hud').classList.remove('hidden');
-  { const mc = el('menu-cot'); if (mc) mc.classList.remove('hidden'); }
+  { const mc = el('menu-cot'); if (mc) mc.classList.remove('hidden');
+    const mt = el('mc-trai'); if (mt) mt.classList.remove('hidden'); }
   renderQlog();   // khối cắm trong cột phải: vẽ ngay, không đợi ai bấm phím
       el('xp-strip').classList.remove('hidden');
       el('combat-log-wrap').classList.remove('hidden');
@@ -20385,7 +20388,8 @@ window.closePanels = closePanels;
 // Không có cái này thì người chơi không đọc được mình đang đứng ở cửa nào — mà đó chính là
 // việc của một thanh menu.
 const MC_BANG = { 'btn-char':'panel-char', 'btn-bag':'panel-bag', 'btn-skill':'panel-skill',
-                  'btn-map':'panel-map', 'btn-settings':'panel-settings' };
+                  'btn-map':'panel-map', 'btn-settings':'panel-settings',
+                  'btn-party':'panel-party', 'btn-friend':'panel-friend' };
 function capNhatMenuCot(){
   for (const bid in MC_BANG){
     const b = el(bid), pn = el(MC_BANG[bid]);
