@@ -68,11 +68,21 @@ const PORT = process.argv[2] || '8853';
 
     // ── 4. dấu + phải khớp ĐÚNG điều kiện nâng cấp thật ──
     startGame('thieulam', null); player.level = 70; player.lvPeak = 70; vhAutoLearn();
-    const nangThat = (id) => skLv(id) < 120 && skLv(id) < player.level
-      && player.silver >= skUpCost(id) && (player.khi || 0) >= skUpKhi(id) && skillInfo(id).unlocked;
+    // ⚠ BỊ ĐỘNG CHỈ SỐ CŨNG NÂNG CẤP ĐƯỢC, và chúng KHÔNG nằm trong `SKILL_DEFS` (vòng đăng ký
+    // bỏ qua `type:'passive'`), nên `skillInfo(id)` trả null cho chúng. Bỏ sót nhánh đó thì
+    // "sự thật" mà bài này đo ra thiếu 7 chiêu, và nó tố cáo dấu + nói dối trong khi dấu + đúng.
+    const nangThat = (id) => {
+      const cs = laBiDongChiSo(id);
+      const inf = cs ? null : skillInfo(id);
+      const mo = cs ? vhLearned(id) : !!(inf && inf.unlocked);
+      return mo && skLv(id) < 120 && skLv(id) < player.level
+        && player.silver >= skUpCost(id) && (player.khi || 0) >= skUpKhi(id);
+    };
     const demCong = () => { togglePanel('skill'); window.knTab('lop');
       return el().querySelectorAll('.kn-cong').length; };
-    const demThat = () => KN_ROT.thieulam.filter(id => SKILL_DEFS[id] && !(VOHOC_DEFS[id] && VOHOC_DEFS[id].type === 'passive') && nangThat(id)).length;
+    const nangDuocLoai = (id) => laBiDongChiSo(id)
+      || (SKILL_DEFS[id] && !(VOHOC_DEFS[id] && VOHOC_DEFS[id].type === 'passive'));
+    const demThat = () => KN_ROT.thieulam.filter(id => nangDuocLoai(id) && nangThat(id)).length;
     player.silver = 9e6; player.khi = 9e5; o.giau = { cong: demCong(), that: demThat() };
     player.silver = 0;  player.khi = 0;    o.ngheo = { cong: demCong(), that: demThat() };
 
@@ -83,8 +93,17 @@ const PORT = process.argv[2] || '8853';
     o.nutGoc = { co: !!nut, ham: ten ? ten[1] : null, song: ten ? typeof window[ten[1]] === 'function' : false };
 
     // ── 6. ô trống KHÔNG bấm được, ô có chiêu thì bấm được ──
-    o.trongTag = (el().querySelector('.kn-trong') || {}).tagName || null;
-    o.coTag = (el().querySelector('.kn-o:not(.kn-trong)') || {}).tagName || null;
+    // ⚠ ĐỪNG đo trên MỘT tab cố định. Tab Lớp nay đủ 16/16 ô (9 chiêu lớp + 7 bị động chỉ số)
+    // nên không còn ô trống nào để mà đo, và `querySelector` trả null — mệnh đề đỏ ở một chỗ
+    // chẳng liên quan gì tới thứ nó định gác. Quét mọi tab, lấy tab nào CÓ ô trống.
+    o.trongTag = null; o.coTag = null; o.tabCoTrong = null;
+    for (const t of KN_TAB){
+      window.knTab(t.id);
+      const tr = el().querySelector('.kn-trong'), co = el().querySelector('.kn-o:not(.kn-trong)');
+      if (co && !o.coTag) o.coTag = co.tagName;
+      if (tr && !o.trongTag){ o.trongTag = tr.tagName; o.tabCoTrong = t.id; }
+    }
+    window.knTab('lop');
 
     // ── 7. hai con số "tiêu hao" phải ĐỌC TỪ HÀM, không chép cứng ──
     window.knChon(KN_HINH[0].k);
@@ -130,8 +149,10 @@ const PORT = process.argv[2] || '8853';
   else if (!r.nutGoc.song) fail(`nút góc phải gọi window.${r.nutGoc.ham}() — HÀM KHÔNG TỒN TẠI, bấm vào không có gì xảy ra`);
   else pass(`nút góc phải gọi window.${r.nutGoc.ham}() — hàm có thật`);
 
-  if (r.trongTag !== 'DIV' || r.coTag !== 'BUTTON')
-    fail(`ô trống phải là DIV (không bấm được) và ô có chiêu phải là BUTTON — đang là ${r.trongTag}/${r.coTag}`);
+  if (!r.tabCoTrong)
+    fail('không tab nào còn ô trống — mệnh đề "ô trống là DIV" sẽ xanh giả, phải dựng lại cảnh');
+  else if (r.trongTag !== 'DIV' || r.coTag !== 'BUTTON')
+    fail(`ô trống phải là DIV (không bấm được) và ô có chiêu phải là BUTTON — đang là ${r.trongTag}/${r.coTag} (tab ${r.tabCoTrong})`);
   else pass('ô trống không bấm được, ô có chiêu bấm được');
 
   if (!r.soKhop.bac || !r.soKhop.khi)
