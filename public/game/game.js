@@ -16612,14 +16612,7 @@ for (const [_id, _pn] of [['btn-char','char'], ['btn-inv','inv'], ['btn-bag','ba
 }
 // ── CỘT MENU: thu gọn · thả xuống · Bảng Sự Kiện ──────────────────────────
 {
-  const thu = el('mc-thu'), cot = el('menu-cot'), drop = el('mc-drop'), bmenu = el('btn-menu');
-  if (thu && cot) thu.addEventListener('click', () => {
-    const dangThu = cot.classList.toggle('thu');
-    thu.textContent = dangThu ? '◂' : '▸';
-    thu.title = dangThu ? 'Mở lại thanh menu' : 'Thu gọn thanh menu';
-    SETTINGS.menuCot = !dangThu; saveSettings();
-    AudioSys.sfx('ui', 0.5);
-  });
+  const cot = el('menu-cot'), drop = el('mc-drop'), bmenu = el('btn-menu');
   if (bmenu && drop) bmenu.addEventListener('click', (e2) => {
     e2.stopPropagation();
     drop.classList.toggle('hidden');
@@ -16636,8 +16629,12 @@ for (const [_id, _pn] of [['btn-char','char'], ['btn-inv','inv'], ['btn-bag','ba
   { const bq = el('btn-qlog'); if (bq) bq.addEventListener('click', () => toggleQlog()); }
   const bsk = el('btn-sukien');
   if (bsk) bsk.addEventListener('click', () => { if (window.openEventBoard) window.openEventBoard(); });
-  // Khôi phục trạng thái thu gọn đã lưu
-  if (cot && thu && SETTINGS.menuCot === false){ cot.classList.add('thu'); thu.textContent = '◂'; }
+  // ⚠ CHỦ ĐỘNG BỎ QUA `SETTINGS.menuCot` CŨ. Nút thu gọn đã gỡ khi menu dời lên thanh chiến
+  // đấu, nhưng cờ `menuCot:false` vẫn còn trong những bản lưu của người đã từng thu cột lại —
+  // khôi phục theo nó là menu biến mất vĩnh viễn và KHÔNG còn nút nào mở lại. Dọn luôn cờ để
+  // nó không nằm lại trong save như một quả mìn.
+  if (SETTINGS.menuCot === false){ SETTINGS.menuCot = true; saveSettings(); }
+  if (cot) cot.classList.remove('thu');
 }
 // Ô thuốc bấm được bằng chuột, không chỉ bằng phím R — thanh dưới là nơi người chơi NHÌN,
 // và thứ nhìn thấy mà bấm không được thì đọc ra như hỏng.
