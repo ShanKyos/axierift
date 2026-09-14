@@ -24629,14 +24629,29 @@ function veHienTai(g){
     }
   }
   // ── cổng / điểm truyền tống ──
+  // Cổng: chấm lam + TÊN VÙNG BÊN KIA + DẢI CẤP của nó. Ghi tên cổng không thôi ("Lối Bắc") thì
+  // người chơi vẫn phải mở tab khác mới biết bên kia cấp bao nhiêu — mà đó đúng là câu hỏi duy
+  // nhất người ta hỏi khi nhìn một cái cổng.
   if (_htLoc.cong) for (const gt of GATES){
     if (gt.map !== curMap) continue;
-    g.fillStyle = '#7fd4ff'; g.strokeStyle = 'rgba(0,0,0,.7)'; g.lineWidth = 1;
-    g.beginPath(); g.arc(gt.x*sx, gt.y*sy, 4.5, 0, 7); g.fill(); g.stroke();
-    g.font = '9px "Be Vietnam Pro", sans-serif'; g.textAlign = 'center';
-    g.lineWidth = 3; g.strokeStyle = 'rgba(10,8,4,.85)';
-    _nhanVien(g, gt.name, gt.x*sx, gt.y*sy - 8, mw);
-    g.fillStyle = '#bfe6ff'; _nhanKep(g, gt.name, gt.x*sx, gt.y*sy - 8, mw);
+    const dm = MAPS[gt.to];
+    const mo = dm ? mapGate(gt.to).ok : true;
+    g.fillStyle = mo ? '#7fd4ff' : '#6a6a72'; g.strokeStyle = 'rgba(0,0,0,.7)'; g.lineWidth = 1.2;
+    g.beginPath(); g.arc(gt.x*sx, gt.y*sy, 5.5, 0, 7); g.fill(); g.stroke();
+    g.beginPath(); g.arc(gt.x*sx, gt.y*sy, 2, 0, 7); g.fillStyle = '#0d1a22'; g.fill();
+    g.font = 'bold 9.5px "Be Vietnam Pro", sans-serif'; g.textAlign = 'center';
+    g.lineWidth = 3; g.strokeStyle = 'rgba(10,8,4,.9)';
+    const t1 = dm ? dm.name : gt.name;
+    _nhanVien(g, t1, gt.x*sx, gt.y*sy - 10, mw);
+    g.fillStyle = mo ? '#bfe6ff' : '#8a8894'; _nhanKep(g, t1, gt.x*sx, gt.y*sy - 10, mw);
+    if (dm){
+      const t2 = (!dm.range || dm.range === '—') ? 'Thành' : `Cấp ${dm.range}`;
+      g.font = '8.5px "Be Vietnam Pro", sans-serif';
+      g.lineWidth = 3; g.strokeStyle = 'rgba(10,8,4,.9)';
+      _nhanVien(g, t2, gt.x*sx, gt.y*sy + 15, mw);
+      g.fillStyle = mo ? 'rgba(191,230,255,.75)' : 'rgba(138,136,148,.8)';
+      _nhanKep(g, t2, gt.x*sx, gt.y*sy + 15, mw);
+    }
   }
   // ── NPC theo ba nhóm ──
   for (const n of NPCS){
@@ -24665,6 +24680,18 @@ window.htBamBanDo = function(ev){
   const c = ev.currentTarget, b = c.getBoundingClientRect();
   const x = (ev.clientX - b.left) / b.width * MAP.w;
   const y = (ev.clientY - b.top)  / b.height * MAP.h;
+  // Bấm trúng một cái cổng = HỎI VỀ VÙNG BÊN KIA, không phải chạy tới cổng. Bán kính bắt tính
+  // ngược từ khổ vẽ ra (14px trên tấm 660) để nó không đổi theo khổ map.
+  if (_htLoc.cong){
+    const bk = 14 * MAP.w / _HT_KHUNG.w;
+    let gan = null, dGan = bk;
+    for (const gt of GATES){
+      if (gt.map !== curMap || !MAPS[gt.to]) continue;
+      const d = dist(x, y, gt.x, gt.y);
+      if (d < dGan){ gan = gt; dGan = d; }
+    }
+    if (gan){ window.ttMo(gan.to); return; }
+  }
   moveTarget = { x, y }; moveWaypoint = null; movePlanClear();
   addFloat(player.x, player.y - 40, '🧭 Đang đi tới…', '#7fd4ff', 12);
   AudioSys.sfx('ui', 0.5);
@@ -24722,16 +24749,7 @@ window.tgReBanDo = function(ev){
 };
 // MỘT cửa duy nhất cho "bấm vào một vùng", dùng chung cho cả chấm trên bản đồ lẫn nút trong
 // danh sách — nếu tách hai đường thì sớm muộn hai bên cho phép hai thứ khác nhau.
-window.tgChon = function(id){
-  if (id === curMap) return;
-  const g = mapGate(id);
-  if (!g.ok && !window.TEST_MODE){ addFloat(player.x, player.y - 40, '🔒 ' + (g.msg || 'Chưa mở vùng này'), '#f0a03a', 13); AudioSys.sfx('ui', 0.4); return; }
-  if (!window.TEST_MODE && !(player.wpUnlocked && player.wpUnlocked[id])){
-    addFloat(player.x, player.y - 40, '🚩 Chưa mở điểm dịch chuyển — đi bộ tới một lần', '#f0a03a', 13);
-    AudioSys.sfx('ui', 0.4); return;
-  }
-  travelTo(id);
-};
+window.tgChon = function(id){ window.ttMo(id); };
 function tgDanhSachHtml(){
   let html = '';
   // GDD Đợt 2 B2: badge mục tiêu NV trên từng vùng
@@ -24788,6 +24806,86 @@ function tgDanhSachHtml(){
   }
   return html;
 }
+// ═══════════ HỘP TRUYỀN TỐNG — bấm một vùng thì ĐỌC TRƯỚC, đi sau ═══════════
+//
+// Bản đầu bấm vào vùng là dịch chuyển thẳng. Sai một nhịp: người chơi bấm để XEM (vùng này cấp
+// bao nhiêu? có trùm gì? giờ nào có sự kiện?) rồi bị quăng sang map khác. Khuôn của dòng MMO
+// nhìn xuống làm đúng thứ tự ngược lại — hiện một tấm thẻ đọc xong rồi mới chọn đi hay không.
+//
+// ⚠ MỌI DÒNG TRONG THẺ ĐỀU PHẢI TRA RA TỪ DỮ LIỆU ĐANG CHẠY. Một tấm thẻ "thông tin vùng" chép
+// cứng là kiểu nói dối tệ nhất: nó trông đáng tin nhất và không ai đi kiểm. Giới hạn ← `md.min`,
+// loại quái ← `md.range`, cấp luyện ← `bandLvText()`, trùm ← `BOSS_DEFS`, giờ sự kiện ← quét
+// thẳng `matonMapFor`/`goldenMapFor` (xem `ttGioSuKien`).
+let _ttChon = null;
+window.ttMo = function(id){ if (MAPS[id]) { _ttChon = id; renderMapPanel(); AudioSys.sfx('ui', 0.5); } };
+window.ttDong = function(){ _ttChon = null; renderMapPanel(); };
+// Giờ mà một SỰ KIỆN THẾ GIỚI thật sự rơi vào vùng này. Không đoán, không chép: quét tới các
+// mốc giờ của chính hai bộ đếm ấy rồi hỏi `*MapFor` xem mốc đó vào map nào.
+// ⚠ Quét đủ một VÒNG XOAY, không quét "24 giờ tới". Xâm Lăng Vàng xoay 8 map × 6 mốc/ngày nên
+// một vùng chỉ tới lượt sau ~32 giờ — quét một ngày thì nửa số vùng báo "không có", sai.
+function ttGioSuKien(id){
+  const gio = (nextFn, mapFn, soMoc) => {
+    const ra = new Set();
+    let t = nextFn(Date.now());
+    for (let i = 0; i < soMoc; i++){
+      if (mapFn(t) === id) ra.add(String(new Date(t).getHours()).padStart(2,'0') + ':00');
+      t = nextFn(t + 60000);
+    }
+    return [...ra].sort();
+  };
+  return {
+    maton:  gio(matonNextBoundary,  matonMapFor,  6 * 8),   // 6 mốc/ngày × 8 vùng
+    golden: gio(goldenNextBoundary, goldenMapFor, 6 * 8),
+  };
+}
+function ttHtml(){
+  const id = _ttChon; if (!id) return '';
+  const md = MAPS[id], g = mapGate(id), cur = id === curMap;
+  const wp = window.TEST_MODE || (player.wpUnlocked && player.wpUnlocked[id]);
+  const bd = (typeof BOSS_DEFS !== 'undefined') && BOSS_DEFS[id];
+  const dai = [0,1,2].map(b => bandLvText(md, b)).filter(Boolean).join(' · ');
+  const sk = ttGioSuKien(id);
+  // Cổng đi bộ thẳng từ chỗ đang đứng — chỉ mời "Chạy Bộ" khi có đường thật.
+  const cong = GATES.find(x => x.map === curMap && x.to === id);
+  const hang = (k, v, mau) => v ? `<div class="tt-hang"><span class="tt-k">${k}</span><span class="tt-v"${mau?` style="color:${mau}"`:''}>${v}</span></div>` : '';
+  let h = `<div class="tt-nen" onclick="ttDong()"></div><div class="tt-hop">
+    <div class="tt-tieu">Truyền Tống<button class="tt-x" onclick="ttDong()">✕</button></div>
+    <div class="tt-than">`;
+  h += hang('Bản đồ:', md.name, '#ffe9a8');
+  h += hang('Giới hạn:', `Cấp ${md.min || 1}`, (player.level >= (md.min||1)) ? '#8fd18f' : '#e8776a');
+  h += hang('Loại quái:', (!md.range || md.range === '—') ? 'Vùng an toàn — không có quái' : `Cấp ${md.range}`);
+  h += hang('Cấp luyện:', dai);
+  if (bd && bd.tranai) h += hang('Tướng Quân:', `${bd.tranai.name} · C${bd.tranai.lv}`, '#e0a0ff');
+  if (bd && bd.thuve && bd.thuve.length)
+    h += hang('Vệ Binh Trụ:', bd.thuve.map(t => `${t.name} · C${t.lv}`).join('<br>'), '#ffb0a0');
+  const bs = mapBanSac(id);
+  // ⚠ `bs.cot` là KHOÁ, không phải tên. In thẳng nó ra thì thẻ hiện "canhhoa" — xem banSacHtml.
+  if (bs && bs.cot && COT_DONG[bs.cot]) h += hang('Dòng Cốt:', COT_DONG[bs.cot].ten, COT_DONG[bs.cot].mau);
+  const vf = vungFarm(id);
+  if (vf) h += hang('Bãi farm:', vf.ten, '#ffca86');
+  h += hang('Hung Thần:', sk.maton.join(', ') || '—', '#ff9a6a');
+  h += hang('Xâm Lăng Vàng:', sk.golden.join(', ') || '—', '#ffd76a');
+  if (!g.ok) h += `<div class="tt-canh">🔒 ${g.msg || 'Chưa đủ điều kiện vào vùng này'}</div>`;
+  else if (!wp) h += `<div class="tt-canh">🚩 Chưa mở điểm dịch chuyển — tự đi bộ tới một lần là mở</div>`;
+  h += `</div><div class="tt-nut">`;
+  h += cur ? `<button class="mini-btn" disabled>Đang ở đây</button>`
+           : `<button class="mini-btn" ${(g.ok && wp) ? `onclick="ttDi('${id}')"` : 'disabled'}>Dịch Chuyển</button>`;
+  h += `<button class="mini-btn" ${(!cur && g.ok && cong) ? `onclick="ttChayBo('${id}')"` : 'disabled'}
+          title="${cong ? 'Tự chạy tới cổng dẫn sang vùng đó' : 'Không có cổng đi thẳng từ vùng đang đứng'}">Chạy Bộ</button>`;
+  h += `<button class="mini-btn" onclick="ttDong()">Huỷ</button></div></div>`;
+  return h;
+}
+window.ttDi = function(id){ _ttChon = null; travelTo(id); };
+// "Chạy Bộ" = tự chạy tới CỔNG dẫn sang vùng đó, không phải dịch chuyển lén. Đi qua cổng vẫn
+// phải bấm G như mọi khi — nút này chỉ thay công đi bộ mò mẫm, không thay luật cổng.
+window.ttChayBo = function(id){
+  const c = GATES.find(x => x.map === curMap && x.to === id);
+  if (!c) return;
+  _ttChon = null;
+  moveTarget = { x:c.x, y:c.y }; moveWaypoint = null; movePlanClear();
+  closePanels();
+  addFloat(player.x, player.y - 40, `🧭 Đang chạy tới ${c.name}`, '#7fd4ff', 12);
+};
 function renderMapPanel(){
   const zt = zoneType();
   const tabs = [{ id:'ht', ten:'Hiện Tại' }, { id:'tg', ten:'Thế Giới' }];
@@ -24805,7 +24903,7 @@ function renderMapPanel(){
       </div>
       <div class="bd-phai bd-cuon">` + tgDanhSachHtml() + `</div></div>`;
   }
-  el('panel-map').innerHTML = html;
+  el('panel-map').innerHTML = html + ttHtml();
   bdBatVong();
 }
 // ═══════════ Chọn Trận (GDD Đợt 3 — kiểu NGU Idle): chọn thẳng 1 cụm quái từ danh sách,

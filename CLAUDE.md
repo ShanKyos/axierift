@@ -477,9 +477,38 @@ chơi đọc TRƯỚC, nên bản đồ phải chiều nó, không phải ngư�
 nhấp nháy và mũi tên người chơi cần một vòng rAF riêng, nhưng để nó chạy song song với vòng game
 suốt phiên là đúng cái lỗi mà `startGame()` phải gọi `titleStop()` để chữa.
 
-Gác: `tests/test_thegioi.js` (8 mệnh đề). Mệnh đề ⑧ là **tầng hành vi**: đếm điểm ảnh để chứng
-minh cả hai canvas vẽ ra thật và bộ lọc đổi được hình — đối chiếu tên không bắt được một canvas
-trắng, đúng bài học `ISO_NEO`.
+#### Thẻ TRUYỀN TỐNG — bấm một vùng thì ĐỌC TRƯỚC, đi sau
+
+Bản đầu bấm vào vùng là dịch chuyển thẳng. Sai một nhịp: người chơi bấm để **xem** (vùng này cấp
+bao nhiêu? trùm gì? giờ nào có sự kiện?) rồi bị quăng sang map khác. Nay hiện một tấm thẻ —
+**Bản đồ · Giới hạn · Loại quái · Cấp luyện · Tướng Quân · Vệ Binh Trụ · Dòng Cốt · Bãi farm ·
+Hung Thần · Xâm Lăng Vàng** — rồi mới **Dịch Chuyển / Chạy Bộ / Huỷ**. Bấm một **cổng** trên tab
+Hiện Tại cũng mở đúng thẻ ấy cho vùng bên kia.
+
+- **"Chạy Bộ" không phải dịch chuyển lén**: nó chỉ tự chạy tới CỔNG dẫn sang vùng đó, và chỉ bật
+  khi có cổng đi thẳng từ vùng đang đứng. Qua cổng vẫn phải bấm G như mọi khi.
+- **⚠ MỌI DÒNG PHẢI TRA RA TỪ DỮ LIỆU ĐANG CHẠY.** Một tấm thẻ "thông tin vùng" chép cứng là kiểu
+  nói dối tệ nhất: nó trông đáng tin nhất và không ai đi kiểm. `md.min` · `md.range` ·
+  `bandLvText()` · `BOSS_DEFS` · `COT_DONG` · `vungFarm()`, và giờ sự kiện quét thẳng
+  `matonMapFor`/`goldenMapFor`.
+- **⚠ Quét giờ sự kiện phải quét đủ MỘT VÒNG XOAY, không phải "24 giờ tới".** Xâm Lăng Vàng xoay
+  8 vùng × 6 mốc/ngày nên một vùng chỉ tới lượt sau ~32 giờ — quét một ngày thì quá nửa số vùng
+  báo "không có", sai mà trông rất hợp lý.
+- **⚠ `bs.cot` là KHOÁ, không phải tên.** In thẳng ra thì thẻ hiện `canhhoa`; tên nằm ở
+  `COT_DONG[bs.cot].ten` (xem `banSacHtml`).
+
+**📌 Việc thẻ này làm lộ ra:** ba vùng — `loimon` · `trungnut` · `caungam` — **không nằm trong
+bất kỳ bảng xoay sự kiện thế giới nào** (`MATON_HA` · `MATON_THUONG` · `GOLDEN_FIELD`). Chúng
+thêm vào sau và không ai cập nhật ba bảng ấy. Thẻ báo "—" là báo ĐÚNG, nên đây không phải lỗi
+của thẻ; nhưng nó là một quyết định cân bằng đang bỏ ngỏ (thêm vào bảng xoay thì đổi chu kỳ và
+phải khai thêm bậc `GOLDEN_BOX`). `test_thegioi §9` in ra danh sách đó mỗi lượt chạy thay vì
+đánh đỏ — *đừng "sửa" nó thành xanh bằng cách nới ngưỡng, hãy quyết rồi sửa dữ liệu.*
+
+Gác: `tests/test_thegioi.js` (9 mệnh đề). Hai mệnh đề đáng nhớ:
+- ⑧ **tầng hành vi**: đếm điểm ảnh để chứng minh cả hai canvas vẽ ra thật và bộ lọc đổi được
+  hình — đối chiếu tên không bắt được một canvas trắng, đúng bài học `ISO_NEO`.
+- ⑨ mỗi giờ sự kiện in trên thẻ được **quét ngược lại** để chứng minh mốc ấy thật sự rơi vào
+  vùng ấy.
 
 ### 🧭 NỐI MAP BẰNG RÌA (B1) + ĐIỂM DỊCH CHUYỂN MỞ BẰNG ĐI BỘ (B2)
 

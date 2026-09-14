@@ -105,24 +105,35 @@ let bad = 0; const fail = m => { bad++; console.log('FAIL ' + m); };
     if (!o.coCho) fail(`⑥ ${o.m} không có chỗ trên bản đồ ⇒ không vẽ được lá cờ "đang ở đây"`);
   }
 
-  // ---- 7. bấm vào vùng: khoá thì không đi, mở thì đi ----
+  // ---- 7. bấm vào vùng = MỞ THẺ, không phải đi thẳng ----
+  // Đây là một quyết định thiết kế, nên nó cần một mệnh đề: bấm để XEM rồi bị quăng sang map
+  // khác là hỏng đúng cái việc người ta vừa định làm.
   const r7 = await p.evaluate(() => {
-    window.TEST_MODE = false;            // luật của người chơi thường, không phải của chế độ thử
+    window.TEST_MODE = false;
     travelTo('ardhaven');
-    player.level = 1;
-    player.wpUnlocked = { ardhaven:1 };
+    player.level = 1; player.wpUnlocked = { ardhaven:1 };
     const truoc = curMap;
-    tgChon('nhanmon');                   // cấp 100, chưa mở — phải ở yên
-    const sauKhoa = curMap;
+    tgChon('nhanmon');
+    const sauBam = curMap, the = _ttChon;
+    const htKhoa = ttHtml();
     player.level = 120; player.wpUnlocked.comoc = 1;
-    tgChon('comoc');                     // đủ cấp + đã mở điểm dịch chuyển — phải đi
-    const sauMo = curMap;
-    window.TEST_MODE = true;
-    return { truoc, sauKhoa, sauMo };
+    ttMo('comoc');
+    const htMo = ttHtml();
+    ttDi('comoc');                      // bấm nút Dịch Chuyển trên thẻ
+    const sauDi = curMap;
+    _ttChon = null; window.TEST_MODE = true;
+    const demDi = (h) => (h.match(/onclick="ttDi\(/g) || []).length;
+    const demBo = (h) => (h.match(/onclick="ttChayBo\(/g) || []).length;
+    return { truoc, sauBam, the, sauDi,
+      khoaCoNutDi: demDi(htKhoa), moCoNutDi: demDi(htMo),
+      khoaCoChayBo: demBo(htKhoa) };
   });
-  console.log('7) bấm vùng:', JSON.stringify(r7));
-  if (r7.sauKhoa !== r7.truoc) fail(`⑦ bấm vùng CHƯA MỞ mà vẫn dịch chuyển (${r7.truoc} → ${r7.sauKhoa}) — bản đồ lách được luật mà nút Dịch Chuyển phải theo`);
-  if (r7.sauMo !== 'comoc') fail(`⑦ bấm vùng đã mở mà không đi (ở lại ${r7.sauMo})`);
+  console.log('7) thẻ truyền tống:', JSON.stringify(r7));
+  if (r7.sauBam !== r7.truoc) fail(`⑦ bấm một vùng mà DỊCH CHUYỂN THẲNG (${r7.truoc} → ${r7.sauBam}) — phải mở thẻ đọc trước`);
+  if (r7.the !== 'nhanmon') fail(`⑦ bấm vùng mà thẻ không mở (đang mở: ${r7.the})`);
+  if (r7.khoaCoNutDi) fail('⑦ thẻ của vùng CHƯA MỞ vẫn bật nút Dịch Chuyển — bản đồ lách được luật mà nút trong danh sách phải theo');
+  if (!r7.moCoNutDi) fail('⑦ thẻ của vùng ĐÃ MỞ lại không bật nút Dịch Chuyển');
+  if (r7.sauDi !== 'comoc') fail(`⑦ bấm Dịch Chuyển trên thẻ mà không đi (ở lại ${r7.sauDi})`);
 
   // ---- 8. TẦNG HÀNH VI: hai tab phải vẽ ra thật, bộ lọc phải đổi được hình ----
   const r8 = await p.evaluate(async () => {
@@ -160,6 +171,50 @@ let bad = 0; const fail = m => { bad++; console.log('FAIL ' + m); };
   if (!(r8.tgSang > 1500)) fail(`⑧ bản đồ thế giới không vẽ được vùng/nhãn nào đáng kể (${r8.tgSang} điểm sáng)`);
   if (!(r8.htDay > r8.htTrong + 1500))
     fail(`⑧ tắt hết bộ lọc mà tab HIỆN TẠI gần như không đổi (${r8.htDay} → ${r8.htTrong}) — hoặc bộ lọc không nối vào phần vẽ, hoặc phần vẽ chẳng vẽ gì`);
+
+  // ---- 9. MỌI DÒNG TRÊN THẺ PHẢI TRA RA TỪ DỮ LIỆU ----
+  // Một tấm thẻ "thông tin vùng" chép cứng là kiểu nói dối tệ nhất: nó trông đáng tin nhất và
+  // không ai đi kiểm. Nên kiểm: giờ sự kiện in ra phải THẬT SỰ rơi vào vùng đó.
+  const r9 = await p.evaluate(() => {
+    const xau = [], trong = [];
+    for (const id of Object.keys(THE_GIOI)){
+      const sk = ttGioSuKien(id);
+      for (const [ten, ds, mapFn, nextFn] of [['Hung Thần', sk.maton, matonMapFor, matonNextBoundary],
+                                              ['Xâm Lăng Vàng', sk.golden, goldenMapFor, goldenNextBoundary]]){
+        for (const gio of ds){
+          // quét lại tới mốc có giờ ấy và hỏi nó rơi vào map nào
+          let t = nextFn(Date.now()), thay = false;
+          for (let i = 0; i < 6*8 && !thay; i++){
+            if (String(new Date(t).getHours()).padStart(2,'0') + ':00' === gio && mapFn(t) === id) thay = true;
+            t = nextFn(t + 60000);
+          }
+          if (!thay) xau.push(`${id} · ${ten} ${gio}`);
+        }
+      }
+      // ⚠ KHÔNG đòi "vùng nào có quái cũng phải có sự kiện". Ba vùng thêm sau (Lối Mòn Corran ·
+      // Trũng Nứt Corran · Aquatic Tribe Causeway) KHÔNG nằm trong `MATON_HA`/`MATON_THUONG`/
+      // `GOLDEN_FIELD` — đó là dữ liệu thật, không phải lỗi quét, và thẻ báo "—" là báo đúng.
+      // Thứ đáng gác là chiều ngược lại: vùng CÓ trong bảng xoay thì phải quét ra được giờ.
+      const trongBang = MATON_HA.includes(id) || MATON_THUONG.includes(id) || GOLDEN_FIELD.includes(id);
+      if (trongBang && !sk.maton.length && !sk.golden.length) trong.push(id);
+    }
+    // và các dòng khác phải khớp MAPS
+    const id0 = 'mongco', h = (ttMo(id0), ttHtml());
+    _ttChon = null;
+    const ngoaiBang = Object.keys(THE_GIOI).filter(k =>
+      !MATON_HA.includes(k) && !MATON_THUONG.includes(k) && !GOLDEN_FIELD.includes(k)
+      && MAPS[k].range && MAPS[k].range !== '—');
+    return { xau, trong, ngoaiBang,
+      coTen: h.includes(MAPS[id0].name), coMin: h.includes('Cấp ' + MAPS[id0].min),
+      coRange: h.includes('Cấp ' + MAPS[id0].range) };
+  });
+  console.log('9) dữ liệu trên thẻ:', JSON.stringify(r9));
+  if (r9.xau.length) fail(`⑨ ${r9.xau.length} giờ sự kiện in ra mà mốc đó KHÔNG rơi vào vùng ấy: ${r9.xau.slice(0,4).join(' · ')}`);
+  if (r9.trong.length) fail(`⑨ ${r9.trong.length} vùng CÓ trong bảng xoay sự kiện mà thẻ quét ra rỗng — quét thiếu một vòng xoay: ${r9.trong.join(', ')}`);
+  if (r9.ngoaiBang.length) console.log(`   ℹ ${r9.ngoaiBang.length} vùng nằm NGOÀI mọi bảng xoay sự kiện (thẻ báo "—", đúng dữ liệu): ${r9.ngoaiBang.join(', ')}`);
+  if (!r9.coTen) fail('⑨ thẻ không in tên map');
+  if (!r9.coMin) fail('⑨ thẻ không in đúng `md.min` làm giới hạn cấp');
+  if (!r9.coRange) fail('⑨ thẻ không in đúng `md.range` làm dải cấp quái');
 
   if (errs.length) fail('lỗi trang: ' + errs.slice(0,3).join(' | '));
   console.log(bad ? `\n${bad} LỖI` : '\nTẤT CẢ XANH');
