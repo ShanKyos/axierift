@@ -224,28 +224,27 @@ html,body { width:100%; height:100%; overflow:hidden; background:var(--bg-deep);
    Mép phải đã kín: ví ba loại tiền, nút PK/TỰ ĐÁNH, bản đồ thu nhỏ, bảng theo dõi nhiệm vụ.
    Đặt cột menu vào đó là nó nằm đè lên bảng nhiệm vụ (đã thấy đúng vậy ở ảnh chụp đầu tiên).
    Mép trái chỉ có cụm tên + đồng hồ ở sát đỉnh, từ đó xuống dưới trống trơn. */
-/* ── MENU HỆ THỐNG: CẮM TRONG CỘT PHẢI ─────────────────────────────────────────────────
-   Ba chặng, ghi cả ba vì mỗi chặng hỏng một kiểu:
-   · cột dọc mép TRÁI — chiếm một dải cao giữa màn hình đúng chỗ nhân vật hay đứng, và là
-     thứ duy nhất của giao diện nằm ở sườn trái nên đọc ra như thanh công cụ dán thêm;
-   · hàng ngang đáy PHẢI — hết chắn màn, nhưng vẫn là một khối ĐỨNG RIÊNG, tức giao diện có
-     thêm một chỗ nữa phải nhớ;
-   · nay nằm TRONG `#cot-phai`. Chủ dự án chốt: "để UI qua bên phải cho đồng nhất".
-   ⇒ Cả bên phải là MỘT cột: ví · tự đánh · bản đồ nhỏ · nhiệm vụ · menu.
-   ⚠ `position:static` — nó là con của một khối đã có chỗ; để `fixed` thì nó rơi khỏi cột và
-   hai bên tự trôi mỗi lần cột cao thấp khác đi. */
-#menu-cot { position:relative; display:flex; flex-direction:column; gap:4px; pointer-events:auto; }
-/* Bảy nút xếp LƯỚI 4 cột: một hàng ngang bảy nút cần 4×36+… = 264px, quá bề ngang cột (180px
-   lọt lòng). Bốn cột ăn 156px, còn thở được. */
-#mc-list { display:grid; grid-template-columns:repeat(4, 1fr); gap:4px; justify-items:center; }
-#mc-thu { width:100%; height:16px; padding:0; cursor:pointer; font-size:9px; line-height:1;
-  color:var(--gold); background:linear-gradient(180deg,rgba(38,32,22,.92),rgba(18,15,10,.94));
-  border:1px solid rgba(198,158,74,.55); border-radius:4px; }
-#mc-thu:hover { border-color:var(--gold); background:rgba(58,46,28,.95); }
-/* 52 → 36px: cùng lý do đã ghi ở `.skill`. */
-.mc-btn { position:relative; width:36px; height:36px; padding:0; cursor:pointer; border:none;
-  background:none; border-radius:7px; display:flex; align-items:center; justify-content:center;
-  font-family:inherit; color:var(--gold); font-size:11px; font-weight:700; }
+/* ── MENU HỆ THỐNG: NẰM TRÊN THANH CHIẾN ĐẤU ───────────────────────────────────────────
+   Chặng thứ tư, và là chặng chủ dự án chốt bằng ảnh mẫu: menu là một CỤM Ô trên chính thanh
+   dưới, sau vạch ngăn — đúng lối mấy game MU/kiếm hiệp bày (một hàng ô liền, chia cụm bằng
+   vạch, chứ không phải mấy tấm rời quanh màn hình).
+   Ba chặng trước và lý do bỏ, giữ lại để đừng đi vòng: cột dọc mép TRÁI (chắn giữa màn, là
+   thứ duy nhất ở sườn trái) → hàng ngang đáy PHẢI (vẫn là khối đứng riêng) → trong cột phải
+   (đồng nhất, nhưng lưới 4 cột trong bề ngang 180px thì ô phải bé hơn ô chiêu, đọc ra hai
+   thứ khác loại).
+   ⚠ NÚT THU GỌN `#mc-thu` ĐÃ GỠ. Trên thanh chiến đấu nó là một cái chốt lạc cỡ, và ai lỡ
+   thu một lần thì không còn đường mở lại bằng chuột — `SETTINGS.menuCot` cũ còn trong bản
+   lưu nên phần nối trong game.js phải CHỦ ĐỘNG bỏ qua nó, xem ghi chú tại chỗ. */
+#menu-cot { position:relative; display:flex; align-items:center; pointer-events:auto; }
+#mc-list { display:flex; flex-direction:row; gap:5px; }
+/* 40px = ĐÚNG cỡ `.skill`, và mượn luôn khung của nó. Lệch cỡ giữa hai cụm cạnh nhau thì
+   mắt đọc ra hai thanh dán vào nhau chứ không ra một thanh chia cụm. */
+.mc-btn { position:relative; width:40px; height:40px; padding:0; cursor:pointer;
+  border-radius:6px; display:flex; align-items:center; justify-content:center;
+  font-family:inherit; color:var(--gold); font-size:11px; font-weight:700;
+  background:rgb(62,51,36); border:2px solid var(--border-strong); overflow:hidden;
+  box-shadow:inset 0 0 0 1px rgba(0,0,0,.55); }
+.mc-btn:active { transform:scale(.94); }
 .mc-btn img { width:100%; height:100%; object-fit:contain; display:block;
   filter:drop-shadow(0 2px 3px rgba(0,0,0,.6)); transition:filter .14s, transform .14s; }
 /* Nhãn chữ chỉ hiện lúc rê chuột — cột phải gọn, mà vẫn không bắt người chơi đoán icon. */
@@ -264,11 +263,11 @@ html,body { width:100%; height:100%; overflow:hidden; background:var(--bg-deep);
 .mc-btn.khoa img { filter:grayscale(1) brightness(.5); }
 .mc-btn.khoa::after { content:'🔒'; position:absolute; right:1px; bottom:0; font-size:10px;
   line-height:1; text-shadow:0 1px 2px #000; }
-.mc-menu { font-size:9px; letter-spacing:.2px; height:36px; width:36px; border-radius:5px;
+.mc-menu { font-size:9px; letter-spacing:.2px; height:40px; width:40px; border-radius:6px;
   background:linear-gradient(180deg,rgba(38,32,22,.94),rgba(18,15,10,.96));
   box-shadow:inset 0 0 0 1px rgba(198,158,74,.5); }
 .mc-menu:hover { box-shadow:inset 0 0 0 1px var(--gold); color:#ffe9b0; }
-#mc-drop { position:absolute; right:calc(100% + 6px); bottom:0; display:flex; flex-direction:column;
+#mc-drop { position:absolute; right:0; bottom:calc(100% + 8px); display:flex; flex-direction:column;
   gap:3px; min-width:200px; padding:6px; border-radius:6px;
   background:linear-gradient(180deg,rgba(28,23,16,.97),rgba(14,11,8,.98));
   box-shadow:inset 0 0 0 1px rgba(198,158,74,.55), 0 8px 24px rgba(0,0,0,.7); }
@@ -278,7 +277,6 @@ html,body { width:100%; height:100%; overflow:hidden; background:var(--bg-deep);
 #mc-drop button:hover { background:rgba(198,158,74,.2); color:#fff3d6; }
 #mc-drop button img { width:22px; height:22px; object-fit:contain; }
 /* THU GỌN — cả cột biến mất, chỉ còn cái mũi tên làm tab kéo ra lại. */
-#menu-cot.thu #mc-list, #menu-cot.thu #mc-drop { display:none; }
 
 
 /* Quest tracker — nằm trong luồng cột phải, dưới minimap */

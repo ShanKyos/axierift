@@ -18,12 +18,15 @@ const { chromium } = require('playwright');
     const out = {};
 
     // 1) mốc giờ: Hung Thần chẵn 4h, Đàn Vàng lệch +2h → xen kẽ mỗi 2 giờ
-    const t0 = new Date('2026-08-30T07:15:00').getTime();
+    // ⚠ Đọc bằng getUTCHours và mốc vào có hậu tố 'Z'. Mốc sự kiện neo theo UTC (xem ghi chú ở
+    // matonNextBoundary); bản cũ của bài này đọc getHours() và mốc vào KHÔNG có 'Z', nên nó
+    // chỉ xanh vì máy chạy bộ kiểm đang để TZ=UTC — tức là nó mù với đúng cái lỗi nó đang gác.
+    const t0 = Date.parse('2026-08-30T07:15:00Z');
     out.boundaries = {
-      maton: new Date(matonNextBoundary(t0)).getHours(),   // kỳ vọng 8
-      golden: new Date(goldenNextBoundary(t0)).getHours(), // kỳ vọng 10
-      matonMod4: new Date(matonNextBoundary(t0)).getHours() % 4,   // 0
-      goldenMod4: new Date(goldenNextBoundary(t0)).getHours() % 4, // 2
+      maton: new Date(matonNextBoundary(t0)).getUTCHours(),   // kỳ vọng 8
+      golden: new Date(goldenNextBoundary(t0)).getUTCHours(), // kỳ vọng 10
+      matonMod4: new Date(matonNextBoundary(t0)).getUTCHours() % 4,   // 0
+      goldenMod4: new Date(goldenNextBoundary(t0)).getUTCHours() % 4, // 2
     };
 
     // 2) kích hoạt: ép mốc về quá khứ rồi update

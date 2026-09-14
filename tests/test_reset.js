@@ -69,18 +69,21 @@ const pass = m => console.log('PASS ' + m);
   const r4 = await p.evaluate(() => {
     player.level = MAX_LV; calcDerived();
     const a = player.atk;
+    const tabTruoc = CHAR_TABS.filter(t => sysUnlocked(t.id)).length;
     for (let i = 0; i < 3; i++){ player.level = MAX_LV; doTayTuy(); doTayTuy(true); }
     player.level = MAX_LV; calcDerived();
     return { sl: player.resetCount, congTruoc: a, congSau: player.atk,
-             tab: CHAR_TABS.filter(t => sysUnlocked(t.id)).length,
+             tabTruoc, tabSau: CHAR_TABS.filter(t => sysUnlocked(t.id)).length,
              ai: AI_PASSES.filter(x => lvPeak() >= x.reqLv).length };
   });
   console.log('4.', JSON.stringify(r4));
-  // `tab >= 4`, không còn 5: CHAR_TABS mất mục 'tuyethoc' khi gỡ hệ Thuần Thục, nên bảng
-  // Nhân Vật còn bốn tab (Thông Tin · Chimera · Đại Thành · Tẩy Tuỷ). Mệnh đề bài này gác
-  // là "Tái Sinh không khoá lại tab nào", không phải "có đúng chừng này tab".
-  (r4.congSau > r4.congTruoc && r4.tab >= 4 && r4.ai === 6)
-    ? pass(`Tái Sinh ${r4.sl} lần: thưởng cộng dồn (công ${r4.congTruoc}→${r4.congSau}), quyền vẫn nguyên`)
+  // ⚠ ĐO CHÊNH, ĐỪNG CHÉP CỨNG SỐ TAB. Mệnh đề bài này gác là "Tái Sinh không khoá lại tab
+  // nào" — mà nó lại chấm bằng một con số tuyệt đối, nên con số ấy TRÔI theo mỗi lần
+  // CHAR_TABS đổi: 5 khi gỡ hệ Thuần Thục, rồi 4 khi gỡ tab Tái Sinh (chủ dự án sẽ thiết kế
+  // lại). Cả hai lần bài đỏ ở một chỗ chẳng liên quan gì tới thứ nó định gác.
+  // So SAU với TRƯỚC thì mệnh đề đúng nguyên văn, và thêm/bớt tab bao nhiêu cũng không đụng.
+  (r4.congSau > r4.congTruoc && r4.tabSau >= r4.tabTruoc && r4.tabTruoc > 0 && r4.ai === 6)
+    ? pass(`Tái Sinh ${r4.sl} lần: thưởng cộng dồn (công ${r4.congTruoc}→${r4.congSau}), quyền vẫn nguyên (${r4.tabTruoc}→${r4.tabSau} tab)`)
     : fail('nhiều lần Tái Sinh sai: ' + JSON.stringify(r4));
 
   // ── 5. save cũ: đã từng Tái Sinh thì phải được trả lại quyền ──────────

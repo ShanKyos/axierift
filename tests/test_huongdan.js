@@ -159,24 +159,36 @@ const ok = m => console.log('  ok  ' + m);
   if (ql.coX) fail('§6 khối cắm vẫn còn nút ✕ — bấm vào là mất hẳn, không có đường mở lại bằng chuột');
   else ok('§6 khối cắm không có nút ✕');
 
-  // ── 7. CẢ BÊN PHẢI LÀ MỘT CỘT ─────────────────────────────────────────────────────────
-  // Menu hệ thống đã đi ba chặng (mép trái → đáy phải → trong cột). Mệnh đề này khoá chặng
-  // cuối: nó phải nằm TRONG `#cot-phai`, và nút Nhiệm Vụ của nó phải thật sự làm gì đó —
+  // ── 7. MENU NẰM TRÊN THANH CHIẾN ĐẤU ──────────────────────────────────────────────────
+  // Menu hệ thống đã đi BỐN chặng: cột dọc mép trái → hàng ngang đáy phải → trong cột phải →
+  // nay là một CỤM Ô trên chính thanh chiến đấu, sau vạch ngăn (chủ dự án chốt bằng ảnh mẫu).
+  // Mệnh đề này khoá chặng cuối: nó phải nằm TRONG `#bottom-hud`, ô phải CÙNG CỠ ô chiêu
+  // (lệch cỡ thì mắt đọc ra hai thanh dán vào nhau), và nút Nhiệm Vụ phải thật sự làm gì đó —
   // `togglePanel('qlog')` nay là lệnh CÂM (khoá lạ thì hàm im lặng bỏ qua), nên một cái nút
   // trỏ nhầm vào đó vẫn bấm được, vẫn kêu, và không đổi một pixel nào.
   const mc = await p.evaluate(() => {
-    const m = document.getElementById('menu-cot'), c = document.getElementById('cot-phai');
+    const m = document.getElementById('menu-cot'), h = document.getElementById('bottom-hud');
     const q = document.getElementById('panel-qlog');
-    if (!m || !c || !q) return { loi:'thiếu phần tử' };
+    if (!m || !h || !q) return { loi:'thiếu phần tử' };
     const truoc = q.classList.contains('ql-thu');
     const b = document.getElementById('btn-qlog');
     if (b) b.click();
-    return { trongCot: c.contains(m), doiTrangThai: !!b && q.classList.contains('ql-thu') !== truoc };
+    const oMenu = m.querySelector('.mc-btn'), oChieu = document.getElementById('sk-0');
+    return { trongThanh: h.contains(m),
+             cungCo: !!(oMenu && oChieu) &&
+               Math.abs(oMenu.getBoundingClientRect().height - oChieu.getBoundingClientRect().height) <= 1,
+             coThu: !!document.getElementById('mc-thu'),
+             doiTrangThai: !!b && q.classList.contains('ql-thu') !== truoc };
   });
   if (mc.loi) fail('§7 ' + mc.loi);
   else {
-    if (!mc.trongCot) fail('§7 menu hệ thống nằm ngoài cột phải — giao diện lại có thêm một khối rời phải nhớ chỗ');
-    else ok('§7 menu hệ thống nằm trong cột phải');
+    if (!mc.trongThanh) fail('§7 menu hệ thống nằm ngoài thanh chiến đấu — lại thành một khối rời phải nhớ chỗ');
+    else ok('§7 menu hệ thống nằm trên thanh chiến đấu');
+    if (!mc.cungCo) fail('§7 ô menu KHÁC cỡ ô chiêu — hai cụm cạnh nhau lệch cỡ thì đọc ra hai thanh dán vào nhau, không ra một thanh chia cụm');
+    else ok('§7 ô menu cùng cỡ ô chiêu');
+    // Nút thu gọn cũ để trên thanh là một cái chốt lạc cỡ, và thu một lần là mất đường mở lại.
+    if (mc.coThu) fail('§7 nút thu gọn #mc-thu sống lại — trên thanh chiến đấu nó không có đường mở lại bằng chuột');
+    else ok('§7 không còn nút thu gọn lạc cỡ');
     if (!mc.doiTrangThai) fail('§7 nút Nhiệm Vụ trong menu không đổi được trạng thái Nhật Ký — gần như chắc chắn nó còn trỏ vào togglePanel(\'qlog\'), mà khoá đó nay không tồn tại nên hàm im lặng bỏ qua');
     else ok('§7 nút Nhiệm Vụ trong menu thu/mở được Nhật Ký');
   }
