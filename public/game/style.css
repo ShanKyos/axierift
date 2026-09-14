@@ -2085,3 +2085,126 @@ html,body { width:100%; height:100%; overflow:hidden; background:var(--bg-deep);
   -webkit-background-clip:text; background-clip:text; color:transparent;
   -webkit-text-stroke:3.5px rgba(10,14,30,.92); paint-order:stroke fill;
   filter:drop-shadow(0 4px 0 rgba(8,11,26,.55)) drop-shadow(0 0 26px rgba(255,190,90,.34)); }
+
+/* ═══ BẢNG BẢN ĐỒ HAI TAB — bố cục "bản đồ trái · danh sách phải" ═══ */
+/* Khuôn lấy từ bảng bản đồ của dòng MMO nhìn xuống. Panel rộng ra để lọt tấm 660px; ở màn hẹp
+   thì xếp dọc, vì bóp tấm bản đồ nhỏ hơn nữa là mất hết nhãn tên vùng. */
+/* ⚠ `.panel` khai `width: min(520px,94vw)` — `max-width` KHÔNG đè được `width`. Bản đầu chỉ đặt
+   max-width nên bảng vẫn 520px và tấm bản đồ 660px bị CẮT CỤT bên phải, mất hẳn cột danh sách. */
+#panel-map { width: min(1060px, 96vw); max-width: none; }
+.bd-hai { display: flex; gap: 12px; align-items: flex-start; }
+/* `flex: 0 0 auto` khoá cứng bề ngang nên canvas không co được dù đã có max-width:100% */
+/* `flex: 1 1 auto` thì tấm bản đồ ăn hết chỗ và cột danh sách bị bóp còn một chữ mỗi dòng.
+   Cho bản đồ CO ĐƯỢC nhưng không GIÃN, và chừa sàn cứng cho cột phải. */
+.bd-trai { flex: 0 1 660px; min-width: 0; }
+.bd-trai canvas {
+  display: block; border: 2px solid #6b5c3c; border-radius: 4px;
+  background: #241f16; box-shadow: inset 0 0 26px rgba(0,0,0,.6);
+  max-width: 100%; height: auto;
+}
+.bd-chu { font-size: 10.5px; opacity: .6; margin-top: 5px; text-align: center; }
+.bd-phai { flex: 1 0 312px; min-width: 300px; }
+.bd-cuon { max-height: 500px; overflow-y: auto; padding-right: 4px; }
+.bd-ten { font-size: 15px; font-weight: 700; }
+.bd-phu { font-size: 11px; opacity: .7; margin-bottom: 6px; }
+.bd-ds { display: flex; flex-wrap: wrap; gap: 4px; max-height: 168px; overflow-y: auto; }
+.bd-npc {
+  font: 11px "Be Vietnam Pro", sans-serif; color: #f0e2bd; cursor: pointer;
+  background: rgba(107,92,60,.22); border: 1px solid #6b5c3c; border-radius: 3px; padding: 3px 7px;
+}
+.bd-npc:hover { background: rgba(226,196,128,.28); color: #fff6df; }
+.bd-loc-hang { display: flex; flex-wrap: wrap; gap: 4px 14px; margin-top: 6px; }
+.bd-loc { font-size: 11px; opacity: .85; cursor: pointer; user-select: none; }
+.bd-loc input { vertical-align: -1px; margin-right: 3px; cursor: pointer; }
+@media (max-width: 1000px) {
+  .bd-hai { flex-direction: column; }
+  .bd-phai { width: 100%; }
+}
+
+/* ═══ Thẻ TRUYỀN TỐNG — bấm một vùng thì đọc trước, đi sau ═══ */
+.tt-nen { position: absolute; inset: 0; background: rgba(8,6,3,.55); z-index: 4; border-radius: 4px; }
+.tt-hop {
+  position: absolute; top: 50%; left: 50%; transform: translate(-50%,-50%); z-index: 5;
+  width: 320px; background: linear-gradient(170deg, #2b2418, #1b160e);
+  border: 2px solid #6b5c3c; border-radius: 5px; box-shadow: 0 10px 34px rgba(0,0,0,.7);
+}
+.tt-tieu {
+  font-family: var(--font-display); font-size: 15px; color: #ffe9a8; text-align: center;
+  padding: 7px 0 6px; border-bottom: 1px solid #6b5c3c; position: relative;
+}
+.tt-x {
+  position: absolute; top: 4px; right: 6px; width: 20px; height: 20px; line-height: 1;
+  background: rgba(0,0,0,.3); border: 1px solid #6b5c3c; color: #d8c8a0; border-radius: 3px; cursor: pointer;
+}
+.tt-x:hover { background: rgba(255,107,107,.5); color: #fff; }
+.tt-than { padding: 9px 12px 4px; font-size: 12px; }
+.tt-hang { display: flex; gap: 8px; margin-bottom: 4px; align-items: baseline; }
+.tt-k { flex: 0 0 92px; color: #9c8e6e; }
+.tt-v { flex: 1 1 0; color: #f0e2bd; }
+.tt-canh { margin: 6px 0 2px; font-size: 11.5px; color: #f0a03a; line-height: 1.35; }
+.tt-nut { display: flex; gap: 6px; justify-content: center; padding: 8px 10px 10px; }
+.tt-nut .mini-btn:disabled { opacity: .4; cursor: not-allowed; }
+/* ═══════════ BẢNG KỸ NĂNG KIỂU CÂY ═══════════
+   Hai cột: CÂY biểu tượng nối bằng mũi tên bên trái, khung ĐỌC CHI TIẾT bên phải — đúng bố cục
+   ảnh mẫu chủ dự án đưa. Panel rộng min(520px,94vw) nên 280 + 8 + phần còn lại vừa khít.
+   ⚠ Cột cây có bề rộng CỐ ĐỊNH bằng đúng 4×KN_COT trong game.js. Hai con số phải khớp nhau,
+   nếu không thì mũi tên SVG (vẽ theo KN_COT) trỏ lệch khỏi ô. */
+.kn-goc { display:flex; justify-content:flex-end; margin:-4px 0 8px; }
+.kn-wrap { display:flex; gap:8px; align-items:flex-start; }
+.kn-cay { position:relative; flex:0 0 auto; }
+.kn-day { position:absolute; left:0; top:0; pointer-events:none; }
+.kn-o { position:absolute; width:44px; padding:0; border-radius:var(--r-sm); cursor:pointer;
+  background:rgba(var(--rgb-da),.55); border:1px solid var(--border-faint);
+  display:flex; flex-direction:column; align-items:center; font-family:inherit;
+  transition:border-color 140ms ease-out, transform 140ms ease-out; }
+.kn-o img { width:40px; height:40px; border-radius:5px; display:block; margin:1px; }
+.kn-o:hover { transform:translateY(-2px); border-color:rgba(var(--rgb-vang),.7); }
+.kn-o.chon { border-color:#7df9ff; box-shadow:0 0 0 1px #7df9ff, 0 0 9px rgba(125,249,255,.45); }
+.kn-o.khoa img { filter:grayscale(1) brightness(.45); }
+.kn-o.khoa .kn-lv { color:var(--text-dim); }
+/* Dấu + xanh ở góc — tín hiệu "nâng được ngay". Nó phải nằm ĐÈ lên mép ô chứ không đẩy ô rộng
+   ra, nếu không 16 ô lệch lưới và mũi tên trỏ sai. */
+.kn-cong { position:absolute; left:-3px; top:-4px; font-style:normal; font-size:13px;
+  font-weight:700; line-height:1; color:#5fc96e; text-shadow:0 0 3px #06210c,0 1px 0 #06210c; }
+.kn-lv { display:block; font-size:10px; line-height:1.35; color:var(--gold);
+  font-variant-numeric:tabular-nums; }
+/* Ô TRỐNG — cố ý vẽ thô, viền đứt, để không ai tưởng đó là một kỹ năng đã gán. */
+.kn-trong { height:44px; border-style:dashed; border-color:rgba(var(--rgb-vang),.28);
+  background:rgba(0,0,0,.22); justify-content:center; }
+.kn-trong span { font-size:17px; color:rgba(var(--rgb-vang),.4); line-height:1; }
+.kn-trong:hover { transform:none; }
+
+.kn-ct { flex:1 1 auto; min-width:0; padding:7px 8px; border-radius:var(--r-sm);
+  background:rgba(0,0,0,.26); border:1px solid var(--border-faint); }
+.kn-ct-trong { font-size:10.5px; color:var(--text-dim); line-height:1.6; }
+.kn-ct-dau { display:flex; gap:7px; align-items:center; margin-bottom:5px; }
+.kn-ct-dau img { width:38px; height:38px; border-radius:5px; flex:0 0 auto; }
+.kn-ct-dau div { min-width:0; }
+.kn-ct-dau b { display:block; font-size:13px; color:var(--accent-light); line-height:1.25; }
+.kn-ct-dau span { font-size:10.5px; color:var(--gold); }
+.kn-ct-tt { font-size:10.5px; margin-bottom:6px; }
+.kn-ct-tt.ok { color:#7ec850; }
+.kn-ct-tt.no { color:var(--orange); }
+.kn-d { font-size:10.5px; color:var(--text-body); line-height:1.5; margin-bottom:3px; }
+.kn-d > span { color:var(--text-dim); }
+.kn-d i { font-style:normal; color:var(--text-dim); }
+.kn-d b.ok { color:#7ec850; } .kn-d b.no { color:#ff6b6b; }
+.kn-mo { color:var(--text-dim); }
+.kn-bar { position:relative; height:11px; border-radius:999px; margin:2px 0 6px;
+  background:rgba(0,0,0,.45); border:1px solid var(--border-faint); overflow:hidden; }
+.kn-bar s { display:block; height:100%; text-decoration:none;
+  background:linear-gradient(90deg,#3a6fd8,#7ecbff); }
+.kn-bar em { position:absolute; inset:0; font-style:normal; font-size:8.5px; line-height:11px;
+  text-align:center; color:#dbe6ff; text-shadow:0 1px 0 #000; }
+.kn-vach { font-size:10px; letter-spacing:1px; color:var(--gold); text-align:center;
+  margin:7px 0 5px; border-top:1px solid rgba(var(--rgb-vang),.25); padding-top:5px; }
+.kn-sach { font-size:10px; color:var(--orange); margin:5px 0 0; line-height:1.4; }
+.kn-nut { display:flex; justify-content:center; margin-top:7px; }
+.kn-nang { min-width:96px; border-color:#7ec850; color:#7ec850; font-weight:700; }
+.kn-nang.mo { opacity:.42; border-color:var(--border-faint); color:var(--text-dim); }
+.kn-chan { font-size:9.5px; color:var(--text-dim); line-height:1.45; margin-top:7px;
+  border-top:1px solid rgba(255,255,255,.07); padding-top:5px; }
+.kn-ghi { font-size:9.5px; color:var(--text-dim); line-height:1.5; margin-top:8px; }
+@media (prefers-reduced-motion: reduce) {
+  .kn-o, .kn-o:hover { transition:none; transform:none; }
+}
