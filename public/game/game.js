@@ -8516,6 +8516,60 @@ function bandSummaryHtml(md){
 // nếu không mỗi lần vào map cái lều lại nhảy sang chỗ khác và chỗ ấy hết là một chỗ.
 const TRAI_DO = ['trai_leu', 'trai_thung', 'trai_leu', 'trai_coc'];
 let traiLua = [];
+// ═══════════ KIẾN TRÚC THỊ TRẤN — 16 khối chặn nay CÓ TRANH ═══════════
+// ⚠ ĐO TRƯỚC KHI LÀM, và con số này là cả lý do tồn tại của khối mã dưới đây:
+// `MAP_OBSTACLES.ardhaven` khai 16 khối `460×340` GIỐNG HỆT NHAU — đó là 16 ngôi nhà. Nhưng
+// không có một mảnh tranh nào cho chúng, nên thứ duy nhất người chơi nhìn thấy là hàng ĐÁ CUỘI
+// mà `rimBuild()` rải dọc biên chặn. Tức màn đầu tiên của trò chơi là một mặt lát đá trống có
+// 16 hình chữ nhật viền sỏi. Không lỗi nào in ra — cùng họ với `ISO_NEO` đã làm sáu map mất
+// sạch cây: *dữ liệu có đủ, chỉ là không có gì vẽ ra.*
+//
+// Nhà bốc theo HẠT CỐ ĐỊNH từ toạ độ khối, không phải `Math.random`: một thị trấn đổi mặt mỗi
+// lần vào là một thị trấn không ai thuộc đường — mà thuộc đường mới là thứ biến 6400×3200 pixel
+// thành một NƠI CHỐN. Cùng luật đã áp cho Rương Canh và bãi quái.
+function khuCua(md, x, y){
+  for (const k of (md.khu || []))
+    if (x >= k.x && x <= k.x + k.w && y >= k.y && y <= k.y + k.h) return k;
+  return null;
+}
+function phoDung(md){
+  if (!md.khu) return;
+  const dem = {};
+  for (const o of (MAP_OBSTACLES[curMap] || [])){
+    if (!o.wd) continue;
+    const cx = o.x + o.wd / 2, cy = o.y + o.ht / 2;
+    const k = khuCua(md, cx, cy);
+    if (!k || !k.nha || !k.nha.length) continue;
+    // Chọn theo THỨ TỰ trong khu, không bốc ngẫu nhiên: mỗi khu khai đúng số nhà bằng số khối
+    // của nó, nên bốc ngẫu nhiên là có khu ra hai cái lò rèn còn khu kia không có cái nào.
+    const i = (dem[k.id] = (dem[k.id] || 0)) ; dem[k.id]++;
+    const img = k.nha[i % k.nha.length];
+    // Nhà neo ở ĐÁY khối, không ở tâm: `veVatIso` đặt chân sprite vào (x,y), mà mái nhà đổ về
+    // phía trên. Neo vào tâm thì nửa trên của khối chặn thò ra ngoài mái — người chơi vướng vào
+    // một chỗ trông như đang trống.
+    decor.push({ type:'iso', img, x:cx, y:o.y + o.ht - 18, s:1, dat:true });
+  }
+  // ĐỒ CỦA KHU — thứ nói "đây là một khu phố" chứ không phải "đây là mấy cái nhà đứng gần nhau".
+  const ra = _hatRng(_bamChuoi('pho:' + curMap));
+  for (const k of (md.khu || [])){
+    if (k.id === 'atia'){                       // quảng trường: giếng + đèn quanh chỗ đông người
+      decor.push({ type:'iso', img:'gieng', x:k.x + k.w * 0.5, y:k.y + k.h * 0.44, s:1, dat:true });
+      for (let i = 0; i < 6; i++){
+        const x = k.x + k.w * (0.22 + 0.56 * (i % 2)), y = k.y + k.h * (0.18 + 0.14 * i);
+        if (!inObstacle(curMap, x, y, 16)) decor.push({ type:'iso', img:'den_pho', x, y, s:1, dat:true });
+      }
+    } else if (k.id === 'giovach'){             // dải tường bắc: tháp canh, mốc cao nhất thành
+      decor.push({ type:'iso', img:'thap_canh', x:k.x + k.w * 0.32, y:k.y + k.h * 0.86, s:1, dat:true });
+      decor.push({ type:'iso', img:'thap_canh', x:k.x + k.w * 0.76, y:k.y + k.h * 0.86, s:1, dat:true });
+    } else {                                     // khu ở: hàng rào nối các khối + đèn dọc ngõ
+      for (let i = 0; i < 5; i++){
+        const x = k.x + k.w * (0.12 + ra() * 0.76), y = k.y + k.h * (0.42 + ra() * 0.5);
+        if (!inObstacle(curMap, x, y, 22))
+          decor.push({ type:'iso', img: ra() < 0.62 ? 'hang_rao' : 'den_pho', x, y, s:1, dat:true });
+      }
+    }
+  }
+}
 function traiFarmDung(md){
   traiLua = [];
   for (const pk of packsMd(md)){
@@ -8906,6 +8960,7 @@ function buildWorld(){
   raiIso(md);            // cây/bụi/đá của map lát viên — SAU bộ lọc, xem raiIso()
   rebuildDecorObs();
   decorUnblock();  // và nếu vẫn bịt mất một lối đi thì dọn đúng mấy gốc cây đang chắn
+  phoDung(md);     // kiến trúc thị trấn — xem khối KIẾN TRÚC THỊ TRẤN
   traiFarmDung(md);// đồ trại của Bãi Farm — xem khối BỘ MẶT CỦA BÃI FARM
   // Đàn thú SAU decor, không trước. Cây/đá rải sau sẽ mọc đè lên con vật đã đứng sẵn: đo được
   // 3/14 con nằm trong vật cản, và con nằm trong vật cản thì bước đầu tiên của nó bị chặn nên
@@ -24457,6 +24512,60 @@ function drawMinimapStatic(mw, mh, sx, sy, md){
     sc.fillStyle = 'rgba(22,18,12,.30)';
     sc.fillRect(0, 0, mw, mh);
   }
+  // ⚠⚠ BẢN ĐỒ NÀY TRƯỚC ĐÂY KHÔNG VẼ MỘT VẬT CẢN NÀO — trên cả 12 map.
+  // Nó tô một mảng `md.ground` phẳng rồi chấm NPC lên, nên hồ, vách núi, tường thành và cả 32
+  // khối nhà của thị trấn đều vô hình. Chủ dự án đưa ảnh chụp bảng bản đồ của một MMO khác và
+  // hỏi làm sao cho sống động như thế; thứ trong ảnh ấy không phải hiệu ứng nào cả, mà đúng ba
+  // lớp dưới đây: HÌNH của vùng đi được, MẶT ĐƯỜNG, và KHỐI NHÀ.
+  // Cả ba suy thẳng từ dữ liệu đang chạy (`diTrong` · `isoDuong` · `MAP_OBSTACLES`) nên không
+  // có cách nào nói dối — sửa một khối nhà là bản đồ đổi theo.
+  // Rẻ: cả khối này nằm trong `_miniStaticCache`, mỗi map dựng đúng một lần.
+  if (md.diTrong && md.diTrong.length > 2){          // ngoài vùng đi được thì tối hẳn
+    sc.save(); sc.beginPath();
+    sc.rect(0, 0, mw, mh);
+    sc.moveTo(md.diTrong[0][0] * sx, md.diTrong[0][1] * sy);
+    for (let i = 1; i < md.diTrong.length; i++) sc.lineTo(md.diTrong[i][0] * sx, md.diTrong[i][1] * sy);
+    sc.closePath(); sc.fillStyle = 'rgba(8,7,5,.62)'; sc.fill('evenodd');
+    sc.restore();
+  }
+  if (md.isoDuong){                                   // mặt đường — thứ cho người chơi đọc ra LỐI
+    sc.save();
+    sc.strokeStyle = 'rgba(236,220,176,.17)';
+    sc.lineWidth = Math.max(1.6, 30 * sx); sc.lineCap = 'round';
+    for (const d of md.isoDuong){
+      sc.beginPath(); sc.moveTo(d[0][0] * sx, d[0][1] * sy);
+      for (let i = 1; i < d.length; i++) sc.lineTo(d[i][0] * sx, d[i][1] * sy);
+      sc.stroke();
+    }
+    sc.restore();
+  }
+  {                                                   // khối nhà / hồ / vách
+    // Dải MÁI chỉ tô ở map có khu phố (`md.khu`): ở map hoang dã thì khối trong `MAP_OBSTACLES`
+    // là hồ và vách núi, mà tô mái ngói lên một cái hồ thì bản đồ nói dối ngay.
+    const laPho = !!md.khu;
+    for (const o of (MAP_OBSTACLES[curMap] || [])){
+      sc.fillStyle = laPho ? 'rgba(46,34,26,.92)' : 'rgba(16,20,26,.60)';
+      if (o.wd){
+        sc.fillRect(o.x * sx, o.y * sy, o.wd * sx, o.ht * sy);
+        if (laPho){
+          sc.fillStyle = 'rgba(206,108,76,.82)';      // mái ngói — khớp màu bộ art đã nướng
+          sc.fillRect(o.x * sx, o.y * sy, o.wd * sx, Math.max(1, o.ht * sy * 0.42));
+        }
+      } else {
+        sc.beginPath(); sc.ellipse(o.x * sx, o.y * sy, o.rx * sx, o.ry * sy, 0, 0, 7); sc.fill();
+      }
+    }
+  }
+  if (md.khu){                                        // TÊN KHU PHỐ — lore đã hứa bảy chỗ này
+    sc.save();
+    sc.font = '8px "Be Vietnam Pro", sans-serif'; sc.textAlign = 'center';
+    sc.fillStyle = 'rgba(240,226,189,.46)';
+    for (const k of md.khu){
+      if (k.h < 260) continue;                        // dải tường quá mỏng, nhãn sẽ đè lên nhà
+      sc.fillText(k.ten.toUpperCase(), (k.x + k.w / 2) * sx, (k.y + k.h / 2) * sy);
+    }
+    sc.restore();
+  }
   // vòng đai cấp đồng tâm từ cửa vào map (xanh lá/vàng/đỏ)
   if (md.packs && md.packs.length && md.spawn){
     let _maxD = 1;
@@ -25397,12 +25506,21 @@ function tgTaiDiem(mx, my){
 // ⚠ Ảnh tham khảo chủ dự án gửi là ảnh chụp game khác — lấy CÁCH BÀY, không lấy tranh của họ.
 // Tấm bản đồ thế giới ở đây dựng từ chính dữ liệu map của game này (xem khối TAB THẾ GIỚI).
 let _banDoTab = 'tg';
-const _htLoc = { npcNv:1, npcCn:1, npcBb:1, quai:1, cong:1, moc:1 };
+// ⚠ `npcTa` MẶC ĐỊNH TẮT. Sapidae Chiefdom có 24 NPC, trong đó 11 người không bán gì, không
+// giao gì, không mở gì — họ gánh nước, quét phố, hát rong. Trong MÀN họ là thứ làm thành phố
+// sống (cùng lý do Đàn Thú Hoang tồn tại), nhưng trên BẢNG BẢN ĐỒ họ là 11 cái nhãn đè lên
+// nhau che mất đúng những chỗ người chơi cần tìm. Bảng bản đồ phải trả lời "tôi LÀM được gì ở
+// đâu", không phải "ai đang đứng đâu".
+const _htLoc = { npcNv:1, npcCn:1, npcBb:1, npcTa:0, quai:1, cong:1, moc:1 };
 const _HT_KHUNG = { w:660, h:476 };
 window.banDoTab = function(id){ _banDoTab = id; renderMapPanel(); AudioSys.sfx('ui', 0.5); };
 window.banDoLoc = function(k, v){ _htLoc[k] = v ? 1 : 0; renderMapPanel(); };
 // NPC chia nhóm theo `talk` — đúng ba nhóm mà bảng bản đồ của dòng game này vẫn chia.
 function _npcNhom(n){
+  // ⚠ CỜ `taCanh` PHẢI HỎI TRƯỚC `talk`. Cả 11 NPC tả cảnh đều khai `talk:'quest'` — đó là
+  // giá trị mặc định để mở hộp thoại, không phải lời hứa có nhiệm vụ. Hỏi `talk` trước thì họ
+  // rơi vào nhóm "NPC nhiệm vụ" và được tô VÀNG y như người thật sự giao việc.
+  if (n.taCanh) return 'npcTa';
   if (n.talk === 'quest') return 'npcNv';
   if (n.talk === 'shop')  return 'npcBb';
   return 'npcCn';
@@ -25491,7 +25609,7 @@ function veHienTai(g){
     if (n.map !== curMap) continue;
     const nh = _npcNhom(n);
     if (!_htLoc[nh]) continue;
-    const col = nh === 'npcNv' ? '#ffd76a' : nh === 'npcBb' ? '#9fe89f' : '#d8c8a0';
+    const col = nh === 'npcNv' ? '#ffd76a' : nh === 'npcBb' ? '#9fe89f' : nh === 'npcTa' ? '#8a8275' : '#d8c8a0';
     g.fillStyle = col; g.strokeStyle = 'rgba(0,0,0,.7)'; g.lineWidth = 1;
     g.beginPath(); g.arc(n.x*sx, n.y*sy, 4, 0, 7); g.fill(); g.stroke();
     g.font = '9px "Be Vietnam Pro", sans-serif'; g.textAlign = 'center';
@@ -25539,7 +25657,7 @@ function htHtml(){
   return `<div class="bd-hai">
     <div class="bd-trai">
       <canvas id="bd-ht" width="${_HT_KHUNG.w}" height="${_HT_KHUNG.h}" onclick="htBamBanDo(event)" title="Bấm để tự chạy tới"></canvas>
-      <div class="bd-loc-hang">${ck('npcCn','NPC chức năng')}${ck('npcNv','NPC nhiệm vụ')}${ck('npcBb','NPC buôn bán')}${ck('quai','Điểm đánh quái')}${ck('cong','Điểm truyền tống')}${ck('moc','Rương · Vỉa · Đàn thú')}</div>
+      <div class="bd-loc-hang">${ck('npcCn','NPC chức năng')}${ck('npcNv','NPC nhiệm vụ')}${ck('npcBb','NPC buôn bán')}${ck('npcTa','Dân phố')}${ck('quai','Điểm đánh quái')}${ck('cong','Điểm truyền tống')}${ck('moc','Rương · Vỉa · Đàn thú')}</div>
     </div>
     <div class="bd-phai">
       <div class="bd-ten" style="color:${zt.color}">${md.name}</div>

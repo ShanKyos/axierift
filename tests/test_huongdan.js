@@ -173,10 +173,11 @@ const ok = m => console.log('  ok  ' + m);
     const truoc = q.classList.contains('ql-thu');
     const b = document.getElementById('btn-qlog');
     if (b) b.click();
-    const oMenu = m.querySelector('.mc-btn'), oChieu = document.getElementById('sk-0');
+    // ⚠ Khẳng định "ô menu CÙNG CỠ ô chiêu" đã GỠ khỏi đây. Nó đúng ở bản trước và SAI từ lúc
+    // chủ dự án đối chiếu với ảnh mẫu: trong ảnh MU, icon hai bên nhỏ hơn ô chiêu, và đó là thứ
+    // giữ thanh gọn. Hợp đồng cỡ nay nằm ở MỘT chỗ — `tests/test_thanhcum.js §7` — gác chiều
+    // đúng: nhỏ hơn ô chiêu, nhưng không nhỏ quá sàn đọc được.
     return { trongThanh: h.contains(m),
-             cungCo: !!(oMenu && oChieu) &&
-               Math.abs(oMenu.getBoundingClientRect().height - oChieu.getBoundingClientRect().height) <= 1,
              coThu: !!document.getElementById('mc-thu'),
              doiTrangThai: !!b && q.classList.contains('ql-thu') !== truoc };
   });
@@ -184,8 +185,6 @@ const ok = m => console.log('  ok  ' + m);
   else {
     if (!mc.trongThanh) fail('§7 menu hệ thống nằm ngoài thanh chiến đấu — lại thành một khối rời phải nhớ chỗ');
     else ok('§7 menu hệ thống nằm trên thanh chiến đấu');
-    if (!mc.cungCo) fail('§7 ô menu KHÁC cỡ ô chiêu — hai cụm cạnh nhau lệch cỡ thì đọc ra hai thanh dán vào nhau, không ra một thanh chia cụm');
-    else ok('§7 ô menu cùng cỡ ô chiêu');
     // Nút thu gọn cũ để trên thanh là một cái chốt lạc cỡ, và thu một lần là mất đường mở lại.
     if (mc.coThu) fail('§7 nút thu gọn #mc-thu sống lại — trên thanh chiến đấu nó không có đường mở lại bằng chuột');
     else ok('§7 không còn nút thu gọn lạc cỡ');

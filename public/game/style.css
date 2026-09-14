@@ -239,17 +239,25 @@ html,body { width:100%; height:100%; overflow:hidden; background:var(--bg-deep);
 /* Cụm TRÁI — cùng luật bày với #mc-list, chỉ khác chỗ đứng. Khai chung một quy tắc để hai
    bên không bao giờ lệch cỡ hay lệch lề: thanh cân đối là chuyện của HAI cụm, sửa một bên
    thôi là cân đối biến mất mà không ai thấy ngay. */
-#mc-trai, #mc-list { display:flex; flex-direction:row; align-items:center; gap:5px; }
+#mc-trai, #mc-list { display:flex; flex-direction:row; align-items:center; gap:4px; }
 #mc-trai { pointer-events:auto; }
 /* Nút chỉ có ký hiệu chữ (Tổ Đội · Hảo Hữu): đè cỡ chữ 11px của .mc-btn, vốn viết cho
    nhãn chứ không cho biểu tượng. */
-.mc-chu { font-size:23px; line-height:1; color:#f2d493;
+.mc-chu { font-size:17px; line-height:1; color:#f2d493;
   text-shadow:0 0 6px rgba(255,206,110,.35), 0 1px 2px rgba(0,0,0,.8); }
 .mc-chu:hover { color:#ffe9b0; }
 .mc-chu.on { color:#ffd76a; box-shadow:inset 0 0 0 1px var(--gold), 0 0 9px rgba(255,206,110,.55); }
-/* 40px = ĐÚNG cỡ `.skill`, và mượn luôn khung của nó. Lệch cỡ giữa hai cụm cạnh nhau thì
-   mắt đọc ra hai thanh dán vào nhau chứ không ra một thanh chia cụm. */
-.mc-btn { position:relative; width:40px; height:40px; padding:0; cursor:pointer;
+/* ⚠ 30px — NHỎ HƠN ô chiêu (40px), và đây là lượt sửa THỨ HAI của cùng một dòng.
+   Bản trước để 40px với lý do "lệch cỡ thì đọc ra hai thanh dán vào nhau". Lý do đó nghe hợp
+   lý nhưng SAI so với chính ảnh mẫu: trong ảnh MU chủ dự án gửi, icon hai bên rõ ràng nhỏ hơn
+   ô chiêu — và đó mới là thứ giữ cho thanh GỌN. Chủ dự án nhìn ảnh chụp và gọi đúng tên:
+   *"sao nó dài quá vậy, UI bên hình mẫu gọn lắm mà"*.
+   Đo được: 22 ô cùng 40px ⇒ thanh dài 865px = 54% bề ngang màn 1600. Hạ 9 ô menu xuống 30px
+   (cùng lúc siết lề và khe) ⇒ còn ~750px = 47%.
+   Và lệch cỡ KHÔNG làm mất tính "một thanh": tấm nền liền + vạch ngăn mới là thứ gom cụm.
+   Ngược lại, cùng cỡ với ô chiêu là nói dối về vai trò — ô chiêu bấm lúc đánh nhau, ô menu
+   thì không bao giờ. `tests/test_thanhcum.js §7` gác chiều này (nhỏ hơn, và có sàn đọc được). */
+.mc-btn { position:relative; width:30px; height:30px; padding:0; cursor:pointer;
   border-radius:6px; display:flex; align-items:center; justify-content:center;
   font-family:inherit; color:var(--gold); font-size:11px; font-weight:700;
   background:rgb(62,51,36); border:2px solid var(--border-strong); overflow:hidden;
@@ -271,9 +279,9 @@ html,body { width:100%; height:100%; overflow:hidden; background:var(--bg-deep);
 /* KHOÁ — xám hẳn + ổ khoá nhỏ góc dưới-phải. Mờ suông thì đọc ra như đang tải. */
 .mc-btn.khoa { cursor:not-allowed; }
 .mc-btn.khoa img { filter:grayscale(1) brightness(.5); }
-.mc-btn.khoa::after { content:'🔒'; position:absolute; right:1px; bottom:0; font-size:10px;
+.mc-btn.khoa::after { content:'🔒'; position:absolute; right:0; bottom:0; font-size:9px;
   line-height:1; text-shadow:0 1px 2px #000; }
-.mc-menu { font-size:9px; letter-spacing:.2px; height:40px; width:40px; border-radius:6px;
+.mc-menu { font-size:19px; line-height:1; height:30px; width:30px; border-radius:6px;
   background:linear-gradient(180deg,rgba(38,32,22,.94),rgba(18,15,10,.96));
   box-shadow:inset 0 0 0 1px rgba(198,158,74,.5); }
 .mc-menu:hover { box-shadow:inset 0 0 0 1px var(--gold); color:#ffe9b0; }
@@ -342,8 +350,8 @@ html,body { width:100%; height:100%; overflow:hidden; background:var(--bg-deep);
    không bằng bề mặt to. Xuống 40px thì cả thanh còn ~430px, và icon vẫn đọc được vì tranh
    vốn vẽ ở 112px. */
 #bottom-hud { position:fixed; left:50%; bottom:20px; transform:translateX(-50%); z-index:11;
-  display:flex; align-items:center; gap:8px; pointer-events:auto;
-  padding:5px 9px; border-radius:10px;
+  display:flex; align-items:center; gap:6px; pointer-events:auto;
+  padding:4px 7px; border-radius:10px;
   background:linear-gradient(180deg, rgba(42,34,24,.84), rgba(15,12,8,.92));
   border:1px solid rgba(198,158,74,.40);
   box-shadow:0 8px 24px rgba(0,0,0,.58), inset 0 1px 0 rgba(255,231,180,.10),
