@@ -3101,6 +3101,114 @@ const SIGNATURE_SKILL = {
 const DOI_TEN_CHIEU = [
   ['dw_evilspirit', 'dw_dragonspirit'],   // Evil Spirit → Dragon Spirit (art mới, bầy long hồn)
 ];
+// ═══════════ THANH CHIÊU TỰ GÁN — kéo chiêu từ bảng Kỹ Năng thả vào ô 1-4 ═══════════
+// Chủ dự án chốt: cho người chơi tự xếp bốn ô "để phù hợp với lối chơi". Trước đó thanh này
+// khoá cứng (chính · phụ · ô 3 · tuyệt chiêu) và CLAUDE.md ghi rõ "không cho người chơi tự gán"
+// — luật đó nay được thay, cố ý.
+//
+// BA LUẬT, và luật thứ ba mới là thứ biến việc xếp ô thành một QUYẾT ĐỊNH chứ không phải một
+// bảng tuỳ thích:
+//
+//  1. Ô 1 chỉ nhận chiêu CHỦ ĐỘNG. Thanh chiêu mà không có lấy một nút bấm được thì người chơi
+//     đứng nhìn; đây là cái sàn.
+//  2. Ô 2-4 nhận cả chủ động lẫn bị động. Mỗi lớp chỉ có 1-2 bị động (đo được: 6 chủ động +
+//     1-2 bị động mỗi lớp) nên ép ba ô kia thành "chỉ bị động" là ba ô không bao giờ điền đủ.
+//  3. ⚠ CHIÊU LÊN THANH THÌ MẤT %CÔNG KÍCH DI SẢN. CLAUDE.md: "một chiêu không được vừa bấm
+//     được vừa cộng %ST vĩnh viễn". Trước đây luật đó giữ được bằng cách khoá cứng thanh chiêu
+//     và chép tay `LEGACY_SECT_SKILLS` sao cho hai bảng không giao nhau. Cho tự gán là cách giữ
+//     đó hỏng ngay — nên nay `legacyAtkPct` HỎI THẲNG thanh chiêu (xem calcDerived).
+//     Hệ quả cố ý: cắm thêm một chiêu là đổi sát thương bấm tay lấy sát thương nền.
+//
+// ⚠ BỊ ĐỘNG CHỈ CHẠY KHI ĐƯỢC CẮM VÀO Ô (`biDongBat`). Nếu bị động cứ ngộ là chạy thì kéo nó
+// vào ô chẳng để làm gì, và ba ô kia mất hẳn một nửa lý do tồn tại.
+const O_CHUDONG_DAU = 0;          // ô bắt buộc chủ động
+function knLaBiDong(id){ const v = VOHOC_DEFS[id]; return !!(v && v.type === 'passive'); }
+function knDaNgo(id){
+  if (knLaBiDong(id)) return vhLearned(id);
+  const inf = skillInfo(id);
+  return !!(inf && inf.unlocked);
+}
+// Bị động có đang chạy không: phải NGỘ ĐƯỢC **và** đang nằm trên thanh. Một cửa duy nhất cho
+// cả sáu chỗ đọc bị động, nên không có cách nào một chỗ quên hỏi vế thứ hai.
+function biDongBat(id){
+  return vhLearned(id) && !!(player && player.skillBar && player.skillBar.includes(id));
+}
+// Chiêu này có được phép vào ô đó không — trả LÝ DO khi không, `null` khi được.
+// Một cửa duy nhất cho cả kéo thả lẫn lệnh gỡ rối, nên thứ người chơi đọc và thứ máy thực thi
+// không thể lệch nhau (cùng bài học với `masteryKhoa`).
+function knOHopLe(slot, id){
+  if (!player || !id) return 'không có chiêu';
+  if (slot < 0 || slot > 3) return 'ô không hợp lệ';
+  if (!SKILL_DEFS[id] && !VOHOC_DEFS[id]) return 'chiêu không có thật';
+  if (!knDaNgo(id)) return 'chưa mở khoá chiêu này';
+  if (slot === O_CHUDONG_DAU && knLaBiDong(id)) return 'ô 1 phải là chiêu chủ động';
+  const cu = (player.skillBar || []).indexOf(id);
+  if (cu >= 0 && cu !== slot) return null;        // đổi chỗ trong thanh: hợp lệ, xử ở knGan
+  return null;
+}
+// Gán chiêu vào ô. Chiêu đang nằm ô khác thì ĐỔI CHỖ hai ô, không nhân bản — để cùng một chiêu
+// nằm hai ô là người chơi tự lừa mình có hai nút.
+window.knGan = function(slot, id){
+  const ly = knOHopLe(slot, id);
+  if (ly){ if (player) addFloat(player.x, player.y-46, ly, '#ff9a6a', 12); AudioSys.sfx('ui', .4); return false; }
+  if (!player.skillBar) player.skillBar = [null,null,null,null];
+  const cu = player.skillBar.indexOf(id);
+  const dangO = player.skillBar[slot] || null;
+  if (cu >= 0){
+    // đổi chỗ — nhưng nếu ô đích là ô 1 và món bị đẩy sang là bị động thì không đổi được
+    if (cu === O_CHUDONG_DAU && dangO && knLaBiDong(dangO)){
+      addFloat(player.x, player.y-46, 'ô 1 phải là chiêu chủ động', '#ff9a6a', 12); return false;
+    }
+    player.skillBar[cu] = dangO;
+  }
+  player.skillBar[slot] = id;
+  knSauDoi(); return true;
+};
+window.knGo = function(slot){
+  if (!player || !player.skillBar) return false;
+  if (slot === O_CHUDONG_DAU){
+    addFloat(player.x, player.y-46, 'ô 1 không được để trống', '#ff9a6a', 12); return false;
+  }
+  player.skillBar[slot] = null; knSauDoi(); return true;
+};
+// Một chỗ dọn sau mọi lần đổi thanh. Thiếu `calcDerived` là %Di Sản và bị động không cập nhật
+// cho tới lần thay đồ kế tiếp — sai mà không có gì báo.
+function knSauDoi(){
+  if (player.spaceSkill && !player.skillBar.includes(player.spaceSkill)) player.spaceSkill = null;
+  AudioSys.sfx('ui', .55);
+  calcDerived(); saveGame();
+  if (typeof renderSkillPanel === 'function' && !el('panel-skill').classList.contains('hidden')) renderSkillPanel();
+}
+// Thanh chiêu phải LUÔN hợp lệ, kể cả với save cũ và với lớp vừa đổi. Gọi trong loadGame.
+function knRaSoat(){
+  if (!player) return;
+  if (!Array.isArray(player.skillBar) || player.skillBar.length !== 4)
+    player.skillBar = defaultSkillBar(player.sect);
+  const thay = [null,null,null,null]; const daCo = new Set();
+  for (let i = 0; i < 4; i++){
+    const id = player.skillBar[i];
+    if (!id || daCo.has(id)) continue;
+    if (i === O_CHUDONG_DAU && knLaBiDong(id)) continue;   // ô 1 không giữ bị động
+    if (!SKILL_DEFS[id] && !VOHOC_DEFS[id]) continue;      // chiêu đã bị gỡ khỏi game
+    // ⚠ ĐỪNG thêm `if (!knDaNgo(id)) continue;` vào đây. Đã thử và nó cắt đúng cái tay mình:
+    // `defaultSkillBar()` CỐ Ý cắm sẵn chiêu chưa tới cấp vào ô 2-4 để người chơi thấy nó sáng
+    // lên khi lên cấp — thêm cửa đó vào là nhân vật cấp 1 của CẢ NĂM LỚP mở ra chỉ còn một ô.
+    // Chiêu chưa tới cấp đã bị chặn ở chỗ tung (`skillInfo().unlocked`), bị động thì bị chặn ở
+    // `biDongBat()`. Cửa `knDaNgo` thuộc về `knOHopLe` — thứ người chơi TỰ kéo — không thuộc về
+    // hàm rà soát, vốn phải tôn trọng cả thanh mà game tự dựng.
+    thay[i] = id; daCo.add(id);
+  }
+  // Ô 1 trống thì lấp bằng chiêu chính của lớp — không bao giờ để người chơi đứng không nút nào.
+  // ⚠ PHẢI DỜI, KHÔNG ĐƯỢC NHÂN BẢN. `a` có thể đã nằm ở ô khác (save hỏng kiểu ['bị động','a',
+  // 'a', …] cho ra đúng ca đó): gán thẳng là thanh có hai ô cùng một chiêu, mà `knGan` thì cấm
+  // đúng chuyện ấy — tức hàm rà soát tự tạo ra trạng thái mà hàm gán không cho phép.
+  if (!thay[O_CHUDONG_DAU]){
+    const cu = thay.indexOf('a');
+    if (cu >= 0) thay[cu] = null;
+    thay[O_CHUDONG_DAU] = 'a';
+  }
+  player.skillBar = thay;
+}
 function defaultSkillBar(sect){ return ['a', 'tp', O3_SKILL_ID[sect] || null, SIGNATURE_SKILL[sect] || null]; }
 // Phím Space gán sẵn TUYỆT CHIÊU của lớp — trước đây Space mặc định là đòn đánh thường, nên ô
 // 4 nằm đó mà phần lớn người chơi không bao giờ bấm tới: nó chỉ hiện trên thanh, muốn dùng
@@ -4126,7 +4234,11 @@ function castVohoc(id){
   if (v.type === 'cone'){
     const t = nearestMob(220);
     if (t) player.face = Math.atan2(t.y - player.y, t.x - player.x);
-    const R = 135 * _ev.r;
+    // Bán kính quạt: mặc định 135, nhưng chiêu khai `fx.r` thì theo chiêu — cùng quy ước mà mọi
+    // chiêu `aoe` vẫn dùng, nên không phải nhớ hai luật. Ba chiêu quạt đang có (dk_lunge ·
+    // dk_fallingslash · mg_powerslash) đều KHÔNG khai fx.r lúc thêm dòng này, nên mặc định 135
+    // giữ nguyên hành vi cũ cho tất cả; chỉ chiêu nào tự khai mới đổi.
+    const R = (fx.r || 135) * _ev.r;
     spawnSkillVfx(id, v, 'cone', player.face, R);
     aoeHit(() => {
       for (const m of mobs){
@@ -7361,9 +7473,16 @@ function calcDerived(){
   // hoàn toàn vô nghĩa: chiêu học thêm từ 4 lớp kia không cộng gì cả. vhLearned() vốn đã là nguồn
   // đúng duy nhất (chỉ tự ngộ chiêu của lớp mình, trừ khi đã Thăng Tiên) — bỏ điều kiện thừa đi.
   let legacyPct = 0;
+  // ⚠ CHIÊU ĐANG NẰM TRÊN THANH THÌ KHÔNG CỘNG %ST. Đây là chỗ giữ luật "một chiêu không được
+  // vừa bấm được vừa cộng %ST vĩnh viễn" sau khi thanh chiêu cho tự gán. Trước đây luật đó giữ
+  // được bằng cách khoá cứng thanh rồi CHÉP TAY `LEGACY_SECT_SKILLS` sao cho hai bảng không giao
+  // nhau — cách giữ bằng tay ấy hỏng ngay giây đầu người chơi kéo được chiêu. Nay hỏi thẳng.
+  // Thanh mặc định không chứa chiêu Di Sản nào nên mọi lớp vẫn đúng +8,0% như cũ.
+  const _tren = new Set((player.skillBar || []).filter(Boolean));
   for (const sid of LEGACY_SECT_SKILLS){
     const lv = VOHOC_DEFS[sid];
-    if (lv && lv.phai === player.sect && vhLearned(sid)) legacyPct += LEGACY_TIER_PCT[lv.tier] || 0;
+    if (lv && lv.phai === player.sect && vhLearned(sid) && !_tren.has(sid))
+      legacyPct += LEGACY_TIER_PCT[lv.tier] || 0;
   }
   if (player.level >= 48) legacyPct += LEGACY_UNIVERSAL_PCT.danchi; // mốc cũ: bậc 4 = cấp 48
   if (player.level >= 72) legacyPct += LEGACY_UNIVERSAL_PCT.tieuhon; // mốc cũ: cảnh 6 = cấp 72
@@ -7440,10 +7559,10 @@ function calcDerived(){
   // thương", Heal ghi "hồi 1% HP/giây", Iron Will ghi "+10% HP, +8% giảm sát thương" — không
   // dòng nào nối vào chỉ số nào, và cả ba lại được quy đổi thành +%ST y như chiêu di sản. Nay
   // mỗi lớp có đúng MỘT hiệu ứng bị động, khác cơ chế nhau, và nó chạy thật.
-  if (vhLearned('dk_fortitude')) player.maxHp = Math.round(player.maxHp * 1.15);        // Swell Life
-  if (vhLearned('mg_ironwill'))  player.hpLeech = (player.hpLeech || 0) + 0.06;         // Iron Will
-  if (vhLearned('dl_darkraven')) player.skillDmgPct = (player.skillDmgPct || 0) + 0.12; // Dark Raven
-  player.healRegenPct = vhLearned('elf_heal') ? 0.01 : 0;                               // Heal — đọc ở update()
+  if (biDongBat('dk_fortitude')) player.maxHp = Math.round(player.maxHp * 1.15);        // Swell Life
+  if (biDongBat('mg_ironwill'))  player.hpLeech = (player.hpLeech || 0) + 0.06;         // Iron Will
+  if (biDongBat('dl_darkraven')) player.skillDmgPct = (player.skillDmgPct || 0) + 0.12; // Dark Raven
+  player.healRegenPct = biDongBat('elf_heal') ? 0.01 : 0;                               // Heal — đọc ở update()
   player.hp = Math.min(player.hp, player.maxHp);
   player.qi = Math.min(player.qi, player.maxQi);
 }
@@ -7733,11 +7852,14 @@ function loadGame(idx){
     }
     delete player.dantian;   // DANTIAN_REALMS đã gỡ — dọn nốt sau khi quy đổi Anima
     // Phase C backfill: thanh kỹ năng, PK, tội ác, buff, độc, auto-sell
-    // Tối giản taskbar (bản mới): luôn ép về đúng 4 ô cố định theo phái (chính/phụ/buff/tuyệt chiêu)
-    // — bỏ hẳn ô tự gán cũ, tránh save cũ kẹt lại chiêu giờ chỉ còn là bị động (không bấm được nữa).
-    // Ép lại ở đây cũng chính là đường nâng cấp cho save cũ: mọi save 3 ô mở lên là có ngay ô 4.
+    // ⚠ CHỖ NÀY TỪNG LÀ `player.skillBar = defaultSkillBar(player.sect)` — ép lại thanh MỖI LẦN
+    // nạp save. Hồi thanh còn cố định thì nó vô hại; từ lúc người chơi tự kéo thả được thì nó là
+    // cái nuốt sạch lựa chọn của họ, và nuốt trong im lặng: gán xong thấy đúng, tải lại trang là
+    // về mặc định, không lỗi, không dấu hiệu. Nay đi qua `knRaSoat()` — vẫn làm đủ ba việc mà
+    // dòng cũ làm (save 3 ô lên 4 ô, bỏ chiêu đã gỡ khỏi game, bỏ bị động kẹt ở ô 1) nhưng GIỮ
+    // những ô còn hợp lệ.
     // Đổi tên chiêu thì cấp đã nâng phải đi theo, không thì save cũ mở lên là ô 4 tụt về cấp 1
-    // trong im lặng. skillBar tự ép lại ngay dưới nên chỉ còn `skillLv` cần dắt sang khoá mới.
+    // trong im lặng. Phải dắt `skillLv` TRƯỚC khi rà soát thanh.
     for (const [cu, moi] of DOI_TEN_CHIEU){
       if (player.skillLv && player.skillLv[cu] != null){
         if (player.skillLv[moi] == null) player.skillLv[moi] = player.skillLv[cu];
@@ -7745,17 +7867,24 @@ function loadGame(idx){
       }
       if (player.spaceSkill === cu) player.spaceSkill = moi;
     }
-    player.skillBar = defaultSkillBar(player.sect);
-    // Cùng lý do: phím Space có thể còn trỏ vào chiêu đã rút khỏi taskbar (vd 'tieuhon' từ save
-    // cũ) — castSkill vẫn còn nhánh cho chúng nên chiêu đó sẽ lén bắn được, phá vỡ thiết kế 4 ô.
-    if (player.spaceSkill && !player.skillBar.includes(player.spaceSkill)) player.spaceSkill = null;
-    spaceMacDinh();
+    for (let _i = 0; _i < (player.skillBar || []).length; _i++){
+      const _m = DOI_TEN_CHIEU.find(([cu]) => cu === player.skillBar[_i]);
+      if (_m) player.skillBar[_i] = _m[1];
+    }
     if (player.pk == null) player.pk = false;
     if (player.toiac == null) player.toiac = 0;
     if (player.toiacT == null) player.toiacT = 0;
     delete player.gkBuffT;   // đồng hồ buff của chiêu Defense đã gỡ
     if (!player.vohoc) player.vohoc = {};
     if (!player.skillLv) player.skillLv = {};
+    // ⚠ PHẢI đứng SAU `player.vohoc` — `knRaSoat` hỏi `knDaNgo()`, mà bị động thì `knDaNgo` đọc
+    // `player.vohoc`. Save đời cũ không có trường đó, nên rà soát sớm một dòng là mọi bị động
+    // trên thanh bị coi như chưa ngộ và bị gỡ sạch, im lặng.
+    knRaSoat();   // save cũ / chiêu đã gỡ / ô 1 lỡ giữ bị động — ép thanh về trạng thái hợp lệ
+    // Phím Space có thể còn trỏ vào chiêu đã rút khỏi thanh (vd 'tieuhon' từ save cũ) —
+    // castSkill vẫn còn nhánh cho chúng nên chiêu đó sẽ lén bắn được dù không có ô nào.
+    if (player.spaceSkill && !player.skillBar.includes(player.spaceSkill)) player.spaceSkill = null;
+    spaceMacDinh();
     if (!player.skillEvo) player.skillEvo = {};
     if (player.bikipVH == null) player.bikipVH = 0;
     if (!player.gt) player.gt = { t: GT_DAY*0.30 }; // Lịch Thế Giới backfill
@@ -9193,7 +9322,10 @@ function phimXuong(e){
   if (e.key === 'Enter' && typeof loMo === 'function' && loMo()){ e.preventDefault(); window.doChaos(); return; }
   if (e.key >= '1' && e.key <= '4' && player){ // taskbar 4 ô kỹ năng (chính/phụ/buff/tuyệt chiêu)
     const id = player.skillBar[+e.key - 1];
-    if (id) castSkill(id); else togglePanel('skill');
+    // Ô cắm BỊ ĐỘNG không tung được — nói ra thay vì im lặng, nếu không người chơi bấm mãi và
+    // tưởng chiêu hỏng. `castSkill` vốn cũng lặng lẽ `return` vì bị động không có trong SKILL_DEFS.
+    if (id && knLaBiDong(id)) addFloat(player.x, player.y-40, `${skName(id)} là bị động — luôn chạy, không cần bấm`, '#a0ffe9', 12);
+    else if (id) castSkill(id); else togglePanel('skill');
   }
   if (e.key.toLowerCase()==='e'){ if (!window.tryCatchHorse || !tryCatchHorse()) tryTalk(); } // GDD Đợt 2 B5: E bắt Tuấn Mã kiệt sức trước
   if (e.key.toLowerCase()==='j'){ if (!tryPickLoot() && !ruongMo() && !viaKhai()) tryHarvestHerb(); } // nhặt đồ → mở Rương Canh → khai Vỉa Cốt → hái thảo dược
@@ -9203,11 +9335,14 @@ function phimXuong(e){
   // Lưu ý: trên màn ≥1000px, togglePanel('inv') mở CẢ Trang Bị lẫn Túi Đồ cạnh nhau — kéo-thả
   // HTML5 cần cả hai cùng có mặt trên DOM. Nên V và B rơi vào cùng một cặp bảng; đó là hành vi
   // có sẵn, không phải do đổi phím. Bỏ alias I để khỏi thành BA phím cho một việc.
-  if (e.key.toLowerCase()==='v') togglePanel('inv');                                // Trang Bị
+  if (e.key.toLowerCase()==='v') togglePanel('inv');                                // Trang Bị + Túi Đồ
   if (e.key.toLowerCase()==='b') togglePanel('bag');
   if (e.key.toLowerCase()==='k') togglePanel('skill');
   if (e.key.toLowerCase()==='m') togglePanel('map');
-  if (e.key.toLowerCase()==='q') togglePanel('qlog');
+  // Q KHÔNG đi qua togglePanel: Nhật Ký đã cắm vào cột phải, nó thu/mở tại chỗ.
+  if (e.key.toLowerCase()==='q') toggleQlog();
+  if (e.key.toLowerCase()==='p') togglePanel('party');    // Tổ Đội
+  if (e.key.toLowerCase()==='h') togglePanel('friend');   // Bạn Bè
   if (e.key.toLowerCase()==='u'){ SETTINGS.minimap = !SETTINGS.minimap; saveSettings(); }
   if (e.key.toLowerCase()==='o') togglePanel('settings');
   // F6 — bảng Hướng Dẫn & Phím Tắt. preventDefault vì F6 mặc định của trình duyệt là nhảy
@@ -9288,9 +9423,11 @@ document.getElementById('sk-basic').addEventListener('click', doBasic);
 document.querySelectorAll('.sk-slot').forEach(b=>{
   b.addEventListener('click', ()=>{
     const id = player && player.skillBar[+b.dataset.slot];
-    if (id) castSkill(id); else togglePanel('skill');
+    if (id && knLaBiDong(id)) addFloat(player.x, player.y-40, `${skName(id)} là bị động — luôn chạy, không cần bấm`, '#a0ffe9', 12);
+    else if (id) castSkill(id); else togglePanel('skill');
   });
 });
+knGanThaHUD();   // thả chiêu thẳng xuống thanh HUD — khai ở cùng chỗ gắn click, khỏi hai nơi nhớ
 // Ô cuối thanh kỹ năng nay là NHẶT ĐỒ (trước là Phiêu Vân Bộ — nhảy). Trên điện thoại không
 // có bàn phím nên đây là đường DUY NHẤT để nhặt đồ dưới đất.
 document.getElementById('sk-loot').addEventListener('click', () => {
@@ -10537,7 +10674,7 @@ function currentQuest(){ return questIdx < QUESTS.length ? QUESTS[questIdx] : nu
 
 // ---------- GDD Đợt 2 B3: Nhắc Việc Bấm Ngay ----------
 function anyPanelOpen(){
-  return ['panel-char','panel-inv','panel-bag','panel-skill','panel-map','panel-quest','panel-settings','panel-qlog','panel-stage','panel-forge']
+  return ['panel-char','panel-inv','panel-bag','panel-skill','panel-map','panel-quest','panel-settings','panel-stage','panel-forge']
     .some(id => { const e2 = document.getElementById(id); return e2 && !e2.classList.contains('hidden'); });
 }
 function hintCandidates(){
@@ -11198,7 +11335,7 @@ function update(dt){
       // tự tung kỹ năng trên taskbar khi hết hồi chiêu & đủ mana (im lặng, không spam thông báo)
       if (_ac.skill && _ad < Math.max(340, _rng0)){
         for (const _sid of player.skillBar){
-          if (_sid == null) continue;
+          if (_sid == null || knLaBiDong(_sid)) continue;   // ô cắm bị động thì không có gì để tung
           const _inf = skillInfo(_sid);
           if (_inf.unlocked && (player.cd[_sid] || 0) <= 0 && player.qi >= _inf.qi) castSkill(_sid);
         }
@@ -11799,7 +11936,7 @@ function onDeath(){
     return;
   }
   // Bản Nguyên Công (Sổ Kỹ Năng): chết tự hồi sinh 50% HP — CD 300s
-  if (vhLearned('tienthiencong') && (player.vhReviveCd || 0) <= 0){
+  if (biDongBat('tienthiencong') && (player.vhReviveCd || 0) <= 0){
     player.vhReviveCd = 300;
     player.hp = Math.round(player.maxHp * 0.5);
     player.combatT = 0;
@@ -16524,7 +16661,8 @@ function drawPlayer(p){
   }
   ctx.restore();
   // ── Danh hiệu trên đỉnh đầu (chọn trong bảng Nhân Vật → tab Thông Tin) ──
-  drawOverheadTitle(p, yOff, riding, maxed);
+  // Danh hiệu trên đỉnh đầu đã gỡ (chủ dự án chốt — nó sẽ hiện ở một chỗ khác). Giữ lại lời
+  // gọi dưới dạng chú thích thì tệ hơn xoá: người sau đọc sẽ tưởng nó chỉ tạm tắt.
 }
 function drawTitleBackdrop(){
   ctx.fillStyle = '#ece2c8'; ctx.fillRect(0,0,W,H);
@@ -16569,8 +16707,7 @@ function skMau(id){
 // NGAY LÚC NẠP TRANG và giết chết mọi thứ đăng ký phía sau nó.
 for (const [_id, _pn] of [['btn-char','char'], ['btn-inv','inv'], ['btn-bag','bag'],
                           ['btn-skill','skill'], ['btn-map','map'],
-                          ['btn-settings','settings'], ['btn-qlog','qlog'],
-                          ['btn-help','help']]){
+                          ['btn-settings','settings'], ['btn-help','help']]){
   const _b = el(_id);
   if (_b) _b.addEventListener('click', () => togglePanel(_pn));
 }
@@ -16594,6 +16731,10 @@ for (const [_id, _pn] of [['btn-char','char'], ['btn-inv','inv'], ['btn-bag','ba
     if (!drop.classList.contains('hidden') && !drop.contains(e2.target) && e2.target !== bmenu)
       drop.classList.add('hidden');
   });
+  // ⚠ `btn-qlog` KHÔNG còn đi qua togglePanel: Nhật Ký đã cắm vào cột nên `map['qlog']` là
+  // `undefined`, và togglePanel gặp khoá lạ thì IM LẶNG bỏ qua — nút vẫn bấm được, vẫn kêu,
+  // và không làm gì cả. Kiểu hỏng đó không ném lỗi nên không ai phát hiện.
+  { const bq = el('btn-qlog'); if (bq) bq.addEventListener('click', () => toggleQlog()); }
   const bsk = el('btn-sukien');
   if (bsk) bsk.addEventListener('click', () => { if (window.openEventBoard) window.openEventBoard(); });
   // Khôi phục trạng thái thu gọn đã lưu
@@ -16619,18 +16760,21 @@ if (btnMini) btnMini.addEventListener('click', ()=>{
   SETTINGS.minimap = !SETTINGS.minimap; saveSettings();
   AudioSys.sfx('ui', 0.5);
 });
-const btnQt = el('btn-questtracker');
-if (btnQt) btnQt.addEventListener('click', ()=>{
-  SETTINGS.questTracker = !SETTINGS.questTracker; saveSettings();
-  el('quest-tracker').classList.toggle('qt-closed', !SETTINGS.questTracker);
-  el('qt-arrow').textContent = SETTINGS.questTracker ? '▾' : '▸';
-  AudioSys.sfx('ui', 0.5);
+// ⚠ NỐI BẰNG UỶ QUYỀN, không `addEventListener` vào nút. Nút `#btn-questtracker` nay do
+// `renderQlog()` vẽ lại mỗi lần đổi tab, nên phần tử cũ bị vứt đi cùng với cái listener của
+// nó — nối thẳng là bấm được đúng một lần rồi câm, mà cái kiểu câm đó không ném lỗi.
+document.addEventListener('click', (e2) => {
+  if (e2.target && e2.target.id === 'btn-questtracker') toggleQlog();
 });
-// khôi phục trạng thái đóng/mở đã lưu (mặc định mở) — không đợi tới lần bấm đầu tiên
-if (el('quest-tracker')){
-  el('quest-tracker').classList.toggle('qt-closed', !SETTINGS.questTracker);
-  if (el('qt-arrow')) el('qt-arrow').textContent = SETTINGS.questTracker ? '▾' : '▸';
+// Khai bằng `function` chứ không phải `window.x = function`: phím Q gọi thẳng `toggleQlog()`
+// và eslint không truy được thuộc tính gán lên window (`no-undef` đỏ ngay). Gán thêm lên
+// window để bảng gỡ rối và bài kiểm gọi được.
+function toggleQlog(){
+  SETTINGS.questTracker = !SETTINGS.questTracker; saveSettings();
+  renderQlog();
+  AudioSys.sfx('ui', 0.5);
 }
+window.toggleQlog = toggleQlog;
 const btnCl = el('btn-combatlog');
 if (btnCl) btnCl.addEventListener('click', ()=>{
   SETTINGS.combatLog = !SETTINGS.combatLog; saveSettings();
@@ -19069,6 +19213,7 @@ function startGame(sectKey, quze){
   el('hud').classList.remove('hidden');
   el('bottom-hud').classList.remove('hidden');
   { const mc = el('menu-cot'); if (mc) mc.classList.remove('hidden'); }
+  renderQlog();   // khối cắm trong cột phải: vẽ ngay, không đợi ai bấm phím
   el('xp-strip').classList.remove('hidden');
   el('combat-log-wrap').classList.remove('hidden');
   fxLoad();   // mức hiệu ứng đã lưu (hoặc Tự Chỉnh) + bật lớp phủ CSS đúng bản đồ
@@ -19198,6 +19343,7 @@ else setTimeout(showIntro, 0);        // người mới → cốt truyện (defe
       el('hud').classList.remove('hidden');
       el('bottom-hud').classList.remove('hidden');
   { const mc = el('menu-cot'); if (mc) mc.classList.remove('hidden'); }
+  renderQlog();   // khối cắm trong cột phải: vẽ ngay, không đợi ai bấm phím
       el('xp-strip').classList.remove('hidden');
       el('combat-log-wrap').classList.remove('hidden');
       if (el('ghha-lang-toggle')) el('ghha-lang-toggle').style.display = 'none';
@@ -20062,7 +20208,10 @@ function togglePanel(which){
   // trả null và câu kế ném "Cannot read properties of null". Mọi chỗ gọi togglePanel('forge') cũ
   // đều vỡ theo.
   if (which === 'forge'){ window.openForgePanel(); return; }
-  const map = { char:'panel-char', inv:'panel-inv', bag:'panel-bag', skill:'panel-skill', map:'panel-map', settings:'panel-settings', qlog:'panel-qlog', help:'panel-help' };
+  // ⚠ KHÔNG có khoá 'qlog' ở đây: Nhật Ký thôi là cửa sổ nổi (xem `.bang-cam`). Cắm lại vào
+  // bảng này là mở Túi Đồ thì một mảnh HUD biến mất.
+  const map = { char:'panel-char', inv:'panel-inv', bag:'panel-bag', skill:'panel-skill', map:'panel-map', settings:'panel-settings', help:'panel-help',
+                party:'panel-party', friend:'panel-friend' };
   const id = map[which];
   const p = el(id);
   if (!p) return;                     // khoá lạ thì im lặng bỏ qua, không ném lỗi giữa lượt chơi
@@ -20086,8 +20235,11 @@ function togglePanel(which){
     // Màn hình hẹp/mobile giữ nguyên hành vi cũ (1 bảng tại 1 thời điểm — kéo-thả vốn không chạy trên chạm).
     // Nhân Vật ⇄ Trang Bị là HAI NỬA của một cửa sổ: mở nửa nào cũng kéo nửa kia ra cùng.
     // Màn hẹp thì thôi — hai nửa cạnh nhau cần bề ngang, mà kéo-thả vốn không chạy trên chạm.
-    if ((which === 'char' || which === 'inv') && window.innerWidth >= 1000){
-      const otherKey = which === 'char' ? 'inv' : 'char';
+    // ⚠ CẶP MỞ KÈM NAY LÀ inv ↔ bag. Đổi chỗ này mà quên `BANG_NHOM` ở trên (hoặc ngược
+    // lại) thì một nửa mở ra còn nửa kia bị chính vòng lặp phía trên tắt đi ngay sau đó —
+    // triệu chứng là "bấm V thấy nhấp nháy rồi mất bảng", rất khó lần ra nguyên nhân.
+    if ((which === 'inv' || which === 'bag') && window.innerWidth >= 1000){
+      const otherKey = which === 'inv' ? 'bag' : 'inv';
       renderPanel(otherKey);
       const po = el(map[otherKey]);
       po.classList.remove('hidden');
@@ -20116,9 +20268,19 @@ function togglePanel(which){
 // Cho `inv` cùng nhóm 'nv' với `char`: hai bảng vẫn mở KÈM nhau (kéo-thả HTML5 cần cả hai
 // cùng có mặt trên DOM), nhưng chúng đọc ra như MỘT cửa sổ hai nửa. Túi Đồ tách hẳn ra nhóm
 // riêng nên mở Túi Đồ là bộ đôi kia đóng, và ngược lại.
-const BANG_NHOM = { char:'nv', inv:'nv', bag:'tui', skill:'kn', map:'bd', settings:'cd', qlog:'nv2', help:'hd' };
-// CHỈ nhóm 'nv' được ở chung màn hình, và nó là hai nửa của cùng một cửa sổ.
-const BANG_SONG = { nv:1 };
+// ⚠ KHUÔN MU ONLINE, chủ dự án chốt: **C ra CHỈ SỐ, V ra TRANG BỊ + TÚI ĐỒ.**
+// Trước đây `char` và `inv` chung nhóm 'nv' nên bấm C là kéo luôn bảng Trang Bị ra — tức
+// phím xem chỉ số cũng mở đồ, và không có phím nào cho "chỉ xem chỉ số". Nay:
+//   · `char` một mình một nhóm → C ra ĐÚNG một cửa sổ chỉ số;
+//   · `inv` + `bag` chung nhóm 'do' → V (và B) ra hình nhân vật mặc đồ CẠNH lưới túi, đúng
+//     một cửa sổ hai nửa như MU. Kéo-thả HTML5 vốn đã cần cả hai cùng có mặt trên DOM.
+// 'xh' (Tổ Đội + Bạn Bè) là một nhóm của main, giữ nguyên. 'qlog' không còn ở đây vì Nhật Ký
+// đã cắm vào cột phải.
+const BANG_NHOM = { char:'nv', inv:'do', bag:'do', skill:'kn', map:'bd', settings:'cd', help:'hd',
+                    party:'xh', friend:'xh' };
+// Nhóm được phép ở chung màn hình với nhóm khác. 'do' là hai NỬA của một cửa sổ nên nó tự
+// mở kèm nhau qua BANG_NHOM; không khai ở đây, nếu không mở Túi Đồ là bảng Bản Đồ nằm lại.
+const BANG_SONG = {};
 // Ba bảng mở cùng lúc thì phải xếp thành ba cột, không chồng lên nhau. Gắn class lên <body>
 // để CSS lo phần xếp chỗ — JS không nên biết toạ độ.
 function capNhatCotBang(){
@@ -20130,20 +20292,24 @@ function capNhatCotBang(){
 window.capNhatCotBang = capNhatCotBang;
 function renderPanel(which){
   if (which==='settings'){ renderSettings(); return; }
-  if (which==='qlog'){ renderQlog(); return; }
   if (which==='help'){ renderHelpPanel(); return; }
   if (which==='char'){ window.charTab = 'info'; renderCharPanel(); }
   else if (which==='inv') renderInv();
   else if (which==='bag') renderBag();
   else if (which==='skill') renderSkillPanel();
   else if (which==='map') renderMapPanel();
+  else if (which==='party') renderPartyPanel();
+  else if (which==='friend'){ renderFriendPanel(); if (_bbTrang === 'chua' || _bbTrang === 'tatMay') bbTai(); }
   else renderCharPanel();
 }
 // CHỒNG CỬA SỔ. Ghi thứ tự MỞ để ESC biết cái nào là trên cùng. Chỉ chứa id bảng, và luôn
 // lọc lại theo thực tế trước khi dùng — bảng có thể bị đóng bằng nút ✕ mà không qua đây.
 let _bangChong = [];
+// ⚠ `panel-qlog` KHÔNG có trong danh sách này (và không có trong `map` của togglePanel):
+// nó đã thành khối cắm trong cột phải. Cắm lại vào đây là ESC đóng mất một mảnh HUD.
 const _MOI_BANG = ['panel-char','panel-inv','panel-bag','panel-skill','panel-map','panel-quest',
-                   'panel-settings','panel-qlog','panel-stage','panel-forge','panel-help'];
+                   'panel-settings','panel-stage','panel-forge','panel-help',
+                   'panel-party','panel-friend'];
 function bangDangMo(){ return _MOI_BANG.filter(id => { const e2 = el(id); return e2 && !e2.classList.contains('hidden'); }); }
 function bangGhiChong(id){
   _bangChong = _bangChong.filter(x => x !== id);
@@ -20222,7 +20388,7 @@ window.closePanels = closePanels;
 // Không có cái này thì người chơi không đọc được mình đang đứng ở cửa nào — mà đó chính là
 // việc của một thanh menu.
 const MC_BANG = { 'btn-char':'panel-char', 'btn-bag':'panel-bag', 'btn-skill':'panel-skill',
-                  'btn-qlog':'panel-qlog', 'btn-map':'panel-map', 'btn-settings':'panel-settings' };
+                  'btn-map':'panel-map', 'btn-settings':'panel-settings' };
 function capNhatMenuCot(){
   for (const bid in MC_BANG){
     const b = el(bid), pn = el(MC_BANG[bid]);
@@ -22306,6 +22472,69 @@ function knMuiTen(ds){
     <defs><marker id="knMui" markerWidth="7" markerHeight="7" refX="5" refY="3.2" orient="auto">
       <path d="M0 0 L6 3.2 L0 6.4 z" fill="#5fc96e"/></marker></defs>${p}</svg>`;
 }
+// ── KÉO THẢ chiêu vào ô 1-4 ─────────────────────────────────────────────────
+// Dùng lại đúng khuôn của Túi Đồ: một biến toàn cục thay vì tin `dataTransfer.getData` trong
+// `dragover` (một số trình duyệt chặn đọc dữ liệu cho tới `drop`). Ghi chú đó đã trả giá một
+// lần ở hệ trang bị — đừng phát minh lại kiểu khác.
+window._keoChieu = null;
+window.knKeoBatDau = function(e, id){
+  window._keoChieu = id;
+  if (e.dataTransfer){
+    e.dataTransfer.effectAllowed = 'move';
+    try { e.dataTransfer.setData('text/plain', id); } catch { /* đã có _keoChieu */ }
+  }
+};
+window.knKeoXong = function(){ window._keoChieu = null; document.querySelectorAll('.sk-nhan').forEach(x => x.classList.remove('sk-nhan')); };
+window.knOKeoQua = function(e, slot){
+  if (!window._keoChieu || knOHopLe(slot, window._keoChieu)) return;   // sai luật → giữ con trỏ "cấm"
+  e.preventDefault();
+  if (e.currentTarget) e.currentTarget.classList.add('sk-nhan');
+};
+window.knORoiKhoi = function(e){ if (e.currentTarget) e.currentTarget.classList.remove('sk-nhan'); };
+window.knOTha = function(e, slot){
+  e.preventDefault();
+  const id = window._keoChieu; window._keoChieu = null;
+  if (e.currentTarget) e.currentTarget.classList.remove('sk-nhan');
+  if (id) window.knGan(slot, id);
+};
+// Thanh chiêu TRÊN HUD cũng nhận thả. Gắn bằng JS chứ không viết vào index.html: bốn nút đó là
+// markup tĩnh, mà luật thả thì đọc `player` — để trong HTML là hai nơi phải nhớ sửa cùng lúc.
+function knGanThaHUD(){
+  document.querySelectorAll('#skillbar .sk-slot').forEach(b => {
+    const sl = +b.dataset.slot;
+    b.addEventListener('dragover', e => window.knOKeoQua(e, sl));
+    b.addEventListener('dragleave', e => window.knORoiKhoi(e));
+    b.addEventListener('drop', e => window.knOTha(e, sl));
+    // Chuột phải trên ô = gỡ. Ô 1 từ chối, và `knGo` tự nói vì sao.
+    b.addEventListener('contextmenu', e => { e.preventDefault(); window.knGo(sl); });
+  });
+}
+// Bốn ô ngay trong bảng Kỹ Năng — để kéo mà không phải với xuống thanh HUD, và để thấy luôn
+// cái giá Di Sản của từng ô.
+function knOBarHtml(){
+  const bar = player.skillBar || [];
+  let h = `<div class="kn-thanh"><div class="kn-thanh-t">Thanh chiêu — kéo chiêu từ cây thả vào ô · chuột phải để gỡ</div><div class="kn-thanh-o">`;
+  for (let i = 0; i < 4; i++){
+    const id = bar[i];
+    const bd = id && knLaBiDong(id);
+    const inf = id ? (bd ? { name: VOHOC_DEFS[id].name, icon: VOHOC_DEFS[id].icon } : skillInfo(id)) : null;
+    const mat = id && LEGACY_SECT_SKILLS.includes(id) && VOHOC_DEFS[id]
+      ? (LEGACY_TIER_PCT[VOHOC_DEFS[id].tier] || 0) : 0;
+    h += `<div class="kn-bo${id?'':' trong'}${bd?' bd':''}" data-slot="${i}"
+        ondragover="window.knOKeoQua(event,${i})" ondragleave="window.knORoiKhoi(event)"
+        ondrop="window.knOTha(event,${i})"
+        oncontextmenu="event.preventDefault();window.knGo(${i})"
+        title="${mstEsc(inf ? inf.name + (bd ? ' — bị động' : '') + (mat ? `\nĐang bỏ ${mat}% Công Kích Di Sản để bấm được` : '') : (i === O_CHUDONG_DAU ? 'Ô 1 — chỉ nhận chiêu chủ động' : 'Ô trống — kéo chiêu vào'))}">
+      ${inf ? `<img src="${inf.icon}" alt="">` : '<span>+</span>'}
+      <i>${i + 1}</i>${bd ? '<u>✚</u>' : ''}${mat ? `<s>−${mat}%</s>` : ''}</div>`;
+  }
+  const _mat = (player.skillBar || []).filter(x => x && LEGACY_SECT_SKILLS.includes(x) && VOHOC_DEFS[x])
+    .reduce((a, x) => a + (LEGACY_TIER_PCT[VOHOC_DEFS[x].tier] || 0), 0);
+  h += `</div><div class="kn-thanh-d">Di Sản còn <b>+${(player.legacyAtkPct || 0).toFixed(1)}%</b> Công Kích`
+     + (_mat ? ` — đã bỏ <b style="color:#ff9a6a">${_mat.toFixed(1)}%</b> để bấm được` : '')
+     + `. Chiêu để ngoài thanh thì cộng %ST vĩnh viễn; kéo lên thanh thì bấm được nhưng mất khoản đó.</div></div>`;
+  return h;
+}
 function renderSkillPanelCay(tab){
   const hinh = knHinh(tab);
   const ds = hinh.map((n, i) => knNut(tab, n, i));
@@ -22325,8 +22554,10 @@ function renderSkillPanelCay(tab){
     // THẬT: hỏi lại đúng ba điều kiện mà upgradeSkillUI() kiểm, không chỉ hỏi "đã mở khoá chưa".
     const nangDuoc = n.mo && !max && n.lv < player.level
       && player.silver >= skUpCost(n.id) && (player.khi || 0) >= skUpKhi(n.id);
+    const keo = n.mo;   // chưa mở khoá thì không kéo được — thả vào ô rồi bị từ chối là tệ hơn
     h += `<button class="kn-o${chon?' chon':''}${n.mo?'':' khoa'}" style="${st}"
-            onclick="knChon('${n.k}')" title="${mstEsc(n.ten + ' — cấp ' + n.lv)}">
+            draggable="${keo}" ondragstart="window.knKeoBatDau(event,'${n.id}')" ondragend="window.knKeoXong()"
+            onclick="knChon('${n.k}')" title="${mstEsc(n.ten + ' — cấp ' + n.lv + (keo ? '\nKéo xuống ô 1-4 để gán' : ''))}">
         <img src="${n.inf.icon}" alt="">
         ${nangDuoc ? '<i class="kn-cong">+</i>' : ''}
         <b class="kn-lv">${n.biDong ? '✚' : n.lv}</b></button>`;
@@ -22370,7 +22601,7 @@ function renderSkillPanelCT(tab, ds){
     <div class="kn-ct-tt ${n.mo?'ok':'no'}">${n.mo ? '◆ Đã đủ điều kiện' : '🔒 ' + (i.lockTxt || 'chưa đủ điều kiện')}</div>
     <div class="kn-d"><span>Loại:</span> ${n.loai}</div>
     <div class="kn-d"><span>Tiến độ:</span> ${mocKe ? `tới mốc <b>${mocKe.name}</b> (cấp ${mocKe.lv})` : 'đã tới mốc cuối'}</div>
-    <div class="kn-bar"><s style="width:${clamp(pc,0,100)}%"></s><em>${clamp(pc,0,100)}%</em></div>
+    <div class="kn-tien"><s style="width:${clamp(pc,0,100)}%"></s><em>${clamp(pc,0,100)}%</em></div>
     <div class="kn-d kn-mo"><span>Hiệu quả:</span> ${i.desc || '—'}</div>
     <div class="kn-d"><span>Tác dụng:</span> ${skThongSoGon(i)}</div>
     <div class="kn-d kn-mo"><span>Thêm 1 cấp:</span> +2,5% Sát Thương · −0,25% hồi chiêu${
@@ -22386,12 +22617,17 @@ function renderSkillPanelCT(tab, ds){
   h += `<div class="kn-nut">
       <button class="mini-btn kn-nang${nangDuoc?'':' mo'}" onclick="window.upgradeSkillUI('${n.id}')">Nâng Cấp</button>
     </div>`;
-  // Ảnh mẫu ghi "Kéo biểu tượng đến thanh phím tắt". Game này KHÔNG cho kéo — thanh chiêu là 4 ô
-  // cố định — nên viết đúng sự thật thay vì chép câu đó sang: nói luôn chiêu này nằm ô nào.
+  // Thanh chiêu nay GÁN ĐƯỢC (kéo thả), nên dòng này phải nói đúng cái giá của việc gán: chiêu
+  // Di Sản lên thanh thì mất khoản %Công Kích của nó. Đừng viết lại "4 ô cố định" — đó là mô tả
+  // của bản trước và nó sẽ nói dối ngay ở ô mà người chơi vừa tự kéo vào.
   const bar = (player.skillBar || []).indexOf(n.id);
+  const _diSan = LEGACY_SECT_SKILLS.includes(n.id);
   h += `<div class="kn-chan">${bar >= 0
     ? `Đang nằm ở <b>ô ${bar + 1}</b> trên thanh chiêu — bấm phím <b>${bar + 1}</b> để tung.`
-    : `Không nằm trên thanh chiêu (4 ô cố định). Chiêu ngoài thanh dồn thành % Công Kích vĩnh viễn — xem tab Khác.`}</div>`;
+      + (_diSan ? ` Đang bỏ khoản %Công Kích Di Sản của chiêu này để đổi lấy ô.` : '')
+    : `Chưa nằm trên thanh chiêu — <b>kéo thả</b> ô này vào ô 1-4 để bấm được.`
+      + (_diSan ? ` Để ngoài thì nó cộng %Công Kích vĩnh viễn (Di Sản — xem tab Khác).` : '')
+      + (n.biDong ? ` Bị động <b>chỉ chạy khi nằm trên thanh</b>.` : '')}</div>`;
   return h + `</div>`;
 }
 // Năm thông số bắt buộc, viết gọn một dòng cho khung hẹp. Đọc thẳng skillInfo() nên không có
@@ -22462,6 +22698,7 @@ function renderSkillPanel(){
     return;
   }
   const cay = renderSkillPanelCay(tab);
+  html += knOBarHtml();
   html += `<div class="kn-wrap">${cay.html}${renderSkillPanelCT(tab, cay.ds)}</div>`;
   html += `<div class="kn-ghi"><b style="color:#5fc96e">+</b> góc ô = nâng được ngay ·
     ô mờ = chưa mở khoá · ô viền đứt = chưa gán kỹ năng</div>`;
@@ -22620,7 +22857,7 @@ function castSkill(id){
   AudioSys.sfx(sfxTag, 0.6);
   flashSkillSlot(id);
   // Song Ảnh Phân Thân Thủ (Sổ Kỹ Năng): 30% chiêu vừa tung không tốn hồi chiêu
-  if (id !== 'tieuvotuong' && vhLearned('songthu') && Math.random() < 0.3){
+  if (id !== 'tieuvotuong' && biDongBat('songthu') && Math.random() < 0.3){
     player.cd[id] = 0;
     addFloat(player.x, player.y-62, '✦ SONG THỦ HỖ BÁC — chiêu không hồi!', '#d8d8f0', 13);
   }
@@ -22674,11 +22911,18 @@ function veChanDung(){
 // ---------- HUD (override): mana · danh hiệu/lớp/cấp trên thanh ----------
 function updateHud(){
   const sect = SECTS[player.sect];
-  const tt = player.titles && player.titles.equipped && TITLES.find(x=>x.id===player.titles.equipped);
   const nameEl = el('hud-name');
   // Góc trái chỉ giữ thứ đổi liên tục và cần liếc giữa trận: danh hiệu, tên, và hai cảnh báo.
   // Lớp / cấp / điểm cộng là thứ tra chứ không phải liếc — đã chuyển sang bảng Nhân Vật (V).
-  const _nameHtml = `${tt?`<span class="title-tag">[${tt.name}]</span> `:''}${player.name ? `<span class="char-name">${player.name}</span>` : sect.name}${player.free>0?` <span class="hud-free" title="Còn ${player.free} điểm chưa cộng — bấm V">+${player.free}</span>`:''}${player.toiac>0?` · <b>TỘI ÁC ${player.toiac}</b>`:''}`;
+  // ⚠ DANH HIỆU KHÔNG CÒN Ở ĐÂY. Chủ dự án chốt: chỗ này chỉ hiện TÊN. Lý do đo được ngay
+  // trên ảnh chụp — ô tên trong khung chân dung rộng chừng 150px, mà "[Kẻ Báo Thù] Wavecrest"
+  // thì riêng cái ngoặc đã ăn hơn nửa, nên thứ bị cắt mất bằng dấu `…` luôn luôn là CÁI TÊN.
+  // Một cái nhãn đẩy đúng thứ nó đi kèm ra khỏi màn hình thì nó không còn là nhãn nữa.
+  // Danh hiệu sẽ có chỗ riêng. Biến `tt` tra danh hiệu đang đeo cũng gỡ theo: sau khi bỏ thẻ
+  // ra khỏi chuỗi thì KHÔNG còn ai đọc nó (`.toiac` phía dưới đọc `player.toiac`, không đọc
+  // `tt`). Lint bắt được đúng chỗ đó — và nó cũng bắt được rằng chú thích đầu tiên tôi viết ở
+  // đây ("giữ nguyên vì còn dùng cho .toiac") là sai.
+  const _nameHtml = `${player.name ? `<span class="char-name">${player.name}</span>` : sect.name}${player.free>0?` <span class="hud-free" title="Còn ${player.free} điểm chưa cộng — bấm V">+${player.free}</span>`:''}${player.toiac>0?` · <b>TỘI ÁC ${player.toiac}</b>`:''}`;
   if (window._lastHudName !== _nameHtml){ window._lastHudName = _nameHtml; nameEl.innerHTML = _nameHtml; } // dirty-check: innerHTML rewrite is real DOM churn if done every frame
   nameEl.classList.toggle('toiac', (player.toiac||0) > 0);
   // ⚠ THANH NGANG, KHÔNG CÒN LÀ VIÊN CẦU. Hai thứ này từng là cầu ở hai đầu thanh chiến đấu
@@ -22756,7 +23000,11 @@ function updateHud(){
   const autoBtn = el('btn-auto');
   if (autoBtn){ autoBtn.classList.remove('hidden'); updateAutoBtn(); }
   // quest tracker — chính tuyến + tối đa 2 phụ tuyến
-  { const _th = trackerHtml(); if (window._lastTrack !== _th){ window._lastTrack = _th; el('quest-tracker').innerHTML = _th; } } // GDD Đợt 2 B2: cache để nút bấm không bị render đè
+  // ⚠ PHẢI hỏi phần tử trước. `#quest-tracker` nay chỉ có mặt khi Nhật Ký đang ở tab "Đang
+  // Làm"; đọc thẳng `el(...)` như trước là ném lỗi mỗi khung ngay khi người chơi bấm sang tab
+  // khác — tức là vỡ vòng vẽ, không phải một dòng sai.
+  { const _qt = el('quest-tracker');
+    if (_qt){ const _th = trackerHtml(); if (window._lastTrack !== _th){ window._lastTrack = _th; _qt.innerHTML = _th; } } } // cache để nút bấm không bị render đè
   // taskbar: 4 ô kỹ năng cố định (chính/phụ/buff/tuyệt chiêu)
   for (let i = 0; i < 4; i++){
     const b = el('sk-'+i); if (!b) continue;
@@ -23906,7 +24154,7 @@ function updateTut(){
   if (!box) return;
   const cur = (!player || player.tutStep == null || player.tutStep < 0 || player.tutStep >= TUT_STEPS.length) ? -99 : player.tutStep;
   // ẩn hướng dẫn khi đang mở bảng — tránh đè nội dung
-  const anyPanel = ['panel-char','panel-inv','panel-bag','panel-skill','panel-map','panel-quest','panel-settings','panel-qlog','panel-forge'].some(id => { const e2 = document.getElementById(id); return e2 && !e2.classList.contains('hidden'); });
+  const anyPanel = ['panel-char','panel-inv','panel-bag','panel-skill','panel-map','panel-quest','panel-settings','panel-forge'].some(id => { const e2 = document.getElementById(id); return e2 && !e2.classList.contains('hidden'); });
   const key = cur * 10 + (anyPanel ? 1 : 0);
   if (window._tutShown === key) return; // chỉ vẽ lại khi đổi bước/trạng thái — tránh reset nút ✕
   window._tutShown = key;
@@ -24007,30 +24255,6 @@ function drawThanHiepSeal(p, now){
   }
   ctx.restore();
 }
-// ── Danh hiệu hiển thị trên đỉnh đầu nhân vật ──
-function drawOverheadTitle(p, yOff, riding, maxed){
-  const tdef = p.titles && p.titles.equipped && TITLES.find(t => t.id === p.titles.equipped);
-  if (!tdef) return;
-  const ty = p.y + yOff - (riding ? 92 : 88);
-  ctx.save();
-  ctx.font = 'bold 12px "Be Vietnam Pro", sans-serif';
-  ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
-  const label = `[${tdef.name}]`;
-  const tw = ctx.measureText(label).width;
-  // nền trầm + viền màu danh hiệu
-  ctx.fillStyle = 'rgba(8,6,4,.48)';
-  ctx.beginPath();
-  if (ctx.roundRect) ctx.roundRect(p.x - tw/2 - 8, ty - 10, tw + 16, 18, 9);
-  else ctx.rect(p.x - tw/2 - 8, ty - 10, tw + 16, 18);
-  ctx.fill();
-  ctx.globalAlpha = 0.8; ctx.strokeStyle = tdef.color; ctx.lineWidth = 1; ctx.stroke();
-  ctx.globalAlpha = 1;
-  fxShadow(tdef.color, maxed ? 12 : 8);
-  ctx.fillStyle = tdef.color;
-  ctx.fillText(label, p.x, ty + 1);
-  ctx.restore();
-}
-
 // ---------- Minimap ----------
 // Everything in this static layer only depends on curMap (background art, level-band rings +
 // labels, spring/herb dots, city wall, gates) — none of it changes frame to frame, but it used
@@ -24778,21 +25002,32 @@ function tgBoCuc(){
   const key = TG_KHUNG.w + 'x' + TG_KHUNG.h + '|' + Object.keys(THE_GIOI).join(',');
   if (_tgBoCuc && _tgKey === key) return _tgBoCuc;
   const ids = Object.keys(THE_GIOI).filter(id => MAPS[id]);
-  let x0 = 1e9, y0 = 1e9, x1 = -1e9, y1 = -1e9;
-  for (const id of ids){ const p = THE_GIOI[id];
-    if (p.x<x0) x0=p.x; if (p.x>x1) x1=p.x; if (p.y<y0) y0=p.y; if (p.y>y1) y1=p.y; }
-  const le = TG_KHUNG.le, leD = TG_KHUNG.leD;
-  const sc = Math.min((TG_KHUNG.w - le*2) / Math.max(0.001, x1-x0),
-                      (TG_KHUNG.h - le - leD) / Math.max(0.001, y1-y0));
   // Cỡ vẽ ra tỉ lệ với CĂN BẬC HAI của diện tích map thật — dùng thẳng diện tích thì map lớn
   // nhất nuốt cả tấm (4,7 lần map nhỏ nhất về diện tích, chỉ 2,2 lần về cạnh).
   let dMax = 1;
   for (const id of ids) dMax = Math.max(dMax, Math.sqrt((MAPS[id].w||2600) * (MAPS[id].h||1900)));
+  // ⚠ HỘP BAO PHẢI TÍNH CẢ BÁN KÍNH, KHÔNG CHỈ TÂM. Bản đầu fit khung theo hộp bao của riêng
+  // TÂM rồi mới vẽ một hình bán kính `r` quanh mỗi tâm — nên vùng ngoài cùng luôn thò ra ngoài
+  // đúng `r` và bị mép canvas xén. Rẻo Rừng Corran (tâm trái nhất) vẽ ra sát x=3px, nhãn của nó
+  // thì tràn hẳn ra âm. Chủ dự án nhìn ảnh chụp gọi đúng tên: *"bị cụt"*.
+  // Bán kính TÍNH THEO ĐƠN VỊ LAYOUT là hằng số (nó tỉ lệ thuận với `sc`, nên `r/sc` không phụ
+  // thuộc `sc`) ⇒ cộng nó vào hộp bao trước khi tính `sc` là xong, không phải lặp cho hội tụ.
+  const ruy = id => 0.40 * (0.62 + 0.38 * Math.sqrt((MAPS[id].w||2600) * (MAPS[id].h||1900)) / dMax);
+  let x0 = 1e9, y0 = 1e9, x1 = -1e9, y1 = -1e9;
+  for (const id of ids){ const p = THE_GIOI[id], ru = ruy(id);
+    if (p.x-ru<x0) x0=p.x-ru; if (p.x+ru>x1) x1=p.x+ru;
+    if (p.y-ru<y0) y0=p.y-ru; if (p.y+ru>y1) y1=p.y+ru; }
+  const le = TG_KHUNG.le, leD = TG_KHUNG.leD;
+  const sc = Math.min((TG_KHUNG.w - le*2) / Math.max(0.001, x1-x0),
+                      (TG_KHUNG.h - le - leD) / Math.max(0.001, y1-y0));
+  // Căn giữa phần dư: `sc` bị một chiều bó, chiều kia còn thừa chỗ. Dồn hết phần thừa về một
+  // bên là tấm bản đồ lệch hẳn sang trái (hoặc lên trên) mà không ai chỉ ra được vì sao.
+  const duX = (TG_KHUNG.w - le*2) - (x1-x0)*sc, duY = (TG_KHUNG.h - le - leD) - (y1-y0)*sc;
   const o = {};
   for (const id of ids){
     const md = MAPS[id], p = THE_GIOI[id];
     const d = Math.sqrt((md.w||2600) * (md.h||1900)) / dMax;
-    o[id] = { cx: le + (p.x-x0)*sc, cy: le + (p.y-y0)*sc,
+    o[id] = { cx: le + duX/2 + (p.x-x0)*sc, cy: le + duY/2 + (p.y-y0)*sc,
               r: sc * 0.40 * (0.62 + 0.38*d), hinh: tgHinhVung(md) };
   }
   _tgBoCuc = o; _tgKey = key;
@@ -25281,6 +25516,209 @@ window.ttChayBo = function(id){
   closePanels();
   addFloat(player.x, player.y - 40, `🧭 Đang chạy tới ${c.name}`, '#7fd4ff', 12);
 };
+// ═══════════ TỔ ĐỘI & BẠN BÈ ═══════════
+//
+// Khuôn lấy từ hai cửa sổ của dòng MMO nhìn xuống (ảnh chủ dự án gửi): một bảng tổ đội có ô
+// thành viên + ô cài đặt, một bảng bạn bè có tab và Độ Thân Thiết. Lấy CÁCH BÀY, đổi tên và art
+// sang phong cách của game này — "hảo hữu" là từ kiếm hiệp nên gọi thẳng là **Bạn Bè**
+// (Quy tắc số 1), và bỏ hẳn hệ "Phu Thê"/"Sư Đồ" vì đó là cơ chế riêng của game kia.
+//
+// ⚠ HAI BẢNG NÀY NỐI VÀO HAI THỨ KHÁC HẲN NHAU, đừng nhầm:
+//   · **Bạn Bè CHẠY THẬT** — nối vào tRPC `friend.*` + bảng `friends` trong CSDL, dùng chung
+//     giữa các tài khoản thật. Thêm bạn, nhận lời mời, chặn, chào mỗi ngày — đều là dữ liệu thật.
+//   · **Tổ Đội CHƯA CHẠY ĐƯỢC** — nó cần realtime, mà game hiện là bản một máy (xem
+//     `docs/BOSS_TO_DOI.md` §2: "tổ đội = phải lên online trước"). Bảng dựng sẵn đúng khuôn và
+//     **NÓI THẲNG** là đang chờ máy chủ. Một bảng rỗng mà giả vờ có người là nói dối người chơi —
+//     cùng luật đã ghi cho Nhật Ký Nhiệm Vụ lúc `QUESTS` rỗng.
+//
+// ⚠ Và cả hai đều phải sống được khi KHÔNG CÓ MÁY CHỦ. Bản chạy trên VPS chỉ phục vụ tệp tĩnh
+// (xem mục PRODUCTION), nên `/api/trpc/*` ở đó không tồn tại. Đường thoát giống hệt AI NPC:
+// hỏi một phát, hỏng thì nói rõ "chưa bật", không để bảng treo hay ném lỗi ra vòng game.
+
+// ── Cửa duy nhất gọi tRPC từ game ────────────────────────────────────────────────────────
+// `game.js` trước đây gọi thẳng `fetch('/api/trpc/npc.status?input=…')` ở hai chỗ với hai cách
+// bọc khác nhau. Gom về một hàm: superjson bọc mọi thứ trong `{json:…}` ở CẢ hai đầu, nên chỗ
+// nào quên bọc là lỗi 400 rất khó đọc.
+async function trpcGoi(duong, input, laMutation){
+  const opt = laMutation
+    ? { method:'POST', headers:{ 'Content-Type':'application/json' }, body: JSON.stringify({ json: input ?? null }) }
+    : undefined;
+  const url = '/api/trpc/' + duong + (laMutation ? '' : '?input=' + encodeURIComponent(JSON.stringify({ json: input ?? null })));
+  const r = await fetch(url, opt);
+  const d = await r.json().catch(() => null);
+  if (!r.ok){
+    const ma = d && d.error && d.error.json && d.error.json.data && d.error.json.data.code;
+    const e = new Error(ma || ('HTTP ' + r.status)); e.ma = ma; throw e;
+  }
+  return d && d.result && d.result.data ? d.result.data.json : null;
+}
+
+// ── BẠN BÈ ───────────────────────────────────────────────────────────────────────────────
+const BB_TAB = [
+  { id:'ban',  ten:'Bạn Bè' },
+  { id:'moi',  ten:'Lời Mời' },
+  { id:'tim',  ten:'Tìm Người Chơi' },
+  { id:'chan', ten:'Sổ Đen' },
+];
+let _bbTab = 'ban';
+let _bbData = null;          // payload của friend.list
+let _bbTrang = 'chua';       // chua · dang · xong · caiDangNhap · tatMay
+let _bbTim = null;           // kết quả tìm người chơi
+let _bbTuTim = '';
+window.banBeTab = function(id){ _bbTab = id; renderFriendPanel(); AudioSys.sfx('ui', 0.5); };
+async function bbTai(){
+  _bbTrang = 'dang'; renderFriendPanel();
+  try {
+    _bbData = await trpcGoi('friend.list');
+    _bbTrang = 'xong';
+  } catch (e){
+    // Phân biệt HAI cái hỏng khác hẳn nhau: chưa đăng nhập (làm được gì đó) và máy chủ không có
+    // (chẳng làm được gì). Gộp thành một câu "lỗi" là bắt người chơi tự đoán.
+    _bbTrang = (e && e.ma === 'UNAUTHORIZED') ? 'caiDangNhap' : 'tatMay';
+  }
+  renderFriendPanel();
+}
+window.bbLamMoi = bbTai;
+function bbDong(o, nut){
+  const cap = o.cap ? `Cấp ${o.cap}` : 'Chưa vào game';
+  const lop = o.lop && typeof SECTS !== 'undefined' && SECTS[o.lop] ? SECTS[o.lop].name : '';
+  const av = o.avatar ? `<img class="bb-av" src="${o.avatar}" alt="">` : `<div class="bb-av bb-av-trong">?</div>`;
+  return `<div class="bb-dong">${av}
+    <div class="bb-giua"><div class="bb-ten">${aiEsc(o.ten || 'Không tên')}</div>
+      <div class="bb-phu">${cap}${lop ? ' · ' + lop : ''}${o.thanThiet != null ? ` · <span class="bb-tt">♥ ${o.thanThiet}</span>` : ''}</div></div>
+    <div class="bb-nut">${nut}</div></div>`;
+}
+function renderFriendPanel(){
+  let html = moBang({ tieu:'Bạn Bè', tabs:BB_TAB, chon:_bbTab, ham:'banBeTab' });
+  if (_bbTrang === 'dang')  html += `<div class="bb-trong">Đang hỏi máy chủ…</div>`;
+  else if (_bbTrang === 'tatMay')
+    html += `<div class="bb-trong">🔌 <b>Máy chủ chưa bật.</b><br>Bạn Bè cần máy chủ để lưu quan hệ giữa các tài khoản.
+             Bản chạy thử tĩnh không có phần này.<br><button class="mini-btn" style="margin-top:8px" onclick="bbLamMoi()">Thử lại</button></div>`;
+  else if (_bbTrang === 'caiDangNhap')
+    html += `<div class="bb-trong">🔑 <b>Cần đăng nhập.</b><br>Danh sách bạn gắn với tài khoản, không gắn với máy —
+             đăng nhập rồi mở lại bảng này.<br><button class="mini-btn" style="margin-top:8px" onclick="bbLamMoi()">Thử lại</button></div>`;
+  else if (_bbTrang === 'chua') html += `<div class="bb-trong">…</div>`;
+  else {
+    const d = _bbData || {};
+    if (_bbTab === 'ban'){
+      const ds = d.ban || [];
+      html += ds.length
+        ? `<div class="bb-ds">` + ds.map(o => bbDong(o,
+            `<button class="mini-btn" ${o.daChao ? 'disabled title="Hôm nay đã chào rồi — mai quay lại"' : `onclick="bbChao(${o.userId})"`}>${o.daChao ? '✓ Đã chào' : '👋 Chào'}</button>
+             <button class="mini-btn" onclick="bbXoa(${o.userId})">Xoá</button>
+             <button class="mini-btn" onclick="bbChan(${o.userId})">Chặn</button>`)).join('') + `</div>`
+        : `<div class="bb-trong">Chưa có ai trong danh sách.<br><span style="opacity:.7">Sang tab <b>Tìm Người Chơi</b> để kết bạn.</span></div>`;
+      html += `<div class="bb-chu">♥ <b>Độ Thân Thiết</b> tăng khi hai bên chào nhau — <b>mỗi ngày một lần</b>. Nó đếm số ngày hai người còn nhớ nhau, nên không mua được và không cày được.</div>`;
+    } else if (_bbTab === 'moi'){
+      const den = d.moiToiToi || [], di = d.moiDaGui || [];
+      html += `<div class="bb-muc">Lời mời gửi tới bạn</div>`;
+      html += den.length ? `<div class="bb-ds">` + den.map(o => bbDong(o,
+          `<button class="mini-btn" onclick="bbNhan(${o.userId})">Nhận</button>
+           <button class="mini-btn" onclick="bbXoa(${o.userId})">Từ chối</button>
+           <button class="mini-btn" onclick="bbChan(${o.userId})">Chặn</button>`)).join('') + `</div>`
+        : `<div class="bb-trong">Không có lời mời nào.</div>`;
+      html += `<div class="bb-muc">Bạn đã gửi đi</div>`;
+      html += di.length ? `<div class="bb-ds">` + di.map(o => bbDong(o,
+          `<button class="mini-btn" onclick="bbXoa(${o.userId})">Huỷ lời mời</button>`)).join('') + `</div>`
+        : `<div class="bb-trong">Chưa gửi lời mời nào.</div>`;
+    } else if (_bbTab === 'tim'){
+      html += `<div class="bb-timhang">
+        <input id="bb-tu" maxlength="64" placeholder="Gõ tên người chơi…" value="${aiEsc(_bbTuTim)}"
+          onkeydown="if(event.key==='Enter'){event.preventDefault();bbTim();}">
+        <button class="mini-btn" onclick="bbTim()">Tìm</button></div>`;
+      if (_bbTim == null) html += `<div class="bb-trong">Chỉ tìm được người <b>đã thật sự chơi</b> — tên có trong Bảng Xếp Hạng.</div>`;
+      else if (!_bbTim.length) html += `<div class="bb-trong">Không thấy ai tên như vậy.</div>`;
+      else {
+        const daCo = new Set([...(d.ban||[]), ...(d.moiDaGui||[]), ...(d.soDen||[])].map(o => o.userId));
+        html += `<div class="bb-ds">` + _bbTim.map(o => bbDong(o,
+          daCo.has(o.userId) ? `<span class="bb-xam">Đã có trong danh sách</span>`
+                             : `<button class="mini-btn" onclick="bbMoi(${o.userId})">Kết bạn</button>`)).join('') + `</div>`;
+      }
+    } else {
+      const ds = d.soDen || [];
+      html += ds.length
+        ? `<div class="bb-ds">` + ds.map(o => bbDong(o, `<button class="mini-btn" onclick="bbBoChan(${o.userId})">Bỏ chặn</button>`)).join('') + `</div>`
+        : `<div class="bb-trong">Sổ đen trống.</div>`;
+      html += `<div class="bb-chu">Người trong sổ đen không gửi được lời mời tới bạn, và bạn không thấy lời mời của họ.</div>`;
+    }
+  }
+  el('panel-friend').innerHTML = html;
+}
+// Mọi nút đều đi qua MỘT hàm: gọi xong thì TẢI LẠI danh sách từ máy chủ, không tự sửa bản sao
+// trong trình duyệt. Sửa tại chỗ thì nhanh hơn một nhịp, đổi lại có hai bản sự thật — và bản
+// trong máy sẽ nói dối ngay lần đầu máy chủ từ chối một thao tác.
+async function bbLam(duong, friendId, khiXong){
+  try {
+    const r = await trpcGoi(duong, { friendId }, true);
+    if (r && r.ok === false){
+      const noi = { tu:'Không tự kết bạn với mình được', biChan:'Người này đã chặn bạn',
+                    daChao:'Hôm nay chào rồi — mai quay lại', chuaLaBan:'Chưa phải bạn bè',
+                    khongCoLoiMoi:'Lời mời không còn nữa' };
+      bbBao(noi[r.ly] || 'Không làm được', '#f0a03a');
+    } else if (khiXong) khiXong(r);
+    await bbTai();
+  } catch { bbBao('Máy chủ không trả lời', '#e8776a'); }
+}
+function bbBao(t, mau){ if (player) addFloat(player.x, player.y - 40, t, mau || '#7fd4ff', 13); }
+window.bbMoi    = (id) => bbLam('friend.moi',   id, r => bbBao(r && r.thanhBan ? '🤝 Đã thành bạn!' : '✉ Đã gửi lời mời', '#8fd18f'));
+window.bbNhan   = (id) => bbLam('friend.nhan',  id, () => bbBao('🤝 Đã thành bạn!', '#8fd18f'));
+window.bbXoa    = (id) => bbLam('friend.xoa',   id);
+window.bbChan   = (id) => bbLam('friend.chan',  id, () => bbBao('Đã cho vào sổ đen', '#f0a03a'));
+window.bbBoChan = (id) => bbLam('friend.boChan',id);
+window.bbChao   = (id) => bbLam('friend.chao',  id, r => bbBao(`♥ +${(r && r.them) || 0} Thân Thiết`, '#ff9ec4'));
+window.bbTim = async function(){
+  const o = el('bb-tu'); _bbTuTim = o ? o.value.trim() : '';
+  if (!_bbTuTim){ _bbTim = null; renderFriendPanel(); return; }
+  try { _bbTim = await trpcGoi('friend.timNguoi', { tu:_bbTuTim }); }
+  catch { _bbTim = []; bbBao('Máy chủ không trả lời', '#e8776a'); }
+  renderFriendPanel();
+};
+
+// ── TỔ ĐỘI ───────────────────────────────────────────────────────────────────────────────
+const TD_TOI_DA = 5;                 // năm người — đúng năm lớp, một đội đủ vai
+const TD_EXP_MOI = 5;                // +5% EXP mỗi thành viên thêm vào
+const TD_CAI = [
+  ['tuNhan',  'Không có tổ đội thì tự nhận lời mời'],
+  ['choVao',  'Là đội trưởng thì tự cho người xin gia nhập'],
+  ['hienHUD', 'Hiện danh sách thành viên trên màn hình chính'],
+];
+window.toDoiCai = function(k, v){
+  SETTINGS.toDoi = SETTINGS.toDoi || {};
+  SETTINGS.toDoi[k] = !!v; saveSettings(); renderPartyPanel();
+};
+function renderPartyPanel(){
+  const cai = SETTINGS.toDoi || {};
+  let html = moBang({ tieu:'Tổ Đội' });
+  html += `<div class="td-dau">
+    <span class="td-buff">Thêm 1 thành viên, đánh quái <b>+${TD_EXP_MOI}% EXP</b></span>
+    <span class="td-trangthai">Trạng thái: <b>Chưa có tổ đội</b></span></div>`;
+  html += `<div class="td-luoi">`;
+  for (let i = 0; i < TD_TOI_DA; i++){
+    if (i === 0){
+      const lop = (typeof SECTS !== 'undefined' && player && SECTS[player.sect]) ? SECTS[player.sect].name : '';
+      html += `<div class="td-o td-toi"><div class="td-o-ten">${aiEsc((player && player.name) || 'Bạn')}</div>
+        <div class="td-o-phu">Cấp ${(player && player.level) || 1}${lop ? ' · ' + lop : ''}</div>
+        <div class="td-o-vai">Đội trưởng</div></div>`;
+    } else {
+      html += `<div class="td-o td-trong"><div class="td-o-cho">Chỗ trống</div></div>`;
+    }
+  }
+  html += `</div>`;
+  // ⚠ NÓI THẲNG, ĐỪNG GIẢ VỜ. Bảng này chưa chạy được vì game là bản một máy; che chuyện đó
+  // bằng mấy cái ô trống im lặng thì người chơi ngồi đợi một tính năng không tồn tại.
+  html += `<div class="td-chua">⏳ <b>Tổ đội cần máy chủ.</b> Game hiện chạy trên một máy và lưu trong trình duyệt,
+    nên chưa có ai khác để rủ. Khung bảng và các tuỳ chọn dưới đây dựng sẵn cho lúc máy chủ lên —
+    xem <b>docs/BOSS_TO_DOI.md</b>.</div>`;
+  html += `<div class="td-cai">` + TD_CAI.map(([k, ten]) =>
+    `<label class="bd-loc"><input type="checkbox" ${cai[k] ? 'checked' : ''} onchange="toDoiCai('${k}',this.checked)"> ${ten}</label>`).join('') + `</div>`;
+  html += `<div class="td-nut">
+    <button class="mini-btn" disabled title="Cần máy chủ">Mời Vào Đội</button>
+    <button class="mini-btn" disabled title="Cần máy chủ">Nhường Đội Trưởng</button>
+    <button class="mini-btn" disabled title="Cần máy chủ">Rời Đội</button>
+    <button class="mini-btn" onclick="togglePanel('friend')">Mở Bạn Bè</button></div>`;
+  el('panel-party').innerHTML = html;
+}
+
 function renderMapPanel(){
   const zt = zoneType();
   const tabs = [{ id:'ht', ten:'Hiện Tại' }, { id:'tg', ten:'Thế Giới' }];
@@ -25896,11 +26334,14 @@ function drawNpc(){
    sau mà không tìm được chỗ trống thì THÔI KHÔNG VẼ, chứ không vẽ đè: một nhãn đọc được đáng
    giá hơn hai nhãn chồng nhau. Người gần nhất luôn có nhãn.                                  */
 const NHAN_CAO   = 15;   // chiều cao một dòng nhãn để tính đụng nhau
-const HUD_CHE    = 64;   // dải trên cùng màn hình có chữ HUD (tên nhân vật, tên map) đè xuống
-// DẢI TRÁI cũng bị chắn, và trước bản này không ai chừa chỗ cho nó: cột biểu tượng #menu-cot
-// (left:10px, rộng ~56px) nằm đè lên canvas, nên tên NPC đứng gần mép trái bị cắt cụt — chụp
-// được ở Sapidae Chiefdom: 'Người Luyện Chimera' hiện ra thành 'ời Luyện Chimera'.
-const HUD_TRAI   = 76;   // 10 (lề) + 56 (cột) + 10 (khoảng thở)
+// Dải TRÊN cao lên 64 → 80: góc trái nay là KHUNG CHÂN DUNG (10 lề + ~58 khung + lề) chứ
+// không còn là một dòng tên trần. Nhãn NPC lọt vào đó là nằm dưới một tấm nền đục.
+const HUD_CHE    = 80;
+// ⚠ DẢI TRÁI ĐÃ ĐƯỢC TRẢ LẠI. Con số 76 cũ chừa chỗ cho cột biểu tượng `#menu-cot` khi nó
+// còn dựng dọc ở mép trái — chụp được ở Sapidae Chiefdom: 'Người Luyện Chimera' hiện ra
+// thành 'ời Luyện Chimera'. Cột đó nay nằm ngang ở đáy phải, nên giữ 76 là tự bỏ phí một
+// dải 76px mà không còn gì che ở đó. Chỉ còn đúng lề mép màn hình.
+const HUD_TRAI   = 12;
 function veNhanNpc(ds){
   if (!ds.length) return;
   ctx.font = '12px "Be Vietnam Pro", sans-serif';
@@ -26012,7 +26453,7 @@ function trackerHtml(){
 }
 
 // ---------- Nhật Ký Nhiệm Vụ (phím Q) — phân theo vùng ----------
-window.qlogTab = 'main';
+window.qlogTab = 'track';
 // ═══════════ CỐT TRUYỆN NGŨ ẤN × TÔNG MÔN — manh mối, lời thoại trấn thủ, kết mở ═══════════
 // CLUES đã dời sang data/canbang.js — sửa cân bằng không phải mở tệp 26k dòng này.
 const CLUES = window.CLUES;
@@ -26134,11 +26575,25 @@ function showKetMo(){
 window.setQlogTab = function(t){ window.qlogTab = t; AudioSys.sfx('ui', 0.5); renderQlog(); };
 function renderQlog(){
   const p = el('panel-qlog'); if (!p) return;
+  p.classList.toggle('ql-thu', !SETTINGS.questTracker);
   // Ba tab này trước đây dùng .mini-btn.danger — CÙNG class với nút "XÓA SAVE", nên tab chưa
   // chọn trông y hệt nút xoá dữ liệu và người chơi cẩn thận sẽ không dám bấm.
-  let html = moBang({ tieu:'Nhật Ký Nhiệm Vụ', chon:window.qlogTab, ham:'setQlogTab',
-    tabs:[{ id:'main', ten:'★ Chính Tuyến' }, { id:'side', ten:'◈ Phụ Tuyến' }, { id:'story', ten:'📜 Nhật Ký' }] });
-  if (window.qlogTab === 'main'){
+  // ⚠ `dongX:false` — khối này CẮM trong cột phải, không phải cửa sổ nổi. Một nút ✕ ở đây
+  // đóng nó đi rồi không còn cách nào mở lại bằng chuột: nó không nằm trong chồng cửa sổ nên
+  // `dongBangTrenCung()` cũng không biết tới. Thu/mở bằng nút ▾ ở ngay dưới, và bằng phím Q.
+  // Tên tab rút còn một hai chữ: cột rộng 190px, tên đầy đủ ("★ Chính Tuyến") xuống dòng và
+  // hàng tab cao gấp đôi phần nội dung nó dẫn vào.
+  let html = moBang({ tieu:'Nhiệm Vụ', mat:'📜', chon:window.qlogTab, ham:'setQlogTab', dongX:false,
+    tabs:[{ id:'track', ten:'Đang Làm' }, { id:'main', ten:'Chính' },
+          { id:'side', ten:'Phụ' }, { id:'story', ten:'Ký Sự' }] });
+  html += `<button id="btn-questtracker" title="Thu/mở Nhật Ký (Q)">${
+    SETTINGS.questTracker ? '▾ Thu gọn' : '▸ Mở ra'}</button>`;
+  // Tab ĐANG LÀM giữ nguyên `trackerHtml()` — mục tiêu chính tuyến đang chạy, phụ tuyến đang
+  // nhận, và Mục Tiêu Hôm Nay. `updateHud()` ghi đè nội dung `#quest-tracker` mỗi khung (có
+  // so chuỗi trước khi ghi), nên phần này phải là MỘT thẻ riêng có id đó.
+  if (window.qlogTab === 'track'){
+    html += `<div id="quest-tracker"${SETTINGS.questTracker ? '' : ' class="qt-closed"'}>${trackerHtml()}</div>`;
+  } else if (window.qlogTab === 'main'){
     if (!QUESTS.length) html += `<div class="ql-row" style="opacity:.7">Chưa có nhiệm vụ chính tuyến. Chuỗi cũ đã gỡ để dựng lại theo lối chơi mới.</div>`;
     let lastCh = '';
     QUESTS.forEach((q, i) => {
@@ -27109,6 +27564,8 @@ const HD_BANG = [
     ['M',   'help.k.map'],
     ['Q',   'help.k.quest'],
     ['U',   'help.k.minimap'],
+    ['P',   'help.k.party'],
+    ['H',   'help.k.friend'],
     ['O',   'help.k.settings'],
     ['F6',  'help.k.help'],
     ['Esc', 'help.k.esc'],

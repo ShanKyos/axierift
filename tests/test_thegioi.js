@@ -64,17 +64,23 @@ let bad = 0; const fail = m => { bad++; console.log('FAIL ' + m); };
       const d = Math.hypot(A.cx-B.cx, A.cy-B.cy);
       if (d < (A.r + B.r) * 0.92) de.push(`${ids[i]}↔${ids[j]} ${Math.round(d)}px < ${Math.round((A.r+B.r)*0.92)}px`);
     }
+    // ⚠ NGƯỠNG NÀY TỪNG LÀ `< 0` VÀ NÓ XANH TRONG LÚC TẤM BẢN ĐỒ ĐANG HỎNG. `tgBoCuc` hồi đó
+    // fit khung theo hộp bao của riêng TÂM, nên vùng ngoài cùng vẽ ra sát x=3px — vẫn "trong
+    // khung" theo đúng chữ, mà nhìn ảnh chụp thì nó ép vào mép và nhãn tràn ra âm. Chủ dự án
+    // phải tự chỉ ra. Nay đòi đủ LỀ THẬT: `TG_KHUNG.le` là lề mà chính `tgBoCuc` hứa chừa.
+    const leMin = TG_KHUNG.le * 0.9;
     for (const id of ids){
       const o = bc[id];
       // nhãn vẽ tới `cy + r + 24` và cao ~8px ⇒ mép dưới thật là +32
-      if (o.cx - o.r < 0 || o.cx + o.r > TG_KHUNG.w || o.cy - o.r < 0 || o.cy + o.r + 32 > TG_KHUNG.h)
+      if (o.cx - o.r < leMin || o.cx + o.r > TG_KHUNG.w - leMin || o.cy - o.r < leMin
+          || o.cy + o.r + 32 > TG_KHUNG.h)
         tran.push(`${id} (${Math.round(o.cx)},${Math.round(o.cy)}) r=${Math.round(o.r)}`);
     }
-    return { de, tran, khung:`${TG_KHUNG.w}x${TG_KHUNG.h}` };
+    return { de, tran, leMin:Math.round(leMin), khung:`${TG_KHUNG.w}x${TG_KHUNG.h}` };
   });
   console.log('3) chồng/tràn:', JSON.stringify(r3));
   if (r3.de.length) fail(`③ ${r3.de.length} cặp vùng đè lên nhau: ${r3.de.join(' · ')}`);
-  if (r3.tran.length) fail(`④ ${r3.tran.length} vùng tràn khỏi khung ${r3.khung}: ${r3.tran.join(' · ')}`);
+  if (r3.tran.length) fail(`④ ${r3.tran.length} vùng không đủ lề ${r3.leMin}px trong khung ${r3.khung}: ${r3.tran.join(' · ')}`);
 
   // ---- 5. mọi cặp cổng thành một con đường ----
   const r5 = await p.evaluate(() => {
