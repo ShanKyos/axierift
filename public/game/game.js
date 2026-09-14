@@ -2107,6 +2107,7 @@ function bayCo(pk, md){
 
 let curMap = 'corran';
 let zoneBanner = null; // { text, sub, color, t }
+let _bannerCu = null;  // banner vừa đẩy vào ô chat — xem chỗ bắt trong update()
 
 // ---------- Tường thành & Cổng thành — Sapidae Chiefdom / Outskirts ----------
 // Thành là khu an toàn tuyệt đối: quái không spawn trong thành, tường chặn mọi lối đi,
@@ -9113,6 +9114,68 @@ function drawLootJewel(x, y, col, t){
 // Nhật ký chiến đấu: gộp sát thương/thưởng mỗi đòn thành 1 dòng chữ trong panel góc dưới trái,
 // thay cho số bay đầy màn hình khi AUTO đang đánh nhiều quái cùng lúc (kiểu combat log NGU Idle) —
 // thao tác DOM trực tiếp, không giữ mảng riêng vì log không cần lưu qua save/load
+// ═══ TRÒ CHUYỆN — góc dưới TRÁI, tách hẳn khỏi nhật ký chiến đấu ════════════════
+//
+// Trước bản này chỉ có MỘT ô ở góc dưới trái, và nó nhận tất: EXP, đồ rơi, sát thương, cả
+// thông báo hệ thống. Hai loại đó người chơi đọc vào HAI LÚC KHÁC HẲN — số EXP chỉ có nghĩa
+// trong lúc đánh nhau, còn thông báo thế giới thì đọc lúc đứng yên — mà chúng lại đẩy nhau
+// ra khỏi cùng một ô 50 dòng. Nay: CHIẾN ĐẤU sang phải, TRÒ CHUYỆN ở lại bên trái.
+//
+// ⚠ KÊNH NGƯỜI-VỚI-NGƯỜI CHƯA CÓ, và cố ý không dựng một tab giả cho nó. Game hiện là một
+// người chơi (`docs/THIET_KE_ONLINE.md` mới là thiết kế, chưa dựng). Ba kênh dưới đây đều
+// có nội dung THẬT ngay hôm nay; khi bản online lên thì thêm một kênh nữa vào `CHAT_KENH`
+// và gọi `logChat('nguoi', …)` — khung, tab, ô nhập và luật lọc đã sẵn.
+const CHAT_KENH = ['tong', 'he', 'quanh'];
+let chatKenh = 'tong';
+const _chatDong = [];          // {kenh, html, mau} — giữ để lọc lại khi đổi tab
+const CHAT_MAX = 120;
+
+function logChat(kenh, text, mau){
+  _chatDong.push({ kenh, text, mau: mau || '#dbe3ff' });
+  while (_chatDong.length > CHAT_MAX) _chatDong.shift();
+  if (chatKenh === 'tong' || chatKenh === kenh) chatVeDong(_chatDong[_chatDong.length - 1]);
+}
+function chatVeDong(d){
+  const box = el('chat-log'); if (!box) return;
+  const day = box.scrollTop + box.clientHeight >= box.scrollHeight - 24;   // đang ở đáy?
+  const r = document.createElement('div');
+  r.className = 'ch-row'; r.style.color = d.mau; r.textContent = d.text;
+  box.appendChild(r);
+  while (box.children.length > CHAT_MAX) box.removeChild(box.firstChild);
+  // Chỉ tự cuộn khi người chơi ĐANG ở đáy. Kéo lên đọc lại mà bị giật xuống mỗi dòng mới
+  // thì không đọc nổi — đúng lỗi mọi ô chat game đều mắc một lần.
+  if (day) box.scrollTop = box.scrollHeight;
+}
+window.chatTab = function(k){
+  if (!CHAT_KENH.includes(k)) return;
+  chatKenh = k;
+  for (const b of document.querySelectorAll('.chat-tab')) b.classList.toggle('on', b.dataset.kenh === k);
+  const box = el('chat-log'); if (!box) return;
+  box.innerHTML = '';
+  for (const d of _chatDong) if (k === 'tong' || d.kenh === k) chatVeDong(d);
+  box.scrollTop = box.scrollHeight;
+};
+// Ô nhập: gõ `/lệnh` thì chạy đúng bộ lệnh playtest đã có (cheatExec), còn chữ thường thì
+// hiện thành một dòng của chính mình. Dòng đó CHƯA đi đâu cả — nói rõ ra thay vì để người
+// chơi tưởng có ai đọc được.
+window.chatGui = function(v){
+  const t = (v || '').trim();
+  if (!t) return;
+  if (t[0] === '/'){
+    // `cheatExec` khai bằng `window.cheatExec = …` ở tận dưới, không phải khai báo hàm — nên
+    // gọi trần là eslint bắt `no-undef`, và nó ĐÚNG: trước lúc dòng kia chạy thì tên đó chưa
+    // tồn tại trong phạm vi module. Đi qua `window` mới là thứ có thật.
+    if (typeof window.cheatExec === 'function') window.cheatExec(t);
+    else logChat('he', 'Lệnh chỉ chạy ở chế độ playtest.', '#ff9a4d');
+    return;
+  }
+  logChat('quanh', `${(player && player.name) || 'Bạn'}: ${t}`, '#ffe9a8');
+  if (!window._chatDaNhac){
+    window._chatDaNhac = true;
+    logChat('he', 'Kênh người-với-người chưa mở — câu vừa rồi chỉ mình bạn thấy.', '#9aa07f');
+  }
+};
+
 function logCombat(text, color){
   const logEl = el('combat-log');
   if (!logEl) return;
@@ -10762,6 +10825,13 @@ function update(dt){
     player.maDao = false;
     zoneBanner = { text:'HỒI ĐẦU THỊ NGẠN', sub:'Tội nghiệt đã gột sạch — trở lại danh sạch.', color:'#7ec850', t:3.5 };
     saveGame();
+  }
+  // ⚠ Bắt banner ở ĐÂY chứ không đi sửa 12+ chỗ gán `zoneBanner = {...}`. Một chỗ bắt thì mọi
+  // thông báo cũ VÀ mọi thông báo thêm sau này tự vào ô chat, không ai phải nhớ gọi thêm hàm.
+  // So bằng ĐỊNH DANH đối tượng: cùng nội dung mà gán lại thì vẫn là một thông báo mới.
+  if (zoneBanner && zoneBanner !== _bannerCu){
+    _bannerCu = zoneBanner;
+    logChat('he', zoneBanner.text + (zoneBanner.sub ? ' — ' + zoneBanner.sub : ''), zoneBanner.color || '#ffd76a');
   }
   if (zoneBanner){ zoneBanner.t -= dt; if (zoneBanner.t <= 0) zoneBanner = null; }
   // đai cấp: bước sang đai mới → báo banner (lần đầu vào map chỉ ghi nhận, không bắn banner)
@@ -15595,6 +15665,7 @@ if (btnCl) btnCl.addEventListener('click', ()=>{
   // Nút đã dời vào thả xuống nên nó KHÔNG còn nằm cạnh cái nhật ký nữa; tắt mà chỉ thu nội
   // dung thì góc màn hình vẫn còn một khung rỗng không ai gọi ra được. Giấu cả khối.
   const w = el('combat-log-wrap'); if (w) w.classList.toggle('an', !SETTINGS.combatLog);
+  const c = el('chat-wrap'); if (c) c.classList.toggle('an', !SETTINGS.combatLog);
   const a = el('cl-arrow'); if (a) a.textContent = SETTINGS.combatLog ? '▾' : '▸';
   AudioSys.sfx('ui', 0.5);
 });
@@ -17906,6 +17977,7 @@ function startGame(sectKey, quze){
   { const mc = el('menu-cot'); if (mc) mc.classList.remove('hidden'); }
   el('xp-strip').classList.remove('hidden');
   el('combat-log-wrap').classList.remove('hidden');
+      el('chat-wrap').classList.remove('hidden');
   fxLoad();   // mức hiệu ứng đã lưu (hoặc Tự Chỉnh) + bật lớp phủ CSS đúng bản đồ
   if (el('combat-log')) el('combat-log').innerHTML = '';   // nhân vật mới không đọc log của người trước
   // Chip đổi ngôn ngữ chỉ thuộc về màn chờ: trong game nó neo trùng chỗ với #hud-map, và trên
@@ -18032,6 +18104,7 @@ else setTimeout(showIntro, 0);        // người mới → cốt truyện (defe
   { const mc = el('menu-cot'); if (mc) mc.classList.remove('hidden'); }
       el('xp-strip').classList.remove('hidden');
       el('combat-log-wrap').classList.remove('hidden');
+      el('chat-wrap').classList.remove('hidden');
       if (el('ghha-lang-toggle')) el('ghha-lang-toggle').style.display = 'none';
       fxLoad();
       snapCamera(); // tiếp tục hành trình: camera đặt thẳng vào nhân vật
@@ -22595,9 +22668,135 @@ function noiMapHtml(mid){
   }).filter(Boolean).join(' · ');
   return bit ? `<div class="m-desc" style="margin-top:2px;opacity:.9">🧭 Đi bộ: ${bit}</div>` : '';
 }
+// ═══ BẢN ĐỒ THÀNH — tấm lớn, CÓ NHÃN CHỮ ════════════════════════════════════════
+//
+// ⚠ VÌ SAO CÓ KHỐI NÀY. Đo được: Ardhaven có 26 NPC và **0 trong 26 có tên trên bản đồ**.
+// `drawMinimap()` có luật "map quá 8 NPC thì chỉ gắn tên cho ai đang có việc", và luật ấy
+// ĐÚNG — 26 cái tên nhồi vào ô 240×120 ra một mảng chữ đặc, không đọc nổi chữ nào. Nhưng hệ
+// quả là không ai có tên cả, và bảng Bản Đồ thì chỉ là một DANH SÁCH CHỮ CÁC MAP, không có
+// hình cái thành. Người chơi không có cách nào biết Lò Rèn ở đâu trừ khi đi vòng quanh.
+//
+// Cách giải không phải nhồi thêm nhãn vào góc màn hình mà là một TẤM LỚN RIÊNG — đúng như
+// map thành của mấy game cùng dòng làm. Ở 560×280 (gấp 5,4 lần diện tích bản đồ góc) thì 8
+// nhãn chức năng + 4 nhãn cổng thừa chỗ. Xem docs/DE_XUAT_NPC_NHA.md §3A.
+//
+// ⚠ CHỈ GẮN NHÃN CHO NPC CÓ CHỨC NĂNG. 18 người `talk:'quest'` để chấm không tên — gắn cả 26
+// là lặp lại đúng cái lỗi mà luật kia sinh ra để tránh, chỉ ở khổ to hơn.
+//
+// ⚠ KHÔNG dùng lại `drawMinimapStatic()`. Nó chỉnh riêng cho ô 240×120: cỡ chấm, cỡ chữ 7px
+// và mấy bán kính đều chép cứng theo khổ đó, phóng lên 560 thì chấm bé như hạt bụi.
+// ⚠ TÊN TRÊN BẢN ĐỒ LẤY TỪ `n.nhan` TRƯỚC, bảng này chỉ là lớp nền. Ba NPC `talk:'shop'`
+// mà cùng in ra "Cửa Hàng" thì người chơi vẫn không biết cái nào bán thuốc — đúng bằng không
+// gắn nhãn. Tên đầy đủ ("Nhà Giả Kim · Tiệm Thuốc") thì dài gấp ba chỗ có, nên NPC khai một
+// nhãn NGẮN riêng ở `data/canbang.js`.
+const THANH_TALK = {
+  forge:    { ten:'Lò Rèn',     mau:'#ffb15c' },
+  shop:     { ten:'Cửa Hàng',   mau:'#ffd76a' },
+  stable:   { ten:'Chuồng',     mau:'#9ad45e' },
+  trunya:   { ten:'Truy Nã',    mau:'#ff9a4d' },
+  vanduyen: { ten:'Cầu May',    mau:'#c07fe0' },
+  tenui:    { ten:'Vực Thẳm',   mau:'#7fb8c4' },
+};
+function veBanDoThanh(mid, W0, H0){
+  const md = MAPS[mid];
+  if (!md || !md.diTrong) return null;
+  const cv = document.createElement('canvas');
+  cv.width = W0; cv.height = H0;
+  const g = cv.getContext('2d');
+  const sx = W0 / md.w, sy = H0 / md.h;
+  const X = v => v * sx, Y = v => v * sy;
+
+  g.fillStyle = '#12150d'; g.fillRect(0, 0, W0, H0);
+  // mặt sàn = đúng đa giác đi được, nên hình cái thành đọc ra được ngay
+  g.beginPath();
+  md.diTrong.forEach((pt, i) => i ? g.lineTo(X(pt[0]), Y(pt[1])) : g.moveTo(X(pt[0]), Y(pt[1])));
+  g.closePath();
+  g.fillStyle = '#39402c'; g.fill();
+  g.strokeStyle = '#8a8768'; g.lineWidth = 2; g.stroke();
+
+  // phố
+  g.strokeStyle = 'rgba(120,118,92,.85)'; g.lineCap = 'round';
+  for (const d of (md.isoDuong || [])){
+    g.lineWidth = Math.max(1.5, X(110));
+    g.beginPath(); g.moveTo(X(d[0][0]), Y(d[0][1])); g.lineTo(X(d[1][0]), Y(d[1][1])); g.stroke();
+  }
+  // khối nhà
+  g.fillStyle = '#6d6a52'; g.strokeStyle = '#8a8768'; g.lineWidth = 1;
+  for (const o of ((window.MAP_OBSTACLES || {})[mid] || [])){
+    if (!o.wd) continue;
+    g.fillRect(X(o.x), Y(o.y), X(o.wd), Y(o.ht));
+    g.strokeRect(X(o.x), Y(o.y), X(o.wd), Y(o.ht));
+  }
+
+  // ── NHÃN: vẽ SAU cùng, và tránh chồng bằng cách thử bốn chỗ quanh chấm ──────────
+  const daDat = [];
+  g.font = '600 11px "Be Vietnam Pro", sans-serif';
+  g.textBaseline = 'middle';
+  const nhan = (x, y, chu, mau, r) => {
+    const w = g.measureText(chu).width;
+    const cho = [ [x + r + 4, y, 'left'], [x - r - 4, y, 'right'],
+                  [x, y + r + 9, 'center'], [x, y - r - 9, 'center'] ];
+    for (const [lx, ly, al] of cho){
+      const x0 = al === 'left' ? lx : al === 'right' ? lx - w : lx - w/2;
+      if (x0 < 2 || x0 + w > W0 - 2 || ly < 8 || ly > H0 - 8) continue;
+      if (daDat.some(q => x0 < q.x + q.w + 3 && x0 + w + 3 > q.x && Math.abs(ly - q.y) < 12)) continue;
+      daDat.push({ x:x0, y:ly, w });
+      g.textAlign = al;
+      g.lineWidth = 3; g.strokeStyle = 'rgba(0,0,0,.85)'; g.strokeText(chu, lx, ly);
+      g.fillStyle = mau; g.fillText(chu, lx, ly);
+      return true;
+    }
+    return false;
+  };
+
+  // Cổng — ⑨ CƠ CHẾ ĐẮT NHẤT lấy từ map tham chiếu: lối ra ghi CẤP ngay cạnh nó, nên bản đồ
+  // thành đồng thời là bảng chỉ đường theo cấp. Dữ liệu đã có sẵn ở MAPS[to].min, trước nay
+  // chỉ không được hiện ra.
+  for (const gt of GATES){
+    if (gt.map !== mid || !gt.to) continue;
+    const dm = MAPS[gt.to]; if (!dm) continue;
+    const px = X(gt.x), py = Y(gt.y);
+    g.fillStyle = '#e9ebda'; g.strokeStyle = 'rgba(0,0,0,.7)'; g.lineWidth = 1.5;
+    g.beginPath(); g.arc(px, py, 5, 0, 7); g.fill(); g.stroke();
+    const du = !player || player.level >= (dm.min || 1);
+    nhan(px, py, `${dm.name} · c${dm.min}`, du ? '#e9ebda' : '#9aa07f', 6);
+  }
+  // NPC có chức năng
+  for (const n of NPCS){
+    if (n.map !== mid) continue;
+    const k = THANH_TALK[n.talk];
+    const px = X(n.x), py = Y(n.y);
+    if (!k){   // người lore: chấm mờ, KHÔNG tên
+      g.fillStyle = 'rgba(255,215,106,.45)';
+      g.beginPath(); g.arc(px, py, 2, 0, 7); g.fill();
+      continue;
+    }
+    g.fillStyle = k.mau; g.strokeStyle = 'rgba(0,0,0,.7)'; g.lineWidth = 1.5;
+    g.beginPath(); g.arc(px, py, 4.5, 0, 7); g.fill(); g.stroke();
+    nhan(px, py, n.nhan || k.ten, k.mau, 5.5);
+  }
+  // người chơi
+  if (player && curMap === mid){
+    g.fillStyle = '#7ecbff'; g.strokeStyle = '#fff'; g.lineWidth = 2;
+    g.beginPath(); g.arc(X(player.x), Y(player.y), 4, 0, 7); g.fill(); g.stroke();
+  }
+  return cv;
+}
+
+// Chèn tấm bản đồ vào bảng SAU khi innerHTML đã đặt — canvas không sống qua innerHTML.
+function ganBanDoThanh(mid){
+  const hoc = el('bando-thanh'); if (!hoc) return;
+  const cv = veBanDoThanh(mid, 560, 280);
+  if (!cv){ hoc.remove(); return; }
+  cv.style.cssText = 'width:100%;height:auto;display:block;border-radius:3px';
+  hoc.innerHTML = ''; hoc.appendChild(cv);
+}
+
 function renderMapPanel(){
   const zt = zoneType();
   let html = moBang({ tieu:'Bản Đồ Lunacia' });
+  // Tấm bản đồ thành — chỉ hiện khi map đang đứng có `diTrong` (tức là có hình thật để vẽ).
+  if (mapDef().diTrong) html += `<div id="bando-thanh" style="margin:2px 0 8px"></div>`;
   html += `<div style="font-size:12px;color:#9aa8d4;margin-bottom:6px">Đang ở: <b style="color:${zt.color}">${mapDef().name}</b> · ${zt.name} · <span style="opacity:.7">Nhiệm vụ: phím Q</span>${window.TEST_MODE ? ' · <span style="color:#7fd4ff">[CHẾ ĐỘ TEST — dịch chuyển tự do]</span>' : ''}</div>`;
   // GDD Đợt 2 B2: badge mục tiêu NV trên từng vùng
   const _qt = questTarget(currentQuest());
@@ -22653,6 +22852,7 @@ function renderMapPanel(){
         ${wpOk && m.packs && m.packs.length ? `<button class="mini-btn" style="margin-left:4px" onclick="openStageSelect('${id}')" title="Vào đánh ngay 1 cụm quái — không cần đi bộ tới">⚔ Chọn Trận</button>` : ''}</span></div>`;
   }
   el('panel-map').innerHTML = html;
+  ganBanDoThanh(curMap);   // canvas không sống qua innerHTML — phải gắn SAU
 }
 // ═══════════ Chọn Trận (GDD Đợt 3 — kiểu NGU Idle): chọn thẳng 1 cụm quái từ danh sách,
 // vào là dịch chuyển tới + tự bật AUTO luôn — bỏ hẳn việc phải đi bộ/né vật cản để tìm bãi quái. ═══════════
@@ -23150,6 +23350,9 @@ function tickBark(n){
   if (dist(player.x, player.y, n.x, n.y) > BARK_R){ n._barkT = 1; return; }
   n._barkI = ((n._barkI | 0) + 1 + (Math.random() * 2 | 0)) % n.barks.length;
   addFloat(n.x, n.y - (n._cao || 64) - 40, n.barks[n._barkI], '#cfd8ff', 12);
+  // Câu vừa buông cũng vào kênh "Quanh Đây": chữ bay trên đầu NPC tan sau vài giây và người
+  // chơi đang nhìn chỗ khác thì mất hẳn. Ô chat giữ lại để đọc sau — đó là cả lý do có nó.
+  logChat('quanh', `${n.name}: ${n.barks[n._barkI].replace(/^"|"$/g, '')}`, '#cfd8ff');
   n._barkT = BARK_CD + Math.random() * 10;
 }
 // ═══ CỠ NPC TRONG MÀN — đo theo NV_CAO, không chép cứng px ═══

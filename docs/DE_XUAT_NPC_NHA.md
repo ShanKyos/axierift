@@ -179,11 +179,45 @@ không quên, và nó cần thiết kế luật riêng chứ không phải một
 
 ## 8. Thứ tự làm
 
-| Đợt | Việc | Cần art? | Kiểm |
+| Đợt | Việc | Cần art? | Trạng thái |
 |---|---|---|---|
-| **N1** | Tab "Thành" trong bảng Bản Đồ: hình + nhãn 8 chức năng + 4 cổng kèm cấp | **không** | chụp màn hình — đọc được tên mọi chức năng |
-| **N2** | Gom NPC theo §4 (cùng đợt T1 của `THIET_KE_THI_TRAN.md`) | **không** | `do_thanh.cjs` · `test_sandat` |
-| **N3** | Dời 3 NPC hàng nam xuống `y ≥ 2700` để không đứng sau lưng nhà | **không** | `test_sandat` |
-| **N4** | Gen 2 sảnh + 4 gian + 1 bộ prop (§5) | có | `do_thanh.cjs` |
+| **N1** | Bản đồ thành có hình + nhãn 8 chức năng + 4 cổng kèm cấp, ngay đầu bảng Bản Đồ | không | ✅ **XONG** |
+| **N2** | Gom NPC theo §4 — bốn quầy về lõi, hai khối bắc nhận Cầu May / Truy Nã | không | ✅ **XONG** |
+| **N3** | Dời 3 NPC hàng nam xuống `y = 2760` để không đứng sau lưng nhà | không | ✅ **XONG** |
+| **N4** | Tách nhật ký: CHIẾN ĐẤU sang phải · TRÒ CHUYỆN ở lại trái | không | ✅ **XONG** |
+| **N5** | Gen 2 sảnh + 4 gian + 1 bộ prop (§5) | **có** | còn nợ |
 
-**N1 · N2 · N3 không cần một tấm art nào** và lấy được gần hết lợi ích của cả tài liệu này.
+### Đo lại sau N1-N4
+
+| | Trước | Sau |
+|---|--:|--:|
+| Chức năng có nhãn đọc được trên bản đồ | **0** | **8 + 4 cổng kèm cấp** |
+| Vòng tiếp tế (cổng → mua bán → cổng) | 9 965px · 47,7s | **4 930px · 23,6s** |
+| Ba tiệm trải rộng | 4 060px · 2,1 màn hình | **1 447px · 0,8 màn hình** |
+| Dịch vụ chạm-mỗi-chuyến, xa nhất | 2 840px · 13,6s | **1 000px · 4,8s** |
+| NPC lọt trong một khung hình quanh điểm thả | 6/24 | **10/24** |
+
+### N4 — hai cột nhật ký
+
+Trước đây **một ô ở góc dưới trái nhận tất**: EXP, đồ rơi, sát thương, lẫn thông báo hệ
+thống. Hai loại đó người chơi đọc vào **hai lúc khác hẳn** — số EXP chỉ có nghĩa trong lúc
+đánh nhau, thông báo thế giới thì đọc lúc đứng yên — mà chúng đẩy nhau ra khỏi cùng một ô.
+
+- **Phải** = Chiến Đấu. Chảy trong `#hud-right`, xếp dưới bảng Nhiệm Vụ — **không** neo vào
+  góc dưới-phải, vì `#hint-toast` (thẻ nhắc việc) cũng ở `right:14px bottom:132px` với
+  `z-index:35` và sẽ đè hẳn lên. Thẻ nhắc là thứ thoáng qua, nhật ký là thứ thường trực.
+- **Trái** = Trò Chuyện, ba kênh **Tổng · Hệ Thống · Quanh Đây**, có ô nhập.
+  - `Hệ Thống` bắt `zoneBanner` tại **chỗ tiêu thụ** trong `update()`, không phải đi sửa 12+
+    chỗ gán — một chỗ bắt thì mọi thông báo cũ và mọi thông báo thêm sau này tự vào.
+  - `Quanh Đây` giữ lại câu NPC vừa buông. Chữ bay trên đầu NPC tan sau vài giây và người
+    chơi nhìn chỗ khác là mất hẳn.
+  - Ô nhập: `/lệnh` chạy đúng bộ lệnh playtest đã có; chữ thường hiện thành dòng của mình,
+    kèm **một** dòng nói rõ kênh người-với-người chưa mở.
+- ⚠ **Cố ý KHÔNG dựng tab giả cho chat người chơi.** Game hiện là một người chơi
+  (`docs/THIET_KE_ONLINE.md` mới là thiết kế). Khi online lên thì thêm một kênh vào
+  `CHAT_KENH` và gọi `logChat('nguoi', …)` — khung, tab, ô nhập và luật lọc đã sẵn.
+- Hai va chạm bố cục **chỉ lộ ở màn nhỏ**, đã đo ở 1280×720 · 1500×860 · 1920×1080: cột menu
+  hệ thống (`#menu-cot`, tới `x=62`) đè hàng tab ⇒ ô chat đặt `left:74px`; và thanh gợi ý
+  phím (`#hint-bar`, rộng 916px giữa màn) đè đáy ô chat ⇒ cả hai ô lùi lên `bottom:132px`.
+
+**N1-N4 không tốn một tấm art nào.**

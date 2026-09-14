@@ -50,6 +50,13 @@
       <button id="btn-questtracker" title="Ẩn/hiện bảng nhiệm vụ">📜 Nhiệm Vụ <span id="qt-arrow">▾</span></button>
       <div id="quest-tracker"></div>
     </div>
+    <!-- ⚠ NHẬT KÝ CHIẾN ĐẤU CHẢY TRONG CỘT PHẢI, không neo vào góc dưới-phải.
+         Neo vào góc thì nó đụng #hint-toast — thẻ nhắc việc cũng ở right:14px bottom:132px và
+         z-index 35, tức là nó ĐÈ HẲN lên nhật ký. Thẻ nhắc là thứ thoáng qua, nhật ký là thứ
+         thường trực; cho nhật ký xếp dưới bảng Nhiệm Vụ thì góc dưới-phải để trống cho thẻ. -->
+    <div id="combat-log-wrap" class="hidden">
+      <div id="combat-log"></div>
+    </div>
   </div>
   <div id="hint-bar"></div>
 </div>
@@ -125,9 +132,24 @@
 
 <!-- Nhật ký chiến đấu: thay cho số sát thương/thông báo bay đầy màn hình lúc tự đánh nhiều quái —
      gộp lại thành 1 dòng chữ ở góc, đọc được thay vì rối mắt -->
-<div id="combat-log-wrap" class="hidden">
-  <div id="combat-log"></div>
+<!-- ═══ HAI CỘT NHẬT KÝ, TÁCH THEO THỨ NGƯỜI CHƠI ĐANG LÀM ═══════════════════════
+     · TRÁI  = TRÒ CHUYỆN — thứ của thế giới và của người: hệ thống, NPC nói quanh mình.
+               Đây là chỗ chat người chơi sẽ vào khi bản online lên.
+     · PHẢI  = CHIẾN ĐẤU  — EXP, đồ rơi, sát thương. Thứ chỉ có nghĩa trong lúc đánh nhau.
+     Trước đây cả hai chung một ô góc dưới TRÁI, nên dòng "nhận 120 EXP" và dòng NPC chào
+     nhau đẩy nhau ra khỏi màn hình — mà hai thứ đó người chơi đọc vào hai lúc khác hẳn. -->
+<div id="chat-wrap" class="hidden">
+  <div id="chat-tabs">
+    <button class="chat-tab on"  data-kenh="tong"  onclick="chatTab('tong')">Tổng</button>
+    <button class="chat-tab"     data-kenh="he"    onclick="chatTab('he')">Hệ Thống</button>
+    <button class="chat-tab"     data-kenh="quanh" onclick="chatTab('quanh')">Quanh Đây</button>
+  </div>
+  <div id="chat-log"></div>
+  <input id="chat-input" maxlength="200" autocomplete="off" placeholder="Enter để nói · /help xem lệnh"
+         onkeydown="if(event.key==='Enter'){chatGui(this.value);this.value='';this.blur();}if(event.key==='Escape'){this.blur();}">
 </div>
+
+<!-- #combat-log-wrap đã CHUYỂN VÀO #hud-right (cột phải), xem chú thích ở đó. -->
 
 <!-- Panels -->
 <div id="panel-char" class="panel hidden"></div>
