@@ -2181,16 +2181,33 @@ window.BOSS_LORE = {
 //
 // Đơn vị là trừu tượng (một "bước" ≈ một vùng); trình vẽ tự co cho vừa khung.
 window.THE_GIOI = {
-  corran:    { x:-1.50, y: 0.05 },
+  // ⚠ MỘT NHÁNH ĐI RA RỒI CỤT LÀ MỘT NHÁNH ĐỌC RA "CHƯA LÀM XONG". Bản đầu để `corran` ở
+  // x=-1,50 trong khi vật gần nhất về phía tây là chính thành ở x=0 — tức vùng KHỞI ĐẦU
+  // (cấp 1-12) là một cục nằm riêng ngoài rìa trái, nối vào thành bằng một nét đứt dài, còn
+  // cả góc tây-nam thì trống trơn. Chủ dự án nhìn ảnh chụp gọi đúng tên: *"bị cụt và vô lý
+  // về UI"*.
+  //
+  // Chữa bằng cách cho nhánh tây có HAI chặng thay vì một: `ngoai` (Beast Herd Camp — đúng
+  // nghĩa "vùng ngoại ô", cấp 10) lùi xuống TÂY-NAM, nên nó nằm ngay bên phải Rẻo Rừng
+  // Corran và mạch cấp đọc được thành một đường: 1-12 → 10 → thành → 20 → … → 100.
+  //
+  // ⚠ VÀ NÓ VẪN LÀ "Cổng NAM → Beast Herd Camp". Hướng chấm theo TRỤC TRỘI (xem `tgHuong`),
+  // nên tây-nam vẫn ra 'Nam' miễn |dy| > |dx| — 1,45 > 1,00. Đừng kéo `ngoai` sang tây thêm
+  // nữa: qua mốc đó là biển cổng nói dối, và `test_thegioi §2` sẽ đỏ chứ không im.
+  //
+  // Cả mười hai số dưới đây đã chấm bằng máy (lỗi hướng 0/22). Sửa một số thì chấm lại, đừng
+  // chấm bằng mắt: ba cạnh `chungnam→comoc` · `daohoa→trungnut` · `trungnut→comoc` chỉ còn
+  // dư rất mỏng vì đồ thị bắt đi Đông-Bắc-Đông rồi quay về Nam đúng chỗ cũ.
+  corran:    { x:-2.05, y: 0.25 },
   ardhaven:  { x: 0.00, y: 0.00 },   // thành — trục của cả tấm bản đồ
-  ngoai:     { x:-0.10, y: 1.20 },
-  tuyettinh: { x: 0.00, y:-1.30 },
-  chungnam:  { x: 1.35, y: 0.35 },
-  daohoa:    { x: 2.55, y: 0.80 },
-  loimon:    { x: 3.70, y: 1.00 },
-  trungnut:  { x: 1.40, y:-0.92 },
-  comoc:     { x: 2.35, y:-0.80 },
-  caungam:   { x: 3.45, y:-1.30 },
-  mongco:    { x: 1.85, y:-2.15 },
-  nhanmon:   { x: 3.15, y:-2.55 },
+  ngoai:     { x:-1.00, y: 1.45 },
+  tuyettinh: { x:-0.75, y:-1.60 },
+  chungnam:  { x: 1.45, y: 0.45 },
+  daohoa:    { x: 2.60, y: 1.05 },
+  loimon:    { x: 3.75, y: 1.45 },
+  trungnut:  { x: 1.30, y:-0.90 },
+  comoc:     { x: 2.65, y:-1.05 },
+  caungam:   { x: 3.60, y:-1.35 },
+  mongco:    { x: 2.05, y:-2.35 },
+  nhanmon:   { x: 3.40, y:-2.70 },
 };

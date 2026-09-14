@@ -2112,6 +2112,50 @@ html,body { width:100%; height:100%; overflow:hidden; background:var(--bg-deep);
 .tt-canh { margin: 6px 0 2px; font-size: 11.5px; color: #f0a03a; line-height: 1.35; }
 .tt-nut { display: flex; gap: 6px; justify-content: center; padding: 8px 10px 10px; }
 .tt-nut .mini-btn:disabled { opacity: .4; cursor: not-allowed; }
+
+/* ═══ TỔ ĐỘI & BẠN BÈ ═══ */
+#panel-friend, #panel-party { width: min(560px, 94vw); }
+.bb-trong { padding: 22px 14px; text-align: center; font-size: 12.5px; color: #9c8e6e; line-height: 1.6; }
+.bb-ds { display: flex; flex-direction: column; gap: 4px; max-height: 380px; overflow-y: auto; padding-right: 3px; }
+.bb-dong {
+  display: flex; align-items: center; gap: 9px; padding: 6px 8px;
+  background: rgba(107,92,60,.14); border: 1px solid rgba(107,92,60,.55); border-radius: 4px;
+}
+.bb-dong:hover { background: rgba(226,196,128,.16); }
+.bb-av { width: 34px; height: 34px; border-radius: 3px; object-fit: cover; border: 1px solid #6b5c3c; flex: 0 0 auto; }
+.bb-av-trong { display: flex; align-items: center; justify-content: center; color: #6b5c3c; background: rgba(0,0,0,.3); }
+.bb-giua { flex: 1 1 0; min-width: 0; }
+.bb-ten { font-size: 13px; color: #f0e2bd; font-weight: 600; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.bb-phu { font-size: 10.5px; color: #9c8e6e; }
+.bb-tt { color: #ff9ec4; }
+.bb-nut { display: flex; gap: 4px; flex: 0 0 auto; }
+.bb-xam { font-size: 11px; color: #6a6255; }
+.bb-muc { font-size: 11.5px; color: #9aa8d4; margin: 8px 0 4px; }
+.bb-chu { font-size: 10.5px; color: #8a8275; margin-top: 8px; line-height: 1.5; }
+.bb-timhang { display: flex; gap: 6px; margin-bottom: 8px; }
+.bb-timhang input {
+  flex: 1 1 0; background: rgba(0,0,0,.35); border: 1px solid #6a5a3a; border-radius: 5px;
+  color: #e4ebff; padding: 6px 8px; font-size: 12.5px; outline: none;
+}
+.td-dau { display: flex; justify-content: space-between; flex-wrap: wrap; gap: 6px; font-size: 11.5px; margin-bottom: 8px; }
+.td-buff { color: #8fd18f; }
+.td-trangthai { color: #9c8e6e; }
+.td-luoi { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; }
+.td-o {
+  min-height: 62px; border: 1px solid #6b5c3c; border-radius: 4px; padding: 7px 9px;
+  background: rgba(107,92,60,.12);
+}
+.td-toi { border-color: #7ecbff; background: rgba(76,141,255,.12); }
+.td-trong { display: flex; align-items: center; justify-content: center; border-style: dashed; opacity: .45; }
+.td-o-ten { font-size: 13px; color: #f0e2bd; font-weight: 600; }
+.td-o-phu { font-size: 10.5px; color: #9c8e6e; }
+.td-o-vai { font-size: 10.5px; color: #7ecbff; margin-top: 2px; }
+.td-o-cho { font-size: 11.5px; color: #8a8275; }
+.td-chua { margin-top: 9px; font-size: 11.5px; color: #f0a03a; line-height: 1.55; }
+.td-cai { display: flex; flex-direction: column; gap: 4px; margin-top: 9px; }
+.td-nut { display: flex; flex-wrap: wrap; gap: 6px; justify-content: center; margin-top: 10px; }
+.td-nut .mini-btn:disabled { opacity: .4; cursor: not-allowed; }
+
 /* ═══════════ BẢNG KỸ NĂNG KIỂU CÂY ═══════════
    Hai cột: CÂY biểu tượng nối bằng mũi tên bên trái, khung ĐỌC CHI TIẾT bên phải — đúng bố cục
    ảnh mẫu chủ dự án đưa. Panel rộng min(520px,94vw) nên 280 + 8 + phần còn lại vừa khít.

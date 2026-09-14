@@ -9203,6 +9203,8 @@ function phimXuong(e){
   if (e.key.toLowerCase()==='k') togglePanel('skill');
   if (e.key.toLowerCase()==='m') togglePanel('map');
   if (e.key.toLowerCase()==='q') togglePanel('qlog');
+  if (e.key.toLowerCase()==='p') togglePanel('party');    // Tổ Đội
+  if (e.key.toLowerCase()==='h') togglePanel('friend');   // Bạn Bè
   if (e.key.toLowerCase()==='u'){ SETTINGS.minimap = !SETTINGS.minimap; saveSettings(); }
   if (e.key.toLowerCase()==='o') togglePanel('settings');
   // F6 — bảng Hướng Dẫn & Phím Tắt. preventDefault vì F6 mặc định của trình duyệt là nhảy
@@ -19965,7 +19967,8 @@ function togglePanel(which){
   // trả null và câu kế ném "Cannot read properties of null". Mọi chỗ gọi togglePanel('forge') cũ
   // đều vỡ theo.
   if (which === 'forge'){ window.openForgePanel(); return; }
-  const map = { char:'panel-char', inv:'panel-inv', bag:'panel-bag', skill:'panel-skill', map:'panel-map', settings:'panel-settings', qlog:'panel-qlog', help:'panel-help' };
+  const map = { char:'panel-char', inv:'panel-inv', bag:'panel-bag', skill:'panel-skill', map:'panel-map', settings:'panel-settings', qlog:'panel-qlog', help:'panel-help',
+                party:'panel-party', friend:'panel-friend' };
   const id = map[which];
   const p = el(id);
   if (!p) return;                     // khoá lạ thì im lặng bỏ qua, không ném lỗi giữa lượt chơi
@@ -20019,7 +20022,8 @@ function togglePanel(which){
 // Cho `inv` cùng nhóm 'nv' với `char`: hai bảng vẫn mở KÈM nhau (kéo-thả HTML5 cần cả hai
 // cùng có mặt trên DOM), nhưng chúng đọc ra như MỘT cửa sổ hai nửa. Túi Đồ tách hẳn ra nhóm
 // riêng nên mở Túi Đồ là bộ đôi kia đóng, và ngược lại.
-const BANG_NHOM = { char:'nv', inv:'nv', bag:'tui', skill:'kn', map:'bd', settings:'cd', qlog:'nv2', help:'hd' };
+const BANG_NHOM = { char:'nv', inv:'nv', bag:'tui', skill:'kn', map:'bd', settings:'cd', qlog:'nv2', help:'hd',
+                    party:'xh', friend:'xh' };
 // CHỈ nhóm 'nv' được ở chung màn hình, và nó là hai nửa của cùng một cửa sổ.
 const BANG_SONG = { nv:1 };
 // Ba bảng mở cùng lúc thì phải xếp thành ba cột, không chồng lên nhau. Gắn class lên <body>
@@ -20040,13 +20044,16 @@ function renderPanel(which){
   else if (which==='bag') renderBag();
   else if (which==='skill') renderSkillPanel();
   else if (which==='map') renderMapPanel();
+  else if (which==='party') renderPartyPanel();
+  else if (which==='friend'){ renderFriendPanel(); if (_bbTrang === 'chua' || _bbTrang === 'tatMay') bbTai(); }
   else renderCharPanel();
 }
 // CHỒNG CỬA SỔ. Ghi thứ tự MỞ để ESC biết cái nào là trên cùng. Chỉ chứa id bảng, và luôn
 // lọc lại theo thực tế trước khi dùng — bảng có thể bị đóng bằng nút ✕ mà không qua đây.
 let _bangChong = [];
 const _MOI_BANG = ['panel-char','panel-inv','panel-bag','panel-skill','panel-map','panel-quest',
-                   'panel-settings','panel-qlog','panel-stage','panel-forge','panel-help'];
+                   'panel-settings','panel-qlog','panel-stage','panel-forge','panel-help',
+                   'panel-party','panel-friend'];
 function bangDangMo(){ return _MOI_BANG.filter(id => { const e2 = el(id); return e2 && !e2.classList.contains('hidden'); }); }
 function bangGhiChong(id){
   _bangChong = _bangChong.filter(x => x !== id);
@@ -24681,21 +24688,32 @@ function tgBoCuc(){
   const key = TG_KHUNG.w + 'x' + TG_KHUNG.h + '|' + Object.keys(THE_GIOI).join(',');
   if (_tgBoCuc && _tgKey === key) return _tgBoCuc;
   const ids = Object.keys(THE_GIOI).filter(id => MAPS[id]);
-  let x0 = 1e9, y0 = 1e9, x1 = -1e9, y1 = -1e9;
-  for (const id of ids){ const p = THE_GIOI[id];
-    if (p.x<x0) x0=p.x; if (p.x>x1) x1=p.x; if (p.y<y0) y0=p.y; if (p.y>y1) y1=p.y; }
-  const le = TG_KHUNG.le, leD = TG_KHUNG.leD;
-  const sc = Math.min((TG_KHUNG.w - le*2) / Math.max(0.001, x1-x0),
-                      (TG_KHUNG.h - le - leD) / Math.max(0.001, y1-y0));
   // Cỡ vẽ ra tỉ lệ với CĂN BẬC HAI của diện tích map thật — dùng thẳng diện tích thì map lớn
   // nhất nuốt cả tấm (4,7 lần map nhỏ nhất về diện tích, chỉ 2,2 lần về cạnh).
   let dMax = 1;
   for (const id of ids) dMax = Math.max(dMax, Math.sqrt((MAPS[id].w||2600) * (MAPS[id].h||1900)));
+  // ⚠ HỘP BAO PHẢI TÍNH CẢ BÁN KÍNH, KHÔNG CHỈ TÂM. Bản đầu fit khung theo hộp bao của riêng
+  // TÂM rồi mới vẽ một hình bán kính `r` quanh mỗi tâm — nên vùng ngoài cùng luôn thò ra ngoài
+  // đúng `r` và bị mép canvas xén. Rẻo Rừng Corran (tâm trái nhất) vẽ ra sát x=3px, nhãn của nó
+  // thì tràn hẳn ra âm. Chủ dự án nhìn ảnh chụp gọi đúng tên: *"bị cụt"*.
+  // Bán kính TÍNH THEO ĐƠN VỊ LAYOUT là hằng số (nó tỉ lệ thuận với `sc`, nên `r/sc` không phụ
+  // thuộc `sc`) ⇒ cộng nó vào hộp bao trước khi tính `sc` là xong, không phải lặp cho hội tụ.
+  const ruy = id => 0.40 * (0.62 + 0.38 * Math.sqrt((MAPS[id].w||2600) * (MAPS[id].h||1900)) / dMax);
+  let x0 = 1e9, y0 = 1e9, x1 = -1e9, y1 = -1e9;
+  for (const id of ids){ const p = THE_GIOI[id], ru = ruy(id);
+    if (p.x-ru<x0) x0=p.x-ru; if (p.x+ru>x1) x1=p.x+ru;
+    if (p.y-ru<y0) y0=p.y-ru; if (p.y+ru>y1) y1=p.y+ru; }
+  const le = TG_KHUNG.le, leD = TG_KHUNG.leD;
+  const sc = Math.min((TG_KHUNG.w - le*2) / Math.max(0.001, x1-x0),
+                      (TG_KHUNG.h - le - leD) / Math.max(0.001, y1-y0));
+  // Căn giữa phần dư: `sc` bị một chiều bó, chiều kia còn thừa chỗ. Dồn hết phần thừa về một
+  // bên là tấm bản đồ lệch hẳn sang trái (hoặc lên trên) mà không ai chỉ ra được vì sao.
+  const duX = (TG_KHUNG.w - le*2) - (x1-x0)*sc, duY = (TG_KHUNG.h - le - leD) - (y1-y0)*sc;
   const o = {};
   for (const id of ids){
     const md = MAPS[id], p = THE_GIOI[id];
     const d = Math.sqrt((md.w||2600) * (md.h||1900)) / dMax;
-    o[id] = { cx: le + (p.x-x0)*sc, cy: le + (p.y-y0)*sc,
+    o[id] = { cx: le + duX/2 + (p.x-x0)*sc, cy: le + duY/2 + (p.y-y0)*sc,
               r: sc * 0.40 * (0.62 + 0.38*d), hinh: tgHinhVung(md) };
   }
   _tgBoCuc = o; _tgKey = key;
@@ -25184,6 +25202,209 @@ window.ttChayBo = function(id){
   closePanels();
   addFloat(player.x, player.y - 40, `🧭 Đang chạy tới ${c.name}`, '#7fd4ff', 12);
 };
+// ═══════════ TỔ ĐỘI & BẠN BÈ ═══════════
+//
+// Khuôn lấy từ hai cửa sổ của dòng MMO nhìn xuống (ảnh chủ dự án gửi): một bảng tổ đội có ô
+// thành viên + ô cài đặt, một bảng bạn bè có tab và Độ Thân Thiết. Lấy CÁCH BÀY, đổi tên và art
+// sang phong cách của game này — "hảo hữu" là từ kiếm hiệp nên gọi thẳng là **Bạn Bè**
+// (Quy tắc số 1), và bỏ hẳn hệ "Phu Thê"/"Sư Đồ" vì đó là cơ chế riêng của game kia.
+//
+// ⚠ HAI BẢNG NÀY NỐI VÀO HAI THỨ KHÁC HẲN NHAU, đừng nhầm:
+//   · **Bạn Bè CHẠY THẬT** — nối vào tRPC `friend.*` + bảng `friends` trong CSDL, dùng chung
+//     giữa các tài khoản thật. Thêm bạn, nhận lời mời, chặn, chào mỗi ngày — đều là dữ liệu thật.
+//   · **Tổ Đội CHƯA CHẠY ĐƯỢC** — nó cần realtime, mà game hiện là bản một máy (xem
+//     `docs/BOSS_TO_DOI.md` §2: "tổ đội = phải lên online trước"). Bảng dựng sẵn đúng khuôn và
+//     **NÓI THẲNG** là đang chờ máy chủ. Một bảng rỗng mà giả vờ có người là nói dối người chơi —
+//     cùng luật đã ghi cho Nhật Ký Nhiệm Vụ lúc `QUESTS` rỗng.
+//
+// ⚠ Và cả hai đều phải sống được khi KHÔNG CÓ MÁY CHỦ. Bản chạy trên VPS chỉ phục vụ tệp tĩnh
+// (xem mục PRODUCTION), nên `/api/trpc/*` ở đó không tồn tại. Đường thoát giống hệt AI NPC:
+// hỏi một phát, hỏng thì nói rõ "chưa bật", không để bảng treo hay ném lỗi ra vòng game.
+
+// ── Cửa duy nhất gọi tRPC từ game ────────────────────────────────────────────────────────
+// `game.js` trước đây gọi thẳng `fetch('/api/trpc/npc.status?input=…')` ở hai chỗ với hai cách
+// bọc khác nhau. Gom về một hàm: superjson bọc mọi thứ trong `{json:…}` ở CẢ hai đầu, nên chỗ
+// nào quên bọc là lỗi 400 rất khó đọc.
+async function trpcGoi(duong, input, laMutation){
+  const opt = laMutation
+    ? { method:'POST', headers:{ 'Content-Type':'application/json' }, body: JSON.stringify({ json: input ?? null }) }
+    : undefined;
+  const url = '/api/trpc/' + duong + (laMutation ? '' : '?input=' + encodeURIComponent(JSON.stringify({ json: input ?? null })));
+  const r = await fetch(url, opt);
+  const d = await r.json().catch(() => null);
+  if (!r.ok){
+    const ma = d && d.error && d.error.json && d.error.json.data && d.error.json.data.code;
+    const e = new Error(ma || ('HTTP ' + r.status)); e.ma = ma; throw e;
+  }
+  return d && d.result && d.result.data ? d.result.data.json : null;
+}
+
+// ── BẠN BÈ ───────────────────────────────────────────────────────────────────────────────
+const BB_TAB = [
+  { id:'ban',  ten:'Bạn Bè' },
+  { id:'moi',  ten:'Lời Mời' },
+  { id:'tim',  ten:'Tìm Người Chơi' },
+  { id:'chan', ten:'Sổ Đen' },
+];
+let _bbTab = 'ban';
+let _bbData = null;          // payload của friend.list
+let _bbTrang = 'chua';       // chua · dang · xong · caiDangNhap · tatMay
+let _bbTim = null;           // kết quả tìm người chơi
+let _bbTuTim = '';
+window.banBeTab = function(id){ _bbTab = id; renderFriendPanel(); AudioSys.sfx('ui', 0.5); };
+async function bbTai(){
+  _bbTrang = 'dang'; renderFriendPanel();
+  try {
+    _bbData = await trpcGoi('friend.list');
+    _bbTrang = 'xong';
+  } catch (e){
+    // Phân biệt HAI cái hỏng khác hẳn nhau: chưa đăng nhập (làm được gì đó) và máy chủ không có
+    // (chẳng làm được gì). Gộp thành một câu "lỗi" là bắt người chơi tự đoán.
+    _bbTrang = (e && e.ma === 'UNAUTHORIZED') ? 'caiDangNhap' : 'tatMay';
+  }
+  renderFriendPanel();
+}
+window.bbLamMoi = bbTai;
+function bbDong(o, nut){
+  const cap = o.cap ? `Cấp ${o.cap}` : 'Chưa vào game';
+  const lop = o.lop && typeof SECTS !== 'undefined' && SECTS[o.lop] ? SECTS[o.lop].name : '';
+  const av = o.avatar ? `<img class="bb-av" src="${o.avatar}" alt="">` : `<div class="bb-av bb-av-trong">?</div>`;
+  return `<div class="bb-dong">${av}
+    <div class="bb-giua"><div class="bb-ten">${aiEsc(o.ten || 'Không tên')}</div>
+      <div class="bb-phu">${cap}${lop ? ' · ' + lop : ''}${o.thanThiet != null ? ` · <span class="bb-tt">♥ ${o.thanThiet}</span>` : ''}</div></div>
+    <div class="bb-nut">${nut}</div></div>`;
+}
+function renderFriendPanel(){
+  let html = moBang({ tieu:'Bạn Bè', tabs:BB_TAB, chon:_bbTab, ham:'banBeTab' });
+  if (_bbTrang === 'dang')  html += `<div class="bb-trong">Đang hỏi máy chủ…</div>`;
+  else if (_bbTrang === 'tatMay')
+    html += `<div class="bb-trong">🔌 <b>Máy chủ chưa bật.</b><br>Bạn Bè cần máy chủ để lưu quan hệ giữa các tài khoản.
+             Bản chạy thử tĩnh không có phần này.<br><button class="mini-btn" style="margin-top:8px" onclick="bbLamMoi()">Thử lại</button></div>`;
+  else if (_bbTrang === 'caiDangNhap')
+    html += `<div class="bb-trong">🔑 <b>Cần đăng nhập.</b><br>Danh sách bạn gắn với tài khoản, không gắn với máy —
+             đăng nhập rồi mở lại bảng này.<br><button class="mini-btn" style="margin-top:8px" onclick="bbLamMoi()">Thử lại</button></div>`;
+  else if (_bbTrang === 'chua') html += `<div class="bb-trong">…</div>`;
+  else {
+    const d = _bbData || {};
+    if (_bbTab === 'ban'){
+      const ds = d.ban || [];
+      html += ds.length
+        ? `<div class="bb-ds">` + ds.map(o => bbDong(o,
+            `<button class="mini-btn" ${o.daChao ? 'disabled title="Hôm nay đã chào rồi — mai quay lại"' : `onclick="bbChao(${o.userId})"`}>${o.daChao ? '✓ Đã chào' : '👋 Chào'}</button>
+             <button class="mini-btn" onclick="bbXoa(${o.userId})">Xoá</button>
+             <button class="mini-btn" onclick="bbChan(${o.userId})">Chặn</button>`)).join('') + `</div>`
+        : `<div class="bb-trong">Chưa có ai trong danh sách.<br><span style="opacity:.7">Sang tab <b>Tìm Người Chơi</b> để kết bạn.</span></div>`;
+      html += `<div class="bb-chu">♥ <b>Độ Thân Thiết</b> tăng khi hai bên chào nhau — <b>mỗi ngày một lần</b>. Nó đếm số ngày hai người còn nhớ nhau, nên không mua được và không cày được.</div>`;
+    } else if (_bbTab === 'moi'){
+      const den = d.moiToiToi || [], di = d.moiDaGui || [];
+      html += `<div class="bb-muc">Lời mời gửi tới bạn</div>`;
+      html += den.length ? `<div class="bb-ds">` + den.map(o => bbDong(o,
+          `<button class="mini-btn" onclick="bbNhan(${o.userId})">Nhận</button>
+           <button class="mini-btn" onclick="bbXoa(${o.userId})">Từ chối</button>
+           <button class="mini-btn" onclick="bbChan(${o.userId})">Chặn</button>`)).join('') + `</div>`
+        : `<div class="bb-trong">Không có lời mời nào.</div>`;
+      html += `<div class="bb-muc">Bạn đã gửi đi</div>`;
+      html += di.length ? `<div class="bb-ds">` + di.map(o => bbDong(o,
+          `<button class="mini-btn" onclick="bbXoa(${o.userId})">Huỷ lời mời</button>`)).join('') + `</div>`
+        : `<div class="bb-trong">Chưa gửi lời mời nào.</div>`;
+    } else if (_bbTab === 'tim'){
+      html += `<div class="bb-timhang">
+        <input id="bb-tu" maxlength="64" placeholder="Gõ tên người chơi…" value="${aiEsc(_bbTuTim)}"
+          onkeydown="if(event.key==='Enter'){event.preventDefault();bbTim();}">
+        <button class="mini-btn" onclick="bbTim()">Tìm</button></div>`;
+      if (_bbTim == null) html += `<div class="bb-trong">Chỉ tìm được người <b>đã thật sự chơi</b> — tên có trong Bảng Xếp Hạng.</div>`;
+      else if (!_bbTim.length) html += `<div class="bb-trong">Không thấy ai tên như vậy.</div>`;
+      else {
+        const daCo = new Set([...(d.ban||[]), ...(d.moiDaGui||[]), ...(d.soDen||[])].map(o => o.userId));
+        html += `<div class="bb-ds">` + _bbTim.map(o => bbDong(o,
+          daCo.has(o.userId) ? `<span class="bb-xam">Đã có trong danh sách</span>`
+                             : `<button class="mini-btn" onclick="bbMoi(${o.userId})">Kết bạn</button>`)).join('') + `</div>`;
+      }
+    } else {
+      const ds = d.soDen || [];
+      html += ds.length
+        ? `<div class="bb-ds">` + ds.map(o => bbDong(o, `<button class="mini-btn" onclick="bbBoChan(${o.userId})">Bỏ chặn</button>`)).join('') + `</div>`
+        : `<div class="bb-trong">Sổ đen trống.</div>`;
+      html += `<div class="bb-chu">Người trong sổ đen không gửi được lời mời tới bạn, và bạn không thấy lời mời của họ.</div>`;
+    }
+  }
+  el('panel-friend').innerHTML = html;
+}
+// Mọi nút đều đi qua MỘT hàm: gọi xong thì TẢI LẠI danh sách từ máy chủ, không tự sửa bản sao
+// trong trình duyệt. Sửa tại chỗ thì nhanh hơn một nhịp, đổi lại có hai bản sự thật — và bản
+// trong máy sẽ nói dối ngay lần đầu máy chủ từ chối một thao tác.
+async function bbLam(duong, friendId, khiXong){
+  try {
+    const r = await trpcGoi(duong, { friendId }, true);
+    if (r && r.ok === false){
+      const noi = { tu:'Không tự kết bạn với mình được', biChan:'Người này đã chặn bạn',
+                    daChao:'Hôm nay chào rồi — mai quay lại', chuaLaBan:'Chưa phải bạn bè',
+                    khongCoLoiMoi:'Lời mời không còn nữa' };
+      bbBao(noi[r.ly] || 'Không làm được', '#f0a03a');
+    } else if (khiXong) khiXong(r);
+    await bbTai();
+  } catch { bbBao('Máy chủ không trả lời', '#e8776a'); }
+}
+function bbBao(t, mau){ if (player) addFloat(player.x, player.y - 40, t, mau || '#7fd4ff', 13); }
+window.bbMoi    = (id) => bbLam('friend.moi',   id, r => bbBao(r && r.thanhBan ? '🤝 Đã thành bạn!' : '✉ Đã gửi lời mời', '#8fd18f'));
+window.bbNhan   = (id) => bbLam('friend.nhan',  id, () => bbBao('🤝 Đã thành bạn!', '#8fd18f'));
+window.bbXoa    = (id) => bbLam('friend.xoa',   id);
+window.bbChan   = (id) => bbLam('friend.chan',  id, () => bbBao('Đã cho vào sổ đen', '#f0a03a'));
+window.bbBoChan = (id) => bbLam('friend.boChan',id);
+window.bbChao   = (id) => bbLam('friend.chao',  id, r => bbBao(`♥ +${(r && r.them) || 0} Thân Thiết`, '#ff9ec4'));
+window.bbTim = async function(){
+  const o = el('bb-tu'); _bbTuTim = o ? o.value.trim() : '';
+  if (!_bbTuTim){ _bbTim = null; renderFriendPanel(); return; }
+  try { _bbTim = await trpcGoi('friend.timNguoi', { tu:_bbTuTim }); }
+  catch { _bbTim = []; bbBao('Máy chủ không trả lời', '#e8776a'); }
+  renderFriendPanel();
+};
+
+// ── TỔ ĐỘI ───────────────────────────────────────────────────────────────────────────────
+const TD_TOI_DA = 5;                 // năm người — đúng năm lớp, một đội đủ vai
+const TD_EXP_MOI = 5;                // +5% EXP mỗi thành viên thêm vào
+const TD_CAI = [
+  ['tuNhan',  'Không có tổ đội thì tự nhận lời mời'],
+  ['choVao',  'Là đội trưởng thì tự cho người xin gia nhập'],
+  ['hienHUD', 'Hiện danh sách thành viên trên màn hình chính'],
+];
+window.toDoiCai = function(k, v){
+  SETTINGS.toDoi = SETTINGS.toDoi || {};
+  SETTINGS.toDoi[k] = !!v; saveSettings(); renderPartyPanel();
+};
+function renderPartyPanel(){
+  const cai = SETTINGS.toDoi || {};
+  let html = moBang({ tieu:'Tổ Đội' });
+  html += `<div class="td-dau">
+    <span class="td-buff">Thêm 1 thành viên, đánh quái <b>+${TD_EXP_MOI}% EXP</b></span>
+    <span class="td-trangthai">Trạng thái: <b>Chưa có tổ đội</b></span></div>`;
+  html += `<div class="td-luoi">`;
+  for (let i = 0; i < TD_TOI_DA; i++){
+    if (i === 0){
+      const lop = (typeof SECTS !== 'undefined' && player && SECTS[player.sect]) ? SECTS[player.sect].name : '';
+      html += `<div class="td-o td-toi"><div class="td-o-ten">${aiEsc((player && player.name) || 'Bạn')}</div>
+        <div class="td-o-phu">Cấp ${(player && player.level) || 1}${lop ? ' · ' + lop : ''}</div>
+        <div class="td-o-vai">Đội trưởng</div></div>`;
+    } else {
+      html += `<div class="td-o td-trong"><div class="td-o-cho">Chỗ trống</div></div>`;
+    }
+  }
+  html += `</div>`;
+  // ⚠ NÓI THẲNG, ĐỪNG GIẢ VỜ. Bảng này chưa chạy được vì game là bản một máy; che chuyện đó
+  // bằng mấy cái ô trống im lặng thì người chơi ngồi đợi một tính năng không tồn tại.
+  html += `<div class="td-chua">⏳ <b>Tổ đội cần máy chủ.</b> Game hiện chạy trên một máy và lưu trong trình duyệt,
+    nên chưa có ai khác để rủ. Khung bảng và các tuỳ chọn dưới đây dựng sẵn cho lúc máy chủ lên —
+    xem <b>docs/BOSS_TO_DOI.md</b>.</div>`;
+  html += `<div class="td-cai">` + TD_CAI.map(([k, ten]) =>
+    `<label class="bd-loc"><input type="checkbox" ${cai[k] ? 'checked' : ''} onchange="toDoiCai('${k}',this.checked)"> ${ten}</label>`).join('') + `</div>`;
+  html += `<div class="td-nut">
+    <button class="mini-btn" disabled title="Cần máy chủ">Mời Vào Đội</button>
+    <button class="mini-btn" disabled title="Cần máy chủ">Nhường Đội Trưởng</button>
+    <button class="mini-btn" disabled title="Cần máy chủ">Rời Đội</button>
+    <button class="mini-btn" onclick="togglePanel('friend')">Mở Bạn Bè</button></div>`;
+  el('panel-party').innerHTML = html;
+}
+
 function renderMapPanel(){
   const zt = zoneType();
   const tabs = [{ id:'ht', ten:'Hiện Tại' }, { id:'tg', ten:'Thế Giới' }];
