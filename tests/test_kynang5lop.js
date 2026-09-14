@@ -104,11 +104,15 @@ const PORT = process.argv[2] || '8853';
     }
 
     // ── 4. bị động nối vào chỉ số thật ──
+    // ⚠ BỊ ĐỘNG NAY CHỈ CHẠY KHI NẰM TRÊN THANH CHIÊU (`biDongBat`). Ngộ được là chưa đủ —
+    // đó là cả cái giá của ba ô còn lại. Nên phép đo phải CẮM nó vào ô rồi mới đo, không thì
+    // bài này đo đúng thứ mà thiết kế cố ý không cho chạy, và đỏ ở một chỗ chẳng nói lên gì.
+    // Vẫn giữ nguyên độ chặt: vế "chỉ là dòng chữ" vẫn bị bắt, chỉ khác ở chỗ đo cho đúng cửa.
     const doPas = (sect, id, f) => {
       startGame(sect, null); player.traits = []; player.level = 60; player.lvPeak = 60;
-      player.vohoc = {}; calcDerived(); const truoc = f();
-      player.vohoc[id] = true; calcDerived(); const sau = f();
-      o.pas[id] = { ten:VOHOC_DEFS[id].name, truoc, sau };
+      player.vohoc = {}; knRaSoat(); calcDerived(); const truoc = f();
+      player.vohoc[id] = true; knGan(1, id); calcDerived(); const sau = f();
+      o.pas[id] = { ten:VOHOC_DEFS[id].name, truoc, sau, tren: player.skillBar.includes(id) };
     };
     doPas('thieulam','dk_fortitude', () => player.maxHp);
     doPas('minhgiao','mg_ironwill',  () => +(player.hpLeech || 0).toFixed(2));
@@ -185,7 +189,8 @@ const PORT = process.argv[2] || '8853';
 
   // ── 4. bị động ──
   for (const [id, d] of Object.entries(r.pas)){
-    if (d.truoc === d.sau) fail(`bị động ${d.ten} không đổi chỉ số nào (${d.truoc} → ${d.sau}) — chỉ là dòng chữ`);
+    if (!d.tren) fail(`bị động ${d.ten}: không cắm được vào ô — phép đo dưới đây sẽ vô nghĩa`);
+    else if (d.truoc === d.sau) fail(`bị động ${d.ten} không đổi chỉ số nào (${d.truoc} → ${d.sau}) — chỉ là dòng chữ`);
     else pass(`${d.ten}: ${d.truoc} → ${d.sau}`);
   }
 
