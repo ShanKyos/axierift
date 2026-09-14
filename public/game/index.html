@@ -23,7 +23,23 @@
 <!-- HUD -->
 <div id="hud" class="hidden">
   <div id="hud-left">
-    <div id="hud-name">—</div>
+    <!-- KHUNG CHÂN DUNG. Trước bản này góc trên trái chỉ có một dòng tên trần, còn Sinh Lực và
+         Mana là hai viên cầu ở HAI ĐẦU thanh chiến đấu. Chủ dự án chốt đổi sang khuôn quen
+         thuộc hơn: chân dung + tên + cấp + hai thanh, gom về một khối ở góc trái.
+         ⚠ GIỮ NGUYÊN id `orb-hp` / `bar-hp` / `txt-hp` (và bộ qi) dù nay chúng là THANH chứ
+         không còn là viên cầu: hai bài kiểm và sáu chỗ trong updateHud() gọi thẳng mấy id đó.
+         Đổi tên id chỉ để cho "đúng chữ" là trả một cái giá thật để mua một thứ không ai thấy. -->
+    <div id="chan-dung">
+      <div id="cd-khung">
+        <canvas id="cd-ava" width="128" height="128"></canvas>
+        <img id="cd-lop" alt="">
+      </div>
+      <div id="cd-phai">
+        <div id="cd-dau"><div id="hud-name">—</div><b id="hud-lv">LV.1</b></div>
+        <div class="cd-thanh cd-hp" id="orb-hp" title="Sinh Lực"><i class="fill" id="bar-hp"></i><span id="txt-hp"></span></div>
+        <div class="cd-thanh cd-qi" id="orb-qi" title="Mana"><i class="fill" id="bar-qi"></i><span id="txt-qi"></span></div>
+      </div>
+    </div>
     <!-- Số Bình Thuốc đã dời xuống ô thuốc trong thanh chiến đấu (#sk-thuoc) — cùng một con
          số bày hai chỗ thì chỗ nào cũng bị liếc qua, mà không chỗ nào được tin. -->
     <div id="hud-buff" title="Rượu Hổ Cốt — tạm thời +12% công lực" style="display:none">🍶</div>
@@ -42,16 +58,29 @@
     </div>
     <button id="btn-pk" class="hbtn pk-off hidden" title="Bật/tắt chế độ PK">PK: Tắt</button>
     <button id="btn-auto" class="hbtn auto-off hidden" title="Tự đánh — treo máy: tự đánh quái & tung kỹ năng quanh điểm neo, tối đa 1-2 bãi (Z)">⚔ AUTO</button>
-    <div id="minimap-wrap">
-      <canvas id="minimap" width="200" height="146" title="Bản đồ thu nhỏ (U)"></canvas>
-      <button id="btn-minimap" title="Ẩn/hiện bản đồ thu nhỏ (U)">🗺</button>
-    </div>
-    <div id="quest-tracker-wrap">
-      <button id="btn-questtracker" title="Ẩn/hiện bảng nhiệm vụ">📜 Nhiệm Vụ <span id="qt-arrow">▾</span></button>
-      <div id="quest-tracker"></div>
+    <!-- CỘT PHẢI là MỘT khối, không phải ba tấm rời chồng lên nhau. Trước bản này bản đồ nhỏ
+         và bảng nhiệm vụ mỗi cái một khung riêng, cách nhau một khe hở để lọt nền map — nên
+         chỗ tiếp giáp đổi sáng-tối theo địa hình đang đứng, và hai tấm lúc đọc ra một khối,
+         lúc đọc ra hai. Cùng lý do đã ghi ở #bottom-hud và ở khung chân dung. -->
+    <div id="cot-phai">
+      <div id="minimap-wrap">
+        <canvas id="minimap" width="200" height="146" title="Bản đồ thu nhỏ (U)"></canvas>
+      </div>
+      <!-- Hàng nút dưới bản đồ: đúng ba cửa người chơi mở từ chỗ này. KHÔNG bịa thêm nút cho
+           tính năng game chưa có (kênh, chợ…) — nút bấm vào không ra gì thì tệ hơn hẳn không
+           có nút. Nút Ẩn dời từ góc canvas xuống đây: nằm trên bản đồ thì nó che mất đúng
+           một góc bản đồ, mà góc nào cũng có thể là chỗ người chơi đang cần nhìn. -->
+      <div id="mm-nut">
+        <button class="cp-nut" title="Bản Đồ (M)" onclick="togglePanel('map')">🗺 Bản Đồ</button>
+        <button class="cp-nut" title="Bảng Sự Kiện" onclick="openEventBoard()">⏱ Sự Kiện</button>
+        <button class="cp-nut" id="btn-minimap" title="Ẩn/hiện bản đồ thu nhỏ (U)">👁 Ẩn</button>
+      </div>
+      <div id="quest-tracker-wrap">
+        <button id="btn-questtracker" title="Ẩn/hiện bảng nhiệm vụ">📜 Nhiệm Vụ <span id="qt-arrow">▾</span></button>
+        <div id="quest-tracker"></div>
+      </div>
     </div>
   </div>
-  <div id="hint-bar"></div>
 </div>
 
 
@@ -63,7 +92,6 @@
        · #bottom-hud  = CHIẾN TRƯỜNG — chỉ thứ dùng lúc đánh: hai viên đá, ô chiêu, thuốc, Trợ Thủ
        · #menu-cot    = MENU HỆ THỐNG — cột dọc sát mép phải, thu gọn được về một tab nhỏ -->
 <div id="bottom-hud" class="hidden">
-  <div class="orb orb-hp" id="orb-hp" title="Sinh Lực"><div class="orb-fill" id="bar-hp"></div><span class="orb-val" id="txt-hp"></span></div>
   <div id="skillbar">
     <button class="skill" id="sk-basic"><span class="sk-ico">⚔</span><span class="sk-key">Space</span><span class="sk-cd"></span></button>
     <button class="skill sk-slot" data-slot="0" id="sk-0" title="Chiêu chính"><span class="sk-ico">+</span><span class="sk-key">1</span><span class="sk-cd"></span></button>
@@ -80,7 +108,6 @@
     <i class="sk-vach"></i>
     <button class="skill sk-troly" id="sk-helper" title="Trợ Thủ — bật/tắt TỰ ĐÁNH (Z) · chuột phải để chỉnh"><span class="sk-ico">⚙</span><span class="sk-key">Z</span></button>
   </div>
-  <div class="orb orb-qi" id="orb-qi" title="Mana"><div class="orb-fill" id="bar-qi"></div><span class="orb-val" id="txt-qi"></span></div>
 </div>
 
 <!-- Cột menu hệ thống. Sáu cửa hay dùng nhất, mỗi cửa một icon 32px trong khung kim loại;
@@ -99,6 +126,7 @@
   <div id="mc-drop" class="hidden">
     <button id="btn-combatlog"><img src="assets/ui/ic_nhatky.png" alt="">Nhật Ký Chiến Đấu <span id="cl-arrow">▾</span></button>
     <button id="btn-sukien">⏱ Bảng Sự Kiện</button>
+    <button id="btn-help">❓ Hướng Dẫn &amp; Phím Tắt <span style="opacity:.7">F6</span></button>
     <button id="btn-music" title="Nhạc nền">♪ Nhạc Nền</button>
   </div>
 </div>
@@ -137,6 +165,7 @@
 <div id="panel-map" class="panel hidden"></div>
 <div id="panel-settings" class="panel hidden"></div>
 <div id="panel-qlog" class="panel hidden"></div>
+<div id="panel-help" class="panel hidden"></div>
 <div id="panel-quest" class="panel hidden"></div>
 <!-- Lò rèn: bảng RIÊNG, chỉ mở khi đứng cạnh Thợ Rèn (không còn là tab trong bảng Nhân Vật) -->
 <div id="panel-forge" class="panel hidden"></div>

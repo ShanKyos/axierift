@@ -124,8 +124,52 @@ html,body { width:100%; height:100%; overflow:hidden; background:var(--bg-deep);
 
 /* HUD */
 #hud { position:fixed; inset:0; pointer-events:none; z-index:10; }
-#hud-left { position:absolute; top:12px; left:12px; width:min(280px,44vw); }
-#hud-name { color:var(--text-bright); font-size:15px; letter-spacing:.5px; text-shadow:0 1px 3px #000; margin-bottom:5px; font-weight:600; }
+#hud-left { position:absolute; top:12px; left:12px; width:min(300px,46vw); }
+#hud-name { color:var(--text-bright); font-size:15px; letter-spacing:.5px; text-shadow:0 1px 3px #000; font-weight:600;
+  overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+
+/* ── KHUNG CHÂN DUNG ────────────────────────────────────────────────────────────────────
+   Chân dung · tên · cấp · Sinh Lực · Mana, gom trong MỘT tấm. Trước đây góc này chỉ có một
+   dòng chữ trần nằm đè lên tranh nền, còn hai thanh thì ở tận đáy màn hình dưới dạng viên
+   cầu — tức muốn biết mình còn bao nhiêu máu thì mắt phải rời khỏi chỗ đang đánh nhau, đi
+   xuống mép dưới, rồi quay lên.
+   Tấm nền đục vì cùng lý do đã ghi ở #bottom-hud: nền map đổi sáng-tối theo chỗ đang đứng,
+   nên chữ trần thì lúc đọc được lúc không. */
+#chan-dung { pointer-events:auto; display:flex; gap:9px; align-items:center;
+  padding:7px 11px 7px 7px; border-radius:12px; margin-bottom:6px;
+  background:linear-gradient(180deg, rgba(42,34,24,.86), rgba(15,12,8,.93));
+  border:1px solid rgba(198,158,74,.42);
+  box-shadow:0 6px 20px rgba(0,0,0,.55), inset 0 1px 0 rgba(255,231,180,.10); }
+/* Ô vuông, KHÔNG tròn: 16 con Axie có tỉ lệ rộng/cao từ 1,07 tới 1,52 nên khuôn tròn cắt
+   mất tai/sừng/càng của con bè — mà đó đúng là phần làm người ta nhận ra con vật của mình. */
+#cd-khung { position:relative; flex:none; width:58px; height:58px; border-radius:9px;
+  overflow:hidden; background:radial-gradient(circle at 42% 30%, #46392a, #17120b 78%);
+  border:2px solid rgba(198,158,74,.62);
+  box-shadow:inset 0 0 0 1px rgba(0,0,0,.6), inset 0 2px 7px rgba(0,0,0,.55); }
+#cd-ava, #cd-lop { position:absolute; inset:0; width:100%; height:100%; display:block; }
+#cd-lop { object-fit:cover; object-position:center top; }
+#cd-phai { flex:1; min-width:0; display:flex; flex-direction:column; gap:4px; }
+#cd-dau { display:flex; align-items:baseline; gap:7px; }
+#cd-dau #hud-name { flex:1; min-width:0; }
+/* Cấp là thứ NGƯỜI KHÁC hỏi và bản thân liếc liên tục, nên nó quay lại HUD sau một đợt bị
+   dọn sang bảng Nhân Vật. Để RIÊNG một thẻ, không nhồi vào chuỗi tên: dòng tên đã mang danh
+   hiệu, dấu điểm chưa cộng và cờ TỘI ÁC — thêm cấp vào đó là nó dài tới mức phải cắt bớt
+   đúng cái tên. `test_hudv` vẫn gác chuyện "tên không được nhồi lớp/cấp", và nó vẫn đúng. */
+#hud-lv { flex:none; color:var(--gold); font-family:var(--font-display); font-size:13px;
+  font-weight:700; letter-spacing:.4px; text-shadow:0 1px 3px #000; }
+/* Hai thanh: nền TỐI ĐỤC + vạch chia, không phải khối màu trơn. Vạch chia cho mắt đọc ra
+   "còn mấy phần" mà không cần đọc số — đúng việc mà một thanh máu phải làm trong lúc đánh. */
+.cd-thanh { position:relative; height:15px; border-radius:4px; overflow:hidden;
+  background:rgba(8,6,4,.82); border:1px solid rgba(0,0,0,.65);
+  box-shadow:inset 0 1px 2px rgba(0,0,0,.7), 0 1px 0 rgba(255,231,180,.07); }
+.cd-thanh .fill { display:block; height:100%; width:100%; transition:width .18s; }
+.cd-thanh span { position:absolute; inset:0; text-align:center; line-height:15px;
+  font-size:10.5px; font-weight:700; color:#fff; text-shadow:0 1px 2px #000, 0 0 5px rgba(0,0,0,.9);
+  font-variant-numeric:tabular-nums; letter-spacing:.2px; }
+.cd-thanh::after { content:''; position:absolute; inset:0; pointer-events:none;
+  background:repeating-linear-gradient(90deg, transparent 0 24%, rgba(0,0,0,.42) 24% calc(24% + 1px)); }
+.cd-hp .fill { background:linear-gradient(180deg,#ff8fa0,#e8324f 55%,#8a1226); }
+.cd-qi .fill { background:linear-gradient(180deg,#9ed4ff,#2f6fe0 55%,#122f72); }
 .bar { position:relative; height:16px; margin-bottom:4px; background:rgba(10,10,26,.72);
   border:1px solid rgba(229,211,186,.4); border-radius:999px; overflow:hidden; }
 .bar .fill { height:100%; width:100%; transition:width .18s; }
@@ -225,14 +269,20 @@ html,body { width:100%; height:100%; overflow:hidden; background:var(--bg-deep);
 
 /* Quest tracker — nằm trong luồng cột phải, dưới minimap */
 #quest-tracker-wrap { pointer-events:auto; }
+/* THANH TIÊU ĐỀ của khối nhiệm vụ, nằm TRONG khung cột phải — nên nó bỏ nền xanh tím cũ
+   (thứ duy nhất trong cả cột còn màu đó) và lấy cùng tông đồng với hàng nút ngay trên. */
 #btn-questtracker { pointer-events:auto; width:100%; display:flex; justify-content:space-between; align-items:center;
-  background:rgba(var(--rgb-da),.88); color:var(--text-body); border:1px solid var(--border); border-radius:var(--r-sm);
-  padding:5px 10px; margin-bottom:4px; font-family:inherit; font-size:var(--fs-md); font-weight:600; cursor:pointer; }
-#btn-questtracker:hover { background:rgba(var(--rgb-vang),.28); border-color:var(--border-strong); }
+  background:linear-gradient(180deg, rgba(70,57,38,.95), rgba(28,22,14,.95));
+  color:#f0dcb0; border:1px solid rgba(198,158,74,.45); border-radius:6px;
+  box-shadow:inset 0 1px 0 rgba(255,231,180,.12);
+  padding:5px 10px; margin-bottom:5px; font-family:inherit; font-size:var(--fs-md); font-weight:600; cursor:pointer; }
+#btn-questtracker:hover { border-color:var(--gold); color:#fff3d4; }
 #quest-tracker.qt-closed { display:none; }
-#quest-tracker { width:min(230px,42vw);
-  background:rgba(18,20,44,.7); border:1px solid var(--border-faint); border-left:3px solid var(--accent);
-  border-radius:var(--r-sm); padding:8px 10px; color:var(--text-soft); font-size:var(--fs-md); line-height:1.5; text-align:left; }
+/* Rộng 100% của cột, không còn tự đặt bề ngang riêng: nó đã nằm trong một khung có bề ngang
+   rồi, để hai con số cùng quyết định một thứ là chúng sẽ cãi nhau ở một cỡ màn hình nào đó. */
+#quest-tracker { width:100%; box-sizing:border-box; max-height:38vh; overflow-y:auto;
+  background:rgba(8,6,4,.6); border:1px solid rgba(0,0,0,.5); border-left:3px solid var(--gold);
+  border-radius:6px; padding:8px 10px; color:var(--text-soft); font-size:var(--fs-md); line-height:1.5; text-align:left; }
 #quest-tracker .q-title { color:var(--accent-light); font-size:var(--fs-lg); margin-bottom:2px; font-weight:700; }
 #quest-tracker .q-done { color:#8fd18f; }
 
@@ -242,11 +292,6 @@ html,body { width:100%; height:100%; overflow:hidden; background:var(--bg-deep);
 #quest-tracker .q-daily-row { font-size:var(--fs-sm); color:#eaddca; display:flex; justify-content:space-between; gap:6px; }
 #quest-tracker .q-daily-row.done { color:#8fd18f; opacity:.85; }
 #quest-tracker .q-daily-row b { color:var(--gold); font-weight:600; }
-
-/* Hint bar */
-#hint-bar { position:absolute; bottom:96px; left:50%; transform:translateX(-50%);
-  color:var(--text-bright); background:rgba(18,20,44,.75); padding:5px 16px; border-radius:999px;
-  font-size:var(--fs-md); border:1px solid var(--border-faint); white-space:nowrap; }
 
 /* Thanh dưới cùng kiểu MU Online: viên Máu (đỏ)/Mana (xanh) hình cầu
    2 đầu + thanh kỹ năng dàn ngang giữa + viền sáng theo % máu chạy dọc mép dưới màn hình. */
@@ -265,36 +310,6 @@ html,body { width:100%; height:100%; overflow:hidden; background:var(--bg-deep);
   border:1px solid rgba(198,158,74,.40);
   box-shadow:0 8px 24px rgba(0,0,0,.58), inset 0 1px 0 rgba(255,231,180,.10),
              inset 0 -1px 0 rgba(0,0,0,.55); }
-/* Vành cầu KHẮC HOA VĂN, không phải một vòng đen trơn. Vành dựng bằng conic-gradient trên
-   pseudo-element: mười hai nan đồng sáng-tối xen kẽ ⇒ mắt đọc ra một cái vòng ĐÚC, có mặt.
-   Vòng viền đơn sắc của bản cũ đọc ra như một khối màu, và đó là chỗ khác nhau giữa "khung
-   được vẽ" với "khung là màu đặc". */
-.orb { pointer-events:auto; position:relative; width:72px; height:72px; border-radius:50%;
-  flex:none; cursor:default; border:none;
-  box-shadow:0 4px 16px rgba(0,0,0,.65);
-  background:radial-gradient(circle at 36% 28%, rgba(255,255,255,.14), rgba(0,0,0,.6) 72%); }
-.orb::before { content:''; position:absolute; inset:-5px; border-radius:50%; z-index:3; pointer-events:none;
-  background:conic-gradient(#8a6a2e, #e6c477 8%, #7a5c26 16%, #d8b467 25%, #6b4f20 33%,
-                            #e6c477 42%, #7a5c26 50%, #d8b467 58%, #6b4f20 66%,
-                            #e6c477 75%, #7a5c26 83%, #d8b467 92%, #8a6a2e);
-  -webkit-mask:radial-gradient(circle, transparent 0 calc(50% - 5px), #000 calc(50% - 5px));
-          mask:radial-gradient(circle, transparent 0 calc(50% - 5px), #000 calc(50% - 5px));
-  filter:drop-shadow(0 1px 3px rgba(0,0,0,.8)); }
-/* Mặt kính: chóa sáng nằm TRÊN dung dịch, dưới vành. */
-.orb::after { content:''; position:absolute; inset:0; border-radius:50%; z-index:2; pointer-events:none;
-  background:radial-gradient(circle at 34% 22%, rgba(255,255,255,.34), transparent 46%),
-             inset 0 0 0 0 transparent;
-  box-shadow:inset 0 3px 10px rgba(0,0,0,.75); }
-.orb-fill, .orb-val { border-radius:50%; }
-.orb { overflow:visible; }
-.orb-fill { clip-path:circle(50% at 50% 50%); }
-.orb-fill { position:absolute; left:0; right:0; bottom:0; height:0%; transition:height .18s; }
-.orb-hp .orb-fill { background:radial-gradient(circle at 42% 22%, #ff9fae, #e8324f 55%, #6e0e20 100%); }
-.orb-qi .orb-fill { background:radial-gradient(circle at 42% 22%, #9ed4ff, #2f6fe0 55%, #0d2a6e 100%); }
-.orb-val { position:absolute; inset:0; z-index:2; display:flex; align-items:center; justify-content:center;
-  font-family:var(--font-display); font-weight:700; font-size:15px; color:#fff;
-  text-shadow:0 1px 3px #000, 0 0 8px rgba(0,0,0,.85); letter-spacing:.3px; }
-
 #skillbar { display:flex; gap:8px; pointer-events:auto; }
 /* Khung ĐẬM cho MỌI ô, không riêng bốn ô chiêu. Trước đây `--border` (đồng, alpha .42) đủ đọc
    trên icon nền tối, nhưng ô Space dùng `basic.png` — một nắm đấm trắng kem trên nền SÁNG — nên
@@ -350,8 +365,21 @@ html,body { width:100%; height:100%; overflow:hidden; background:var(--bg-deep);
    khác nhau, và trong lúc đánh nhau người ta tìm theo CỤM chứ không đếm từng ô. */
 .sk-vach { width:2px; height:34px; align-self:center; flex:none; border-radius:1px;
   background:linear-gradient(180deg,transparent,rgba(198,158,74,.55),transparent); }
+/* ⚠ HAI Ô THUỐC KHÔNG CÓ KHUNG — cố ý, và đây là chỗ khác hẳn bốn ô chiêu.
+   Ô chiêu cần khung vì nó mang thêm ba tín hiệu đè lên nhau: vạch màu nguyên tố (`.sk-he`),
+   lớp che hồi chiêu (`.sk-cd`), và trạng thái khoá. Khung là chỗ treo mấy thứ đó.
+   Ô thuốc không có cái nào trong ba — nó chỉ có một cái bình và một con số. Cho nó khung đồng
+   giống ô chiêu là nói với mắt rằng "đây cũng là một chiêu", trong khi hàng ngang đã có tới
+   tám khung vàng rồi. Bỏ khung đi thì bình thuốc tự tách ra thành một NHÓM khác mà không tốn
+   thêm một vạch ngăn nào.
+   Icon nới 74% → 100%: không còn khung để chừa lề, mà để nguyên cỡ cũ thì cái bình bé lại
+   trong một ô trống, đọc ra như ô hỏng. */
 .sk-vat { display:flex; flex-direction:column; align-items:center; justify-content:flex-end;
-  background-size:74%; background-position:center 3px; background-repeat:no-repeat; }
+  background-size:100%; background-position:center; background-repeat:no-repeat;
+  background-color:transparent; border:none; box-shadow:none; }
+/* Không có khung thì phải có cách khác báo "bấm được". Sáng lên khi rê chuột là đủ, và nó
+   không thêm một pixel hình nào vào thanh. */
+.sk-vat:hover { filter:brightness(1.18); }
 /* Hai bình đổi sang art Axie Land (`land-items/Items/Potion`): đỏ = máu, xanh = năng lượng —
    đúng hai thứ hai ô này làm, cùng một tay vẽ với art trang bị vừa nối. Tấm cũ `ic_binhmau` /
    `ic_lomana` là tranh chibi sinh ngoài, lạc tông với phần còn lại của thanh. */
@@ -906,13 +934,10 @@ html,body { width:100%; height:100%; overflow:hidden; background:var(--bg-deep);
   .sk-vach { display:none; }
   .skill { width:42px; height:42px; }
   .skill .sk-ico { font-size:17px; line-height:26px; }
-  .orb { width:48px; height:48px; }
-  .orb-val { font-size:var(--fs-sm); }
   #hud-left { width:min(280px,38vw); }
   #quest-tracker { font-size:var(--fs-sm); max-height:34vh; overflow-y:auto; }
   #quest-tracker .q-daily { display:none; }
   #minimap { width:150px; height:110px; }
-  #hint-bar { bottom:90px; font-size:var(--fs-sm); max-width:92vw; white-space:normal; text-align:center; }
   #combat-log-wrap { bottom:104px; width:min(200px,44vw); }
   #combat-log { font-size:10.5px; max-height:16vh; }
 }
@@ -1195,17 +1220,34 @@ html,body { width:100%; height:100%; overflow:hidden; background:var(--bg-deep);
 .title-row.equipped { box-shadow: 0 0 10px rgba(var(--rgb-vang),.3) inset; }
 
 /* ── Minimap — trong luồng cột phải, kèm nút ẩn/hiện ── */
-#minimap-wrap { position:relative; margin-top:4px; line-height:0; }
-#minimap { border:1px solid var(--border-strong); border-radius:var(--r-md);
-  background:rgba(14,15,32,.8); box-shadow:0 2px 14px rgba(0,0,0,.5); pointer-events:auto; cursor:pointer; }
-#btn-minimap { position:absolute; top:5px; right:5px; width:22px; height:22px; padding:0;
-  font-size:var(--fs-sm); line-height:1; border-radius:999px; cursor:pointer; pointer-events:auto;
-  background:rgba(var(--rgb-da),.88); color:var(--accent-light); border:1px solid var(--border); }
-#btn-minimap:hover { background:rgba(var(--rgb-vang),.3); }
-#btn-minimap.off { opacity:.6; position:static; margin-left:auto; }
+/* ── CỘT PHẢI: bản đồ nhỏ + hàng nút + bảng nhiệm vụ, MỘT tấm ──────────────────────────
+   Cùng bảng màu với khung chân dung và thanh chiến đấu, nên ba khối HUD đọc ra là một bộ
+   chứ không phải ba thứ nhặt từ ba chỗ. */
+#cot-phai { pointer-events:auto; margin-top:6px; width:212px; padding:6px;
+  border-radius:12px; display:flex; flex-direction:column; gap:6px;
+  background:linear-gradient(180deg, rgba(42,34,24,.86), rgba(15,12,8,.93));
+  border:1px solid rgba(198,158,74,.42);
+  box-shadow:0 6px 20px rgba(0,0,0,.55), inset 0 1px 0 rgba(255,231,180,.10); }
+#minimap-wrap { position:relative; line-height:0; }
+#minimap { display:block; width:200px; height:146px; border-radius:8px;
+  background:rgba(8,6,4,.86); border:1px solid rgba(0,0,0,.6);
+  box-shadow:inset 0 0 0 1px rgba(198,158,74,.35); pointer-events:auto; cursor:pointer; }
+#mm-nut { display:flex; gap:4px; }
+.cp-nut { flex:1; min-width:0; cursor:pointer; pointer-events:auto; font-family:inherit;
+  font-size:10.5px; line-height:1.5; padding:4px 2px; border-radius:6px; white-space:nowrap;
+  color:#f0dcb0; background:linear-gradient(180deg, rgba(70,57,38,.95), rgba(28,22,14,.95));
+  border:1px solid rgba(198,158,74,.45);
+  box-shadow:inset 0 1px 0 rgba(255,231,180,.12), 0 1px 3px rgba(0,0,0,.5); }
+.cp-nut:hover { background:linear-gradient(180deg, rgba(96,78,50,.95), rgba(44,35,21,.95));
+  border-color:var(--gold); color:#fff3d4; }
+.cp-nut:active { transform:translateY(1px); }
+/* Bản đồ đang ẩn: nút đổi CHỮ chứ không chỉ mờ đi. Mờ đi thì nó đọc ra "nút này hỏng"; đổi
+   chữ mới nói được đây là một công tắc và nó đang ở nấc nào. Chữ do JS ghi (drawMinimap). */
+#btn-minimap.off { color:var(--text-dimmer); border-color:var(--border-faint); }
 /* ── Cài đặt ── */
 .set-row { display:flex; align-items:center; justify-content:space-between; gap:10px; padding:7px 2px;
   border-bottom:1px dashed var(--border-faint); font-size:var(--fs-lg); }
+
 .set-row b { color:var(--accent-light); min-width:26px; text-align:right; }
 .set-row input[type=range] { flex:1; accent-color:var(--accent); height:4px; cursor:pointer; }
 /* .danger CHỈ dành cho nút phá huỷ (xoá save). Trạng thái TẮT của công tắc dùng .tat — trước
@@ -1214,6 +1256,29 @@ html,body { width:100%; height:100%; overflow:hidden; background:var(--bg-deep);
 .mini-btn.danger:hover { background:rgba(255,107,107,.25); }
 .mini-btn.tat { background:rgba(var(--rgb-da),.7); border-color:var(--border-faint); color:var(--text-dimmer); }
 .mini-btn.tat:hover { background:rgba(var(--rgb-vang),.12); color:var(--text-dim); }
+
+/* ── BẢNG HƯỚNG DẪN (F6) ─────────────────────────────────────────────────────
+   Rộng hơn bảng thường (520px) vì nội dung là HAI CỘT chữ, không phải một danh sách dọc:
+   ép vào 520px thì mỗi dòng xuống hàng giữa chừng và bảng dài gấp đôi màn hình.
+   Dưới 760px màn hình thì lưới tự về một cột — đó là việc của auto-fill, không phải của
+   một điểm ngắt chép tay. */
+#panel-help { width:min(720px,94vw); }
+.hd-luoi { display:grid; grid-template-columns:repeat(auto-fill, minmax(320px, 1fr)); gap:1px 18px; }
+/* ⚠ LƯỚI, KHÔNG PHẢI FLEX. Con tem phím rộng theo chữ của nó ('R' hẹp, 'Chuột phải' rộng gấp
+   ba), nên xếp bằng flex thì mô tả mỗi dòng bắt đầu ở một chỗ khác nhau — mắt mất hẳn cái mép
+   thẳng để trượt dọc, mà cả bảng này sinh ra là để quét mắt. Ô CỐ ĐỊNH thì mép chữ thẳng hàng
+   trong khi con tem vẫn ôm sát chữ của nó. */
+.hd-hang { display:grid; grid-template-columns:88px 1fr; align-items:baseline; gap:9px; padding:5px 2px;
+  border-bottom:1px dashed var(--border-faint); font-size:var(--fs-md); color:var(--text-body); }
+/* Mặt phím phải ĐỌC RA LÀ MỘT CÁI PHÍM, không phải một chữ in đậm. Cả bảng này là để người
+   chơi quét mắt tìm phím, nên cột trái phải bắt mắt trước cột phải — rộng cố định để mọi mô
+   tả thẳng hàng, chứ hàng chữ gãy so le thì mắt phải đọc từng dòng một. */
+.hd-phim { justify-self:start; text-align:center; white-space:nowrap;
+  font-family:var(--font-display); font-size:var(--fs-md); font-weight:700; line-height:1.5;
+  padding:1px 7px; border-radius:5px; color:#f3e3bb;
+  background:linear-gradient(180deg, rgba(70,57,38,.95), rgba(30,24,15,.95));
+  border:1px solid rgba(198,158,74,.55);
+  box-shadow:0 1px 0 rgba(0,0,0,.6), inset 0 1px 0 rgba(255,231,180,.14); }
 
 /* ---------- P1: nhiệm vụ theo vùng ---------- */
 .map-locked { border-style: dashed !important; opacity: .8; background: rgba(0,0,10,.15); }
