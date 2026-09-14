@@ -4225,7 +4225,11 @@ function castVohoc(id){
   if (v.type === 'cone'){
     const t = nearestMob(220);
     if (t) player.face = Math.atan2(t.y - player.y, t.x - player.x);
-    const R = 135 * _ev.r;
+    // Bán kính quạt: mặc định 135, nhưng chiêu khai `fx.r` thì theo chiêu — cùng quy ước mà mọi
+    // chiêu `aoe` vẫn dùng, nên không phải nhớ hai luật. Ba chiêu quạt đang có (dk_lunge ·
+    // dk_fallingslash · mg_powerslash) đều KHÔNG khai fx.r lúc thêm dòng này, nên mặc định 135
+    // giữ nguyên hành vi cũ cho tất cả; chỉ chiêu nào tự khai mới đổi.
+    const R = (fx.r || 135) * _ev.r;
     spawnSkillVfx(id, v, 'cone', player.face, R);
     aoeHit(() => {
       for (const m of mobs){
