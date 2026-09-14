@@ -125,6 +125,74 @@ const ok = m => console.log('  ok  ' + m);
     else ok(`§4 icon ${id} sáng ${L.toFixed(1)}`);
   }
 
+  // ── 5. KHUÔN MU ONLINE: C ra CHỈ SỐ · V ra TRANG BỊ + TÚI ĐỒ ──────────────────────────
+  // Trước đây `char` và `inv` chung một nhóm nên bấm C kéo luôn bảng Trang Bị ra. Mệnh đề này
+  // gác đúng chỗ đó, và nó gác được vì nó đo SỐ BẢNG MỞ chứ không đo từng bảng một: hỏng kiểu
+  // "mở dư một bảng" chỉ lộ ra khi đếm.
+  const mo = async (phim) => {
+    await p.evaluate(() => closePanels());
+    await p.waitForTimeout(150);
+    await p.keyboard.press(phim);
+    await p.waitForTimeout(300);
+    return p.evaluate(() => ['char','inv','bag'].filter(k =>
+      !document.getElementById('panel-' + k).classList.contains('hidden')));
+  };
+  const bangC = await mo('c');
+  if (bangC.join() !== 'char')
+    fail(`§5 bấm C mở ra [${bangC.join(' ')}] — phải ĐÚNG bảng chỉ số (char), đây là khuôn MU`);
+  else ok('§5 C mở đúng một bảng chỉ số');
+  const bangV = await mo('v');
+  if (bangV.join() !== 'inv,bag')
+    fail(`§5 bấm V mở ra [${bangV.join(' ')}] — phải là Trang Bị + Túi Đồ đứng cạnh nhau`);
+  else ok('§5 V mở Trang Bị + Túi Đồ');
+
+  // ── 6. Nhật Ký cắm trong cột phải, KHÔNG bị bảng khác đóng ────────────────────────────
+  const ql = await p.evaluate(() => {
+    const q = document.getElementById('panel-qlog'), c = document.getElementById('cot-phai');
+    return { trongCot: !!(q && c && c.contains(q)),
+             hien: !!(q && !q.classList.contains('hidden')),
+             coX: !!(q && q.querySelector('.close-x')) };
+  });
+  if (!ql.trongCot) fail('§6 panel-qlog không nằm trong cột phải');
+  else if (!ql.hien) fail('§6 Nhật Ký bị ẩn sau khi mở bảng khác — khối cắm trong HUD không được biến mất');
+  else ok('§6 Nhật Ký cắm trong cột phải và vẫn hiện khi bảng khác mở');
+  if (ql.coX) fail('§6 khối cắm vẫn còn nút ✕ — bấm vào là mất hẳn, không có đường mở lại bằng chuột');
+  else ok('§6 khối cắm không có nút ✕');
+
+  // ── 7. MENU NẰM TRÊN THANH CHIẾN ĐẤU ──────────────────────────────────────────────────
+  // Menu hệ thống đã đi BỐN chặng: cột dọc mép trái → hàng ngang đáy phải → trong cột phải →
+  // nay là một CỤM Ô trên chính thanh chiến đấu, sau vạch ngăn (chủ dự án chốt bằng ảnh mẫu).
+  // Mệnh đề này khoá chặng cuối: nó phải nằm TRONG `#bottom-hud`, ô phải CÙNG CỠ ô chiêu
+  // (lệch cỡ thì mắt đọc ra hai thanh dán vào nhau), và nút Nhiệm Vụ phải thật sự làm gì đó —
+  // `togglePanel('qlog')` nay là lệnh CÂM (khoá lạ thì hàm im lặng bỏ qua), nên một cái nút
+  // trỏ nhầm vào đó vẫn bấm được, vẫn kêu, và không đổi một pixel nào.
+  const mc = await p.evaluate(() => {
+    const m = document.getElementById('menu-cot'), h = document.getElementById('bottom-hud');
+    const q = document.getElementById('panel-qlog');
+    if (!m || !h || !q) return { loi:'thiếu phần tử' };
+    const truoc = q.classList.contains('ql-thu');
+    const b = document.getElementById('btn-qlog');
+    if (b) b.click();
+    const oMenu = m.querySelector('.mc-btn'), oChieu = document.getElementById('sk-0');
+    return { trongThanh: h.contains(m),
+             cungCo: !!(oMenu && oChieu) &&
+               Math.abs(oMenu.getBoundingClientRect().height - oChieu.getBoundingClientRect().height) <= 1,
+             coThu: !!document.getElementById('mc-thu'),
+             doiTrangThai: !!b && q.classList.contains('ql-thu') !== truoc };
+  });
+  if (mc.loi) fail('§7 ' + mc.loi);
+  else {
+    if (!mc.trongThanh) fail('§7 menu hệ thống nằm ngoài thanh chiến đấu — lại thành một khối rời phải nhớ chỗ');
+    else ok('§7 menu hệ thống nằm trên thanh chiến đấu');
+    if (!mc.cungCo) fail('§7 ô menu KHÁC cỡ ô chiêu — hai cụm cạnh nhau lệch cỡ thì đọc ra hai thanh dán vào nhau, không ra một thanh chia cụm');
+    else ok('§7 ô menu cùng cỡ ô chiêu');
+    // Nút thu gọn cũ để trên thanh là một cái chốt lạc cỡ, và thu một lần là mất đường mở lại.
+    if (mc.coThu) fail('§7 nút thu gọn #mc-thu sống lại — trên thanh chiến đấu nó không có đường mở lại bằng chuột');
+    else ok('§7 không còn nút thu gọn lạc cỡ');
+    if (!mc.doiTrangThai) fail('§7 nút Nhiệm Vụ trong menu không đổi được trạng thái Nhật Ký — gần như chắc chắn nó còn trỏ vào togglePanel(\'qlog\'), mà khoá đó nay không tồn tại nên hàm im lặng bỏ qua');
+    else ok('§7 nút Nhiệm Vụ trong menu thu/mở được Nhật Ký');
+  }
+
   console.log('errors:', errs.slice(0, 5));
   if (errs.length) fail('có lỗi JS trên trang');
   await b.close();

@@ -68,6 +68,40 @@ const pass = m => console.log('PASS ' + m);
     fail('hai lớp dùng chung một avatar mặc định — ngoài đường không phân biệt được lớp');
   else pass('năm lớp năm con khác nhau');
 
+  // ④ NHÂN VẬT MỚI PHẢI THẤY AXIE NGAY — và phải hỏi bằng cách TẠO nhân vật thật.
+  //
+  // ⚠ Ba khẳng định trên đây đều xanh trong suốt thời gian lỗi còn sống, vì cả ba chỉ đọc
+  // BẢNG `AVA_MAC_DINH`. Bảng thì không bao giờ hỏng; thứ hỏng là sợi dây từ bảng tới nhân
+  // vật. `startGame` khai `avatar: null` trong khối dựng người chơi, mà `avatarId()` đọc
+  // `null` là "người chơi đã tự tắt" ⇒ nhân vật vừa tạo ra không có Axie nào, còn save đời
+  // cũ (không có khoá ⇒ `undefined`) thì có. Hai vùng khác nhau của cùng một tệp, `git merge`
+  // ghép êm ru, `node --check` xanh.
+  //
+  // Nên bài này lái `startGame` cho CẢ NĂM LỚP rồi hỏi `avatarId(player)`, và hỏi thêm chiều
+  // NGƯỢC LẠI: `/avatar off` vẫn phải tắt được. Thiếu vế sau thì cách "sửa" dễ nhất — gộp
+  // `undefined` với `null` thành `!p.avatar` — cũng làm bài xanh, mà nó bẻ gãy cái nút tắt.
+  const r4 = await page.evaluate(() => {
+    const out = {};
+    for (const sk in SECTS){
+      localStorage.clear();
+      startGame(sk, null);
+      out[sk] = { khai: 'avatar' in player, id: avatarId(player), cho: AVA_MAC_DINH[sk] || null };
+    }
+    localStorage.clear(); startGame('thieulam', null);
+    chiTatAvatar();
+    out._tat = { avatar: player.avatar, id: avatarId(player) };
+    return out;
+  });
+  const hong = Object.entries(r4).filter(([k, v]) => k[0] !== '_' && v.id !== v.cho);
+  if (hong.length)
+    fail('nhân vật MỚI không có avatar mặc định: ' +
+         hong.map(([k, v]) => `${k} ra ${v.id} (chờ ${v.cho}${v.khai ? ', player khai sẵn avatar' : ''})`).join(' · '));
+  else pass(`cả ${Object.keys(r4).filter(k => k[0] !== '_').length} lớp: tạo nhân vật mới là thấy Axie mặc định ngay`);
+
+  if (r4._tat.id !== null)
+    fail(`/avatar off không tắt được — avatarId vẫn ra ${r4._tat.id}`);
+  else pass('tắt avatar vẫn tắt được (null ≠ undefined còn nguyên nghĩa)');
+
   console.log('errors:', JSON.stringify(errors.slice(0, 10)));
   if (errors.length) fail(`${errors.length} lỗi JS trong lúc chạy`);
   await browser.close();

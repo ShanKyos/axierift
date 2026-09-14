@@ -124,8 +124,8 @@ html,body { width:100%; height:100%; overflow:hidden; background:var(--bg-deep);
 
 /* HUD */
 #hud { position:fixed; inset:0; pointer-events:none; z-index:10; }
-#hud-left { position:absolute; top:12px; left:12px; width:min(300px,46vw); }
-#hud-name { color:var(--text-bright); font-size:15px; letter-spacing:.5px; text-shadow:0 1px 3px #000; font-weight:600;
+#hud-left { position:absolute; top:10px; left:10px; width:min(238px,40vw); }
+#hud-name { color:var(--text-bright); font-size:12.5px; letter-spacing:.3px; text-shadow:0 1px 3px #000; font-weight:600;
   overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
 
 /* ── KHUNG CHÂN DUNG ────────────────────────────────────────────────────────────────────
@@ -135,36 +135,36 @@ html,body { width:100%; height:100%; overflow:hidden; background:var(--bg-deep);
    xuống mép dưới, rồi quay lên.
    Tấm nền đục vì cùng lý do đã ghi ở #bottom-hud: nền map đổi sáng-tối theo chỗ đang đứng,
    nên chữ trần thì lúc đọc được lúc không. */
-#chan-dung { pointer-events:auto; display:flex; gap:9px; align-items:center;
-  padding:7px 11px 7px 7px; border-radius:12px; margin-bottom:6px;
+#chan-dung { pointer-events:auto; display:flex; gap:7px; align-items:center;
+  padding:5px 8px 5px 5px; border-radius:9px; margin-bottom:5px;
   background:linear-gradient(180deg, rgba(42,34,24,.86), rgba(15,12,8,.93));
   border:1px solid rgba(198,158,74,.42);
   box-shadow:0 6px 20px rgba(0,0,0,.55), inset 0 1px 0 rgba(255,231,180,.10); }
 /* Ô vuông, KHÔNG tròn: 16 con Axie có tỉ lệ rộng/cao từ 1,07 tới 1,52 nên khuôn tròn cắt
    mất tai/sừng/càng của con bè — mà đó đúng là phần làm người ta nhận ra con vật của mình. */
-#cd-khung { position:relative; flex:none; width:58px; height:58px; border-radius:9px;
+#cd-khung { position:relative; flex:none; width:44px; height:44px; border-radius:7px;
   overflow:hidden; background:radial-gradient(circle at 42% 30%, #46392a, #17120b 78%);
   border:2px solid rgba(198,158,74,.62);
   box-shadow:inset 0 0 0 1px rgba(0,0,0,.6), inset 0 2px 7px rgba(0,0,0,.55); }
 #cd-ava, #cd-lop { position:absolute; inset:0; width:100%; height:100%; display:block; }
 #cd-lop { object-fit:cover; object-position:center top; }
-#cd-phai { flex:1; min-width:0; display:flex; flex-direction:column; gap:4px; }
-#cd-dau { display:flex; align-items:baseline; gap:7px; }
+#cd-phai { flex:1; min-width:0; display:flex; flex-direction:column; gap:3px; }
+#cd-dau { display:flex; align-items:baseline; gap:5px; }
 #cd-dau #hud-name { flex:1; min-width:0; }
 /* Cấp là thứ NGƯỜI KHÁC hỏi và bản thân liếc liên tục, nên nó quay lại HUD sau một đợt bị
    dọn sang bảng Nhân Vật. Để RIÊNG một thẻ, không nhồi vào chuỗi tên: dòng tên đã mang danh
    hiệu, dấu điểm chưa cộng và cờ TỘI ÁC — thêm cấp vào đó là nó dài tới mức phải cắt bớt
    đúng cái tên. `test_hudv` vẫn gác chuyện "tên không được nhồi lớp/cấp", và nó vẫn đúng. */
-#hud-lv { flex:none; color:var(--gold); font-family:var(--font-display); font-size:13px;
+#hud-lv { flex:none; color:var(--gold); font-family:var(--font-display); font-size:11px;
   font-weight:700; letter-spacing:.4px; text-shadow:0 1px 3px #000; }
 /* Hai thanh: nền TỐI ĐỤC + vạch chia, không phải khối màu trơn. Vạch chia cho mắt đọc ra
    "còn mấy phần" mà không cần đọc số — đúng việc mà một thanh máu phải làm trong lúc đánh. */
-.cd-thanh { position:relative; height:15px; border-radius:4px; overflow:hidden;
+.cd-thanh { position:relative; height:11px; border-radius:3px; overflow:hidden;
   background:rgba(8,6,4,.82); border:1px solid rgba(0,0,0,.65);
   box-shadow:inset 0 1px 2px rgba(0,0,0,.7), 0 1px 0 rgba(255,231,180,.07); }
 .cd-thanh .fill { display:block; height:100%; width:100%; transition:width .18s; }
-.cd-thanh span { position:absolute; inset:0; text-align:center; line-height:15px;
-  font-size:10.5px; font-weight:700; color:#fff; text-shadow:0 1px 2px #000, 0 0 5px rgba(0,0,0,.9);
+.cd-thanh span { position:absolute; inset:0; text-align:center; line-height:11px;
+  font-size:9px; font-weight:700; color:#fff; text-shadow:0 1px 2px #000, 0 0 5px rgba(0,0,0,.9);
   font-variant-numeric:tabular-nums; letter-spacing:.2px; }
 .cd-thanh::after { content:''; position:absolute; inset:0; pointer-events:none;
   background:repeating-linear-gradient(90deg, transparent 0 24%, rgba(0,0,0,.42) 24% calc(24% + 1px)); }
@@ -224,20 +224,43 @@ html,body { width:100%; height:100%; overflow:hidden; background:var(--bg-deep);
    Mép phải đã kín: ví ba loại tiền, nút PK/TỰ ĐÁNH, bản đồ thu nhỏ, bảng theo dõi nhiệm vụ.
    Đặt cột menu vào đó là nó nằm đè lên bảng nhiệm vụ (đã thấy đúng vậy ở ảnh chụp đầu tiên).
    Mép trái chỉ có cụm tên + đồng hồ ở sát đỉnh, từ đó xuống dưới trống trơn. */
-#menu-cot { position:fixed; left:10px; top:50%; transform:translateY(-50%); z-index:12;
-  display:flex; flex-direction:column; align-items:flex-start; gap:5px; pointer-events:auto; }
-#mc-thu { width:22px; height:26px; padding:0; cursor:pointer; font-size:11px; line-height:1;
-  color:var(--gold); background:linear-gradient(180deg,rgba(38,32,22,.92),rgba(18,15,10,.94));
-  border:1px solid rgba(198,158,74,.55); border-radius:4px; }
-#mc-thu:hover { border-color:var(--gold); background:rgba(58,46,28,.95); }
-#mc-list { display:flex; flex-direction:column; gap:5px; }
-.mc-btn { position:relative; width:52px; height:52px; padding:0; cursor:pointer; border:none;
-  background:none; border-radius:7px; display:flex; align-items:center; justify-content:center;
-  font-family:inherit; color:var(--gold); font-size:11px; font-weight:700; }
+/* ── MENU HỆ THỐNG: NẰM TRÊN THANH CHIẾN ĐẤU ───────────────────────────────────────────
+   Chặng thứ tư, và là chặng chủ dự án chốt bằng ảnh mẫu: menu là một CỤM Ô trên chính thanh
+   dưới, sau vạch ngăn — đúng lối mấy game MU/kiếm hiệp bày (một hàng ô liền, chia cụm bằng
+   vạch, chứ không phải mấy tấm rời quanh màn hình).
+   Ba chặng trước và lý do bỏ, giữ lại để đừng đi vòng: cột dọc mép TRÁI (chắn giữa màn, là
+   thứ duy nhất ở sườn trái) → hàng ngang đáy PHẢI (vẫn là khối đứng riêng) → trong cột phải
+   (đồng nhất, nhưng lưới 4 cột trong bề ngang 180px thì ô phải bé hơn ô chiêu, đọc ra hai
+   thứ khác loại).
+   ⚠ NÚT THU GỌN `#mc-thu` ĐÃ GỠ. Trên thanh chiến đấu nó là một cái chốt lạc cỡ, và ai lỡ
+   thu một lần thì không còn đường mở lại bằng chuột — `SETTINGS.menuCot` cũ còn trong bản
+   lưu nên phần nối trong game.js phải CHỦ ĐỘNG bỏ qua nó, xem ghi chú tại chỗ. */
+#menu-cot { position:relative; display:flex; align-items:center; pointer-events:auto; }
+/* Cụm TRÁI — cùng luật bày với #mc-list, chỉ khác chỗ đứng. Khai chung một quy tắc để hai
+   bên không bao giờ lệch cỡ hay lệch lề: thanh cân đối là chuyện của HAI cụm, sửa một bên
+   thôi là cân đối biến mất mà không ai thấy ngay. */
+#mc-trai, #mc-list { display:flex; flex-direction:row; align-items:center; gap:5px; }
+#mc-trai { pointer-events:auto; }
+/* Nút chỉ có ký hiệu chữ (Tổ Đội · Hảo Hữu): đè cỡ chữ 11px của .mc-btn, vốn viết cho
+   nhãn chứ không cho biểu tượng. */
+.mc-chu { font-size:23px; line-height:1; color:#f2d493;
+  text-shadow:0 0 6px rgba(255,206,110,.35), 0 1px 2px rgba(0,0,0,.8); }
+.mc-chu:hover { color:#ffe9b0; }
+.mc-chu.on { color:#ffd76a; box-shadow:inset 0 0 0 1px var(--gold), 0 0 9px rgba(255,206,110,.55); }
+/* 40px = ĐÚNG cỡ `.skill`, và mượn luôn khung của nó. Lệch cỡ giữa hai cụm cạnh nhau thì
+   mắt đọc ra hai thanh dán vào nhau chứ không ra một thanh chia cụm. */
+.mc-btn { position:relative; width:40px; height:40px; padding:0; cursor:pointer;
+  border-radius:6px; display:flex; align-items:center; justify-content:center;
+  font-family:inherit; color:var(--gold); font-size:11px; font-weight:700;
+  background:rgb(62,51,36); border:2px solid var(--border-strong); overflow:hidden;
+  box-shadow:inset 0 0 0 1px rgba(0,0,0,.55); }
+.mc-btn:active { transform:scale(.94); }
 .mc-btn img { width:100%; height:100%; object-fit:contain; display:block;
   filter:drop-shadow(0 2px 3px rgba(0,0,0,.6)); transition:filter .14s, transform .14s; }
 /* Nhãn chữ chỉ hiện lúc rê chuột — cột phải gọn, mà vẫn không bắt người chơi đoán icon. */
-.mc-btn span { position:absolute; left:calc(100% + 7px); top:50%; transform:translateY(-50%);
+/* Nhãn bật lên TRÊN. Ở cột dọc nó nằm bên phải được, nhưng xếp ngang thì bên phải là nút kế
+   tiếp — nhãn sẽ che đúng cái nút người ta đang định bấm. */
+.mc-btn span { position:absolute; left:50%; bottom:calc(100% + 6px); transform:translateX(-50%);
   white-space:nowrap; padding:3px 9px; border-radius:4px; opacity:0; pointer-events:none;
   background:rgba(12,10,8,.94); border:1px solid rgba(198,158,74,.5); color:#f0e2c0;
   font-size:11.5px; font-weight:600; transition:opacity .12s; }
@@ -248,13 +271,13 @@ html,body { width:100%; height:100%; overflow:hidden; background:var(--bg-deep);
 /* KHOÁ — xám hẳn + ổ khoá nhỏ góc dưới-phải. Mờ suông thì đọc ra như đang tải. */
 .mc-btn.khoa { cursor:not-allowed; }
 .mc-btn.khoa img { filter:grayscale(1) brightness(.5); }
-.mc-btn.khoa::after { content:'🔒'; position:absolute; right:2px; bottom:1px; font-size:12px;
+.mc-btn.khoa::after { content:'🔒'; position:absolute; right:1px; bottom:0; font-size:10px;
   line-height:1; text-shadow:0 1px 2px #000; }
-.mc-menu { font-size:11px; letter-spacing:.3px; height:30px; width:52px; border-radius:5px;
+.mc-menu { font-size:9px; letter-spacing:.2px; height:40px; width:40px; border-radius:6px;
   background:linear-gradient(180deg,rgba(38,32,22,.94),rgba(18,15,10,.96));
   box-shadow:inset 0 0 0 1px rgba(198,158,74,.5); }
 .mc-menu:hover { box-shadow:inset 0 0 0 1px var(--gold); color:#ffe9b0; }
-#mc-drop { position:absolute; left:calc(100% + 8px); bottom:0; display:flex; flex-direction:column;
+#mc-drop { position:absolute; right:0; bottom:calc(100% + 8px); display:flex; flex-direction:column;
   gap:3px; min-width:200px; padding:6px; border-radius:6px;
   background:linear-gradient(180deg,rgba(28,23,16,.97),rgba(14,11,8,.98));
   box-shadow:inset 0 0 0 1px rgba(198,158,74,.55), 0 8px 24px rgba(0,0,0,.7); }
@@ -264,25 +287,35 @@ html,body { width:100%; height:100%; overflow:hidden; background:var(--bg-deep);
 #mc-drop button:hover { background:rgba(198,158,74,.2); color:#fff3d6; }
 #mc-drop button img { width:22px; height:22px; object-fit:contain; }
 /* THU GỌN — cả cột biến mất, chỉ còn cái mũi tên làm tab kéo ra lại. */
-#menu-cot.thu #mc-list, #menu-cot.thu #mc-drop { display:none; }
 
 
 /* Quest tracker — nằm trong luồng cột phải, dưới minimap */
-#quest-tracker-wrap { pointer-events:auto; }
-/* THANH TIÊU ĐỀ của khối nhiệm vụ, nằm TRONG khung cột phải — nên nó bỏ nền xanh tím cũ
-   (thứ duy nhất trong cả cột còn màu đó) và lấy cùng tông đồng với hàng nút ngay trên. */
-#btn-questtracker { pointer-events:auto; width:100%; display:flex; justify-content:space-between; align-items:center;
+/* ── NHẬT KÝ NHIỆM VỤ CẮM TRONG CỘT ────────────────────────────────────────────────────
+   `.bang-cam` gỡ hết thuộc tính của một cửa sổ nổi ra khỏi `.panel`: hết `position:fixed`,
+   hết canh giữa màn, hết bề rộng riêng, hết bóng đổ và đinh tán. Giữ nguyên class `.panel`
+   là cố ý — phần vẽ (`moBang`, `.bang-tieu`, `.bang-tabs`, `.ql-row`) dùng chung với mọi
+   bảng khác, và chép một bộ luật thứ hai cho riêng nó là mở đường cho hai bên lệch nhau. */
+.panel.bang-cam { position:static; transform:none; width:100%; box-sizing:border-box;
+  max-height:none; overflow:visible; z-index:auto;
+  background:rgba(8,6,4,.6); border:1px solid rgba(0,0,0,.5); border-left:3px solid var(--gold);
+  border-radius:6px; padding:6px 7px; box-shadow:none; }
+.panel.bang-cam .bang-tieu { font-size:12px; margin:0 0 5px; padding:0; border:none; }
+.panel.bang-cam .bang-tabs { gap:2px; margin-bottom:5px; }
+.panel.bang-cam .bang-tab { font-size:9.5px; padding:2px 5px; }
+.panel.bang-cam .ql-row { font-size:10.5px; line-height:1.45; }
+.panel.bang-cam .ql-ch { font-size:10.5px; }
+/* Thu gọn giấu THÂN, chừa lại thanh tiêu đề + hàng tab + nút — nếu giấu cả khối thì nút mở
+   lại cũng biến mất cùng, và không còn cách nào mở bằng chuột. */
+.panel.bang-cam.ql-thu > *:not(.bang-tieu):not(.bang-tabs):not(#btn-questtracker) { display:none; }
+#btn-questtracker { pointer-events:auto; width:100%; text-align:center;
   background:linear-gradient(180deg, rgba(70,57,38,.95), rgba(28,22,14,.95));
-  color:#f0dcb0; border:1px solid rgba(198,158,74,.45); border-radius:6px;
+  color:#f0dcb0; border:1px solid rgba(198,158,74,.45); border-radius:5px;
   box-shadow:inset 0 1px 0 rgba(255,231,180,.12);
-  padding:5px 10px; margin-bottom:5px; font-family:inherit; font-size:var(--fs-md); font-weight:600; cursor:pointer; }
+  padding:2px 8px; margin-bottom:5px; font-family:inherit; font-size:9.5px; font-weight:600; cursor:pointer; }
 #btn-questtracker:hover { border-color:var(--gold); color:#fff3d4; }
 #quest-tracker.qt-closed { display:none; }
-/* Rộng 100% của cột, không còn tự đặt bề ngang riêng: nó đã nằm trong một khung có bề ngang
-   rồi, để hai con số cùng quyết định một thứ là chúng sẽ cãi nhau ở một cỡ màn hình nào đó. */
-#quest-tracker { width:100%; box-sizing:border-box; max-height:38vh; overflow-y:auto;
-  background:rgba(8,6,4,.6); border:1px solid rgba(0,0,0,.5); border-left:3px solid var(--gold);
-  border-radius:6px; padding:8px 10px; color:var(--text-soft); font-size:var(--fs-md); line-height:1.5; text-align:left; }
+#quest-tracker { width:100%; box-sizing:border-box; max-height:34vh; overflow-y:auto;
+  color:var(--text-soft); font-size:10.5px; line-height:1.45; text-align:left; }
 #quest-tracker .q-title { color:var(--accent-light); font-size:var(--fs-lg); margin-bottom:2px; font-weight:700; }
 #quest-tracker .q-done { color:#8fd18f; }
 
@@ -303,19 +336,24 @@ html,body { width:100%; height:100%; overflow:hidden; background:var(--bg-deep);
    dưới bắt nhân vật chạy tới. Các nút con vốn đã tự khai auto nên không đổi gì thêm.
    `bottom` 12 → 24: thanh EXP nằm ở bottom:6 cao 13 (tức chiếm 6..19) và trước đây cắt ngang
    đáy các ô chiêu. Nay nó nằm gọn DƯỚI tấm nền, thành một làn riêng. */
-#bottom-hud { position:fixed; left:50%; bottom:24px; transform:translateX(-50%); z-index:11;
-  display:flex; align-items:center; gap:14px; pointer-events:auto;
-  padding:7px 14px; border-radius:14px;
+/* ⚠ CỠ Ô LÀ 40px, KHÔNG PHẢI 56. Chủ dự án đưa ảnh mẫu và chốt "thu nhỏ lại": ở 56px, chín ô
+   cộng lề chiếm 560px giữa mép dưới màn hình — một dải chắn ngang đúng chỗ người chơi đang
+   nhìn để đánh nhau. Mẫu MU/kiếm hiệp để ô quanh 32-36px và bù lại bằng KHUNG rõ nét chứ
+   không bằng bề mặt to. Xuống 40px thì cả thanh còn ~430px, và icon vẫn đọc được vì tranh
+   vốn vẽ ở 112px. */
+#bottom-hud { position:fixed; left:50%; bottom:20px; transform:translateX(-50%); z-index:11;
+  display:flex; align-items:center; gap:8px; pointer-events:auto;
+  padding:5px 9px; border-radius:10px;
   background:linear-gradient(180deg, rgba(42,34,24,.84), rgba(15,12,8,.92));
   border:1px solid rgba(198,158,74,.40);
   box-shadow:0 8px 24px rgba(0,0,0,.58), inset 0 1px 0 rgba(255,231,180,.10),
              inset 0 -1px 0 rgba(0,0,0,.55); }
-#skillbar { display:flex; gap:8px; pointer-events:auto; }
+#skillbar { display:flex; gap:5px; pointer-events:auto; }
 /* Khung ĐẬM cho MỌI ô, không riêng bốn ô chiêu. Trước đây `--border` (đồng, alpha .42) đủ đọc
    trên icon nền tối, nhưng ô Space dùng `basic.png` — một nắm đấm trắng kem trên nền SÁNG — nên
    khung nhạt chìm hẳn vào ảnh: nút bấm nhiều nhất game lại là nút duy nhất trông không có khung.
    Thêm một vành tối phía trong để ảnh sáng nào cũng có mép. */
-.skill { position:relative; width:56px; height:56px; border-radius:var(--r-md); cursor:pointer;
+.skill { position:relative; width:40px; height:40px; border-radius:6px; cursor:pointer;
   /* ⚠ NỀN Ô PHẢI ĐỤC VÀ SÁNG HƠN TẤM NỀN. Trước khi có tấm nền, ô để .88 và 12% còn lại là
      nền map SÁNG lọt qua — nó vô tình soi sáng mấy tấm icon vốn tối. Dựng tấm nền tối phía sau
      là mất nguồn sáng chùa đó, chụp ra thấy cả tám icon xỉn hẳn đi. Nay ô tự mang nền riêng,
@@ -329,7 +367,7 @@ html,body { width:100%; height:100%; overflow:hidden; background:var(--bg-deep);
      chiều sâu" — chụp ra thì nó dìm hẳn cả tám icon, đọc còn khó hơn lúc chưa sửa. Thứ làm
      ảnh sáng có mép là cái nét 1px, không phải vùng tối lan vào giữa. */
   box-shadow:inset 0 0 0 1px rgba(0,0,0,.55); }
-.skill .sk-ico { display:block; font-size:var(--fs-2xl); line-height:34px; }
+.skill .sk-ico { display:block; font-size:17px; line-height:26px; }
 /* PHÍM TẮT phải đọc được giữa lúc đánh nhau. Bản cũ là chữ 9px mờ .7 nằm dưới đáy ô, trên nền
    icon — gần như vô hình, mà đây lại là thứ dạy người chơi bỏ chuột ra mà gõ phím. Nay là một
    con tem ở góc trên-trái, có nền tối riêng nên không phụ thuộc icon bên dưới sáng hay tối. */
@@ -340,9 +378,9 @@ html,body { width:100%; height:100%; overflow:hidden; background:var(--bg-deep);
    toàn bộ icon: đo được độ sáng ô chiêu tụt 79,1 → 22,7, tức tối đi hơn ba lần, mà nhìn thì
    chỉ thấy "icon hơi tối" chứ không ra nguyên nhân. Cùng một họ với lỗi `.sk-so` đã sửa hôm
    nay: một selector, hai chỗ khai. */
-.skill .sk-key { position:absolute; left:2px; top:2px; right:auto; bottom:auto; z-index:3;
-  font-size:11px; font-weight:700; line-height:1; letter-spacing:.2px;
-  padding:2px 4px; border-radius:4px; opacity:1;
+.skill .sk-key { position:absolute; left:1px; top:1px; right:auto; bottom:auto; z-index:3;
+  font-size:9px; font-weight:700; line-height:1; letter-spacing:.2px;
+  padding:1px 3px; border-radius:3px; opacity:1;
   background:rgba(6,5,3,.78); color:#f3e3bb; text-shadow:0 1px 2px #000; }
 /* Vạch màu theo NGUYÊN TỐ của chiêu. Bốn ô chiêu của Dark Knight đều là nét trắng trên nền
    xanh — cùng một tông, nên giữa trận không phân biệt được ô 2 với ô 3. Không tô đè lên tranh
@@ -358,12 +396,12 @@ html,body { width:100%; height:100%; overflow:hidden; background:var(--bg-deep);
    chỗ này còn để trống. Nét đứt là quy ước "thả vào đây" mà mọi game bày ô đồ đều dùng. */
 .skill.sk-empty { background:rgba(20,17,12,.55); border:2px dashed rgba(198,158,74,.6);
   color:rgba(240,214,150,.8); opacity:1; filter:none; }
-.skill.sk-empty .sk-ico { font-size:22px; line-height:34px; opacity:.85; }
+.skill.sk-empty .sk-ico { font-size:16px; line-height:26px; opacity:.85; }
 .skill.sk-empty:hover { border-color:var(--gold); background:rgba(58,46,28,.6);
   box-shadow:0 0 10px rgba(255,206,110,.35); }
 /* Vạch ngăn NHÓM trong thanh chiêu: chiêu | vật phẩm | trợ thủ. Cùng một hàng nhưng ba việc
    khác nhau, và trong lúc đánh nhau người ta tìm theo CỤM chứ không đếm từng ô. */
-.sk-vach { width:2px; height:34px; align-self:center; flex:none; border-radius:1px;
+.sk-vach { width:2px; height:24px; align-self:center; flex:none; border-radius:1px;
   background:linear-gradient(180deg,transparent,rgba(198,158,74,.55),transparent); }
 /* ⚠ HAI Ô THUỐC KHÔNG CÓ KHUNG — cố ý, và đây là chỗ khác hẳn bốn ô chiêu.
    Ô chiêu cần khung vì nó mang thêm ba tín hiệu đè lên nhau: vạch màu nguyên tố (`.sk-he`),
@@ -385,7 +423,7 @@ html,body { width:100%; height:100%; overflow:hidden; background:var(--bg-deep);
    `ic_lomana` là tranh chibi sinh ngoài, lạc tông với phần còn lại của thanh. */
 #sk-thuoc { background-image:url(assets/items/it_mau.png); }
 #sk-mana  { background-image:url(assets/items/it_mana.png); }
-.sk-so { position:absolute; right:3px; bottom:2px; font-size:12px; font-weight:700; color:#fff;
+.sk-so { position:absolute; right:2px; bottom:1px; font-size:10px; font-weight:700; color:#fff;
   text-shadow:0 1px 3px #000, 0 0 6px rgba(0,0,0,.9); font-variant-numeric:tabular-nums; }
 .sk-vat.het { filter:grayscale(1) brightness(.55); }
 .sk-vat.het .sk-so { color:#ff8f8f; }
@@ -947,7 +985,6 @@ html,body { width:100%; height:100%; overflow:hidden; background:var(--bg-deep);
   background:rgba(18,20,44,.4); border:1px solid rgba(var(--rgb-vang),.3); border-radius:999px; padding:2px 9px; display:inline-block; }
 #hud-buff { color:var(--orange); font-size:11.5px; text-shadow:0 1px 3px #000; margin-top:2px; letter-spacing:.5px; }
 #hud-loidon { color:var(--gold); font-size:11.5px; text-shadow:0 1px 3px #000; margin-top:2px; letter-spacing:.5px; }
-#hud-name .title-tag { color:var(--accent-light); }
 #hud-name.toiac { color:#ff5a4a; }
 #hud-map { position:absolute; top:12px; left:50%; transform:translateX(-50%); text-align:center;
   color:var(--text-bright); font-size:14px; letter-spacing:.5px; text-shadow:0 1px 3px #000; font-weight:600; }
@@ -1223,18 +1260,20 @@ html,body { width:100%; height:100%; overflow:hidden; background:var(--bg-deep);
 /* ── CỘT PHẢI: bản đồ nhỏ + hàng nút + bảng nhiệm vụ, MỘT tấm ──────────────────────────
    Cùng bảng màu với khung chân dung và thanh chiến đấu, nên ba khối HUD đọc ra là một bộ
    chứ không phải ba thứ nhặt từ ba chỗ. */
-#cot-phai { pointer-events:auto; margin-top:6px; width:212px; padding:6px;
-  border-radius:12px; display:flex; flex-direction:column; gap:6px;
+#cot-phai { pointer-events:auto; margin-top:5px; width:190px; padding:5px;
+  border-radius:9px; display:flex; flex-direction:column; gap:5px;
   background:linear-gradient(180deg, rgba(42,34,24,.86), rgba(15,12,8,.93));
   border:1px solid rgba(198,158,74,.42);
   box-shadow:0 6px 20px rgba(0,0,0,.55), inset 0 1px 0 rgba(255,231,180,.10); }
 #minimap-wrap { position:relative; line-height:0; }
-#minimap { display:block; width:200px; height:146px; border-radius:8px;
+/* Canvas giữ nguyên 200×146 điểm ảnh THẬT, chỉ thu bằng CSS — nên bản đồ nhỏ lại mà còn
+   NÉT HƠN trước (nhiều điểm ảnh hơn trên cùng một diện tích), không phải mờ đi. */
+#minimap { display:block; width:180px; height:131px; border-radius:6px;
   background:rgba(8,6,4,.86); border:1px solid rgba(0,0,0,.6);
   box-shadow:inset 0 0 0 1px rgba(198,158,74,.35); pointer-events:auto; cursor:pointer; }
 #mm-nut { display:flex; gap:4px; }
 .cp-nut { flex:1; min-width:0; cursor:pointer; pointer-events:auto; font-family:inherit;
-  font-size:10.5px; line-height:1.5; padding:4px 2px; border-radius:6px; white-space:nowrap;
+  font-size:9.5px; line-height:1.4; padding:3px 1px; border-radius:5px; white-space:nowrap;
   color:#f0dcb0; background:linear-gradient(180deg, rgba(70,57,38,.95), rgba(28,22,14,.95));
   border:1px solid rgba(198,158,74,.45);
   box-shadow:inset 0 1px 0 rgba(255,231,180,.12), 0 1px 3px rgba(0,0,0,.5); }
@@ -1650,6 +1689,13 @@ html,body { width:100%; height:100%; overflow:hidden; background:var(--bg-deep);
 #fx-crack[data-tru="3"] { --nw:112px; --nh:28vh; --no:.64; }
 #fx-crack[data-tru="4"] { --nw:138px; --nh:34vh; --no:.72; }
 #fx-crack[data-tru="5"] { --nw:170px; --nh:42vh; --no:.84; }
+/* ⚠ SỐ NẤC PHẢI KHỚP RUNE_TONG. Bảng xương sống đi từ 5 (Năm Trụ Khoá) lên 7 (Bảy Rune Cổ), và
+   bộ chọn `[data-tru="N"]` khớp CHÍNH XÁC — nên hai nấc cuối thiếu ở đây là `--nw` không được
+   khai, `getComputedStyle` trả chuỗi rỗng, parseFloat ra NaN, và lớp vết nứt TỤT VỀ 0 đúng ở hai
+   nấc cuối cùng của cả ván chơi. Không có lỗi nào trên console. test_dot4 đọc số nấc từ
+   RUNE_TONG nên nó bắt được — đổi RUNE_CO thì chạy lại bài đó. */
+#fx-crack[data-tru="6"] { --nw:198px; --nh:49vh; --no:.90; }
+#fx-crack[data-tru="7"] { --nw:224px; --nh:56vh; --no:.96; }
 /* Nấc cuối vẫn hiện, chỉ bỏ đoạn chuyển tiếp — người tắt hiệu ứng chuyển động vẫn phải ĐỌC ĐƯỢC
    trạng thái thế giới, chứ không phải bị giấu mất một nửa cốt truyện. */
 @media (prefers-reduced-motion: reduce){ #fx-crack { transition:none; } }
@@ -2202,21 +2248,53 @@ html,body { width:100%; height:100%; overflow:hidden; background:var(--bg-deep);
 .kn-d i { font-style:normal; color:var(--text-dim); }
 .kn-d b.ok { color:#7ec850; } .kn-d b.no { color:#ff6b6b; }
 .kn-mo { color:var(--text-dim); }
-.kn-bar { position:relative; height:11px; border-radius:999px; margin:2px 0 6px;
+/* Thanh TIẾN ĐỘ trong khung chi tiết. ⚠ Tên cũ là `.kn-bar` và nó từng bị một phép đổi tên
+   hàng loạt cuỗm mất khi thêm hàng bốn ô — đổi sang `.kn-tien` để hai thứ không còn tên giống
+   nhau nữa. Lỗi đó không ném gì, chỉ lộ ra khi chụp màn hình. */
+.kn-tien { position:relative; height:11px; border-radius:999px; margin:2px 0 6px;
   background:rgba(0,0,0,.45); border:1px solid var(--border-faint); overflow:hidden; }
-.kn-bar s { display:block; height:100%; text-decoration:none;
+.kn-tien s { display:block; height:100%; text-decoration:none;
   background:linear-gradient(90deg,#3a6fd8,#7ecbff); }
-.kn-bar em { position:absolute; inset:0; font-style:normal; font-size:8.5px; line-height:11px;
+.kn-tien em { position:absolute; inset:0; font-style:normal; font-size:8.5px; line-height:11px;
   text-align:center; color:#dbe6ff; text-shadow:0 1px 0 #000; }
 .kn-vach { font-size:10px; letter-spacing:1px; color:var(--gold); text-align:center;
   margin:7px 0 5px; border-top:1px solid rgba(var(--rgb-vang),.25); padding-top:5px; }
 .kn-sach { font-size:10px; color:var(--orange); margin:5px 0 0; line-height:1.4; }
-.kn-nut { display:flex; justify-content:center; margin-top:7px; }
+.kn-nut { display:flex; justify-content:center; gap:6px; margin-top:7px; }
 .kn-nang { min-width:96px; border-color:#7ec850; color:#7ec850; font-weight:700; }
 .kn-nang.mo { opacity:.42; border-color:var(--border-faint); color:var(--text-dim); }
+/* Trục thứ hai của một chiêu — điểm tiềm năng. Màu lam ĐÚNG bằng màu bộ đếm điểm trong bảng
+   Nhân Vật: hai chỗ nói về cùng một túi điểm thì phải cùng một màu. */
+.kn-tn { min-width:96px; border-color:#7ecbff; color:#7ecbff; font-weight:700; }
+.kn-tn.mo { opacity:.42; border-color:var(--border-faint); color:var(--text-dim); }
 .kn-chan { font-size:9.5px; color:var(--text-dim); line-height:1.45; margin-top:7px;
   border-top:1px solid rgba(255,255,255,.07); padding-top:5px; }
 .kn-ghi { font-size:9.5px; color:var(--text-dim); line-height:1.5; margin-top:8px; }
 @media (prefers-reduced-motion: reduce) {
   .kn-o, .kn-o:hover { transition:none; transform:none; }
 }
+
+/* ── Thanh chiêu 4 ô trong bảng Kỹ Năng (kéo thả) ──
+   ⚠ KHÔNG đặt tên `.kn-bar` — tên đó đã là thanh tiến độ cao 11px trong khung chi tiết, đặt
+   trùng là hàng bốn ô bẹp dí mà không có gì báo lỗi. */
+.kn-thanh { margin:0 0 9px; padding:7px 8px; border-radius:var(--r-sm);
+  background:rgba(0,0,0,.24); border:1px solid var(--border-faint); }
+.kn-thanh-t { font-size:9.5px; color:var(--text-dim); margin-bottom:5px; }
+.kn-thanh-o { display:flex; gap:7px; }
+.kn-thanh-d { font-size:9.5px; color:var(--text-dim); line-height:1.5; margin-top:6px; }
+.kn-thanh-d b { color:var(--gold); }
+.kn-bo { position:relative; width:44px; height:44px; border-radius:var(--r-sm);
+  background:rgba(var(--rgb-da),.55); border:1px solid var(--border-faint);
+  display:flex; align-items:center; justify-content:center; }
+.kn-bo img { width:40px; height:40px; border-radius:5px; display:block; }
+.kn-bo.trong { border-style:dashed; border-color:rgba(var(--rgb-vang),.3); }
+.kn-bo.trong span { font-size:17px; color:rgba(var(--rgb-vang),.42); line-height:1; }
+.kn-bo.bd { border-color:rgba(160,255,233,.55); }
+.kn-bo i { position:absolute; left:2px; top:0; font-style:normal; font-size:9px; font-weight:700;
+  color:var(--gold); text-shadow:0 1px 0 #000; }
+.kn-bo u { position:absolute; right:2px; top:0; text-decoration:none; font-size:10px; color:#a0ffe9;
+  text-shadow:0 1px 0 #000; }
+.kn-bo s { position:absolute; left:0; right:0; bottom:-1px; text-decoration:none; font-size:8px;
+  text-align:center; color:#ff9a6a; text-shadow:0 1px 0 #000; }
+/* Ô đang nhận thả — viền xanh lá, cùng màu dấu + "nâng được" của cây. */
+.kn-bo.sk-nhan, #skillbar .sk-slot.sk-nhan { outline:2px solid #5fc96e; outline-offset:1px; }

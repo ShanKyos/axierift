@@ -45,7 +45,12 @@ const PORT = process.argv[2] || '8853';
         diSan: LEGACY_SECT_SKILLS.filter(x => VOHOC_DEFS[x].phai === sect).map(x => VOHOC_DEFS[x].name),
         biDong: CLASS_PASSIVES.filter(x => VOHOC_DEFS[x].phai === sect).map(x => VOHOC_DEFS[x].name),
         // chiêu của lớp KHÁC mà nhân vật này học được / nhìn thấy trên bảng
-        hocLan: Object.keys(VOHOC_DEFS).filter(x => VOHOC_DEFS[x].phai !== sect && vhLearned(x)).map(x => VOHOC_DEFS[x].name),
+        // ⚠ "Chiêu lớp khác" nghĩa là chiêu THUỘC một lớp khác — không phải mọi thứ không thuộc
+        // lớp này. Bảy bị động chỉ số khai `phai: null` (chung cho cả năm lớp, xem KN_XUONG_SONG)
+        // nên chúng đúng là ai cũng học; gộp chúng vào đây là bài kiểm tố cáo cả 5 lớp cùng lúc
+        // vì một thứ chính nó được thiết kế để dùng chung.
+        hocLan: Object.keys(VOHOC_DEFS).filter(x => VOHOC_DEFS[x].phai && VOHOC_DEFS[x].phai !== sect && vhLearned(x)).map(x => VOHOC_DEFS[x].name),
+        chung: Object.keys(VOHOC_DEFS).filter(x => !VOHOC_DEFS[x].phai && vhLearned(x)).length,
         // ⚠ TRÙNG TÊN KHÔNG PHẢI RÒ CHIÊU. Phép đo là so chuỗi `>tên<`, mà "Twisting Slash"
         // vừa là `skillA` của Dark Knight vừa là `mg_twistingslash` của Spellblade. Bảng kỹ năng
         // kiểu cây in tên dạng `<b>Tên</b>` nên khớp đúng khuôn đó, và Dark Knight bị báo oan là
@@ -104,11 +109,15 @@ const PORT = process.argv[2] || '8853';
     }
 
     // ── 4. bị động nối vào chỉ số thật ──
+    // ⚠ BỊ ĐỘNG NAY CHỈ CHẠY KHI NẰM TRÊN THANH CHIÊU (`biDongBat`). Ngộ được là chưa đủ —
+    // đó là cả cái giá của ba ô còn lại. Nên phép đo phải CẮM nó vào ô rồi mới đo, không thì
+    // bài này đo đúng thứ mà thiết kế cố ý không cho chạy, và đỏ ở một chỗ chẳng nói lên gì.
+    // Vẫn giữ nguyên độ chặt: vế "chỉ là dòng chữ" vẫn bị bắt, chỉ khác ở chỗ đo cho đúng cửa.
     const doPas = (sect, id, f) => {
       startGame(sect, null); player.traits = []; player.level = 60; player.lvPeak = 60;
-      player.vohoc = {}; calcDerived(); const truoc = f();
-      player.vohoc[id] = true; calcDerived(); const sau = f();
-      o.pas[id] = { ten:VOHOC_DEFS[id].name, truoc, sau };
+      player.vohoc = {}; knRaSoat(); calcDerived(); const truoc = f();
+      player.vohoc[id] = true; knGan(1, id); calcDerived(); const sau = f();
+      o.pas[id] = { ten:VOHOC_DEFS[id].name, truoc, sau, tren: player.skillBar.includes(id) };
     };
     doPas('thieulam','dk_fortitude', () => player.maxHp);
     doPas('minhgiao','mg_ironwill',  () => +(player.hpLeech || 0).toFixed(2));
@@ -183,9 +192,19 @@ const PORT = process.argv[2] || '8853';
   if (chung.length) fail('hoạt ảnh dùng chung: ' + chung.map(([v, ks]) => `${v} ← ${ks.join(' + ')}`).join(' · '));
   if (!thieu.length && !chung.length) pass(`${Object.keys(r.style).length} ô bấm được = ${Object.keys(dem).length} hoạt ảnh khác nhau`);
 
+  // Chiêu CHUNG phải thật sự chung: cả năm lớp học được đúng bằng nhau, và khác 0. Nếu không
+  // thì `phai: null` chỉ là một cách viết khác của "không lớp nào học được", mà mệnh đề
+  // `hocLan` ở trên lại vừa được nới ra để bỏ qua đúng nhóm này — nới mà không có ai gác là
+  // mở một lỗ thủng ngay chỗ vừa vá.
+  const soChung = Object.values(r.lop).map(d => d.chung);
+  if (!soChung[0]) fail('không lớp nào học được chiêu CHUNG — `phai: null` đang là chữ chết');
+  else if (new Set(soChung).size !== 1) fail(`chiêu chung không chung: ${JSON.stringify(soChung)}`);
+  else pass(`chiêu chung: cả 5 lớp đều học đủ ${soChung[0]} cái`);
+
   // ── 4. bị động ──
   for (const [id, d] of Object.entries(r.pas)){
-    if (d.truoc === d.sau) fail(`bị động ${d.ten} không đổi chỉ số nào (${d.truoc} → ${d.sau}) — chỉ là dòng chữ`);
+    if (!d.tren) fail(`bị động ${d.ten}: không cắm được vào ô — phép đo dưới đây sẽ vô nghĩa`);
+    else if (d.truoc === d.sau) fail(`bị động ${d.ten} không đổi chỉ số nào (${d.truoc} → ${d.sau}) — chỉ là dòng chữ`);
     else pass(`${d.ten}: ${d.truoc} → ${d.sau}`);
   }
 
