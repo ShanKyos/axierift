@@ -718,6 +718,10 @@ window.MAPS = {
     desc:'Plant Tribe Glade — trảng đất Plant Tribe bỏ lại từ hôm trời nứt, nay Axie Sa Ngã chiếm. Chưa có trụ nào ở đây, chỉ có hậu quả.',
     spawnFrom:{ chungnam:{ x:211, y:776 }, loimon:{ x:4269, y:1016 }, trungnut:{ x:2104, y:211 } },
     spawn:{ x:506, y:966 },
+    // ĐÀN THÚ HOANG — sinh vật nền không tham chiến, xem khối ĐÀN THÚ HOANG trong game.js.
+    // Loài ĐẦU trong danh sách là loài chủ đạo (thuChiaLoai: 1 · 0,7 · 0,49).
+    // Tộc Thực Vật — thú của vườn hoa: rêu · hoa cam · bọt sáng.
+    thu: { loai:['reu_xanh','hoa_cam','bong_sang'], dan: 14 },
     voi: 4400,          // `vung.dai` là tỉ lệ của `voi` — đo từ điểm thả tới đỉnh xa nhất
     // Sáu miền từ BA loài, dải `dai` RỜI NHAU và cấp tăng dần: bandao 38 → thinu 42 → mocnhan 48.
     // Bản cũ 3 miền × 3 cụm = 9 bãi trên khổ 2600×1900; khổ mới rộng gấp 3,2 lần nên phải dày theo.
@@ -946,6 +950,11 @@ window.MAPS = {
     desc:'"Trụ Werebear Woods do ta giữ." Một Tướng Quân đơn độc chống đỡ cả cánh rừng — trụ thứ nhất trong năm. Werebear vẫn sống theo bầy ở đây, và chúng hiền cho tới lúc bị chọc.',
     spawnFrom:{ ardhaven:{ x:211, y:776 }, comoc:{ x:2424, y:211 }, daohoa:{ x:4269, y:1080 } },
     spawn:{ x:506, y:966 },
+    // ĐÀN THÚ HOANG — sinh vật nền không tham chiến, xem khối ĐÀN THÚ HOANG trong game.js.
+    // Loài ĐẦU trong danh sách là loài chủ đạo (thuChiaLoai: 1 · 0,7 · 0,49).
+    // Tộc Beast — rừng ôn hoà. Con rêu lạc sang từ Plant Tribe Glade kề bên: sinh cảnh
+    // chồng nhau thì thật hơn bảy tập loài rời nhau tăm tắp.
+    thu: { loai:['cam_la','nanh_tia','reu_xanh'], dan: 14 },
     voi: 4450,          // `vung.dai` là tỉ lệ của `voi` — đo từ điểm thả tới đỉnh xa nhất
     // Sáu miền từ BỐN loài, dải `dai` RỜI NHAU và cấp tăng dần theo khoảng cách:
     // chimera_bo 24 → phando 26 → xanu 31 → bandao 38. Bản cũ 4 miền × 1-2 cụm = 6 bãi trên khổ
@@ -1283,6 +1292,10 @@ window.MAPS = {
     desc:'Trụ Roost đóng thẳng xuống giữa ổ ấp. Bug Tribe Tunnels thì thầm: thứ nở ra ở đây không còn là Axie nữa.',
     spawnFrom:{ chungnam:{ x:1608, y:3309 }, trungnut:{ x:211, y:776 }, caungam:{ x:4525, y:1144 }, mongco:{ x:2936, y:211 } },
     spawn:{ x:1658, y:3014 },
+    // ĐÀN THÚ HOANG — sinh vật nền không tham chiến, xem khối ĐÀN THÚ HOANG trong game.js.
+    // Loài ĐẦU trong danh sách là loài chủ đạo (thuChiaLoai: 1 · 0,7 · 0,49).
+    // Tộc Bug — trong tổ. Rêu mọc cả ở cửa hang nên con ăn rêu theo vào.
+    thu: { loai:['bo_giap','bo_nam','reu_xanh'], dan: 13 },
     voi: 3900,          // `vung.dai` là tỉ lệ của `voi` — đo từ điểm thả tới đỉnh xa nhất
     // ⚠ CUNG GÓC PHẢI QUAY VỀ PHÍA MAP THẬT SỰ TRẢI RA. Điểm thả của map này nằm giữa mép NAM,
     // nên đất nằm ở phía BẮC — góc tới các đỉnh xa của đa giác đo được là −119°…−36° (0° = đông,
@@ -1428,6 +1441,17 @@ window.MAPS = {
     desc:'Băng của Bird Tribe Heights là vết sẹo, không phải thời tiết. Bãi EXP khổng lồ — mang theo kháng độc, Chimera ở đây cắn có nọc.',
     spawnFrom:{ ardhaven:{ x:211, y:776 }, caungam:{ x:2232, y:211 } },
     spawn:{ x:506, y:966 },
+    // ĐÀN THÚ HOANG — sinh vật nền không tham chiến, xem khối ĐÀN THÚ HOANG trong game.js.
+    // Loài ĐẦU trong danh sách là loài chủ đạo (thuChiaLoai: 1 · 0,7 · 0,49).
+    // Tộc Bird — trên tuyết.
+    // ⚠ THỨ TỰ Ở ĐÂY LÀ KẾT QUẢ CỦA MỘT ẢNH CHỤP, KHÔNG PHẢI CỦA MỘT Ý HAY. Bản đầu để
+    // `long_trang` (thú lông trắng) đứng đầu — nghe thì hợp vùng tuyết, chụp ra thì cả đàn TÀNG
+    // HÌNH: nền tuyết sáng, con trắng, không còn đường viền nào. Đúng cái bẫy đã ghi ở khối map
+    // isometric ("mặt phẳng sáng đều không mốc thì đọc ra khoảng không"), chỉ khác là lần này nó
+    // ăn vào con vật chứ không ăn vào mặt đất. Nay chim hồng đứng đầu (tương phản mạnh nhất với
+    // tuyết, mà đây cũng là Bird Tribe nên đúng tộc), lông trắng lui xuống cuối — hiếm gặp, và
+    // lúc gặp thì cái chìm vào nền lại thành một chi tiết thay vì cả một đàn ma.
+    thu: { loai:['chim_hong','bang_lam','long_trang'], dan: 13 },
     voi: 4700,          // `vung.dai` là tỉ lệ của `voi` — đo từ điểm thả tới đỉnh xa nhất
     // Sáu miền từ BA loài: cùng một loài, cụm này Xạ Thủ cụm kia Pháp Sư — đúng cơ chế A1
     // (vai gán theo BÃI, không theo loài). Ba loài × sáu hồ sơ vai, không tốn một tệp art nào.
@@ -1490,6 +1514,10 @@ window.MAPS = {
     desc:'Tướng Quân dựng đại bản doanh ngay trên Trụ Ashmark — hắn thôi không giấu nữa. Thảo nguyên đá nung, Chimera trâu bò đánh đau.',
     spawnFrom:{ comoc:{ x:1672, y:3373 }, nhanmon:{ x:4717, y:1144 } },
     spawn:{ x:1722, y:3078 },
+    // ĐÀN THÚ HOANG — sinh vật nền không tham chiến, xem khối ĐÀN THÚ HOANG trong game.js.
+    // Loài ĐẦU trong danh sách là loài chủ đạo (thuChiaLoai: 1 · 0,7 · 0,49).
+    // Tộc Reptile — cao nguyên đá nung. Con cam lá lạc lên từ rừng dưới chân núi.
+    thu: { loai:['than_tia','than_gai','cam_la'], dan: 13 },
     voi: 4150,          // `vung.dai` là tỉ lệ của `voi` — đo từ điểm thả tới đỉnh xa nhất
     // ⚠ Cung Thủ Tro Tàn (`cungthu`) VỐN ĐÃ đánh xa. Một miền của nó cố ý KHÔNG khai `vai`
     // để giữ nguyên tầm gốc — khai 'xa' cho cả hai là âm thầm buff một con đã cân xong
@@ -1553,6 +1581,10 @@ window.MAPS = {
     desc:'Trụ Dusk Marsh — trụ cuối cùng. Gỡ nó xuống là mở đúng cánh cửa Morvahn đang chờ. PK ở đây không cộng Tai Tiếng.',
     spawnFrom:{ mongco:{ x:211, y:840 } },
     spawn:{ x:506, y:1030 },
+    // ĐÀN THÚ HOANG — sinh vật nền không tham chiến, xem khối ĐÀN THÚ HOANG trong game.js.
+    // Loài ĐẦU trong danh sách là loài chủ đạo (thuChiaLoai: 1 · 0,7 · 0,49).
+    // Tộc Dusk — đầm lầy. Bọ nấm theo về từ Bug Tribe Tunnels, chỗ nào ẩm là nó mọc nấm được.
+    thu: { loai:['dam_va','dam_dom','bo_nam'], dan: 15 },
     voi: 5050,          // `vung.dai` là tỉ lệ của `voi` — đo từ điểm thả tới đỉnh xa nhất
     // Bảy miền — map cuối game, rộng nhất, nên dày nhất. Ba loài chia bảy hồ sơ vai.
     vung: [

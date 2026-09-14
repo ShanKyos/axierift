@@ -557,6 +557,28 @@ Gác: `tests/test_isoneo.js`, **hai tầng** — vì tầng đối chiếu tên 
 *Luật chung rút ra: **bảng sinh tự động chỉ được có MỘT tệp đích, và tệp đích phải là tệp mà sản
 phẩm thật sự nạp.*** Mọi bước "rồi chép sang…" là một bước sẽ bị quên, và kiểu quên đó im lặng.
 
+### ⚠ LÙM CHẶN TỪNG NUỐT MẤT RƯƠNG CANH — bộ lọc `_keep` KHÔNG che được nó
+
+Đo được, không phải lo xa: **4/40 Rương Canh và 1/3 Vỉa Cốt nằm LỌT trong một lùm chặn**
+(`daohoa` 1 · `ngoai` 1 · `mongco` 2 rương + 1 vỉa). Lùm chặn là khối **150×88**; rương chỉ mở
+được khi người chơi vào trong `RUONG_TAM` = 54px, mà `player.ruong` là **một-lần-trong-đời** ⇒
+rương nằm giữa lùm là rương **không bao giờ mở được**, vĩnh viễn, cho nhân vật đó. Nội dung bị
+xoá sổ trong im lặng: không lỗi, không thông báo, không bài kiểm nào đỏ.
+
+**Vì sao `_keep` không cứu:** nó lọc mảng `decor`, mà lùm sinh ra **sau** nó — `raiIso()` chạy
+sau bộ lọc (đúng theo thiết kế, xem ghi chú tại chỗ) và đẻ thẳng vào `decorObsCum`. `raiCum()`
+vốn đã có danh sách tránh riêng của nó, chỉ là thiếu ba vật thể thế giới đứng một chỗ. Nay có đủ:
+rương 260 · vỉa 240 · bãi cỏ đàn thú 260. Giá phải trả: ~156 → ~141 lùm trên toàn bộ 12 map.
+
+**⚠ Ba hàm ấy đều CÓ NHỚ và phải được hâm lúc `decorObs` còn rỗng.** Khối `_keep` ở `buildWorld`
+gọi cả ba, và nó nằm **trên** `raiIso` — nên chúng bốc vị trí từ vật cản TĨNH. Dời chỗ hâm đó
+xuống dưới `raiIso` là bố cục đổi theo từng lần vào map, mà `thuBaiCo`/`ruongCuaMap` thì cả thiết
+kế dựa vào chuyện chúng **không bao giờ đổi chỗ**.
+
+**⚠ Đo phải SAU `travelTo`.** `obstaclesOf()` chỉ nối decor của map ĐANG ĐỨNG, nên đo rương của
+một map chưa vào thì chỉ thấy vật cản tĩnh — và đúng cái thứ gây lỗi lại là thứ bị bỏ sót.
+Gác: `tests/test_ruong.js §8`.
+
 ### 🐑 ĐÀN THÚ HOANG — thứ trong map KHÔNG phải để đánh
 
 Đo trước khi làm: **mọi thứ cựa quậy** trong một map ngoài trời đều muốn giết người chơi (quái ·
@@ -564,9 +586,41 @@ du hiệp · trùm vùng · trại canh Rương), còn cây và đá thì đứn
 đọc ra là *một cái sân có mấy bầy địch*, không đọc ra là **một nơi chốn**. Đàn thú là bằng chứng
 duy nhất rằng thế giới có sống trước khi người chơi tới.
 
-Khai bằng dữ liệu, một dòng trong `MAPS`: `thu: { loai:[…], dan: 14 }`. Hiện có **một** map —
-`ngoai` (Beast Herd Camp), mà chính `desc` của nó đã hứa *"đàn thú của người bản địa vẫn gặm cỏ
-ở đây"* từ lâu trong khi trong map không có một con thú nào. Thêm map khác = thêm một dòng.
+Khai bằng dữ liệu, một dòng trong `MAPS`: `thu: { loai:[…], dan: 13-15 }`. **Đủ 7/7 map hoang
+dã**, 17 loài nướng từ 17 rig Spine, ~2 MB nhưng **nạp lười theo map** (3 bảng ≈ 330 KB mỗi map).
+
+| map | tộc | loài (loài ĐẦU là loài chủ đạo) |
+|---|---|---|
+| `ngoai` | beast | cuu_bong · bo_dom · soc_hat |
+| `daohoa` | plant | reu_xanh · hoa_cam · bong_sang |
+| `chungnam` | beast | cam_la · nanh_tia · reu_xanh |
+| `comoc` | bug | bo_giap · bo_nam · reu_xanh |
+| `tuyettinh` | bird | chim_hong · bang_lam · long_trang |
+| `mongco` | reptile | than_tia · than_gai · cam_la |
+| `nhanmon` | dusk | dam_va · dam_dom · bo_nam |
+
+**Loài trùng giữa hai map là CỐ Ý** (rêu ở ba map, cam lá ở hai): sinh cảnh chồng nhau thì thật
+hơn bảy tập loài rời nhau tăm tắp, và mỗi map vẫn có loài chủ đạo riêng.
+
+**`thuChiaLoai()` chia dân số theo trọng số `1 · 0,7 · 0,49`** — loài đầu chiếm khoảng một nửa
+đàn. Chia đều `loai[i % n]` thì mỗi đàn là ba nhóm bằng nhau, đọc ra *một bộ sưu tập* chứ không
+ra *một đàn có loài chủ đạo* — mà "loài chủ đạo" chính là thứ `mapBanSac()` đã hứa trên bảng Bản
+Đồ. ⚠ Và phải chèn XEN KẼ: dồn loài đầu vào nửa trước mảng thì chúng cũng bốc chỗ đứng trước, và
+đàn tách thành hai mảng màu.
+
+**⚠ MÀU CỦA ĐÀN PHẢI TƯƠNG PHẢN VỚI SÀN, và chỉ ẢNH CHỤP mới nói được.** Bird Tribe Heights bản
+đầu để `long_trang` (thú lông trắng) đứng đầu — nghe thì hợp vùng tuyết, chụp ra thì **cả đàn
+tàng hình**: nền tuyết sáng, con trắng, không còn đường viền nào. Đúng cái bẫy đã ghi ở khối map
+isometric (*"mặt phẳng sáng đều không mốc thì đọc ra khoảng không"*), chỉ khác là lần này nó ăn
+vào con vật chứ không ăn vào mặt đất. Nay chim hồng đứng đầu, lông trắng lui xuống cuối.
+
+**⚠ DÙNG RIG `-1`, KHÔNG DÙNG RIG GỐC.** `pve-starters.json` ghi rõ *"-1 folders are body stage 1
+(awakened)"*. 16 rig **gốc** đã bị `nuong_chi.py` lấy làm 16 Chimera đồng hành; lấy lại chính
+chúng làm thú nền thì con thú gặm cỏ ngoài đồng trông y hệt con Chimera đang đi cạnh người chơi.
+
+**⚠ LỚP AXIE TRA TỪ `Catalogs/pve-starters.json`, đừng đoán theo màu.** Trường `class` là số
+(0 beast · 1 bug · 2 bird · 3 plant · 4 aquatic · 5 reptile · 6 mech · 7 dawn · 8 dusk) và
+**lớp 0 bị lược đi** — năm con không có trường `class` đều là beast, không phải thiếu dữ liệu.
 
 **⚠ ĐỪNG BIẾN NÓ THÀNH NỘI DUNG.** Cho săn được là nó thành một bãi quái yếu, mà bãi quái yếu
 thì AUTO dọn sạch trong một phút — mất cả cái nền lẫn cái nội dung. Nó **không** có máu, **không**
@@ -599,9 +653,13 @@ khung idle — 34 rig lành ra 0,52-0,78, bốn rig hỏng ra 0,25-0,31, hai c�
 `python3 tools/spine/nuong_thu.py --quet` in lại bảng đó. **Đừng chọn rig bằng mắt trên ảnh thu
 nhỏ**: ở cỡ 60px một con mất thân trông vẫn "có gì đó".
 
-Gác: `tests/test_danthu.js` (7 mệnh đề). Mệnh đề ⑤ **tự kiểm cảnh dựng trước khi chấm** — nó
-khẳng định con cuối hàng cách người chơi > `THU_SO` rồi mới đòi nó phải chạy, nếu không thì bài
-"kiểm sóng lây" thật ra chỉ kiểm chuyện con đó nhìn thấy người chơi.
+Gác: `tests/test_danthu.js` (9 mệnh đề, quét **mọi** map khai `thu`). Hai mệnh đề đáng nhớ:
+- ⑤ **tự kiểm cảnh dựng trước khi chấm** — khẳng định con cuối hàng cách người chơi > `THU_SO`
+  rồi mới đòi nó phải chạy, nếu không thì bài "kiểm sóng lây" chỉ kiểm chuyện con đó nhìn thấy
+  người chơi.
+- ⑧ mọi loài khai trong dữ liệu phải có **hình học trong `THU_ANH`** VÀ có **tệp `.webp`**. Không
+  thừa: `veThu()` `return` sớm khi thiếu một trong hai — **đúng cái cách `veVatIso()` đã làm sáu
+  map mất sạch cây mà không bài nào đỏ**.
 
 ### ◈ BÃI FARM — khái niệm "spot" của MU, và **HẠ SÀN KHÔNG PHẢI LÀ ĐẶT TRẦN**
 

@@ -153,6 +153,35 @@ const { chromium } = require('playwright');
   if (!/Rương Canh/.test(r7.html)) fail('bảng Bản Đồ không nói vùng còn mấy rương');
   else pass('bảng Bản Đồ đếm rương còn lại: ' + (r7.html.match(/Rương Canh[^<]*<b>[^<]*<\/b>[^<]*/) || [''])[0].trim());
 
+  // ── 8. KHÔNG rương nào nằm LỌT trong vật cản ──
+  // ⚠ Đây là lỗi ĐÃ XẢY RA, không phải lo xa. Lùm chặn của map lát viên (`raiCum` → `decorObsCum`,
+  // khối 150×88) sinh ra SAU bộ lọc `_keep` của buildWorld, nên bộ lọc ấy không che được nó — và
+  // đo ra **4/40 rương nằm lọt trong một lùm** (daohoa 1 · ngoai 1 · mongco 2). Rương chỉ mở được
+  // khi người chơi vào trong `RUONG_TAM` = 54px, mà `player.ruong` là một-lần-trong-đời ⇒ rương
+  // giữa lùm là rương KHÔNG BAO GIỜ mở được, vĩnh viễn, cho nhân vật đó. Nội dung bị xoá sổ trong
+  // im lặng: không lỗi, không thông báo.
+  //
+  // ⚠ PHẢI ĐO SAU KHI travelTo. `obstaclesOf()` chỉ nối decor của map ĐANG ĐỨNG, nên đo rương của
+  // một map chưa vào thì chỉ thấy vật cản tĩnh — và đúng cái thứ gây lỗi (lùm) là thứ bị bỏ sót.
+  const r8 = await p.evaluate(() => {
+    applyTestBoost();
+    const xau = [], bang = [];
+    for (const k of Object.keys(MAPS)){
+      const md = MAPS[k]; if (md.dungeon || !ruongCuaMap(k).length) continue;
+      travelTo('ardhaven'); travelTo(k);
+      let ket = 0;
+      for (const r of ruongCuaMap(k)){
+        // 40px: rương mở ở 54px, nên tâm rương kẹt trong bán kính 40 là chắc chắn không với tới
+        if (inObstacle(k, r.x, r.y, 40)){ ket++; xau.push(`${r.id}`); }
+      }
+      bang.push(`${k}:${ket}/${ruongCuaMap(k).length}`);
+    }
+    return { xau, bang: bang.join(' ') };
+  });
+  console.log('8) rương kẹt trong vật cản:', r8.bang);
+  if (r8.xau.length) fail(`${r8.xau.length} rương nằm lọt trong vật cản, không bao giờ mở được: ` + r8.xau.join(', '));
+  else pass('không rương nào nằm lọt trong vật cản');
+
   console.log('errors:', JSON.stringify(errs.slice(0, 5)));
   if (errs.length) fail(errs.length + ' lỗi runtime');
   await b.close();

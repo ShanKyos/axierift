@@ -25,12 +25,43 @@ from nuong_nv import dai
 from PIL import Image
 
 # id trong game -> thư mục rig trong PvE/Starters.
-# Chọn theo BÓNG DÁNG chứ không theo màu: một đàn phải đọc ra ba con vật khác nhau kể cả khi
-# thu về 60px và mất hết chi tiết. Cừu xù · bò đốm · sóc có đuôi.
+#
+# Chọn theo BÓNG DÁNG chứ không theo màu: một đàn phải đọc ra mấy con vật khác nhau kể cả khi
+# thu về 60px và mất hết chi tiết.
+#
+# ⚠ DÙNG RIG `-1`, KHÔNG DÙNG RIG GỐC. `pve-starters.json` ghi rõ: *"-1 folders are body stage 1
+# (awakened)"* — tức bản đã tiến hoá của cùng con Axie. 16 rig GỐC đã bị `nuong_chi.py` lấy làm
+# 16 Chimera đồng hành; lấy lại chính chúng làm thú nền thì con thú gặm cỏ ngoài đồng trông y hệt
+# con Chimera đang đi cạnh người chơi. Bản `-1` khác thân, khác màu, nên hai hệ không giẫm nhau.
+#
+# ⚠ LỚP AXIE LẤY TỪ `Catalogs/pve-starters.json`, đừng đoán theo màu. Trường `class` ở đó là số
+# (0 beast · 1 bug · 2 bird · 3 plant · 4 aquatic · 5 reptile · 6 mech · 7 dawn · 8 dusk) và
+# **lớp 0 bị lược đi** — năm con không có trường `class` đều là beast, không phải "thiếu dữ liệu".
 BO = {
-    'cuu_bong': '19-1',   # cừu lông xù, kem
-    'bo_dom':   '23-1',   # đen trắng loang, đúng chất gia súc
-    'soc_hat':  '5-1',    # nâu vàng, có đuôi cong
+    # ── đồng cỏ (ngoai) ───────────────────────────────────────────────
+    'cuu_bong': '19-1',   # Hope   · beast   — cừu lông xù, kem
+    'bo_dom':   '23-1',   # Noir   · aquatic — đen trắng loang, đúng chất gia súc
+    'soc_hat':  '5-1',    # Tripp  · beast   — nâu vàng, có đuôi cong
+    # ── vườn hoa (daohoa) ─────────────────────────────────────────────
+    'reu_xanh': '2-1',    # Olek   · plant   — xanh rêu, mỏ bẹt
+    'hoa_cam':  '16-1',   # Ena    · plant   — kem, đội quả cam và hoa đào
+    'bong_sang':'25-1',   # Mit    · plant   — trắng hồng, bọt sáng trên lưng
+    # ── rừng (chungnam) ───────────────────────────────────────────────
+    'cam_la':   '1-1',    # Buba   · beast   — cam, tai lá, đuôi đá
+    'nanh_tia': '21-1',   # Xia    · beast   — vàng vỏ tía, hai nanh
+    # ── tổ / hang (comoc) ─────────────────────────────────────────────
+    'bo_giap':  '11-1',   # Shillin· bug     — đỏ, sừng bọ, càng xanh
+    'bo_nam':   '17-1',   # Pomodoro·bug     — nón nấm sẫm cắm hoa
+    # ── tuyết (tuyettinh) ─────────────────────────────────────────────
+    'long_trang':'22-1',  # Bing   · beast   — trắng tròn, đuôi xù
+    'bang_lam': '3-1',    # Puffy  · aquatic — lam băng, đuôi cá
+    'chim_hong':'12-1',   # Momo   · bird    — hồng, cánh bướm
+    # ── tro nung (mongco) ─────────────────────────────────────────────
+    'than_tia': '7-1',    # Venoki · reptile — tía, sừng lửa
+    'than_gai': '18-1',   # Machito· reptile — tím, gai tinh thể
+    # ── đầm lầy (nhanmon) ─────────────────────────────────────────────
+    'dam_va':   '15-1',   # Shufen · dusk    — lam vá chằng, đội nấm
+    'dam_dom':  '24-1',   # Rouge  · aquatic — trắng đốm đỏ, vỏ ngọc
 }
 # Ba dáng. Tên khoá là thứ game đọc; giá trị là tên hoạt cảnh trong rig.
 DANG = [('gam', 'activity/eat-chew'), ('dung', 'action/idle/normal'), ('chay', 'action/run')]

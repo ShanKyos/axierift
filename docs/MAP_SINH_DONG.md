@@ -57,11 +57,19 @@ bán kính trại 118 ⇒ ba trại chạm nhau.
 
 ### 🐑 Đàn Thú Hoang — sinh vật nền không tham chiến
 
-14 con, ba loài, gặm cỏ ở một bãi cố định của `ngoai`. Không máu, không bị nhắm, không rơi gì.
+13-15 con mỗi map, ba loài, gặm cỏ ở một bãi cố định. Không máu, không bị nhắm, không rơi gì.
 Cả đàn **bỏ chạy lây nhau thành sóng**. Chi tiết ở `CLAUDE.md` mục *ĐÀN THÚ HOANG*.
 
-Vì sao chọn đúng map này: tên map là *Beast Herd Camp* và `desc` của nó đã hứa *"đàn thú của
-người bản địa vẫn gặm cỏ ở đây"* từ lâu — mà trong map không có một con thú nào.
+Bắt đầu ở `ngoai` vì tên map là *Beast Herd Camp* và `desc` của nó đã hứa *"đàn thú của người
+bản địa vẫn gặm cỏ ở đây"* từ lâu — mà trong map không có một con thú nào. Nay **đủ 7/7 map
+hoang dã**, 17 loài, mỗi map một tộc Axie chủ đạo.
+
+**Hai thứ chỉ lộ ra khi mở rộng ra bảy map**, không thấy được khi mới làm một map:
+- **Màu của đàn phải tương phản với sàn.** Bird Tribe Heights để con lông trắng đứng đầu thì
+  cả đàn tàng hình trên tuyết. Chỉ ảnh chụp mới nói được.
+- **Lùm chặn nuốt mất vật thể thế giới.** Thêm bãi cỏ vào bản đồ làm lộ ra rằng `raiCum()` chưa
+  bao giờ tránh Rương Canh hay Vỉa Cốt — **4/40 rương và 1/3 vỉa** đang nằm lọt trong một lùm,
+  tức không bao giờ mở được. Xem `CLAUDE.md` mục *LÙM CHẶN TỪNG NUỐT MẤT RƯƠNG CANH*.
 
 ## 4. Kho art Axie — đã đối chiếu lại, và bảng cũ SAI một dòng
 
@@ -92,8 +100,7 @@ lượng nó như "thêm một bảng khai".
 
 ## 5. Còn nợ — xếp theo (giá trị ÷ công), cao xuống thấp
 
-1. **Đàn thú cho sáu map còn lại.** Một dòng `thu:` mỗi map + nướng thêm loài hợp biome. Máy đã
-   xong; đây thuần là dữ liệu và art.
+1. ~~**Đàn thú cho sáu map còn lại.**~~ **XONG** — 7/7 map, 17 loài.
 2. **Bãi Farm thứ hai trở đi** — một chỗ mỗi map từ cấp 24 trở lên. `test_baifarm` đã chặn sẵn
    chuyện hai chỗ trên cùng một map.
 3. **Cho Bãi Farm một bộ mặt.** Nó có tên trên bảng Bản Đồ nhưng trong map trông y hệt ba trại

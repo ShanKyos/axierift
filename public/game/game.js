@@ -1948,6 +1948,21 @@ function raiCum(md, boc){
   for (const k in (md.spawnFrom || {})) tranh.push({ x:md.spawnFrom[k].x, y:md.spawnFrom[k].y, r:260 });
   for (const g of GATES) if (g.map === curMap) tranh.push({ x:g.x, y:g.y, r:260 });
   for (const h of (HERB_SPOTS[curMap] || [])) tranh.push({ x:h.x, y:h.y, r:200 });
+  // ⚠ VÀ CẢ BA VẬT THỂ THẾ GIỚI ĐỨNG MỘT CHỖ. Chúng thiếu ở đây suốt từ lúc lùm ra đời, và
+  // ĐO ĐƯỢC là lỗi thật, không phải lo xa: **4/40 Rương Canh và 1/3 Vỉa Cốt hôm nay nằm LỌT
+  // trong một lùm chặn** (daohoa 1 · ngoai 1 · mongco 2 rương + 1 vỉa). Lùm chặn là khối
+  // 150×88, còn rương chỉ mở được khi người chơi vào trong 54px ⇒ rương nằm giữa lùm là rương
+  // KHÔNG BAO GIỜ mở được, vĩnh viễn, cho nhân vật đó (`player.ruong` là một-lần-trong-đời).
+  // Nội dung bị xoá sổ trong im lặng — không lỗi, không thông báo, không bài kiểm nào đỏ.
+  //
+  // Bộ lọc `_keep` ở buildWorld KHÔNG che được chỗ này: nó lọc mảng `decor`, mà lùm sinh ra
+  // SAU nó (raiIso chạy sau bộ lọc, đúng theo thiết kế) và đẻ thẳng vào `decorObsCum`.
+  // ⚠ Ba hàm dưới đây đều CÓ NHỚ và đã được hâm ở khối `_keep` phía trên — tức lúc `decorObs`
+  // còn rỗng — nên chúng trả về vị trí tính từ vật cản TĨNH. Đừng dời chỗ hâm đó xuống dưới
+  // `raiIso`: bốc vị trí trong lúc decor đã tồn tại là bố cục đổi theo từng lần vào map.
+  for (const r of ruongCuaMap(curMap)) tranh.push({ x:r.x, y:r.y, r:260 });
+  { const v = viaCuaMap(curMap); if (v) tranh.push({ x:v.x, y:v.y, r:240 }); }
+  { const t = thuBaiCo(curMap); if (t) tranh.push({ x:t.x, y:t.y, r:260 }); }
   const bd = BOSS_DEFS[curMap];
   if (bd){
     for (const tv of (bd.thuve || [])) tranh.push({ x:tv.x*MAP.w, y:tv.y*MAP.h, r:300 });
@@ -8458,12 +8473,34 @@ function thuBaiCo(mid){
 // Dựng đàn cho map đang đứng. Vị trí từng con bốc lại mỗi lần vào map — CỐ Ý khác Rương Canh:
 // cái đứng yên là BÃI CỎ, còn từng con thì không, vì một con vật đứng đúng một chỗ qua nhiều
 // phiên đọc ra là một bức tượng.
+// Trả về mảng dài `n`, mỗi ô là CHỈ SỐ loài của con thứ i. Trọng số 1 · 0,7 · 0,49 … nên loài
+// đầu chiếm khoảng một nửa đàn. Xáo lại theo đúng thứ tự chèn xen kẽ — dồn cả loài đầu vào nửa
+// trước mảng thì chúng cũng bốc chỗ đứng trước, và đàn tách thành hai mảng màu.
+function thuChiaLoai(soLoai, n){
+  if (soLoai <= 1) return new Array(n).fill(0);
+  const w = []; let tong = 0;
+  for (let i = 0; i < soLoai; i++){ const x = Math.pow(0.7, i); w.push(x); tong += x; }
+  const dem = w.map(x => Math.max(1, Math.round(n * x / tong)));
+  let lech = n - dem.reduce((a, c) => a + c, 0);
+  for (let i = 0; lech !== 0 && i < 200; i++){
+    const k = i % soLoai;
+    if (lech > 0){ dem[k]++; lech--; } else if (dem[k] > 1){ dem[k]--; lech++; }
+  }
+  const ra = [];
+  for (let vong = 0; ra.length < n; vong++)
+    for (let k = 0; k < soLoai && ra.length < n; k++) if (dem[k] > vong) ra.push(k);
+  return ra;
+}
 function thuDungDan(){
   thuDan = [];
   const md = mapDef(); if (!md || !md.thu) return;
   const bai = thuBaiCo(curMap); if (!bai) return;
   const loai = md.thu.loai || [];
   const n = md.thu.dan || 10;
+  // Loài ĐẦU đông nhất rồi thưa dần — cùng lối với `_vungChiaDan` chia dân số bãi quái. Chia đều
+  // `loai[i % loai.length]` thì mỗi đàn là ba nhóm bằng nhau, đọc ra một bộ sưu tập chứ không ra
+  // một đàn có LOÀI CHỦ ĐẠO; mà "loài chủ đạo" chính là thứ `mapBanSac()` đã hứa trên bảng Bản Đồ.
+  const _sl = thuChiaLoai(loai.length, n);
   for (let i = 0; i < n && loai.length; i++){
     let x = 0, y = 0, ok = false;
     for (let t = 0; t < 40 && !ok; t++){
@@ -8472,7 +8509,7 @@ function thuDungDan(){
       ok = !inObstacle(curMap, x, y, 22);
     }
     if (!ok) continue;
-    thuDan.push({ loai: loai[i % loai.length], x, y, hx: bai.x, hy: bai.y,
+    thuDan.push({ loai: loai[_sl[i]], x, y, hx: bai.x, hy: bai.y,
                   st: 'gam', t: 0.4 + Math.random() * 3, dir: Math.random() < 0.5 ? -1 : 1,
                   ph: Math.random() * 100, tx: x, ty: y });
   }
@@ -8681,6 +8718,11 @@ function buildWorld(){
     for (const h of (HERB_SPOTS[curMap] || [])) _keep.push({ x:h.x, y:h.y, r:60 });
     { const _v = viaCuaMap(curMap); if (_v) _keep.push({ x:_v.x, y:_v.y, r:110 }); }
     for (const _r of ruongCuaMap(curMap)) _keep.push({ x:_r.x, y:_r.y, r:150 });   // cả rương lẫn trại canh của nó
+    // Bãi cỏ của Đàn Thú. Chừa trống 150px ở TÂM bãi chứ không cả `THU_BAN` (300) — 300 là một
+    // khoảng hói to bằng nửa màn hình. Từng con thú đã tự tránh vật cản lúc bốc chỗ đứng
+    // (`thuDungDan` chạy SAU khi rải decor), nên thứ duy nhất cần chừa là cái TÂM: `t.hx/t.hy`
+    // là điểm nhà, mà con nào cũng nhắm về đó lúc đi lang thang.
+    { const _tc = thuBaiCo(curMap); if (_tc) _keep.push({ x:_tc.x, y:_tc.y, r:150 }); }
     for (const a of AI_PASSES) if (a.map === curMap) _keep.push({ x:a.x, y:a.y, r:a.r + 80 });
     if (typeof GATES !== 'undefined') for (const g of GATES) if (g.map === curMap) _keep.push({ x:g.x, y:g.y, r:130 });
     const _bd = BOSS_DEFS[curMap];
