@@ -75,9 +75,36 @@
         <button class="cp-nut" title="Bảng Sự Kiện" onclick="openEventBoard()">⏱ Sự Kiện</button>
         <button class="cp-nut" id="btn-minimap" title="Ẩn/hiện bản đồ thu nhỏ (U)">👁 Ẩn</button>
       </div>
-      <div id="quest-tracker-wrap">
-        <button id="btn-questtracker" title="Ẩn/hiện bảng nhiệm vụ">📜 Nhiệm Vụ <span id="qt-arrow">▾</span></button>
-        <div id="quest-tracker"></div>
+      <!-- NHẬT KÝ NHIỆM VỤ CẮM THẲNG VÀO CỘT, không còn là cửa sổ nổi giữa màn.
+           Trước bản này có HAI chỗ nói về nhiệm vụ: bảng theo dõi ở cột phải (mục tiêu đang
+           làm) và Nhật Ký mở bằng Q (cả chuỗi, 3 tab) — hai cửa đọc cùng một dữ liệu, và
+           người chơi phải nhớ cái nào ở đâu. Nay gộp: khối này CHÍNH LÀ Nhật Ký, và bảng theo
+           dõi cũ thành tab đầu của nó.
+           ⚠ Nó KHÔNG còn đi qua togglePanel: một khối cắm trong HUD mà mở Túi Đồ là biến mất
+           thì đọc ra như lỗi. Phím Q gọi `toggleQlog()` — thu/mở tại chỗ. -->
+      <div id="panel-qlog" class="panel bang-cam"></div>
+      <!-- MENU HỆ THỐNG nằm TRONG cột phải, không phải một khối thứ tư trôi ở đáy.
+           Chủ dự án chốt: "để UI qua bên phải cho đồng nhất". Trước đó nó đã đi hai chặng —
+           cột dọc mép TRÁI, rồi hàng ngang đáy PHẢI — và cả hai đều để nó đứng RIÊNG, tức
+           giao diện có thêm một khối nữa phải nhớ chỗ. Nay cả bên phải là MỘT cột: ví, tự
+           đánh, bản đồ, nhiệm vụ, rồi menu. -->
+      <div id="menu-cot" class="hidden">
+        <button id="mc-thu" title="Thu gọn thanh menu">▸</button>
+        <div id="mc-list">
+          <button class="mc-btn" id="btn-char"     title="Nhân Vật (C) — chỉ số"><img src="assets/ui/ic_nhanvat.png" alt=""><span>Nhân Vật</span></button>
+          <button class="mc-btn" id="btn-bag"      title="Túi Đồ (B)"><img src="assets/ui/ic_tuido.png" alt=""><span>Túi Đồ</span></button>
+          <button class="mc-btn" id="btn-skill"    title="Kỹ Năng (K)"><img src="assets/ui/ic_kynang.png" alt=""><span>Kỹ Năng</span></button>
+          <button class="mc-btn" id="btn-qlog"     title="Nhiệm Vụ (Q)"><img src="assets/ui/ic_nhiemvu.png" alt=""><span>Nhiệm Vụ</span></button>
+          <button class="mc-btn" id="btn-map"      title="Bản Đồ (M)"><img src="assets/ui/ic_bando.png" alt=""><span>Bản Đồ</span></button>
+          <button class="mc-btn" id="btn-settings" title="Cài Đặt (O)"><img src="assets/ui/ic_caidat.png" alt=""><span>Cài Đặt</span></button>
+          <button class="mc-btn mc-menu" id="btn-menu" title="Thêm">Menu ▾</button>
+        </div>
+        <div id="mc-drop" class="hidden">
+          <button id="btn-combatlog"><img src="assets/ui/ic_nhatky.png" alt="">Nhật Ký Chiến Đấu <span id="cl-arrow">▾</span></button>
+          <button id="btn-sukien">⏱ Bảng Sự Kiện</button>
+          <button id="btn-help">❓ Hướng Dẫn &amp; Phím Tắt <span style="opacity:.7">F6</span></button>
+          <button id="btn-music" title="Nhạc nền">♪ Nhạc Nền</button>
+        </div>
       </div>
     </div>
   </div>
@@ -110,26 +137,6 @@
   </div>
 </div>
 
-<!-- Cột menu hệ thống. Sáu cửa hay dùng nhất, mỗi cửa một icon 32px trong khung kim loại;
-     mũi tên trên đầu thu cả cột về một tab nhỏ, thứ còn lại dồn vào nút Menu ▾. -->
-<div id="menu-cot" class="hidden">
-  <button id="mc-thu" title="Thu gọn thanh menu">▸</button>
-  <div id="mc-list">
-    <button class="mc-btn" id="btn-char"     title="Nhân Vật (C) — trang bị + chỉ số"><img src="assets/ui/ic_nhanvat.png" alt=""><span>Nhân Vật</span></button>
-    <button class="mc-btn" id="btn-bag"      title="Túi Đồ (B)"><img src="assets/ui/ic_tuido.png" alt=""><span>Túi Đồ</span></button>
-    <button class="mc-btn" id="btn-skill"    title="Kỹ Năng (K)"><img src="assets/ui/ic_kynang.png" alt=""><span>Kỹ Năng</span></button>
-    <button class="mc-btn" id="btn-qlog"     title="Nhiệm Vụ (Q)"><img src="assets/ui/ic_nhiemvu.png" alt=""><span>Nhiệm Vụ</span></button>
-    <button class="mc-btn" id="btn-map"      title="Bản Đồ (M)"><img src="assets/ui/ic_bando.png" alt=""><span>Bản Đồ</span></button>
-    <button class="mc-btn" id="btn-settings" title="Cài Đặt (O)"><img src="assets/ui/ic_caidat.png" alt=""><span>Cài Đặt</span></button>
-    <button class="mc-btn mc-menu" id="btn-menu" title="Thêm">Menu ▾</button>
-  </div>
-  <div id="mc-drop" class="hidden">
-    <button id="btn-combatlog"><img src="assets/ui/ic_nhatky.png" alt="">Nhật Ký Chiến Đấu <span id="cl-arrow">▾</span></button>
-    <button id="btn-sukien">⏱ Bảng Sự Kiện</button>
-    <button id="btn-help">❓ Hướng Dẫn &amp; Phím Tắt <span style="opacity:.7">F6</span></button>
-    <button id="btn-music" title="Nhạc nền">♪ Nhạc Nền</button>
-  </div>
-</div>
 <!-- Thanh EXP nằm NGAY DƯỚI viên đá Máu, mép dưới màn hình — đúng chỗ MU đặt nó. -->
 <div id="xp-strip" class="hidden"><div class="bar xp"><div id="bar-xp" class="fill"></div><span id="txt-xp"></span></div></div>
 <!-- Tầng Sâu: nút rút lui. Không có nút này thì kho tạm không có cách nào mang về, cả chế độ
@@ -166,7 +173,6 @@
 <div id="panel-party" class="panel hidden"></div>
 <div id="panel-friend" class="panel hidden"></div>
 <div id="panel-settings" class="panel hidden"></div>
-<div id="panel-qlog" class="panel hidden"></div>
 <div id="panel-help" class="panel hidden"></div>
 <div id="panel-quest" class="panel hidden"></div>
 <!-- Lò rèn: bảng RIÊNG, chỉ mở khi đứng cạnh Thợ Rèn (không còn là tab trong bảng Nhân Vật) -->
@@ -258,5 +264,9 @@
 <script src="data/lop_cho.js"></script>
 <script src="data/iso.js"></script>
 <script src="game.js"></script>
+<!-- Bóng Người (Giai đoạn 1 online). Nạp SAU game.js và TỰ TẮT khi không khai máy chủ, nên bản
+     chơi một mình — thứ đang sống trên production — chạy y nguyên. Bật: ?net=ws://localhost:8877/ws
+     hoặc ?net=1 khi nginx đã có location /ws. Xem public/game/net.js. -->
+<script src="net.js"></script>
 </body>
 </html>
