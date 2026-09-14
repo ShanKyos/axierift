@@ -1151,6 +1151,57 @@ Một chiêu **không được vừa bấm được vừa cộng %ST vĩnh viễ
 đồng thời gỡ nó khỏi `LEGACY_SECT_SKILLS`, và đẩy một chiêu khác vào thế chỗ sao cho mỗi lớp
 vẫn đúng **4 chiêu Di Sản = +8,0% Công Kích** (`test_kynang5lop` bắt lỗi lệch giữa các lớp).
 
+### 🗂 BẢNG KỸ NĂNG LÀ MỘT CÂY — và `KN_ROT` là chỗ ĐIỀN KỸ NĂNG
+
+Dựng theo ảnh mẫu chủ dự án đưa: hàng tab trên cùng · **cây biểu tượng nối bằng mũi tên** ở nửa
+trái · khung đọc chi tiết + nút Nâng Cấp ở nửa phải. Ba tab: **Lớp · Vaeldra · Khác**.
+
+**Điền kỹ năng ở ĐÚNG MỘT CHỖ:** `KN_ROT[<lớp>]` (tab Lớp) và `KN_ROT_CHUNG[<tab>]` (tab còn
+lại). Danh sách mã chiêu rót vào ô của `KN_HINH` **theo thứ tự khai**. Thiếu thì ô còn trống,
+thừa thì bỏ qua — cả hai đều không ném lỗi, nên điền dần từng ô được.
+
+| bảng | việc |
+|---|---|
+| `KN_TAB` | tên + phụ đề ba tab — **đổi tên tab là sửa một dòng** |
+| `KN_HINH` | hình cây: 16 ô, `c` cột · `h` hàng · `tu` là ô cha (vẽ mũi tên tới) |
+| `KN_HINH_RIENG` | `<lớp>\|<tab>` → hình riêng; không khai thì dùng `KN_HINH` |
+| `KN_ROT` / `KN_ROT_CHUNG` | **mã chiêu rót vào ô** |
+
+**⚠ Ảnh mẫu là game kiếm hiệp, ba chữ trong đó Quy tắc số 1 cấm.** Đã đổi, và đây là bảng quy đổi
+để đừng ai "sửa ngược" tưởng là sót: `Phái` → **Lớp** · `Giang Hồ` → **Vaeldra** (đúng cái thế
+giới bên ngoài mà chữ kia muốn nói, và là danh từ riêng của game này) · `Cảnh giới` → nút
+**Đại Thành** · `Chân khí tiêu hao` → **Bản Năng tiêu hao** (vốn ĐÃ là thứ `skUpKhi()` trừ đi) ·
+`Tiền đồng` → **Lumen**. `test_nowuxia2` quét thẳng "cảnh giới" và "chân khí".
+
+**⚠ CHIÊU BỊ ĐỘNG KHÔNG NẰM TRONG `SKILL_DEFS`.** Vòng đăng ký `continue` qua `type === 'passive'`
+vì chúng không bấm được, nên `skillInfo()` trả `null` cho cả năm cái — và `knNut()` cố ý biến
+"không tra được" thành ô trống (đó là thứ cho phép điền dần). Hai cái cộng lại: năm chiêu bị động
+hiện ra **y hệt ô chưa gán**, không lỗi, không dấu hiệu. Nên `knNut()` có nhánh đọc thẳng
+`VOHOC_DEFS` cho bị động, và khung chi tiết đi nhánh riêng — bị động không cấp, không Mana, không
+hồi chiêu, nên in năm thông số cho nó là hứa suông.
+
+**Bốn thứ `tests/test_cayky.js` gác, ba trong bốn KHÔNG ném lỗi và KHÔNG hiện ra:**
+
+1. **Mã chiêu gõ sai** — `'dk_cyclon'` thiếu chữ e hiện ra y hệt ô chưa gán. Bài đối chiếu từng
+   mã với `SKILL_DEFS` **và** `VOHOC_DEFS`.
+2. **Nút chết.** Nút góc phải bản đầu trỏ vào `openEvoPanel()` — **một hàm không tồn tại**. Bảng
+   chọn nhánh Tiến Hoá chỉ tự mở khi chiêu chạm mốc 40/80/120, không có cửa mở tay. Bấm vào không
+   có gì xảy ra. Bài gọi thẳng tên hàm trong `onclick` rồi hỏi `typeof window[tên] === 'function'`.
+   *Luật chung: đặt tên hàm vào một chuỗi `onclick` là bỏ qua mọi thứ kiểm được — phải kiểm tay.*
+3. **Hình cây thủng** — `tu` trỏ tới khoá không có ⇒ mũi tên biến mất lặng lẽ; hai ô trùng ô lưới
+   ⇒ chồng lên nhau.
+4. **Dấu `+` nói dối.** Dấu `+` xanh nghĩa là "nâng được NGAY", nên nó phải hỏi lại đúng ba điều
+   kiện `upgradeSkillUI()` kiểm (cấp · Lumen · Bản Năng), không phải chỉ hỏi "đã mở khoá chưa".
+   Bài đếm dấu `+` hai lần — túi đầy và túi rỗng — rồi đòi hai con số phải KHÁC nhau.
+
+**⚠ Bề rộng vùng cây SUY TỪ HÌNH** (`knKho()`), đừng chép cứng số cột: dời chuỗi thẳng từ cột 3
+sang cột 2 mà để nguyên `4*KN_COT` là thừa một cột rỗng 58px — cây dãn ra, khung chi tiết bị bóp,
+và không có gì báo lỗi.
+
+**Ảnh mẫu ghi "Kéo biểu tượng đến thanh phím tắt" — game này KHÔNG cho kéo** (thanh chiêu 4 ô cố
+định). Dòng chân khung nói đúng sự thật thay vì chép câu đó sang: chiêu nằm ô mấy, hoặc nó đang
+là Di Sản.
+
 ### 🌳 ĐẠI THÀNH LÀ MỘT CÂY HAI NHÁNH — đừng biến nó lại thành danh sách
 
 `MASTERY_COMMON` + `MASTERY_CLASS` = **16 bảng** (1 chung + 3 riêng × 5 lớp), **144 nút**, mở ở

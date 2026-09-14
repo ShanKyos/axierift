@@ -1988,3 +1988,68 @@ html,body { width:100%; height:100%; overflow:hidden; background:var(--bg-deep);
   -webkit-background-clip:text; background-clip:text; color:transparent;
   -webkit-text-stroke:3.5px rgba(10,14,30,.92); paint-order:stroke fill;
   filter:drop-shadow(0 4px 0 rgba(8,11,26,.55)) drop-shadow(0 0 26px rgba(255,190,90,.34)); }
+
+/* ═══════════ BẢNG KỸ NĂNG KIỂU CÂY ═══════════
+   Hai cột: CÂY biểu tượng nối bằng mũi tên bên trái, khung ĐỌC CHI TIẾT bên phải — đúng bố cục
+   ảnh mẫu chủ dự án đưa. Panel rộng min(520px,94vw) nên 280 + 8 + phần còn lại vừa khít.
+   ⚠ Cột cây có bề rộng CỐ ĐỊNH bằng đúng 4×KN_COT trong game.js. Hai con số phải khớp nhau,
+   nếu không thì mũi tên SVG (vẽ theo KN_COT) trỏ lệch khỏi ô. */
+.kn-goc { display:flex; justify-content:flex-end; margin:-4px 0 8px; }
+.kn-wrap { display:flex; gap:8px; align-items:flex-start; }
+.kn-cay { position:relative; flex:0 0 auto; }
+.kn-day { position:absolute; left:0; top:0; pointer-events:none; }
+.kn-o { position:absolute; width:44px; padding:0; border-radius:var(--r-sm); cursor:pointer;
+  background:rgba(var(--rgb-da),.55); border:1px solid var(--border-faint);
+  display:flex; flex-direction:column; align-items:center; font-family:inherit;
+  transition:border-color 140ms ease-out, transform 140ms ease-out; }
+.kn-o img { width:40px; height:40px; border-radius:5px; display:block; margin:1px; }
+.kn-o:hover { transform:translateY(-2px); border-color:rgba(var(--rgb-vang),.7); }
+.kn-o.chon { border-color:#7df9ff; box-shadow:0 0 0 1px #7df9ff, 0 0 9px rgba(125,249,255,.45); }
+.kn-o.khoa img { filter:grayscale(1) brightness(.45); }
+.kn-o.khoa .kn-lv { color:var(--text-dim); }
+/* Dấu + xanh ở góc — tín hiệu "nâng được ngay". Nó phải nằm ĐÈ lên mép ô chứ không đẩy ô rộng
+   ra, nếu không 16 ô lệch lưới và mũi tên trỏ sai. */
+.kn-cong { position:absolute; left:-3px; top:-4px; font-style:normal; font-size:13px;
+  font-weight:700; line-height:1; color:#5fc96e; text-shadow:0 0 3px #06210c,0 1px 0 #06210c; }
+.kn-lv { display:block; font-size:10px; line-height:1.35; color:var(--gold);
+  font-variant-numeric:tabular-nums; }
+/* Ô TRỐNG — cố ý vẽ thô, viền đứt, để không ai tưởng đó là một kỹ năng đã gán. */
+.kn-trong { height:44px; border-style:dashed; border-color:rgba(var(--rgb-vang),.28);
+  background:rgba(0,0,0,.22); justify-content:center; }
+.kn-trong span { font-size:17px; color:rgba(var(--rgb-vang),.4); line-height:1; }
+.kn-trong:hover { transform:none; }
+
+.kn-ct { flex:1 1 auto; min-width:0; padding:7px 8px; border-radius:var(--r-sm);
+  background:rgba(0,0,0,.26); border:1px solid var(--border-faint); }
+.kn-ct-trong { font-size:10.5px; color:var(--text-dim); line-height:1.6; }
+.kn-ct-dau { display:flex; gap:7px; align-items:center; margin-bottom:5px; }
+.kn-ct-dau img { width:38px; height:38px; border-radius:5px; flex:0 0 auto; }
+.kn-ct-dau div { min-width:0; }
+.kn-ct-dau b { display:block; font-size:13px; color:var(--accent-light); line-height:1.25; }
+.kn-ct-dau span { font-size:10.5px; color:var(--gold); }
+.kn-ct-tt { font-size:10.5px; margin-bottom:6px; }
+.kn-ct-tt.ok { color:#7ec850; }
+.kn-ct-tt.no { color:var(--orange); }
+.kn-d { font-size:10.5px; color:var(--text-body); line-height:1.5; margin-bottom:3px; }
+.kn-d > span { color:var(--text-dim); }
+.kn-d i { font-style:normal; color:var(--text-dim); }
+.kn-d b.ok { color:#7ec850; } .kn-d b.no { color:#ff6b6b; }
+.kn-mo { color:var(--text-dim); }
+.kn-bar { position:relative; height:11px; border-radius:999px; margin:2px 0 6px;
+  background:rgba(0,0,0,.45); border:1px solid var(--border-faint); overflow:hidden; }
+.kn-bar s { display:block; height:100%; text-decoration:none;
+  background:linear-gradient(90deg,#3a6fd8,#7ecbff); }
+.kn-bar em { position:absolute; inset:0; font-style:normal; font-size:8.5px; line-height:11px;
+  text-align:center; color:#dbe6ff; text-shadow:0 1px 0 #000; }
+.kn-vach { font-size:10px; letter-spacing:1px; color:var(--gold); text-align:center;
+  margin:7px 0 5px; border-top:1px solid rgba(var(--rgb-vang),.25); padding-top:5px; }
+.kn-sach { font-size:10px; color:var(--orange); margin:5px 0 0; line-height:1.4; }
+.kn-nut { display:flex; justify-content:center; margin-top:7px; }
+.kn-nang { min-width:96px; border-color:#7ec850; color:#7ec850; font-weight:700; }
+.kn-nang.mo { opacity:.42; border-color:var(--border-faint); color:var(--text-dim); }
+.kn-chan { font-size:9.5px; color:var(--text-dim); line-height:1.45; margin-top:7px;
+  border-top:1px solid rgba(255,255,255,.07); padding-top:5px; }
+.kn-ghi { font-size:9.5px; color:var(--text-dim); line-height:1.5; margin-top:8px; }
+@media (prefers-reduced-motion: reduce) {
+  .kn-o, .kn-o:hover { transition:none; transform:none; }
+}

@@ -22069,10 +22069,235 @@ function legacyUniversalRowHtml(id){
       <div class="sk-desc">${info.desc}</div></span>
     ${right}</div>`;
 }
+// ═══════════ BẢNG KỸ NĂNG KIỂU CÂY — cây bên trái, khung chi tiết bên phải ═══════════
+// Bố cục dựng theo ảnh mẫu chủ dự án đưa: hàng tab trên cùng, một CÂY biểu tượng nối bằng mũi
+// tên ở nửa trái, và một khung đọc chi tiết + nút Nâng Cấp ở nửa phải.
+//
+// ⚠ TÊN TAB nằm gọn trong KN_TAB — đổi tên là sửa MỘT dòng.
+// Ảnh mẫu ghi "Phái" và "Giang Hồ"; cả hai đều nằm trong danh sách cấm của Quy tắc số 1
+// ("môn phái, giang hồ"), nên ở đây là "Lớp" và "Vaeldra" — Vaeldra chính là cái thế giới bên
+// ngoài mà chữ "giang hồ" muốn nói, và nó là danh từ riêng của game này. Ảnh mẫu còn có nút
+// "Cảnh giới" và dòng "Chân khí tiêu hao": hai chữ đó `test_nowuxia2` quét thẳng, nên chúng
+// thành "Tiến Hoá" và "Bản Năng" — mà Bản Năng vốn ĐÃ là thứ `skUpKhi()` trừ đi.
+const KN_TAB = [
+  { id:'lop',     ten:'Lớp',     dong:'kỹ năng riêng của lớp, tự ngộ theo cấp' },
+  { id:'vaeldra', ten:'Vaeldra', dong:'kỹ năng chung, học ngoài thế giới bằng Sách Kỹ Năng' },
+  { id:'khac',    ten:'Khác',    dong:'Di Sản · bị động · hệ phụ' },
+];
+// HÌNH của cây — 16 ô, dùng chung cho mọi lớp và mọi tab. `c` = cột (0-3), `h` = hàng (0-6),
+// `tu` = những ô CHA vẽ mũi tên tới ô này.
+//
+// Vì sao một hình dùng chung: năm lớp mà năm hình thì đây là năm bảng phải nuôi, và bốn trong
+// năm cái sẽ mốc meo — đúng bệnh nhân bản mà CLAUDE.md chẩn ở đầu tệp hướng dẫn. Muốn một lớp
+// có hình riêng thì thêm khoá vào KN_HINH_RIENG, máy tự lấy; không khai thì dùng hình chung.
+const KN_HINH = [
+  { k:'a1', c:1, h:0, tu:[] },
+  { k:'b1', c:0, h:1, tu:['a1'] },
+  { k:'b2', c:1, h:1, tu:['a1'] },
+  { k:'c1', c:1, h:2, tu:['b1','b2'] },
+  { k:'d1', c:0, h:3, tu:['c1'] },
+  { k:'d2', c:1, h:3, tu:['c1'] },
+  { k:'e1', c:1, h:4, tu:['d1','d2'] },
+  { k:'f1', c:0, h:5, tu:['e1'] },
+  { k:'f2', c:1, h:5, tu:['e1'] },
+  // Cột 3 là một CHUỖI THẲNG, tách hẳn khỏi cây nhánh — giống hệt ảnh mẫu. Nó là chỗ cho một
+  // mạch nâng cấp tuyến tính đứng cạnh một cây có rẽ nhánh.
+  { k:'g1', c:2, h:0, tu:[] },
+  { k:'g2', c:2, h:1, tu:['g1'] },
+  { k:'g3', c:2, h:2, tu:['g2'] },
+  { k:'g4', c:2, h:3, tu:['g3'] },
+  { k:'g5', c:2, h:4, tu:['g4'] },
+  { k:'g6', c:2, h:5, tu:['g5'] },
+  { k:'g7', c:2, h:6, tu:['g6'] },
+];
+const KN_HINH_RIENG = {};      // <lớp>|<tab> → hình riêng, để trống thì dùng KN_HINH
+const KN_COT = 58, KN_HANG = 60, KN_O = 44;   // bước cột · bước hàng · cạnh ô biểu tượng
+// Bề rộng/cao vùng cây SUY TỪ CHÍNH HÌNH, không chép cứng số cột. Chép cứng "4 cột" rồi dời
+// chuỗi thẳng sang cột 2 là thừa ra một cột rỗng đúng 58px — cây dãn ra, khung chi tiết bị bóp,
+// và không có gì báo lỗi cả.
+function knKho(hinh){
+  let c = 0, h = 0;
+  for (const n of hinh){ if (n.c > c) c = n.c; if (n.h > h) h = n.h; }
+  return { w: c * KN_COT + KN_O, h: h * KN_HANG + KN_O + 14 };   // +14 chừa chỗ dòng số cấp
+}
+// ⚠ ĐÂY LÀ CHỖ CHỦ DỰ ÁN ĐIỀN KỸ NĂNG. Mỗi khoá là `<lớp>|<tab>`, giá trị là danh sách mã chiêu
+// rót vào các ô của KN_HINH THEO THỨ TỰ khai ở trên (a1 · b1 · b2 · c1 · d1 · d2 · e1 · f1 · f2
+// · g1…g7). Thiếu thì ô còn trống, thừa thì bỏ qua — cả hai đều không ném lỗi, nên điền dần
+// từng ô được, không phải điền đủ 16 mới chạy.
+//
+// Mã chiêu tra ở đâu: `a` và `tp` là chiêu chính/phụ của lớp (khai trong SECTS), còn lại là
+// khoá trong VOHOC_DEFS — gõ `Object.keys(VOHOC_DEFS)` trong bảng lệnh là ra đủ.
+const KN_ROT = {
+  thieulam: ['a','tp','dk_bulwark','dk_cyclone','dk_ragefulblow','dk_lunge','dk_impale',
+             'dk_fallingslash','dk_fortitude'],
+  toanchan: ['a','tp','elf_greaterdmg','elf_penetration','elf_poisonarrow','elf_greaterdef',
+             'elf_holybolt','elf_fiveshot','elf_heal'],
+  baidasan: ['a','tp','dw_inferno','dw_dragonspirit','dw_lightning','dw_ice','dw_twister',
+             'dw_shield','songthu'],
+  minhgiao: ['a','tp','mg_battlefury','mg_powerslash','mg_fireball','mg_powerwave',
+             'mg_twistingslash','mg_giganticstorm','mg_ironwill'],
+  bug:      ['a','tp','dl_commandaura','dl_chaoticdiseier','dl_force','dl_electricspark',
+             'dl_fireburst','dl_darkhorse','dl_darkraven'],
+};
+const KN_ROT_CHUNG = { vaeldra: ['danchi','tieuhon'] };   // tab Vaeldra dùng chung cho mọi lớp
+function knHinh(tab){ return KN_HINH_RIENG[(player && player.sect) + '|' + tab] || KN_HINH; }
+function knMa(tab, i){
+  const ds = tab === 'lop' ? (KN_ROT[player && player.sect] || []) : (KN_ROT_CHUNG[tab] || []);
+  return ds[i] || null;
+}
+// Một ô của cây → mọi thứ phần vẽ cần. Ô TRỐNG vẫn trả về một vật thể hợp lệ (`trong:true`) chứ
+// không trả null: ô trống phải vẽ ra được, nếu không thì cây thủng lỗ và mũi tên trỏ vào hư không.
+function knNut(tab, n, i){
+  const id = knMa(tab, i);
+  if (!id) return { k:n.k, c:n.c, h:n.h, tu:n.tu, trong:true, ten:'Ô Trống' };
+  const v = VOHOC_DEFS[id] || null;
+  // ⚠ CHIÊU BỊ ĐỘNG KHÔNG NẰM TRONG `SKILL_DEFS` — vòng đăng ký ở trên `continue` qua
+  // `type === 'passive'` vì chúng không bấm được, nên `skillInfo()` trả null cho cả năm cái.
+  // Để mặc thì chúng hiện ra y HỆT một ô chưa gán: không lỗi, không dấu hiệu, và người chơi
+  // mất hẳn năm ô. Mà ảnh mẫu có sẵn dòng "Loại: Bị động" — bị động thuộc về cây này.
+  // Nên dựng hồ sơ đọc THẲNG từ VOHOC_DEFS cho nhánh đó. `tests/test_cayky.js` mục 2 gác.
+  if (v && v.type === 'passive'){
+    return { k:n.k, c:n.c, h:n.h, tu:n.tu, trong:false, id, v, biDong:true,
+      inf:{ id, name:v.name, icon:v.icon, desc:v.desc },
+      ten:v.name, lv:0, mo: vhLearned(id), loai:'Bị động' };
+  }
+  const inf = skillInfo(id);
+  if (!inf) return { k:n.k, c:n.c, h:n.h, tu:n.tu, trong:true, ten:'Ô Trống', loi:id };
+  const d = SKILL_DEFS[id] || {};
+  return { k:n.k, c:n.c, h:n.h, tu:n.tu, trong:false, id, inf, d, v, biDong:false,
+    ten: inf.name, lv: skLv(id), mo: inf.unlocked,
+    loai: v && v.type === 'buff' ? 'Phù trợ' : 'Chủ động' };
+}
+window.knTab = function(t){ window._knTab = t; window._knChon = null; renderSkillPanel(); };
+window.knChon = function(k){ window._knChon = k; renderSkillPanel(); };
+// Mũi tên cha → con. Vẽ bằng SVG chứ không bằng viền CSS: đường nối phải đi từ đáy ô cha sang
+// đỉnh ô con qua một khuỷu, mà khuỷu thì border không dựng được.
+function knMuiTen(ds){
+  const cx = (n) => n.c * KN_COT + KN_O / 2, cy = (n) => n.h * KN_HANG;
+  let p = '';
+  for (const n of ds) for (const tk of (n.tu || [])){
+    const cha = ds.find(x => x.k === tk); if (!cha) continue;
+    const x1 = cx(cha), y1 = cy(cha) + KN_O, x2 = cx(n), y2 = cy(n) - 4;
+    const my = (y1 + y2) / 2;
+    p += `<path d="M${x1} ${y1} V${my} H${x2} V${y2}" fill="none" stroke="#5fc96e" stroke-width="2"
+            marker-end="url(#knMui)" opacity=".85"/>`;
+  }
+  const K = knKho(ds);
+  return `<svg class="kn-day" width="${K.w}" height="${K.h}" viewBox="0 0 ${K.w} ${K.h}">
+    <defs><marker id="knMui" markerWidth="7" markerHeight="7" refX="5" refY="3.2" orient="auto">
+      <path d="M0 0 L6 3.2 L0 6.4 z" fill="#5fc96e"/></marker></defs>${p}</svg>`;
+}
+function renderSkillPanelCay(tab){
+  const hinh = knHinh(tab);
+  const ds = hinh.map((n, i) => knNut(tab, n, i));
+  if (!window._knChon || !ds.find(x => x.k === window._knChon && !x.trong))
+    window._knChon = (ds.find(x => !x.trong) || {}).k || null;
+  const K = knKho(ds);
+  let h = `<div class="kn-cay" style="width:${K.w}px;height:${K.h}px">` + knMuiTen(ds);
+  for (const n of ds){
+    const st = `left:${n.c*KN_COT}px;top:${n.h*KN_HANG}px`;
+    if (n.trong){
+      h += `<div class="kn-o kn-trong" style="${st}" title="Ô trống — điền mã chiêu vào KN_ROT">
+              <span>+</span></div>`;
+      continue;
+    }
+    const chon = n.k === window._knChon, max = n.biDong || n.lv >= 120;
+    // Nâng được thì hiện dấu + xanh ở góc — đúng tín hiệu trong ảnh mẫu, và nó phải là tín hiệu
+    // THẬT: hỏi lại đúng ba điều kiện mà upgradeSkillUI() kiểm, không chỉ hỏi "đã mở khoá chưa".
+    const nangDuoc = n.mo && !max && n.lv < player.level
+      && player.silver >= skUpCost(n.id) && (player.khi || 0) >= skUpKhi(n.id);
+    h += `<button class="kn-o${chon?' chon':''}${n.mo?'':' khoa'}" style="${st}"
+            onclick="knChon('${n.k}')" title="${mstEsc(n.ten + ' — cấp ' + n.lv)}">
+        <img src="${n.inf.icon}" alt="">
+        ${nangDuoc ? '<i class="kn-cong">+</i>' : ''}
+        <b class="kn-lv">${n.biDong ? '✚' : n.lv}</b></button>`;
+  }
+  h += `</div>`;
+  return { html: h, ds };
+}
+function renderSkillPanelCT(tab, ds){
+  const n = ds.find(x => x.k === window._knChon);
+  if (!n || n.trong)
+    return `<div class="kn-ct"><div class="kn-ct-trong">Chưa có ô nào được gán kỹ năng ở tab này.<br><br>
+      Điền mã chiêu vào <b>KN_ROT</b> (tab Lớp) hoặc <b>KN_ROT_CHUNG</b> (các tab còn lại) —
+      chúng rót vào ô theo thứ tự khai trong <b>KN_HINH</b>.</div></div>`;
+  if (n.biDong){
+    // Bị động: không cấp, không Mana, không hồi chiêu — in năm thông số cho nó là hứa suông.
+    return `<div class="kn-ct">
+      <div class="kn-ct-dau"><img src="${n.inf.icon}" alt="">
+        <div><b>${n.ten}</b><span>Bị động — luôn có hiệu lực</span></div></div>
+      <div class="kn-ct-tt ${n.mo?'ok':'no'}">${n.mo ? '◆ Đã ngộ' : '🔒 tự ngộ ở cấp ' + (n.v.unlock || '?')}</div>
+      <div class="kn-d"><span>Loại:</span> Bị động</div>
+      <div class="kn-d kn-mo"><span>Hiệu quả:</span> ${n.inf.desc || '—'}</div>
+      <div class="kn-vach">Điều kiện</div>
+      <div class="kn-d"><span>Cấp nhân vật:</span> <b class="${player.level >= (n.v.unlock||0) ? 'ok' : 'no'}">${n.v.unlock || '?'}</b> <i>(đang ${player.level})</i></div>
+      <div class="kn-chan">Bị động không nâng cấp và không chiếm ô nào trên thanh chiêu — có là chạy.</div>
+    </div>`;
+  }
+  const max = n.lv >= 120, tran = n.lv >= player.level;
+  const cost = skUpCost(n.id), khi = skUpKhi(n.id);
+  const duBac = player.silver >= cost, duKhi = (player.khi || 0) >= khi;
+  const nangDuoc = n.mo && !max && !tran && duBac && duKhi;
+  // Tiến độ tới MỐC kế, không phải tới cấp 120: mốc mới là thứ đổi hành vi, và người chơi cần
+  // biết còn bao xa tới nó.
+  const mocKe = SK_MILESTONES.find(m => m.lv > n.lv);
+  const mocTruoc = [...SK_MILESTONES].reverse().find(m => m.lv <= n.lv);
+  const sanTruoc = mocTruoc ? mocTruoc.lv : 1;
+  const pc = mocKe ? Math.round((n.lv - sanTruoc) / (mocKe.lv - sanTruoc) * 100) : 100;
+  const i = n.inf;
+  let h = `<div class="kn-ct">
+    <div class="kn-ct-dau"><img src="${i.icon}" alt="">
+      <div><b>${n.ten}</b><span>Cấp: ${n.lv}</span></div></div>
+    <div class="kn-ct-tt ${n.mo?'ok':'no'}">${n.mo ? '◆ Đã đủ điều kiện' : '🔒 ' + (i.lockTxt || 'chưa đủ điều kiện')}</div>
+    <div class="kn-d"><span>Loại:</span> ${n.loai}</div>
+    <div class="kn-d"><span>Tiến độ:</span> ${mocKe ? `tới mốc <b>${mocKe.name}</b> (cấp ${mocKe.lv})` : 'đã tới mốc cuối'}</div>
+    <div class="kn-bar"><s style="width:${clamp(pc,0,100)}%"></s><em>${clamp(pc,0,100)}%</em></div>
+    <div class="kn-d kn-mo"><span>Hiệu quả:</span> ${i.desc || '—'}</div>
+    <div class="kn-d"><span>Tác dụng:</span> ${skThongSoGon(i)}</div>
+    <div class="kn-d kn-mo"><span>Thêm 1 cấp:</span> +2,5% Sát Thương · −0,25% hồi chiêu${
+      mocKe && mocKe.lv === n.lv + 1 ? ` · <b style="color:#ffd76a">đạt mốc ${mocKe.name}</b>` : ''}</div>
+    <div class="kn-d"><span>Tiến Hoá:</span> ${evoStage(n.id) ? evoBadgeHtml(n.id) + ` bậc ${evoStage(n.id)}/3` : `<i>chưa — mốc đầu ở cấp ${EVO_LVS[0]}</i>`}</div>
+    <div class="kn-vach">Điều kiện</div>
+    <div class="kn-d"><span>Cấp nhân vật:</span> <b class="${tran?'no':'ok'}">${n.lv + 1}</b>
+      <i>(đang ${player.level})</i></div>
+    <div class="kn-d"><span>Lumen tiêu hao:</span> <b class="${duBac?'ok':'no'}">${cost.toLocaleString('vi-VN')}</b></div>
+    <div class="kn-d"><span>Bản Năng tiêu hao:</span> <b class="${duKhi?'ok':'no'}">${khi.toLocaleString('vi-VN')}</b></div>`;
+  if ((player.bikipVH || 0) > 0)
+    h += `<div class="kn-sach">📜 Dùng Sách Kỹ Năng — nâng thẳng 1 cấp, khỏi tốn gì (còn ${player.bikipVH})</div>`;
+  h += `<div class="kn-nut">
+      <button class="mini-btn kn-nang${nangDuoc?'':' mo'}" onclick="window.upgradeSkillUI('${n.id}')">Nâng Cấp</button>
+    </div>`;
+  // Ảnh mẫu ghi "Kéo biểu tượng đến thanh phím tắt". Game này KHÔNG cho kéo — thanh chiêu là 4 ô
+  // cố định — nên viết đúng sự thật thay vì chép câu đó sang: nói luôn chiêu này nằm ô nào.
+  const bar = (player.skillBar || []).indexOf(n.id);
+  h += `<div class="kn-chan">${bar >= 0
+    ? `Đang nằm ở <b>ô ${bar + 1}</b> trên thanh chiêu — bấm phím <b>${bar + 1}</b> để tung.`
+    : `Không nằm trên thanh chiêu (4 ô cố định). Chiêu ngoài thanh dồn thành % Công Kích vĩnh viễn — xem tab Khác.`}</div>`;
+  return h + `</div>`;
+}
+// Năm thông số bắt buộc, viết gọn một dòng cho khung hẹp. Đọc thẳng skillInfo() nên không có
+// cách nào lệch với ô kỹ năng đầy đủ.
+function skThongSoGon(i){
+  const dw = player.sect === 'baidasan';
+  return `${dw ? 'Sức Mạnh Phép Thuật' : 'Công Kích'} ×${(i.he||1).toFixed(2)}`
+    + ` · tầm ${Math.round(i.tam||0)}` + ` · phạm vi ${Math.round(i.pham||0)}`
+    + ` · hồi ${(i.cd||0)}s · ${Math.round(i.qi||0)} Mana`;
+}
 function renderSkillPanel(){
-  vhAutoLearn(); // save cũ / test mode: quét tự ngộ kỹ năng phái
-  let html = moBang({ tieu:'Kỹ Năng', dong:'4 ô cố định · phím 1-4' });
-  html += `<div style="font-size:10.5px;color:#9aa8d4;line-height:1.5;margin-bottom:8px">⬆ +2,5%Sát Thương/cấp (Lumen) · mốc 20/40/60/80/100/120 thêm phù trợ · <b style="color:#7df9ff">40/80/120 ⚡Tiến Hóa</b> · <span style="color:#7fd8e0">Bản Năng <b>${Math.floor(player.khi || 0).toLocaleString('vi-VN')}</b></span> · ⌨ Space: <b>${(player.spaceSkill && skillInfo(player.spaceSkill)) ? skillInfo(player.spaceSkill).name : 'đánh thường'}</b></div>`;
+  vhAutoLearn(); // save cũ / test mode: quét tự ngộ kỹ năng lớp
+  const tab = window._knTab && KN_TAB.find(t => t.id === window._knTab) ? window._knTab : 'lop';
+  window._knTab = tab;
+  const tinfo = KN_TAB.find(t => t.id === tab);
+  let html = moBang({ tieu:'Kỹ Năng', dong:tinfo.dong,
+    tabs: KN_TAB.map(t => ({ id:t.id, ten:t.ten, title:t.dong })), chon:tab, ham:'knTab' });
+  // Nút góc phải của ảnh mẫu ("Cảnh giới") → ở đây mở bảng Đại Thành, tầng tiến trình sâu hơn
+  // nằm sau cấp 120. ⚠ Bản đầu tôi trỏ nút này vào `openEvoPanel()` — một hàm KHÔNG TỒN TẠI.
+  // Bảng chọn nhánh Tiến Hoá chỉ tự mở khi một chiêu vừa chạm mốc 40/80/120, không có cửa mở
+  // tay. Nút chết thì không ném lỗi, không ai thấy, nên phải kiểm tên hàm chứ đừng đoán.
+  html += `<div class="kn-goc"><button class="mini-btn" onclick="window.openMastery()"
+      title="Bảng ${MASTERY_NAME} — mở ở cấp ${MASTERY_LV} sau khi xong chính tuyến">✦ ${MASTERY_NAME}</button></div>`;
+  if (tab === 'khac'){
+    html += `<div style="font-size:10.5px;color:#9aa8d4;line-height:1.5;margin-bottom:8px">⬆ +2,5% Sát Thương/cấp (Lumen) · mốc 20/40/60/80/100/120 thêm phù trợ · <b style="color:#7df9ff">40/80/120 ⚡Tiến Hóa</b> · <span style="color:#7fd8e0">Bản Năng <b>${Math.floor(player.khi || 0).toLocaleString('vi-VN')}</b></span> · ⌨ Space: <b>${(player.spaceSkill && skillInfo(player.spaceSkill)) ? skillInfo(player.spaceSkill).name : 'đánh thường'}</b></div>`;
   {
     html += `<div class="stat-sec">${SECTS[player.sect].name} — 1 chính · 1 phụ · 1 ${BUFF_SKILL_ID[player.sect] ? 'phù trợ' : 'chiêu phụ nữa'} · 1 tuyệt chiêu</div>`;
     html += equippedSkillRowHtml('a', 'Chính');
@@ -22114,6 +22339,14 @@ function renderSkillPanel(){
     html += `<div class="stat-sec">HỆ TẤN CHỨC PHỤ</div>`;
     for (const id of ['danchi','tieuhon']) html += legacyUniversalRowHtml(id);
   }
+    el('panel-skill').innerHTML = html;
+    return;
+  }
+  const cay = renderSkillPanelCay(tab);
+  html += `<div class="kn-wrap">${cay.html}${renderSkillPanelCT(tab, cay.ds)}</div>`;
+  html += `<div class="kn-ghi"><b style="color:#5fc96e">+</b> góc ô = nâng được ngay ·
+    ô mờ = chưa mở khoá · ô viền đứt = chưa gán kỹ năng</div>`;
+
   el('panel-skill').innerHTML = html;
 }
 
