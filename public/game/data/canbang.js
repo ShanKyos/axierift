@@ -1493,6 +1493,41 @@ window.MAP_OBSTACLES = {
   ],
 };
 
+// ═══ AVATAR — ảnh đại diện trên HUD, người chơi tự chọn ═════════════════════════
+//
+// ⚠ NGUỒN ART: TOÀN BỘ đã nằm sẵn trong repo. Đã soi kho `axieinfinity` trên GitHub cho việc
+// này (54 repo + gói `axie-origins-asset-kit` 15 286 tệp) và kết luận là KHÔNG có chân dung
+// dùng được: `PvE/Cards/Chimeras` có 75 tấm vuông 320×320 nghe rất hợp, nhưng mở ra thì đó là
+// TRANH CHIÊU THỨC — nền động, bố cục khác nhau từng tấm, có tấm chỉ là một vệt lá bay, có
+// tấm đầy máu. Thứ duy nhất hợp là `Textures/BattleHud/InBattle/avatar_frame.png`, mà cái
+// khung thì style.css đã có sẵn ngôn ngữ "khung kim loại chạm nổi" dựng bằng box-shadow —
+// dùng nó thì không thêm tệp nào và không phải hỏi lại chuyện giấy phép của gói kia.
+//
+// Ba loại, 24 lựa chọn, không tốn một byte art mới:
+//   · `lop`  — thẻ nhân vật của chính lớp mình, VẼ LẠI theo trang bị đang mặc (heroCardUrl).
+//              Đây là mặc định: avatar đổi theo đồ là thứ chỉ game này làm được.
+//   · `chi`  — 16 Chimera, chạy bằng dải 16 khung qua lớp `.chi-anh` nên avatar ĐỘNG (thở),
+//              không phải một tấm tĩnh. Kỹ thuật đã có, chỉ đổi cỡ.
+//   · `thu`  — 3 thú cưng.
+//
+// Cố ý KHÔNG lấy 17 chân dung NPC làm avatar: đó là Trưởng Lão Rell, Bổ Đầu, Thợ Rèn — những
+// người đang đứng trong thành. Lấy mặt họ làm mặt mình thì game có hai Trưởng Lão Rell.
+//
+// ⚠ MỞ SẴN HẾT, không khoá theo Chimera đang sở hữu. Khoá thì có nghĩa hơn thật, nhưng đó là
+// một quyết định thiết kế phần thưởng — để chủ dự án chốt, đừng tự quyết trong một việc mà
+// yêu cầu chỉ là "cho phép thay bằng các loại avatar khác nhau".
+// ⚠ DANH SÁCH CHIMERA SUY TỪ `window.CHIMERA`, KHÔNG CHÉP TAY. Bản đầu tôi gõ tay 16 id và
+// sai 8 cái (frostmane/gloomtail/ironhide/riftclaw/sablewing/thornhoof/verdantix/wispfang —
+// không con nào có thật). Suy từ bảng gốc thì thêm một Chimera là avatar tự có mặt, và không
+// có cách nào lệch.
+window.AVATAR_THU = ['acorntail', 'bloomveil', 'hexhorn'];
+window.avatarDs = function(){
+  return [
+    { id:'lop', loai:'lop' },
+    ...window.CHIMERA.map(c => ({ id:'chi:' + c.id, loai:'chi', chi:c.id, ten:c.ten })),
+    ...window.AVATAR_THU.map(id => ({ id:'thu:' + id, loai:'thu', thu:id })),
+  ];
+};
 window.NPCS = [
   { id:'truonglang', name:'Trưởng Làng', map:'corran', x:400, y:400, img:'assets/npcs/truonglang.png', talk:'quest',
     // Ông giao 9 trong 10 nhiệm vụ đầu và dẫn truyện gọi ông là người "nhặt ngươi về nuôi" —

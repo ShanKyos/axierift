@@ -15725,6 +15725,7 @@ function renderChar(){
   let html = `<div class="stat-sec">${sect.name} · Cấp ${p.level}</div>`;
   // chân dung = chính nhân vật trong game, ở đúng bậc trang bị đang mặc
   html += `<img class="char-portrait" src="${heroCardUrl(p.sect, heroTier(p), gearVisual(p))}" alt="${sect.name}">`;
+  html += avatarChonHtml();
   // The Hatching: 3 trait + tính cách
   if (p.traits && p.traits.length){
     const pers = PERSONALITIES[p.personality] || PERSONALITIES.trung;
@@ -21090,6 +21091,57 @@ function flashSkillSlot(skillId){
   if (b){ b.classList.add('flash'); setTimeout(()=>b.classList.remove('flash'), 220); }
 }
 
+// ═══ AVATAR — ảnh đại diện HUD, người chơi tự chọn ══════════════════════════════
+// Khuôn dữ liệu và lý do chọn nguồn art: xem khối AVATAR trong data/canbang.js.
+// Lưu ở `player.avatar` ('lop' | 'chi:<id>' | 'thu:<id>'), mặc định 'lop'.
+function avatarHienTai(){ return (player && player.avatar) || 'lop'; }
+
+// Trả HTML một ô avatar cỡ `px`. Chimera dùng lại lớp `.chi-anh` — dải 16 khung chạy bằng hai
+// animation steps() lồng nhau, nên avatar Chimera THỞ chứ không đứng im. Đó là thứ một tấm
+// ảnh tĩnh cắt từ cùng bộ art không làm được, và nó miễn phí vì kỹ thuật đã có sẵn.
+function avatarHtml(id, px){
+  const a = window.avatarDs().find(x => x.id === id) || { id:'lop', loai:'lop' };
+  if (a.loai === 'chi'){
+    const A = CHI_ANH.o[a.chi];
+    // Giữ đúng tỉ lệ ô của con đó rồi mới ép vào khung vuông: 16 con có 16 cỡ ô khác nhau
+    // (rộng/cao 1,07→1,52), ép thẳng vào hình vuông là con rộng nhất bị bóp méo.
+    const rong = A ? Math.round(px * A.nhoRong / A.nhoCao) : px;
+    return `<i class="chi-anh av-chi" style="--sh:url(assets/chimera/${a.chi}.webp);`
+         + `--w:${rong}px;--h:${px}px"></i>`;
+  }
+  if (a.loai === 'thu') return `<img class="av-img" src="assets/pets/${a.thu}.png" alt="">`;
+  // ⚠ Thẻ nhân vật là khung 160×220 mà thân người chỉ chiếm phần giữa — thu vừa hộp 52px thì
+  // nhân vật còn vài điểm ảnh, nhìn ra một cái chấm. Lớp `av-lop` phóng lên rồi neo đỉnh để
+  // hộp cắt lấy đầu và vai, đúng kiểu một tấm chân dung.
+  return `<img class="av-img av-lop" src="${heroCardUrl(player.sect, heroTier(player), gearVisual(player))}" alt="">`;
+}
+
+// Đổi avatar. Lưu ngay — người chơi đổi xong mà tắt trình duyệt thì phải giữ được.
+window.doiAvatar = function(id){
+  if (!player) return;
+  if (!window.avatarDs().some(a => a.id === id)) return;
+  player.avatar = id;
+  window._avSig = null;          // ép HUD vẽ lại
+  AudioSys.sfx('ui', 0.5);
+  saveGame();
+  if (!el('panel-char').classList.contains('hidden')) renderCharPanel();
+};
+
+// Bảng chọn trong panel Nhân Vật.
+function avatarChonHtml(){
+  const cur = avatarHienTai();
+  let h = `<div class="stat-sec">Ảnh Đại Diện</div>`
+        + `<div style="font-size:11.5px;color:var(--text-dim);margin:-2px 0 6px;line-height:1.5">`
+        + `Hiện ở góc trái màn hình. "Chính mình" vẽ lại theo trang bị đang mặc.</div>`
+        + `<div class="av-luoi">`;
+  for (const a of window.avatarDs()){
+    const ten = a.loai === 'lop' ? 'Chính mình' : (a.ten || a.thu || a.chi);
+    h += `<button class="av-o${a.id === cur ? ' on' : ''}" title="${ten}" `
+       + `onclick="doiAvatar('${a.id}')">${avatarHtml(a.id, 40)}</button>`;
+  }
+  return h + `</div>`;
+}
+
 // ---------- HUD (override): mana · danh hiệu/lớp/cấp trên thanh ----------
 function updateHud(){
   const sect = SECTS[player.sect];
@@ -21099,6 +21151,20 @@ function updateHud(){
   // Lớp / cấp / điểm cộng là thứ tra chứ không phải liếc — đã chuyển sang bảng Nhân Vật (V).
   const _nameHtml = `${tt?`<span class="title-tag">[${tt.name}]</span> `:''}${player.name ? `<span class="char-name">${player.name}</span>` : sect.name}${player.free>0?` <span class="hud-free" title="Còn ${player.free} điểm chưa cộng — bấm V">+${player.free}</span>`:''}${player.toiac>0?` · <b>TỘI ÁC ${player.toiac}</b>`:''}`;
   if (window._lastHudName !== _nameHtml){ window._lastHudName = _nameHtml; nameEl.innerHTML = _nameHtml; } // dirty-check: innerHTML rewrite is real DOM churn if done every frame
+  // Ô avatar — dựng lại CHỈ khi chữ ký đổi. Chữ ký phải gồm cả trang bị, vì avatar 'lop' là
+  // thẻ nhân vật vẽ theo đồ đang mặc: thiếu nó thì thay giáp xong avatar vẫn là bộ cũ.
+  {
+    const avEl = el('hud-avatar');
+    if (avEl){
+      const _gv = gearVisual(player);
+      const _sig = `${avatarHienTai()}|${player.sect}|${player.level}|${_gv ? _gv.n + _gv.rarity + Math.round(_gv.t*10) + Math.round(_gv.plus) : '-'}`;
+      if (window._avSig !== _sig){
+        window._avSig = _sig;
+        avEl.innerHTML = `<div class="av-khung">${avatarHtml(avatarHienTai(), 46)}</div>`
+                       + `<b class="av-lv">LV.${player.level}</b>`;
+      }
+    }
+  }
   nameEl.classList.toggle('toiac', (player.toiac||0) > 0);
   // Viên đá Máu/Mana kiểu MU Online: chất lỏng dâng từ dưới lên, nên đổi width → height
   const hpPct = clamp(100*player.hp/player.maxHp, 0, 100), qiPct = clamp(100*player.qi/player.maxQi, 0, 100);
