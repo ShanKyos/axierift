@@ -1386,6 +1386,48 @@ Và một luật vẽ: **art tối thì phải cộng sáng.** `cong:false` (v�
 nền — Meteorite, Inferno. Gói tối như Dragon Spirit vẽ đè thì thành vệt bóng; bỏ `cong:false`
 cho nó cộng sáng là bầy long hồn phát sáng lên ngay. Đã thử cả hai và chụp lại để so.
 
+### 🎯 THANH CHIÊU NAY TỰ GÁN — kéo thả, và ô 1 là ô duy nhất bị khoá
+
+Người chơi kéo một ô trên cây thả vào ô 1-4 (thả được cả trên bảng lẫn trên thanh HUD dưới màn).
+Trước bản này thanh là **4 ô cố định** dựng bằng `defaultSkillBar()` và không ai đổi được.
+
+**`knOHopLe(slot, id)` là cửa DUY NHẤT** — cả kéo thả, lệnh gỡ rối lẫn `knGan` đều hỏi nó, nên
+lý do người chơi ĐỌC và luật máy THỰC THI không thể lệch nhau (cùng lối với `masteryKhoa`).
+
+| luật | vì sao |
+|---|---|
+| ô 1 phải **chủ động**, không bao giờ trống | cắm bị động vào đó là người chơi đứng không nút nào bấm |
+| **không ô nào trùng chiêu** — kéo vào ô đã có thì ĐỔI CHỖ | hai ô cùng một chiêu là tự lừa mình có hai nút |
+| bị động **chỉ chạy khi nằm trên thanh** (`biDongBat()`) | không có vế đó thì cắm hay không cũng như nhau, và ba ô kia mất nửa lý do tồn tại |
+| chiêu lên thanh thì **mất %Công Kích Di Sản** của nó | CLAUDE.md: *một chiêu không được vừa bấm được vừa cộng %ST vĩnh viễn*. `calcDerived()` nay trừ động theo thanh, không chép tay nữa |
+
+**⚠ LỖI TO NHẤT CỦA ĐỢT NÀY, VÀ NĂM MỆNH ĐỀ ĐẦU ĐỀU XANH TRONG LÚC NÓ CÒN SỐNG:**
+`loadGame()` có một dòng `player.skillBar = defaultSkillBar(player.sect)` chạy **vô điều kiện**.
+Hồi thanh còn cố định thì nó vô hại — nó chính là đường nâng cấp cho save 3 ô. Từ lúc kéo thả
+được thì nó **nuốt sạch lựa chọn của người chơi, và nuốt trong im lặng**: gán xong nhìn đúng, tải
+lại trang là về mặc định, không lỗi, không dấu hiệu. Nay đi qua `knRaSoat()`, vốn làm đủ ba việc
+dòng cũ làm (save 3 ô lên 4, bỏ chiêu đã gỡ khỏi game, bỏ bị động kẹt ở ô 1) mà **giữ ô còn hợp
+lệ**. *Luật chung: thêm quyền cho người chơi thì phải đi soát lại mọi chỗ đang GHI ĐÈ thứ đó —
+một dòng gán vô hại hôm qua là một dòng ăn cắp hôm nay.*
+
+**⚠ `knRaSoat()` phải đứng SAU `if (!player.vohoc) player.vohoc = {}`** trong `loadGame`. Nó hỏi
+`knDaNgo()`, mà bị động thì `knDaNgo` đọc `player.vohoc`; save đời cũ không có trường đó nên rà
+soát sớm một dòng là mọi bị động trên thanh bị coi như chưa ngộ và bị gỡ sạch.
+
+**⚠ ĐỪNG thêm cửa `knDaNgo` vào `knRaSoat`.** Đã thử và nó cắt đúng cái tay mình:
+`defaultSkillBar()` **cố ý** cắm sẵn chiêu chưa tới cấp vào ô 2-4 để người chơi thấy nó sáng lên
+khi lên cấp, nên thêm cửa ấy là nhân vật cấp 1 của **cả năm lớp** mở ra chỉ còn một ô. `knDaNgo`
+thuộc về `knOHopLe` — thứ người chơi **TỰ** kéo — không thuộc về hàm rà soát, vốn phải tôn trọng
+cả thanh mà chính game dựng.
+
+Gác: `tests/test_ganchieu.js` (7 mệnh đề). ⑥ và ⑦ là hai cái vừa kể; ⑥ tự kiểm cảnh dựng trước
+khi chấm (đòi lớp đó gán được một chiêu **ngoài** thanh mặc định, nếu không thì `truoc` bằng đúng
+mặc định và mệnh đề xanh kể cả khi `loadGame` ép lại thanh).
+
+⚠ Dòng chân khung chi tiết phải nói đúng: nó từng viết *"Không nằm trên thanh chiêu (4 ô cố
+định)"*. Câu đó nay là lời nói dối ngay ở ô mà người chơi vừa tự kéo vào.
+
+
 ## ⚠ QUY TẮC SỐ 3: KHÔNG DÙNG VECTOR. CHẤM HẾT.
 
 Chủ dự án chốt hai lần (phiên 2026-09-05): **không vẽ vector, và cũng đừng nhắc tới nó
