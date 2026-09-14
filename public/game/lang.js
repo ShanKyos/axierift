@@ -1015,7 +1015,18 @@ Object.assign(EXACT, {
     'The lines are real ON-FOOT routes between regions — derived straight from the in-game gates.',
   // ── Bảng Kỹ Năng dạng cây ──
   'Lớp': 'Class', 'Khác': 'Other', '✦ Đại Thành': '✦ Mastery',
-  'kỹ năng riêng của lớp, tự ngộ theo cấp': 'class-only skills, learned automatically by level',
+  // ⚠ Phụ đề tab Lớp ĐÃ ĐỔI khi cây nhận thêm bảy bị động chỉ số chung. Mục cũ
+  // ('kỹ năng riêng của lớp, tự ngộ theo cấp') nay là chuỗi chết — sửa tiếng Việt ở game.js mà
+  // quên bảng này thì người chơi tiếng Anh nhận lại nguyên tiếng Việt, và không bài nào đỏ.
+  'chiêu riêng của lớp + 7 bị động chỉ số chung — tự ngộ theo cấp':
+    'class skills + 7 shared stat passives — all learned automatically by level',
+  // ── Bị động: hai họ, hai luật (xem CLAUDE.md) ──
+  'Bị động': 'Passive', 'Bị động — chỉ số': 'Passive — stat', 'Bị động hiệu ứng': 'Passive — effect',
+  'Bị động — luôn có hiệu lực': 'Passive — always active',
+  'Bị động hiệu ứng — cần một ô trên thanh': 'Effect passive — needs a bar slot',
+  'Đang cộng:': 'Currently giving:',
+  'bị động chỉ số luôn chạy — không cần cắm vào ô':
+    'stat passives are always active — no slot needed',
   '◆ Đã đủ điều kiện': '◆ Requirements met',
   'Loại:': 'Type:', 'Chủ động': 'Active', 'Tiến độ:': 'Progress:', 'tới mốc': 'to milestone',
   'Hiệu quả:': 'Effect:', 'Tác dụng:': 'Does:', 'Thêm 1 cấp:': 'Per extra level:',
