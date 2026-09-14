@@ -790,7 +790,35 @@ window.MAPS = {
     // thành, không phải cây mọc giữa phố. `isoNho` (cỏ dại, sỏi vụn) thì mọc trong lòng thành:
     // mặc định của nó là w*h/3e4 = 683 cho khổ này, quá dày cho một mặt phố lát đá — hạ về 260,
     // đủ để mặt lát không trơ mà không biến quảng trường thành bãi cỏ.
-    isoCay:200, isoNho:260,
+    // ⚠ BỘ DECOR PHẢI KHAI. `isoCayBo`/`isoNhoBo` bỏ trống thì rơi về bộ MẶC ĐỊNH — tức 200 cái
+    // CÂY RỪNG mọc trên mặt phố lát đá, đo được ở lượt chẩn đoán đầu tiên. Bộ `*_vuon` là cây
+    // vườn: đúng thứ người ta trồng trong một khu phố.
+    // Và hạ số lượng theo: thành phố có KIẾN TRÚC rồi thì cây chỉ còn là thứ điểm xuyết, để
+    // nguyên 200/260 là nhà bị lá che mất mặt tiền.
+    isoCay:46, isoNho:90,
+    isoCayBo:['cay_vuon1','cay_vuon2','cay_vuon3','cay_vuon4'],
+    isoNhoBo:['nho_vuon1','nho_vuon2','nho_vuon3'],
+    // BẢY KHU PHỐ. Đoạn lore của map đã gọi tên đủ bảy chỗ này từ lâu — Quảng Trường Atia, Phố
+    // Chợ, Phố Lò, Sân Chuồng, Sảnh Lệnh, Vách Gió, Xóm Trọ — nhưng trước bản này không có một
+    // thứ gì trên bản đồ cho thấy chúng. Bảng hứa một đằng, thế giới không có gì ở đằng kia;
+    // cùng kiểu nói dối mà `mapBanSac()` sinh ra để chữa.
+    //
+    // Ô chữ nhật dưới đây là MỘT NGUỒN cho cả ba thứ: nhà nào mọc trên khối nào (`phoDung`),
+    // NPC thuộc khu nào (bảng Bản Đồ gom theo đây), và tên khu in ở đâu. Đừng dựng bảng thứ hai.
+    //
+    // ⚠ Ranh khu vẽ theo CHỖ NPC CHỨC NĂNG ĐANG ĐỨNG, không theo la bàn: Thợ Rèn (5230,990) và
+    // Binh Khí Chủ (5890,990) nằm trong Phố Lò, Chủ Quán Trọ (4150,1010) trong Xóm Trọ, Người
+    // Giữ Chuồng (2160,2450) trong Sân Chuồng. Dời một NPC ra khỏi khu của nó thì nhà của nghề
+    // ấy mọc một nơi còn người làm nghề ấy đứng một nơi.
+    khu:[
+      { id:'atia',   ten:'Quảng Trường Atia', x:2720, y: 300, w: 960, h:2600, nha:['quay_cho','quay_cho','quay_cho','quay_cho'] },
+      { id:'giovach',ten:'Vách Gió',          x: 200, y: 300, w:6000, h: 210, nha:[] },
+      { id:'cho',    ten:'Phố Chợ',           x: 200, y: 510, w:2520, h:1090, nha:['quay_cho','nha_o','quay_cho','nha_lau','nha_o','quay_cho','nha_o','nha_o'] },
+      { id:'tro',    ten:'Xóm Trọ',           x:3680, y: 510, w:1220, h:1090, nha:['nha_lau','nha_o','nha_o','nha_lau'] },
+      { id:'lo',     ten:'Phố Lò',            x:4900, y: 510, w:1300, h:1090, nha:['nha_lo','nha_o','nha_o','nha_lo'] },
+      { id:'lenh',   ten:'Sảnh Lệnh',         x:3680, y:1600, w:2520, h:1300, nha:['sanh_lenh','nha_o','nha_o','nha_lau','nha_o','nha_o','nha_lau','nha_o'] },
+      { id:'chuong', ten:'Sân Chuồng',        x: 200, y:1600, w:2520, h:1300, nha:['chuong','nha_o','chuong','nha_o','nha_o','chuong','nha_o','nha_o'] },
+    ],
     // LƯỚI PHỐ. Map rộng thì luật "đường mòn = dải xa mép nhất" biến cả thành một bãi sỏi
     // mênh mông, nên phải khai đường thật. Hai đại lộ nối thẳng bốn cổng, bốn ngõ dọc rơi
     // đúng khe 200px giữa các khối nhà, hai phố vòng chạy men dãy nhà bắc và nam.
@@ -1706,6 +1734,18 @@ window.MAP_OBSTACLES = {
   // công trình cắt ra ở tỉ lệ 1,8 ô (xem tools/iso/cat_congtrinh.py), nên nhà đặt lên vừa khít.
   // Chặn nguyên KHỐI chứ không chỉ chân tường: art isometric vẽ cả mái, mà mái là thứ nhân vật
   // sẽ đi đè lên nếu cho vào.
+  // ⚠ BỐN HÀNG, KHÔNG PHẢI HAI — và đây là một lỗi BỐ CỤC, không phải thiếu trang trí.
+  // Hai hàng cũ nằm ở y 520 và y 2340, tức sát hai rìa bắc–nam. Dải giữa cao 1480px chỉ có
+  // đúng một con đường. Camera mặc định là 'xa' (1,0×) nên người chơi thấy 1500×950px một
+  // khung — đứng giữa Quảng Trường Atia thì KHÔNG CÓ MỘT CÁI NHÀ NÀO trong tầm mắt, dù thành
+  // có đủ 16 khối. Đã chụp ảnh ra và xác nhận đúng như vậy trước khi thêm hai hàng này.
+  //
+  // Hai hàng mới rơi vào đúng khe giữa các con đường trong `isoDuong` (ngang y=370 · 1600 ·
+  // 2830; dọc x=1500 · 2160 · 3200 · 4240 · 4900), nên không khối nào nằm đè lên mặt đường.
+  // Chừa 160-240px mỗi phía làm vỉa — đủ cho một người lách qua mà vẫn đọc ra "mặt phố".
+  //
+  // ⚠ Thêm khối là bớt đất đi được. `test_domap` chặn sàn 55% và đường kính ≤81% đường chéo —
+  // chạy lại hai bài đó sau mỗi lần đụng vào bảng này, đừng đếm bằng mắt.
   ardhaven: [
     { x:280, y:520, wd:460, ht:340 }, { x:940, y:520, wd:460, ht:340 }, { x:1600, y:520, wd:460, ht:340 },
     { x:2260, y:520, wd:460, ht:340 }, { x:280, y:2340, wd:460, ht:340 }, { x:940, y:2340, wd:460, ht:340 },
@@ -1713,6 +1753,20 @@ window.MAP_OBSTACLES = {
     { x:4340, y:520, wd:460, ht:340 }, { x:5000, y:520, wd:460, ht:340 }, { x:5660, y:520, wd:460, ht:340 },
     { x:3680, y:2340, wd:460, ht:340 }, { x:4340, y:2340, wd:460, ht:340 }, { x:5000, y:2340, wd:460, ht:340 },
     { x:5660, y:2340, wd:460, ht:340 },
+    // hàng trong, bắc đại lộ
+    { x:280, y:1100, wd:460, ht:340 }, { x:940, y:1100, wd:460, ht:340 }, { x:1600, y:1100, wd:460, ht:340 },
+    { x:2260, y:1100, wd:460, ht:340 }, { x:3680, y:1100, wd:460, ht:340 }, { x:4340, y:1100, wd:460, ht:340 },
+    { x:5000, y:1100, wd:460, ht:340 }, { x:5660, y:1100, wd:460, ht:340 },
+    // hàng trong, nam đại lộ
+    { x:280, y:1800, wd:460, ht:340 }, { x:940, y:1800, wd:460, ht:340 }, { x:1600, y:1800, wd:460, ht:340 },
+    { x:2260, y:1800, wd:460, ht:340 }, { x:3680, y:1800, wd:460, ht:340 }, { x:4340, y:1800, wd:460, ht:340 },
+    { x:5000, y:1800, wd:460, ht:340 }, { x:5660, y:1800, wd:460, ht:340 },
+    // BỐN QUẦY CHỢ giữa Quảng Trường Atia. Chúng là vật cản THẬT chứ không phải decor: đồ trại
+    // của Bãi Farm cố ý đi xuyên qua được vì đó là chỗ đánh nhau, nhưng ở thị trấn thì đi xuyên
+    // qua một cái quầy hàng là lỗi. Đặt lệch khỏi đại lộ dọc (x=3200) và ngang (y=1600), và
+    // cách điểm thả (3200,1900) đủ xa để không ai vừa vào game đã kẹt trong một cái sạp.
+    { x:2780, y: 900, wd:200, ht:140 }, { x:3400, y: 900, wd:200, ht:140 },
+    { x:2780, y:2200, wd:200, ht:140 }, { x:3400, y:2200, wd:200, ht:140 },
   ],
 };
 
@@ -1831,32 +1885,32 @@ window.NPCS = [
   // thành mà ai cũng nói về đại hoạ thì không phải một cái thành, nó là một bảng
   // thông báo có chân.
 
-  { id:'ah_banrong', name:'Người Bán Rong', map:'ardhaven', x:1450, y:1520, img:'assets/npcs/monkhach.png', talk:'quest',
+  { id:'ah_banrong', name:'Người Bán Rong', taCanh:true, map:'ardhaven', x:1450, y:1520, img:'assets/npcs/monkhach.png', talk:'quest',
     lore:'"Ta gánh hai thúng, một thúng bánh một thúng chè. Thúng nào bán hết trước thì sáng mai ta gánh thúng đó nặng hơn. Đơn giản thế thôi."',
     barks:['"Bánh còn nóng, mua đi."','"Chè hôm nay đắt hơn hôm qua — đường lên giá, không phải ta."',
            '"Ta đứng đây tới trưa thôi đấy."'] },
 
-  { id:'ah_thomoc', name:'Thợ Mộc', map:'ardhaven', x:1100, y:2100, img:'assets/npcs/thumo.png', talk:'quest',
+  { id:'ah_thomoc', name:'Thợ Mộc', taCanh:true, map:'ardhaven', x:1100, y:2100, img:'assets/npcs/thumo.png', talk:'quest',
     lore:'"Cả phố đặt ta đóng cửa mới. Cửa cũ vẫn tốt cả — chỉ là ai cũng muốn cái then dày hơn ngón tay cái. Ta đóng, ta không hỏi vì sao."',
     barks:['"Gỗ này còn ướt, phải phơi thêm mười ngày."','"Đừng dựa vào đó, keo chưa khô."',
            '"Đóng thì đóng ba đinh, đừng đóng hai."'] },
 
-  { id:'ah_ganhnuoc', name:'Người Gánh Nước', map:'ardhaven', x:860, y:1700, img:'assets/npcs/noiung.png', talk:'quest',
+  { id:'ah_ganhnuoc', name:'Người Gánh Nước', taCanh:true, map:'ardhaven', x:860, y:1700, img:'assets/npcs/noiung.png', talk:'quest',
     lore:'"Giếng ở đầu phố, nhà ta ở cuối phố. Mười hai chuyến một ngày, và ta thuộc từng viên đá lát trên đoạn đường đó — kể cả viên bị nứt từ hôm khu phố này rơi sang."',
     barks:['"Tránh ra, ướt giày bây giờ."','"Nước múc sáng trong hơn nước múc chiều."',
            '"Cái đòn gánh này ta dùng từ hồi còn ở bên kia."'] },
 
-  { id:'ah_treem', name:'Lũ Trẻ Chạy Quanh', map:'ardhaven', x:3020, y:1820, img:'assets/npcs/quachtinh.png', talk:'quest',
+  { id:'ah_treem', name:'Lũ Trẻ Chạy Quanh', taCanh:true, map:'ardhaven', x:3020, y:1820, img:'assets/npcs/quachtinh.png', talk:'quest',
     lore:'"Bọn cháu chơi đuổi bắt. Ai chạm vào bậc thềm nhà bác thợ rèn là thua, vì bác ấy sẽ ra mắng — luật do bác ấy đặt, không phải bọn cháu."',
     barks:['"Đuổi kịp cháu thì cháu cho cái này!"','"Chú đừng mách mẹ cháu nhé."',
            '"Chú cao thế, chú nhìn qua nóc nhà kia được không?"'] },
 
-  { id:'ah_linhtuan', name:'Lính Tuần Phố', map:'ardhaven', x:2560, y:1600, img:'assets/npcs/bodau.png', talk:'quest',
+  { id:'ah_linhtuan', name:'Lính Tuần Phố', taCanh:true, map:'ardhaven', x:2560, y:1600, img:'assets/npcs/bodau.png', talk:'quest',
     lore:'"Ta đi từ Cổng Tây sang Cổng Đông rồi quay lại, mỗi vòng đúng một khắc. Việc chán lắm. Nhưng chán là dấu hiệu tốt, ngươi cứ tin ta."',
     barks:['"Trong tường thì yên."','"Ai còn để xe hàng giữa lòng phố nữa là ta thu."',
            '"Đi qua đi lại mỏi chân hơn đánh nhau."'] },
 
-  { id:'ah_quetpho', name:'Người Quét Phố', map:'ardhaven', x:3620, y:1470, img:'assets/npcs/ttmon.png', talk:'quest',
+  { id:'ah_quetpho', name:'Người Quét Phố', taCanh:true, map:'ardhaven', x:3620, y:1470, img:'assets/npcs/ttmon.png', talk:'quest',
     lore:'"Sáng quét lá, chiều quét bụi, tối quét thứ khách say làm rơi. Phố sạch thì không ai khen. Phố bẩn thì ai cũng biết là ta."',
     barks:['"Dịch sang bên một tí, ta quét."','"Lá năm nay rụng nhiều hơn mọi năm."',
            '"Chổi này ta tự bó, bền hơn chổi mua ngoài chợ."'] },
@@ -1866,17 +1920,17 @@ window.NPCS = [
     barks:['"Còn phòng, đừng lo."','"Cơm dọn lúc trời chạng vạng, đừng tới trễ."',
            '"Ai ngáy to thì ta xếp lên gác. Không giận nhé."'] },
 
-  { id:'ah_duatin', name:'Người Đưa Tin', map:'ardhaven', x:4300, y:1620, img:'assets/npcs/noiung.png', talk:'quest',
+  { id:'ah_duatin', name:'Người Đưa Tin', taCanh:true, map:'ardhaven', x:4300, y:1620, img:'assets/npcs/noiung.png', talk:'quest',
     lore:'"Ta chạy tin giữa bốn cổng, trong tường thôi. Thư gửi ra ngoài thành thì ta không nhận — ngoài đó không có ai đứng đợi ở đầu đường cả."',
     barks:['"Tránh đường, ta đang vội."','"Lá này để ba ngày rồi, chưa ai tới lấy."',
            '"Ta chạy nhanh hơn ngươi đấy, cá không?"'] },
 
-  { id:'ah_banhoa', name:'Bà Bán Hoa', map:'ardhaven', x:3400, y:1930, img:'assets/npcs/duoclao.png', talk:'quest',
+  { id:'ah_banhoa', name:'Bà Bán Hoa', taCanh:true, map:'ardhaven', x:3400, y:1930, img:'assets/npcs/duoclao.png', talk:'quest',
     lore:'"Hoa của ta trồng ở luống sau nhà, không phải hàng gánh từ ngoài đồng vào. Cành ngắn hơn thật, nhưng cắm trong nhà được bảy ngày."',
     barks:['"Mua một bó về cắm, nhà sáng hẳn ra."','"Cành trắng hết rồi, còn cành đỏ thôi."',
            '"Cắt buổi sáng thì tươi lâu hơn cắt buổi chiều."'] },
 
-  { id:'ah_onglao', name:'Ông Lão Ngồi Ghế Đá', map:'ardhaven', x:2870, y:1340, img:'assets/npcs/truonglang.png', talk:'quest',
+  { id:'ah_onglao', name:'Ông Lão Ngồi Ghế Đá', taCanh:true, map:'ardhaven', x:2870, y:1340, img:'assets/npcs/truonglang.png', talk:'quest',
     lore:'"Cái ghế này quay mặt ra phố lớn. Ta ngồi từ lúc mặt trời chưa qua nóc nhà đối diện, tới lúc nó khuất sau đó. Ngày nào cũng vậy, và ta chưa chán ngày nào."',
     barks:['"Ngồi xuống đi, ghế còn chỗ."','"Trước đây chỗ này là bãi đất trống."',
            '"Cứ đi đi. Ta không giữ ai lại bao giờ."'] },
@@ -1886,12 +1940,12 @@ window.NPCS = [
     barks:['"Đừng đưa tay ra trước mặt nó."','"Nó ăn hai bữa, sáng và tối. Cho ăn thêm là nó lười."',
            '"Con này nghe tiếng huýt, không nghe tên."'] },
 
-  { id:'ah_thonhuom', name:'Thợ Nhuộm', map:'ardhaven', x:1170, y:1010, img:'assets/npcs/daosi.png', talk:'quest',
+  { id:'ah_thonhuom', name:'Thợ Nhuộm', taCanh:true, map:'ardhaven', x:1170, y:1010, img:'assets/npcs/daosi.png', talk:'quest',
     lore:'"Tay ta xanh tới khuỷu, rửa cách gì cũng không ra. Khách nhìn tay ta rồi mới tin mấy tấm vải treo kia là màu thật chứ không phải màu quét."',
     barks:['"Đừng chạm vào, vải chưa khô."','"Màu chàm phải nhuộm bảy lượt mới ăn."',
            '"Nước nhuộm đổ ra rãnh kia, đừng giẫm vào."'] },
 
-  { id:'ah_hatrong', name:'Kẻ Hát Rong', map:'ardhaven', x:3200, y:1300, img:'assets/npcs/quachtinh.png', talk:'quest',
+  { id:'ah_hatrong', name:'Kẻ Hát Rong', taCanh:true, map:'ardhaven', x:3200, y:1300, img:'assets/npcs/quachtinh.png', talk:'quest',
     lore:'"Ta hát bài nào cũng được, trừ bài về cái đêm trời nứt. Hát bài đó thì có người bỏ về, có người ngồi lại khóc — mà cả hai hạng đều không bỏ tiền."',
     barks:['"Nghe một bài không mất gì cả."','"Dây thứ ba lại chùng rồi."',
            '"Hôm qua có người trả ta bằng một quả táo. Ta vẫn hát."'] },
