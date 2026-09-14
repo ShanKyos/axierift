@@ -64,7 +64,7 @@ INTRO_PAGES / QUESTS / CLUES / BOSS_LORE / SECTS / NPCS / MOBS / TB_TIER_NAMES.
 | Thay cho | Dùng |
 |---|---|
 | MU (thế giới) | **Vaeldra** — lục địa thép và tro |
-| Kundun | **Morvahn** |
+| Kundun | ~~Morvahn~~ — **đã bỏ cùng mạch cũ.** Canon nay không có đại ma đầu bị chôn; kẻ thù là **DRUE**, người thứ bảy đi qua Nhát Gọi (xem mục Cốt truyện) |
 | Lorencia | **Ardhaven** |
 | Fairy Elf / Magic Gladiator | **Sylvan Ranger** / **Spellblade** |
 | Devil Square / Blood Castle | **Đấu Trường Tế Thần** / **Pháo Đài Máu** |
@@ -202,6 +202,93 @@ Khảo sát `axieinfinity/axie-origins-asset-kit` (clone về `/home/user/axiein
 appear+idle) rồi mới đem đi cắt khung chạy — tốn 28 khung nướng thừa mỗi con, đổi lại không
 phải tin vào một con số chép tay nào.
 
+### ⚠ RAGOON ĐÃ GỠ — gacha thì KHÔNG, nó chỉ đổi thứ nó trao
+
+Chủ dự án chốt: *"Bỏ luôn phần Ragoon. Nếu gacha là sẽ gacha nhân vật."* Cái chết là **CON THÚ**,
+không phải cái máy. Đường cắt hoá ra **ba tầng** (đặc tả: `docs/DOI_VAI_AXIE.md §11b`):
+
+| Tầng | Quyết định |
+|---|---|
+| Tầng vẽ — `CHIMERA` `CHI_ANH` `CHI_MAP` `_chiVe` `chiVeNho` `chiChayImg` `chiSan` `CHI_THO_FPS` | **GIỮ.** Avatar đọc đúng bộ này. Gỡ là gỡ luôn avatar. |
+| Máy gacha — `chiState` `chiNhan` `gachaMotLuot` `gachaQuay` pity banner `player.chimera.co` | **GIỮ, đổi thứ nó TRAO** → thân Axie. 16 con đã có sẵn 16 bảng khung avatar; gỡ máy rồi dựng bộ chọn avatar mới là nhân bản đúng cái vừa xoá. |
+| Con thú + hai vòng nuôi nó | **GỠ HẾT** (danh sách đầy đủ trong chú thích tại chỗ cũ trong `game.js`) |
+
+**Ba nguồn chỉ số từ con Axie đã gỡ khỏi `calcDerived`**: bị động `thu` (× `chiThuMul`), bốn kỹ
+năng đồng hành, buff tạm `chiTam`. ⚠ **Đừng nối lại.** `CHIMERA[].thu` / `.chieu` trong
+`canbang.js` vẫn còn nhưng **không được đọc ở đâu nữa** — một cái thân thì không cộng chỉ số, và
+cho quay gacha ra +25% sát thương là dựng lại đúng trục sức mạnh mua được mà đợt này đang tháo.
+
+**`chiCoTrongMan` / `CHI_THAN` 0,45 / `CHI_TRAN` 0,55 đã gỡ** — luật *"Chimera đi theo không bao
+giờ được lấn át nhân vật"* cần HAI cái thân đứng cạnh nhau mới có nghĩa. Nay chỉ còn một. ⚠ Cỡ
+avatar do `AVA_TY` 0,72 / `AVA_TRAN` 0,95 quản, và hai số đó khớp theo luật **ngược lại**: avatar
+và lớp nhân vật THAY CHỖ NHAU lúc ra đòn nên khối nhìn thấy phải **bằng nhau**, không nhỏ hơn.
+Chép `CHI_THAN`/`CHI_TRAN` sang đấy là mỗi cú đánh một cú giật cỡ. `tests/test_cothu.js` gác.
+
+### ◆ ~~BỐN Ô CỐT~~ — ĐÃ GỠ HẲN CHỈ SỐ, đừng dựng lại
+
+> ⚠ Giữ đúng cái tiêu đề này để cảnh báo, thay vì xoá trắng rồi để người sau đọc `COT_O` trong
+> lịch sử git mà tưởng nó còn. Cùng kiểu bẫy đã ghi ở mục "~~Khắc Ấn~~" và "~~Chimera đi theo~~".
+
+Chủ dự án chốt: **gỡ hẳn chỉ số.** Cốt là trục sức mạnh CUỐI CÙNG còn sót lại từ nhánh Ragoon —
+bốn ô mang đúng tên bộ phận Axie (Sừng · Vuốt · Vảy · Đuôi), 4 dòng chính + 8 dòng phụ + 11 hiệu
+ứng đủ bộ. Dời nó sang người chơi đã KHÔNG cứu được vấn đề gốc: nó vẫn là **sức mạnh đến từ phía
+Axie**, mà luật Đổi Vai nói thẳng — *Axie 0 chỉ số, 0 kỹ năng, 0 trang bị; toàn bộ chỉ số nằm ở
+5 lớp*.
+
+**Đây là lần thứ BA cùng một trục bị tháo ra**, và lần nào nó cũng quay lại dưới dạng "chỉ vài
+dòng chỉ số nhỏ thôi":
+
+| đời | trục | gỡ ở đâu |
+|---|---|---|
+| 1 | bị động `thu` × `chiThuMul` (Huyết Thống) | đợt gỡ Ragoon |
+| 2 | cấp Chimera × `chiLvThuMul` + kỹ năng đồng hành `chiTam` | đợt gộp `main` |
+| 3 | **bốn ô Cốt** | đợt này |
+
+⇒ Đã gỡ: `COT_O` · `COT_PHU` · `COT_PHAM` · `COT_KHO_MAX` · `COT_BO_R` · `cotGom` · `cotO` ·
+`cotKho` · `cotMoi` · `cotDeo`/`cotThao`/`cotNang`/`cotBo` · `cotBoCast`/`cotBoTick`/`cotDmgMul`/
+`cotCdMul` · `cotRoi` · `cotBossVung` · bảng Kho Cốt · lệnh `/cot`. **`tests/test_cotgobo.js` gác
+chiều NGƯỢC LẠI**: chúng phải không còn, và cắm dữ liệu Cốt giả vào `player` phải đổi **0 điểm**
+chỉ số (đo chỉ số THẬT trước/sau — `applyLine()` lặng lẽ bỏ khoá lạ nên đọc bảng thì không thấy).
+
+**`COT_DONG` GIỮ LẠI** nhưng chỉ còn là **bản sắc của VỈA** ở từng vùng: một cái tên và một màu
+cho chấm kim cương trên bản đồ nhỏ. Phần chỉ số (`hai`/`haiTxt`/`bonTxt`) hết tác dụng.
+
+#### Thứ thay chỗ nó: VỈA TRẢ **BẢN NĂNG**
+
+Vỉa là vòng chơi mỗi ngày DUY NHẤT buộc người chơi đi tới một toạ độ — không thể để nó trả ra thứ
+vô dụng. Nay nó trả **600 Bản Năng**, và con số neo vào thứ đã có chứ không bịa: một Trùm Vùng
+cho 200, còn chú thích của chính hàm ấy nói Vỉa "hào phóng hơn Trùm Vùng một bậc" với ba mảnh
+⇒ 3 × 200. Chỗ tiêu là **nâng cấp kỹ năng** (`30 × cấp^1,1` mỗi bậc) — tức sức mạnh của chính
+5 lớp, đúng nơi luật Đổi Vai nói nó phải nằm.
+
+Và nó hợp canon hơn thứ nó thay: qua Nhát Gọi thì **mất ký ức chứ không mất NGHỀ**. Đào lên tàn
+tích của những kẻ đi trước mà lấy lại được bản năng là đúng câu chuyện đang kể.
+
+#### Di trú: hoàn lại, đừng xoá trắng
+
+`cotDiTru()` chạy một lần trong `loadGame`. Mọi thứ quy về đơn vị CÒN CHỖ TIÊU, tỉ giá neo vào
+nguồn rơi:
+
+| đã đổ vào | hoàn bằng | tỉ giá, và nó từ đâu ra |
+|---|---|---|
+| mảnh Cốt | Bản Năng | 1 mảnh = **200** (một lượt vỉa rơi 3 mảnh, nay trả 600) |
+| Đất Hồn (+ cấp/Hoá quy ra) | Ấn Giao Kết | **5 : 1** (trùm vùng rơi 4-6 Đất Hồn *và* 1 Ấn) |
+| Lumen đổ vào Hoá | Lumen | đúng số — Lumen chưa bao giờ đổi đơn vị |
+
+- ⚠ **Quét MỌI chỗ từng cất mảnh**: kho người chơi · bốn ô người chơi · kho và bốn ô của TỪNG
+  con Chimera đời cũ. Sót một chỗ là một khoản mất trắng không ai thấy.
+- ⚠ **Ghi nhận `lv`/`hoa` TRƯỚC khi xoá.** Bản đầu xoá thẳng rồi mới tính hoàn ⇒ mọi người chơi
+  được hoàn đúng 0, không một lỗi nào báo.
+- ⚠ **Cờ `player._diTruCot` chặn hoàn hai lần** — nạp save nhiều lần mà thiếu cờ là in tiền.
+- ⚠ **Phải BÁO ra một dòng đọc được.** Một khoản hoàn không ai thấy thì với người chơi không
+  khác gì mất trắng.
+
+#### Nhiệm vụ phải trỏ lại
+
+`c3q3` từng gate bốn ô Cốt ⇒ nay gate **Vỉa** (`need:2`, nằm đúng giữa c2q2 cấp 26 = 1 và sd_tt2
+cấp 68 = 3). 11 nhiệm vụ thưởng mảnh Cốt ⇒ thưởng **Bản Năng**, quy theo `số mảnh × phẩm × 200 ×
+max(1, cấp/20)` để theo kịp giá nâng chiêu.
+
 ### Còn treo
 
 | | |
@@ -210,7 +297,7 @@ phải tin vào một con số chép tay nào.
 | Lớp gacha Cổ Vật | `docs/CO_VAT_15.md` mới là ĐỀ XUẤT, chưa chốt. Trần 16% chỉ quản lớp đó — **chỉ số từ 5 lớp KHÔNG có trần**. |
 | Chibi 5 class Axie ở màn tạo nhân vật | chưa thiết kế. `CHIBI_CFG` hiện phân biệt bằng bóng dáng NGƯỜI. |
 | Mốc thay "Giày +6 mở dáng chạy" | avatar bay/chạy thì mốc cũ mất ý nghĩa |
-| Ngũ Hành → tam giác Axie | chưa làm. 40 nhãn `el:` trong `data/canbang.js` vẫn là Kim/Mộc/Thuỷ/Hoả/Thổ — **tàn dư kiếm hiệp, vi phạm Quy tắc số 1**. Kèm một lỗi lệch dấu: 1 con khai `'Thuỷ'` còn 10 con khai `'Thủy'`. |
+| Ngũ Hành → tam giác Axie | chưa làm. 40 nhãn `el:` trong `data/canbang.js` vẫn là Kim/Mộc/Thuỷ/Hoả/Thổ — **tàn dư kiếm hiệp, vi phạm Quy tắc số 1**. Đặc tả ở `docs/DOI_VAI_AXIE.md` §7; `hurtMob` không đổi công thức, chỉ đổi nhãn. ~~Lỗi lệch dấu `'Thuỷ'`~~ **đã vá** (`bb2a1bd`) — con Trấn Ải Trũng Nứt từng nằm ngoài toàn bộ hệ khắc hệ. |
 
 ---
 
@@ -257,7 +344,7 @@ Ba thứ từng treo trên phó bản, đã phải rời chỗ khi gỡ — **nh
 | Thứ | Trước | Nay |
 |---|---|---|
 | Địa hình Tầng Sâu | `DEEP_MAP = 'pb_daohoa'` | map riêng `deep` trong `MAPS` |
-| Nguồn Cốt Chimera | thông quan phòng | **cầu tạm**: boss vùng của 7 map cha (`cotBossVung`) |
+| Nguồn Cốt (nay của NGƯỜI CHƠI) | thông quan phòng | **cầu tạm**: boss vùng của 7 map cha (`cotBossVung`) |
 | `COT_DONG[*].map` | `pb_*` | map cha ngoài trời |
 
 `cotBossVung` là **cầu tạm, không phải thiết kế**. Nó tồn tại vì một hệ không còn cửa
@@ -377,222 +464,310 @@ là bảng Bản Đồ nói dối — mà nói dối kiểu đó không ai phát
 **Cố ý KHÔNG làm `monRoi`** (món chỉ rơi ở map này) như đề xuất gốc: chính đề xuất đó cảnh báo
 món độc quyền phải thật sự cần cho một thứ gì đó, không thì chỉ là "món rác mang tên đẹp".
 Dựng bảy nền kinh tế mới cho bảy món là đúng cái bệnh nhân bản. Mỗi map **đã có sẵn** một thứ
-độc quyền thật — một Dòng Cốt Chimera, có nơi tiêu thật. Việc của A2 là **cho thấy**, không
+độc quyền thật — một Dòng Cốt, có nơi tiêu thật (bốn ô Cốt của người chơi). Việc của A2 là **cho thấy**, không
 phải **thêm**.
 
 Đây cũng là chỗ chữa cho khắc hệ: `el:` chạy trong `hurtMob` (±20% / −12%) từ lâu nhưng người
 chơi không có cách nào biết map nào hệ gì. Nay hệ trội nằm ngay trên bảng Bản Đồ.
 
-### 📌 CHÍNH TUYẾN ĐÃ DỰNG LẠI (33 nhiệm vụ) — PHỤ TUYẾN THÌ CHƯA
+### 📌 CHÍNH TUYẾN ĐÃ DỰNG LẠI · PHỤ TUYẾN CŨNG ĐÃ DỰNG XONG
 
-> ⚠ Mục này từng mở đầu bằng câu "`QUESTS` và `SIDE_QUESTS` nay đều **rỗng**". Câu đó **đã sai**
-> kể từ khi chuỗi được dựng lại, và nó vẫn nằm đây đủ lâu để làm một phiên (2026-09-11) kết luận
-> nhầm rằng bảng Đại Thành "không có cửa vào" — vì cổng đó đọc `player.mongChiTon`, và cờ ấy chỉ
-> bật khi xong chính tuyến. Đọc CLAUDE.md xong vẫn phải **đo**: `node -e` đếm thẳng `QUESTS.length`.
+> ⚠ Mục này **trước đây ghi cả hai bảng đều rỗng và chờ dựng lại**. Nửa đầu không còn đúng —
+> giữ lại đúng cái tiêu đề này để cảnh báo, thay vì xoá trắng rồi để người sau đọc lịch sử git
+> mà tưởng chuỗi vẫn rỗng. Cùng một kiểu bẫy đã ghi ở mục "~~Khắc Ấn~~".
 
-Đo được hôm nay: **`QUESTS` = 33 mục · 5 chương · cấp 1 → 118**, khai hết trong
-`data/canbang.js`. **`SIDE_QUESTS` vẫn = 0** — phụ tuyến còn nợ, và phần dưới đây nói về nó.
-
-Đừng đọc `SIDE_QUESTS` rỗng rồi kết luận game này không cần phụ tuyến: đó là một hệ bị tháo ra
-để thiết kế lại, không phải bị bỏ.
-
-**Vì sao đợt gỡ ban đầu xảy ra:** lối chơi đã đổi quá nhiều so với lúc viết chuỗi cũ — bỏ 7 phó
-bản, vai trò theo bãi, bản sắc map, zoom camera, cổng map bỏ `reqMain`. Chuỗi cũ dẫn người chơi
-đi qua một game không còn tồn tại. Giữ một chuỗi sai còn tệ hơn không có chuỗi nào.
-
-**⚠ NẾU LẠI GỠ: GỠ Ở HAI NƠI, KHÔNG PHẢI MỘT.** `game.js` từng có một `QUESTS.push(...)` nối thêm
-6 chương / 25 mục sau phần khai trong `data/canbang.js`. Rỗng bảng dữ liệu mà quên phần push thì
-`QUESTS.length` vẫn ra **25** — đã mắc đúng lỗi đó một lần. Phần push nay chỉ còn là **chú thích**
-ở `game.js` (~dòng 22489); cả 33 mục hiện tại đều từ `data/canbang.js`.
-
-**Đã đổi theo, và vẫn còn đúng:**
-- `reqMain` gỡ khỏi **mọi** map (kể cả một cái khai lẫn trong `MAPS.ngoai`). Map nay mở khoá bằng
-  **cấp** là đủ. Nhánh đọc `md.reqMain` trong `mapGate()` vẫn còn — cắm lại một giá trị là khoá
-  sống lại. *Cân nhắc kỹ: khoá map sau một nhiệm vụ nghĩa là nhiệm vụ hỏng thì map mất.*
-- Bảng theo dõi và Nhật Ký Nhiệm Vụ nói **"chưa có nhiệm vụ"**, không nói "hoàn tất". Một bảng
-  rỗng mà khoe "chính tuyến hoàn tất, tự do làm phụ tuyến" là nói dối người chơi.
-
-**Khi dựng phụ tuyến:** chủ dự án đã nói có thể **xây lại cả hệ thống lore** cùng lúc, nên đừng
-vá chuỗi cũ từ git — thiết kế lại từ đầu cùng với lore. Khuôn dữ liệu của cả hai bảng nằm trong
-chú thích ở `data/canbang.js`. Máy chạy nhiệm vụ **giữ nguyên** và chạy theo dữ liệu: điền bảng
-là chuỗi sống lại — chính tuyến 33 mục đã sống lại đúng bằng cách đó.
-
-**Ai đọc mục này cũng nên biết:** chính tuyến nay là **cổng của bảng Đại Thành**
-(`masteryOpen()` đòi cấp 120 **và** `player.mongChiTon`). Chuỗi hỏng thì cả hệ Đại Thành mất cửa
-— đúng cái rủi ro mà dòng cảnh báo về `reqMain` ở trên đang nói, chỉ khác là nó đã thành thật.
-
-### 🗺 BẢNG BẢN ĐỒ HAI TAB — và tấm bản đồ thế giới DỰNG TỪ DỮ LIỆU
-
-Bấm **M** ra bảng hai tab, khuôn lấy từ bảng bản đồ của dòng MMO nhìn xuống (Võ Lâm, Ragnarok):
-
-| tab | có gì |
+| | Trạng thái |
 |---|---|
-| **Hiện Tại** | vùng đang đứng ở khổ 660×500 — bãi quái (tên loài + số con), cổng, NPC chia ba nhóm, Rương Canh · Vỉa Cốt · bãi cỏ Đàn Thú, mũi tên người chơi. Sáu ô lọc bật/tắt từng nhóm. Bấm lên bản đồ là **tự chạy tới**. |
-| **Thế Giới** | cả mười hai vùng trên một tấm, lá cờ nhấp nháy ở vùng đang đứng, bấm một vùng là dịch chuyển. Danh sách vùng nằm cột phải. |
+| `QUESTS` | **ĐANG CHẠY** — 9 chương / 50 nhiệm vụ (thêm chương VIII · Người Thứ Bảy), canon Nhát Gọi. Xem mục "Cốt truyện (canon)" và `docs/LORE_RUNE.md` |
+| `SIDE_QUESTS` | **ĐANG CHẠY** — **32 nhiệm vụ / 10 map**, phủ cấp 3→116. Trước là 9 mục chỉ trên ba map lối đi. |
 
-**⚠ ẢNH THAM KHẢO CHỦ DỰ ÁN GỬI LÀ ẢNH CHỤP GAME KHÁC.** Lấy **cách bày**, không lấy tranh của
-họ — tấm bản đồ thế giới ở đây không phải một bức tranh mà **dựng từ dữ liệu đang chạy**:
+**Vì sao chuỗi CŨ bị gỡ (ghi lại để đừng vá nó từ git):** lối chơi đã đổi quá nhiều so với lúc
+viết — bỏ 7 phó bản, vai trò theo bãi, bản sắc map, zoom camera, cổng map bỏ `reqMain`. Rồi bản
+dựng lại lần đầu (5 chương / 33 nhiệm vụ) lại **không nhắc canon một lần nào**: đếm trên toàn
+khối ra 0 lần cho Trụ Khoá · Morvahn · Vaeldra · Tướng Quân. Hai mạch chạy song song không nối
+vào nhau — đó là lý do có đợt gộp này.
 
-| thứ trên bản đồ | suy từ |
+**⚠ CHUỖI KHAI Ở MỘT NƠI, KHÔNG PHẢI HAI.** Trước đây `data/canbang.js` khai 10 mục rồi `game.js`
+`QUESTS.push(...)` thêm 6 chương/25 mục nữa, nên rỗng bảng dữ liệu mà quên phần push thì
+`QUESTS.length` vẫn ra 25 — đã mắc đúng lỗi đó. Nay **toàn bộ 46 mục nằm trong `data/canbang.js`**
+và `game.js` không push nhiệm vụ chính nào. Giữ đúng nếp đó.
+
+**Phụ tuyến — 32 mục / 10 map.** Bản đầu chỉ có 9 mục trên ba map LỐI ĐI (`loimon` · `trungnut`
+· `caungam`), phủ đúng dải cấp 40→62. Nay phủ **cấp 3 → 116**: mỗi map đánh nhau có ba mục do NPC
+của chính vùng đó giao. `Tầng Sâu` vẫn trống — nợ còn lại duy nhất.
+
+| loại | số | | loại | số |
+|---|---|---|---|---|
+| `kill` | 10 | | `moc` | 6 |
+| `collect` | 6 | | `tranai` | 2 |
+| `talk` | 6 | | `chaos` | 2 |
+
+- **Đánh nhau 12/32 = 38%**, và **mỗi map đúng MỘT mục `kill`**. Hai mục `tranai` không tính vào
+  luật đó: hạ một con trùm là một trận một lần, không phải cày N con. `tests/test_phutuyen.js` gác.
+- **Hai mục `tranai` tồn tại vì một lỗ có thật**: `loimon` và `caungam` cố ý không có chương chính
+  tuyến (không phiến Rune nào cắm được ở một lối đi hay một nhịp đá không nền), nhưng Tướng Quân
+  thì vẫn đứng đó — **hai con DUY NHẤT trong mười một con mà không nhiệm vụ nào trỏ tới**.
+- ⚠ **`sl_cn1`/`sl_cn2` chính là `c4q4`/`c4q5` cũ**, kéo ra khỏi chính tuyến. Chương IV từng thu
+  phiến gốc ở nhiệm vụ 3/5 rồi còn hai nhiệm vụ nữa trên `caungam` — tức chính tuyến ngồi trên
+  đất phụ tuyến. Nay `tranai` là ô CUỐI ở cả bảy chương.
+- ⚠ **`reqMain` là CHỈ SỐ (0-based), không phải số thứ tự.** Thêm/bớt một nhiệm vụ chính là mọi
+  `reqMain` trượt. Để mốc thấp hơn chỗ cần một chút, đừng khoá sát.
+- Trần **`SIDE_TRAN` = 5** mục cầm cùng lúc (trước là 3 chép cứng). Mỗi vùng có ba mục, nên trần 3
+  nghĩa là nhận trọn một vùng rồi thì không cầm nổi mục nào của vùng khác.
+
+#### ⚠ BA LỖI IM LẶNG CỦA BẢN 9-MỤC — đã vá, đừng dựng lại
+
+Cả ba đều **không ném lỗi, không làm đỏ bài kiểm nào**, và cả ba đều là cùng một dạng: dữ liệu
+khai một đằng, máy đọc một nẻo.
+
+1. **Không mục nào khai `map:`** — mà bảng Nhật Ký lọc phụ tuyến bằng `SIDE_QUESTS.filter(sq =>
+   sq.map === mapId)`. Tức tab Phụ Tuyến **trống trơn** suốt, dù có 9 nhiệm vụ đang chạy.
+2. **`herbMap` là dữ liệu chết** — `sideOnEvent('collect')` chỉ gác map cho loại `catch`. Nhiệm vụ
+   ghi "hái ở Lối Mòn" mà hái ở bãi thuốc ngoài cổng thành cũng đếm.
+3. **Bốn map có sẵn `HERB_SPOTS` nhưng `herbs:false`** (`daohoa` `loimon` `trungnut` `caungam`) —
+   toạ độ đã chấm từ lâu, chỉ thiếu đúng cái cờ, nên không bụi nào mọc ở chỗ nhiệm vụ chỉ tới.
+   **Cờ và bảng toạ độ là HAI chỗ**: có bảng mà quên cờ thì không lỗi nào báo.
+
+⇒ Bài kiểm mới **lái bằng hàm thật** (`acceptSide` · `tryHarvestHerb` · `sideOnKill` · `mocTick` ·
+`turnInSide`) chứ không đọc bảng rồi tự kết luận: chỗ hỏng nằm ở sợi dây nối, không nằm ở bảng.
+
+#### Máy phụ tuyến nhận thêm hai loại
+
+- **`tranai`** — `sideOnKill` nay nhận cả ĐỐI TƯỢNG quái chứ không chỉ `m.type`, vì Trấn Ải của mọi
+  vùng dựng động trong `spawnZoneBoss` nên không có khoá nào trong `MOBS` để so; phải đọc
+  `def.bossKind`.
+- **`moc`** — dùng CHUNG bảng `MOC_NV` với chính tuyến và đi qua ĐÚNG nhịp `mocTick(dt)`, không móc
+  thêm chỗ nào. Đếm **từ trạng thái**, nên mục nào người chơi đã làm đủ từ trước là xong ngay lúc
+  nhận — đó là chủ ý, xem mục `MOC_NV`.
+
+#### 🌱 `daohoa` NAY CÓ NPC — trước đó là map đánh nhau DUY NHẤT không ai nói một câu
+
+`uomluong` (Kẻ Coi Luống) ở `(200,200)`. Chỗ đứng **chấm bằng máy**, không đoán: đi được, trống
+8 hướng, lề 108px tới mọi thứ phải tránh (bãi quái 340 · Vệ Binh 520 · Tướng Quân 760 · cổng 300 ·
+điểm thả 260 · Rương Canh 260 · bụi thuốc 180), và cách điểm thả 368px nên người chơi đi ngang qua
+chứ không phải đi tìm. Cả map chỉ có **41 điểm** thoả bộ ràng buộc đó — đừng dịch tay, quét lại.
+
+### 🎁 THƯỞNG NHIỆM VỤ — MỘT cửa trao, MỘT cửa hiện
+
+`traoThuong(rew)` (trao) và `rewMoTa(rew)` (hiện) dùng chung cho cả chính tuyến lẫn phụ tuyến.
+
+⚠ **Hai lỗi có sẵn mà việc gộp này lộ ra:**
+- `turnInSide` **không đọc `rew.item`** — mọi nhiệm vụ phụ khai thưởng vật phẩm sẽ im lặng nuốt mất
+  món đó.
+- Bốn chỗ in thưởng chỉ in `xp` và `silver`, nên **chín nhiệm vụ đã khai `rew.item` từ lâu vẫn hứa
+  suông trên bảng**: người chơi nhận được món mà không chỗ nào nói trước là có. *Trao thưởng và
+  HIỆN thưởng là hai việc — sửa một cái mà quên cái kia thì không lỗi nào báo.*
+
+Bốn nhánh thưởng, **đều trỏ vào hệ đang chạy**, không đẻ tiền tệ mới: `item` (ô trang bị) ·
+`cot` (Dòng Cốt độc quyền của vùng) · `ngoc` (ép thẳng vào đồ) · `gk` (vé quay Khế Ước). **Shard
+CỐ Ý không có mặt** — nó chỉ tới từ mốc mỗi ngày và thông quan, cho nhiệm vụ nhả Shard là phá đúng
+luật đó. Nay **24/50 chính tuyến + 9/32 phụ tuyến** có thưởng vật phẩm (trước: 9/50 + 0/32).
+
+### ⏱ NHỊP CẤP — `XP_TABLE` NAY DẪN TỪ SỐ ĐO, KHÔNG TỪ CẢM GIÁC
+
+Mốc chủ dự án chốt: **~3 giờ tới cấp 60**. Đo lại được, và **hai nửa của phép tính nằm ở hai tệp**
+— bảng cấp trong `game.js`, XP nhiệm vụ trong `data/canbang.js`. ⚠ **Sửa một nửa là mốc nói dối
+ngay mà không lỗi nào báo.** `tests/test_nhipcap.js` là thứ duy nhất bắt được chuyện đó.
+
+| công cụ | việc |
 |---|---|
-| hình của vùng | chính `md.diTrong` — đa giác đi được thật |
-| màu | `md.ground` (nâng sáng qua `tgMauVung`) |
-| cỡ to nhỏ | `md.w × md.h` thật, theo **căn bậc hai** diện tích |
-| đường nối | `GATES` |
-| khoá / mở | `mapGate()` — **cùng cửa** mà nút Dịch Chuyển dùng |
-| **chỗ đứng** | `THE_GIOI` trong `data/canbang.js` — **thứ DUY NHẤT đặt tay** |
+| `tools/do_nhipcap.cjs` | ĐO XP/giờ thật trong chính vòng chơi (đặt cấp, mặc đồ đúng cấp, bật AUTO, tick `update`) |
+| `tools/can_exp.cjs` | từ số đo dẫn ra `XP_TABLE` + XP của cả 82 nhiệm vụ |
 
-Nên nó không nói dối được: sửa đa giác một vùng là hình trên bản đồ đổi theo, thêm một cổng là
-có thêm một con đường. Vẽ tay một tấm ảnh rồi dán tên lên thì đúng một lần rồi sai mãi — cùng
-bài học `mapBanSac()`.
+```
+cd public/game && python3 -m http.server 8853
+NODE_PATH=/opt/node22/lib/node_modules node tools/do_nhipcap.cjs --giay 150 --lap 3 --json do.json
+node tools/can_exp.cjs do.json --tile 8 --gio60 2.94 --gio120 29.5 --tile120 7 --nvDau 30 --nvCuoi 6 --ghi
+```
 
-**⭐ HƯỚNG TRÊN BIỂN CỔNG NAY LÀ RÀNG BUỘC CÓ NGƯỜI GÁC.** Mỗi cổng mang tên một hướng
-(*"Lối Bắc → Bug Tribe Tunnels"*); trước khi có bản đồ thế giới thì không chỗ nào đối chiếu được,
-nên nó chỉ là chữ. Nay người chơi đọc biển xong nhìn bản đồ là thấy ngay. `test_thegioi.js §2`
-đối chiếu **22 cạnh** — hướng ghi trên biển phải trùng hướng thật giữa hai chấm.
+**Trước / sau:**
 
-**⚠ VÀ ĐỒ THỊ NÀY KHÔNG NHÚNG PHẲNG ĐƯỢC NẾU GIỮ NGUYÊN MỌI BIỂN CŨ.** Bird Tribe Heights buộc
-phải ở phía **Bắc** của thành (nó là một trong bốn cổng thành), Aquatic Tribe Causeway buộc phải
-ở phía **Đông** của Bug Tribe Tunnels — mà biển cũ lại ghi Causeway ở phía **Bắc** của Heights.
-Ba ràng buộc ấy không cùng đúng trên một mặt phẳng. Đã sửa đúng **một cặp biển**
-(Heights ↔ Causeway: Bắc/Nam → Đông/Tây) thay vì bẻ cong bản đồ: *biển chỉ đường là thứ người
-chơi đọc TRƯỚC, nên bản đồ phải chiều nó, không phải ngược lại.*
-
-**Bốn chỗ đã vấp, ghi lại:**
-1. **`max-width` KHÔNG đè được `width`.** `.panel` khai `width: min(520px,94vw)`; đặt
-   `#panel-map { max-width:1020px }` thì bảng vẫn 520px, tấm bản đồ 660px bị **cắt cụt** và cột
-   danh sách mất hẳn. Phải đặt `width`.
-2. **`flex: 0 0 auto` khoá cứng bề ngang** nên `max-width:100%` trên canvas không cứu được; và
-   `flex: 1 1 auto` thì ngược lại — bản đồ ăn hết chỗ, cột phải còn một chữ mỗi dòng. Đúng là
-   `flex: 0 1 660px` cho bản đồ + sàn cứng `flex: 1 0 312px` cho cột danh sách.
-3. **Lề DƯỚI phải rộng hơn ba lề kia** (`TG_KHUNG.leD`): nhãn vẽ ở `cy + r + 13` và `+24`, nên
-   vùng sát đáy thì hình lọt khung mà TÊN rơi ra ngoài. Bản đầu để lề đều và Beast Herd Camp
-   mất hẳn tên.
-4. **`md.ground` viết cho mặt đất TRONG MÀN**, rất tối (#1d2a1c…#3a4450) vì nó nằm dưới ánh sáng
-   và dưới cả một tấm nền art. Đặt nguyên lên giấy da thì mười hai vùng ra mười hai vệt gần như
-   đen như nhau. `tgMauVung()` nâng sáng ×2,05 và pha ấm nhưng **giữ nguyên sắc**. Cùng họ với
-   `itemPal`: một bảng màu không dùng chung được cho hai chỗ có nền khác nhau.
-
-**⚠ FIT KHUNG PHẢI TÍNH CẢ BÁN KÍNH — và bài kiểm "trong khung" KHÔNG đủ để gác chuyện đó.**
-`tgBoCuc()` bản đầu fit theo hộp bao của riêng **TÂM**, rồi mới vẽ một hình bán kính `r` quanh
-mỗi tâm ⇒ vùng ngoài cùng luôn thò ra đúng `r`. Rẻo Rừng Corran vẽ ra sát **x = 3,5px** và nhãn
-của nó tràn hẳn sang âm. `test_thegioi §3` **vẫn xanh** suốt, vì nó hỏi `cx − r < 0` — mà 3,5
-thì lớn hơn 0. Chủ dự án phải tự nhìn ảnh chụp và gọi tên: *"bị cụt"*.
-
-Chữa ở gốc: bán kính tính theo **đơn vị layout** là hằng số (`r ∝ sc` nên `r/sc` không phụ thuộc
-`sc`), nên chỉ cần cộng nó vào hộp bao TRƯỚC khi tính `sc` — không phải lặp cho hội tụ. Kèm
-căn giữa phần dư (`duX/duY`): `sc` bị một chiều bó, chiều kia còn thừa, dồn hết về một bên là
-tấm bản đồ lệch mà không ai chỉ ra được vì sao. Ngưỡng bài kiểm nay là **lề thật** (`TG_KHUNG.le
-× 0,9`), không phải `> 0`.
-
-*Luật chung: một bài kiểm hỏi "có nằm trong khung không" chỉ gác được chuyện tràn hẳn ra ngoài.
-Thứ người chơi thấy là **ép sát mép**, và cái đó phải hỏi bằng LỀ.*
-
-**⚠ NHÁNH ĐI RA RỒI CỤT ĐỌC RA "CHƯA LÀM XONG".** `corran` (vùng khởi đầu, cấp 1-12) từng đứng
-một mình ngoài rìa trái, nối vào thành bằng một nét đứt dài, còn cả góc tây-nam thì trống trơn.
-Nay nhánh tây có **hai chặng**: `ngoai` (Beast Herd Camp — đúng nghĩa *vùng ngoại ô*, cấp 10)
-lùi xuống **tây-nam** nên nó nằm ngay bên phải Rẻo Rừng Corran, và mạch cấp đọc được thành một
-đường liền: **1-12 → 10 → thành → 20 → … → 100**.
-
-Nó **vẫn là "Cổng Nam → Beast Herd Camp"**: hướng chấm theo **trục trội**, nên tây-nam vẫn ra
-`Nam` miễn `|dy| > |dx|` (1,45 > 1,00). Đừng kéo `ngoai` sang tây thêm — qua mốc đó là biển
-cổng nói dối, và `§2` sẽ đỏ chứ không im.
-
-⚠ **Sửa một toạ độ thì CHẤM LẠI BẰNG MÁY, đừng chấm bằng mắt.** Ba cạnh `chungnam→comoc` ·
-`daohoa→trungnut` · `trungnut→comoc` chỉ còn dư rất mỏng, vì đồ thị bắt đi **Đông → Bắc → Đông**
-rồi cạnh khép lại phải là **Nam** thuần — tức `comoc` buộc phải bắc hơn là đông so với
-`chungnam` trong khi vẫn nằm sau hai bước sang đông. Đó là ràng buộc của ĐỒ THỊ, không phải của
-bố cục; đừng "nắn cho đẹp" rồi tưởng nới được.
-
-**⚠ Vòng vẽ của bảng phải TỰ TẮT khi bảng đóng** (`bdVongVe` kiểm `panel-map.hidden`). Lá cờ
-nhấp nháy và mũi tên người chơi cần một vòng rAF riêng, nhưng để nó chạy song song với vòng game
-suốt phiên là đúng cái lỗi mà `startGame()` phải gọi `titleStop()` để chữa.
-
-#### Thẻ TRUYỀN TỐNG — bấm một vùng thì ĐỌC TRƯỚC, đi sau
-
-Bản đầu bấm vào vùng là dịch chuyển thẳng. Sai một nhịp: người chơi bấm để **xem** (vùng này cấp
-bao nhiêu? trùm gì? giờ nào có sự kiện?) rồi bị quăng sang map khác. Nay hiện một tấm thẻ —
-**Bản đồ · Giới hạn · Loại quái · Cấp luyện · Tướng Quân · Vệ Binh Trụ · Dòng Cốt · Bãi farm ·
-Hung Thần · Xâm Lăng Vàng** — rồi mới **Dịch Chuyển / Chạy Bộ / Huỷ**. Bấm một **cổng** trên tab
-Hiện Tại cũng mở đúng thẻ ấy cho vùng bên kia.
-
-- **"Chạy Bộ" không phải dịch chuyển lén**: nó chỉ tự chạy tới CỔNG dẫn sang vùng đó, và chỉ bật
-  khi có cổng đi thẳng từ vùng đang đứng. Qua cổng vẫn phải bấm G như mọi khi.
-- **⚠ MỌI DÒNG PHẢI TRA RA TỪ DỮ LIỆU ĐANG CHẠY.** Một tấm thẻ "thông tin vùng" chép cứng là kiểu
-  nói dối tệ nhất: nó trông đáng tin nhất và không ai đi kiểm. `md.min` · `md.range` ·
-  `bandLvText()` · `BOSS_DEFS` · `COT_DONG` · `vungFarm()`, và giờ sự kiện quét thẳng
-  `matonMapFor`/`goldenMapFor`.
-- **⚠ Quét giờ sự kiện phải quét đủ MỘT VÒNG XOAY, không phải "24 giờ tới".** Xâm Lăng Vàng xoay
-  8 vùng × 6 mốc/ngày nên một vùng chỉ tới lượt sau ~32 giờ — quét một ngày thì quá nửa số vùng
-  báo "không có", sai mà trông rất hợp lý.
-- **⚠ `bs.cot` là KHOÁ, không phải tên.** In thẳng ra thì thẻ hiện `canhhoa`; tên nằm ở
-  `COT_DONG[bs.cot].ten` (xem `banSacHtml`).
-
-**📌 Việc thẻ này làm lộ ra:** ba vùng — `loimon` · `trungnut` · `caungam` — **không nằm trong
-bất kỳ bảng xoay sự kiện thế giới nào** (`MATON_HA` · `MATON_THUONG` · `GOLDEN_FIELD`). Chúng
-thêm vào sau và không ai cập nhật ba bảng ấy. Thẻ báo "—" là báo ĐÚNG, nên đây không phải lỗi
-của thẻ; nhưng nó là một quyết định cân bằng đang bỏ ngỏ (thêm vào bảng xoay thì đổi chu kỳ và
-phải khai thêm bậc `GOLDEN_BOX`). `test_thegioi §9` in ra danh sách đó mỗi lượt chạy thay vì
-đánh đỏ — *đừng "sửa" nó thành xanh bằng cách nới ngưỡng, hãy quyết rồi sửa dữ liệu.*
-
-Gác: `tests/test_thegioi.js` (9 mệnh đề). Hai mệnh đề đáng nhớ:
-- ⑧ **tầng hành vi**: đếm điểm ảnh để chứng minh cả hai canvas vẽ ra thật và bộ lọc đổi được
-  hình — đối chiếu tên không bắt được một canvas trắng, đúng bài học `ISO_NEO`.
-- ⑨ mỗi giờ sự kiện in trên thẻ được **quét ngược lại** để chứng minh mốc ấy thật sự rơi vào
-  vùng ấy.
-
-### 👥 BẠN BÈ CHẠY THẬT · TỔ ĐỘI LÀ CÁI VỎ THÀNH THẬT
-
-Chủ dự án chốt phạm vi: **"UI + Hảo Hữu chạy thật"** — Bạn Bè nối thẳng vào máy chủ có sẵn, Tổ
-Đội thì dựng đủ mặt tiền nhưng **nói thẳng ra là chưa có máy chủ**, chờ tầng realtime
-(`docs/BOSS_TO_DOI.md §2`). Khuôn lấy từ ảnh chụp MMO khác chủ dự án gửi; **đổi tên và art** cho
-hợp thế giới này, giữ nguyên cách bày.
-
-| | phím | trạng thái |
+| | cũ | mới |
 |---|---|---|
-| **Bạn Bè** (`panel-friend`) | **H** | chạy thật: `friend.*` qua tRPC + bảng `friends` |
-| **Tổ Đội** (`panel-party`) | **P** | vỏ — 1 ô đội trưởng + 4 "Chỗ trống", 3 ô cài đặt có lưu |
+| tới cấp 60 | 4,36 giờ | **3,00 giờ** (làm hết NV) · 3,60 (bỏ hết) |
+| tới cấp 120 | 29,9 giờ | 33,4 giờ |
+| dốc nhất giữa hai cấp | **×9,8 ở mốc 60** (253.269 → 2.472.993) | ×1,39 |
+| nhiệm vụ gánh tới cấp 60 | 9,1% | 15,0% |
+| nhiệm vụ cấp 100 thưởng | 140.000 = **2,5% một cấp** | 887.643 = 12% một cấp |
 
-Bốn tab của Bạn Bè: **Bạn Bè · Lời Mời · Tìm Người Chơi · Sổ Đen**. Mỗi hàng hiện tên · cấp ·
-lớp · **♥ Độ Thân Thiết**; nút **Chào** một ngày một lần (`CHAO_THEM = 10`, khoá ngày tính theo
-**UTC** ở cả hai phía), xong thì chuyển sang trạng thái tắt `✓ Đã chào`.
+**Ba thứ quyết định hình dạng — đọc trước khi chạm vào một con số nào:**
 
-**⚠ MỘT CÁI VỎ KHÔNG ĐƯỢC GIẢ VỜ LÀ MÁY CHẠY.** Ô "Chỗ trống" của Tổ Đội mà bấm vào rồi im lặng
-thì người chơi tưởng game hỏng. Nên bảng có hẳn một khối `⏳ Tổ đội cần máy chủ` nói ra điều
-đó, và mọi nút phụ thuộc máy chủ đều **tắt sẵn** chứ không phải bấm được rồi không làm gì. Ba ô
-cài đặt (`tuNhan` · `choVao` · `hienHUD`) thì **lưu thật** vào save — chúng là lựa chọn của
-người chơi, không phải thứ chờ máy chủ.
+1. **XP/giờ đo được khớp đúng luật luỹ thừa `rate(l) = 1694 · l^1,945`** — gần đúng lv², hợp với
+   việc XP mỗi con ≈ 0,8-1,1 × lv² trên cả 29 loài.
+2. **Ngân sách THỜI GIAN mỗi cấp** tăng theo cấp số nhân (cấp 59 tốn gấp 8 lần cấp 1).
+3. **Nhiệm vụ gánh 30% một cấp ở cấp 1, nhạt dần còn 6% ở cấp 120.** Tỉ lệ PHẲNG thì hoặc cấp 1
+   thưởng 1 EXP (đọc như nhiệm vụ hỏng), hoặc cấp 120 nhiệm vụ gánh hộ quá nhiều. Đây chính là
+   thứ trả lời "càng về sau càng phải cày".
 
-**⚠ BA ĐƯỜNG HỎNG KHÁC NHAU, BA CÂU KHÁC NHAU.** Bản live trên VPS **chỉ phục vụ tệp tĩnh** nên
-`/api/trpc/*` ở đó thật sự không tồn tại — đây không phải ca hiếm, đây là ca **thường gặp nhất**:
+⚠ **`XP_TABLE` đặt theo CÀY THUẦN rồi chia cho (1 − phần nhiệm vụ)**, KHÔNG phải `= cày + nhiệm
+vụ`. Đã thử cách sau: cấp nào có nhiệm vụ rơi vào thì **99% là quà** (đo ở cấp 1), và ai bỏ qua
+chuỗi thì kẹt cứng.
 
-| `_bbTrang` | khi nào | bảng nói gì |
-|---|---|---|
-| `tatMay` | không gọi được `/api/trpc` (404/mạng) | "Bản này chưa nối máy chủ" + nút **Thử Lại** |
-| `caiDangNhap` | gọi được nhưng `UNAUTHORIZED` | mời đăng nhập |
-| `xong` | có dữ liệu | danh sách thật |
+⚠ **ĐỪNG lấy `max(đường khớp, số đo)`.** Số đo có đỉnh do bốc trúng bộ đồ ngon — cấp 45 đo 7,67
+triệu/giờ còn cấp 50 chỉ 5,13 — nên `max` đẻ ra bảng **không tăng dần**. Và lấy thẳng số đo ở chỗ
+HỤT thì biến hố nội dung thành "cấp rẻ bất thường", tức giấu lỗi thay vì chữa.
 
-Gộp ba thứ đó thành một câu "lỗi" là lấy mất của người chơi cách duy nhất để biết phải làm gì.
+⚠ **Tính giờ THEO TỪNG CẤP**, đừng lấy tổng rồi nhân tỉ lệ nhiệm vụ trung bình: XP nhiệm vụ rơi
+thành CỤC ở vài cấp lẻ. Phép xấp xỉ trung bình báo 3,00 giờ trong khi tính đúng ra **3,60**.
 
-**⚠ MỌI NÚT PHẢI TẢI LẠI TỪ MÁY CHỦ, ĐỪNG SỬA MẢNG TẠI CHỖ.** `bbLam(duong, friendId, khiXong)`
-gọi mutation rồi **luôn** `bbTai()` lại. Sửa `_bbData` tại chỗ thì nhanh hơn một nhịp nhưng chấp
-nhận hai mô hình dữ liệu cùng tồn tại — mà quan hệ bạn bè là **hai chiều**: nhận lời mời đổi
-trạng thái của cả hai hàng, xoá bạn xoá hai hàng. Đoán kết quả ở phía trình duyệt là sẽ đoán sai
-đúng những ca đó.
+⚠ **`XP60PLUS_ANCHORS` và `xp60PlusHourlyRate` ĐÃ GỠ.** Chú thích của chúng ghi là đo "không trang
+bị" — đo lại kiểu đó thì từ cấp 10 trở lên nhân vật **CHẾT trước khi giết được con nào** (atk 35 vs
+quái 1.052 máu), tức mốc cũ không thể sinh ra từ phép đo mà nó tự mô tả.
 
-**⚠ HỢP ĐỒNG superjson: MỌI THỨ BỌC TRONG `{json: …}`.** Cả hai chiều, cả GET lẫn POST, kể cả
-input rỗng (`{"json":null}`) và cả **mã lỗi** (`d.error.json.data.code`). `trpcGoi()` là cửa duy
-nhất; viết `fetch` thẳng ở chỗ khác là lần nào cũng quên một trong ba chỗ đó.
-`test_banbe.js §5` khoá đúng chuỗi URL và thân POST — hợp đồng nối hai tầng thì phải có người gác.
+#### 🕳 BỐN HỐ XP CÒN LẠI — nợ NỘI DUNG, cố ý không nướng vào bảng cấp
 
-**⚠ Lint: `caughtErrorsIgnorePattern` KHÔNG hiểu `^_`.** `catch (_e) {}` vẫn đỏ `no-unused-vars`
-y như `catch (e) {}`. Cách đúng là **bỏ hẳn tham số**: `catch { … }` (optional catch binding).
-Mất một vòng sửa vì tưởng quy ước `_` dùng được ở mọi chỗ.
+Số đo thấp hơn đường khớp >55% ở **cấp 5 · 35 · 55 · 70 · 119** — tất cả đều ở NÓC một dải map.
+Nguyên nhân đã truy ra, và nó không nằm ở XP:
 
-Máy chủ: `db/schema.ts` thêm bảng `friends` (`userId` · `friendId` · `trangThai` cho/ban/chan ·
-`thanThiet` · `chaoNgay`, khoá duy nhất theo cặp) + di trú `0002`; truy vấn ở
-`api/queries/friends.ts`, router ở `api/friendRouter.ts`. Gác: `tests/test_banbe.js` (6 mệnh đề,
-trong đó ba mệnh đề đầu dựng lại **đủ ba đường hỏng** ở trên).
+- **AUTO cắm chốt đúng MỘT bãi mỗi map và không bao giờ lên bãi cao hơn.** Đo được: cấp 55 đứng
+  trên `comoc` vẫn cày `thinu` (cấp 42, 1.440 XP) trong khi `huyetbat` (cấp 56, 2.465 XP) nằm đó
+  không ai đụng. Cấp 35 trên `chungnam` vẫn cày `chimera_bo` (cấp 24).
+- **Chênh trang bị ngẫu nhiên bị khuếch đại bởi giáp trừ thẳng.** Cùng cấp 50, cùng map, cùng loài:
+  atk 100 → **30 mạng**/2 phút, atk 120 → **96 mạng**. Chênh 18% công ra chênh 3,2 lần tốc độ.
+
+Cả hai là việc riêng, không phải việc của bảng XP. `tools/can_exp.cjs` in danh sách hố ở cuối mỗi
+lượt chạy — đó là danh sách việc, không phải nhiễu đo.
+
+### ☀ TẦNG NGÀY THEO DẢI CẤP (`DAILY_BANDS`)
+
+Đo được: chuỗi nhiệm vụ cho **1% tổng XP** lên cấp 120 — tức 99% hành trình là cày. Nên tầng
+NGÀY là thứ **duy nhất** chạm vào mọi ngày chơi ở 70 cấp cuối. Mà bản cũ là **ba mục cố định**
+(`Hạ 10 Chimera` · `Rèn 1 lần` · `Hạ 1 Trùm Vùng`) với `minLv` 1/5/12 — từ cấp 12 tới 120,
+**108 cấp**, người chơi mở bảng ra thấy đúng ba dòng đó, cùng con số đó.
+
+Nay 7 dải, **dùng lại đúng khuôn `TRUYNA_BANDS`** — đừng dựng khuôn dải thứ hai, hai bảng cùng
+ý nghĩa là bảo đảm chúng lệch nhau sau vài đợt sửa. Từ 1 mục / thưởng ×1 lên 5 mục / thưởng ×13
+(300 → 3.900 Lumen · 100 → 1.300 Bản Năng · 2 → 6 Shard).
+
+- ⚠ **CHỈ THÊM MỤC TIÊU NÀO ĐÃ CÓ NHỊP NGÀY SẴN.** `via` (Vỉa Cốt) và `truyna` (Truy Nã Lệnh)
+  vốn đã là nội dung ngày — đưa vào đây là **cho thấy** thứ đã có. Dựng một hệ lặp thứ tư cạnh
+  Truy Nã + Vỉa + ba sự kiện theo giờ thật là đúng bệnh nhân bản ở đầu tài liệu này.
+- ⚠ **MỖI khoá phải có một chỗ gọi `dailyTrack()`.** Thiếu một chỗ móc là mục đó đứng 0 vĩnh
+  viễn, và vì thưởng đòi xong **HẾT** nên nó khoá luôn thưởng ngày — im lặng, không lỗi nào.
+- ⚠ **`dailyReset()` dựng khuôn TỪ `DAILY_META`**, không viết tay từng khoá. Thêm mục mà quên
+  thêm ngăn thì `d[g.id]` là `undefined` và `||0` che mất. Save cũ cũng được vá mà giữ tiến độ.
+
+Bài kiểm: `tests/test_muctieu.js` — lái từng mục tới đích bằng **chính hàm của game**
+(`viaKhai()` / `truynaClaim()` thật, không chỉ gọi `dailyTrack`), vì đó là thứ bắt được chỗ móc
+thiếu.
+
+### ☠ CHƯƠNG VIII · NGƯỜI THỨ BẢY — và trùm nhiệm vụ nay THEO MAP
+
+DRUE được nhắc **2/46** nhiệm vụ, cả hai chỉ là một câu tả cảnh trong mô tả boss vùng — kẻ thù
+chính của canon chưa bao giờ bị đối đầu. Chương VIII (4 nhiệm vụ, cấp 116-120) trả nốt chỗ đó.
+
+- ⚠ **KHÔNG phải Rune thứ tám.** `RUNE_TONG` = 7 khớp cứng với số nấc `#fx-crack[data-tru="N"]`
+  trong `style.css`; thêm phiến thứ tám là lớp vết nứt tụt về 0 ở nấc cuối mà không báo gì.
+  DRUE cũng **không phải Trấn Ải** — mỗi map đúng một con, `TRAN_AI_TONG` suy từ `BOSS_DEFS`.
+- ⚠ **Kết Mở vẫn ở `c7q6`, không dời.** Chương VIII là thứ xảy ra SAU cái kết mở đó. `showKetDrue()`
+  cố ý không phải màn "ngươi đã thắng": đèn vẫn tắt, vì bảy phiến vẫn trong lò.
+- Chỗ đặt **quét bằng máy**: Dusk Marsh đã bão hoà (cả map chỉ còn 3 điểm hợp lệ, lề 2-15px).
+  Trũng Nứt có 2100 điểm, lấy điểm lề lớn nhất 1320px. Mép TRÊN map là đúng canon — Nhát Gọi là
+  vết cắt trên **trời**, Trũng Nứt là đất ngay dưới nó.
+- `MOBS.drue` vẽ bằng khung xương `fiend`, **không thêm tệp ảnh nào**.
+
+**Trùm nhiệm vụ nay theo map**: `BOSS_ARENAS` · `bossMobKey(md)` · `questBossIdx(mid)`;
+`md.boss` là `true` (tương thích, ⇒ `MOBS.boss`) hoặc một khoá trong `MOBS`.
+
+⚠ **Guard là `questIdx === questBossIdx(map)`, KHÔNG phải `>= idx && !victory`.** `victory` là
+cờ **toàn cục**: nó bật ở `c0q8` — **cấp 12** — rồi chặn vĩnh viễn con thứ hai ở cấp 120. Tức
+DRUE không bao giờ hiện với người chơi đi đường tự nhiên, và không lỗi nào báo. So sánh bằng thì
+tự đúng cho mọi map và tự tắt khi nhiệm vụ trôi qua.
+
+⚠ **`showVictory()` chép cứng "Thủ Lĩnh Gloam đã bại"** — câu của trùm cấp 12. Chỉ con ở
+`corran` được gọi nó.
+
+⚠ **BÀI KIỂM PHẢI ĐI ĐƯỜNG TỰ NHIÊN.** Bài đầu của tôi nhảy thẳng `questIdx` tới chương VIII rồi
+đo — xanh, và bỏ sót đúng lỗi `victory` ở trên. `test_nhiemvu §9` nay bắt buộc hạ trùm chương 0
+trước. *Bài kiểm nhảy cóc qua đoạn đầu game sẽ không bao giờ thấy cờ nào bật ở đoạn đầu game.*
+
+### ☠ CỬA CƠ CHẾ MỞ Ở CẤP NÀO — hỏi TRƯỚC khi gate nó
+
+**Lỗi nặng nhất từng có trong chuỗi này, và nó im lặng tuyệt đối.** `c4q3` (cấp 56) gate **Đại
+Thành**. Nhưng `MASTERY_LV = 120` *và* `masteryOpen()` còn đòi `player.mongChiTon` — bảng Đại
+Thành chỉ mở **SAU KHI xong 100% chính tuyến**.
+
+⇒ `MOC_NV.mastery.dem()` đứng 0 vĩnh viễn · `mocTick` không bao giờ bật `done` · **chính tuyến
+kẹt cứng ở ô 26/50**. Không một lỗi nào trên console, không bài kiểm nào đỏ, và bảng "bảy cửa
+đang có người gác" ngay trong tài liệu này thì **sai từ lúc viết**.
+
+**Luật rút ra: một cửa mở SAU chuỗi thì KHÔNG ô nào trong chuỗi gate được nó.** Trước khi khai
+một `moc` mới, hỏi đủ hai câu — *đếm được không* **và** *mở ở cấp nào*. Câu thứ hai là câu đã bị
+bỏ qua. `c4q3` nay gate **Box Kundun** (mở từ đầu game: rơi từ quái, mua ở tiệm).
+
+**Bài kiểm gác: `tests/test_daochoi.js`** — đi HẾT 50 ô chính tuyến bằng chính `turnInQuest()`,
+không nhảy cóc `questIdx`, và ở mỗi ô hỏi ba câu của người chơi: nhận được không · làm được
+không · trả được không. Kèm phép lan **theo đường người chơi** (chỉ qua `GATES`) để bắt map
+thành nội dung chết.
+
+⚠ Ba lỗi GIẢ mà chính bài kiểm ấy đã đẻ ra trước khi đúng — cùng một bệnh, *đoán hình dạng dữ
+liệu rồi tin kết quả*:
+- `GATES` là **mảng phẳng** `{map,x,y,to}`, không phải từ điển theo map ⇒ phép lan không bao giờ
+  ra khỏi thành, bài báo **73 lỗi giả** kể cả map khởi đầu.
+- `trongDaGiac(dg, x, y)` — đa giác đứng **TRƯỚC**. Gọi `(x, y, dg)` thì mọi NPC đều "ngoài sàn".
+- cửa `nangky` đọc `player.skillLv` (không phải `vhLv`), và **rỗng ở đó là ĐÚNG** — đó chính là
+  việc nhiệm vụ bảo đi làm. Phải LÁI THẬT (đưa tài nguyên, gọi `upgradeSkillUI`) rồi mới đếm.
+
+### 🗺 DỰNG LẠI MỘT MAP ⇒ QUÉT LẠI MỌI TOẠ ĐỘ CHÉP TAY TRÊN MAP ĐÓ
+
+Bốn map dựng lại lên khổ lớn (`daohoa` 2600×1900 → 4600×3400). Hai thứ chép tay trên khổ cũ rơi
+ra **ngoài đa giác sàn** và không lỗi nào báo:
+- NPC `uomluong` ở `(200,200)` → phải chấm lại thành `(760,160)`;
+- một bụi thuốc `loimon (2200,420)` → `(2260,420)`.
+
+**Đừng nhân tỉ lệ — phải quét lại** bằng đúng bộ ràng buộc, vì đa giác sàn mới không phải bản
+phóng to của cái cũ. Ngưỡng "cách điểm thả bao xa" cũng phải theo **đường chéo map**, không
+phải một con số px cố định: dải 300-1100px hợp với khổ 2600×1900 thì trên 4600×3400 vẫn là ngay
+cạnh chỗ vừa rơi xuống.
+
+### 🔒 TRẠNG THÁI `full` CỦA PHỤ TUYẾN PHẢI CÓ NHÁNH RIÊNG
+
+Đang cầm đủ `SIDE_TRAN` mục thì `sideAvail` trả `'full'`. Bảng Nhật Ký **không có nhánh cho nó**
+nên nó rơi xuống nhánh khoá và hiện ra **`🔒 ??? cấp N`** — y hệt một mục chưa đủ cấp. Người chơi
+cầm đủ 5 mục thì 27 mục còn lại đọc ra thành *"phải lên cấp nữa"*, dù đã vượt cấp đó từ lâu.
+Bảng NPC thì có nhánh, nhưng chép cứng *"tối đa 3 phụ tuyến"* trong khi trần đã là 5.
+
+### 📍 LOẠI NHIỆM VỤ `moc` — cửa cơ chế phải có người GÁC, không phải một câu nhắc
+
+Đo được: chuỗi 46 nhiệm vụ có **70% là đánh quái**, và toàn bộ phần còn lại thì `enhance` gánh 7
+chỗ — cùng MỘT nhiệm vụ "đập một món lên +N", khác đúng con số (`+3 +5 +6 +7 +9 +11 +11`, hai cái
+cuối trùng). Đúng bệnh nhân bản mà mục chẩn đoán ở đầu tài liệu này nói tới.
+
+⚠ **Và luật ở `docs/LORE_RUNE.md §6` mà chính tôi viết thì viết SAI:** *"không quá 60% là `kill`"*
+— đếm đúng chữ `kill` ra 41% và luật PASS, trong khi chuỗi thật 70% là đánh (`tpkill` · `boss` ·
+`tranai` cũng là đi giết, mà `tranai` còn là loại thêm SAU khi viết luật). **Một luật đếm hẹp hơn
+ý định của nó thì tệ hơn không có luật: nó xanh và nó bảo đảm sai.** Luật đã sửa: đếm mọi loại
+đánh, ≤60% toàn chuỗi và ≤70% mỗi chương. Số đo nay: **54% · cao nhất 67%**.
+
+`MOC_NV` + `type:'moc'` là thứ kéo tỉ lệ xuống mà không phải thêm một `enhance` thứ tám:
+
+- **MỘT loại, không năm loại.** Năm cửa cần gác (Vỉa Cốt · Rương Canh · Box Kundun · Khế Ước ·
+  Đại Thành) đều cùng một hình dạng — "đã làm việc đó mấy lần rồi". Năm `type` là năm nhánh trong
+  `killMob`, năm nhánh trong `questTarget`, năm nhánh trong bảng hiện tiến độ.
+- ⚠ **`dem()` đếm từ TRẠNG THÁI, không từ sự kiện.** Móc vào chỗ "vừa mở rương" thì người chơi mở
+  rương TRƯỚC khi nhận nhiệm vụ là nhiệm vụ **không bao giờ xong**, và họ không có cách nào biết
+  vì sao. Đếm từ trạng thái thì nhận xong là nó đã đủ luôn — đúng như một nhiệm vụ "hãy chạm vào
+  hệ thống này" nên hành xử.
+- ⚠ **Nhịp kiểm ở `mocTick(dt)` trong `update()`, không móc vào sáu chỗ.** Mỗi chỗ móc thiếu là
+  một nhiệm vụ không bao giờ xong.
+- ⚠ **`player.hapMo` đếm ở `throwBaoHap`, KHÔNG ở `openBaoHap`.** Kéo-thả hạp ra màn hình — đường
+  mà chính bảng Túi Đồ khuyên dùng — đi thẳng qua `throwBaoHap`. Móc ở `openBaoHap` là người chơi
+  làm đúng lời khuyên thì nhiệm vụ không đếm.
+- **§6 hứa một cửa "Tinh Luyện" — hứa sai:** đó là một NÚT trong bảng Đại Thành (`sr_tinhluyen`),
+  không có hành động nào đếm được. Cửa đó đổi sang **Đại Thành**.
+
+**Đã đổi theo:**
+- `reqMain` gỡ khỏi **mọi** map. Map mở khoá bằng **cấp** (`md.min`) là đủ. Nhánh đọc `md.reqMain`
+  trong `mapGate()` vẫn còn — cắm lại một giá trị là khoá sống lại. *Cân nhắc kỹ: khoá map sau
+  một nhiệm vụ nghĩa là nhiệm vụ hỏng thì map mất.*
+- ⚠ **Vòng lọc `MAPS[id].reqMain === questIdx` trong `turnInQuest()` đã GỠ.** `reqMain` không còn
+  ở map nào nên mảng đó luôn rỗng, và hệ quả là **8/9 câu `REGION_UNLOCK_LORE` là nội dung chết**
+  — kể cả bốn câu giới thiệu phiến Rune. Nay `travelTo()` bắn chúng theo **lần đầu đặt chân**
+  (`!player.wpUnlocked[mapId]`, đọc TRƯỚC khi đặt cờ).
+- ⚠ **Mốc trùm chương suy từ dữ liệu, không chép cứng.** Ba chỗ từng viết thẳng `questIdx >= 9`
+  ("nhiệm vụ thứ 10") kèm một chú thích đã lạc ("boss Đào Hoa" — con đó nay ở Rẻo Rừng Corran).
+  Nay là `QUEST_BOSS_IDX = QUESTS.findIndex(q => q.type === 'boss')`, fallback `Infinity` chứ
+  không phải `-1` (vì `questIdx >= -1` là luôn đúng ⇒ trùm hiện ra từ cấp 1).
 
 ### 🧭 NỐI MAP BẰNG RÌA (B1) + ĐIỂM DỊCH CHUYỂN MỞ BẰNG ĐI BỘ (B2)
 
@@ -952,32 +1127,118 @@ vảy rồng → hắc nguyệt**. Bộ tên cũ mượn thẳng binh khí kiế
 Lăng Ba Hài, Chí Tôn Long Giáp, Thiên Tôn Miện…) — vi phạm Quy tắc số 1. Tên mới phải là
 danh từ trang bị thuần, đừng mượn tên chiêu thức hay bảo vật tiểu thuyết.
 
-## Cốt truyện (canon)
+## Cốt truyện (canon) — **NHÁT GỌI · BẢY RUNE CỔ**
 
-Hai vũ trụ giao thoa. Phong ấn giam **Morvahn** ở **Vaeldra** vỡ; Thủ Hộ Vaeldra
-không giữ nổi nên **bẻ lệch vết nứt** sang một thế giới bên cạnh mà hải đồ ghi là
-"vô chủ" — hải đồ sai, đó là **Lunacia**. Vaeldra tự cứu mình bằng cách trút tận
-thế lên nhà người khác.
+> Canon đầy đủ, kèm hợp đồng thi công: **`docs/LORE_RUNE.md`**.
+> Mạch cũ (**Morvahn · Năm Trụ Khoá · Vaeldra trút tận thế lên nhà người khác**) đã BỎ HẲN —
+> chủ dự án chốt 2026-09-11. Đừng dựng lại từ git: không một danh từ riêng nào của nó còn dùng.
+> Hai tài liệu nhiệm vụ cũ (`docs/LORE_AXIE_VA_NHIEM_VU.md` §5, `docs/THIET_KE_NHIEM_VU.md`)
+> cũng lỗi thời ở TÊN MAP và spine — chỉ còn §2-3 của tài liệu đầu (khảo sát lore Axie có nguồn)
+> là dùng được.
 
-Nhân vật chính thuộc một trong **5 lớp Vaeldra**, nằm trong đội tiên phong vượt
-vết nứt sang sửa. Người chơi CHỌN LỚP NGAY ở màn tạo nhân vật — lớp thứ sáu
-`vophai` và lễ nhập môn cấp 10 (the Calling) đã gỡ hẳn. Cú giật ngược kéo cả khu phố **Ardhaven**
-sang, dân bản địa dựng lại quanh đó thành **Sapidae Chiefdom**.
+**Rune** là nghề của Bug axie: khắc lên **đá**. Một phiến Rune dựng ở một nơi thì **giữ một cái
+luật** ở nơi đó. Giáo lý là **Nếp Khắc Vừa**: khắc vừa đúng cái phiến đá gánh nổi, và đừng bao
+giờ khắc một cái luật phải giữ mãi mãi.
 
-⇒ Điều này *giải thích trong truyện* hai thứ vốn khập khiễng:
-tường thành phương Tây giữa thế giới Axie, và NPC hai phong cách
-(**NPC chức năng = người Ardhaven sống sót**, **NPC cốt truyện = người Lunacia bản địa**).
+**Bảy Rune Cổ** cắm khắp Lunacia, mỗi vùng một phiến. Chimera áp biên không phá nổi Rune nhưng
+**mài** nó; bảy trăm năm thì đá mỏng, mà người biết khắc sâu thì hết. Nên **Sylas** (NPC đã có ở
+Bug Tribe Tunnels) làm đúng cái việc giáo lý cấm: khắc một Rune **lên trời** để xin một người thợ
+biết làm Rune bền hơn đá. Nhát cắt đó là **NHÁT GỌI**, và thứ đi qua nó là nguyên khu phố
+**Ardhaven** của **Vaeldra** — đá lát, lò rèn, và bảy người lính.
 
-Khí Morvahn chạm vào sinh vật Lunacia thì bẻ nó thành **Chimera**.
+⇒ Canon này *giải thích trong truyện* ba thứ vốn khập khiễng, **bằng chính cơ chế đã có**:
 
-**Năm Trụ Khóa** (thay cho Ngũ Ấn) do Thủ Hộ Vaeldra đóng xuống để ghim miệng vết
-nứt. Tướng quân Morvahn chiếm cả năm. **Gỡ trụ thì đi tiếp được, nhưng vết nứt
-toác thêm** — muốn tới Morvahn phải tự tay mở cánh cửa hắn cần. Đó là bi kịch
-trung tâm, và là lý do của kết mở.
+| Thứ cần giải thích | Canon nói |
+|---|---|
+| Vì sao nhân vật là **Dark Knight / Dark Wizard** giữa thế giới Axie | **Lunacia gọi ngươi tới** — không phải ngươi sang xâm chiếm, cũng không phải sang sửa lỗi của mình |
+| Vì sao **Ardhaven** là phố đá phương Tây có lò rèn | **cái lò CHÍNH LÀ thứ Lunacia cầu**; thành là câu trả lời, không phải đống đổ nát |
+| Vì sao **mất ký ức** rồi võ nghệ trở lại theo cấp | **Rune đòi trả bằng thứ nó dịch chuyển**; nghề khắc sâu hơn ký ức nên nghề quay lại |
+| Vì sao đập trang bị lên **+N** lại quan trọng | **Vaeldra khắc Rune vào THÉP** — mỗi lần rèn là một lần khắc |
 
-Thuật ngữ: Tướng Quân (boss cuối map) · Vệ Binh Trụ (3 boss phụ) · Trụ Khóa ·
-Cổng Vực · Hung Thần (boss thế giới định kỳ, **không phải** Morvahn) · Đoàn Gloam
-(lính Vaeldra đào ngũ).
+**Chimera KHÔNG đổi định nghĩa**: lore Axie chính thức nói chimera sinh ra từ dạng tha hoá của
+thần **Atia**. Đừng chạm vào đó — đúng lý do mà hệ bạn đồng hành đã phải đổi tên sang **Ragoon**
+(xem chú thích đầu `CHIMERA` trong `canbang.js`). Việc của kẻ thù chỉ là làm bảy cái luật hỏng
+nhanh hơn Chimera làm.
+
+**Kẻ thù: DRUE — người thứ bảy.** Hắn qua Nhát Gọi cùng ngươi và giữ được ký ức, vì hắn trả bằng
+ký ức của người khác. Hắn không khắc vào đá, không khắc vào thép: **hắn khắc vào chính mình**.
+Manh mối `td_trong` (*"cái tên thứ bảy chưa bị gạch, vì chưa ai chứng minh được là nó nên bị
+gạch"*) là mũi nhọn của cả chuỗi; `manh_lenh` (*"một con mắt không có tròng"*) là dấu của hắn.
+
+**Bi kịch trung tâm — giữ nguyên HÌNH DẠNG của mạch cũ, đổi hẳn nội dung:** thu Rune về lò thì
+Rune bền thêm nghìn năm, **nhưng trong lúc phiến đá nằm trong lò, cái luật nó giữ thì TRỐNG**.
+Phiến thứ bảy (**Rune Giữ Đường**) là thứ thắp đường cho hồn quay về Cây Hồn — nên nhiệm vụ cuối
+của chuỗi vừa đóng chính tuyến vừa bật Kết Mở. Danh hiệu: **Kẻ Gỡ Rune Cuối**.
+
+Và **chương 0 đóng lại ở đó**: đèn dẫn hồn tắt khắp Rẻo Rừng Corran là đầu xa của phiến thứ bảy.
+`c0q2` đã viết đúng câu cần thiết — *"Ba đêm liền, mà **dầu vẫn còn đầy**"*. Đèn tắt không vì hết
+dầu; nét khắc bị lấy đi.
+
+### Bảy phiến — mỗi vùng một, đếm được
+
+| Vùng | Rune Cổ | Luật nó giữ | Dòng Cốt (đã có) |
+|---|---|---|---|
+| Beast Herd Camp | Rune Giữ Đàn | đàn không tan khi hoảng | Đồng Cỏ |
+| Werebear Woods | Rune Giữ Bờ | rừng không lấn qua bờ | Rễ Gai |
+| Plant Tribe Glade | Rune Giữ Mùa | luống ấp nở đúng mùa | Cánh Hoa |
+| Bug Tribe Tunnels | Rune Giữ Tên | axie vừa nở được nhận tên (**phiến GỐC**) | Vỏ Trứng |
+| Bird Tribe Heights | Rune Giữ Khúc | khúc hát không tắt theo người hát | Băng Vụn |
+| Reptile Sunstone Flats | Rune Giữ Lửa | lò không nguội qua đêm | Tro Tàn |
+| Dusk Marsh | Rune Giữ Đường | đường về Cây Hồn còn sáng | Sấm Vụn |
+
+**Bốn map còn lại KHÔNG có Rune, và đó là chủ ý** — `corran` (rễ Cây Hồn chạy ngầm, không ai dám
+khắc đá lên rễ) · `loimon` (một lối mòn không phải một nơi) · `trungnut` (đất trũng ngay dưới
+Nhát Gọi, cắm đá là nứt ⇒ **giải thích luôn `type:'freepk'`**) · `caungam` (không có nền để cắm).
+
+⚠ **HAI CON SỐ, HAI TỔNG, ĐỌC TỪ HAI NGUỒN.** `runeDaThu()` đếm trên `RUNE_CO` (7);
+`tuongQuanDaHa()` đếm cờ `ta_*` và in kèm `TRAN_AI_TONG` suy từ `BOSS_DEFS` (11). Bản cũ in cả
+hai theo mẫu `/7` chép cứng, nên vét sạch game là panel Nhật Ký in ra đúng chữ **"11/7 Tướng
+Quân đã hạ"**. `test_cottruyen.js §2` gác đúng chỗ đó: vét hết rồi quét cả panel, không phân số
+nào được vượt trần.
+
+⚠ **Cờ lưu vẫn là `ta_<map>`**, không đổi tiền tố — save cũ không phải di trú. Chỉ bộ ĐẾM đổi.
+
+⚠ **Số nấc lớp vết nứt (`#fx-crack[data-tru="N"]` trong `style.css`) phải khớp `RUNE_TONG`.**
+Bộ chọn khớp chính xác, nên thiếu một nấc là `--nw` không được khai, `parseFloat` ra `NaN`, và
+lớp vết nứt TỤT VỀ 0 đúng ở nấc cuối — không một lỗi nào trên console. Đã dính khi đi từ 5 lên 7.
+
+Thuật ngữ chốt: **Rune Cổ** · **Nếp Khắc Vừa** · **Nhát Gọi** · **Cây Hồn** · Tướng Quân (Trấn Ải,
+mỗi map ĐÚNG MỘT con) · **Vệ Binh Rune** (3 boss phụ, canh Cổng Vực) · Cổng Vực · **Đá Ấn Rune** ·
+Hung Thần (boss thế giới định kỳ, **không** dính cốt truyện) · Đoàn Gloam (kẻ qua Nhát Gọi rồi đi
+theo người thứ bảy) · **DRUE**.
+
+### Chuỗi nhiệm vụ — 8 chương, 46 nhiệm vụ, **ĐANG CHẠY**
+
+⚠ Mục này trước đây ghi `QUESTS` và `SIDE_QUESTS` đều rỗng "chờ dựng lại". `QUESTS` **đã dựng
+lại**: 8 chương / 46 nhiệm vụ trong `data/canbang.js`. `SIDE_QUESTS` thì **vẫn rỗng** — đó là
+việc còn nợ thật.
+
+Mỗi chương = một Rune, và **đóng bằng loại nhiệm vụ `tranai`** (hạ Trấn Ải của chính vùng đó).
+Loại đó là mới, và nó tồn tại để vá đúng một lỗi: trước bản này Kết Mở do `killMob` quyết định
+(hạ Trấn Ải Dusk Marsh bật cờ `ketMo`) nhưng **không một nhiệm vụ nào bảo đi hạ nó** — nên người
+chơi xong 100% chính tuyến mà chưa chắc thấy kết, hoặc thấy kết trước khi xong chính tuyến.
+
+Ba luật của chuỗi, đo được bằng máy (xem script kiểm trong `docs/LORE_RUNE.md §6`):
+1. khoảng cách hai nhiệm vụ liền nhau **≤ 4 cấp** (bản cũ có chỗ hở 8 cấp);
+2. cấp quái lệch cấp nhiệm vụ **≤ ±4** (bản cũ có chỗ lệch +16);
+3. **≤ 60%** nhiệm vụ là đánh quái (bản cũ 67%), và **không chương nào toàn đánh quái**.
+
+Mỗi chương mở đúng một cửa cơ chế, và **cửa nào hứa thì phải có nhiệm vụ THẬT gác** — xem mục
+"LOẠI NHIỆM VỤ `moc`" ở trên. Bảy cửa đang có người gác:
+
+| Ch | Cửa | Nhiệm vụ |
+|---|---|---|
+| I | Khế Ước (thân Axie) | `c1q3` Kẻ Đi Trước — quay 1 |
+| II | Vỉa Cốt | `c2q2` Bụi Đá Dưới Chân Phiến — khai 1 |
+| III | bốn ô Cốt | `c3q3` Mảnh Cốt Đầu Tiên — cắm 4 |
+| IV | Rương Canh | `c4q2` Hòm Có Người Canh — mở 2 |
+| IV | Box Kundun | `c4q3` Thứ Không Ai Dạy Được — mở 1 |
+| V | Bản Năng → cấp kỹ năng | `c5q2` Bản Năng — nâng 3 |
+| VI | Box Kundun (thêm) | `c6q4` Mỏ Đã Tắt Lửa — mở 6 |
+
+⚠ Cửa **Khế Ước** nặng hơn sáu cửa kia: sau đợt gỡ Ragoon đó là cửa **duy nhất** vào hệ avatar,
+tức tính năng đầu bảng của cả đợt Đổi Vai. Không có nó thì người chơi xong 100% chính tuyến mà
+không ai nói cho họ biết là đổi được thân.
 
 ## Kiến trúc
 
@@ -1272,6 +1533,46 @@ Nhịp chuẩn: **cứ 2 giờ thật có một sự kiện thế giới**, hai 
 Không lưu state sự kiện — mốc giờ tính lại được từ đồng hồ thật.
 
 ⚠ Sự kiện mới PHẢI vào `eventList()` để hiện trên Bảng Sự Kiện + chip đồng hồ.
+
+### ⏱ MỐC GIỜ NEO THEO **UTC**, và đừng bao giờ dùng `getHours()` để tính nó
+
+`matonNextBoundary` · `goldenNextBoundary` · `riftNextBoundary` là **số học thuần trên epoch**
+(`MATON_CHU_KY` 4h · `GOLDEN_LECH` +2h · `RIFT_CHU_KY` 6h). Trước bản này cả ba dùng
+`d.setHours(d.getHours()+1)` rồi `while (d.getHours() % 4 !== 0)` — mà `getHours()` trả giờ
+**ĐỊA PHƯƠNG**, nên mỗi múi giờ ra một mốc khác nhau. Đo được ở cùng khoảnh khắc
+`2026-09-14T10:30Z`:
+
+| máy người chơi để | mốc Hung Thần kế tiếp |
+|---|---|
+| UTC | `12:00Z` |
+| `Asia/Ho_Chi_Minh` | `13:00Z` — **lệch 1 giờ** |
+| `Asia/Kolkata` | `14:30Z` — **lệch 2,5 giờ** |
+| `Pacific/Chatham` | `11:15Z` |
+
+Trớ trêu là `matonMapFor()`/`goldenMapFor()` **vốn đã đúng** — chúng là số học trên epoch. Nên
+hai người ở hai múi giờ **đồng ý map nào bị đánh mà không đồng ý lúc nào**. Với game chơi một
+mình thì không ai biết; với "cùng nhau đánh một con boss" thì nó phá đúng cái tính năng đó.
+Nay mốc và map cùng đọc một con số `slot`, nên chúng không lệch được nữa.
+
+**⚠ HIỂN THỊ thì vẫn dùng giờ ĐỊA PHƯƠNG, và đó là đúng.** `ttGioSuKien()`, `fmtClock()`, chip
+`#hud-time` in `getHours()` — người chơi muốn biết mấy giờ **theo đồng hồ của họ**. Mốc là tuyệt
+đối, cách đọc nó là địa phương. Đừng "sửa" mấy chỗ hiển thị đó sang UTC.
+
+**⚠ BÀI KIỂM CŨ MÙ VỚI ĐÚNG LỖI NÓ TRÔNG NHƯ ĐANG GÁC.** `test_golden` và `test_rift` kiểm mốc
+giờ từ lâu, nhưng đọc `getHours()` và máy chạy bộ kiểm để `TZ=UTC` — ở UTC thì giờ địa phương
+BẰNG giờ UTC, nên chúng xanh y hệt nhau dù mốc neo theo địa phương hay theo UTC. Nay hai bài đó
+đọc `getUTCHours()` (nói đúng ý mình), và `tests/test_muigio.js` mới là thứ gác thật: nó mở
+**6 ngữ cảnh Playwright với 6 `timezoneId`** rồi đòi mốc trả về phải trùng khít tới mili giây.
+Đã thử trả `matonNextBoundary` về bản cũ để chắc bài đỏ được — nó đỏ, và còn bắt được cả **map
+bị lệch** ở Chatham.
+*Luật chung: một bài kiểm chạy ở đúng một cấu hình môi trường thì nó chỉ gác được cấu hình ấy.
+`test_muigio §0` tự kiểm cảnh dựng trước khi chấm — đòi 6 múi giờ phải ra ≥4 độ lệch khác nhau,
+vì nếu Playwright lặng lẽ bỏ qua `timezoneId` thì mọi con số trùng nhau và bài xanh vô nghĩa.*
+
+**Còn một chỗ cùng họ, CỐ Ý để nguyên:** `tenuiGoldenHour()` (Vực Thẳm, Giờ Vàng 12h & 20h) vẫn
+đọc giờ địa phương. Nó không phải sự kiện thế giới chung — "giờ vàng" ở đây có nghĩa là buổi
+trưa/buổi tối **của người chơi**. Neo nó theo UTC là người Việt nhận giờ vàng lúc 19h và 3h sáng,
+tệ hơn hẳn. Nếu sau này nó thành sự kiện chung thì phải đổi.
 
 ## ~~Khắc Ấn~~ — ĐÃ GỠ, đừng dựng lại
 
@@ -1660,7 +1961,7 @@ ngựa (vẽ cung hở), găng ra thanh sô-cô-la (4 khối chữ nhật bằng
 
 `NV_CAO` (hiện **132**) là chiều cao nhân vật trên màn. Nó là **thước đo chung**: thần khí
 (`TK_PHONG`), hình học Vòng Kiếm Lửa (`VONGKIEM_TAM/RX/RY/VKX/VKY`), sải chân (`SAI_CHAN`),
-ngưỡng chạy (`CHAY_TU`), chỗ bàn chân chạm đất (`chanDy()`) và cỡ Chimera đi theo — **tất cả
+ngưỡng chạy (`CHAY_TU`), chỗ bàn chân chạm đất (`chanDy()`) và cỡ avatar (`avaCo`) — **tất cả
 đều dẫn xuất từ nó**. Chép cứng lại một con số đã thu sẵn là mở đường cho chúng lệch nhau, và
 kiểu lệch ấy rất khó lần: phóng to nhân vật thì bàn chân trượt đất, vòng lửa quét ngang đầu,
 chiêu giáng xuống nổ ngang bụng — mà nhìn thì chỉ thấy "hình như hơi lạ".
@@ -1675,21 +1976,22 @@ bước = quãng đường ÷ sải chân nên sai một chút là trượt châ
 khác ở tận dưới ("Cannot access 'X' before initialization"). eslint và tsc **không** bắt được;
 chỉ mở trang mới thấy. Đã mắc một lần với `VONGKIEM_TAM`.
 
-## Chimera đi theo KHÔNG BAO GIỜ được lấn át nhân vật
+## ~~Chimera đi theo KHÔNG BAO GIỜ được lấn át nhân vật~~ — luật đã GỠ
 
-Chủ dự án chốt bằng đúng chữ "không bao giờ", nên luật phải là **cấu trúc**, không phải một
-con số dò tay. 16 con nướng ra 16 cỡ ô khác nhau (tỉ lệ rộng/cao 1,07 → 1,52), nên khoá theo
-"thân cao 84px" như bản cũ là chưa đủ: con rộng nhất vẽ ra **146px ngang** trong khi nhân vật
-chỉ chiếm ~45px — mắt đọc thành "con thú dắt theo một người".
+> ⚠ Giữ đúng cái tiêu đề này để cảnh báo, thay vì xoá trắng rồi để người sau đọc `CHI_THAN`
+> trong lịch sử git mà tưởng nó còn. Cùng kiểu bẫy đã ghi ở mục "~~Khắc Ấn~~".
 
-`chiCoTrongMan(id)` khoá theo **hộp vẽ ra**, cả cao lẫn rộng, và khoá **tương đối với
-`NV_CAO`**: `CHI_THAN` = 0,45 (thân cao mấy phần thân người) và `CHI_TRAN` = 0,55 (trần cho
-chiều nào cũng vậy). Con nào vượt thì tự thu đúng phần vượt — nên lời hứa đúng cho cả 16 con
-hiện có lẫn mọi con nướng thêm sau này. `test_cothu.js` quét cả bộ, không kiểm một con mẫu.
+Luật cũ (`chiCoTrongMan` · `CHI_THAN` 0,45 · `CHI_TRAN` 0,55) khoá cỡ con thú đi theo theo **hộp
+vẽ ra**, cả cao lẫn rộng, tương đối với `NV_CAO`. Nó tồn tại vì có **HAI cái thân** đứng cạnh
+nhau trong màn, và câu hỏi "con nào là ngươi" là câu hỏi thật.
 
-Gót chân neo cố định ở `mountObj.y + 12` bất kể con to nhỏ (`_chiVe()` đặt gót ở
-`y + than*0,38` nên chỗ vẽ phải trừ ngược lại), và vũng bóng co theo chính con vật — thu nhỏ
-con thú mà để nguyên elip bóng thì nó thành ra đứng trên một cái đĩa.
+**Ragoon đã gỡ** (xem mục Đổi Vai). Nay chỉ còn MỘT thân: con Axie **LÀ** thân người chơi. Một
+cái thân không lấn át được chính nó.
+
+⚠ **Cỡ avatar đi theo luật NGƯỢC LẠI, đừng chép số cũ sang.** `AVA_TY` 0,72 / `AVA_TRAN` 0,95:
+avatar và lớp nhân vật **THAY CHỖ NHAU** lúc ra đòn, nên khối nhìn thấy phải **bằng nhau**, không
+phải nhỏ hơn. `CHI_THAN`/`CHI_TRAN` cố ý nhỏ hơn người — chép sang là mỗi cú đánh một cú giật cỡ.
+`tests/test_cothu.js` nay gác đúng luật mới đó (và gác luôn việc Ragoon không sống lại).
 
 ## 🌌 MÀN HÌNH CHỜ — ART CHÍNH CHỦ AXIE, ĐÂY LÀ NGOẠI LỆ CÓ PHẠM VI
 
@@ -2067,7 +2369,7 @@ gác chuyện đó (cả ba đường mặc đồ đều đi qua đó).
 | Tên người chơi thấy | Ký hiệu | Trường | Kiếm ở đâu | Tiêu ở đâu |
 |---|---|---|---|---|
 | **Lumen** | `◈` | `player.silver` | rơi từ quái, bán đồ, nhiệm vụ | tiệm · rèn · nâng kỹ năng · Lò Hỗn Độn |
-| **Ấn Giao Kết** | `✦` | `player.chimera.ve.gk` | boss vùng lần đầu · điểm danh · phó bản | quay Khế Ước Chimera |
+| **Ấn Giao Kết** | `✦` | `player.chimera.ve.gk` | boss vùng lần đầu · điểm danh · phó bản | quay Khế Ước (ra **thân Axie**, không ra thú đồng hành) |
 | **Shard** | `♦` | `player.shard` | KHÔNG rơi từ quái — chỉ mốc mỗi ngày và thông quan | Quầy Shard: vé quay · nới túi · nới kho |
 
 - `player.silver` **giữ nguyên tên trường**; chỉ chữ người chơi thấy đổi thành "Lumen". Đừng đổi
@@ -2109,6 +2411,152 @@ map khác. `onDeath()` phải dọn: `sigilReset()` (vũng độc + sóng hẹn 
 Lưu ý `respawn()` chỉ gọi `buildWorld()` khi chết ở map KHÔNG an toàn, nên không thể trông
 vào nó để dọn hộ.
 
+## 🌐 ONLINE — Giai đoạn 1 "Bóng Người" ĐÃ THI CÔNG, và nó dừng đúng ở đó
+
+> Thiết kế đầy đủ: **`docs/THIET_KE_ONLINE.md`** · khảo sát + lộ trình 7 giai đoạn:
+> **`docs/KHAO_SAT_ONLINE.md`** · mẫu giao thức/lược đồ: `docs/online-samples/`
+
+**Làm được gì:** hai người mở hai trình duyệt, cùng một map, **nhìn thấy nhau chạy** — có tên,
+có thanh máu, xếp lớp đúng theo chiều sâu.
+
+**KHÔNG làm gì:** không tài khoản, không cơ sở dữ liệu, không quyền quyết định, không chống gian
+lận, không PvP, không chat, không đồng bộ quái. **Đó là chủ ý.** Đây là giai đoạn nhỏ nhất chứng
+minh được cả hướng đi. Đừng bắt `server/bongnguoi.js` gánh thêm việc — mọi thứ có giá trị lâu dài
+(sinh vật phẩm, cộng tiền tệ, máu boss chung) phải đợi tới lúc có tài khoản thật và kho đồ trên
+máy chủ, xem `docs/THIET_KE_ONLINE.md` mục "Ngã ba phải chọn".
+
+| Thứ | Ở đâu |
+|---|---|
+| Máy chủ chuyển tiếp | `server/bongnguoi.js` · `npm run bongnguoi` · cổng 8877 |
+| WebSocket tự viết, **0 phụ thuộc** | `server/wsnho.js` |
+| Client | `public/game/net.js`, nạp SAU `game.js` |
+| Tầng vẽ | `drawPlayer(p)` · `NETPLAYERS` · `netTaoThan()` · `veNhanNet()` · `veKhoa()` |
+| Triển khai | `deploy/bongnguoi.service` · `deploy/nginx-ws.conf` · `deploy/capnhat-deploy.sh` |
+| Gác | `tests/test_bongnguoi.js` (Chromium thật) + `tests/test_wsnho.js` (giao thức) |
+
+### ⚠ MÁY CHỦ KHÔNG PHỤ THUỘC GÌ — chỉ cần `node`, KHÔNG cần `npm install`
+
+Bản đầu dùng thư viện `ws`. Đưa lên VPS mới lộ ra cái giá: **VPS chưa bao giờ có Node** (nó là
+nginx phục vụ tệp tĩnh, vỏ tRPC trong `api/` chưa từng chạy), và `npm install ws` trong
+`/var/www/axiewuxia` thì npm hoà lại **toàn bộ** cây phụ thuộc của repo — đo được **63 gói prod,
+467 MB `node_modules`** (aws-sdk, react, trpc, drizzle, radix…) chỉ để chạy một relay 170 dòng.
+Kèm ba rủi ro vận hành: `npm install` viết lại `package-lock.json` (**có trong git** ⇒ giằng co
+với `git reset --hard` mỗi 2 phút); đặt một `package.json` riêng cạnh tệp máy chủ để cô lập thì
+Node đọc **package.json gần nhất** và coi `bongnguoi.js` là CommonJS ⇒ mọi `import` nổ; và thêm
+một thứ phải cài lại mỗi khi dựng máy mới.
+
+Nhu cầu thật rất nhỏ — **khung TEXT, gói dưới vài KB** — nên `server/wsnho.js` làm tay bắt tay
++ đóng/bóc khung bằng `node:crypto` + `node:http`. Máy chủ thành **một thư mục không cần cài gì**.
+
+⚠ **ĐỪNG mở rộng `wsnho.js` thành thư viện đầy đủ.** Nó cố ý không làm: nén
+(permessage-deflate), khung nhị phân, phân mảnh do chính máy chủ gửi. Ngày nào cần một trong ba
+thì đem `ws` về — lúc ấy cái giá kia đáng trả.
+
+**Ba chỗ đóng khung dễ sai, cả ba đã có bài gác riêng** (`tests/test_wsnho.js`, client THÔ bằng
+`node:net` — trình duyệt là client LỊCH SỰ nên nó không dựng được mấy đường này):
+
+1. **Khung máy chủ gửi KHÔNG được che mặt nạ; khung client gửi lên BẮT BUỘC che.** Ngược một
+   trong hai là trình duyệt đóng với mã 1002.
+2. **TCP không bảo toàn ranh giới gói.** Một lượt `data` có thể mang nửa khung hoặc ba khung
+   rưỡi. §3 gửi **từng byte một** để ép đúng đường đó; triệu chứng khi sai là "thỉnh thoảng mất
+   một gói", không phải một lỗi đọc ra được.
+3. **Nhánh độ dài 2 byte (`126`) là nhánh CHẠY THẬT**, không phải phòng xa — ảnh chụp của vài
+   người đã vượt 125 byte. Sai nhánh đó thì game hỏng đúng lúc đông người, tức lúc khó gỡ nhất.
+
+**⚠ VÀ MỘT LỖI THẬT MÀ BÀI KIỂM BẮT ĐƯỢC, Chromium thì không:** `http.Server` của Node dựng
+`net.Server` với **`allowHalfOpen: true`** (để còn viết nốt hồi đáp sau khi client đóng nửa
+đường), và socket nâng cấp lên WebSocket **thừa hưởng** tính chất đó. Nên client gửi FIN mà
+không gửi khung close thì `'close'` **không bao giờ nổ** — người đó nằm lại trong danh sách và
+bóng của họ đứng chết giữa map tới 30 giây (tới khi bộ lọc im lặng dọn hộ). Trình duyệt gửi
+khung close tử tế nên đường này không lộ khi thử bằng Chromium. Phải bắt **cả `'end'`**.
+
+### ⚠ VPS CẦN CÀI NODE — `apt install nodejs` cho bản QUÁ CŨ
+
+`node` và `npm` không có sẵn trên VPS. Và `apt install nodejs` của Debian/Ubuntu cho Node 12,
+trong khi mã dùng **ESM + tiền tố `node:`** (cần ≥ 14.18, thực tế nên ≥ 18). Cài từ NodeSource:
+
+```bash
+curl -fsSL https://deb.nodesource.com/setup_20.x | bash -
+apt install -y nodejs
+node --version      # phải ra v20.x
+```
+
+`npm` đi kèm gói đó, nhưng **không dùng tới** — máy chủ không có phụ thuộc nào.
+
+**⚠ MẶC ĐỊNH TẮT, và đừng gỡ cái cửa đó.** Không khai máy chủ ⇒ `net.js` `return` ngay,
+`NETPLAYERS` rỗng, bản chơi một mình chạy y nguyên — đó là thứ đang sống trên production, và cả
+185 bài hồi quy đều chạy trên đường không có mạng. Bật bằng `?net=ws://…`, `?net=1`, hoặc
+`window.NET_URL`. `test_bongnguoi §0` gác chiều ngược lại: không khai máy chủ mà vẫn nối là đỏ.
+
+### Năm cái bẫy đã dẫm, ghi lại
+
+1. **`let` ở tầng cao nhất KHÔNG gắn vào `window`.** `player` và `curMap` khai bằng `let`, nên
+   `net.js` đọc `window.player` nhận `undefined`, im lặng không gửi gì, **không một lỗi nào in
+   ra**. (`function` và `var` thì có gắn — nên `thanNhip` gọi qua `window.` được, còn `player`
+   thì không.) Cửa đọc duy nhất là **`window.netDoc()`**; thêm trường thì sửa ở đó, đừng cho
+   `net.js` với tay vào phạm vi của game.
+2. **`bayCao` từng là MỘT biến module** — hai người đeo cánh khác bậc giành nhau một ô nhớ, độ
+   cao cả hai nhấp nháy theo thứ tự vẽ. Nay là `Map` khoá theo `veKhoa(p)`. **Vẫn nằm ngoài
+   `player`** vì lý do cũ còn nguyên: nhét vào `player` là nó chui vào save.
+3. **Thân người từ xa phải cắm vào ĐÚNG danh sách xếp lớp theo `y`** (`ents`), không vẽ thành
+   một lượt riêng. Lượt riêng thì họ luôn nằm sau hết hoặc trước hết — người đứng dưới gốc cây
+   lại hiện đè lên tán.
+4. **`thanNhip()` là MỘT luật, hai nơi gọi.** Nhịp bước + quán tính phụ tách khỏi `update()` để
+   `net.js` gọi được. Chép công thức sang `net.js` là dựng bản sao thứ hai của một luật đang
+   sống — sửa một bên là bàn chân trượt đất, mà kiểu lệch đó chỉ hiện ra khi nhìn ảnh chụp.
+   Cùng họ với luật "hai chỗ phải cùng gọi `dangChay()`".
+5. **Ảnh chụp phải TỰ NÓI nó thuộc map nào.** Suy ngầm "ảnh này chắc là map mình đang đứng" thì
+   đúng lúc vừa qua cổng, một ảnh của map cũ tới sau sẽ thả vài cái bóng vào map mới.
+
+### Và hai bẫy ở BÀI KIỂM — cả hai cho ra một bài XANH VÌ LÝ DO SAI
+
+- **Đếm điểm ảnh "khác trong suốt" là vô nghĩa trên nền ĐẶC.** Mặt đất của game đục kín nên ô
+  nào cũng đủ alpha: ra đúng 84×120 = 10.080 ở cả lượt có bóng lẫn lượt không, bằng nhau, trông
+  y như "không vẽ được gì".
+- **Đổi sang đếm điểm ảnh ĐỔI MÀU thì ra 10.056/10.080 — 99,8%.** Không phải vì bóng người to
+  bằng cả ô, mà vì **cả cảnh trôi** giữa hai lần vẽ: mây, sóng cỏ, ánh sáng đều chạy theo
+  `performance.now()`, và hai lệnh `evaluate` cách nhau hàng chục mili giây.
+  Cách đúng: vẽ **cả hai lượt trong CÙNG một `evaluate`** (trôi còn ~1 ms) **và** đo thêm một ô
+  **đối chứng** ở chỗ không có ai đứng, rồi đòi ô có bóng phải đổi nhiều hơn hẳn. Đo được sau
+  khi sửa: **4.725 điểm ảnh đổi ở ô có bóng, 0 ở ô đối chứng**; gỡ nhánh vẽ đi thì còn 54.
+
+### Còn nợ, biết rõ
+
+| | |
+|---|---|
+| `wingDef(it)` lui về `player.sect` khi không tra được `it.wing` | thân người từ xa sẽ mượn cánh theo lớp của NGƯỜI CHƠI. Chưa nổ vì giai đoạn 1 không đồng bộ trang bị; phải sửa trước Giai đoạn 2 |
+| Trang bị / hành động ra đòn / cánh | chưa đồng bộ — Giai đoạn 2. Gửi **chữ ký** `gearVisual`, KHÔNG gửi `player.equip` (một món 474 byte × 11 ô = ~5 KB mỗi người mỗi ảnh chụp) |
+| `cheatExec` vẫn ship | Giai đoạn 0 chưa làm. Vô hại ở bản offline; phải gỡ trước khi có bất cứ thứ gì chung |
+| Sandbox không SSH được vào VPS | mọi bước cài Node/nginx/systemd phải do chủ dự án chạy tay |
+
+### ⚠ CRON TRIỂN KHAI SẼ KHÔNG KHỞI ĐỘNG LẠI MÁY CHỦ
+
+`/root/deploy-axiewuxia.sh` chạy `git reset --hard` mỗi 2 phút **trên chính cây mà máy chủ đang
+chạy từ đó**. Mã đổi dưới chân một tiến trình đang chạy, mà nó không tự khởi động lại — nó sẽ
+chạy bản cũ mãi mãi và **không có gì báo**.
+
+Cài bằng **`deploy/capnhat-deploy.sh`** — chạy một lần trên VPS bằng root, tự sao lưu, tự kiểm
+cú pháp, chạy lại nhiều lần vô hại.
+
+**⚠ ĐỪNG dán một dòng `systemctl restart` trơn vào đó.** Tôi đã viết đúng cái sai ấy một lần:
+cron chạy script deploy **2 phút một lần, BẤT KỂ có commit mới hay không**, nên một dòng restart
+vô điều kiện là **đá mọi người đang chơi ra khỏi game mỗi 2 phút**. Triệu chứng người chơi mô tả
+sẽ là "cứ vài phút lại mất kết nối", và không ai nghĩ tới script deploy.
+
+Mốc so sánh đúng là **commit cuối cùng chạm `server/` hoặc `package.json`**:
+
+```bash
+MOC_BN=/root/.bongnguoi-ver
+VER_BN=$(git -C /var/www/axiewuxia log -1 --format=%H -- server/ package.json 2>/dev/null)
+if [ -n "$VER_BN" ] && [ "$VER_BN" != "$(cat "$MOC_BN" 2>/dev/null)" ]; then
+  echo "$VER_BN" > "$MOC_BN"
+  /usr/bin/systemctl is-active --quiet bongnguoi && /usr/bin/systemctl restart bongnguoi
+fi
+```
+
+Nhờ vậy deploy chỉ đổi art/`game.js` — **trường hợp thường gặp nhất của dự án này** — không ngắt
+kết nối của ai. `is-active` giữ nguyên: chưa bật dịch vụ thì đừng bật hộ.
+
 ## Test
 
 Playwright + server tĩnh:
@@ -2121,6 +2569,39 @@ Trong test: `window.TEST_MODE = true; startGame('<sect>', null);` rồi gọi th
 
 ⚠ Khi nhảy thẳng `player.level` trong test, phải tự gọi `vhAutoLearn()` — game thật gọi nó qua
 `gainXp()` → `unlockNotices()` mỗi lần lên cấp.
+
+### ⏱ `rc=124` TRONG HỒI QUY LÀ ĐỒNG HỒ CỦA BỘ CHẠY, KHÔNG PHẢI MỘT KHẲNG ĐỊNH ĐỎ
+
+Log của bài dính kiểu này **cụt giữa chừng** với `Target page … has been closed` chứ không có
+dòng `FAIL` nào. Đã gặp **bốn bài khác nhau qua bốn lượt** — `test_chianh` · `test_bossplace` ·
+`test_sandat` · `test_hudv` — và mỗi bài chạy RIÊNG xong trong **3-28 giây** với rc=0.
+
+**Bốn giả thuyết đã kiểm và LOẠI** (ghi lại để đừng kiểm lại từ đầu):
+
+| nghi | đo được |
+|---|---|
+| chạy chung với một lượt đo dài | tiến trình đó đã chết TRƯỚC lượt hồi quy đầu |
+| máy hết RAM / đĩa | còn 14 GB rỗng · đĩa 29 GB |
+| trình duyệt mồ côi tích lại | `ps` sau lượt chạy: 0 tiến trình chrome |
+| server tĩnh nghẽn một luồng | `python3 -m http.server` đã là `ThreadingHTTPServer` từ Python 3.7 |
+
+Nguyên nhân cuối cùng **chưa tìm ra** — đừng giả vờ là đã. `tools/reg.sh` nay xử đúng mức đó:
+gặp `rc=124` thì **chạy lại đúng một lần**, ghi tên vào `chaylai.txt` và **in ra cuối** dòng
+`ĐÃ CHẠY LẠI`. Lượt hai vẫn 124 thì vẫn tính đỏ. *Một bộ kiểm im lặng nuốt lỗi thì tệ hơn một
+bộ kiểm nói ra là nó đã phải chạy lại.*
+
+⚠ **Dọn trình duyệt mồ côi bằng lọc `ppid=1`, TUYỆT ĐỐI không `pkill -f chrom`.** Mẫu đó khớp
+luôn dòng lệnh của chính shell đang chạy rồi giết nó (thoát 144) — cùng vết sẹo đã ghi ở mục
+git bên dưới, và nó đã bị dẫm lại một lần nữa trong phiên gần đây.
+
+⚠ **Bài kiểm mỏng mẫu thì đỏ theo xúc xắc, không phải theo lỗi.** Hai chỗ đã phải sửa:
+- `test_bayquai` đo vị trí Kẻ Tiếp Sức trên **6 bãi của một map** rồi đòi "không quá 25% lọt vào
+  giữa" — một con lọt là qua, hai con là đỏ. Nay quét mọi map ⇒ **63 mẫu**.
+- `test_cottruyen` chốt bằng con số đếm *"đúng 7 NPC có trang thoại"*, nên **thêm một NPC viết tử
+  tế là bài đỏ**. Nay suy thẳng từ `QUESTS`: gác *"không người dẫn chương nào bị bỏ trống"*.
+
+Cùng một bệnh với luật `≤60% là kill` ở `docs/LORE_RUNE.md §6`: **một cái chốt hẹp hơn ý định của
+nó thì xanh, và nó bảo đảm sai.**
 
 ## ⚠ ĐỨNG ĐÚNG CHỖ TRƯỚC KHI CHẠY GIT
 
@@ -2185,12 +2666,6 @@ git -C /home/user/axie-wuxia commit -m "..."
 git -C /home/user/axie-wuxia push origin main    # ≤2 phút sau là live
 ```
 
-Đồng bộ nhánh demo khi cần:
-```bash
-git checkout demo-axie-showcase && git merge origin/main --no-edit && git push origin demo-axie-showcase
-git checkout main
-```
-
 ⚠ **Push thẳng lên `main` LÀ deploy.** Không còn PR làm lớp đệm, nên bốn cổng dưới đây là thứ
 duy nhất đứng giữa một commit hỏng và người chơi. Chạy đủ TRƯỚC khi push, và đọc mã thoát cho
 đúng (`cmd > /tmp/x.log 2>&1; rc=$?` — **không** đọc `$?` sau một pipe):
@@ -2224,13 +2699,38 @@ Hỏng thì **sửa trước khi push**, đừng push rồi sửa sau — ngư�
 `http://14.225.204.107/` (thêm `?test=1` để mở chế độ thử: đi map tự do + tick cấp 60).
 Log deploy nằm ở VPS, người dùng xem giúp — sandbox không tới được.
 
-## Git
+## Git — CHỈ CÓ `main`, không có nhánh nào phải đồng bộ
 
-Phát triển trên `main`, sau đó sync sang `demo-axie-showcase`:
-```bash
-git checkout demo-axie-showcase && git merge origin/main --no-edit && git push origin demo-axie-showcase
-git checkout main
-```
+Phát triển trên `main`, push thẳng lên `main`. Hết. Không nhánh phụ, không PR, không mirror.
+
+> ### 🗑 `demo-axie-showcase` ĐÃ BỎ — và hai khối lệnh sync ở đây từng là LỜI NÓI DỐI
+>
+> Mục này trước đây bảo *"phát triển trên `main`, sau đó sync sang `demo-axie-showcase`"* kèm một
+> lệnh `git merge`, ở **hai** chỗ trong tệp. Lệnh ấy **chưa bao giờ chạy được**: hai nhánh không
+> có tổ tiên chung (commit gốc `3a6b95f` vs `3586a1d`), nên git từ chối thẳng —
+> `fatal: refusing to merge unrelated histories`. Đã chạy thử trong worktree tạm để xác nhận
+> chứ không suy từ tài liệu.
+>
+> Nhánh đó là **ảnh chụp đông lạnh của bản TRƯỚC khi pivot sang MU** (bản chuyển thể Giang Hồ
+> Huyễn Ảnh): 9 lớp · Bế Quan · Đan Điền · Trúc Cơ · Luyện Đan · WASD · Baloo 2 làm
+> `--font-display` · 7 phó bản — tức gần như mọi thứ Quy tắc số 1 cấm hoặc các đợt sau đã gỡ có
+> lý do. Commit cuối 2026-08-30; không `.github/`, `vercel.json` hay cron deploy nào đọc nó.
+> Chủ dự án chốt bỏ ngày 2026-09-14. SHA tip nếu cần dựng lại: `09326d9`.
+>
+> ⚠ **Nhánh vẫn CÒN trên remote** — token của sandbox push commit được nhưng **không xoá được
+> ref** (`git push --delete` trả `HTTP 403` nhất quán, cả dạng `--delete` lẫn refspec rỗng; proxy
+> khoẻ, không phải lỗi mạng), và GitHub MCP chỉ có `create_branch`, không có tool xoá. Xoá phải
+> do chủ dự án tự chạy — trên máy mình `git push origin --delete demo-axie-showcase`, hoặc bấm
+> trên trang Branches của GitHub. **Đừng thử lại từ sandbox rồi tưởng mình gõ sai lệnh.**
+> Dù nhánh còn hay mất thì luật vẫn thế: **không ai đồng bộ nó nữa.**
+>
+> ⚠ **Đừng đọc "216 commit demo có mà main chưa có" rồi tưởng có việc chưa trộn.** Đó là toàn bộ
+> lịch sử RIÊNG của một cây khác, không phải công việc tồn đọng — với hai lịch sử rời nhau thì
+> `git rev-list --left-right` luôn ra con số to ở cả hai phía và nó không mang nghĩa gì.
+>
+> *Luật chung: một quy trình ghi trong tài liệu mà không ai chạy sẽ mục đi trong im lặng — đúng
+> họ với bước "rồi chép sang…" của `ISO_NEO`. Ghi một lệnh thì phải có ngày chạy nó, không thì
+> đừng ghi.*
 
 ## Đồ rơi phải NẰM DƯỚI ĐẤT, không nhảy thẳng vào túi
 
@@ -2394,5 +2894,5 @@ Cỡ NPC từng là `nh = 64` chép cứng. Hai chỗ sai, và chỗ thứ hai m
    nhớ lại, và neo **đáy hộp** vào chân NPC.
 
 Năm NPC là thú Axie có tranh rộng hơn cao (tới 1,35), nên khoá cả hai chiều rồi thu phần vượt —
-đúng khuôn `chiCoTrongMan()` đã dùng cho Chimera. Nhãn tên, dấu nhiệm vụ và câu thoại bay lên
+đúng khuôn `avaCo()` đã dùng cho avatar (trước là `chiCoTrongMan()`, đã gỡ). Nhãn tên, dấu nhiệm vụ và câu thoại bay lên
 đều đo theo `n._cao`, không chép cứng 52/64/78 nữa.

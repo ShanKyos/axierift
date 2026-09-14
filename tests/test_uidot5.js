@@ -30,33 +30,38 @@ const pass = m => console.log('PASS ' + m);
   await p.waitForTimeout(500);
 
   // ═══ ② PHÍM C / V / K / B ═════════════════════════════════════════════════
-  // ⚠ LUẬT ĐÃ ĐỔI. Trước đây bài này đòi C và V ra hai cửa sổ RỜI, vì hồi đó cả hai cùng gọi
-  // togglePanel('char') nên bấm phím nào cũng chỉ được một bảng. Nay theo lối MU S6, Nhân Vật
-  // và Trang Bị là HAI NỬA của một cửa sổ (chỉ số bên này, hình nộm mặc đồ bên kia) nên trên
-  // màn ≥1000px mở nửa nào cũng kéo nửa kia ra cùng — xem togglePanel(). Cái còn phải giữ là:
-  // mỗi phím vẫn dựng đúng nửa của nó, và cặp Nhân Vật không lôi theo Kỹ Năng hay Túi Đồ.
+  // ⚠ LUẬT ĐỔI LẦN THỨ HAI, VÀ ĐÂY LÀ LẦN CHỦ DỰ ÁN CHỐT BẰNG ẢNH GAME GỐC.
+  //   · đời 1: C và V cùng gọi togglePanel('char') ⇒ hai phím một cửa sổ, phí một phím.
+  //   · đời 2: Nhân Vật ⇄ Trang Bị thành hai nửa một cửa sổ ⇒ bấm C là kéo luôn đồ ra, tức
+  //            KHÔNG còn phím nào cho "chỉ xem chỉ số".
+  //   · đời 3 (nay): đúng khuôn MU Online — **C ra CHỈ SỐ một mình, V ra TRANG BỊ + TÚI ĐỒ**
+  //            (hình nhân vật mặc đồ cạnh lưới túi, đúng một cửa sổ hai nửa).
+  // Chấm bằng ĐÚNG TẬP bảng mở, không chấm có-hay-không: hỏng kiểu "mở dư một bảng" chỉ lộ
+  // ra khi đếm, mà đó chính là kiểu hỏng của cả hai đời trước.
+  // ⚠ `panel-qlog` bị loại khỏi phép đếm: nó thôi là cửa sổ nổi và nay CẮM trong cột phải
+  // (luôn hiện, không bảng nào đóng được nó) — để nó trong tập là mọi phím đều "mở dư".
   const phim = {};
   for (const k of ['c', 'v', 'k', 'b']){
     await p.evaluate(() => closePanels());
     await p.keyboard.press(k);
     await p.waitForTimeout(220);
     phim[k] = await p.evaluate(() =>
-      [...document.querySelectorAll('.panel')].filter(e => !e.classList.contains('hidden')).map(e => e.id));
+      [...document.querySelectorAll('.panel')]
+        .filter(e => !e.classList.contains('hidden') && !e.classList.contains('bang-cam'))
+        .map(e => e.id).sort());
   }
   console.log('phím:', JSON.stringify(phim));
-  const mot = (k, id) => {
-    if (!phim[k].includes(id)) fail(`phím ${k.toUpperCase()} không mở ${id} (mở: ${phim[k].join(',') || 'không gì'})`);
+  const DUNG = {
+    c: ['panel-char'],                   // CHỈ SỐ, một mình
+    v: ['panel-bag', 'panel-inv'],       // TRANG BỊ + TÚI ĐỒ (đã sort)
+    k: ['panel-skill'],
+    b: ['panel-bag', 'panel-inv'],       // B là lối vào thứ hai của cùng cửa sổ đó
   };
-  mot('c', 'panel-char'); mot('v', 'panel-inv'); mot('k', 'panel-skill'); mot('b', 'panel-bag');
-  const lan = (k, id) => {
-    if (phim[k].includes(id)) fail(`phím ${k.toUpperCase()} lôi theo ${id} — không cùng cửa sổ`);
-  };
-  // Cặp Nhân Vật ⇄ Trang Bị được phép đứng chung; mọi bảng khác thì không.
-  lan('c', 'panel-skill'); lan('c', 'panel-bag');
-  lan('v', 'panel-skill'); lan('v', 'panel-bag');
-  lan('k', 'panel-char');  lan('k', 'panel-inv');  lan('k', 'panel-bag');
-  lan('b', 'panel-char');  lan('b', 'panel-inv');  lan('b', 'panel-skill');
-  if (!bad) pass('C/V → cặp Nhân Vật+Trang Bị · K → Kỹ Năng · B → Túi Đồ, không bảng nào lẫn nhóm');
+  for (const k in DUNG){
+    if (phim[k].join() !== DUNG[k].join())
+      fail(`phím ${k.toUpperCase()} mở [${phim[k].join(' ') || 'không gì'}] — phải đúng [${DUNG[k].join(' ')}]`);
+  }
+  if (!bad) pass('C → chỉ số · V/B → Trang Bị + Túi Đồ · K → Kỹ Năng, không phím nào mở dư');
 
   // ═══ ③ BẢNG KỸ NĂNG — MỘT TRANG ═══════════════════════════════════════════
   const kn = await p.evaluate(() => {
@@ -112,8 +117,10 @@ const pass = m => console.log('PASS ' + m);
     return { info: doc('info'), chi: doc('mount'), dt: doc('mastery'), ts: doc('taytuy') };
   });
   console.log('nhân vật:', JSON.stringify(nv.info.cha), '· trong nhóm:', JSON.stringify(nv.chi.con));
-  if (nv.info.cha.length !== 3) fail(`hàng tab đầu có ${nv.info.cha.length} mục, phải còn 3`);
-  else pass('hàng tab đầu còn 3 mục: ' + nv.info.cha.join(' · '));
+  // 3 → 2: tab 'taytuy' (Tái Sinh) đã gỡ theo yêu cầu chủ dự án — sẽ thiết kế lại. Máy Tái
+  // Sinh (`renderTayTuy` · `doTayTuy` · `player.resetCount`) giữ nguyên, chỉ cái TAB đi.
+  if (nv.info.cha.length !== 2) fail(`hàng tab đầu có ${nv.info.cha.length} mục, phải còn 2`);
+  else pass('hàng tab đầu còn 2 mục: ' + nv.info.cha.join(' · '));
   if (nv.info.hang !== 1 || nv.ts.hang !== 1)
     fail('hàng tab con hiện cả khi KHÔNG ở trong nhóm — bốn nút thừa trên mọi trang khác');
   else pass('hàng tab con chỉ hiện khi đang ở trong nhóm');
