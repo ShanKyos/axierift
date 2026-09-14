@@ -7498,8 +7498,12 @@ function newPlayer(sectKey){
     // hành: Ragoon đã gỡ. `eq` là con đang cắm; `player.avatar` là thứ tầng vẽ đọc.
     chimera: { eq:null, co:{}, ve:{ gk:3, cx:1 }, pity5:0, pity4:0, bd:false,
                pity5s:0, pity4s:0, nguyet:0, tinh:0, su:[], tanthu:20 },
-    cot: { sung:null, vuot:null, vay:null, duoi:null }, cotKho: [],  // bốn ô Cốt của NGƯỜI CHƠI
-    avatar: null,                          // thân Axie đang dùng, null = lớp nhân vật như cũ
+    // ⚠ KHÔNG khai `avatar:` ở đây. `avatarId()` phân biệt `undefined` (chưa từng chọn ⇒ lấy con
+    // mặc định của lớp) với `null` (đã tắt bằng `/avatar off` ⇒ tôn trọng). Khai `avatar: null`
+    // là nói với máy rằng nhân vật vừa tạo ra ĐÃ TỰ TẮT avatar — nên nhân vật mới không thấy
+    // Axie nào, còn save đời cũ (không có khoá) thì thấy. Đã ship đúng lỗi đó: hai commit cùng
+    // ngày 2026-09-11 sửa hai vùng khác nhau của tệp (`5706cb7` thêm dòng khai, `3b0b28b` dựng
+    // luật undefined/null), `git merge` ghép êm ru và `node --check` xanh.
     jewels: { chucPhuc: 0, linhHon: 0, sinhMenh: 0, honDon: 0 }, // Tứ Châu (Track HT)
     baohap: {},                            // Box Kundun Ma Tôn Giáng Thế { tier: số lượng }
     truyna: { day:'', state:'none', map:null }, // Truy Nã Lệnh ngày

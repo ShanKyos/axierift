@@ -102,9 +102,39 @@ khi tấn công thì ví dụ Dark Wizard sẽ xuất hiện và tung chiêu."*
 | 16 bảng khung CHẠY `<id>_r.webp` | 1,29 MB, **nạp theo nhu cầu** (chỉ con đang dùng) |
 | Công cụ nướng | `tools/spine/nuong_chi_chay.py` |
 
-> ⚠ **`player.avatar` rỗng ⇒ HÀNH VI CŨ Y NGUYÊN.** Đây là chủ ý, không phải làm dở: đợt này
-> phải cắm vào một trò chơi đang chạy mà không bài nào trong 177 bài đỏ. Avatar là thứ **bật
-> lên**, không phải thứ thay thế. Đừng "dọn dẹp" cái cửa đó đi.
+### ⚠ `undefined` ≠ `null` — VÀ ĐỪNG KHAI `avatar:` TRONG KHỐI DỰNG NGƯỜI CHƠI
+
+> ⚠ Mục này **trước đây ghi "`player.avatar` rỗng ⇒ HÀNH VI CŨ Y NGUYÊN"**. Nửa sau không còn
+> đúng — chủ dự án đã chốt **bật mặc định** (`3b0b28b`): rỗng nay nghĩa là *lấy con mặc định
+> của lớp*. Giữ đúng cái tiêu đề này để cảnh báo, thay vì xoá trắng rồi để người sau đọc câu cũ
+> mà tưởng avatar vẫn là thứ phải gõ lệnh mới có.
+
+`avatarId(p)` là cửa DUY NHẤT, và nó phân biệt **ba** trạng thái, không phải hai:
+
+| `p.avatar` | nghĩa | vẽ ra |
+|---|---|---|
+| `undefined` | **chưa từng chọn** — nhân vật mới, hoặc save đời trước bản này | `AVA_MAC_DINH[p.sect]` |
+| `null` | người chơi **đã tắt** bằng `/avatar off` / `chiTatAvatar()` | lớp nhân vật như cũ |
+| một id | con đang cắm | con đó |
+
+Gộp hai cái đầu thành `!p.avatar` là cái nút tắt không tắt được gì.
+
+**⚠ HỆ QUẢ: khối dựng người chơi trong `startGame` TUYỆT ĐỐI KHÔNG khai `avatar:`.** Khai
+`avatar: null` là nói với máy rằng nhân vật **vừa tạo ra đã tự tắt avatar** — nên nhân vật mới
+không thấy Axie nào, trong khi save đời cũ (không có khoá) thì thấy. `JSON.stringify` bỏ khoá
+`undefined`, nên không khai chính là cách lưu đúng trạng thái "chưa chọn".
+
+**Và đây là chỗ đau — nó đã ship, đúng cái kiểu hỏng mà tài liệu này cảnh báo ở mục màn chờ:**
+hai commit cùng ngày 2026-09-11 sửa **hai vùng khác nhau** của `game.js` — `5706cb7` (gỡ Ragoon)
+thêm dòng `avatar: null`, `3b0b28b` (bật mặc định) dựng luật `undefined`/`null`. `git merge` ghép
+êm ru, `node --check` xanh, cả ba khẳng định avatar trong `test_avatar` vẫn xanh, và thứ còn lại
+là một trò chơi mà **tính năng đầu bảng của cả đợt Đổi Vai tắt ngóm với mọi người chơi mới**.
+
+⚠ **Ba khẳng định cũ xanh vì chúng chỉ đọc BẢNG `AVA_MAC_DINH`.** Bảng thì không bao giờ hỏng;
+thứ hỏng là sợi dây từ bảng tới nhân vật. `test_avatar §4` nay **lái `startGame` cho cả năm lớp**
+rồi hỏi `avatarId(player)`, và hỏi thêm chiều NGƯỢC LẠI (`/avatar off` vẫn phải tắt được) — vì
+cách "sửa" dễ nhất, gộp `undefined` với `null`, cũng làm vế đầu xanh. *Kiểm một cái bảng không
+bao giờ kiểm được cái dây.*
 
 **Cờ bài kiểm đọc được:** `window.__veThan` nay có ba giá trị — `'avatar'` · `'sprite'` ·
 `'vector'`. Bài cũ nào khẳng định nó phải là `'sprite'` thì vẫn đúng khi avatar tắt.
