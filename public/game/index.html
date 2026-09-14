@@ -83,29 +83,6 @@
            ⚠ Nó KHÔNG còn đi qua togglePanel: một khối cắm trong HUD mà mở Túi Đồ là biến mất
            thì đọc ra như lỗi. Phím Q gọi `toggleQlog()` — thu/mở tại chỗ. -->
       <div id="panel-qlog" class="panel bang-cam"></div>
-      <!-- MENU HỆ THỐNG nằm TRONG cột phải, không phải một khối thứ tư trôi ở đáy.
-           Chủ dự án chốt: "để UI qua bên phải cho đồng nhất". Trước đó nó đã đi hai chặng —
-           cột dọc mép TRÁI, rồi hàng ngang đáy PHẢI — và cả hai đều để nó đứng RIÊNG, tức
-           giao diện có thêm một khối nữa phải nhớ chỗ. Nay cả bên phải là MỘT cột: ví, tự
-           đánh, bản đồ, nhiệm vụ, rồi menu. -->
-      <div id="menu-cot" class="hidden">
-        <button id="mc-thu" title="Thu gọn thanh menu">▸</button>
-        <div id="mc-list">
-          <button class="mc-btn" id="btn-char"     title="Nhân Vật (C) — chỉ số"><img src="assets/ui/ic_nhanvat.png" alt=""><span>Nhân Vật</span></button>
-          <button class="mc-btn" id="btn-bag"      title="Túi Đồ (B)"><img src="assets/ui/ic_tuido.png" alt=""><span>Túi Đồ</span></button>
-          <button class="mc-btn" id="btn-skill"    title="Kỹ Năng (K)"><img src="assets/ui/ic_kynang.png" alt=""><span>Kỹ Năng</span></button>
-          <button class="mc-btn" id="btn-qlog"     title="Nhiệm Vụ (Q)"><img src="assets/ui/ic_nhiemvu.png" alt=""><span>Nhiệm Vụ</span></button>
-          <button class="mc-btn" id="btn-map"      title="Bản Đồ (M)"><img src="assets/ui/ic_bando.png" alt=""><span>Bản Đồ</span></button>
-          <button class="mc-btn" id="btn-settings" title="Cài Đặt (O)"><img src="assets/ui/ic_caidat.png" alt=""><span>Cài Đặt</span></button>
-          <button class="mc-btn mc-menu" id="btn-menu" title="Thêm">Menu ▾</button>
-        </div>
-        <div id="mc-drop" class="hidden">
-          <button id="btn-combatlog"><img src="assets/ui/ic_nhatky.png" alt="">Nhật Ký Chiến Đấu <span id="cl-arrow">▾</span></button>
-          <button id="btn-sukien">⏱ Bảng Sự Kiện</button>
-          <button id="btn-help">❓ Hướng Dẫn &amp; Phím Tắt <span style="opacity:.7">F6</span></button>
-          <button id="btn-music" title="Nhạc nền">♪ Nhạc Nền</button>
-        </div>
-      </div>
     </div>
   </div>
 </div>
@@ -134,6 +111,29 @@
     <button class="skill" id="sk-loot" title="Nhặt đồ dưới đất (J)"><span class="sk-ico">✋</span><span class="sk-key">J</span><span class="sk-cd"></span></button>
     <i class="sk-vach"></i>
     <button class="skill sk-troly" id="sk-helper" title="Trợ Thủ — bật/tắt TỰ ĐÁNH (Z) · chuột phải để chỉnh"><span class="sk-ico">⚙</span><span class="sk-key">Z</span></button>
+  </div>
+  <i class="sk-vach"></i>
+  <!-- MENU HỆ THỐNG nằm TRÊN THANH CHIẾN ĐẤU, không phải một khối thứ tư trôi ở đáy.
+       Chủ dự án chốt: "để UI qua bên phải cho đồng nhất". Trước đó nó đã đi hai chặng —
+       cột dọc mép TRÁI, rồi hàng ngang đáy PHẢI — và cả hai đều để nó đứng RIÊNG, tức
+       giao diện có thêm một khối nữa phải nhớ chỗ. Nay cả bên phải là MỘT cột: ví, tự
+       đánh, bản đồ, nhiệm vụ, rồi menu. -->
+  <div id="menu-cot" class="hidden">
+    <div id="mc-list">
+      <button class="mc-btn" id="btn-char"     title="Nhân Vật (C) — chỉ số"><img src="assets/ui/ic_nhanvat.png" alt=""><span>Nhân Vật</span></button>
+      <button class="mc-btn" id="btn-bag"      title="Túi Đồ (B)"><img src="assets/ui/ic_tuido.png" alt=""><span>Túi Đồ</span></button>
+      <button class="mc-btn" id="btn-skill"    title="Kỹ Năng (K)"><img src="assets/ui/ic_kynang.png" alt=""><span>Kỹ Năng</span></button>
+      <button class="mc-btn" id="btn-qlog"     title="Nhiệm Vụ (Q)"><img src="assets/ui/ic_nhiemvu.png" alt=""><span>Nhiệm Vụ</span></button>
+      <button class="mc-btn" id="btn-map"      title="Bản Đồ (M)"><img src="assets/ui/ic_bando.png" alt=""><span>Bản Đồ</span></button>
+      <button class="mc-btn" id="btn-settings" title="Cài Đặt (O)"><img src="assets/ui/ic_caidat.png" alt=""><span>Cài Đặt</span></button>
+      <button class="mc-btn mc-menu" id="btn-menu" title="Thêm">Menu ▾</button>
+    </div>
+    <div id="mc-drop" class="hidden">
+      <button id="btn-combatlog"><img src="assets/ui/ic_nhatky.png" alt="">Nhật Ký Chiến Đấu <span id="cl-arrow">▾</span></button>
+      <button id="btn-sukien">⏱ Bảng Sự Kiện</button>
+      <button id="btn-help">❓ Hướng Dẫn &amp; Phím Tắt <span style="opacity:.7">F6</span></button>
+      <button id="btn-music" title="Nhạc nền">♪ Nhạc Nền</button>
+    </div>
   </div>
 </div>
 

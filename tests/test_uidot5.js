@@ -117,8 +117,10 @@ const pass = m => console.log('PASS ' + m);
     return { info: doc('info'), chi: doc('mount'), dt: doc('mastery'), ts: doc('taytuy') };
   });
   console.log('nhân vật:', JSON.stringify(nv.info.cha), '· trong nhóm:', JSON.stringify(nv.chi.con));
-  if (nv.info.cha.length !== 3) fail(`hàng tab đầu có ${nv.info.cha.length} mục, phải còn 3`);
-  else pass('hàng tab đầu còn 3 mục: ' + nv.info.cha.join(' · '));
+  // 3 → 2: tab 'taytuy' (Tái Sinh) đã gỡ theo yêu cầu chủ dự án — sẽ thiết kế lại. Máy Tái
+  // Sinh (`renderTayTuy` · `doTayTuy` · `player.resetCount`) giữ nguyên, chỉ cái TAB đi.
+  if (nv.info.cha.length !== 2) fail(`hàng tab đầu có ${nv.info.cha.length} mục, phải còn 2`);
+  else pass('hàng tab đầu còn 2 mục: ' + nv.info.cha.join(' · '));
   if (nv.info.hang !== 1 || nv.ts.hang !== 1)
     fail('hàng tab con hiện cả khi KHÔNG ở trong nhóm — bốn nút thừa trên mọi trang khác');
   else pass('hàng tab con chỉ hiện khi đang ở trong nhóm');

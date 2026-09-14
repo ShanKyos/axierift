@@ -2324,12 +2324,6 @@ git -C /home/user/axie-wuxia commit -m "..."
 git -C /home/user/axie-wuxia push origin main    # ≤2 phút sau là live
 ```
 
-Đồng bộ nhánh demo khi cần:
-```bash
-git checkout demo-axie-showcase && git merge origin/main --no-edit && git push origin demo-axie-showcase
-git checkout main
-```
-
 ⚠ **Push thẳng lên `main` LÀ deploy.** Không còn PR làm lớp đệm, nên bốn cổng dưới đây là thứ
 duy nhất đứng giữa một commit hỏng và người chơi. Chạy đủ TRƯỚC khi push, và đọc mã thoát cho
 đúng (`cmd > /tmp/x.log 2>&1; rc=$?` — **không** đọc `$?` sau một pipe):
@@ -2363,13 +2357,38 @@ Hỏng thì **sửa trước khi push**, đừng push rồi sửa sau — ngư�
 `http://14.225.204.107/` (thêm `?test=1` để mở chế độ thử: đi map tự do + tick cấp 60).
 Log deploy nằm ở VPS, người dùng xem giúp — sandbox không tới được.
 
-## Git
+## Git — CHỈ CÓ `main`, không có nhánh nào phải đồng bộ
 
-Phát triển trên `main`, sau đó sync sang `demo-axie-showcase`:
-```bash
-git checkout demo-axie-showcase && git merge origin/main --no-edit && git push origin demo-axie-showcase
-git checkout main
-```
+Phát triển trên `main`, push thẳng lên `main`. Hết. Không nhánh phụ, không PR, không mirror.
+
+> ### 🗑 `demo-axie-showcase` ĐÃ BỎ — và hai khối lệnh sync ở đây từng là LỜI NÓI DỐI
+>
+> Mục này trước đây bảo *"phát triển trên `main`, sau đó sync sang `demo-axie-showcase`"* kèm một
+> lệnh `git merge`, ở **hai** chỗ trong tệp. Lệnh ấy **chưa bao giờ chạy được**: hai nhánh không
+> có tổ tiên chung (commit gốc `3a6b95f` vs `3586a1d`), nên git từ chối thẳng —
+> `fatal: refusing to merge unrelated histories`. Đã chạy thử trong worktree tạm để xác nhận
+> chứ không suy từ tài liệu.
+>
+> Nhánh đó là **ảnh chụp đông lạnh của bản TRƯỚC khi pivot sang MU** (bản chuyển thể Giang Hồ
+> Huyễn Ảnh): 9 lớp · Bế Quan · Đan Điền · Trúc Cơ · Luyện Đan · WASD · Baloo 2 làm
+> `--font-display` · 7 phó bản — tức gần như mọi thứ Quy tắc số 1 cấm hoặc các đợt sau đã gỡ có
+> lý do. Commit cuối 2026-08-30; không `.github/`, `vercel.json` hay cron deploy nào đọc nó.
+> Chủ dự án chốt bỏ ngày 2026-09-14. SHA tip nếu cần dựng lại: `09326d9`.
+>
+> ⚠ **Nhánh vẫn CÒN trên remote** — token của sandbox push commit được nhưng **không xoá được
+> ref** (`git push --delete` trả `HTTP 403` nhất quán, cả dạng `--delete` lẫn refspec rỗng; proxy
+> khoẻ, không phải lỗi mạng), và GitHub MCP chỉ có `create_branch`, không có tool xoá. Xoá phải
+> do chủ dự án tự chạy — trên máy mình `git push origin --delete demo-axie-showcase`, hoặc bấm
+> trên trang Branches của GitHub. **Đừng thử lại từ sandbox rồi tưởng mình gõ sai lệnh.**
+> Dù nhánh còn hay mất thì luật vẫn thế: **không ai đồng bộ nó nữa.**
+>
+> ⚠ **Đừng đọc "216 commit demo có mà main chưa có" rồi tưởng có việc chưa trộn.** Đó là toàn bộ
+> lịch sử RIÊNG của một cây khác, không phải công việc tồn đọng — với hai lịch sử rời nhau thì
+> `git rev-list --left-right` luôn ra con số to ở cả hai phía và nó không mang nghĩa gì.
+>
+> *Luật chung: một quy trình ghi trong tài liệu mà không ai chạy sẽ mục đi trong im lặng — đúng
+> họ với bước "rồi chép sang…" của `ISO_NEO`. Ghi một lệnh thì phải có ngày chạy nó, không thì
+> đừng ghi.*
 
 ## Đồ rơi phải NẰM DƯỚI ĐẤT, không nhảy thẳng vào túi
 
