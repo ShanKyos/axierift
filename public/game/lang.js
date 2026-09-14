@@ -1042,6 +1042,80 @@ RULES.unshift(
     'corner mark = upgradable now · dimmed = locked · dashed border = no skill assigned'],
 );
 
+/* Đợt 4 — hai bảng từ thượng nguồn: Tổ Đội (phím P) và Bạn Bè (phím H).
+   Quét bằng đúng cách cũ (bật English rồi đọc text node đang hiển thị) ra 23 chuỗi, tất cả
+   đều thuộc hai bảng này. ⚠ Chuỗi trên màn KHÔNG phủ hết bảng Bạn Bè: mọi nút trên từng
+   DÒNG bạn (Chào · Xoá · Chặn · Nhận · Từ chối · Kết bạn…) và mọi câu báo lỗi trong `bbLam`
+   chỉ hiện khi máy chủ trả về danh sách, mà bản tĩnh thì không có máy chủ. Nên khối này lấy
+   thẳng từ NGUỒN (`renderFriendPanel` · `bbDong` · `bbLam` · `TD_CAI`), không lấy từ phép
+   quét — quét chỉ chứng minh được cái ĐANG hiện, và đây là chỗ nó không đủ.
+   `🇻🇳 Tiếng Việt` CỐ Ý giữ tiếng Việt: đó là nhãn chọn ngôn ngữ, dịch nó đi thì người đang
+   lạc trong bản tiếng Anh mất luôn đường về. */
+Object.assign(EXACT, {
+  // ── Tổ Đội ──
+  'Tổ Đội': 'Party', 'Trạng thái:': 'Status:', 'Chưa có tổ đội': 'No party',
+  'Đội trưởng': 'Leader', 'Chỗ trống': 'Empty slot', 'Bạn': 'You',
+  'Mời Vào Đội': 'Invite', 'Nhường Đội Trưởng': 'Pass Leader', 'Rời Đội': 'Leave Party',
+  'Mở Bạn Bè': 'Open Friends', 'Cần máy chủ': 'Needs a server',
+  'Không có tổ đội thì tự nhận lời mời': 'Auto-accept invites when not in a party',
+  'Là đội trưởng thì tự cho người xin gia nhập': 'As leader, auto-admit join requests',
+  'Hiện danh sách thành viên trên màn hình chính': 'Show the member list on the main screen',
+  // ── Bạn Bè ──
+  'Bạn Bè': 'Friends', 'Lời Mời': 'Invites', 'Tìm Người Chơi': 'Find Players', 'Sổ Đen': 'Blocklist',
+  'Đang hỏi máy chủ…': 'Asking the server…',
+  'Máy chủ chưa bật.': 'Server is not running.', 'Cần đăng nhập.': 'Sign-in required.',
+  'Thử lại': 'Retry', 'Chưa vào game': 'Never played', 'Không tên': 'Unnamed',
+  'Lời mời gửi tới bạn': 'Invites sent to you', 'Bạn đã gửi đi': 'Invites you sent',
+  'Không có lời mời nào.': 'No invites.', 'Chưa gửi lời mời nào.': "You haven't sent any invites.",
+  'Sổ đen trống.': 'Blocklist is empty.', 'Không thấy ai tên như vậy.': 'No player by that name.',
+  'Đã có trong danh sách': 'Already on your list',
+  'Gõ tên người chơi…': 'Type a player name…', 'Tìm': 'Search',
+  '✓ Đã chào': '✓ Greeted', '👋 Chào': '👋 Greet', 'Xoá': 'Remove', 'Chặn': 'Block',
+  'Bỏ chặn': 'Unblock', 'Nhận': 'Accept', 'Từ chối': 'Decline',
+  'Huỷ lời mời': 'Cancel invite', 'Kết bạn': 'Add friend',
+  'Hôm nay đã chào rồi — mai quay lại': 'Already greeted today — come back tomorrow',
+  'Người trong sổ đen không gửi được lời mời tới bạn, và bạn không thấy lời mời của họ.':
+    "Blocked players cannot send you invites, and you won't see theirs.",
+  // Câu báo bay lên giữa màn (bbBao) — chỉ hiện khi có máy chủ, nên quét không thấy.
+  'Không tự kết bạn với mình được': "You can't friend yourself",
+  'Người này đã chặn bạn': 'This player has blocked you',
+  'Hôm nay chào rồi — mai quay lại': 'Already greeted today — come back tomorrow',
+  'Chưa phải bạn bè': 'Not friends yet', 'Lời mời không còn nữa': 'That invite is gone',
+  'Không làm được': "Couldn't do that", 'Máy chủ không trả lời': 'Server did not respond',
+  '🤝 Đã thành bạn!': '🤝 Now friends!', '✉ Đã gửi lời mời': '✉ Invite sent',
+  'Đã cho vào sổ đen': 'Added to blocklist',
+});
+
+/* Mấy câu dài của hai bảng này nằm TRÊN NHIỀU DÒNG trong một text node (template literal có
+   thụt đầu dòng, xuống dòng ĐƠN) nên nhánh tách đoạn `\n\s*\n` của trCompute không đụng tới.
+   Phải khớp cả cụm bằng `\s+` — đúng cái bẫy đã ghi ở chú giải ô kỹ năng đợt 3.
+   HẸP (neo cả hai đầu) nên unshift, khỏi bị mấy quy tắc bắt-tất nuốt. */
+RULES.unshift(
+  [/^Thêm 1 thành viên, đánh quái$/, 'Each extra member,'],
+  // `+5% EXP` không có dấu tiếng Việt nên không cần quy tắc; `Cấp N` đã có sẵn ở khối gốc.
+  [/^Cấp (\d+) · (.+)$/, (m, lv, lop) => `Lv ${lv} · ${tr(lop)}`],
+  [/^Tổ đội cần máy chủ\.$/, 'Party needs a server.'],
+  [/^Game hiện chạy trên một máy và lưu trong trình duyệt,\s+nên chưa có ai khác để rủ\. Khung bảng và các tuỳ chọn dưới đây dựng sẵn cho lúc máy chủ lên —\s+xem\s*$/,
+    'The game currently runs on one machine and saves in your browser, so there is nobody to invite yet. '
+    + 'This panel and the options below are built ahead of the server going live — see '],
+  [/^Bạn Bè cần máy chủ để lưu quan hệ giữa các tài khoản\.\s+Bản chạy thử tĩnh không có phần này\.$/,
+    'Friends needs a server to store relationships between accounts. This static build does not have one.'],
+  [/^Danh sách bạn gắn với tài khoản, không gắn với máy —\s+đăng nhập rồi mở lại bảng này\.$/,
+    'Your friend list belongs to your account, not to this machine — sign in, then reopen this panel.'],
+  [/^Chưa có ai trong danh sách\.$/, 'Nobody on your list yet.'],
+  [/^Sang tab (.+) để kết bạn\.$/, (m, tab) => `Head to the ${tr(tab)} tab to add someone.`],
+  [/^Chỉ tìm được người$/, 'You can only find players'],
+  [/^đã thật sự chơi$/, 'who have actually played'],
+  [/^— tên có trong Bảng Xếp Hạng\.$/, '— names that appear on the Leaderboard.'],
+  [/^Độ Thân Thiết$/, 'Closeness'],
+  [/^tăng khi hai bên chào nhau —$/, 'grows when the two of you greet each other —'],
+  [/^mỗi ngày một lần$/, 'once per day'],
+  [/^\. Nó đếm số ngày hai người còn nhớ nhau, nên không mua được và không cày được\.$/,
+    '. It counts the days you two still remember each other, so it cannot be bought or farmed.'],
+  [/^♥ \+(\d+) Thân Thiết$/, '♥ +$1 Closeness'],
+  [/^♥ (\d+)$/, '♥ $1'],
+);
+
 const _trCache = new Map();
 function tr(s) {
   if (lang !== 'en' || !s || typeof s !== 'string') return s;
