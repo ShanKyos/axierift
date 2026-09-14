@@ -62,7 +62,10 @@ const pass = m => console.log('PASS ' + m);
   const kn = await p.evaluate(() => {
     closePanels(); togglePanel('skill');
     const el = document.getElementById('panel-skill');
-    const t = el.innerText || '';
+    // Bảng Kỹ Năng nay là CÂY CÓ TAB (chủ dự án chốt) — gom chữ cả ba tab rồi mới chấm, nếu
+    // không thì ba mục cũ trông như đã bốc hơi trong khi chúng chỉ dời sang tab Khác.
+    let t = el.innerText || '';
+    if (typeof KN_TAB !== 'undefined') for (const x of KN_TAB){ window.knTab(x.id); t += '\n' + (el.innerText || ''); }
     return { tab: el.querySelectorAll('.bang-tab').length,
              muc: [...el.querySelectorAll('.stat-sec')].map(x => x.textContent.trim()),
              coDiSan: /DI SẢN LỚP/.test(t), coBonO: /1 chính · 1 phụ/.test(t),
@@ -70,10 +73,10 @@ const pass = m => console.log('PASS ' + m);
              conHam: typeof window.switchSkillTab };
   });
   console.log('kỹ năng:', JSON.stringify(kn));
-  if (kn.tab !== 0) fail(`bảng Kỹ Năng còn ${kn.tab} tab — phải gộp về một trang`);
-  else pass('bảng Kỹ Năng không còn tab nào');
+  if (kn.tab !== 3) fail(`bảng Kỹ Năng có ${kn.tab} tab — phải đúng 3 (Lớp · Vaeldra · Khác)`);
+  else pass('bảng Kỹ Năng có đủ 3 tab');
   if (!kn.coBonO || !kn.coDiSan || !kn.coTanChuc)
-    fail('gộp mà mất mục: 4 ô=' + kn.coBonO + ' di sản=' + kn.coDiSan + ' tấn chức=' + kn.coTanChuc);
+    fail('chia tab mà MẤT MỤC: 4 ô=' + kn.coBonO + ' di sản=' + kn.coDiSan + ' tấn chức=' + kn.coTanChuc);
   else pass('cả ba mục cùng nằm trên một trang');
   // Hai mục BỊ ĐỘNG nay cạnh nhau — tiêu đề phải phân biệt được, không thì đọc thành trùng lặp
   const bd = kn.muc.filter(x => /^BỊ ĐỘNG/.test(x));

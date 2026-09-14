@@ -2020,6 +2020,11 @@ let zoneBanner = null; // { text, sub, color, t }
 // Bố cục kiểu Lorencia (MU Online): quảng trường vuông rộng ở giữa, tường bao 4 mặt, MỖI MẶT MỘT
 // CỔNG (Bắc/Nam/Đông/Tây) toả ra 4 hướng thế giới — thay cho thành hộp kín chỉ có 1 cổng Nam cũ,
 // vốn khiến toàn bộ NPC phải chen chúc trong một góc nhỏ.
+// ⚠ HƯỚNG TRÊN BIỂN CỔNG NAY LÀ MỘT RÀNG BUỘC CÓ NGƯỜI GÁC, không còn là chữ trang trí.
+// Bảng Bản Đồ có tab THẾ GIỚI vẽ cả mười hai vùng lên một tấm, nên biển ghi "Lối Bắc" mà vùng
+// kia nằm phía đông là người chơi bắt được ngay. `tests/test_thegioi.js §2` đối chiếu từng cạnh.
+// Đã phải sửa đúng một cặp biển để đồ thị nhúng phẳng được — xem `window.THE_GIOI` trong
+// `data/canbang.js`, chỗ ghi vì sao Heights ↔ Causeway đổi từ Bắc/Nam sang Đông/Tây.
 const GATES = [
   // ── BỐN CỔNG ARDHAVEN ─────────────────────────────────────────────────────
   // ⚠ BỐN CỘT MỐC NÀY LÙI VÀO TRONG, KHÔNG ĐỨNG NGAY MIỆNG VẤU CỔNG — và đó là một RÀNG BUỘC
@@ -2127,8 +2132,8 @@ const GATES = [
   // theo đúng nếp cũ: Bug Tribe Tunnels 'Lối Đông' ↔ Nhịp Đá 'Lối Tây'.
   { map:'comoc',       x:4480, y:1024,  to:'caungam',   name:'Lối Đông → Aquatic Tribe Causeway' },
   { map:'caungam',  x:320,  y:900,  to:'comoc',     name:'Lối Tây → Bug Tribe Tunnels' },
-  { map:'caungam',  x:1850, y:2380, to:'tuyettinh', name:'Lối Nam → Bird Tribe Heights' },
-  { map:'tuyettinh',x:2112, y:256, to:'caungam',   name:'Lối Bắc → Aquatic Tribe Causeway' },
+  { map:'caungam',  x:1850, y:2380, to:'tuyettinh', name:'Lối Tây → Bird Tribe Heights' },
+  { map:'tuyettinh',x:2112, y:256, to:'caungam',   name:'Lối Đông → Aquatic Tribe Causeway' },
   { map:'comoc',       x:1728, y:3264, to:'chungnam', name:'Lối Nam → Werebear Woods' },
   { map:'comoc',       x:2816, y:256,  to:'mongco',   name:'Lối Bắc → Reptile Sunstone Flats' },
   { map:'mongco',      x:1792, y:3328, to:'comoc',    name:'Lối Nam → Bug Tribe Tunnels' },
@@ -9167,7 +9172,13 @@ document.getElementById('btn-music').addEventListener('click', ()=>{
 });
 
 // ---------- Input ----------
-window.addEventListener('keydown', e=>{
+// ⚠ HÀM CÓ TÊN, VÀ PHƠI RA `window`. Không phải để gọi từ ngoài — để bài kiểm ĐỌC ĐƯỢC nó.
+// Bảng Hướng Dẫn (F6) liệt kê phím bằng dữ liệu tay, nên nó có thể nói dối ngay lần đầu ai đó
+// đổi một phím ở dưới đây mà quên sửa bảng — mà một bảng dạy chơi nói sai phím thì tệ hơn hẳn
+// không có bảng nào. `tests/test_huongdan.js §3` lấy `phimXuong.toString()` rồi soi từng chữ
+// cái trong HD_BANG có thật sự được bắt hay không. Đổi arrow này về vô danh là gỡ mất cái chốt
+// đó, và nó sẽ gỡ trong im lặng.
+function phimXuong(e){
   if (e.target && e.target.tagName === 'INPUT') return; // đang gõ console playtest
   keys[e.key.toLowerCase()] = true;
   if (e.key === ' ') { e.preventDefault(); doSpace(); }
@@ -9194,6 +9205,9 @@ window.addEventListener('keydown', e=>{
   if (e.key.toLowerCase()==='q') togglePanel('qlog');
   if (e.key.toLowerCase()==='u'){ SETTINGS.minimap = !SETTINGS.minimap; saveSettings(); }
   if (e.key.toLowerCase()==='o') togglePanel('settings');
+  // F6 — bảng Hướng Dẫn & Phím Tắt. preventDefault vì F6 mặc định của trình duyệt là nhảy
+  // focus sang thanh địa chỉ: không chặn thì bấm một cái là mất luôn bàn phím khỏi game.
+  if (e.key === 'F6'){ e.preventDefault(); togglePanel('help'); }
   // F không còn mở lò từ xa nữa — nó ĐƯA NGƯỜI CHƠI TỚI thợ rèn. Đứng cạnh rồi bấm F thì mở.
   if (e.key.toLowerCase()==='f') window.openForgePanel();
   if (e.key.toLowerCase()==='z' && player && !dead) toggleAuto();
@@ -9211,7 +9225,9 @@ window.addEventListener('keydown', e=>{
   // nên mở Túi Đồ lên xem giữa lúc đang dở bảng Kỹ Năng thì bấm ESC là mất cả hai. Nay đóng
   // đúng cửa MỞ SAU CÙNG (đỉnh chồng `_bangChong`), muốn dọn sạch thì bấm tiếp.
   if (e.key === 'Escape'){ if (window.ngocCam) window.buongNgoc(); else dongBangTrenCung(); }
-});
+}
+window.addEventListener('keydown', phimXuong);
+window.phimXuong = phimXuong;
 window.addEventListener('keyup', e=> keys[e.key.toLowerCase()] = false);
 // Giữ ALT: hiện nhãn tên MỌI món dưới đất, không chỉ món gần. Nhả ra là về như cũ.
 window.addEventListener('keydown', e => { if (e.key === 'Alt'){ window._lootShowAll = true; e.preventDefault(); } });
@@ -16456,7 +16472,8 @@ function skMau(id){
 // NGAY LÚC NẠP TRANG và giết chết mọi thứ đăng ký phía sau nó.
 for (const [_id, _pn] of [['btn-char','char'], ['btn-inv','inv'], ['btn-bag','bag'],
                           ['btn-skill','skill'], ['btn-map','map'],
-                          ['btn-settings','settings'], ['btn-qlog','qlog']]){
+                          ['btn-settings','settings'], ['btn-qlog','qlog'],
+                          ['btn-help','help']]){
   const _b = el(_id);
   if (_b) _b.addEventListener('click', () => togglePanel(_pn));
 }
@@ -19948,7 +19965,7 @@ function togglePanel(which){
   // trả null và câu kế ném "Cannot read properties of null". Mọi chỗ gọi togglePanel('forge') cũ
   // đều vỡ theo.
   if (which === 'forge'){ window.openForgePanel(); return; }
-  const map = { char:'panel-char', inv:'panel-inv', bag:'panel-bag', skill:'panel-skill', map:'panel-map', settings:'panel-settings', qlog:'panel-qlog' };
+  const map = { char:'panel-char', inv:'panel-inv', bag:'panel-bag', skill:'panel-skill', map:'panel-map', settings:'panel-settings', qlog:'panel-qlog', help:'panel-help' };
   const id = map[which];
   const p = el(id);
   if (!p) return;                     // khoá lạ thì im lặng bỏ qua, không ném lỗi giữa lượt chơi
@@ -20002,7 +20019,7 @@ function togglePanel(which){
 // Cho `inv` cùng nhóm 'nv' với `char`: hai bảng vẫn mở KÈM nhau (kéo-thả HTML5 cần cả hai
 // cùng có mặt trên DOM), nhưng chúng đọc ra như MỘT cửa sổ hai nửa. Túi Đồ tách hẳn ra nhóm
 // riêng nên mở Túi Đồ là bộ đôi kia đóng, và ngược lại.
-const BANG_NHOM = { char:'nv', inv:'nv', bag:'tui', skill:'kn', map:'bd', settings:'cd', qlog:'nv2' };
+const BANG_NHOM = { char:'nv', inv:'nv', bag:'tui', skill:'kn', map:'bd', settings:'cd', qlog:'nv2', help:'hd' };
 // CHỈ nhóm 'nv' được ở chung màn hình, và nó là hai nửa của cùng một cửa sổ.
 const BANG_SONG = { nv:1 };
 // Ba bảng mở cùng lúc thì phải xếp thành ba cột, không chồng lên nhau. Gắn class lên <body>
@@ -20017,6 +20034,7 @@ window.capNhatCotBang = capNhatCotBang;
 function renderPanel(which){
   if (which==='settings'){ renderSettings(); return; }
   if (which==='qlog'){ renderQlog(); return; }
+  if (which==='help'){ renderHelpPanel(); return; }
   if (which==='char'){ window.charTab = 'info'; renderCharPanel(); }
   else if (which==='inv') renderInv();
   else if (which==='bag') renderBag();
@@ -20028,7 +20046,7 @@ function renderPanel(which){
 // lọc lại theo thực tế trước khi dùng — bảng có thể bị đóng bằng nút ✕ mà không qua đây.
 let _bangChong = [];
 const _MOI_BANG = ['panel-char','panel-inv','panel-bag','panel-skill','panel-map','panel-quest',
-                   'panel-settings','panel-qlog','panel-stage','panel-forge'];
+                   'panel-settings','panel-qlog','panel-stage','panel-forge','panel-help'];
 function bangDangMo(){ return _MOI_BANG.filter(id => { const e2 = el(id); return e2 && !e2.classList.contains('hidden'); }); }
 function bangGhiChong(id){
   _bangChong = _bangChong.filter(x => x !== id);
@@ -22073,10 +22091,235 @@ function legacyUniversalRowHtml(id){
       <div class="sk-desc">${info.desc}</div></span>
     ${right}</div>`;
 }
+// ═══════════ BẢNG KỸ NĂNG KIỂU CÂY — cây bên trái, khung chi tiết bên phải ═══════════
+// Bố cục dựng theo ảnh mẫu chủ dự án đưa: hàng tab trên cùng, một CÂY biểu tượng nối bằng mũi
+// tên ở nửa trái, và một khung đọc chi tiết + nút Nâng Cấp ở nửa phải.
+//
+// ⚠ TÊN TAB nằm gọn trong KN_TAB — đổi tên là sửa MỘT dòng.
+// Ảnh mẫu ghi "Phái" và "Giang Hồ"; cả hai đều nằm trong danh sách cấm của Quy tắc số 1
+// ("môn phái, giang hồ"), nên ở đây là "Lớp" và "Vaeldra" — Vaeldra chính là cái thế giới bên
+// ngoài mà chữ "giang hồ" muốn nói, và nó là danh từ riêng của game này. Ảnh mẫu còn có nút
+// "Cảnh giới" và dòng "Chân khí tiêu hao": hai chữ đó `test_nowuxia2` quét thẳng, nên chúng
+// thành "Tiến Hoá" và "Bản Năng" — mà Bản Năng vốn ĐÃ là thứ `skUpKhi()` trừ đi.
+const KN_TAB = [
+  { id:'lop',     ten:'Lớp',     dong:'kỹ năng riêng của lớp, tự ngộ theo cấp' },
+  { id:'vaeldra', ten:'Vaeldra', dong:'kỹ năng chung, học ngoài thế giới bằng Sách Kỹ Năng' },
+  { id:'khac',    ten:'Khác',    dong:'Di Sản · bị động · hệ phụ' },
+];
+// HÌNH của cây — 16 ô, dùng chung cho mọi lớp và mọi tab. `c` = cột (0-3), `h` = hàng (0-6),
+// `tu` = những ô CHA vẽ mũi tên tới ô này.
+//
+// Vì sao một hình dùng chung: năm lớp mà năm hình thì đây là năm bảng phải nuôi, và bốn trong
+// năm cái sẽ mốc meo — đúng bệnh nhân bản mà CLAUDE.md chẩn ở đầu tệp hướng dẫn. Muốn một lớp
+// có hình riêng thì thêm khoá vào KN_HINH_RIENG, máy tự lấy; không khai thì dùng hình chung.
+const KN_HINH = [
+  { k:'a1', c:1, h:0, tu:[] },
+  { k:'b1', c:0, h:1, tu:['a1'] },
+  { k:'b2', c:1, h:1, tu:['a1'] },
+  { k:'c1', c:1, h:2, tu:['b1','b2'] },
+  { k:'d1', c:0, h:3, tu:['c1'] },
+  { k:'d2', c:1, h:3, tu:['c1'] },
+  { k:'e1', c:1, h:4, tu:['d1','d2'] },
+  { k:'f1', c:0, h:5, tu:['e1'] },
+  { k:'f2', c:1, h:5, tu:['e1'] },
+  // Cột 3 là một CHUỖI THẲNG, tách hẳn khỏi cây nhánh — giống hệt ảnh mẫu. Nó là chỗ cho một
+  // mạch nâng cấp tuyến tính đứng cạnh một cây có rẽ nhánh.
+  { k:'g1', c:2, h:0, tu:[] },
+  { k:'g2', c:2, h:1, tu:['g1'] },
+  { k:'g3', c:2, h:2, tu:['g2'] },
+  { k:'g4', c:2, h:3, tu:['g3'] },
+  { k:'g5', c:2, h:4, tu:['g4'] },
+  { k:'g6', c:2, h:5, tu:['g5'] },
+  { k:'g7', c:2, h:6, tu:['g6'] },
+];
+const KN_HINH_RIENG = {};      // <lớp>|<tab> → hình riêng, để trống thì dùng KN_HINH
+const KN_COT = 58, KN_HANG = 60, KN_O = 44;   // bước cột · bước hàng · cạnh ô biểu tượng
+// Bề rộng/cao vùng cây SUY TỪ CHÍNH HÌNH, không chép cứng số cột. Chép cứng "4 cột" rồi dời
+// chuỗi thẳng sang cột 2 là thừa ra một cột rỗng đúng 58px — cây dãn ra, khung chi tiết bị bóp,
+// và không có gì báo lỗi cả.
+function knKho(hinh){
+  let c = 0, h = 0;
+  for (const n of hinh){ if (n.c > c) c = n.c; if (n.h > h) h = n.h; }
+  return { w: c * KN_COT + KN_O, h: h * KN_HANG + KN_O + 14 };   // +14 chừa chỗ dòng số cấp
+}
+// ⚠ ĐÂY LÀ CHỖ CHỦ DỰ ÁN ĐIỀN KỸ NĂNG. Mỗi khoá là `<lớp>|<tab>`, giá trị là danh sách mã chiêu
+// rót vào các ô của KN_HINH THEO THỨ TỰ khai ở trên (a1 · b1 · b2 · c1 · d1 · d2 · e1 · f1 · f2
+// · g1…g7). Thiếu thì ô còn trống, thừa thì bỏ qua — cả hai đều không ném lỗi, nên điền dần
+// từng ô được, không phải điền đủ 16 mới chạy.
+//
+// Mã chiêu tra ở đâu: `a` và `tp` là chiêu chính/phụ của lớp (khai trong SECTS), còn lại là
+// khoá trong VOHOC_DEFS — gõ `Object.keys(VOHOC_DEFS)` trong bảng lệnh là ra đủ.
+const KN_ROT = {
+  thieulam: ['a','tp','dk_bulwark','dk_cyclone','dk_ragefulblow','dk_lunge','dk_impale',
+             'dk_fallingslash','dk_fortitude'],
+  toanchan: ['a','tp','elf_greaterdmg','elf_penetration','elf_poisonarrow','elf_greaterdef',
+             'elf_holybolt','elf_fiveshot','elf_heal'],
+  baidasan: ['a','tp','dw_inferno','dw_dragonspirit','dw_lightning','dw_ice','dw_twister',
+             'dw_shield','songthu'],
+  minhgiao: ['a','tp','mg_battlefury','mg_powerslash','mg_fireball','mg_powerwave',
+             'mg_twistingslash','mg_giganticstorm','mg_ironwill'],
+  bug:      ['a','tp','dl_commandaura','dl_chaoticdiseier','dl_force','dl_electricspark',
+             'dl_fireburst','dl_darkhorse','dl_darkraven'],
+};
+const KN_ROT_CHUNG = { vaeldra: ['danchi','tieuhon'] };   // tab Vaeldra dùng chung cho mọi lớp
+function knHinh(tab){ return KN_HINH_RIENG[(player && player.sect) + '|' + tab] || KN_HINH; }
+function knMa(tab, i){
+  const ds = tab === 'lop' ? (KN_ROT[player && player.sect] || []) : (KN_ROT_CHUNG[tab] || []);
+  return ds[i] || null;
+}
+// Một ô của cây → mọi thứ phần vẽ cần. Ô TRỐNG vẫn trả về một vật thể hợp lệ (`trong:true`) chứ
+// không trả null: ô trống phải vẽ ra được, nếu không thì cây thủng lỗ và mũi tên trỏ vào hư không.
+function knNut(tab, n, i){
+  const id = knMa(tab, i);
+  if (!id) return { k:n.k, c:n.c, h:n.h, tu:n.tu, trong:true, ten:'Ô Trống' };
+  const v = VOHOC_DEFS[id] || null;
+  // ⚠ CHIÊU BỊ ĐỘNG KHÔNG NẰM TRONG `SKILL_DEFS` — vòng đăng ký ở trên `continue` qua
+  // `type === 'passive'` vì chúng không bấm được, nên `skillInfo()` trả null cho cả năm cái.
+  // Để mặc thì chúng hiện ra y HỆT một ô chưa gán: không lỗi, không dấu hiệu, và người chơi
+  // mất hẳn năm ô. Mà ảnh mẫu có sẵn dòng "Loại: Bị động" — bị động thuộc về cây này.
+  // Nên dựng hồ sơ đọc THẲNG từ VOHOC_DEFS cho nhánh đó. `tests/test_cayky.js` mục 2 gác.
+  if (v && v.type === 'passive'){
+    return { k:n.k, c:n.c, h:n.h, tu:n.tu, trong:false, id, v, biDong:true,
+      inf:{ id, name:v.name, icon:v.icon, desc:v.desc },
+      ten:v.name, lv:0, mo: vhLearned(id), loai:'Bị động' };
+  }
+  const inf = skillInfo(id);
+  if (!inf) return { k:n.k, c:n.c, h:n.h, tu:n.tu, trong:true, ten:'Ô Trống', loi:id };
+  const d = SKILL_DEFS[id] || {};
+  return { k:n.k, c:n.c, h:n.h, tu:n.tu, trong:false, id, inf, d, v, biDong:false,
+    ten: inf.name, lv: skLv(id), mo: inf.unlocked,
+    loai: v && v.type === 'buff' ? 'Phù trợ' : 'Chủ động' };
+}
+window.knTab = function(t){ window._knTab = t; window._knChon = null; renderSkillPanel(); };
+window.knChon = function(k){ window._knChon = k; renderSkillPanel(); };
+// Mũi tên cha → con. Vẽ bằng SVG chứ không bằng viền CSS: đường nối phải đi từ đáy ô cha sang
+// đỉnh ô con qua một khuỷu, mà khuỷu thì border không dựng được.
+function knMuiTen(ds){
+  const cx = (n) => n.c * KN_COT + KN_O / 2, cy = (n) => n.h * KN_HANG;
+  let p = '';
+  for (const n of ds) for (const tk of (n.tu || [])){
+    const cha = ds.find(x => x.k === tk); if (!cha) continue;
+    const x1 = cx(cha), y1 = cy(cha) + KN_O, x2 = cx(n), y2 = cy(n) - 4;
+    const my = (y1 + y2) / 2;
+    p += `<path d="M${x1} ${y1} V${my} H${x2} V${y2}" fill="none" stroke="#5fc96e" stroke-width="2"
+            marker-end="url(#knMui)" opacity=".85"/>`;
+  }
+  const K = knKho(ds);
+  return `<svg class="kn-day" width="${K.w}" height="${K.h}" viewBox="0 0 ${K.w} ${K.h}">
+    <defs><marker id="knMui" markerWidth="7" markerHeight="7" refX="5" refY="3.2" orient="auto">
+      <path d="M0 0 L6 3.2 L0 6.4 z" fill="#5fc96e"/></marker></defs>${p}</svg>`;
+}
+function renderSkillPanelCay(tab){
+  const hinh = knHinh(tab);
+  const ds = hinh.map((n, i) => knNut(tab, n, i));
+  if (!window._knChon || !ds.find(x => x.k === window._knChon && !x.trong))
+    window._knChon = (ds.find(x => !x.trong) || {}).k || null;
+  const K = knKho(ds);
+  let h = `<div class="kn-cay" style="width:${K.w}px;height:${K.h}px">` + knMuiTen(ds);
+  for (const n of ds){
+    const st = `left:${n.c*KN_COT}px;top:${n.h*KN_HANG}px`;
+    if (n.trong){
+      h += `<div class="kn-o kn-trong" style="${st}" title="Ô trống — điền mã chiêu vào KN_ROT">
+              <span>+</span></div>`;
+      continue;
+    }
+    const chon = n.k === window._knChon, max = n.biDong || n.lv >= 120;
+    // Nâng được thì hiện dấu + xanh ở góc — đúng tín hiệu trong ảnh mẫu, và nó phải là tín hiệu
+    // THẬT: hỏi lại đúng ba điều kiện mà upgradeSkillUI() kiểm, không chỉ hỏi "đã mở khoá chưa".
+    const nangDuoc = n.mo && !max && n.lv < player.level
+      && player.silver >= skUpCost(n.id) && (player.khi || 0) >= skUpKhi(n.id);
+    h += `<button class="kn-o${chon?' chon':''}${n.mo?'':' khoa'}" style="${st}"
+            onclick="knChon('${n.k}')" title="${mstEsc(n.ten + ' — cấp ' + n.lv)}">
+        <img src="${n.inf.icon}" alt="">
+        ${nangDuoc ? '<i class="kn-cong">+</i>' : ''}
+        <b class="kn-lv">${n.biDong ? '✚' : n.lv}</b></button>`;
+  }
+  h += `</div>`;
+  return { html: h, ds };
+}
+function renderSkillPanelCT(tab, ds){
+  const n = ds.find(x => x.k === window._knChon);
+  if (!n || n.trong)
+    return `<div class="kn-ct"><div class="kn-ct-trong">Chưa có ô nào được gán kỹ năng ở tab này.<br><br>
+      Điền mã chiêu vào <b>KN_ROT</b> (tab Lớp) hoặc <b>KN_ROT_CHUNG</b> (các tab còn lại) —
+      chúng rót vào ô theo thứ tự khai trong <b>KN_HINH</b>.</div></div>`;
+  if (n.biDong){
+    // Bị động: không cấp, không Mana, không hồi chiêu — in năm thông số cho nó là hứa suông.
+    return `<div class="kn-ct">
+      <div class="kn-ct-dau"><img src="${n.inf.icon}" alt="">
+        <div><b>${n.ten}</b><span>Bị động — luôn có hiệu lực</span></div></div>
+      <div class="kn-ct-tt ${n.mo?'ok':'no'}">${n.mo ? '◆ Đã ngộ' : '🔒 tự ngộ ở cấp ' + (n.v.unlock || '?')}</div>
+      <div class="kn-d"><span>Loại:</span> Bị động</div>
+      <div class="kn-d kn-mo"><span>Hiệu quả:</span> ${n.inf.desc || '—'}</div>
+      <div class="kn-vach">Điều kiện</div>
+      <div class="kn-d"><span>Cấp nhân vật:</span> <b class="${player.level >= (n.v.unlock||0) ? 'ok' : 'no'}">${n.v.unlock || '?'}</b> <i>(đang ${player.level})</i></div>
+      <div class="kn-chan">Bị động không nâng cấp và không chiếm ô nào trên thanh chiêu — có là chạy.</div>
+    </div>`;
+  }
+  const max = n.lv >= 120, tran = n.lv >= player.level;
+  const cost = skUpCost(n.id), khi = skUpKhi(n.id);
+  const duBac = player.silver >= cost, duKhi = (player.khi || 0) >= khi;
+  const nangDuoc = n.mo && !max && !tran && duBac && duKhi;
+  // Tiến độ tới MỐC kế, không phải tới cấp 120: mốc mới là thứ đổi hành vi, và người chơi cần
+  // biết còn bao xa tới nó.
+  const mocKe = SK_MILESTONES.find(m => m.lv > n.lv);
+  const mocTruoc = [...SK_MILESTONES].reverse().find(m => m.lv <= n.lv);
+  const sanTruoc = mocTruoc ? mocTruoc.lv : 1;
+  const pc = mocKe ? Math.round((n.lv - sanTruoc) / (mocKe.lv - sanTruoc) * 100) : 100;
+  const i = n.inf;
+  let h = `<div class="kn-ct">
+    <div class="kn-ct-dau"><img src="${i.icon}" alt="">
+      <div><b>${n.ten}</b><span>Cấp: ${n.lv}</span></div></div>
+    <div class="kn-ct-tt ${n.mo?'ok':'no'}">${n.mo ? '◆ Đã đủ điều kiện' : '🔒 ' + (i.lockTxt || 'chưa đủ điều kiện')}</div>
+    <div class="kn-d"><span>Loại:</span> ${n.loai}</div>
+    <div class="kn-d"><span>Tiến độ:</span> ${mocKe ? `tới mốc <b>${mocKe.name}</b> (cấp ${mocKe.lv})` : 'đã tới mốc cuối'}</div>
+    <div class="kn-bar"><s style="width:${clamp(pc,0,100)}%"></s><em>${clamp(pc,0,100)}%</em></div>
+    <div class="kn-d kn-mo"><span>Hiệu quả:</span> ${i.desc || '—'}</div>
+    <div class="kn-d"><span>Tác dụng:</span> ${skThongSoGon(i)}</div>
+    <div class="kn-d kn-mo"><span>Thêm 1 cấp:</span> +2,5% Sát Thương · −0,25% hồi chiêu${
+      mocKe && mocKe.lv === n.lv + 1 ? ` · <b style="color:#ffd76a">đạt mốc ${mocKe.name}</b>` : ''}</div>
+    <div class="kn-d"><span>Tiến Hoá:</span> ${evoStage(n.id) ? evoBadgeHtml(n.id) + ` bậc ${evoStage(n.id)}/3` : `<i>chưa — mốc đầu ở cấp ${EVO_LVS[0]}</i>`}</div>
+    <div class="kn-vach">Điều kiện</div>
+    <div class="kn-d"><span>Cấp nhân vật:</span> <b class="${tran?'no':'ok'}">${n.lv + 1}</b>
+      <i>(đang ${player.level})</i></div>
+    <div class="kn-d"><span>Lumen tiêu hao:</span> <b class="${duBac?'ok':'no'}">${cost.toLocaleString('vi-VN')}</b></div>
+    <div class="kn-d"><span>Bản Năng tiêu hao:</span> <b class="${duKhi?'ok':'no'}">${khi.toLocaleString('vi-VN')}</b></div>`;
+  if ((player.bikipVH || 0) > 0)
+    h += `<div class="kn-sach">📜 Dùng Sách Kỹ Năng — nâng thẳng 1 cấp, khỏi tốn gì (còn ${player.bikipVH})</div>`;
+  h += `<div class="kn-nut">
+      <button class="mini-btn kn-nang${nangDuoc?'':' mo'}" onclick="window.upgradeSkillUI('${n.id}')">Nâng Cấp</button>
+    </div>`;
+  // Ảnh mẫu ghi "Kéo biểu tượng đến thanh phím tắt". Game này KHÔNG cho kéo — thanh chiêu là 4 ô
+  // cố định — nên viết đúng sự thật thay vì chép câu đó sang: nói luôn chiêu này nằm ô nào.
+  const bar = (player.skillBar || []).indexOf(n.id);
+  h += `<div class="kn-chan">${bar >= 0
+    ? `Đang nằm ở <b>ô ${bar + 1}</b> trên thanh chiêu — bấm phím <b>${bar + 1}</b> để tung.`
+    : `Không nằm trên thanh chiêu (4 ô cố định). Chiêu ngoài thanh dồn thành % Công Kích vĩnh viễn — xem tab Khác.`}</div>`;
+  return h + `</div>`;
+}
+// Năm thông số bắt buộc, viết gọn một dòng cho khung hẹp. Đọc thẳng skillInfo() nên không có
+// cách nào lệch với ô kỹ năng đầy đủ.
+function skThongSoGon(i){
+  const dw = player.sect === 'baidasan';
+  return `${dw ? 'Sức Mạnh Phép Thuật' : 'Công Kích'} ×${(i.he||1).toFixed(2)}`
+    + ` · tầm ${Math.round(i.tam||0)}` + ` · phạm vi ${Math.round(i.pham||0)}`
+    + ` · hồi ${(i.cd||0)}s · ${Math.round(i.qi||0)} Mana`;
+}
 function renderSkillPanel(){
-  vhAutoLearn(); // save cũ / test mode: quét tự ngộ kỹ năng phái
-  let html = moBang({ tieu:'Kỹ Năng', dong:'4 ô cố định · phím 1-4' });
-  html += `<div style="font-size:10.5px;color:#9aa8d4;line-height:1.5;margin-bottom:8px">⬆ +2,5%Sát Thương/cấp (Lumen) · mốc 20/40/60/80/100/120 thêm phù trợ · <b style="color:#7df9ff">40/80/120 ⚡Tiến Hóa</b> · <span style="color:#7fd8e0">Bản Năng <b>${Math.floor(player.khi || 0).toLocaleString('vi-VN')}</b></span> · ⌨ Space: <b>${(player.spaceSkill && skillInfo(player.spaceSkill)) ? skillInfo(player.spaceSkill).name : 'đánh thường'}</b></div>`;
+  vhAutoLearn(); // save cũ / test mode: quét tự ngộ kỹ năng lớp
+  const tab = window._knTab && KN_TAB.find(t => t.id === window._knTab) ? window._knTab : 'lop';
+  window._knTab = tab;
+  const tinfo = KN_TAB.find(t => t.id === tab);
+  let html = moBang({ tieu:'Kỹ Năng', dong:tinfo.dong,
+    tabs: KN_TAB.map(t => ({ id:t.id, ten:t.ten, title:t.dong })), chon:tab, ham:'knTab' });
+  // Nút góc phải của ảnh mẫu ("Cảnh giới") → ở đây mở bảng Đại Thành, tầng tiến trình sâu hơn
+  // nằm sau cấp 120. ⚠ Bản đầu tôi trỏ nút này vào `openEvoPanel()` — một hàm KHÔNG TỒN TẠI.
+  // Bảng chọn nhánh Tiến Hoá chỉ tự mở khi một chiêu vừa chạm mốc 40/80/120, không có cửa mở
+  // tay. Nút chết thì không ném lỗi, không ai thấy, nên phải kiểm tên hàm chứ đừng đoán.
+  html += `<div class="kn-goc"><button class="mini-btn" onclick="window.openMastery()"
+      title="Bảng ${MASTERY_NAME} — mở ở cấp ${MASTERY_LV} sau khi xong chính tuyến">✦ ${MASTERY_NAME}</button></div>`;
+  if (tab === 'khac'){
+    html += `<div style="font-size:10.5px;color:#9aa8d4;line-height:1.5;margin-bottom:8px">⬆ +2,5% Sát Thương/cấp (Lumen) · mốc 20/40/60/80/100/120 thêm phù trợ · <b style="color:#7df9ff">40/80/120 ⚡Tiến Hóa</b> · <span style="color:#7fd8e0">Bản Năng <b>${Math.floor(player.khi || 0).toLocaleString('vi-VN')}</b></span> · ⌨ Space: <b>${(player.spaceSkill && skillInfo(player.spaceSkill)) ? skillInfo(player.spaceSkill).name : 'đánh thường'}</b></div>`;
   {
     html += `<div class="stat-sec">${SECTS[player.sect].name} — 1 chính · 1 phụ · 1 ${BUFF_SKILL_ID[player.sect] ? 'phù trợ' : 'chiêu phụ nữa'} · 1 tuyệt chiêu</div>`;
     html += equippedSkillRowHtml('a', 'Chính');
@@ -22118,6 +22361,14 @@ function renderSkillPanel(){
     html += `<div class="stat-sec">HỆ TẤN CHỨC PHỤ</div>`;
     for (const id of ['danchi','tieuhon']) html += legacyUniversalRowHtml(id);
   }
+    el('panel-skill').innerHTML = html;
+    return;
+  }
+  const cay = renderSkillPanelCay(tab);
+  html += `<div class="kn-wrap">${cay.html}${renderSkillPanelCT(tab, cay.ds)}</div>`;
+  html += `<div class="kn-ghi"><b style="color:#5fc96e">+</b> góc ô = nâng được ngay ·
+    ô mờ = chưa mở khoá · ô viền đứt = chưa gán kỹ năng</div>`;
+
   el('panel-skill').innerHTML = html;
 }
 
@@ -22284,6 +22535,45 @@ function flashSkillSlot(skillId){
   if (b){ b.classList.add('flash'); setTimeout(()=>b.classList.remove('flash'), 220); }
 }
 
+// ---------- CHÂN DUNG GÓC TRÁI ----------
+// Vẽ con Axie người chơi đang mang; chưa mang con nào (hoặc `/avatar off`) thì lui về chân
+// dung của LỚP — cùng tấm art mà thẻ chọn lớp dùng, nên hai chỗ không thể lệch nhau.
+//
+// ⚠ VẼ THEO NHU CẦU, KHÔNG VẼ MỖI KHUNG HÌNH. `updateHud()` chạy mỗi khung; dựng lại một
+// tấm 128×128 sáu chục lần mỗi giây chỉ để ra đúng một bức là trả tiền cho không.
+// Khoá đệm phải gồm CẢ id avatar LẪN lớp: đổi avatar mà không đổi lớp (thường xuyên) hay
+// đổi lớp mà không đổi avatar (đổi nhân vật) đều phải vẽ lại.
+let _cdKhoa = '';
+function veChanDung(){
+  const cv = el('cd-ava'), img = el('cd-lop');
+  if (!cv || !img || !player) return;
+  const id = avatarId(player);
+  const khoa = (id || '-') + '|' + player.sect;
+  if (khoa === _cdKhoa) return;
+  const N = cv.width;
+  const g = cv.getContext('2d');
+  g.clearRect(0, 0, N, N);
+  if (id){
+    const A = CHI_ANH.o[id];
+    // Ràng CẢ HAI chiều rồi mới thu — đúng khuôn `chiCoTrongMan()` đã dùng cho thú đi theo.
+    // Chỉ ràng chiều cao thì con bè nhất (tỉ lệ rộng/cao tới 1,52) tràn ra khỏi ô vuông và
+    // bị cắt mất đúng hai bên — mà hai bên là chỗ có càng, cánh, sừng.
+    const hh = N / Math.max(1, A.nhoRong / A.nhoCao);
+    const thanPx = hh * A.thanCao;
+    // `_chiVe` neo theo GÓT (`y + thanPx*0,38`) rồi lùi lên `hh*A.neoY`. Giải ngược ra `y`
+    // sao cho mép trên tấm rơi đúng giữa ô. Đừng dò tay con số này: 16 con có 16 `neoY`.
+    const y = (N - hh) / 2 + hh * A.neoY - thanPx * 0.38;
+    if (!chiVeNho(g, id, 0, N / 2, y, thanPx)) return;   // art chưa về — thử lại khung sau
+    cv.style.display = ''; img.style.display = 'none';
+    _cdKhoa = khoa;
+    return;
+  }
+  const u = (typeof ccLopIcon === 'function') ? ccLopIcon(player.sect) : '';
+  if (!u) return;                                        // art chưa về — thử lại khung sau
+  img.src = u; img.style.display = ''; cv.style.display = 'none';
+  _cdKhoa = khoa;
+}
+
 // ---------- HUD (override): mana · danh hiệu/lớp/cấp trên thanh ----------
 function updateHud(){
   const sect = SECTS[player.sect];
@@ -22294,14 +22584,19 @@ function updateHud(){
   const _nameHtml = `${tt?`<span class="title-tag">[${tt.name}]</span> `:''}${player.name ? `<span class="char-name">${player.name}</span>` : sect.name}${player.free>0?` <span class="hud-free" title="Còn ${player.free} điểm chưa cộng — bấm V">+${player.free}</span>`:''}${player.toiac>0?` · <b>TỘI ÁC ${player.toiac}</b>`:''}`;
   if (window._lastHudName !== _nameHtml){ window._lastHudName = _nameHtml; nameEl.innerHTML = _nameHtml; } // dirty-check: innerHTML rewrite is real DOM churn if done every frame
   nameEl.classList.toggle('toiac', (player.toiac||0) > 0);
-  // Viên đá Máu/Mana kiểu MU Online: chất lỏng dâng từ dưới lên, nên đổi width → height
+  // ⚠ THANH NGANG, KHÔNG CÒN LÀ VIÊN CẦU. Hai thứ này từng là cầu ở hai đầu thanh chiến đấu
+  // nên chất lỏng dâng theo `height`; nay chúng nằm trong khung chân dung góc trái và chạy
+  // theo `width`. Đổi một chỗ mà quên chỗ kia thì thanh đứng im ở 100% — trông y hệt "máu
+  // không tụt", tức là một lỗi cân bằng chứ không ra một lỗi giao diện.
   const hpPct = clamp(100*player.hp/player.maxHp, 0, 100), qiPct = clamp(100*player.qi/player.maxQi, 0, 100);
-  el('bar-hp').style.height = hpPct+'%';
-  el('txt-hp').textContent = `${Math.ceil(player.hp)}`;
+  el('bar-hp').style.width = hpPct+'%';
+  el('txt-hp').textContent = `${Math.ceil(player.hp)} / ${player.maxHp}`;
   el('orb-hp').title = `Sinh Lực ${Math.ceil(player.hp)} / ${player.maxHp}`;
-  el('bar-qi').style.height = qiPct+'%';
-  el('txt-qi').textContent = `${Math.floor(player.qi)}`;
+  el('bar-qi').style.width = qiPct+'%';
+  el('txt-qi').textContent = `${Math.floor(player.qi)} / ${player.maxQi}`;
   el('orb-qi').title = `Mana ${Math.floor(player.qi)} / ${player.maxQi}`;
+  { const _lv = el('hud-lv'); if (_lv) _lv.textContent = 'LV.' + player.level; }
+  veChanDung();
   el('hp-accent-fill').style.width = hpPct+'%';
   if (player.level >= MAX_LV){ el('bar-xp').style.width='100%'; el('txt-xp').textContent='MAX'; }
   else { el('bar-xp').style.width = (100*player.xp/XP_TABLE[player.level-1])+'%';
@@ -22365,8 +22660,6 @@ function updateHud(){
   if (autoBtn){ autoBtn.classList.remove('hidden'); updateAutoBtn(); }
   // quest tracker — chính tuyến + tối đa 2 phụ tuyến
   { const _th = trackerHtml(); if (window._lastTrack !== _th){ window._lastTrack = _th; el('quest-tracker').innerHTML = _th; } } // GDD Đợt 2 B2: cache để nút bấm không bị render đè
-  // hint — theo tầng cấp, tân thủ chỉ thấy phím cốt lõi
-  el('hint-bar').textContent = hintText();
   // taskbar: 4 ô kỹ năng cố định (chính/phụ/buff/tuyệt chiêu)
   for (let i = 0; i < 4; i++){
     const b = el('sk-'+i); if (!b) continue;
@@ -23771,8 +24064,14 @@ function drawMiniSeal(sc, sx, sy){
 function drawMinimap(){
   if (!miniCtx || !miniCvs) return;
   miniCvs.style.display = SETTINGS.minimap ? 'block' : 'none';
+  // Nút đổi CHỮ theo nấc, không chỉ đổi độ mờ — một nút mờ đi đọc ra "hỏng", còn một nút
+  // đổi chữ thì tự nói nó là công tắc và đang ở nấc nào.
   const btnMini = el('btn-minimap');
-  if (btnMini) btnMini.classList.toggle('off', !SETTINGS.minimap);
+  if (btnMini){
+    btnMini.classList.toggle('off', !SETTINGS.minimap);
+    const _t = SETTINGS.minimap ? '👁 Ẩn' : '👁 Hiện';
+    if (btnMini.textContent !== _t) btnMini.textContent = _t;
+  }
   if (!SETTINGS.minimap) return;
   const mw = miniCvs.width, mh = miniCvs.height;
   const sx = mw / MAP.w, sy = mh / MAP.h;
@@ -24339,10 +24638,418 @@ function noiMapHtml(mid){
   }).filter(Boolean).join(' · ');
   return bit ? `<div class="m-desc" style="margin-top:2px;opacity:.9">🧭 Đi bộ: ${bit}</div>` : '';
 }
-function renderMapPanel(){
-  const zt = zoneType();
-  let html = moBang({ tieu:'Bản Đồ Lunacia' });
-  html += `<div style="font-size:12px;color:#9aa8d4;margin-bottom:6px">Đang ở: <b style="color:${zt.color}">${mapDef().name}</b> · ${zt.name} · <span style="opacity:.7">Nhiệm vụ: phím Q</span>${window.TEST_MODE ? ' · <span style="color:#7fd4ff">[CHẾ ĐỘ TEST — dịch chuyển tự do]</span>' : ''}</div>`;
+// ═══════════ TAB THẾ GIỚI CỦA BẢNG BẢN ĐỒ ═══════════
+//
+// Trước bản này bấm M ra một DANH SÁCH CHỮ mười hai dòng. Danh sách nói được "vùng nào cấp bao
+// nhiêu" nhưng không nói được thứ mà một bản đồ sinh ra để nói: **cái gì nằm cạnh cái gì**. Người
+// chơi đọc xong vẫn không biết mình đang ở đâu trong thế giới, và biển chỉ đường trong map ("Lối
+// Bắc → Bug Tribe Tunnels") thì không có chỗ nào đối chiếu.
+//
+// ⚠ TẤM BẢN ĐỒ NÀY KHÔNG PHẢI MỘT BỨC TRANH — nó DỰNG TỪ DỮ LIỆU ĐANG CHẠY:
+//
+//   | thứ trên bản đồ | suy từ |
+//   |---|---|
+//   | hình của vùng   | chính `md.diTrong` (đa giác đi được thật) |
+//   | màu             | `md.ground` |
+//   | cỡ to nhỏ       | `md.w × md.h` thật |
+//   | đường nối       | `GATES` |
+//   | khoá / mở       | `mapGate()` — cùng cửa mà nút Dịch Chuyển dùng |
+//   | chỗ đứng        | `THE_GIOI` trong `data/canbang.js` — thứ DUY NHẤT đặt tay |
+//
+// Nên nó không thể nói dối. Sửa đa giác một vùng là hình trên bản đồ đổi theo; thêm một cổng là
+// có thêm một con đường. Vẽ tay một tấm ảnh rồi dán tên lên thì đúng đúng một lần, rồi sai mãi —
+// và kiểu sai đó không ai phát hiện được, y như bài học `mapBanSac()` đã ghi.
+// ⚠ `leD` (lề DƯỚI) rộng hơn ba lề kia: nhãn tên + dải cấp vẽ ở `cy + r + 13` và `+24`, tức
+// vùng nằm sát đáy thì HÌNH lọt khung mà TÊN thì rơi ra ngoài. Bản đầu để lề đều và Beast Herd
+// Camp mất hẳn tên.
+// Bảng chỗ đứng của từng vùng, nạp bằng thẻ script riêng như CHI_ANH / THU_ANH.
+const THE_GIOI = window.THE_GIOI || {};
+const TG_KHUNG = { w:660, h:500, le:44, leD:74 };
+let _tgBoCuc = null, _tgKey = null, _tgHover = null;
+// Hình của một vùng: lấy `diTrong`, chuẩn hoá về hộp bao của CHÍNH NÓ, rồi thu theo cỡ map thật.
+// Chuẩn hoá theo hộp bao chứ không theo khổ map: map nào cũng có lề trống quanh đa giác, giữ lề
+// thì vùng nào cũng teo lại thành một chấm giữa một ô vuông rỗng.
+function tgHinhVung(md){
+  const dg = md.diTrong;
+  if (!dg || dg.length < 3) return null;
+  let x0 = 1e9, y0 = 1e9, x1 = -1e9, y1 = -1e9;
+  for (const p of dg){ if (p[0]<x0) x0=p[0]; if (p[0]>x1) x1=p[0]; if (p[1]<y0) y0=p[1]; if (p[1]>y1) y1=p[1]; }
+  const w = Math.max(1, x1-x0), h = Math.max(1, y1-y0), m = Math.max(w, h);
+  return { pts: dg.map(p => [ (p[0]-x0-w/2)/m, (p[1]-y0-h/2)/m ]), ti: w/h };
+}
+function tgBoCuc(){
+  const key = TG_KHUNG.w + 'x' + TG_KHUNG.h + '|' + Object.keys(THE_GIOI).join(',');
+  if (_tgBoCuc && _tgKey === key) return _tgBoCuc;
+  const ids = Object.keys(THE_GIOI).filter(id => MAPS[id]);
+  let x0 = 1e9, y0 = 1e9, x1 = -1e9, y1 = -1e9;
+  for (const id of ids){ const p = THE_GIOI[id];
+    if (p.x<x0) x0=p.x; if (p.x>x1) x1=p.x; if (p.y<y0) y0=p.y; if (p.y>y1) y1=p.y; }
+  const le = TG_KHUNG.le, leD = TG_KHUNG.leD;
+  const sc = Math.min((TG_KHUNG.w - le*2) / Math.max(0.001, x1-x0),
+                      (TG_KHUNG.h - le - leD) / Math.max(0.001, y1-y0));
+  // Cỡ vẽ ra tỉ lệ với CĂN BẬC HAI của diện tích map thật — dùng thẳng diện tích thì map lớn
+  // nhất nuốt cả tấm (4,7 lần map nhỏ nhất về diện tích, chỉ 2,2 lần về cạnh).
+  let dMax = 1;
+  for (const id of ids) dMax = Math.max(dMax, Math.sqrt((MAPS[id].w||2600) * (MAPS[id].h||1900)));
+  const o = {};
+  for (const id of ids){
+    const md = MAPS[id], p = THE_GIOI[id];
+    const d = Math.sqrt((md.w||2600) * (md.h||1900)) / dMax;
+    o[id] = { cx: le + (p.x-x0)*sc, cy: le + (p.y-y0)*sc,
+              r: sc * 0.40 * (0.62 + 0.38*d), hinh: tgHinhVung(md) };
+  }
+  _tgBoCuc = o; _tgKey = key;
+  return o;
+}
+// Cạnh của đồ thị thế giới, gộp hai chiều thành một. Đọc thẳng `GATES` nên thêm cổng là có
+// thêm đường, không phải nhớ sửa ở đây.
+function tgCanh(){
+  const bc = tgBoCuc(), da = {}, ra = [];
+  for (const g of GATES){
+    if (!bc[g.map] || !bc[g.to]) continue;
+    const k = g.map < g.to ? g.map+'|'+g.to : g.to+'|'+g.map;
+    if (da[k]) continue; da[k] = 1;
+    ra.push({ a:g.map, b:g.to });
+  }
+  return ra;
+}
+// Hướng THẬT giữa hai vùng trên bản đồ, trả về 'Bắc'/'Nam'/'Đông'/'Tây'. Bài kiểm dùng chung
+// hàm này với phần vẽ nên không có chuyện bài kiểm và bản đồ hiểu "hướng" khác nhau.
+window.tgHuong = tgHuong;   // bài kiểm đối chiếu hướng biển cổng dùng CHUNG hàm này
+function tgHuong(a, b){
+  const bc = tgBoCuc(); if (!bc[a] || !bc[b]) return null;
+  const dx = bc[b].cx - bc[a].cx, dy = bc[b].cy - bc[a].cy;
+  return Math.abs(dx) >= Math.abs(dy) ? (dx > 0 ? 'Đông' : 'Tây') : (dy > 0 ? 'Nam' : 'Bắc');
+}
+let _tgNen = null;
+function tgNen(){
+  if (_tgNen) return _tgNen;
+  const c = document.createElement('canvas'); c.width = TG_KHUNG.w; c.height = TG_KHUNG.h;
+  const g = c.getContext('2d');
+  const gr = g.createLinearGradient(0, 0, TG_KHUNG.w, TG_KHUNG.h);
+  gr.addColorStop(0, '#2a2418'); gr.addColorStop(0.5, '#332b1c'); gr.addColorStop(1, '#241f16');
+  g.fillStyle = gr; g.fillRect(0, 0, TG_KHUNG.w, TG_KHUNG.h);
+  // vân giấy: nhiễu thưa, hạt CỐ ĐỊNH nên tấm nền không nhấp nháy giữa hai lần mở bảng
+  const ra = _hatRng(_bamChuoi('bandothegioi'));
+  for (let i = 0; i < 2600; i++){
+    g.globalAlpha = 0.02 + ra()*0.05;
+    g.fillStyle = ra() < 0.5 ? '#6b5c3c' : '#171208';
+    g.fillRect(ra()*TG_KHUNG.w, ra()*TG_KHUNG.h, 1 + ra()*2, 1 + ra()*2);
+  }
+  g.globalAlpha = 1;
+  // viền cháy sém quanh mép
+  const vg = g.createRadialGradient(TG_KHUNG.w/2, TG_KHUNG.h/2, TG_KHUNG.h*0.30,
+                                    TG_KHUNG.w/2, TG_KHUNG.h/2, TG_KHUNG.w*0.72);
+  vg.addColorStop(0, 'rgba(0,0,0,0)'); vg.addColorStop(1, 'rgba(10,7,3,.75)');
+  g.fillStyle = vg; g.fillRect(0, 0, TG_KHUNG.w, TG_KHUNG.h);
+  _tgNen = c;
+  return c;
+}
+// Màu `ground` viết cho MẶT ĐẤT TRONG MÀN — rất tối (#1d2a1c…#3a4450) vì nó nằm dưới ánh sáng
+// và dưới cả một tấm nền art. Đặt nguyên màu ấy lên giấy da thì mười hai vùng ra mười hai vệt
+// gần như đen như nhau. Nâng sáng và pha ấm cho tách khỏi giấy, nhưng GIỮ NGUYÊN sắc — vùng nào
+// xanh vẫn xanh, vùng nào nâu vẫn nâu, nên bản đồ vẫn nói đúng vùng ấy trông thế nào.
+// (Cùng bài học với `itemPal`: icon nằm trên nền panel TỐI nên cần sàn sáng riêng — một bảng màu
+//  không dùng chung được cho hai chỗ có nền khác nhau.)
+function tgMauVung(md){
+  const h = (md.ground || '#3a4230').replace('#', '');
+  let r = parseInt(h.slice(0,2),16), gg = parseInt(h.slice(2,4),16), b = parseInt(h.slice(4,6),16);
+  const K = 2.05, AM = 26;
+  r = Math.min(255, Math.round(r*K + AM)); gg = Math.min(255, Math.round(gg*K + AM*0.85));
+  b = Math.min(255, Math.round(b*K + AM*0.45));
+  return `rgb(${r},${gg},${b})`;
+}
+// Nhãn sát mép khung thì bị cắt cụt — và cắt cụt một cái TÊN thì người chơi đọc ra một tên khác.
+// Kẹp tâm chữ vào trong khung theo đúng bề rộng chữ đó. Dùng chung cho cả hai tab.
+function _nhanKep(g, t, x, y, w){
+  const nua = g.measureText(t).width / 2 + 3;
+  g.fillText(t, clamp(x, nua, w - nua), y);
+}
+function _nhanVien(g, t, x, y, w){
+  const nua = g.measureText(t).width / 2 + 3;
+  g.strokeText(t, clamp(x, nua, w - nua), y);
+}
+function veTheGioi(g){
+  const bc = tgBoCuc();
+  g.clearRect(0, 0, TG_KHUNG.w, TG_KHUNG.h);
+  g.drawImage(tgNen(), 0, 0);
+  // ── đường nối, vẽ TRƯỚC vùng để nó chui xuống dưới mép đất ──
+  for (const c of tgCanh()){
+    const A = bc[c.a], B = bc[c.b];
+    const moA = mapGate(c.a).ok, moB = mapGate(c.b).ok;
+    g.strokeStyle = (moA && moB) ? 'rgba(226,196,128,.42)' : 'rgba(120,106,78,.22)';
+    g.lineWidth = 2.4; g.setLineDash([7, 5]);
+    g.beginPath(); g.moveTo(A.cx, A.cy); g.lineTo(B.cx, B.cy); g.stroke();
+    g.setLineDash([]);
+  }
+  // ── từng vùng ──
+  const ids = Object.keys(bc);
+  for (const id of ids){
+    const md = MAPS[id], o = bc[id], cur = id === curMap;
+    const mo = mapGate(id).ok, hv = _tgHover === id;
+    g.save();
+    g.translate(o.cx, o.cy);
+    if (o.hinh){
+      g.beginPath();
+      for (let i = 0; i < o.hinh.pts.length; i++){
+        const p = o.hinh.pts[i];
+        if (i) g.lineTo(p[0]*o.r*2, p[1]*o.r*2); else g.moveTo(p[0]*o.r*2, p[1]*o.r*2);
+      }
+      g.closePath();
+    } else { g.beginPath(); g.arc(0, 0, o.r, 0, 7); }
+    // bóng đổ nhẹ cho vùng đất nổi lên khỏi mặt giấy
+    g.save(); g.translate(2.5, 3.5); g.fillStyle = 'rgba(10,7,3,.45)'; g.fill(); g.restore();
+    g.fillStyle = mo ? tgMauVung(md) : '#241f18';
+    g.globalAlpha = mo ? (hv ? 1 : 0.92) : 0.5;
+    g.fill();
+    g.globalAlpha = 1;
+    g.lineWidth = cur ? 2.6 : hv ? 2 : 1.2;
+    g.strokeStyle = cur ? '#8ef0a0' : hv ? '#ffe9a8' : mo ? 'rgba(226,196,128,.55)' : 'rgba(120,106,78,.35)';
+    g.stroke();
+    g.restore();
+    // nhãn: tên + dải cấp, đặt DƯỚI vùng
+    const ten = mo ? md.name : md.name;
+    g.font = `${cur ? 'bold ' : ''}11.5px "Be Vietnam Pro", sans-serif`;
+    g.textAlign = 'center';
+    g.lineWidth = 3; g.strokeStyle = 'rgba(12,8,3,.9)';
+    _nhanVien(g, ten, o.cx, o.cy + o.r + 13, TG_KHUNG.w);
+    g.fillStyle = cur ? '#8ef0a0' : mo ? '#f0e2bd' : '#8a8275';
+    _nhanKep(g, ten, o.cx, o.cy + o.r + 13, TG_KHUNG.w);
+    // Thành khai `range:'—'`; in ra "cấp —" thì trông như dữ liệu thiếu chứ không ra "chỗ này
+    // không có quái". Gọi đúng tên nó.
+    const phu = !mo ? `🔒 cấp ${md.min}` : (!md.range || md.range === '—') ? 'Thành · An Toàn' : `cấp ${md.range}`;
+    g.font = '9.5px "Be Vietnam Pro", sans-serif';
+    g.lineWidth = 3; g.strokeStyle = 'rgba(12,8,3,.9)';
+    _nhanVien(g, phu, o.cx, o.cy + o.r + 24, TG_KHUNG.w);
+    g.fillStyle = mo ? 'rgba(226,196,128,.75)' : 'rgba(138,130,117,.8)';
+    _nhanKep(g, phu, o.cx, o.cy + o.r + 24, TG_KHUNG.w);
+  }
+  // ── ĐANG Ở ĐÂY: lá cờ nhấp nháy, vẽ SAU CÙNG để không vùng nào che ──
+  const cur = bc[curMap];
+  if (cur){
+    const t = performance.now() / 1000;
+    const nh = 0.5 + 0.5 * Math.sin(t * 3.2);
+    g.save();
+    g.globalAlpha = 0.30 + nh * 0.35;
+    g.beginPath(); g.arc(cur.cx, cur.cy, cur.r + 6 + nh * 5, 0, 7);
+    g.strokeStyle = '#8ef0a0'; g.lineWidth = 2; g.stroke();
+    g.globalAlpha = 1;
+    // cán cờ + lá cờ
+    const fy = cur.cy - cur.r - 4;
+    g.strokeStyle = '#e8f5ea'; g.lineWidth = 2;
+    g.beginPath(); g.moveTo(cur.cx, fy); g.lineTo(cur.cx, fy - 20); g.stroke();
+    g.fillStyle = '#57d97a';
+    g.beginPath(); g.moveTo(cur.cx, fy - 20); g.lineTo(cur.cx + 14, fy - 15.5);
+    g.lineTo(cur.cx, fy - 11); g.closePath(); g.fill();
+    g.restore();
+  }
+}
+function tgTaiDiem(mx, my){
+  const bc = tgBoCuc();
+  let tot = null, totD = 1e9;
+  for (const id in bc){
+    const o = bc[id], d = Math.hypot(mx - o.cx, my - o.cy);
+    // Bắt theo KHOẢNG CÁCH TỚI TÂM chứ không theo đa giác: đa giác của vùng có eo và vịnh, bấm
+    // trúng một cái vịnh thì hụt — mà người chơi đang bấm vào "vùng đất này", không bấm vào
+    // đúng một điểm ảnh của bờ biển.
+    if (d < o.r * 1.12 && d < totD){ tot = id; totD = d; }
+  }
+  return tot;
+}
+// ═══════════ BẢNG BẢN ĐỒ — HAI TAB: HIỆN TẠI · THẾ GIỚI ═══════════
+// Khuôn lấy từ bảng bản đồ của dòng MMO nhìn xuống (Võ Lâm / Ragnarok): tab đầu là vùng ĐANG
+// đứng có đủ mốc và bộ lọc, tab sau là cả thế giới có chấm "mình đang ở đây".
+// ⚠ Ảnh tham khảo chủ dự án gửi là ảnh chụp game khác — lấy CÁCH BÀY, không lấy tranh của họ.
+// Tấm bản đồ thế giới ở đây dựng từ chính dữ liệu map của game này (xem khối TAB THẾ GIỚI).
+let _banDoTab = 'tg';
+const _htLoc = { npcNv:1, npcCn:1, npcBb:1, quai:1, cong:1, moc:1 };
+const _HT_KHUNG = { w:660, h:476 };
+window.banDoTab = function(id){ _banDoTab = id; renderMapPanel(); AudioSys.sfx('ui', 0.5); };
+window.banDoLoc = function(k, v){ _htLoc[k] = v ? 1 : 0; renderMapPanel(); };
+// NPC chia nhóm theo `talk` — đúng ba nhóm mà bảng bản đồ của dòng game này vẫn chia.
+function _npcNhom(n){
+  if (n.talk === 'quest') return 'npcNv';
+  if (n.talk === 'shop')  return 'npcBb';
+  return 'npcCn';
+}
+// ── Tab HIỆN TẠI ────────────────────────────────────────────────────────────────────────
+// Lớp nền dùng lại NGUYÊN `drawMinimapStatic()` của bản đồ thu nhỏ, chỉ truyền khổ lớn hơn —
+// hàm đó đã nhận `(mw, mh, sx, sy, md)` và nhớ theo khoá `curMap|WxH`, nên khổ khác là một ô
+// nhớ khác, không đụng gì tới bản đồ góc màn hình. Chép lại phần vẽ nền sang đây là dựng bản
+// sao thứ hai của một luật đang sống — thứ mà tệp này đã trả giá vài lần vì làm thế.
+function veHienTai(g){
+  const md = mapDef();
+  const mw = _HT_KHUNG.w, mh = _HT_KHUNG.h;
+  const sx = mw / MAP.w, sy = mh / MAP.h;
+  g.clearRect(0, 0, mw, mh);
+  g.drawImage(drawMinimapStatic(mw, mh, sx, sy, md), 0, 0);
+  // ⚠ Lớp nền kia phủ tối 40% vì nó vẽ cho ô 200×146 ở góc màn hình, nơi nền phải LÙI lại sau
+  // các chấm. Ở khổ 660×500 thì cùng độ tối ấy ra một tấm gần như đen — bản đồ vùng mà không
+  // đọc được địa hình thì chỉ còn là một cái nền cho mấy chấm. Kéo sáng lại đúng ở đây, không
+  // sửa lớp nền chung: hai chỗ dùng có hai nền khác nhau nên cần hai mức sáng khác nhau.
+  g.save(); g.globalCompositeOperation = 'lighter'; g.globalAlpha = 0.16;
+  g.fillStyle = md.ground || '#3a4230'; g.fillRect(0, 0, mw, mh); g.restore();
+  // ── điểm đánh quái: vòng tròn bãi + số con ──
+  if (_htLoc.quai) for (const pk of packsOf(curMap)){
+    const x = pk.x*sx, y = pk.y*sy, r = Math.max(6, (pk.r||110)*sx);
+    g.beginPath(); g.arc(x, y, r, 0, 7);
+    g.fillStyle = pk.farm ? 'rgba(255,150,60,.16)' : 'rgba(224,90,74,.11)';
+    g.fill();
+    g.strokeStyle = pk.farm ? 'rgba(255,170,80,.75)' : 'rgba(224,90,74,.45)';
+    g.lineWidth = pk.farm ? 1.8 : 1; g.stroke();
+    const d = MOBS[pk.mob];
+    if (d){
+      g.font = '9px "Be Vietnam Pro", sans-serif'; g.textAlign = 'center';
+      g.lineWidth = 3; g.strokeStyle = 'rgba(10,8,4,.85)';
+      const t = `${d.name} ×${pk.n}`;
+      _nhanVien(g, t, x, y + 3, mw); g.fillStyle = pk.farm ? '#ffca86' : '#e8b0a6'; _nhanKep(g, t, x, y + 3, mw);
+    }
+  }
+  // ── mốc thế giới: Rương Canh · Vỉa Cốt · bãi cỏ Đàn Thú ──
+  if (_htLoc.moc){
+    for (const r of ruongCuaMap(curMap)){
+      const mo = ruongDaMo(r.id);
+      g.fillStyle = mo ? 'rgba(150,140,120,.7)' : '#ffd76a';
+      g.strokeStyle = 'rgba(0,0,0,.7)'; g.lineWidth = 1;
+      g.beginPath(); g.rect(r.x*sx - 4, r.y*sy - 3, 8, 6); g.fill(); g.stroke();
+    }
+    const v = viaCuaMap(curMap);
+    if (v){
+      g.save(); g.translate(v.x*sx, v.y*sy); g.rotate(Math.PI/4);
+      g.fillStyle = '#8ef0a0'; g.strokeStyle = 'rgba(0,0,0,.7)'; g.lineWidth = 1;
+      g.fillRect(-4, -4, 8, 8); g.strokeRect(-4, -4, 8, 8); g.restore();
+    }
+    const bai = thuBaiCo(curMap);
+    if (bai){
+      g.beginPath(); g.arc(bai.x*sx, bai.y*sy, Math.max(8, 300*sx), 0, 7);
+      g.strokeStyle = 'rgba(140,220,150,.45)'; g.lineWidth = 1; g.setLineDash([4,4]); g.stroke();
+      g.setLineDash([]);
+    }
+  }
+  // ── cổng / điểm truyền tống ──
+  // Cổng: chấm lam + TÊN VÙNG BÊN KIA + DẢI CẤP của nó. Ghi tên cổng không thôi ("Lối Bắc") thì
+  // người chơi vẫn phải mở tab khác mới biết bên kia cấp bao nhiêu — mà đó đúng là câu hỏi duy
+  // nhất người ta hỏi khi nhìn một cái cổng.
+  if (_htLoc.cong) for (const gt of GATES){
+    if (gt.map !== curMap) continue;
+    const dm = MAPS[gt.to];
+    const mo = dm ? mapGate(gt.to).ok : true;
+    g.fillStyle = mo ? '#7fd4ff' : '#6a6a72'; g.strokeStyle = 'rgba(0,0,0,.7)'; g.lineWidth = 1.2;
+    g.beginPath(); g.arc(gt.x*sx, gt.y*sy, 5.5, 0, 7); g.fill(); g.stroke();
+    g.beginPath(); g.arc(gt.x*sx, gt.y*sy, 2, 0, 7); g.fillStyle = '#0d1a22'; g.fill();
+    g.font = 'bold 9.5px "Be Vietnam Pro", sans-serif'; g.textAlign = 'center';
+    g.lineWidth = 3; g.strokeStyle = 'rgba(10,8,4,.9)';
+    const t1 = dm ? dm.name : gt.name;
+    _nhanVien(g, t1, gt.x*sx, gt.y*sy - 10, mw);
+    g.fillStyle = mo ? '#bfe6ff' : '#8a8894'; _nhanKep(g, t1, gt.x*sx, gt.y*sy - 10, mw);
+    if (dm){
+      const t2 = (!dm.range || dm.range === '—') ? 'Thành' : `Cấp ${dm.range}`;
+      g.font = '8.5px "Be Vietnam Pro", sans-serif';
+      g.lineWidth = 3; g.strokeStyle = 'rgba(10,8,4,.9)';
+      _nhanVien(g, t2, gt.x*sx, gt.y*sy + 15, mw);
+      g.fillStyle = mo ? 'rgba(191,230,255,.75)' : 'rgba(138,136,148,.8)';
+      _nhanKep(g, t2, gt.x*sx, gt.y*sy + 15, mw);
+    }
+  }
+  // ── NPC theo ba nhóm ──
+  for (const n of NPCS){
+    if (n.map !== curMap) continue;
+    const nh = _npcNhom(n);
+    if (!_htLoc[nh]) continue;
+    const col = nh === 'npcNv' ? '#ffd76a' : nh === 'npcBb' ? '#9fe89f' : '#d8c8a0';
+    g.fillStyle = col; g.strokeStyle = 'rgba(0,0,0,.7)'; g.lineWidth = 1;
+    g.beginPath(); g.arc(n.x*sx, n.y*sy, 4, 0, 7); g.fill(); g.stroke();
+    g.font = '9px "Be Vietnam Pro", sans-serif'; g.textAlign = 'center';
+    g.lineWidth = 3; g.strokeStyle = 'rgba(10,8,4,.85)';
+    _nhanVien(g, n.name, n.x*sx, n.y*sy + 13, mw);
+    g.fillStyle = col; _nhanKep(g, n.name, n.x*sx, n.y*sy + 13, mw);
+  }
+  // ── người chơi: mũi tên trắng, vẽ SAU CÙNG ──
+  g.save();
+  g.translate(player.x*sx, player.y*sy); g.rotate(player.face);
+  g.fillStyle = '#fff'; g.strokeStyle = 'rgba(0,0,0,.8)'; g.lineWidth = 1.2;
+  g.beginPath(); g.moveTo(7, 0); g.lineTo(-5, 4.5); g.lineTo(-5, -4.5); g.closePath();
+  g.fill(); g.stroke();
+  g.restore();
+}
+// Bấm lên bản đồ vùng = chạy tới đó. Cùng đường mà bấm bản đồ thu nhỏ đang dùng (`moveTarget`),
+// nên không có luật đi lại thứ hai.
+window.htBamBanDo = function(ev){
+  const c = ev.currentTarget, b = c.getBoundingClientRect();
+  const x = (ev.clientX - b.left) / b.width * MAP.w;
+  const y = (ev.clientY - b.top)  / b.height * MAP.h;
+  // Bấm trúng một cái cổng = HỎI VỀ VÙNG BÊN KIA, không phải chạy tới cổng. Bán kính bắt tính
+  // ngược từ khổ vẽ ra (14px trên tấm 660) để nó không đổi theo khổ map.
+  if (_htLoc.cong){
+    const bk = 14 * MAP.w / _HT_KHUNG.w;
+    let gan = null, dGan = bk;
+    for (const gt of GATES){
+      if (gt.map !== curMap || !MAPS[gt.to]) continue;
+      const d = dist(x, y, gt.x, gt.y);
+      if (d < dGan){ gan = gt; dGan = d; }
+    }
+    if (gan){ window.ttMo(gan.to); return; }
+  }
+  moveTarget = { x, y }; moveWaypoint = null; movePlanClear();
+  addFloat(player.x, player.y - 40, '🧭 Đang đi tới…', '#7fd4ff', 12);
+  AudioSys.sfx('ui', 0.5);
+};
+function htHtml(){
+  const md = mapDef(), zt = zoneType();
+  const ck = (k, ten) => `<label class="bd-loc"><input type="checkbox" ${_htLoc[k]?'checked':''} onchange="banDoLoc('${k}',this.checked)"> ${ten}</label>`;
+  const npcs = NPCS.filter(n => n.map === curMap);
+  const dsNpc = npcs.length
+    ? npcs.map(n => `<button class="bd-npc" onclick="htDiToi(${Math.round(n.x)},${Math.round(n.y)})" title="Tự đi tới chỗ ${n.name}">${n.name}</button>`).join('')
+    : '<div style="opacity:.55;font-size:11px;padding:6px">Vùng này không có ai.</div>';
+  return `<div class="bd-hai">
+    <div class="bd-trai">
+      <canvas id="bd-ht" width="${_HT_KHUNG.w}" height="${_HT_KHUNG.h}" onclick="htBamBanDo(event)" title="Bấm để tự chạy tới"></canvas>
+      <div class="bd-loc-hang">${ck('npcCn','NPC chức năng')}${ck('npcNv','NPC nhiệm vụ')}${ck('npcBb','NPC buôn bán')}${ck('quai','Điểm đánh quái')}${ck('cong','Điểm truyền tống')}${ck('moc','Rương · Vỉa · Đàn thú')}</div>
+    </div>
+    <div class="bd-phai">
+      <div class="bd-ten" style="color:${zt.color}">${md.name}</div>
+      <div class="bd-phu">${zt.name} · cấp ${md.range}</div>
+      <div class="bd-ds">${dsNpc}</div>
+      <div class="m-desc" style="margin-top:6px">${md.desc}</div>
+      ${banSacHtml(curMap)}${noiMapHtml(curMap)}${bandSummaryHtml(md)}
+    </div></div>`;
+}
+window.htDiToi = function(x, y){
+  moveTarget = { x, y }; moveWaypoint = null; movePlanClear();
+  closePanels();
+  addFloat(player.x, player.y - 40, '🧭 Đang đi tới…', '#7fd4ff', 12);
+};
+// ── Vòng vẽ của bảng: chỉ chạy khi bảng đang mở ──────────────────────────────────────────
+// Lá cờ "đang ở đây" nhấp nháy và mũi tên người chơi phải đi theo nhân vật, nên bảng cần một
+// vòng vẽ riêng. Nó TỰ TẮT khi bảng đóng — không được để một vòng rAF thứ hai chạy suốt phiên
+// song song với vòng game, đúng bài học `startGame()` phải gọi `titleStop()`.
+let _bdVongId = 0;
+function bdVongVe(){
+  const p = el('panel-map');
+  if (!p || p.classList.contains('hidden')){ _bdVongId = 0; return; }
+  const c = el(_banDoTab === 'tg' ? 'bd-tg' : 'bd-ht');
+  if (c){ const g = c.getContext('2d'); if (_banDoTab === 'tg') veTheGioi(g); else veHienTai(g); }
+  _bdVongId = requestAnimationFrame(bdVongVe);
+}
+function bdBatVong(){ if (!_bdVongId) _bdVongId = requestAnimationFrame(bdVongVe); }
+window.tgBamBanDo = function(ev){
+  const c = ev.currentTarget, b = c.getBoundingClientRect();
+  const id = tgTaiDiem((ev.clientX - b.left) / b.width * TG_KHUNG.w,
+                       (ev.clientY - b.top)  / b.height * TG_KHUNG.h);
+  if (!id) return;
+  window.tgChon(id);
+};
+window.tgReBanDo = function(ev){
+  const c = ev.currentTarget, b = c.getBoundingClientRect();
+  _tgHover = tgTaiDiem((ev.clientX - b.left) / b.width * TG_KHUNG.w,
+                       (ev.clientY - b.top)  / b.height * TG_KHUNG.h);
+  c.style.cursor = _tgHover ? 'pointer' : 'default';
+};
+// MỘT cửa duy nhất cho "bấm vào một vùng", dùng chung cho cả chấm trên bản đồ lẫn nút trong
+// danh sách — nếu tách hai đường thì sớm muộn hai bên cho phép hai thứ khác nhau.
+window.tgChon = function(id){ window.ttMo(id); };
+function tgDanhSachHtml(){
+  let html = '';
   // GDD Đợt 2 B2: badge mục tiêu NV trên từng vùng
   const _qt = questTarget(currentQuest());
   const _sqMaps = {};
@@ -24351,7 +25058,6 @@ function renderMapPanel(){
     if (_st && _st.st !== 'claimed'){ const _t2 = sideQuestTarget(sq); if (_t2) _sqMaps[_t2.map] = true; }
   }
   const _badge = (mid) => `${_qt && _qt.map === mid ? ' <span title="Mục tiêu nhiệm vụ chính tuyến" style="color:#ffd76a;font-weight:700">❗</span>' : ''}${_sqMaps[mid] ? ' <span title="Mục tiêu phụ tuyến đang làm" style="color:#7fd4ff;font-weight:700">◈</span>' : ''}`;
-
   for (const id in MAPS){
     const m = MAPS[id], z2 = ZONE_TYPES[m.type];
     if (m.dungeon && !window.TEST_MODE) continue; // phó bản chỉ vào qua cổng dịch chuyển — không hiện ở đây (trừ chế độ test)
@@ -24396,7 +25102,107 @@ function renderMapPanel(){
         ${!wpOk ? '<span style="font-size:11px;color:#6a6255" title="Đã đủ cấp, nhưng chưa từng đặt chân tới — đi bộ tới một lần là mở">🚩 Đi bộ tới để mở</span>' : ''}
         ${wpOk && m.packs && m.packs.length ? `<button class="mini-btn" style="margin-left:4px" onclick="openStageSelect('${id}')" title="Vào đánh ngay 1 cụm quái — không cần đi bộ tới">⚔ Chọn Trận</button>` : ''}</span></div>`;
   }
-  el('panel-map').innerHTML = html;
+  return html;
+}
+// ═══════════ HỘP TRUYỀN TỐNG — bấm một vùng thì ĐỌC TRƯỚC, đi sau ═══════════
+//
+// Bản đầu bấm vào vùng là dịch chuyển thẳng. Sai một nhịp: người chơi bấm để XEM (vùng này cấp
+// bao nhiêu? có trùm gì? giờ nào có sự kiện?) rồi bị quăng sang map khác. Khuôn của dòng MMO
+// nhìn xuống làm đúng thứ tự ngược lại — hiện một tấm thẻ đọc xong rồi mới chọn đi hay không.
+//
+// ⚠ MỌI DÒNG TRONG THẺ ĐỀU PHẢI TRA RA TỪ DỮ LIỆU ĐANG CHẠY. Một tấm thẻ "thông tin vùng" chép
+// cứng là kiểu nói dối tệ nhất: nó trông đáng tin nhất và không ai đi kiểm. Giới hạn ← `md.min`,
+// loại quái ← `md.range`, cấp luyện ← `bandLvText()`, trùm ← `BOSS_DEFS`, giờ sự kiện ← quét
+// thẳng `matonMapFor`/`goldenMapFor` (xem `ttGioSuKien`).
+let _ttChon = null;
+window.ttMo = function(id){ if (MAPS[id]) { _ttChon = id; renderMapPanel(); AudioSys.sfx('ui', 0.5); } };
+window.ttDong = function(){ _ttChon = null; renderMapPanel(); };
+// Giờ mà một SỰ KIỆN THẾ GIỚI thật sự rơi vào vùng này. Không đoán, không chép: quét tới các
+// mốc giờ của chính hai bộ đếm ấy rồi hỏi `*MapFor` xem mốc đó vào map nào.
+// ⚠ Quét đủ một VÒNG XOAY, không quét "24 giờ tới". Xâm Lăng Vàng xoay 8 map × 6 mốc/ngày nên
+// một vùng chỉ tới lượt sau ~32 giờ — quét một ngày thì nửa số vùng báo "không có", sai.
+function ttGioSuKien(id){
+  const gio = (nextFn, mapFn, soMoc) => {
+    const ra = new Set();
+    let t = nextFn(Date.now());
+    for (let i = 0; i < soMoc; i++){
+      if (mapFn(t) === id) ra.add(String(new Date(t).getHours()).padStart(2,'0') + ':00');
+      t = nextFn(t + 60000);
+    }
+    return [...ra].sort();
+  };
+  return {
+    maton:  gio(matonNextBoundary,  matonMapFor,  6 * 8),   // 6 mốc/ngày × 8 vùng
+    golden: gio(goldenNextBoundary, goldenMapFor, 6 * 8),
+  };
+}
+function ttHtml(){
+  const id = _ttChon; if (!id) return '';
+  const md = MAPS[id], g = mapGate(id), cur = id === curMap;
+  const wp = window.TEST_MODE || (player.wpUnlocked && player.wpUnlocked[id]);
+  const bd = (typeof BOSS_DEFS !== 'undefined') && BOSS_DEFS[id];
+  const dai = [0,1,2].map(b => bandLvText(md, b)).filter(Boolean).join(' · ');
+  const sk = ttGioSuKien(id);
+  // Cổng đi bộ thẳng từ chỗ đang đứng — chỉ mời "Chạy Bộ" khi có đường thật.
+  const cong = GATES.find(x => x.map === curMap && x.to === id);
+  const hang = (k, v, mau) => v ? `<div class="tt-hang"><span class="tt-k">${k}</span><span class="tt-v"${mau?` style="color:${mau}"`:''}>${v}</span></div>` : '';
+  let h = `<div class="tt-nen" onclick="ttDong()"></div><div class="tt-hop">
+    <div class="tt-tieu">Truyền Tống<button class="tt-x" onclick="ttDong()">✕</button></div>
+    <div class="tt-than">`;
+  h += hang('Bản đồ:', md.name, '#ffe9a8');
+  h += hang('Giới hạn:', `Cấp ${md.min || 1}`, (player.level >= (md.min||1)) ? '#8fd18f' : '#e8776a');
+  h += hang('Loại quái:', (!md.range || md.range === '—') ? 'Vùng an toàn — không có quái' : `Cấp ${md.range}`);
+  h += hang('Cấp luyện:', dai);
+  if (bd && bd.tranai) h += hang('Tướng Quân:', `${bd.tranai.name} · C${bd.tranai.lv}`, '#e0a0ff');
+  if (bd && bd.thuve && bd.thuve.length)
+    h += hang('Vệ Binh Trụ:', bd.thuve.map(t => `${t.name} · C${t.lv}`).join('<br>'), '#ffb0a0');
+  const bs = mapBanSac(id);
+  // ⚠ `bs.cot` là KHOÁ, không phải tên. In thẳng nó ra thì thẻ hiện "canhhoa" — xem banSacHtml.
+  if (bs && bs.cot && COT_DONG[bs.cot]) h += hang('Dòng Cốt:', COT_DONG[bs.cot].ten, COT_DONG[bs.cot].mau);
+  const vf = vungFarm(id);
+  if (vf) h += hang('Bãi farm:', vf.ten, '#ffca86');
+  h += hang('Hung Thần:', sk.maton.join(', ') || '—', '#ff9a6a');
+  h += hang('Xâm Lăng Vàng:', sk.golden.join(', ') || '—', '#ffd76a');
+  if (!g.ok) h += `<div class="tt-canh">🔒 ${g.msg || 'Chưa đủ điều kiện vào vùng này'}</div>`;
+  else if (!wp) h += `<div class="tt-canh">🚩 Chưa mở điểm dịch chuyển — tự đi bộ tới một lần là mở</div>`;
+  h += `</div><div class="tt-nut">`;
+  h += cur ? `<button class="mini-btn" disabled>Đang ở đây</button>`
+           : `<button class="mini-btn" ${(g.ok && wp) ? `onclick="ttDi('${id}')"` : 'disabled'}>Dịch Chuyển</button>`;
+  h += `<button class="mini-btn" ${(!cur && g.ok && cong) ? `onclick="ttChayBo('${id}')"` : 'disabled'}
+          title="${cong ? 'Tự chạy tới cổng dẫn sang vùng đó' : 'Không có cổng đi thẳng từ vùng đang đứng'}">Chạy Bộ</button>`;
+  h += `<button class="mini-btn" onclick="ttDong()">Huỷ</button></div></div>`;
+  return h;
+}
+window.ttDi = function(id){ _ttChon = null; travelTo(id); };
+// "Chạy Bộ" = tự chạy tới CỔNG dẫn sang vùng đó, không phải dịch chuyển lén. Đi qua cổng vẫn
+// phải bấm G như mọi khi — nút này chỉ thay công đi bộ mò mẫm, không thay luật cổng.
+window.ttChayBo = function(id){
+  const c = GATES.find(x => x.map === curMap && x.to === id);
+  if (!c) return;
+  _ttChon = null;
+  moveTarget = { x:c.x, y:c.y }; moveWaypoint = null; movePlanClear();
+  closePanels();
+  addFloat(player.x, player.y - 40, `🧭 Đang chạy tới ${c.name}`, '#7fd4ff', 12);
+};
+function renderMapPanel(){
+  const zt = zoneType();
+  const tabs = [{ id:'ht', ten:'Hiện Tại' }, { id:'tg', ten:'Thế Giới' }];
+  let html = moBang({ tieu:'Bản Đồ Lunacia', dong: mapDef().name, tabs, chon:_banDoTab, ham:'banDoTab' });
+  html += `<div style="font-size:12px;color:#9aa8d4;margin-bottom:6px">Đang ở: <b style="color:${zt.color}">${mapDef().name}</b> · ${zt.name} · <span style="opacity:.7">Nhiệm vụ: phím Q</span>${window.TEST_MODE ? ' · <span style="color:#7fd4ff">[CHẾ ĐỘ TEST — dịch chuyển tự do]</span>' : ''}</div>`;
+  if (_banDoTab === 'ht'){
+    html += htHtml();
+  } else {
+    html += `<div class="bd-hai">
+      <div class="bd-trai">
+        <canvas id="bd-tg" width="${TG_KHUNG.w}" height="${TG_KHUNG.h}"
+                onclick="tgBamBanDo(event)" onmousemove="tgReBanDo(event)"
+                onmouseleave="_tgHover=null" title="Bấm vào một vùng để dịch chuyển"></canvas>
+        <div class="bd-chu">Đường nối là lối ĐI BỘ thật giữa hai vùng — suy thẳng từ cổng trong game.</div>
+      </div>
+      <div class="bd-phai bd-cuon">` + tgDanhSachHtml() + `</div></div>`;
+  }
+  el('panel-map').innerHTML = html + ttHtml();
+  bdBatVong();
 }
 // ═══════════ Chọn Trận (GDD Đợt 3 — kiểu NGU Idle): chọn thẳng 1 cụm quái từ danh sách,
 // vào là dịch chuyển tới + tự bật AUTO luôn — bỏ hẳn việc phải đi bộ/né vật cản để tìm bãi quái. ═══════════
@@ -26173,19 +26979,76 @@ function sysUnlocked(id){
   return lvPeak() >= lv;
 }
 
-// ---------- Hint bar theo cấp ----------
-function hintText(){
-  // Migrated to i18n.js's t() — proof-of-pattern slice, see docs/I18N_MIGRATION_GUIDE.md.
-  const lv = player.level;
-  const parts = [t('hud.hint.clickmove'), t('hud.hint.attack'), t('hud.hint.talk'), t('hud.hint.potion')];
-  if (lv >= 3) parts.push(t('hud.hint.quest'));
-  // C, V, B nay là BA bảng khác nhau (Nhân Vật · Trang Bị · Túi Đồ) nên in đủ ba. Trước đây
-  // C và V mở cùng một cửa sổ, in cả hai thì dòng gợi ý tự mâu thuẫn.
-  if (lv >= 5) parts.push(t('hud.hint.character'), t('hud.hint.gear'), t('hud.hint.bag'));
-  if (lv >= 8) parts.push(t('hud.hint.map'), t('hud.hint.skills'));
-  // 'hud.hint.tame' đã bỏ — hệ Thú Thuần Hóa gỡ rồi, phím T không còn làm gì.
-  parts.push(t('hud.hint.loot'));
-  return parts.join(' · ');
+// ---------- BẢNG HƯỚNG DẪN (F6) ----------
+// Thay cho DẢI GỢI Ý cũ (`#hint-bar`). Dải đó đặt ở `bottom:96px`, giữa màn — tức NGAY SAU
+// thanh chiến đấu, nên gần như lúc nào cũng bị chính thanh che mất. Nó lại chỉ in được một
+// dòng không xuống hàng (`white-space:nowrap`), nên càng lên cấp càng nhiều phím thì nó càng
+// tràn ra ngoài. Một dòng vừa bị che vừa tràn thì không dạy được ai cái gì.
+//
+// ⚠ BẢNG DỮ LIỆU, không phải HTML chép tay. Thêm một phím = thêm một dòng ở đây.
+// Cột `phim` là chữ trên mặt phím nên KHÔNG dịch ('R' ở tiếng nào cũng là 'R'); cột thứ hai
+// là KHOÁ i18n. Dải gợi ý cũ là lát cắt i18n duy nhất của game (xem docs/I18N_MIGRATION_GUIDE.md)
+// — gỡ nó mà chép cứng tiếng Việt vào đây là người chơi tiếng Anh mở đúng cái bảng dạy chơi
+// ra thì thấy toàn tiếng Việt.
+const HD_BANG = [
+  { ten:'help.g.battle', hang:[
+    ['Chuột phải', 'help.k.move'],
+    ['Space',      'help.k.attack'],
+    ['1 2 3 4',    'help.k.skills'],
+    ['R',          'help.k.hp'],
+    ['T',          'help.k.mp'],
+    ['Z',          'help.k.auto'],
+    ['J',          'help.k.pick'],
+    ['E',          'help.k.talk'],
+    ['G',          'help.k.gate'],
+    ['F',          'help.k.forge'],
+    ['Alt',        'help.k.alt'],
+  ]},
+  { ten:'help.g.panels', hang:[
+    ['C',   'help.k.char'],
+    ['V',   'help.k.gear'],
+    ['B',   'help.k.bag'],
+    ['K',   'help.k.skillp'],
+    ['M',   'help.k.map'],
+    ['Q',   'help.k.quest'],
+    ['U',   'help.k.minimap'],
+    ['O',   'help.k.settings'],
+    ['F6',  'help.k.help'],
+    ['Esc', 'help.k.esc'],
+  ]},
+];
+// ⚠ ĐỌC THẲNG `player.autoCfg`, ĐỪNG CHÉP LẠI MẤY CON SỐ MẶC ĐỊNH. Bảng này nói về một cái
+// cờ đang chạy; chép giá trị mặc định vào đây thì người chơi kéo thanh trượt trong Cài Đặt
+// xong mở F6 ra vẫn thấy con số cũ, mà kiểu sai đó trông y hệt "bảng chưa vẽ lại".
+// Nhánh lui chỉ để phòng gọi lúc chưa có nhân vật — dùng đúng khuôn của renderSettings.
+function autoCfgNow(){
+  return (typeof player !== 'undefined' && player && player.autoCfg)
+    ? player.autoCfg : { skill:true, potion:true, potionPct:40, range:430, boss:false };
+}
+window.HD_BANG = HD_BANG;   // bài kiểm đọc thẳng bảng này, đừng chép sang chỗ khác
+function renderHelpPanel(){
+  const p = el('panel-help'); if (!p) return;
+  const ac = autoCfgNow();
+  const co = v => v ? '<b style="color:#7ec850">BẬT</b>' : '<b style="color:#c08a6a">TẮT</b>';
+  let h = moBang({ tieu: t('help.title'), mat:'❓' });
+  for (const nhom of HD_BANG){
+    h += `<div class="stat-sec">${t(nhom.ten)}</div><div class="hd-luoi">`;
+    for (const [phim, khoa] of nhom.hang)
+      h += `<div class="hd-hang"><kbd class="hd-phim">${phim}</kbd><span>${t(khoa)}</span></div>`;
+    h += `</div>`;
+  }
+  // ⚠ MỤC NÀY CHỈ ĐỌC, KHÔNG CHỨA CÔNG TẮC. Công tắc Tự Đánh đã có một nhà ở Cài Đặt (O);
+  // dựng bộ thứ hai ở đây là hai cửa cùng sửa một cờ, và tới lúc thêm một tuỳ chọn thì chắc
+  // chắn có một bên bị quên. Số hiện ra đọc thẳng từ `player.autoCfg` nên nó không nói dối
+  // được, còn nút ở dưới đưa người chơi tới đúng chỗ sửa.
+  h += `<div class="stat-sec">${t('help.g.auto')}</div>`
+     + `<div class="bonus-list">${t('help.auto.intro')}<br>`
+     + `• ${t('help.auto.skill')}: ${co(ac.skill)}<br>`
+     + `• ${t('help.auto.potion')}: ${co(ac.potion)} — ${t('help.auto.below')} <b style="color:#ffd76a">${ac.potionPct}%</b><br>`
+     + `• ${t('help.auto.range')}: <b style="color:#ffd76a">${ac.range}px</b><br>`
+     + `• ${t('help.auto.boss')}: ${co(ac.boss)}</div>`
+     + `<div class="forge-actions"><button class="mini-btn" onclick="togglePanel('settings')">⚙ ${t('help.auto.open')}</button></div>`;
+  p.innerHTML = h;
 }
 
 // ---------- Mục Tiêu Hôm Nay ----------
