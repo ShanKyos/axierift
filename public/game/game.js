@@ -5261,6 +5261,10 @@ const AVA_MAC_DINH = {
   thieulam:'emberjaw', baidasan:'tidewarden', toanchan:'cinderbeak',
   minhgiao:'netherfang', bug:'mossback',
 };
+// Bày ra window để BÀI KIỂM đối chiếu được. `tools/title/liet_ke_taitro.cjs` đọc bảng này từ
+// game.js bằng regex để sinh nhóm "Axie đại diện" của bản kê màn tải — regex mà trượt thì nó
+// im lặng sinh ra một danh sách khác, và test_taitro §2 là chỗ DUY NHẤT bắt được chuyện đó.
+window.AVA_MAC_DINH = AVA_MAC_DINH;
 // Con Axie đang làm avatar, hoặc null. Một cửa duy nhất — đừng đọc thẳng p.avatar ở chỗ khác.
 //
 // ⚠ PHÂN BIỆT `undefined` VỚI `null`, đây là cả cơ chế:
@@ -19106,6 +19110,7 @@ window.doTayTuy = function(confirmed){
 };
 // ---------- Sect select / boot ----------
 function startGame(sectKey, quze){
+  taiTroDong();   // màn tải (nếu còn) — cửa duy nhất vào thế giới là chỗ đúng để đóng nó
   // ⚠ DỪNG cảnh màn chờ NGAY Ở ĐÂY, đừng trông vào chỗ gọi. titleAlive() tắt vòng lặp khi CẢ
   // HAI màn (#sect-select, #intro-story) đã ẩn — mà đường vào game nào cũng chỉ ẩn đúng một
   // cái rồi gọi startGame, nên chỉ cần một đường quên ẩn cái kia là cảnh Lunacia mười lớp
@@ -19277,11 +19282,138 @@ const hasSave = (() => {
 // defer: ccSlotsRender() đọc ccSlot/ccHoiXoa, khai báo ở CUỐI file. Gọi thẳng ở đây là chạm
 // vào chúng trước khi chúng tồn tại (TDZ) — và cả module đứng lại ngay dòng đó, game không nạp
 // nổi. Đúng lý do khối `saveStale` ngay dưới cũng phải defer.
-if (hasSave) setTimeout(showMainMenu, 0);   // người cũ → thẳng danh sách nhân vật
-else if (saveStale){
-  // Người này ĐÃ chơi rồi — đừng bắt xem lại intro cốt truyện. Đưa thẳng vào màn chọn lớp,
-  // kèm lý do. Mất nhân vật mà không hiểu vì sao là thứ tệ nhất một bản cập nhật có thể làm.
-  setTimeout(() => {
+// ═══════════ MÀN TẢI — thanh tiến độ cân theo SỐ BYTE THẬT ═══════════
+//
+// Đo trước khi làm: màn chờ kéo về 21 tệp / 1,63 MB (cảnh Lunacia 10 lớp + bệ đá, 5 dải khung
+// nhân vật, 5 con Axie mặc định) và KHÔNG có màn tải nào đứng trước. Hậu quả nhìn thấy được:
+// cảnh lắp dần từng lớp trước mắt người chơi — trời trước, núi sau, nhân vật cuối.
+//
+// ⚠ CÂN THEO BYTE, KHÔNG THEO SỐ TỆP. Một lớp mây 12 KB và một dải khung 98 KB mà nhảy bằng
+//   nhau thì thanh chạy vọt tới 80% rồi đứng im — nói dối theo đúng kiểu khó bắt nhất. Bản kê
+//   `data/taitro.js` mang kích thước THẬT của từng tệp, sinh bằng tools/title/liet_ke_taitro.cjs.
+//
+// ⚠ VÀ TUYỆT ĐỐI KHÔNG CHẠY THEO ĐỒNG HỒ. Dự án này đã gỡ một thanh giả rồi (thanh "Tiếp nhận
+//   28%…82%" ở màn chọn máy chủ) — lý do ghi ngay trên SERVERS. Thanh này chỉ nhúc nhích khi
+//   có một tấm ảnh thật vừa về.
+const TAI_TRAN = 9000;   // trần chờ: quá ngần này thì vào game, art nào trễ thì về sau
+const TAI_TOI  = 340;    // giữ khung 100% lại chừng này rồi mới tan — đủ để mắt bắt kịp
+// Mẹo THẬT, rút từ cơ chế đang chạy. Mẹo bịa ở màn tải là thứ người chơi thử ngay trong mười
+// phút đầu rồi phát hiện ra là sai — tệ hơn hẳn việc không có mẹo nào.
+const TAI_MEO = [
+  'Bấm <b>chuột phải</b> để đi. Phím <b>1-4</b> tung chiêu — và chiêu rơi đúng chỗ <b>con trỏ</b> đang chỉ, không phải dưới chân.',
+  '<b>Axie là avatar</b>, năm lớp mới là sức mạnh. Lúc ra đòn, lớp nhân vật hiện ra ngay bên cạnh rồi tan đi.',
+  '<b>Vỉa Cốt</b> đổi chỗ mỗi ngày — ba vùng, mỗi vùng một điểm. Tìm chấm kim cương trên bản đồ nhỏ.',
+  '<b>Rương Canh</b> thì đứng yên mãi mãi. Diệt hết trại canh là mở, và mỗi nhân vật chỉ mở được một lần.',
+  'Cứ <b>hai giờ thật</b> có một sự kiện thế giới. Bấm cái đồng hồ trên HUD để xem lượt kế tiếp.',
+  '<b>+7 là ngưỡng phát sáng</b> — nhưng cả bộ lấy mức rèn THẤP NHẤT, nên nâng đều mới thấy.',
+  'Mỗi vùng giữ độc quyền một <b>Dòng Cốt Chimera</b>. Chọn chỗ để cày chính là chọn hướng nuôi.',
+];
+function taiMB(b){ return (b / 1048576).toFixed(2).replace('.', ',') + ' MB'; }
+// Hỏi ĐÚNG cái hàm mà trong màn dùng, để tấm tải về nằm luôn trong bộ đệm của nó. Tải bằng một
+// Image() riêng thì lần dùng sau tuy hứng được bộ đệm HTTP nhưng vẫn phải GIẢI MÃ lại — mà giải
+// mã webp mới là phần tốn, không phải phần truyền.
+const _taiPhu = {};
+function taiTroAnh(p){
+  let m;
+  if ((m = p.match(/^assets\/title\/lunacia\/(.+)\.webp$/)))
+    // `san.webp` là nền CSS của bệ đá (#cc-classes::before), không nằm trong NEN_LOP.
+    return NEN_LOP.some(l => l.t === m[1]) ? nenTai(m[1]) : taiTroThuong(p);
+  if ((m = p.match(/^assets\/title\/lop\/(.+)\.webp$/))){ ccLopAnh(m[1]); return CC_LOP_IMG[m[1]] || taiTroThuong(p); }
+  if ((m = p.match(/^assets\/chimera\/(.+)\.webp$/)))    return chiImg(m[1]) || taiTroThuong(p);
+  return taiTroThuong(p);
+}
+function taiTroThuong(p){
+  let im = _taiPhu[p];
+  if (!im){ im = new Image(); im.src = p; _taiPhu[p] = im; }
+  return im;
+}
+let _taiXong = false;
+// Đóng màn tải ngay lập tức, không chờ gì. startGame() gọi cái này — cùng lý do titleStop()
+// nằm ở đó: cửa duy nhất vào thế giới là chỗ đúng để tắt mọi thứ thuộc về màn ngoài.
+//
+// ⚠ VÀ PHẢI HUỶ LUÔN PHẦN CÒN LẠI CỦA MÀN TẢI, không chỉ giấu cái khung đi. Có một đường vào
+// game chạy SONG SONG với màn tải: `?sect=<lớp>` tự gọi startGame trong một setTimeout đăng ký
+// sau setTimeout của màn tải, nên nó khởi động game trong lúc màn tải còn đang chờ ảnh. Nếu
+// hoanTat() sau đó vẫn chạy tiếp thì nó gọi vaoManDau() và BẬT MÀN CHỜ ĐÈ LÊN GAME ĐANG CHẠY.
+// Đặt `_taiXong` là chốt chặn; đặt `__gameReady` vì lúc này mọi thứ sẵn sàng thật, và bỏ sót
+// nó là bài kiểm nào dùng `?sect=` sẽ chờ tới hết giờ.
+function taiTroDong(){
+  _taiXong = true;
+  window.__gameReady = true;
+  const h = el('preload');
+  if (h){ h.classList.add('xong'); h.classList.add('tat'); }
+}
+function taiTroChay(xong){
+  const M = window.TAI_TRO, hop = el('preload');
+  // Không có bản kê hoặc không có khung ⇒ ĐỪNG chắn đường vào game. Màn tải là thứ phục vụ
+  // người chơi, không phải thứ họ phải vượt qua.
+  if (!M || !M.nhom || !hop){ if (hop) taiTroDong(); xong(); return; }
+
+  { const t = el('pl-tip'); if (t) t.innerHTML = TAI_MEO[Math.floor(Math.random() * TAI_MEO.length)]; }
+
+  const tep = [];
+  for (const n of M.nhom) for (const q of n.tep) tep.push({ p:q[0], b:q[1], ten:n.ten });
+  const tong = M.tong || tep.reduce((a, t) => a + t.b, 0) || 1;
+  let daXong = 0;
+
+  const ve = () => {
+    const pct = Math.min(100, Math.round(daXong / tong * 100));
+    { const f = el('pl-fill');  if (f) f.style.width = pct + '%'; }
+    { const q = el('pl-pct');   if (q) q.textContent = pct + '%'; }
+    { const b = el('pl-byte');  if (b) b.textContent = taiMB(Math.min(daXong, tong)) + ' / ' + taiMB(tong); }
+    // Tên nhóm = nhóm ĐẦU TIÊN còn tệp chưa về, không phải tệp vừa về. Lấy tệp vừa về thì
+    // dòng chữ nhảy loạn giữa ba nhóm vì chúng tải song song.
+    const con = tep.find(t => !t.r);
+    { const n = el('pl-nhom'); if (n) n.textContent = con ? 'Đang tải · ' + con.ten : 'Xong — đang mở cổng…'; }
+  };
+  const xongMot = t => {
+    if (t.r) return;
+    t.r = 1; daXong += t.b; ve();
+    if (tep.every(x => x.r)) hoanTat();
+  };
+  const t0 = performance.now();
+  const hoanTat = () => {
+    if (_taiXong) return;
+    _taiXong = true;
+    ve();
+    // Giữ khung 100% lại một nhịp rồi mới tan. Đây KHÔNG phải kéo dài giả: thanh đã chạy
+    // xong thật rồi, chỗ này chỉ là thời gian tan của lớp phủ. Trên bộ đệm nóng mọi thứ về
+    // trong một khung, và một màn nháy đúng 16ms thì mắt chỉ đọc ra một cú giật.
+    const cho = Math.max(0, TAI_TOI - (performance.now() - t0));
+    setTimeout(() => {
+      hop.classList.add('xong');
+      xong();
+      window.__gameReady = true;   // xem chú thích ở cuối tệp — cờ này nay cũng có nghĩa "art màn chờ đã đủ"
+      // Chỉ `display:none` SAU khi đã tan hết — bỏ đi ngay thì không có hiệu ứng tan nào.
+      setTimeout(() => hop.classList.add('tat'), 360);
+    }, cho);
+  };
+
+  for (const t of tep){
+    const im = taiTroAnh(t.p);
+    if (!im){ xongMot(t); continue; }
+    if (im.complete && im.naturalWidth){ xongMot(t); continue; }
+    // `error` cũng tính là XONG. Một tấm 404 mà giữ thanh lại ở 94% vĩnh viễn thì lỗi art
+    // biến thành lỗi không vào được game.
+    im.addEventListener('load',  () => xongMot(t), { once:true });
+    im.addEventListener('error', () => xongMot(t), { once:true });
+  }
+  ve();
+  if (!tep.length) hoanTat();
+  setTimeout(hoanTat, TAI_TRAN);   // trần cứng: art trễ thì về sau, đừng nhốt người chơi ở đây
+}
+
+// Ba đường vào, gom thành MỘT hàm — màn tải phải chắn được cả ba, mà chắn ba chỗ gọi riêng
+// lẻ thì sớm muộn có một đường quên. (Đúng bài học của titleStop(): đặt cửa ở chỗ duy nhất mọi
+// đường đều phải đi qua, đừng trông vào chỗ gọi.)
+function vaoManDau(){
+  // Đã ở trong thế giới rồi thì đừng bật màn chờ đè lên. Chốt thứ hai sau `_taiXong` — đường
+  // `?sect=` khởi động game song song với màn tải, xem taiTroDong().
+  if (player) return;
+  if (hasSave){ showMainMenu(); return; }   // người cũ → thẳng danh sách nhân vật
+  if (saveStale){
+    // Người này ĐÃ chơi rồi — đừng bắt xem lại intro cốt truyện. Đưa thẳng vào màn chọn lớp,
+    // kèm lý do. Mất nhân vật mà không hiểu vì sao là thứ tệ nhất một bản cập nhật có thể làm.
     el('sect-select').classList.remove('hidden'); titleStart();
     const cards = el('cc-classes'); if (cards) cards.style.display = '';
     const sub = document.querySelector('#sect-select .ss-sub');
@@ -19289,9 +19421,25 @@ else if (saveStale){
       <span style="opacity:.85">Mỗi lớp nay có bốn chiêu bấm được, mỗi chiêu một biểu tượng và một
       hiệu ứng riêng. Hệ tiền tệ rút gọn lại, và hệ thú cưng nhập làm một. Nhân vật cũ mang sang thì
       chỉ còn là những con số của các hệ không còn tồn tại — nên hãy bắt đầu lại từ đầu.</span>`;
-  }, 0);
+    return;
+  }
+  showIntro();                        // người mới → cốt truyện
 }
-else setTimeout(showIntro, 0);        // người mới → cốt truyện (defer: chờ module intro ở cuối file nạp xong)
+// defer: chờ module nạp hết (intro + các `let` ở cuối tệp) rồi mới chạy màn tải.
+//
+// ⚠ BỌC try/catch, và đây không phải phòng thủ thừa: `window.__gameReady` nay bật ở CUỐI màn
+// tải. Một lỗi ném ra trong lúc dựng màn tải sẽ giữ cờ đó tắt vĩnh viễn — tức người chơi nhìn
+// một lớp phủ đứng im, còn 177 bài kiểm thì treo tới hết giờ chứ không đỏ. Hỏng thì bỏ qua màn
+// tải và vào thẳng.
+setTimeout(() => {
+  try { taiTroChay(vaoManDau); }
+  catch (e){
+    console.error('Màn tải hỏng, vào thẳng:', e);
+    try { taiTroDong(); } catch { /* khung không có thì thôi */ }
+    vaoManDau();
+    window.__gameReady = true;
+  }
+}, 0);
 {
   // Nút này KHÔNG tự hiện theo hasSave nữa — ccSlotsRender() bật nó lên khi có ô đang được chọn.
   // Không có nhân vật nào thì không có gì để vào, và nút phải tắt.
@@ -28905,4 +29053,10 @@ window.rollVanDuyen = function(){
 // chúng; gọi startGame() trước lúc đó là đâm vào vùng chết (TDZ) của những biến nằm sau — đo được
 // dưới tải hồi quy: "Cannot access 'petObj' before initialization". Test chờ cờ này thay vì chờ
 // một số mili-giây đoán mò.
-window.__gameReady = true;
+//
+// ⚠ CỜ NAY BẬT Ở CUỐI MÀN TẢI, không ở đây — xem hoanTat() trong taiTroChay(). Ý nghĩa cũ giữ
+// nguyên (màn tải chạy trong setTimeout nên module chắc chắn đã nạp hết), và thêm được một
+// nghĩa nữa: màn chờ đã có đủ art. 177 bài kiểm đều chờ cờ này, nên đặt nó ở đây là chúng bấm
+// vào một màn chờ còn đang bị lớp phủ tải che — mà triệu chứng lại là "không tìm thấy nút".
+// Trần cứng TAI_TRAN đảm bảo cờ luôn bật, kể cả khi một tấm art 404.
+window.__manDaNap = true;

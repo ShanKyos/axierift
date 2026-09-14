@@ -2306,3 +2306,46 @@ html,body { width:100%; height:100%; overflow:hidden; background:var(--bg-deep);
   text-align:center; color:#ff9a6a; text-shadow:0 1px 0 #000; }
 /* Ô đang nhận thả — viền xanh lá, cùng màu dấu + "nâng được" của cây. */
 .kn-bo.sk-nhan, #skillbar .sk-slot.sk-nhan { outline:2px solid #5fc96e; outline-offset:1px; }
+/* ═══════════ MÀN TẢI ═══════════
+   Màn đầu tiên người chơi thấy. Trước bản này không có nó: cảnh Lunacia mười lớp lắp dần ngay
+   trước mắt, trời trước núi sau nhân vật cuối — trên mạng chậm trông như trang hỏng.
+
+   ⚠ THANH CÂN THEO BYTE THẬT (data/taitro.js), không theo đồng hồ. Xem taiTroChay() trong
+   game.js. Một thanh chạy theo setTimeout là đúng thứ dự án này đã gỡ một lần ở màn máy chủ.
+
+   Khung thép vát cạnh, KHÔNG bo tròn: ngoại lệ art kiểu Axie chỉ mở trong #sect-select, và
+   màn này không phải chỗ đó. Riêng cái LOGO thì dùng chung một cách vẽ với màn chờ — nó là
+   cùng một logo, hiện cách nhau chưa tới một giây, ra hai kiểu là mắt đọc thành hai game. */
+#preload { position:fixed; inset:0; z-index:90; display:flex; align-items:center; justify-content:center;
+  background:radial-gradient(120% 90% at 50% 34%, #131a34 0%, #0a0d1e 52%, #05060f 100%);
+  transition:opacity .34s ease; }
+#preload.xong { opacity:0; pointer-events:none; }
+#preload.tat { display:none; }
+.pl-inner { display:flex; flex-direction:column; align-items:center; width:min(460px, 82vw); }
+/* Cùng một cách vẽ chữ với logo màn chờ — xem khối MÀN CHỜ KIỂU AXIE ở cuối tệp. */
+#preload .sv-logo { font-family:var(--font-chi); font-weight:800; gap:.50em; margin-bottom:26px; }
+#preload .sv-logo span {
+  background:linear-gradient(180deg,#fff6df 6%,#ffd98a 42%,#f0a93f 62%,#ffe7b4 96%);
+  -webkit-background-clip:text; background-clip:text; color:transparent;
+  -webkit-text-stroke:3.5px rgba(10,14,30,.92); paint-order:stroke fill;
+  filter:drop-shadow(0 4px 0 rgba(8,11,26,.55)) drop-shadow(0 0 26px rgba(255,190,90,.34)); }
+/* Rãnh thanh: vát bốn góc bằng clip-path chứ không bo tròn — cùng ngôn ngữ hình với khung
+   thép đinh tán của HUD. Viền vẽ bằng một lớp nền thứ hai để clip-path không cắt mất nét. */
+.pl-bar { position:relative; width:100%; height:16px; overflow:hidden;
+  background:linear-gradient(180deg, #05070f, #0d1122);
+  box-shadow:inset 0 0 0 1px rgba(198,158,74,.34), inset 0 2px 6px rgba(0,0,0,.8);
+  clip-path:polygon(5px 0, 100% 0, 100% calc(100% - 5px), calc(100% - 5px) 100%, 0 100%, 0 5px); }
+#pl-fill { display:block; height:100%; width:0;
+  background:linear-gradient(180deg, #ffe9b8 0%, #f2bd62 46%, #d9902c 54%, #ffdf9f 100%);
+  box-shadow:0 0 12px rgba(255,196,104,.45);
+  transition:width .18s linear; }
+.pl-hang { display:flex; justify-content:space-between; align-items:baseline; width:100%; margin-top:9px; }
+#pl-nhom { font-size:12px; color:var(--text-dim); letter-spacing:.06em; }
+#pl-pct { font-family:var(--font-display); font-size:13px; font-weight:700; color:var(--accent-light); }
+.pl-byte { width:100%; margin-top:3px; font-size:10.5px; color:#6f6754; letter-spacing:.04em; }
+/* Mẹo chơi — mẹo THẬT, rút từ cơ chế đang chạy. Một dòng mẹo bịa ở màn tải là thứ người chơi
+   thử ngay trong mười phút đầu rồi phát hiện ra là sai. */
+.pl-tip { margin-top:30px; min-height:34px; max-width:400px; text-align:center;
+  font-size:12px; line-height:1.6; color:#8d8570; }
+@media (prefers-reduced-motion: reduce){ #pl-fill { transition:none; } }
+

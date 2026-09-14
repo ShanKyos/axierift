@@ -20,6 +20,24 @@
 <body>
 <canvas id="game"></canvas>
 
+<!-- ═══════════ MÀN TẢI ═══════════
+     Trước bản này KHÔNG có màn tải nào: cảnh Lunacia mười lớp lắp dần ngay trước mắt người
+     chơi — trời hiện trước, núi hiện sau, nhân vật hiện cuối. Trên mạng chậm nó trông như hỏng.
+
+     ⚠ THANH NÀY CÂN THEO SỐ BYTE THẬT, không theo số tệp và tuyệt đối không theo đồng hồ.
+     Bản kê nằm ở data/taitro.js, sinh bằng tools/title/liet_ke_taitro.cjs từ chính kích thước
+     tệp trên đĩa. Một thanh chạy theo setTimeout là đúng cái thứ mà dự án này đã gỡ một lần rồi
+     (thanh "Tiếp nhận 28%…82%" ở màn chọn máy chủ) — xem QUY TẮC ở CLAUDE.md. -->
+<div id="preload">
+  <div class="pl-inner">
+    <div class="sv-logo"><span class="sv-logo-a">AXIE</span><span class="sv-logo-b">RIFT</span></div>
+    <div class="pl-bar"><i id="pl-fill"></i></div>
+    <div class="pl-hang"><span id="pl-nhom">Đang mở vết nứt…</span><b id="pl-pct">0%</b></div>
+    <div class="pl-byte" id="pl-byte"></div>
+    <div class="pl-tip" id="pl-tip"></div>
+  </div>
+</div>
+
 <!-- HUD -->
 <div id="hud" class="hidden">
   <div id="hud-left">
@@ -277,6 +295,7 @@
 <script src="data/canbang.js"></script>
 <script src="data/chi_anh.js"></script>
 <script src="data/thu_anh.js"></script>
+<script src="data/taitro.js"></script>
 <script src="data/lop_cho.js"></script>
 <script src="data/iso.js"></script>
 <script src="game.js"></script>
