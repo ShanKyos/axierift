@@ -2202,11 +2202,14 @@ html,body { width:100%; height:100%; overflow:hidden; background:var(--bg-deep);
 .kn-d i { font-style:normal; color:var(--text-dim); }
 .kn-d b.ok { color:#7ec850; } .kn-d b.no { color:#ff6b6b; }
 .kn-mo { color:var(--text-dim); }
-.kn-bar { position:relative; height:11px; border-radius:999px; margin:2px 0 6px;
+/* Thanh TIẾN ĐỘ trong khung chi tiết. ⚠ Tên cũ là `.kn-bar` và nó từng bị một phép đổi tên
+   hàng loạt cuỗm mất khi thêm hàng bốn ô — đổi sang `.kn-tien` để hai thứ không còn tên giống
+   nhau nữa. Lỗi đó không ném gì, chỉ lộ ra khi chụp màn hình. */
+.kn-tien { position:relative; height:11px; border-radius:999px; margin:2px 0 6px;
   background:rgba(0,0,0,.45); border:1px solid var(--border-faint); overflow:hidden; }
-.kn-bar s { display:block; height:100%; text-decoration:none;
+.kn-tien s { display:block; height:100%; text-decoration:none;
   background:linear-gradient(90deg,#3a6fd8,#7ecbff); }
-.kn-bar em { position:absolute; inset:0; font-style:normal; font-size:8.5px; line-height:11px;
+.kn-tien em { position:absolute; inset:0; font-style:normal; font-size:8.5px; line-height:11px;
   text-align:center; color:#dbe6ff; text-shadow:0 1px 0 #000; }
 .kn-vach { font-size:10px; letter-spacing:1px; color:var(--gold); text-align:center;
   margin:7px 0 5px; border-top:1px solid rgba(var(--rgb-vang),.25); padding-top:5px; }
@@ -2220,3 +2223,28 @@ html,body { width:100%; height:100%; overflow:hidden; background:var(--bg-deep);
 @media (prefers-reduced-motion: reduce) {
   .kn-o, .kn-o:hover { transition:none; transform:none; }
 }
+
+/* ── Thanh chiêu 4 ô trong bảng Kỹ Năng (kéo thả) ──
+   ⚠ KHÔNG đặt tên `.kn-bar` — tên đó đã là thanh tiến độ cao 11px trong khung chi tiết, đặt
+   trùng là hàng bốn ô bẹp dí mà không có gì báo lỗi. */
+.kn-thanh { margin:0 0 9px; padding:7px 8px; border-radius:var(--r-sm);
+  background:rgba(0,0,0,.24); border:1px solid var(--border-faint); }
+.kn-thanh-t { font-size:9.5px; color:var(--text-dim); margin-bottom:5px; }
+.kn-thanh-o { display:flex; gap:7px; }
+.kn-thanh-d { font-size:9.5px; color:var(--text-dim); line-height:1.5; margin-top:6px; }
+.kn-thanh-d b { color:var(--gold); }
+.kn-bo { position:relative; width:44px; height:44px; border-radius:var(--r-sm);
+  background:rgba(var(--rgb-da),.55); border:1px solid var(--border-faint);
+  display:flex; align-items:center; justify-content:center; }
+.kn-bo img { width:40px; height:40px; border-radius:5px; display:block; }
+.kn-bo.trong { border-style:dashed; border-color:rgba(var(--rgb-vang),.3); }
+.kn-bo.trong span { font-size:17px; color:rgba(var(--rgb-vang),.42); line-height:1; }
+.kn-bo.bd { border-color:rgba(160,255,233,.55); }
+.kn-bo i { position:absolute; left:2px; top:0; font-style:normal; font-size:9px; font-weight:700;
+  color:var(--gold); text-shadow:0 1px 0 #000; }
+.kn-bo u { position:absolute; right:2px; top:0; text-decoration:none; font-size:10px; color:#a0ffe9;
+  text-shadow:0 1px 0 #000; }
+.kn-bo s { position:absolute; left:0; right:0; bottom:-1px; text-decoration:none; font-size:8px;
+  text-align:center; color:#ff9a6a; text-shadow:0 1px 0 #000; }
+/* Ô đang nhận thả — viền xanh lá, cùng màu dấu + "nâng được" của cây. */
+.kn-bo.sk-nhan, #skillbar .sk-slot.sk-nhan { outline:2px solid #5fc96e; outline-offset:1px; }

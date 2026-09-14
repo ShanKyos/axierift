@@ -3092,6 +3092,114 @@ const SIGNATURE_SKILL = {
 const DOI_TEN_CHIEU = [
   ['dw_evilspirit', 'dw_dragonspirit'],   // Evil Spirit → Dragon Spirit (art mới, bầy long hồn)
 ];
+// ═══════════ THANH CHIÊU TỰ GÁN — kéo chiêu từ bảng Kỹ Năng thả vào ô 1-4 ═══════════
+// Chủ dự án chốt: cho người chơi tự xếp bốn ô "để phù hợp với lối chơi". Trước đó thanh này
+// khoá cứng (chính · phụ · ô 3 · tuyệt chiêu) và CLAUDE.md ghi rõ "không cho người chơi tự gán"
+// — luật đó nay được thay, cố ý.
+//
+// BA LUẬT, và luật thứ ba mới là thứ biến việc xếp ô thành một QUYẾT ĐỊNH chứ không phải một
+// bảng tuỳ thích:
+//
+//  1. Ô 1 chỉ nhận chiêu CHỦ ĐỘNG. Thanh chiêu mà không có lấy một nút bấm được thì người chơi
+//     đứng nhìn; đây là cái sàn.
+//  2. Ô 2-4 nhận cả chủ động lẫn bị động. Mỗi lớp chỉ có 1-2 bị động (đo được: 6 chủ động +
+//     1-2 bị động mỗi lớp) nên ép ba ô kia thành "chỉ bị động" là ba ô không bao giờ điền đủ.
+//  3. ⚠ CHIÊU LÊN THANH THÌ MẤT %CÔNG KÍCH DI SẢN. CLAUDE.md: "một chiêu không được vừa bấm
+//     được vừa cộng %ST vĩnh viễn". Trước đây luật đó giữ được bằng cách khoá cứng thanh chiêu
+//     và chép tay `LEGACY_SECT_SKILLS` sao cho hai bảng không giao nhau. Cho tự gán là cách giữ
+//     đó hỏng ngay — nên nay `legacyAtkPct` HỎI THẲNG thanh chiêu (xem calcDerived).
+//     Hệ quả cố ý: cắm thêm một chiêu là đổi sát thương bấm tay lấy sát thương nền.
+//
+// ⚠ BỊ ĐỘNG CHỈ CHẠY KHI ĐƯỢC CẮM VÀO Ô (`biDongBat`). Nếu bị động cứ ngộ là chạy thì kéo nó
+// vào ô chẳng để làm gì, và ba ô kia mất hẳn một nửa lý do tồn tại.
+const O_CHUDONG_DAU = 0;          // ô bắt buộc chủ động
+function knLaBiDong(id){ const v = VOHOC_DEFS[id]; return !!(v && v.type === 'passive'); }
+function knDaNgo(id){
+  if (knLaBiDong(id)) return vhLearned(id);
+  const inf = skillInfo(id);
+  return !!(inf && inf.unlocked);
+}
+// Bị động có đang chạy không: phải NGỘ ĐƯỢC **và** đang nằm trên thanh. Một cửa duy nhất cho
+// cả sáu chỗ đọc bị động, nên không có cách nào một chỗ quên hỏi vế thứ hai.
+function biDongBat(id){
+  return vhLearned(id) && !!(player && player.skillBar && player.skillBar.includes(id));
+}
+// Chiêu này có được phép vào ô đó không — trả LÝ DO khi không, `null` khi được.
+// Một cửa duy nhất cho cả kéo thả lẫn lệnh gỡ rối, nên thứ người chơi đọc và thứ máy thực thi
+// không thể lệch nhau (cùng bài học với `masteryKhoa`).
+function knOHopLe(slot, id){
+  if (!player || !id) return 'không có chiêu';
+  if (slot < 0 || slot > 3) return 'ô không hợp lệ';
+  if (!SKILL_DEFS[id] && !VOHOC_DEFS[id]) return 'chiêu không có thật';
+  if (!knDaNgo(id)) return 'chưa mở khoá chiêu này';
+  if (slot === O_CHUDONG_DAU && knLaBiDong(id)) return 'ô 1 phải là chiêu chủ động';
+  const cu = (player.skillBar || []).indexOf(id);
+  if (cu >= 0 && cu !== slot) return null;        // đổi chỗ trong thanh: hợp lệ, xử ở knGan
+  return null;
+}
+// Gán chiêu vào ô. Chiêu đang nằm ô khác thì ĐỔI CHỖ hai ô, không nhân bản — để cùng một chiêu
+// nằm hai ô là người chơi tự lừa mình có hai nút.
+window.knGan = function(slot, id){
+  const ly = knOHopLe(slot, id);
+  if (ly){ if (player) addFloat(player.x, player.y-46, ly, '#ff9a6a', 12); AudioSys.sfx('ui', .4); return false; }
+  if (!player.skillBar) player.skillBar = [null,null,null,null];
+  const cu = player.skillBar.indexOf(id);
+  const dangO = player.skillBar[slot] || null;
+  if (cu >= 0){
+    // đổi chỗ — nhưng nếu ô đích là ô 1 và món bị đẩy sang là bị động thì không đổi được
+    if (cu === O_CHUDONG_DAU && dangO && knLaBiDong(dangO)){
+      addFloat(player.x, player.y-46, 'ô 1 phải là chiêu chủ động', '#ff9a6a', 12); return false;
+    }
+    player.skillBar[cu] = dangO;
+  }
+  player.skillBar[slot] = id;
+  knSauDoi(); return true;
+};
+window.knGo = function(slot){
+  if (!player || !player.skillBar) return false;
+  if (slot === O_CHUDONG_DAU){
+    addFloat(player.x, player.y-46, 'ô 1 không được để trống', '#ff9a6a', 12); return false;
+  }
+  player.skillBar[slot] = null; knSauDoi(); return true;
+};
+// Một chỗ dọn sau mọi lần đổi thanh. Thiếu `calcDerived` là %Di Sản và bị động không cập nhật
+// cho tới lần thay đồ kế tiếp — sai mà không có gì báo.
+function knSauDoi(){
+  if (player.spaceSkill && !player.skillBar.includes(player.spaceSkill)) player.spaceSkill = null;
+  AudioSys.sfx('ui', .55);
+  calcDerived(); saveGame();
+  if (typeof renderSkillPanel === 'function' && !el('panel-skill').classList.contains('hidden')) renderSkillPanel();
+}
+// Thanh chiêu phải LUÔN hợp lệ, kể cả với save cũ và với lớp vừa đổi. Gọi trong loadGame.
+function knRaSoat(){
+  if (!player) return;
+  if (!Array.isArray(player.skillBar) || player.skillBar.length !== 4)
+    player.skillBar = defaultSkillBar(player.sect);
+  const thay = [null,null,null,null]; const daCo = new Set();
+  for (let i = 0; i < 4; i++){
+    const id = player.skillBar[i];
+    if (!id || daCo.has(id)) continue;
+    if (i === O_CHUDONG_DAU && knLaBiDong(id)) continue;   // ô 1 không giữ bị động
+    if (!SKILL_DEFS[id] && !VOHOC_DEFS[id]) continue;      // chiêu đã bị gỡ khỏi game
+    // ⚠ ĐỪNG thêm `if (!knDaNgo(id)) continue;` vào đây. Đã thử và nó cắt đúng cái tay mình:
+    // `defaultSkillBar()` CỐ Ý cắm sẵn chiêu chưa tới cấp vào ô 2-4 để người chơi thấy nó sáng
+    // lên khi lên cấp — thêm cửa đó vào là nhân vật cấp 1 của CẢ NĂM LỚP mở ra chỉ còn một ô.
+    // Chiêu chưa tới cấp đã bị chặn ở chỗ tung (`skillInfo().unlocked`), bị động thì bị chặn ở
+    // `biDongBat()`. Cửa `knDaNgo` thuộc về `knOHopLe` — thứ người chơi TỰ kéo — không thuộc về
+    // hàm rà soát, vốn phải tôn trọng cả thanh mà game tự dựng.
+    thay[i] = id; daCo.add(id);
+  }
+  // Ô 1 trống thì lấp bằng chiêu chính của lớp — không bao giờ để người chơi đứng không nút nào.
+  // ⚠ PHẢI DỜI, KHÔNG ĐƯỢC NHÂN BẢN. `a` có thể đã nằm ở ô khác (save hỏng kiểu ['bị động','a',
+  // 'a', …] cho ra đúng ca đó): gán thẳng là thanh có hai ô cùng một chiêu, mà `knGan` thì cấm
+  // đúng chuyện ấy — tức hàm rà soát tự tạo ra trạng thái mà hàm gán không cho phép.
+  if (!thay[O_CHUDONG_DAU]){
+    const cu = thay.indexOf('a');
+    if (cu >= 0) thay[cu] = null;
+    thay[O_CHUDONG_DAU] = 'a';
+  }
+  player.skillBar = thay;
+}
 function defaultSkillBar(sect){ return ['a', 'tp', O3_SKILL_ID[sect] || null, SIGNATURE_SKILL[sect] || null]; }
 // Phím Space gán sẵn TUYỆT CHIÊU của lớp — trước đây Space mặc định là đòn đánh thường, nên ô
 // 4 nằm đó mà phần lớn người chơi không bao giờ bấm tới: nó chỉ hiện trên thanh, muốn dùng
@@ -7356,9 +7464,16 @@ function calcDerived(){
   // hoàn toàn vô nghĩa: chiêu học thêm từ 4 lớp kia không cộng gì cả. vhLearned() vốn đã là nguồn
   // đúng duy nhất (chỉ tự ngộ chiêu của lớp mình, trừ khi đã Thăng Tiên) — bỏ điều kiện thừa đi.
   let legacyPct = 0;
+  // ⚠ CHIÊU ĐANG NẰM TRÊN THANH THÌ KHÔNG CỘNG %ST. Đây là chỗ giữ luật "một chiêu không được
+  // vừa bấm được vừa cộng %ST vĩnh viễn" sau khi thanh chiêu cho tự gán. Trước đây luật đó giữ
+  // được bằng cách khoá cứng thanh rồi CHÉP TAY `LEGACY_SECT_SKILLS` sao cho hai bảng không giao
+  // nhau — cách giữ bằng tay ấy hỏng ngay giây đầu người chơi kéo được chiêu. Nay hỏi thẳng.
+  // Thanh mặc định không chứa chiêu Di Sản nào nên mọi lớp vẫn đúng +8,0% như cũ.
+  const _tren = new Set((player.skillBar || []).filter(Boolean));
   for (const sid of LEGACY_SECT_SKILLS){
     const lv = VOHOC_DEFS[sid];
-    if (lv && lv.phai === player.sect && vhLearned(sid)) legacyPct += LEGACY_TIER_PCT[lv.tier] || 0;
+    if (lv && lv.phai === player.sect && vhLearned(sid) && !_tren.has(sid))
+      legacyPct += LEGACY_TIER_PCT[lv.tier] || 0;
   }
   if (player.level >= 48) legacyPct += LEGACY_UNIVERSAL_PCT.danchi; // mốc cũ: bậc 4 = cấp 48
   if (player.level >= 72) legacyPct += LEGACY_UNIVERSAL_PCT.tieuhon; // mốc cũ: cảnh 6 = cấp 72
@@ -7435,10 +7550,10 @@ function calcDerived(){
   // thương", Heal ghi "hồi 1% HP/giây", Iron Will ghi "+10% HP, +8% giảm sát thương" — không
   // dòng nào nối vào chỉ số nào, và cả ba lại được quy đổi thành +%ST y như chiêu di sản. Nay
   // mỗi lớp có đúng MỘT hiệu ứng bị động, khác cơ chế nhau, và nó chạy thật.
-  if (vhLearned('dk_fortitude')) player.maxHp = Math.round(player.maxHp * 1.15);        // Swell Life
-  if (vhLearned('mg_ironwill'))  player.hpLeech = (player.hpLeech || 0) + 0.06;         // Iron Will
-  if (vhLearned('dl_darkraven')) player.skillDmgPct = (player.skillDmgPct || 0) + 0.12; // Dark Raven
-  player.healRegenPct = vhLearned('elf_heal') ? 0.01 : 0;                               // Heal — đọc ở update()
+  if (biDongBat('dk_fortitude')) player.maxHp = Math.round(player.maxHp * 1.15);        // Swell Life
+  if (biDongBat('mg_ironwill'))  player.hpLeech = (player.hpLeech || 0) + 0.06;         // Iron Will
+  if (biDongBat('dl_darkraven')) player.skillDmgPct = (player.skillDmgPct || 0) + 0.12; // Dark Raven
+  player.healRegenPct = biDongBat('elf_heal') ? 0.01 : 0;                               // Heal — đọc ở update()
   player.hp = Math.min(player.hp, player.maxHp);
   player.qi = Math.min(player.qi, player.maxQi);
 }
@@ -7728,11 +7843,14 @@ function loadGame(idx){
     }
     delete player.dantian;   // DANTIAN_REALMS đã gỡ — dọn nốt sau khi quy đổi Anima
     // Phase C backfill: thanh kỹ năng, PK, tội ác, buff, độc, auto-sell
-    // Tối giản taskbar (bản mới): luôn ép về đúng 4 ô cố định theo phái (chính/phụ/buff/tuyệt chiêu)
-    // — bỏ hẳn ô tự gán cũ, tránh save cũ kẹt lại chiêu giờ chỉ còn là bị động (không bấm được nữa).
-    // Ép lại ở đây cũng chính là đường nâng cấp cho save cũ: mọi save 3 ô mở lên là có ngay ô 4.
+    // ⚠ CHỖ NÀY TỪNG LÀ `player.skillBar = defaultSkillBar(player.sect)` — ép lại thanh MỖI LẦN
+    // nạp save. Hồi thanh còn cố định thì nó vô hại; từ lúc người chơi tự kéo thả được thì nó là
+    // cái nuốt sạch lựa chọn của họ, và nuốt trong im lặng: gán xong thấy đúng, tải lại trang là
+    // về mặc định, không lỗi, không dấu hiệu. Nay đi qua `knRaSoat()` — vẫn làm đủ ba việc mà
+    // dòng cũ làm (save 3 ô lên 4 ô, bỏ chiêu đã gỡ khỏi game, bỏ bị động kẹt ở ô 1) nhưng GIỮ
+    // những ô còn hợp lệ.
     // Đổi tên chiêu thì cấp đã nâng phải đi theo, không thì save cũ mở lên là ô 4 tụt về cấp 1
-    // trong im lặng. skillBar tự ép lại ngay dưới nên chỉ còn `skillLv` cần dắt sang khoá mới.
+    // trong im lặng. Phải dắt `skillLv` TRƯỚC khi rà soát thanh.
     for (const [cu, moi] of DOI_TEN_CHIEU){
       if (player.skillLv && player.skillLv[cu] != null){
         if (player.skillLv[moi] == null) player.skillLv[moi] = player.skillLv[cu];
@@ -7740,17 +7858,24 @@ function loadGame(idx){
       }
       if (player.spaceSkill === cu) player.spaceSkill = moi;
     }
-    player.skillBar = defaultSkillBar(player.sect);
-    // Cùng lý do: phím Space có thể còn trỏ vào chiêu đã rút khỏi taskbar (vd 'tieuhon' từ save
-    // cũ) — castSkill vẫn còn nhánh cho chúng nên chiêu đó sẽ lén bắn được, phá vỡ thiết kế 4 ô.
-    if (player.spaceSkill && !player.skillBar.includes(player.spaceSkill)) player.spaceSkill = null;
-    spaceMacDinh();
+    for (let _i = 0; _i < (player.skillBar || []).length; _i++){
+      const _m = DOI_TEN_CHIEU.find(([cu]) => cu === player.skillBar[_i]);
+      if (_m) player.skillBar[_i] = _m[1];
+    }
     if (player.pk == null) player.pk = false;
     if (player.toiac == null) player.toiac = 0;
     if (player.toiacT == null) player.toiacT = 0;
     delete player.gkBuffT;   // đồng hồ buff của chiêu Defense đã gỡ
     if (!player.vohoc) player.vohoc = {};
     if (!player.skillLv) player.skillLv = {};
+    // ⚠ PHẢI đứng SAU `player.vohoc` — `knRaSoat` hỏi `knDaNgo()`, mà bị động thì `knDaNgo` đọc
+    // `player.vohoc`. Save đời cũ không có trường đó, nên rà soát sớm một dòng là mọi bị động
+    // trên thanh bị coi như chưa ngộ và bị gỡ sạch, im lặng.
+    knRaSoat();   // save cũ / chiêu đã gỡ / ô 1 lỡ giữ bị động — ép thanh về trạng thái hợp lệ
+    // Phím Space có thể còn trỏ vào chiêu đã rút khỏi thanh (vd 'tieuhon' từ save cũ) —
+    // castSkill vẫn còn nhánh cho chúng nên chiêu đó sẽ lén bắn được dù không có ô nào.
+    if (player.spaceSkill && !player.skillBar.includes(player.spaceSkill)) player.spaceSkill = null;
+    spaceMacDinh();
     if (!player.skillEvo) player.skillEvo = {};
     if (player.bikipVH == null) player.bikipVH = 0;
     if (!player.gt) player.gt = { t: GT_DAY*0.30 }; // Lịch Thế Giới backfill
@@ -9188,7 +9313,10 @@ function phimXuong(e){
   if (e.key === 'Enter' && typeof loMo === 'function' && loMo()){ e.preventDefault(); window.doChaos(); return; }
   if (e.key >= '1' && e.key <= '4' && player){ // taskbar 4 ô kỹ năng (chính/phụ/buff/tuyệt chiêu)
     const id = player.skillBar[+e.key - 1];
-    if (id) castSkill(id); else togglePanel('skill');
+    // Ô cắm BỊ ĐỘNG không tung được — nói ra thay vì im lặng, nếu không người chơi bấm mãi và
+    // tưởng chiêu hỏng. `castSkill` vốn cũng lặng lẽ `return` vì bị động không có trong SKILL_DEFS.
+    if (id && knLaBiDong(id)) addFloat(player.x, player.y-40, `${skName(id)} là bị động — luôn chạy, không cần bấm`, '#a0ffe9', 12);
+    else if (id) castSkill(id); else togglePanel('skill');
   }
   if (e.key.toLowerCase()==='e'){ if (!window.tryCatchHorse || !tryCatchHorse()) tryTalk(); } // GDD Đợt 2 B5: E bắt Tuấn Mã kiệt sức trước
   if (e.key.toLowerCase()==='j'){ if (!tryPickLoot() && !ruongMo() && !viaKhai()) tryHarvestHerb(); } // nhặt đồ → mở Rương Canh → khai Vỉa Cốt → hái thảo dược
@@ -9285,9 +9413,11 @@ document.getElementById('sk-basic').addEventListener('click', doBasic);
 document.querySelectorAll('.sk-slot').forEach(b=>{
   b.addEventListener('click', ()=>{
     const id = player && player.skillBar[+b.dataset.slot];
-    if (id) castSkill(id); else togglePanel('skill');
+    if (id && knLaBiDong(id)) addFloat(player.x, player.y-40, `${skName(id)} là bị động — luôn chạy, không cần bấm`, '#a0ffe9', 12);
+    else if (id) castSkill(id); else togglePanel('skill');
   });
 });
+knGanThaHUD();   // thả chiêu thẳng xuống thanh HUD — khai ở cùng chỗ gắn click, khỏi hai nơi nhớ
 // Ô cuối thanh kỹ năng nay là NHẶT ĐỒ (trước là Phiêu Vân Bộ — nhảy). Trên điện thoại không
 // có bàn phím nên đây là đường DUY NHẤT để nhặt đồ dưới đất.
 document.getElementById('sk-loot').addEventListener('click', () => {
@@ -11195,7 +11325,7 @@ function update(dt){
       // tự tung kỹ năng trên taskbar khi hết hồi chiêu & đủ mana (im lặng, không spam thông báo)
       if (_ac.skill && _ad < Math.max(340, _rng0)){
         for (const _sid of player.skillBar){
-          if (_sid == null) continue;
+          if (_sid == null || knLaBiDong(_sid)) continue;   // ô cắm bị động thì không có gì để tung
           const _inf = skillInfo(_sid);
           if (_inf.unlocked && (player.cd[_sid] || 0) <= 0 && player.qi >= _inf.qi) castSkill(_sid);
         }
@@ -11815,7 +11945,7 @@ function onDeath(){
     return;
   }
   // Bản Nguyên Công (Sổ Kỹ Năng): chết tự hồi sinh 50% HP — CD 300s
-  if (vhLearned('tienthiencong') && (player.vhReviveCd || 0) <= 0){
+  if (biDongBat('tienthiencong') && (player.vhReviveCd || 0) <= 0){
     player.vhReviveCd = 300;
     player.hp = Math.round(player.maxHp * 0.5);
     player.combatT = 0;
@@ -22216,6 +22346,69 @@ function knMuiTen(ds){
     <defs><marker id="knMui" markerWidth="7" markerHeight="7" refX="5" refY="3.2" orient="auto">
       <path d="M0 0 L6 3.2 L0 6.4 z" fill="#5fc96e"/></marker></defs>${p}</svg>`;
 }
+// ── KÉO THẢ chiêu vào ô 1-4 ─────────────────────────────────────────────────
+// Dùng lại đúng khuôn của Túi Đồ: một biến toàn cục thay vì tin `dataTransfer.getData` trong
+// `dragover` (một số trình duyệt chặn đọc dữ liệu cho tới `drop`). Ghi chú đó đã trả giá một
+// lần ở hệ trang bị — đừng phát minh lại kiểu khác.
+window._keoChieu = null;
+window.knKeoBatDau = function(e, id){
+  window._keoChieu = id;
+  if (e.dataTransfer){
+    e.dataTransfer.effectAllowed = 'move';
+    try { e.dataTransfer.setData('text/plain', id); } catch { /* đã có _keoChieu */ }
+  }
+};
+window.knKeoXong = function(){ window._keoChieu = null; document.querySelectorAll('.sk-nhan').forEach(x => x.classList.remove('sk-nhan')); };
+window.knOKeoQua = function(e, slot){
+  if (!window._keoChieu || knOHopLe(slot, window._keoChieu)) return;   // sai luật → giữ con trỏ "cấm"
+  e.preventDefault();
+  if (e.currentTarget) e.currentTarget.classList.add('sk-nhan');
+};
+window.knORoiKhoi = function(e){ if (e.currentTarget) e.currentTarget.classList.remove('sk-nhan'); };
+window.knOTha = function(e, slot){
+  e.preventDefault();
+  const id = window._keoChieu; window._keoChieu = null;
+  if (e.currentTarget) e.currentTarget.classList.remove('sk-nhan');
+  if (id) window.knGan(slot, id);
+};
+// Thanh chiêu TRÊN HUD cũng nhận thả. Gắn bằng JS chứ không viết vào index.html: bốn nút đó là
+// markup tĩnh, mà luật thả thì đọc `player` — để trong HTML là hai nơi phải nhớ sửa cùng lúc.
+function knGanThaHUD(){
+  document.querySelectorAll('#skillbar .sk-slot').forEach(b => {
+    const sl = +b.dataset.slot;
+    b.addEventListener('dragover', e => window.knOKeoQua(e, sl));
+    b.addEventListener('dragleave', e => window.knORoiKhoi(e));
+    b.addEventListener('drop', e => window.knOTha(e, sl));
+    // Chuột phải trên ô = gỡ. Ô 1 từ chối, và `knGo` tự nói vì sao.
+    b.addEventListener('contextmenu', e => { e.preventDefault(); window.knGo(sl); });
+  });
+}
+// Bốn ô ngay trong bảng Kỹ Năng — để kéo mà không phải với xuống thanh HUD, và để thấy luôn
+// cái giá Di Sản của từng ô.
+function knOBarHtml(){
+  const bar = player.skillBar || [];
+  let h = `<div class="kn-thanh"><div class="kn-thanh-t">Thanh chiêu — kéo chiêu từ cây thả vào ô · chuột phải để gỡ</div><div class="kn-thanh-o">`;
+  for (let i = 0; i < 4; i++){
+    const id = bar[i];
+    const bd = id && knLaBiDong(id);
+    const inf = id ? (bd ? { name: VOHOC_DEFS[id].name, icon: VOHOC_DEFS[id].icon } : skillInfo(id)) : null;
+    const mat = id && LEGACY_SECT_SKILLS.includes(id) && VOHOC_DEFS[id]
+      ? (LEGACY_TIER_PCT[VOHOC_DEFS[id].tier] || 0) : 0;
+    h += `<div class="kn-bo${id?'':' trong'}${bd?' bd':''}" data-slot="${i}"
+        ondragover="window.knOKeoQua(event,${i})" ondragleave="window.knORoiKhoi(event)"
+        ondrop="window.knOTha(event,${i})"
+        oncontextmenu="event.preventDefault();window.knGo(${i})"
+        title="${mstEsc(inf ? inf.name + (bd ? ' — bị động' : '') + (mat ? `\nĐang bỏ ${mat}% Công Kích Di Sản để bấm được` : '') : (i === O_CHUDONG_DAU ? 'Ô 1 — chỉ nhận chiêu chủ động' : 'Ô trống — kéo chiêu vào'))}">
+      ${inf ? `<img src="${inf.icon}" alt="">` : '<span>+</span>'}
+      <i>${i + 1}</i>${bd ? '<u>✚</u>' : ''}${mat ? `<s>−${mat}%</s>` : ''}</div>`;
+  }
+  const _mat = (player.skillBar || []).filter(x => x && LEGACY_SECT_SKILLS.includes(x) && VOHOC_DEFS[x])
+    .reduce((a, x) => a + (LEGACY_TIER_PCT[VOHOC_DEFS[x].tier] || 0), 0);
+  h += `</div><div class="kn-thanh-d">Di Sản còn <b>+${(player.legacyAtkPct || 0).toFixed(1)}%</b> Công Kích`
+     + (_mat ? ` — đã bỏ <b style="color:#ff9a6a">${_mat.toFixed(1)}%</b> để bấm được` : '')
+     + `. Chiêu để ngoài thanh thì cộng %ST vĩnh viễn; kéo lên thanh thì bấm được nhưng mất khoản đó.</div></div>`;
+  return h;
+}
 function renderSkillPanelCay(tab){
   const hinh = knHinh(tab);
   const ds = hinh.map((n, i) => knNut(tab, n, i));
@@ -22235,8 +22428,10 @@ function renderSkillPanelCay(tab){
     // THẬT: hỏi lại đúng ba điều kiện mà upgradeSkillUI() kiểm, không chỉ hỏi "đã mở khoá chưa".
     const nangDuoc = n.mo && !max && n.lv < player.level
       && player.silver >= skUpCost(n.id) && (player.khi || 0) >= skUpKhi(n.id);
+    const keo = n.mo;   // chưa mở khoá thì không kéo được — thả vào ô rồi bị từ chối là tệ hơn
     h += `<button class="kn-o${chon?' chon':''}${n.mo?'':' khoa'}" style="${st}"
-            onclick="knChon('${n.k}')" title="${mstEsc(n.ten + ' — cấp ' + n.lv)}">
+            draggable="${keo}" ondragstart="window.knKeoBatDau(event,'${n.id}')" ondragend="window.knKeoXong()"
+            onclick="knChon('${n.k}')" title="${mstEsc(n.ten + ' — cấp ' + n.lv + (keo ? '\nKéo xuống ô 1-4 để gán' : ''))}">
         <img src="${n.inf.icon}" alt="">
         ${nangDuoc ? '<i class="kn-cong">+</i>' : ''}
         <b class="kn-lv">${n.biDong ? '✚' : n.lv}</b></button>`;
@@ -22280,7 +22475,7 @@ function renderSkillPanelCT(tab, ds){
     <div class="kn-ct-tt ${n.mo?'ok':'no'}">${n.mo ? '◆ Đã đủ điều kiện' : '🔒 ' + (i.lockTxt || 'chưa đủ điều kiện')}</div>
     <div class="kn-d"><span>Loại:</span> ${n.loai}</div>
     <div class="kn-d"><span>Tiến độ:</span> ${mocKe ? `tới mốc <b>${mocKe.name}</b> (cấp ${mocKe.lv})` : 'đã tới mốc cuối'}</div>
-    <div class="kn-bar"><s style="width:${clamp(pc,0,100)}%"></s><em>${clamp(pc,0,100)}%</em></div>
+    <div class="kn-tien"><s style="width:${clamp(pc,0,100)}%"></s><em>${clamp(pc,0,100)}%</em></div>
     <div class="kn-d kn-mo"><span>Hiệu quả:</span> ${i.desc || '—'}</div>
     <div class="kn-d"><span>Tác dụng:</span> ${skThongSoGon(i)}</div>
     <div class="kn-d kn-mo"><span>Thêm 1 cấp:</span> +2,5% Sát Thương · −0,25% hồi chiêu${
@@ -22296,12 +22491,17 @@ function renderSkillPanelCT(tab, ds){
   h += `<div class="kn-nut">
       <button class="mini-btn kn-nang${nangDuoc?'':' mo'}" onclick="window.upgradeSkillUI('${n.id}')">Nâng Cấp</button>
     </div>`;
-  // Ảnh mẫu ghi "Kéo biểu tượng đến thanh phím tắt". Game này KHÔNG cho kéo — thanh chiêu là 4 ô
-  // cố định — nên viết đúng sự thật thay vì chép câu đó sang: nói luôn chiêu này nằm ô nào.
+  // Thanh chiêu nay GÁN ĐƯỢC (kéo thả), nên dòng này phải nói đúng cái giá của việc gán: chiêu
+  // Di Sản lên thanh thì mất khoản %Công Kích của nó. Đừng viết lại "4 ô cố định" — đó là mô tả
+  // của bản trước và nó sẽ nói dối ngay ở ô mà người chơi vừa tự kéo vào.
   const bar = (player.skillBar || []).indexOf(n.id);
+  const _diSan = LEGACY_SECT_SKILLS.includes(n.id);
   h += `<div class="kn-chan">${bar >= 0
     ? `Đang nằm ở <b>ô ${bar + 1}</b> trên thanh chiêu — bấm phím <b>${bar + 1}</b> để tung.`
-    : `Không nằm trên thanh chiêu (4 ô cố định). Chiêu ngoài thanh dồn thành % Công Kích vĩnh viễn — xem tab Khác.`}</div>`;
+      + (_diSan ? ` Đang bỏ khoản %Công Kích Di Sản của chiêu này để đổi lấy ô.` : '')
+    : `Chưa nằm trên thanh chiêu — <b>kéo thả</b> ô này vào ô 1-4 để bấm được.`
+      + (_diSan ? ` Để ngoài thì nó cộng %Công Kích vĩnh viễn (Di Sản — xem tab Khác).` : '')
+      + (n.biDong ? ` Bị động <b>chỉ chạy khi nằm trên thanh</b>.` : '')}</div>`;
   return h + `</div>`;
 }
 // Năm thông số bắt buộc, viết gọn một dòng cho khung hẹp. Đọc thẳng skillInfo() nên không có
@@ -22372,6 +22572,7 @@ function renderSkillPanel(){
     return;
   }
   const cay = renderSkillPanelCay(tab);
+  html += knOBarHtml();
   html += `<div class="kn-wrap">${cay.html}${renderSkillPanelCT(tab, cay.ds)}</div>`;
   html += `<div class="kn-ghi"><b style="color:#5fc96e">+</b> góc ô = nâng được ngay ·
     ô mờ = chưa mở khoá · ô viền đứt = chưa gán kỹ năng</div>`;
@@ -22530,7 +22731,7 @@ function castSkill(id){
   AudioSys.sfx(sfxTag, 0.6);
   flashSkillSlot(id);
   // Song Ảnh Phân Thân Thủ (Sổ Kỹ Năng): 30% chiêu vừa tung không tốn hồi chiêu
-  if (id !== 'tieuvotuong' && vhLearned('songthu') && Math.random() < 0.3){
+  if (id !== 'tieuvotuong' && biDongBat('songthu') && Math.random() < 0.3){
     player.cd[id] = 0;
     addFloat(player.x, player.y-62, '✦ SONG THỦ HỖ BÁC — chiêu không hồi!', '#d8d8f0', 13);
   }
