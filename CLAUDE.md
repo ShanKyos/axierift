@@ -85,6 +85,11 @@ khi tấn công thì ví dụ Dark Wizard sẽ xuất hiện và tung chiêu."*
 | **Axie** | thân NHÌN THẤY. **0 chỉ số, 0 kỹ năng, 0 trang bị.** Là ô để cắm NFT. |
 | **5 lớp** | nơi chứa **toàn bộ** chỉ số, trang bị, kỹ năng, Tiến Hoá, Di Sản |
 | **Lúc đánh** | lớp nhân vật **vật chất hoá KẾ BÊN Axie**, tung chiêu, rồi tan. Axie **không** biến mất — nhân vật đi theo bảo kê. |
+
+**⚠ MỘT NGƯỜI CHƠI = NHÂN VẬT + AXIE.** Chủ dự án chốt (2026-09-15). Hai hình đứng cạnh nhau
+trên màn là **một** người, không phải hai — đọc ảnh chụp mà đếm đầu là đếm gấp đôi. Hệ quả cho
+tầng mạng: đồng bộ một người chơi là đồng bộ **cả cặp**, và mọi phép đo "có mấy người trong
+khung" phải đếm theo cặp.
 | **Khoá lớp** | chọn một lần lúc tạo nhân vật. **Avatar thì tự do** — mọi NFT đều cắm được. |
 
 ### ⇒ Đây KHÔNG phải đổi kiến trúc. Là đổi LỚP VẼ.
@@ -2896,6 +2901,14 @@ node --version      # phải ra v20.x
 (`caidat.sh` bước 1 làm đúng ba dòng trên, kèm kiểm `curl` có sẵn chưa — bản Debian tối giản
 không có, và khi thiếu thì lỗi báo ra là "không tải được script NodeSource", tức sai chỗ.)
 
+**⚠ THỬ HAI NGƯỜI: MỌI NHÂN VẬT MỚI HIỆN RA Ở ĐÚNG MỘT ĐIỂM.** Đo được: `ardhaven (3200, 1900)`
+cho **mọi** nhân vật mới, bất kể localStorage. Nên hai cửa sổ vừa vào game là hai thân **chồng
+khít lên nhau, lệch 0,0px** — kết nối chạy hoàn hảo mà nhìn ra "không thấy ai". Phải **cho một
+người đi chỗ khác** rồi mới kết luận.
+⚠ Và **"hai cửa sổ ẩn danh" là sai**: Chrome dùng CHUNG một phiên ẩn danh cho mọi cửa sổ ẩn danh
+⇒ vẫn một localStorage, vẫn một nhân vật. Đúng là **một cửa sổ thường + một cửa sổ ẩn danh**,
+hoặc hai trình duyệt khác nhau, hoặc hai máy.
+
 **⚠ MẶC ĐỊNH TẮT, và đừng gỡ cái cửa đó.** Không khai máy chủ ⇒ `net.js` `return` ngay,
 `NETPLAYERS` rỗng, bản chơi một mình chạy y nguyên — đó là thứ đang sống trên production, và cả
 185 bài hồi quy đều chạy trên đường không có mạng. Bật bằng `?net=ws://…`, `?net=1`, hoặc
@@ -2920,6 +2933,32 @@ không có, và khi thiếu thì lỗi báo ra là "không tải được script
    Cùng họ với luật "hai chỗ phải cùng gọi `dangChay()`".
 5. **Ảnh chụp phải TỰ NÓI nó thuộc map nào.** Suy ngầm "ảnh này chắc là map mình đang đứng" thì
    đúng lúc vừa qua cổng, một ảnh của map cũ tới sau sẽ thả vài cái bóng vào map mới.
+
+### ⚠⚠ THÂN NGƯỜI TỪ XA TỪNG ĐỨNG CHẾT — và năm mệnh đề đầu đều xanh suốt lúc đó
+
+Lỗi nặng nhất của Giai đoạn 1, **đã ship**, và nó giết đúng mục tiêu của cả giai đoạn
+("nhìn thấy nhau **CHẠY**") trong khi mọi bài kiểm vẫn xanh và không một lỗi nào in ra.
+
+`nhanAnh()` đặt `t.at` và `t.bt` **BẰNG NHAU** (cùng bằng `gio`), nên `span = max(1, bt − at)`
+ra **1 ms**; còn `noiSuy()` lại vẽ ở mốc `performance.now() − TRE_MS`, tức **luôn TRƯỚC `at`**.
+⇒ `k` bị kẹp về 0 ở **mọi** khung ⇒ `x = ax` = chỗ đang vẽ ⇒ thân người từ xa đứng nguyên ở
+**vị trí đầu tiên**, vĩnh viễn. Đo được: B dời tới `x = 3460`, A vẫn vẽ `x = 3200` — lệch đúng
+bằng quãng vừa đi, ở cả hai map.
+
+**Luật rút ra, và nó lớn hơn cái lỗi:** `TRE_MS` (120) **lớn hơn** nhịp ảnh chụp (100), nên sơ
+đồ **HAI MỐC** không thể vẽ lùi thật được — chỉ nội suy được trong `[at, bt]`. Muốn vẽ lùi thì
+phải giữ **ba mốc trở lên**. Nay: trượt từ chỗ ĐANG vẽ tới mốc mới trong đúng `TRE_MS`, và
+`noiSuy` đọc `performance.now()` thẳng.
+
+⚠ **Vì sao năm mệnh đề cũ mù:** cả năm đặt toạ độ **một lần** rồi đo một ảnh **TĨNH**. Chúng gác
+*"có vẽ ra không"*, không gác *"có đi được không"*. `test_bongnguoi §3b` nay dời B rồi đòi A phải
+vẽ theo (ngưỡng 40px — đòi khớp chằn chặn là đỏ theo xúc xắc, vì nội suy vốn trễ một nhịp), và
+nó **đã được thử ngược**: dựng lại đúng bản cũ thì nó đỏ.
+
+⚠ **Và thử ngược cũng có bẫy.** Lượt đầu tôi `sed` nhầm — `const gio = performance.now()` có ở
+**hai** hàm, và lùi cả hai thì `−120` triệt tiêu nhau, ra một biến thể *chạy được*, nên bài xanh
+và tôi suýt kết luận "bài kiểm không bắt được lỗi". Thử ngược phải dựng lại **đúng** bản lỗi,
+không phải một bản hỏng bất kỳ.
 
 ### Và hai bẫy ở BÀI KIỂM — cả hai cho ra một bài XANH VÌ LÝ DO SAI
 

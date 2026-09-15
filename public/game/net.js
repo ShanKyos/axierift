@@ -21,7 +21,7 @@
   const GUI_MS   = 100;    // 10 Hz. Game là click-to-move nên client gửi *đích* nhiều hơn gửi
                            // *toạ độ* — 10 Hz đã dư. Xem docs §2.1.
   const NOI_LAI_MS = 3000; // nối lại sau khi rớt
-  const TRE_MS   = 120;    // vẽ TRỄ hơn thời gian thật chừng này — xem ghi chú ở `noiSuy()`
+  const TRE_MS   = 120;    // trượt tới mốc mới trong chừng này — xem ghi chú ở `noiSuy()`
 
   function diaChi() {
     const q = new URLSearchParams(location.search).get('net');
@@ -89,8 +89,16 @@
       }
       // mốc cũ = chỗ ĐANG vẽ, không phải mốc `b` trước đó: nếu một ảnh tới trễ thì nhảy từ chỗ
       // đang vẽ mượt hơn hẳn nhảy từ một mốc mà mắt chưa bao giờ nhìn thấy.
+      // ⚠⚠ `at` VÀ `bt` KHÔNG ĐƯỢC BẰNG NHAU. Bản đầu đặt cả hai bằng `gio`, nên
+      // `span = max(1, bt − at)` ra **1 ms**, mà `noiSuy` lại vẽ ở thời điểm `now − TRE_MS`
+      // — tức luôn TRƯỚC `at`. Kết quả: `k` bị kẹp về 0 ở MỌI khung ⇒ `x = ax = chỗ đang vẽ`
+      // ⇒ thân người từ xa ĐỨNG CHẾT ở vị trí đầu tiên, vĩnh viễn.
+      // Không lỗi nào ném ra. `test_bongnguoi` vẫn xanh vì nó đặt toạ độ MỘT LẦN rồi chỉ đo
+      // một ảnh TĨNH — tức nó gác "có vẽ ra không", không gác "có nhúc nhích không", mà cả
+      // Giai đoạn 1 sinh ra để làm đúng vế thứ hai.
+      // Nay: trượt từ chỗ ĐANG vẽ tới mốc mới trong đúng `TRE_MS`.
       t.ax = t.x || d.x; t.ay = t.y || d.y; t.at = gio;
-      t.bx = d.x; t.by = d.y; t.bt = gio;
+      t.bx = d.x; t.by = d.y; t.bt = gio + TRE_MS;
       t.face = d.f; t.moving = !!d.mv;
       t.hp = d.hp; t.maxHp = d.mhp; t.level = d.lv; t.speed = d.sp;
       t.sect = d.s; t.name = d.n;
@@ -110,14 +118,19 @@
 
   /* ── Nội suy ─────────────────────────────────────────────────────────────────────────
    * Ảnh chụp tới mỗi 100 ms; màn hình vẽ mỗi ~16 ms. Vẽ thẳng toạ độ của ảnh mới nhất thì thân
-   * người nhảy 6 khung một lần. Nên vẽ TRỄ `TRE_MS` so với thời gian thật và trượt giữa hai mốc:
-   * đổi 120 ms độ trễ lấy chuyển động liên tục.
+   * người nhảy 6 khung một lần. Nên TRƯỢT từ chỗ đang vẽ tới mốc mới trong `TRE_MS`: đổi ~120 ms
+   * độ trễ lấy chuyển động liên tục.
+   *
+   * ⚠ ĐỪNG lùi mốc thời gian vẽ về `now − TRE_MS` trong sơ đồ HAI MỐC này. Chỉ nội suy được
+   * trong khoảng `[at, bt]`, mà `TRE_MS` (120) LỚN HƠN nhịp ảnh chụp (100) — nên một mốc vẽ lùi
+   * 120 ms luôn rơi ra ngoài khoảng ấy về phía trước, `k` kẹp về 0, và thân người đứng im. Muốn
+   * vẽ lùi thật thì phải giữ ba mốc trở lên; ở giai đoạn này không đáng.
    *
    * ⚠ KHÔNG dự đoán tới trước (extrapolate). Người chơi dừng đột ngột thì bản dự đoán chạy quá
    * đích rồi bị kéo giật ngược — thứ đó nhìn ra ngay, còn 120 ms trễ thì không ai thấy. Game là
    * click-to-move, không phải bắn súng: không có gì ở đây cần bù trễ.                          */
   function noiSuy(dt) {
-    const gio = performance.now() - TRE_MS;
+    const gio = performance.now();
     for (const t of NET.than.values()) {
       if (t.bx == null) continue;
       const span = Math.max(1, t.bt - t.at);
