@@ -1800,7 +1800,19 @@ window.MAPS = {
     sanIso:true, isoCo:['nen_da1','nen_da2','nen_da3','nen_da4'],
     isoDat:['nen_soi1','nen_soi2','nen_soi3','nen_soi4'],
     isoVet:['vet_soi1','vet_soi2'],
-    isoCay:0, isoNho:0, trees:0, rocks:0, herbs:false,
+    // ⚠ `isoNho` KHÔNG ĐƯỢC ĐỂ 0, và `tests/test_isoneo.js §3` bắt đúng chỗ đó — bản đầu của
+    // tôi để `isoNho:0` rồi bài đỏ ngay: *"map lát viên mà trơ mặt đất"*. Bài ấy có lý: một mặt
+    // phẳng không mốc nào thì mắt không bám được, đọc ra khoảng không chứ không ra một cái sân
+    // — đúng bài học đã trả giá ở Bird Tribe Heights (xem khối map isometric trong CLAUDE.md).
+    //
+    // ⚠ NHƯNG BỘ SPRITE PHẢI LÀ ĐÁ VỤN, KHÔNG PHẢI `ISO_NHO` MẶC ĐỊNH. Bộ mặc định có `co1`
+    // `co2` `buicay1-3` — cỏ và BỤI CÂY. Bụi cây trên một sàn đấu là VẬT CHE: hai người lách
+    // sau bụi mà bắn nhau thì trận đấu thành trò trốn tìm, và cả cái đa giác bầu dục 16 đỉnh
+    // ở dưới sinh ra để KHÔNG có góc chết. Đá vụn cho mắt cái mốc cần thiết mà không cho ai
+    // chỗ nấp. (`raiIso` đẩy `type:'iso'` nên không sinh vật cản; vật cản chỉ tới từ `isoCum`,
+    // mà map này không khai.)
+    isoCay:0, isoNho:70, isoNhoBo:['da1','da1','da2','da2','da3'],
+    trees:0, rocks:0, herbs:false,
     desc:'Bảy người lính Vaeldra qua Nhát Gọi mang theo một cái lò và một thói quen: sáng nào cũng có hai người xuống sân mà thử nhau. Sân ấy còn đây. Không có gì để đào, không có gì để giết — chỉ có người đứng đối diện.',
     spawn:{ x:900, y:1140 }, spawnFrom:{ ardhaven:{ x:900, y:1140 } },
     // ⚠ HAI GÓC ĐỨNG, và nếu thiếu thì lỗi hiện ra RẤT GIỐNG "mạng không chạy": mọi nhân vật
