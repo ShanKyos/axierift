@@ -3318,6 +3318,16 @@ máu trần nên mỗi nhịp kéo lại hàng trăm nghìn máu, nhân vật kh
 độ trễ đổi theo lượt — đo được `0,017` ở mốc 300 ms và **đúng 0** ở mốc 150 ms, cùng một mã chạy
 tốt. Theo dõi liên tục rồi lấy ĐỈNH thì không còn khe nào để trượt.
 
+⚠ **HAI BÀI KIỂM CŨ ĐỎ VÌ HAI CƠ CHẾ MỚI LÀM ĐÚNG VIỆC CỦA CHÚNG** — cả hai sửa bằng cách đi
+theo, không bằng cách nới luật:
+- `test_wsnho §3/§4` nhận diện client bằng **TÊN**, mà §2 của chính nó đã cho cả chín client gửi
+  một `pos` kèm tên trước đó ⇒ tên đã chốt, hai cái tên mốc bị bỏ qua đúng như thiết kế. Nay
+  nhận diện bằng **TOẠ ĐỘ** — thứ hai mục ấy thật sự chứng minh (gói tới nơi nguyên vẹn).
+- `test_dongbodo §7` đo lớp nhân vật lúc ra đòn, mà `_lopHien` đòi `!hurtT`; từ lúc cú trúng đòn
+  được đồng bộ thì thân người từ xa đứng giữa bãi quái **liên tục giật** nên lớp nhân vật không
+  bao giờ vật chất hoá. Chốt tự kiểm của chính mục ấy bắt được — *đỏ ở chốt cảnh dựng, không đỏ
+  ở mệnh đề*, đúng như nó phải thế.
+
 ### Còn nợ, biết rõ
 
 | | |
