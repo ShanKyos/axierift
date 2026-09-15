@@ -12,21 +12,21 @@ Axie carries none of it, so any Axie can be any class.
 
 ## Play it
 
-**▶ Live build: http://14.225.204.107/** — nothing to install.
+**▶ Live build: http://14.225.204.107/?test=1** — nothing to install, nothing to sign up for.
 
-Two URL flags worth knowing if you are evaluating rather than playing through:
+That `?test=1` starts you wearing a full set of real art gear instead of bare-skinned, so the
+character and equipment art is visible from the first second. It grants no levels and no currency —
+the game underneath is the normal one.
 
-- `?test=1` — starts you in a full set of real art gear instead of bare-skinned, so the character
-  and equipment art is visible from the first second. No levels, no currency.
-- `?max=1` — level 120 with every system unlocked and maxed: end-game gear at +11, wings, jewels,
-  Box Kundun. The fastest way to see everything.
+If you would rather see the end of the game than play up to it, `?max=1` gives you level 120 with
+every system unlocked and maxed: end-game gear at +11, wings, jewels, Box Kundun.
 
 Or run it locally. `public/game/` is a self-contained static app — canvas 2D + vanilla JS, no build
 step, no backend, no `.env`, no database:
 
 ```bash
-git clone https://github.com/ShanKyos/axiewuxia.git
-cd axiewuxia/public/game
+git clone https://github.com/ShanKyos/axierift.git
+cd axierift/public/game
 python3 -m http.server 8850     # or: npx serve -l 8850
 ```
 
@@ -116,10 +116,11 @@ bash tools/reg.sh /tmp/reg-x    # full Playwright regression, ~30 min
 
 **Identifiers are Vietnamese, and some are older than the game.** This is a Vietnamese-language game,
 so functions and data keys are Vietnamese (`hurtMob` sits next to `veAvatar`, `banRaiVung`,
-`viaHomNay`). Separately, the engine was migrated from a shipped wuxia RPG: class and NPC keys
-(`thieulam`, `baidasan`, `quachtinh`) and the paths `axie-wuxia` / `/var/www/axiewuxia` were kept for
-save compatibility and to avoid breaking the live deploy. None of them ever reaches player-visible
-text. The migration itself is finished — the wuxia setting, vocabulary and systems are gone.
+`viaHomNay`). Separately, the engine was migrated from a shipped wuxia RPG, and a few names from
+before that migration were kept on purpose: class and NPC keys (`thieulam`, `baidasan`, `quachtinh`)
+because save files are keyed on them, and the server path `/var/www/axiewuxia` because the deploy
+cron runs out of it. None of them ever reaches player-visible text. The migration itself is
+finished — the wuxia setting, vocabulary and systems are gone.
 
 **The licence is deliberately not open source.** See [`LICENSE`](LICENSE) — it is source-available,
 all rights reserved, and the file explains why: some Builder's Program source material carries
