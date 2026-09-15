@@ -110,6 +110,39 @@ const pass = m => console.log('PASS ' + m);
   if (!r4.conTruong && !r4.conKhoNgoc && !r4.conTiem && r4.conHang)
     pass(`Tu La đã gỡ sạch, tỉ giá hoàn ${r4.conHang}◈/viên`);
 
+  // ── 5) LUẬT XỊT THEO MỐC: +7 tụt 1 · +8/+9 về 0 ───────────────────────────────────
+  // Luật này từng sống ở `forgeRule` nên khi gỡ "Rèn Thường" nó suýt mất theo. Đo được lúc nó
+  // tạm mất: đoạn +6→+9 dễ đi 35%. Bài này chạy CẢ HAI đường ép ngọc, vì `useJewel` từng chép
+  // riêng phép `Math.max(0, plus-1)` và lệch khỏi luật chung suốt một đợt.
+  const r5 = await p.evaluate(() => {
+    const o = { tui:{}, npc:{}, chungCua: !/Math\.max\(\s*0\s*,\s*it\.plus\s*-\s*1\s*\)/.test(String(window.useJewel || '')) };
+    for (const truoc of [6, 7, 8]) o.tui[truoc] = ngocXit('linhHon', truoc);
+    // đường NPC: ép tới khi xịt, xem nó rơi về đâu
+    player.jewels.linhHon = 9999;
+    for (const truoc of [6, 7, 8]){
+      let ket = null;
+      for (let lan = 0; lan < 400 && ket === null; lan++){
+        const it = genSpecific('vukhi', 105); it.plus = truoc; it.uid = 555000 + lan;
+        player.inv.push(it);
+        window.useJewel('linhHon', it.uid);
+        if (it.plus < truoc) ket = it.plus;      // đã xịt
+        player.inv = player.inv.filter(x => x.uid !== it.uid);
+      }
+      o.npc[truoc] = ket;
+    }
+    return o;
+  });
+  console.log('5) luật xịt:', JSON.stringify(r5));
+  const mong = { 6:5, 7:0, 8:0 };   // +6→+7 tụt 1 · +7→+8 và +8→+9 về 0
+  for (const t of [6, 7, 8]){
+    if (r5.tui[t] !== mong[t]) fail(`ép trong túi: +${t} lên +${t+1} mà xịt phải còn +${mong[t]}, ra +${r5.tui[t]}`);
+    if (r5.npc[t] !== mong[t]) fail(`useJewel: +${t} lên +${t+1} mà xịt phải còn +${mong[t]}, ra +${r5.npc[t]}`);
+  }
+  if (r5.tui[6] === 5 && r5.tui[7] === 0 && r5.tui[8] === 0) pass('ép trong túi: +7 tụt 1 · +8/+9 VỀ 0');
+  if (r5.npc[6] === 5 && r5.npc[7] === 0 && r5.npc[8] === 0) pass('useJewel: cùng luật, không lệch');
+  if (!r5.chungCua) fail('useJewel vẫn tự tính phép tụt cấp — phải đi qua ngocXit()');
+  else pass('cả hai đường cùng đi qua ngocXit()');
+
   console.log('errors:', JSON.stringify(errs.slice(0, 3)));
   if (errs.length) fail('lỗi trang: ' + errs[0]);
   await b.close();

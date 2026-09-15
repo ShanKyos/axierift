@@ -1501,13 +1501,26 @@ tổng chi phí không đổi một đồng: +10 cũ 3 Tu La + 1 Hỗn = 8.000�
 Di trú hoàn ở **hai** chỗ — túi (`gems.tuLa`) **và Ngăn Ngọc** (`khoNgoc.tuLa`); ngọc đã cất thì
 không tiêu được, bỏ sót chỗ thứ hai là mất trắng mà không báo.
 
-**⚠ GỠ ② LÀM ĐOẠN +6→+9 DỄ ĐI 35%** — đo 20.000 lượt, và ngược với dự đoán ban đầu: đường Lò
-75/65/50% nhưng xịt +8/+9 **về 0** tốn **22,7** lượt; ép ngọc 50% phẳng nhưng xịt chỉ **tụt 1**
-tốn **14,8**. "Tụt 1 cấp" nhẹ hơn "về 0" nhiều hơn là 25% tỉ lệ nặng hơn. Ở nhịp ~2 Linh Hồn/giờ
-là ~7 giờ cho một món lên +9 (port "về 0" sang ngọc thì 35,9 lượt ≈ 18 giờ, gấp 2,4×).
-*Bài học: tỉ lệ nhìn thì nặng hơn, nhưng LUẬT XỊT mới là thứ quyết định — đo, đừng đoán.*
-Luật "về 0" là quyết định cũ của chủ dự án nhưng nó gắn vào `forgeRule`, nên nó đi theo ②.
-Muốn đưa về thì thêm `fail` cho từng mốc trong `NGOC_EP` — một dòng.
+**⚠ LUẬT XỊT THEO TỪNG MỐC — `NGOC_EP.linhHon.xit`, thi hành ở `ngocXit()`.**
++7 xịt **tụt 1 cấp** · **+8 và +9 xịt VỀ +0**. Đây là quyết định của chủ dự án, và nó **từng
+sống ở `forgeRule`** (đường ②), nên gỡ ② suýt cuốn nó đi mất. Nay nó nằm cạnh chính viên ngọc
+thi hành nó, và `ngocXit()` là **cửa duy nhất** — cả `epNgoc` lẫn `useJewel` đều gọi nó.
+Đừng chép lại phép `Math.max(0, plus-1)` ở chỗ gọi: đó đúng là cách ③ từng lệch khỏi luật chung.
+
+**Số đo đoạn +6→+9** (mô phỏng 40.000 lượt, lượt dưới +7 do Chúc Phúc lo nên miễn phí):
+
+| | tỉ lệ · luật xịt | lượt bấm TB |
+|---|---|---|
+| trước cả đợt · đường Lò ② | 75/65/50% · +8/+9 về 0 | **22,5** |
+| ngọc, nếu để "tụt 1" | 50% phẳng · tụt 1 | *15,0* |
+| **nay** · ngọc | 50% phẳng · **+8/+9 về 0** | **35,8** |
+
+⇒ **so với trước cả đợt, +6→+9 nay khó hơn 1,59×** (≈11 giờ → ≈18 giờ ở nhịp ~2 Linh Hồn/giờ).
+Không phải vì luật xịt — mà vì tỉ lệ tụt từ 75/65/50 xuống **50 phẳng** khi đường ② mất.
+Muốn về đúng độ khó cũ thì cho `NGOC_EP.linhHon` một bảng `rate` theo mốc 75/65/50 — ra đúng 22,5.
+
+*Bài học đã trả giá: **LUẬT XỊT nặng hơn TỈ LỆ**. Bỏ ② mà giữ "tụt 1" làm đoạn này DỄ đi 33%,
+dù tỉ lệ nhìn thì tệ hơn hẳn. Đo, đừng đoán.*
 
 **Bài kiểm:** `tests/test_renxit.js` (4 mục — nó **chạy cả hai đường ép ngọc** chứ không đọc con
 số) · `test_chaos` §3d gác chiều ngược lại: `'Rèn Thường'` sống lại là bài đỏ.

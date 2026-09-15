@@ -16271,8 +16271,16 @@ function atRoyalForge(){
 const NGOC_EP = {
   chucPhuc: { ten:'Chúc Phúc Châu', glyph:'◎', mau:'#7ec850', tran:6, rate:100,
               mo:'100% lên +1, an toàn tuyệt đối — dùng được tới +6.' },
+  // ⚠ LUẬT XỊT THEO TỪNG MỐC, không phải một luật chung. Đây là quyết định của chủ dự án, và
+  // nó từng sống ở `forgeRule` (đường "Rèn Thường" ở Lò) — nên khi gỡ đường đó nó suýt mất
+  // theo. Đo được lúc nó tạm mất: đoạn +6→+9 dễ đi 35% (22,7 lượt → 14,8), vì "tụt 1" nhẹ hơn
+  // "về 0" nhiều hơn là 25% tỉ lệ nặng hơn. Nay luật nằm ở ĐÂY, cạnh chính viên ngọc thi hành
+  // nó, nên đợt gỡ sau không cuốn nó đi được nữa.
+  //   · lên +7 (từ +6) mà xịt ⇒ TỤT MỘT CẤP, còn +5
+  //   · lên +8/+9       mà xịt ⇒ VỀ +0 — đây là vách ngăn thật của cuối bảng ngọc
   linhHon:  { ten:'Linh Hồn Châu',  glyph:'◉', mau:'#b08ae8', tran:9, rate:50,
-              mo:'50% lên +1, hỏng thì TỤT 1 CẤP — dùng được tới +9.' },
+              xit: { 8:'zero', 9:'zero' },   // mốc không khai ⇒ 'drop1'
+              mo:'50% lên +1, hỏng thì tụt 1 cấp (lên +8/+9 hỏng thì VỀ +0) — dùng được tới +9.' },
   // Sinh Mệnh không đụng tới mức rèn — nó nâng DÒNG SINH LỰC, một thang riêng 7 bậc. Vì thế
   // mới có trường `loai`: hai viên trên ăn vào `it.plus`, viên này ăn vào `it.life`.
   sinhMenh: { ten:'Sinh Mệnh Châu', glyph:'❤', mau:'#e84a6a', loai:'life', tran:7, rate:50,
@@ -16339,7 +16347,11 @@ const CHAOS_RECIPES = [
       const d = NGOC_EP[_k];
       return { title: `${m.it.name} +${m.it.plus} → +${m.it.plus + 1}`, rate: ngocRate(_k),
         cost: [ jewelCost(_k, v, 1) ],
-        warn: d.rate >= 100 ? 'An toàn tuyệt đối — không có thất bại.' : 'Thất bại: trang bị TỤT 1 CẤP.',
+        // ⚠ Câu cảnh báo phải SUY TỪ `d.xit`, đừng chép cứng "tụt 1 cấp": ở mốc +8/+9 thì Linh
+        // Hồn xịt là VỀ +0, và hứa sai ở đây là người chơi bấm mà không biết mình đang cược gì.
+        warn: d.rate >= 100 ? 'An toàn tuyệt đối — không có thất bại.'
+            : ((d.xit && d.xit[(m.it.plus || 0) + 1]) === 'zero'
+                ? 'Thất bại: trang bị VỀ +0.' : 'Thất bại: trang bị TỤT 1 CẤP.'),
         charm: false }; },
     run(v, m){
       const d = NGOC_EP[_k];
@@ -20973,7 +20985,8 @@ window.xepGonTui = function(){
 //
 // Thang bậc, bám đúng MU:
 //   +1 … +6   ◎ Chúc Phúc  — 100%, không bao giờ hỏng
-//   +7 … +9   ◉ Linh Hồn   — 50%, hỏng thì TỤT 1 CẤP
+//   +7        ◉ Linh Hồn   — 50%, hỏng thì TỤT 1 CẤP
+//   +8 · +9   ◉ Linh Hồn   — 50%, hỏng thì VỀ +0 (luật ở NGOC_EP.linhHon.xit, thi hành ở ngocXit)
 //   +10 · +11 · +12  Phá Thiên Kiếp tại Lò Rèn Hoàng Gia (khay + ngọc + Hỗn Nguyên + Lumen,
 //                     hỏng thì VỠ VỤN) — đây là TOÀN BỘ phần việc của Lò, không hơn.
 // Trước đây Linh Hồn cho tới +11 với đúng 1 viên và cùng tỉ lệ 50% — tức là nó ĂN ĐỨT Phá
@@ -20984,6 +20997,15 @@ window.xepGonTui = function(){
 // `useJewel()` ở NPC Thợ Rèn thì KHÔNG đi qua hàm đó nên từng chép cứng `>= 11` và bỏ lọt
 // suốt — nay nó đọc thẳng `NGOC_EP.linhHon.tran`. Thêm đường ép thứ tư thì nhớ cùng một nguồn.
 function ngocRate(k){ return Math.min(100, NGOC_EP[k].rate + (player.forgeBonus || 0)); }
+// Xịt thì món về mức nào. CỬA DUY NHẤT — `epNgoc` và `useJewel` đều gọi nó, nên thứ người chơi
+// ĐỌC trong mô tả viên ngọc và thứ máy THỰC THI không thể lệch nhau. Đừng chép lại phép
+// `Math.max(0, plus-1)` ở chỗ gọi: đó đúng là cách đường thứ ba (`useJewel`) từng lệch khỏi
+// luật chung và sống sót qua cả một đợt sửa.
+function ngocXit(k, truoc){
+  const d = NGOC_EP[k] || {};
+  const luat = (d.xit && d.xit[truoc + 1]) || 'drop1';
+  return luat === 'zero' ? 0 : Math.max(0, truoc - 1);
+}
 // Lý do KHÔNG ép được, dạng câu nói thẳng với người chơi. Trả null = ép được.
 function ngocEpDuoc(it, k){
   const d = NGOC_EP[k];
@@ -21021,7 +21043,7 @@ function epNgoc(it, k){
     return { ok:true, thang, truoc, sau: it.life, k, life:true };
   }
   const truoc = it.plus || 0;
-  it.plus = thang ? truoc + 1 : Math.max(0, truoc - 1);
+  it.plus = thang ? truoc + 1 : ngocXit(k, truoc);
   return { ok:true, thang, truoc, sau: it.plus, k };
 }
 window.ngocCam = null;            // viên ngọc đang cầm trên tay
@@ -25268,9 +25290,12 @@ window.useJewel = function(kind, uid){
         addFloat(player.x, player.y-58, '◉ Hết đường ngọc — lên +10 phải tới Lò Rèn Hoàng Gia', '#ffb15c', 13);
       AudioSys.sfx('forge_ok', 0.9);
     } else {
-      it.plus = Math.max(0, it.plus - 1);
-      say(`✘ Linh Hồn thất bại — ${it.name} tụt còn +${it.plus}`, '#ff7a6a');
-      addFloat(player.x, player.y-40, `◉ Xịt — tụt còn +${it.plus}`, '#ff7a6a', 13);
+      const _truoc = it.plus;
+      it.plus = ngocXit('linhHon', _truoc);          // cùng cửa với epNgoc — xem ngocXit()
+      const _veKhong = it.plus === 0 && _truoc > 1;
+      say(_veKhong ? `✘ Linh Hồn thất bại — ${it.name} VỀ +0`
+                   : `✘ Linh Hồn thất bại — ${it.name} tụt còn +${it.plus}`, '#ff7a6a');
+      addFloat(player.x, player.y-40, _veKhong ? '◉ Xịt — VỀ +0' : `◉ Xịt — tụt còn +${it.plus}`, '#ff7a6a', 13);
       AudioSys.sfx('forge_fail', 0.85);
     }
   } else if (kind === 'sinhMenh'){
