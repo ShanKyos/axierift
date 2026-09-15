@@ -2456,3 +2456,64 @@ html,body { width:100%; height:100%; overflow:hidden; background:var(--bg-deep);
   font-size:12px; line-height:1.6; color:#8d8570; }
 @media (prefers-reduced-motion: reduce){ #pl-fill { transition:none; } }
 
+
+/* ═══ HỆ THỐNG SỰ KIỆN — LƯỚI CÓ CỘT ═════════════════════════════════════════════════════
+   Khuôn lấy từ ảnh mẫu MU chủ dự án gửi: hàng tiêu đề đặc màu, rồi các hàng sọc xen kẽ, mỗi
+   cột thẳng lối. Cái được của lưới nằm ở CỘT THỜI GIAN: bảy con số đếm ngược xếp thẳng hàng
+   thì mắt quét một phát là ra "cái nào tới trước", còn bảy câu văn xuôi thì phải đọc hết.
+   ⚠ MÀU thì KHÔNG chép: ảnh mẫu dùng thanh tiêu đề đỏ cam chói, đặt vào khung thép đinh tán
+   của game này là hai ngôn ngữ hình ảnh chửi nhau (cùng lý do Baloo 2 bị gỡ khỏi
+   `--font-display`). Dùng vàng `--gold` đang có — giữ HÌNH DẠNG, đổi bảng màu. */
+/* ⚠ Lớp phủ dùng CHUNG `#overlay-inner` (max-width 560px) cho mọi màn — Bại Trận, Thăng Cấp,
+   Kết Mở… Nới bằng `:has()` chứ ĐỪNG gắn một class vào `#overlay-inner` trong `openEventBoard`:
+   `lopPhuMo()` trả về đúng một phần tử ấy và mọi chỗ gọi khác chỉ ghi đè `innerHTML`, không ai
+   xoá class — nên cái class đó sẽ ở lại và nới rộng mọi lớp phủ sau đó, trong im lặng.
+   `:has()` tự hết hiệu lực ngay khi nội dung đổi, nên không có trạng thái nào để mà quên. */
+#overlay-inner:has(.sk-bang) { max-width:min(940px, 95vw); }
+.sk-bang { display:flex; flex-direction:column; gap:3px; margin:10px 0 4px;
+  max-height:min(56vh, 520px); overflow-y:auto; overflow-x:auto; }
+/* Một khai báo lưới DUY NHẤT, dùng chung cho hàng tiêu đề và mọi hàng dữ liệu — hai bảng cột
+   riêng là bảo đảm chúng lệch nhau ngay lần đầu ai đó sửa một bên. */
+.sk-dau, .sk-hang { display:grid; grid-template-columns:34px minmax(150px,1.5fr) minmax(110px,1fr)
+  minmax(190px,2.1fr) minmax(104px,.9fr) 82px; align-items:center; gap:8px; min-width:680px; }
+.sk-dau { position:sticky; top:0; z-index:2; padding:5px 8px; border-radius:5px;
+  font-family:var(--font-display); font-size:10.5px; letter-spacing:.08em; text-transform:uppercase;
+  background:linear-gradient(180deg, var(--gold), #b8863a);
+  box-shadow:0 2px 6px rgba(0,0,0,.5); }
+/* ⚠ HÀNG TIÊU ĐỀ DÙNG CHUNG TÊN LỚP VỚI Ô DỮ LIỆU (`sk-noi`, `sk-lich`, `sk-di`…) vì cả hai
+   sinh ra từ cùng bảng `SK_COT` — đó là chủ ý, một bảng cột thì không lệch được. Nhưng nó
+   nghĩa là MÀU của ô chảy ngược lên tiêu đề: ảnh chụp đầu tiên ra "NƠI DIỄN RA" và "LỊCH TRÌNH"
+   xám mờ trên nền vàng (gần như không đọc được), và ô "THAM GIA" thì mọc hẳn ra một cái NÚT
+   nền đen — vì `sk-di` là lớp của nút bấm. Nên `!important` ở đây không phải lười: nó là chỗ
+   duy nhất chặn được dòng chảy đó mà không phải đẻ ra bảng cột thứ hai. */
+.sk-dau span { text-align:center; color:#1a1408 !important; font-size:10.5px !important;
+  font-weight:700; background:none !important; border:none !important; padding:0 !important;
+  white-space:nowrap; }
+.sk-dau .sk-ten, .sk-dau .sk-noi, .sk-dau .sk-lich { text-align:left; }
+.sk-hang { padding:6px 8px; border-radius:5px; font-size:12px; text-align:left;
+  background:rgba(255,255,255,.035); box-shadow:inset 0 0 0 1px rgba(198,158,74,.13); }
+.sk-hang:nth-child(odd) { background:rgba(255,255,255,.065); }
+/* Hàng ĐANG DIỄN RA phải nhảy ra khỏi bảng bằng cái nhìn đầu tiên — đó là cả lý do chủ dự án
+   muốn cái bảng này ("người chơi mới biết đang là sự kiện gì"). */
+.sk-hang.sk-live { background:rgba(127,224,138,.10);
+  box-shadow:inset 0 0 0 1px rgba(127,224,138,.55); }
+.sk-hang .sk-tt  { text-align:center; color:var(--text-dim); font-size:11px; }
+/* Cho tên XUỐNG DÒNG, đừng cắt cụt: bản đầu ăn mất đuôi thành "Truy Nã Lệnh & Mục Tiêu Ng…",
+   mà một cái bảng cắt mất tên sự kiện thì hỏng đúng việc nó sinh ra để làm. */
+.sk-hang .sk-ten { font-weight:600; color:#e8dcc0; line-height:1.35; }
+.sk-hang .sk-ten i { font-style:normal; margin-right:3px; }
+.sk-hang .sk-noi { color:var(--text-dim); line-height:1.35; }
+/* Dãy giờ là cột DÀI nhất — cho nó xuống dòng thay vì cắt cụt, vì một lịch trình cụt mất mấy
+   mốc cuối thì tệ hơn hẳn một hàng cao thêm vài pixel. */
+.sk-hang .sk-lich { color:#b9ae90; font-size:11px; line-height:1.45; }
+.sk-hang .sk-tg  { text-align:center; white-space:nowrap; }
+.sk-hang .sk-di-o { text-align:center; }
+.sk-di { font-family:inherit; font-size:10.5px; font-weight:700; padding:4px 9px; cursor:pointer;
+  border-radius:4px; color:#e8dcc0; white-space:nowrap;
+  background:linear-gradient(180deg,rgba(40,33,23,.95),rgba(19,16,11,.96));
+  border:1px solid rgba(198,158,74,.45); }
+.sk-di:hover { border-color:var(--gold); color:#fff3d6; }
+.sk-di-live { color:#0f1a10; border-color:#7fe08a;
+  background:linear-gradient(180deg,#9df0a8,#5cbf6c); }
+.sk-ghi { margin-top:8px; font-size:10.5px; line-height:1.55; color:var(--text-dim); }
+@media (max-width:760px){ .sk-bang { max-height:48vh; } }
