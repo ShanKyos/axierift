@@ -937,28 +937,42 @@ window.MAPS = {
     { img:'ct_loren', x:4992, y:368,  w:473, h:472 },  // Lò Rèn Hoàng Gia — khối #10 (5000,520) · Phố Lò
     { img:'ct_duoc',  x:1600, y:436,  w:460, h:424 },  // Tiệm Thuốc       — khối #2  (1600,520) · Phố Chợ
     { img:'ct_vukhi', x:5686, y:526,  w:409, h:334 },  // Vũ Khí Phường    — khối #11 (5660,520) · Phố Lò
-  ],
-    // ── MƯỜI BA KHỐI CÒN TRỐNG · ĐANG CHỜ ART ────────────────────────────────
-    // 16 khối, mới 3 có ảnh (ct_cong dùng hết cho bốn cuống cổng). Khuôn đặt cho mọi khối
-    // 460×340:  x = khoi.x − (w − 460)/2   ·   y = khoi.y + 340 − h   (chân trùng mép dưới khối)
+
+    // ── BỐN CÔNG TRÌNH ĐỢT HAI ────────────────────────────────────────────────
+    // Chọn bốn khối này vì mỗi khối ĐÃ CÓ NPC đứng sẵn — chức năng người chơi dùng
+    // được từ lâu mà không nhìn ra trong thế giới. Khuôn đặt của khối 460×340:
+    // x = khoi.x − (w−460)/2 · y = khoi.y + 340 − h (chân trùng mép dưới khối).
     //
-    // ĐÃ CÓ NPC ĐỨNG TRƯỚC CỬA, CHỈ THIẾU NHÀ — năm cái này ưu tiên, vì mỗi cái là một
-    // chức năng người chơi đã dùng được mà chưa nhìn ra:
-    //   #9  (4340, 520) hàng BẮC · ct_caumay    — Sảnh Cầu May   (NPC `thantoan` ở 4570,990)
-    //   #8  (3680, 520) hàng BẮC · ct_quantro   — Quán Trọ       (NPC `trachu`   ở 4150,1010)
-    //   #3  (2260, 520) hàng BẮC · ct_thapvach  — chòi trông vách (NPC `ah_vachgio` ở 2160,380)
-    //   #12 (3680,2340) hàng NAM · ct_saanhlenh — Sảnh Lệnh      (NPC `bodau`     ở 4150,2100)
-    //   #7  (2260,2340) hàng NAM · ct_chuong    — dãy chuồng     (NPC `ah_mucdong` ở 2160,2450)
-    // ⚠ HAI CÁI HÀNG NAM: mặt tiền sprite isometric luôn quay XUỐNG DƯỚI, nên nhà ở hàng nam
-    //   quay mặt ra tường thành. Khi có art thì hoặc xin bản quay ngược, hoặc dời NPC xuống
-    //   phía nam khối (y ≥ 2700).
+    // ⚠ HAI CÁI HÀNG NAM (#12, #7) QUAY MẶT RA TƯỜNG THÀNH. Mặt tiền sprite isometric
+    // luôn nằm ở hai mặt +X/−Y, tức hướng xuống-phải và xuống-trái, còn người chơi tới
+    // từ phố lớn phía BẮC. Vẫn đặt ở đây vì cặp NHÀ–NPC quan trọng hơn mặt nào quay ra:
+    // `bodau` giao Truy Nã Lệnh phải đứng cạnh Sảnh Lệnh, `ah_mucdong` phải đứng cạnh
+    // chuồng. Hai con này cũng CỐ Ý đặt hàng kiểu KHÔNG CÓ MẶT TIỀN MẠNH — chuồng hở
+    // bốn bề, sảnh nhận diện bằng cái tháp và mấy lá cờ.
+    //
+    // ⚠ ĐÃ QUÉT MÁY: không một NPC nào trong 24 con của ardhaven rơi vào bốn hình chữ
+    // nhật dưới đây, kể cả với lề 30px. `bodau` (4150,2100) nằm trên mép trên Sảnh Lệnh
+    // 193px, `ah_mucdong` (2160,2450) nằm bên trái chuồng 100px — cả hai đứng NGOÀI khối
+    // nên không phải dời ai. Đừng dịch tay bốn số này mà không quét lại: `vatTo` vào
+    // `ents` theo y = v.y + v.h, nên NPC nào lọt trong hình là bị nhà vẽ đè lên.
+    { img:'ct_quantro',   x:3654, y:350,  w:512, h:510 },  // Quán Trọ        — khối #8  (3680, 520) · hàng BẮC
+    { img:'ct_thapvach',  x:2234, y:388,  w:511, h:472 },  // Chòi Trông Vách — khối #3  (2260, 520) · hàng BẮC
+    { img:'ct_saanhlenh', x:3654, y:2293, w:512, h:387 },  // Sảnh Lệnh       — khối #12 (3680,2340) · hàng NAM
+    { img:'ct_chuong',    x:2260, y:2286, w:460, h:394 },  // Dãy Chuồng      — khối #7  (2260,2340) · hàng NAM
+  ],
+    // ── CHÍN KHỐI CÒN TRỐNG · ĐANG CHỜ ART ───────────────────────────────────
+    // 16 khối, nay 7 có ảnh (ct_cong dùng hết cho bốn cuống cổng). Khuôn đặt cho mọi khối
+    // 460×340:  x = khoi.x − (w − 460)/2   ·   y = khoi.y + 340 − h (chân trùng mép dưới khối)
+    //
+    // CÒN ĐÚNG MỘT KHỐI CÓ NPC ĐỨNG SẴN MÀ THIẾU NHÀ:
+    //   #9  (4340, 520) hàng BẮC · ct_caumay — Sảnh Cầu May (NPC `thantoan` ở 4570,990)
     //
     // CHƯA GÁN VAI — nhà dân nền, một hai kiểu lặp lại là đủ:
     //   #0 (280,520)  #1 (940,520)              hàng bắc, đầu tây
     //   #4 (280,2340) #5 (940,2340) #6 (1600,2340)   hàng nam, đầu tây
     //   #13 (4340,2340) #14 (5000,2340) #15 (5660,2340)  hàng nam, đầu đông
     packs: [], duhiep: null },
-  ngoai: { name:'Beast Herd Camp', min:10, range:'14 - 24', type:'safe', ground:'#2d3526', patch:'#6a7a52',
+  ngoai: { name:'Beast Herd Camp', bdNen:'dongco', min:10, range:'14 - 24', type:'safe', ground:'#2d3526', patch:'#6a7a52',
     // ⚠ MAP NÀY DỰNG LẠI TỪ TRANH NHÌN NGANG — xem docs/DUNG_LAI_BON_MAP.md.
     // Tấm nền cũ là tranh SÂN KHẤU: đáy có một dải sàn mỏng, phần trên là trời/núi/tường cây. Mà
     // game.js kéo tranh nền phủ kín thế giới rồi cho đi khắp mặt tranh, nên TRANH NỀN CHÍNH LÀ
@@ -1116,7 +1130,7 @@ window.MAPS = {
   //
   // Thang cap anh xa vao QUANG DUONG: C38 dau lan -> C42 giua -> C48 cuoi, roi trum o tan cung.
   // Di xa hon = quai nang hon, khong can mot dong chu nao giai thich.
-  loimon: { name:'Lối Mòn Corran', min:40, range:'42 - 48', type:'pk', hinh:'hanhlang',
+  loimon: { name:'Lối Mòn Corran', bdNen:'duong', min:40, range:'42 - 48', type:'pk', hinh:'hanhlang',
     w:6400, h:1400, ground:'#2f3324', patch:'#6a7a52',
     // SAN LAT VIEN: nen ghep tu hinh thoi 2:1 nuong bang tools/iso/nuong_tile.py, thay cho
     // tam tranh nen bg_loimon.jpg. Xem khoi "SAN LAT VIEN" trong game.js. Vung di duoc van la
@@ -1223,7 +1237,7 @@ window.MAPS = {
   // Xem ghi chú "HOÁN DẢI CẤP" ở Plant Tribe Glade phía trên: map này nhận dải 1-12, bộ quái
   // nhập môn và bốn cờ làng; tên và lore giữ nguyên. Địa hình (5200x3800, sàn lát viên,
   // `diTrong`/`isoCum`/`isoDuong`) KHÔNG đổi — chúng sinh bằng máy cho chính tấm nền này.
-  corran: { name:'Rẻo Rừng Corran', min:1, range:'1 - 12', type:'safe', ground:'#2f3324', patch:'#6a7a52',
+  corran: { name:'Rẻo Rừng Corran', bdNen:'rung', min:1, range:'1 - 12', type:'safe', ground:'#2f3324', patch:'#6a7a52',
     // `ground` la mau to KIN canvas truoc khi ve bat cu thu gi -- tuc la mau cua phan NGOAI da
     // giac `diTrong`, cho vien nen khong lat toi. O map lat vien, cho ay phai doc ra BONG RUNG
     // SAU. Ban cu de '#cfd2ae' (cat nhat, hop voi tam tranh nen mot mieng ngay xua) va anh chup
@@ -1340,7 +1354,7 @@ window.MAPS = {
   // ⚠ `boss:'drue'` — trùm NHIỆM VỤ chương VIII. Map này min 44 nhưng trùm chỉ hiện khi
   // `questIdx >= questBossIdx('trungnut')`, tức từ nhiệm vụ cấp 120 — y khuôn con ở Rẻo Rừng
   // Corran (map min 1, trùm hiện ở nhiệm vụ cấp 12). Người cấp 50 đi ngang không gặp hắn.
-  trungnut: { boss:'drue', name:'Trũng Nứt Corran', min:44, range:'44 - 50', type:'freepk',
+  trungnut: { boss:'drue', name:'Trũng Nứt Corran', bdNen:'dahoang', min:44, range:'44 - 50', type:'freepk',
     w:4200, h:3200, ground:'#2f3324', patch:'#6a7a52', sanIso:true,
     spawnFrom:{ daohoa:{ x:706, y:2845 }, comoc:{ x:3805, y:770 } },
     // ⚠ `HERB_SPOTS` (game.js) ĐÃ có toạ độ chấm bằng máy cho map này từ lâu, chỉ thiếu đúng
