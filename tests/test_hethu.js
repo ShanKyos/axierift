@@ -188,6 +188,112 @@ const pass = m => console.log('PASS ' + m);
   else if (!r6.coTenHe) fail('bảng Nhân Vật in nhãn nhưng không in tên hệ đang mang');
   else pass('bảng Nhân Vật in cả hệ đòn đánh lẫn hệ phòng thủ, kèm nguồn của mỗi cái');
 
+  // ── ⑦ MỖI ĐÒN TRÚNG PHẢI NÓI RA — CẢ HAI VẾ, KHÔNG CHỈ VẾ BẤT LỢI ────────────────────
+  //
+  // Trước bản này vế phòng thủ có đúng MỘT cửa: một dòng `logCombat` trong hộp nhật ký 260px ở
+  // góc dưới-trái — trôi quá nhanh để đọc giữa lúc đánh nhau — và nó chỉ in ở nhánh ×1,12, vì
+  // `mobCounter` không bao giờ bật ở nhánh ×0,90. Tức nửa CÓ LỢI của cơ chế, cũng là nửa trả
+  // lời cho "vì sao phải có nhiều hơn một con Axie", chưa từng hiện ra một lần nào.
+  //
+  // ⚠ Đo trên `floats` (số bay TRÊN ĐẦU người chơi), không đo nhật ký: nhật ký đã in sẵn từ
+  // trước ở một vế, nên một bài hỏi nhật ký sẽ xanh mà chưa kiểm được gì mới.
+  const doFloat = async (avaId, moTa) => await page.evaluate(({ id }) => {
+    window.TEST_MODE = true; startGame('thieulam', null);
+    player.level = 40; player.free = 0; calcDerived();
+    player.reflect = 0;
+    travelTo('chungnam');
+    chiNhan(id); player.avatar = id; calcDerived();
+    player.hp = player.maxHp;
+    const m = mobs.find(x => x && x.hp > 0);
+    if (!m) return { loi: 'không có quái trong màn' };
+    m.def = Object.assign({}, m.def, { el:'Beast', lv:40, atk:400, atkCd:0.01, range:200 });
+    // ⚠ GHIM HỆ CHO CẢ MAP, đừng ghim mỗi con đứng cạnh. Số bay bắn theo con quái vừa đánh
+    // TRÚNG, mà `chungnam` có nhiều bãi — lượt đầu tôi chỉ ghim một con và cái bay ra lại là
+    // phán quyết của một con Dusk khác ("⚠ Dusk khắc Aquatic"), tức bài chấm một cảnh khác
+    // hẳn cảnh nó tưởng mình dựng. §2 không lộ ra vì nó chỉ cộng tổng máu mất.
+    for (const x of mobs) if (x) x.he = 'Beast';
+    floats.length = 0;
+    const he = heThu(player);
+    // ⚠ HỨNG NGAY TRONG VÒNG, đừng đọc `floats` sau khi chạy xong. 600 nhịp là 10 GIÂY thời gian
+    // trong game, mà một số bay chỉ sống ~1 giây — đọc sau thì nó đã bị dọn khỏi mảng từ lâu và
+    // bài báo "không số bay nào hiện lên" trong khi nó đã hiện đúng. (Đã đo đúng thế một lượt:
+    // soFloat 0 mà tongFloat 11.) Gom theo ĐỐI TƯỢNG để đếm được số lần bắn, không gom theo chữ.
+    const thay = new Set();
+    let trung = 0;
+    for (let i = 0; i < 600; i++){
+      m.x = player.x + 26; m.y = player.y;
+      m.hp = m.maxHp = 9e8; m.dead = false; m.aggro = 9999; m.target = player;
+      const truoc = player.hp;
+      update(1/60);
+      for (const f of floats) if (f.text && f.text.includes(he)) thay.add(f);
+      if (player.hp < truoc) trung++;
+      player.hp = player.maxHp; player.dead = false;
+    }
+    const cua = [...thay];
+    return { he, trung, soFloat: cua.length, chu: cua.length ? cua[0].text : null };
+  }, { id: avaId });
+
+  // (a) vế BẤT LỢI — Dusk bị Beast khắc, ×1,12
+  const f1 = await doFloat('netherfang');
+  console.log('  ⑦a bất lợi:', JSON.stringify(f1));
+  if (f1.loi || !f1.trung) fail('⑦a không dựng được cảnh đo: ' + JSON.stringify(f1));
+  else if (!f1.soFloat) fail(`⑦a trúng ${f1.trung} đòn bị khắc mà không một số bay nào hiện lên đầu người chơi`);
+  else if (!/Beast/.test(f1.chu)) fail(`⑦a cảnh dựng sai — số bay nói về con quái khác: "${f1.chu}"`);
+  else if (!/⚠/.test(f1.chu)) fail(`⑦a số bay không đọc ra là bất lợi: "${f1.chu}"`);
+  else pass(`vế bất lợi hiện lên đầu người chơi: "${f1.chu}"`);
+
+  // ⚠ Chờ qua hồi của số bay. Không chờ thì lượt (b) bị chính bộ chống tràn nuốt mất và bài
+  // báo "vế có lợi vẫn im lặng" — đúng cái lỗi nó định bắt, nhưng vì một lý do sai.
+  await page.waitForTimeout(2800);
+
+  // (b) vế CÓ LỢI — Aquatic khắc lại Beast, ×0,90. ĐÂY là vế trước nay im lặng tuyệt đối.
+  const f2 = await doFloat('tidewarden');
+  console.log('  ⑦b có lợi:', JSON.stringify(f2));
+  if (f2.loi || !f2.trung) fail('⑦b không dựng được cảnh đo: ' + JSON.stringify(f2));
+  else if (!f2.soFloat) fail(`⑦b trúng ${f2.trung} đòn KHẮC LẠI mà không một số bay nào hiện — nửa có lợi của cơ chế vẫn câm`);
+  else if (!/Beast/.test(f2.chu)) fail(`⑦b cảnh dựng sai — số bay nói về con quái khác: "${f2.chu}"`);
+  else if (!/✦/.test(f2.chu)) fail(`⑦b số bay không đọc ra là có lợi: "${f2.chu}"`);
+  else pass(`vế có lợi hiện lên đầu người chơi: "${f2.chu}"`);
+
+  // (c) và nó phải CÓ HỒI. Bắn một số bay mỗi đòn thì một trận đông quái đẩy tràn mảng `floats`
+  //     (trần 70) và nuốt mất mọi thông báo khác — chữa một chỗ mù bằng cách làm mù chỗ khác.
+  if (f2.soFloat > 3) fail(`⑦c ${f2.trung} đòn sinh ra ${f2.soFloat} số bay khắc hệ — thiếu hồi, sẽ đẩy tràn mảng floats`);
+  else if (!f2.loi) pass(`có hồi: ${f2.trung} đòn chỉ sinh ${f2.soFloat} số bay`);
+
+  // ── ⑧ BĂNG-RÔN LÚC VÀO MAP — kênh DUY NHẤT trả lời "nên cầm con nào TỚI đây" ─────────
+  //
+  // Số bay ở ⑦ chỉ nói được chuyện đang xảy ra; nó không bao giờ nói được nên đổi Axie trước
+  // khi đi. Hai kênh cho hai câu hỏi khác nhau, nên bài này hỏi riêng.
+  //
+  // ⚠ Suy hệ của vùng bằng `mapBanSac()` lúc chạy, đừng chép cứng "mongco là Reptile": miền
+  // dân số sửa được trong `data/canbang.js`, và một con số chép tay ở đây sẽ nói dối ngay lần
+  // đầu ai đó đổi nó.
+  const r8 = await page.evaluate(async () => {
+    window.TEST_MODE = true; startGame('thieulam', null);
+    player.level = 90; player.free = 0; calcDerived();
+    const MID = 'mongco';
+    const heVung = (mapBanSac(MID) || {}).he;
+    if (!heVung) return { loi: 'mapBanSac không cho hệ trội của ' + MID };
+    const conTheoLop = lop => (CHIMERA.find(c => c.lop === lop) || {}).id;
+    const idKhacLai = conTheoLop(heKhacLai(heVung)[0]);      // Axie khắc lại đất này ⇒ ×0,90
+    const idBiKhac  = conTheoLop(heKhacLai(heKhacLai(heVung)[0])[0]); // đất khắc nó ⇒ ×1,12
+    const doVao = (id) => {
+      chiNhan(id); player.avatar = id; calcDerived();
+      travelTo('ardhaven'); travelTo(MID);
+      return (zoneBanner && zoneBanner.sub) || '';
+    };
+    return { heVung, idKhacLai, idBiKhac, subLoi: doVao(idKhacLai), subHai: doVao(idBiKhac) };
+  });
+  console.log('  ⑧', JSON.stringify(r8));
+  if (r8.loi || !r8.idKhacLai || !r8.idBiKhac) fail('⑧ không dựng được cảnh đo: ' + JSON.stringify(r8));
+  else if (!/✦/.test(r8.subLoi) || !/nhẹ hơn/i.test(r8.subLoi))
+    fail(`⑧ vào map với Axie khắc lại mà băng-rôn không nói gì: "${r8.subLoi}"`);
+  else if (!/⚠/.test(r8.subHai) || !/NẶNG/.test(r8.subHai))
+    fail(`⑧ vào map với Axie bị khắc mà băng-rôn không cảnh báo: "${r8.subHai}"`);
+  else if (r8.subLoi === r8.subHai)
+    fail('⑧ băng-rôn không đổi theo con Axie đang đeo — nó đang in một câu chép cứng');
+  else pass('băng-rôn lúc vào map nói đúng thế khắc của con Axie đang đeo, cả hai chiều');
+
   console.log('errors:', JSON.stringify(errors.slice(0, 6)));
   if (errors.length) fail(`${errors.length} lỗi JS trong lúc chạy`);
   await browser.close();

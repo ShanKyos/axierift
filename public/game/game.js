@@ -954,8 +954,9 @@ function mobHe(m){ return (m && (m.he || (m.def && m.def.el))) || null; }
 function elName(k){ return (ELEM[k] || {}).name || k || '—'; }
 function elColor(k){ return (ELEM[k] || {}).color || '#c9b889'; }
 // Hệ của ĐÒN ĐÁNH: lấy theo vũ khí đang cầm, không có vũ khí thì theo hệ của lớp.
-// CHỈ dùng cho chiều người → quái. Chiều quái → người vẫn theo hệ của LỚP, nên đổi vũ khí
-// không bao giờ làm ngươi ăn đòn nặng hơn — đúng như đã chốt.
+// CHỈ dùng cho chiều người → quái. Chiều quái → người đi qua `heThu(player)` — tức theo CON
+// AXIE đang đeo, không theo vũ khí — nên đổi vũ khí không bao giờ làm ngươi ăn đòn nặng hơn.
+// (Chú thích cũ ghi "theo hệ của LỚP"; đúng cho tới đợt Đổi Vai, sai từ đó.)
 function atkElem(){
   if (!player) return null;
   const w = player.equip && player.equip.vukhi;
@@ -8502,6 +8503,34 @@ function mapBanSac(id){
 // công thức sau vài đợt sửa, và kiểu lệch đó thì người chơi phát hiện trước bài kiểm: họ làm
 // đúng lời bảng Bản Đồ và ăn đòn nặng hơn.
 function heKhacLai(he){ return ELEMENTS.filter(k => heKhac(k, he)); }
+// Phán quyết khắc hệ ở chiều PHÒNG THỦ (quái → người). Đây là cửa DUY NHẤT cho mọi chỗ NÓI RA
+// vế đó — băng-rôn lúc vào map và số bay mỗi lần trúng đòn — và nó mang luôn hai hệ số, nên
+// `hurtPlayer` cũng đọc từ đây. Chép công thức ra ba nơi là ba nơi phải nhớ sửa, mà lệch nhau
+// thì băng-rôn hứa một đằng còn đòn đánh ra một nẻo, không một lỗi nào báo.
+//
+// ⚠ TRẢ CẢ TRẠNG THÁI TRUNG TÍNH (`ket:0`), đừng trả `null` cho nó. Im lặng ở nhánh trung tính
+// thì người chơi không phân biệt được "con Axie này không khắc gì ở đây" với "cơ chế không
+// chạy" — mà chính vế CÓ LỢI (×0,90) đã im lặng suốt từ đầu vì đúng kiểu bỏ sót ấy.
+function heThuKet(mobEl, axieEl){
+  if (!mobEl || !axieEl || !ELEM[mobEl] || !ELEM[axieEl]) return null;
+  const gA = ELEM[axieEl].glyph, gM = ELEM[mobEl].glyph;
+  if (heKhac(mobEl, axieEl))
+    return { ket:-1, mul:1.12, mau:'#ff9a3a',
+             txt:`⚠ ${gM} ${mobEl} khắc ${gA} ${axieEl}`,
+             dai:`⚠ Axie ${gA} ${axieEl} ăn đòn NẶNG hơn 12% ở đất ${mobEl} — đổi sang ${heKhacLai(mobEl).join(' / ')} thì chịu đòn nhẹ hơn` };
+  if (heKhac(axieEl, mobEl))
+    return { ket:1, mul:0.9, mau:'#7ec850',
+             txt:`✦ ${gA} ${axieEl} khắc lại ${gM} ${mobEl}`,
+             dai:`✦ Axie ${gA} ${axieEl} khắc lại đất ${mobEl} — chịu đòn NHẸ hơn 10% ở đây` };
+  return { ket:0, mul:1, mau:'#c9b889',
+           txt:`${gA} ${axieEl} trung tính`,
+           dai:`${gA} Axie ${axieEl} trung tính với đất ${mobEl} — đổi sang ${heKhacLai(mobEl).join(' / ')} thì chịu đòn nhẹ hơn 10%` };
+}
+// Hồi cho số bay khắc hệ. Nó bắn theo TỪNG ĐÒN TRÚNG, mà một trận đông quái có hàng chục đòn
+// mỗi giây — không có hồi thì nó vừa phủ kín màn vừa đẩy tràn mảng `floats` (trần 70) và nuốt
+// mất mọi thông báo khác. Để ngoài `player` để nó không chui vào save.
+let _heFloatMs = 0;
+const HE_FLOAT_HOI = 2600;
 // Một dòng, kiểu Ragnarok: đất của ai · lớp Axie nào · mang gì tới · nơi duy nhất rơi cái gì.
 function banSacHtml(id){
   const b = mapBanSac(id); if (!b) return '';
@@ -12063,12 +12092,9 @@ function update(dt){
         // khắc hệ chiều quái → người: hệ quái khắc hệ NGƯỜI +12%, bị người khắc -10%.
         // Hệ người nay do CON AXIE đang đeo quyết định — xem heThu(). Trước đây là
         // `SECTS[player.sect].element`, tức một hằng số người chơi không tác động được.
-        const mobEl = mobHe(m), sectEl2 = heThu(player);
-        let mobCounter = false;
-        if (mobEl && sectEl2){
-          if (heKhac(mobEl, sectEl2)){ dmg *= 1.12; mobCounter = true; }
-          else if (heKhac(sectEl2, mobEl)) dmg *= 0.9;
-        }
+        const _hek = heThuKet(mobHe(m), heThu(player));
+        if (_hek) dmg *= _hek.mul;
+        const mobCounter = !!_hek && _hek.ket === -1;
         dmg = Math.max(1, Math.round(dmg));
         // ĐỠ ĐÒN — cơ chế chỉ đồ Hoàn Hảo có: chặn HẲN một đòn, không phải giảm %. Đặt SAU khi
         // đã làm tròn để con số hiện lên đúng bằng thứ người chơi vừa chặn được.
@@ -12090,7 +12116,8 @@ function update(dt){
             player.poisonDps = Math.max(1, Math.round(player.maxHp * 0.008 * (1 - (player.vhPoisonRes || 0))));
             playStatusFx('poison', 'poison_apply', player.x, player.y, 0.5, 0.3); } }
         // đòn đánh trúng: vụ nổ hào quang nguyên tố + rung màn hình
-        const elC2 = _dbEl && ELEM[_dbEl] ? ELEM[_dbEl].color : (mobEl && ELEM[mobEl]) ? ELEM[mobEl].color : '#ff7a6a';
+        const _mobEl = mobHe(m);
+        const elC2 = _dbEl && ELEM[_dbEl] ? ELEM[_dbEl].color : (_mobEl && ELEM[_mobEl]) ? ELEM[_mobEl].color : '#ff7a6a';
         addEffect({ type:'ring', x:player.x, y:player.y-10, r:22, color:elC2 });
         for (let i=0;i<4;i++) addEffect({ type:'ink', x:player.x, y:player.y-12, vx:rnd(-70,70), vy:rnd(-90,-20), color:elC2 });
         player.hurtT = 0.25; // viền đỏ nhấp khi trúng đòn
@@ -12133,6 +12160,15 @@ function update(dt){
         }
         AudioSys.sfx('hurt', 0.7);
         logCombat(`🩸 ${mobCounter ? 'KHẮC CHẾ ' : ''}-${dmg} ← ${m.def.name}`, mobCounter ? '#ff9a3a' : '#ff7a6a');
+        // Vế PHÒNG THỦ của tam giác lớp Axie, nói thẳng lên đầu người chơi.
+        // Trước bản này nó chỉ có đúng một cửa: dòng nhật ký ngay trên — hộp 260px ở góc
+        // dưới-trái, trôi quá nhanh để đọc giữa lúc đánh nhau — và CHỈ ở vế bất lợi, vì
+        // `mobCounter` không bao giờ bật ở nhánh ×0,90. Tức nửa có lợi của cơ chế, cũng là nửa
+        // trả lời cho câu "vì sao phải có nhiều hơn một con Axie", chưa từng hiện ra một lần.
+        if (_hek && _hek.ket !== 0 && performance.now() - _heFloatMs > HE_FLOAT_HOI){
+          _heFloatMs = performance.now();
+          addFloat(player.x, player.y - 58, _hek.txt, _hek.mau, 13);
+        }
         // Thái Cực hộ thể (Lưỡng Nghi Cảnh): phản 5% sát thương
         if (player.reflect && !m.dead){
           const ref = Math.max(1, Math.round(dmg * player.reflect));
@@ -25748,8 +25784,18 @@ window.travelTo = function(mapId, from){
   // chết. `wpUnlocked[mapId]` là cờ "đã từng tới", được đặt ngay bên dưới, nên đọc trước khi đặt.
   const _dauTienFirst = !(player.wpUnlocked && player.wpUnlocked[mapId]);
   const _rlore = _dauTienFirst && typeof REGION_UNLOCK_LORE !== 'undefined' ? REGION_UNLOCK_LORE[mapId] : null;
-  zoneBanner = _rlore ? { text:'🗺 ' + md.name, sub:_rlore.sub, color:'#ffd76a', t:5.5 }
-                       : { text: md.name, sub: `${zt.name} — ${md.desc}`, color: zt.color, t: 3.2 };
+  // Vế phòng thủ của tam giác lớp Axie, nói ra ĐÚNG LÚC nó còn đổi được gì: vừa đặt chân, trước
+  // khi đánh trận đầu. Suy từ `mapBanSac` (hệ trội của chính miền dân số ở đây) qua cùng một cửa
+  // `heThuKet` mà đòn đánh dùng — băng-rôn và sát thương không thể nói hai đằng.
+  //
+  // ⚠ Băng-rôn KHÔNG thay được số bay mỗi đòn, và ngược lại. Nó bắn một lần lúc vào map, nên
+  // người chơi đổi Axie giữa map là nó thành một câu đã cũ; còn số bay thì không bao giờ nói
+  // được "nên cầm con nào TỚI đây". Hai kênh cho hai câu hỏi khác nhau.
+  const _bsHe = (mapBanSac(mapId) || {}).he;
+  const _kqHe = _bsHe ? heThuKet(_bsHe, heThu(player)) : null;
+  const _subHe = _kqHe ? ' · ' + _kqHe.dai : '';
+  zoneBanner = _rlore ? { text:'🗺 ' + md.name, sub:_rlore.sub + _subHe, color:'#ffd76a', t:5.5 }
+                       : { text: md.name, sub: `${zt.name} — ${md.desc}${_subHe}`, color: zt.color, t: 3.2 };
   addEffect({ type:'ring', x:player.x, y:player.y, r:120, color:zt.color, big:true });
   // Điểm dịch chuyển: lần đầu đặt chân tới 1 vùng (dù được nhiệm vụ dẫn tới hay tự dịch chuyển
   // khi vừa đủ điều kiện) sẽ mở khoá nút "Dịch Chuyển" cho vùng đó trong Bản Đồ (M) từ giờ về sau.

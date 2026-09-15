@@ -14,6 +14,16 @@ function m1El(e){ return ({ 'Kim':'Metal','Mộc':'Wood','Thủy':'Water','Hỏa
 // lẫn hai thứ tiếng ngay từ lần mở đầu tiên.
 let lang = 'vi';
 try { lang = localStorage.getItem(KEY) || 'vi'; } catch (e) {}
+// ?lang=en / ?lang=vi thắng localStorage — bản sao CỐ Ý của đoạn trong i18n.js. Hai lớp phải tự
+// đọc lấy, không lớp nào đọc ké lớp kia: chúng dùng chung khoá 'vlcm_lang' nên chỉ cần một lớp
+// lỡ nhịp là giao diện lẫn hai thứ tiếng, và đó là kiểu hỏng không ném lỗi nào.
+try {
+  const q = new URLSearchParams(location.search).get('lang');
+  if (q === 'en' || q === 'vi') {
+    lang = q;
+    try { localStorage.setItem(KEY, q); } catch (e) {}
+  }
+} catch (e) {}
 
 /* ---- term swaps: applied ONLY inside rule-captured fragments ---- */
 const TERMS = [

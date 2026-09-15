@@ -22,8 +22,21 @@
   // trên 87 (5%) — "Defense (Reduces damage taken)", "Dodge", "Unlocking grants a permanent stat
   // bonus…" — trong khi đặt 'vi' cho ra 0.
   // (Con số này tôi tự đo. Một khảo sát trước đó báo 44%; không tái hiện được.)
+  // ?lang=en / ?lang=vi THẮNG localStorage — đây là cửa để đưa một đường link chơi thử bằng
+  // tiếng Anh cho người chưa từng mở game (giám khảo, người ngoài), mà không bắt họ đi tìm nút
+  // đổi ngôn ngữ. Chọn xong thì GHI LẠI vào localStorage: hai lớp dịch dùng chung khoá đó, nên
+  // ghi lại là bấm sang trang khác trong cùng phiên vẫn giữ đúng thứ tiếng.
+  // ⚠ lang.js đọc y hệt đoạn này, ĐỘC LẬP — đừng rút gọn thành "i18n.js ghi rồi lang.js đọc
+  // ké". Thứ tự nạp là một giả định, mà một màn hình lẫn hai thứ tiếng thì không lỗi nào báo.
   let locale = 'vi';
   try { locale = localStorage.getItem(KEY) || 'vi'; } catch (e) {}
+  try {
+    const q = new URLSearchParams(location.search).get('lang');
+    if (q === 'en' || q === 'vi') {
+      locale = q;
+      try { localStorage.setItem(KEY, q); } catch (e) {}
+    }
+  } catch (e) {}
 
   function dict() {
     return locale === 'vi' ? (window.I18N_VI || {}) : (window.I18N_EN || {});
