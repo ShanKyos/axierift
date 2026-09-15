@@ -883,6 +883,48 @@ const ELEM = {
   'Thủy':{ name:'Frost',  color:'#7ec8ff', beats:'Hỏa',  glyph:'❄' },
   'Hỏa':{ name:'Ember',   color:'#e8552a', beats:'Kim',  glyph:'☼' },
 };
+// ── HỆ PHÒNG THỦ ĐẾN TỪ CON AXIE ĐANG ĐEO ──────────────────────────────────────
+// Trước bản này `SECTS[sect].element` là HẰNG SỐ: chọn lớp xong là hệ phòng thủ khoá cứng cả
+// đời, người chơi không có một cách nào tác động. Nay con Axie quyết định nó.
+//
+// ⚠ CHỈ CHIỀU PHÒNG THỦ. Chiều người → quái vẫn do VŨ KHÍ quyết (`atkElem`) — luật bất đối
+// xứng "đổi vũ khí không bao giờ làm ngươi ăn đòn nặng hơn" đã chốt từ trước và không đụng tới.
+// Ba nguồn hệ sẽ là ba thứ phải nhớ; hai nguồn cho hai CHIỀU thì đọc ra được:
+//     người → quái : VŨ KHÍ      quái → người : AXIE
+//
+// ⚠ KHÔNG CỘNG MỘT CHỈ SỐ NÀO. Hệ số ×1,12/×0,90 đã chạy sẵn trong `update`; đổi Axie chỉ đổi
+// NHÁNH nào được chọn, không đổi con số nào. Luật Đổi Vai (*Axie 0 chỉ số, 0 kỹ năng, 0 trang
+// bị*) còn nguyên: đây là một QUAN HỆ, không phải một nấc thang sức mạnh. Đừng "cải tiến" nó
+// thành +% kháng — làm thế là dựng lại đúng trục sức mạnh mua được đã bị tháo ba lần.
+//
+// Ánh xạ 9 lớp Axie → 5 hệ đang có. Đây là bước GỘP, không phải tam giác chính chủ của Axie
+// (①Beast·Bug·Mech ▶ ②Plant·Reptile·Dusk ▶ ③Aquatic·Bird·Dawn ▶ ①) — vòng khắc ở đây là NGŨ
+// GIÁC 5 cạnh, không chứa nổi một tam giác 3 nhóm. Đổi hẳn sang tam giác là đợt việc riêng và
+// nó ĐỔI CÂN BẰNG (tỉ lệ khắc 20% → 33%); bước này cố ý không đụng một cạnh nào.
+const AXIE_HE = {
+  Plant:   'Mộc',    // hiển nhiên
+  Bug:     'Thổ',    // Rune là nghề của Bug axie — khắc lên ĐÁ. Canon của chính game này.
+  Reptile: 'Thổ',    // vảy đá, Reptile Sunstone Flats
+  Beast:   'Hỏa',    // hoang dã, hung hãn
+  Dusk:    'Hỏa',    // Dusk Marsh vốn đã là map hệ Ember
+  Aquatic: 'Thủy',   // hiển nhiên
+  Bird:    'Thủy',   // trời cao, Bird Tribe Heights là vùng tuyết
+  Mech:    'Kim',    // hiển nhiên
+  Dawn:    'Kim',    // ánh kim — đối xứng với Dusk → Ember
+};
+// Hệ PHÒNG THỦ của người chơi. Một cửa duy nhất — `update` và mọi chỗ hiện ra đều hỏi nó, nên
+// thứ người chơi ĐỌC và thứ máy THỰC THI không thể lệch nhau (cùng lối với `masteryKhoa`).
+//
+// ⚠ Lui về hệ của LỚP khi chưa có avatar. Không bao giờ trả `null`: nhánh khắc hệ đọc
+// `if (mobEl && sectEl2)`, nên trả rỗng là tắt câm cả cơ chế mà không một lỗi nào báo.
+function heThu(p){
+  const pl = p || (typeof player !== 'undefined' ? player : null);
+  if (!pl) return null;
+  const id = avatarId(pl);
+  const he = id && CHI_MAP[id] ? AXIE_HE[CHI_MAP[id].lop] : null;
+  return (he && ELEM[he]) ? he : ((SECTS[pl.sect] || {}).element || null);
+}
+window.heThu = heThu;
 function elName(k){ return (ELEM[k] || {}).name || k || '—'; }
 function elColor(k){ return (ELEM[k] || {}).color || '#c9b889'; }
 // Hệ của ĐÒN ĐÁNH: lấy theo vũ khí đang cầm, không có vũ khí thì theo hệ của lớp.
@@ -11967,8 +12009,10 @@ function update(dt){
         const lvGapM = (m.def.lv || 1) - player.level;
         if (lvGapM > 5) dmg *= 1 + Math.min(1.2, (lvGapM - 5) * 0.08);
         if (m.def.bossKind){ const gapB2 = m.def.lv - player.level; if (gapB2 > 10) dmg *= 1.6; else if (gapB2 >= 6) dmg *= 1.3; } // Áp Bức Võ Công chiều ngược
-        // khắc hệ chiều quái → người: hệ quái khắc phái +12%, bị phái khắc -10%
-        const mobEl = m.def.el, sectEl2 = SECTS[player.sect].element;
+        // khắc hệ chiều quái → người: hệ quái khắc hệ NGƯỜI +12%, bị người khắc -10%.
+        // Hệ người nay do CON AXIE đang đeo quyết định — xem heThu(). Trước đây là
+        // `SECTS[player.sect].element`, tức một hằng số người chơi không tác động được.
+        const mobEl = m.def.el, sectEl2 = heThu(player);
         let mobCounter = false;
         if (mobEl && sectEl2){
           if (ELEM[mobEl].beats === sectEl2){ dmg *= 1.12; mobCounter = true; }
@@ -17285,7 +17329,21 @@ function renderChar(){
     // Mana = tài nguyên tung chiêu (hồi liên tục). Instinct = điểm nâng kỹ năng (tích lũy).
     ['Bản Năng (nâng kỹ năng)', Math.floor(p.khi || 0).toLocaleString('vi-VN')],
   ];
-  if (_ae) stats.push(['Hệ đòn đánh', `<span style="color:${elColor(_ae)}">${ELEM[_ae].glyph} ${elName(_ae)}</span>`]);
+  // Hai dòng HỆ chen lên ngay sau Công Kích / Sinh Lực, KHÔNG đẩy xuống cuối mảng.
+  //
+  // ⚠ Đây là chỗ đã phải sửa sau khi CHỤP RA NHÌN: đẩy xuống cuối thì chúng rơi khỏi vùng nhìn
+  // thấy của bảng và người chơi phải cuộn mới gặp. Mà đây lại là hai dòng DUY NHẤT trong cả
+  // khối mà người chơi đổi được bằng một lựa chọn (vũ khí đang cầm · Axie đang đeo) — mấy dòng
+  // còn lại chỉ là kết quả của cấp và trang bị. Một cơ chế bị chôn dưới đáy danh sách cuộn thì
+  // với người chơi không khác gì không tồn tại.
+  //
+  // Mỗi dòng nói rõ nó đến TỪ ĐÂU. Hai nguồn cho hai CHIỀU là cả thiết kế (xem heThu); in hai
+  // dòng mà không ghi nguồn thì người chơi đọc ra là game có hai cái hệ mâu thuẫn nhau.
+  const _he = heThu(player);
+  const _heRow = [];
+  if (_ae) _heRow.push(['Hệ đòn đánh <span style="opacity:.6;font-size:10px">(vũ khí)</span>', `<span style="color:${elColor(_ae)}">${ELEM[_ae].glyph} ${elName(_ae)}</span>`]);
+  if (_he) _heRow.push(['Hệ phòng thủ <span style="opacity:.6;font-size:10px">(Axie)</span>', `<span style="color:${elColor(_he)}">${ELEM[_he].glyph} ${elName(_he)}</span>`]);
+  stats.splice(2, 0, ..._heRow);
   for (const [n,v] of stats) html += `<div class="stat-row"><span>${n}</span><b>${v}</b></div>`;
   // Khối CHIÊU THỨC đã gỡ: bảng Kỹ Năng (phím K) vốn đã in đủ năm thông số của từng chiêu,
   // nên ba dòng ở đây là bản tóm tắt thứ ba của cùng một thứ.
@@ -18899,7 +18957,7 @@ function renderMount(){
   // Huyết Thống CN · <bị động> · Chiêu <tên> (Ns)" — bốn thứ đó nay đều không tồn tại. In lại
   // bất kỳ cái nào là hứa với người chơi một sức mạnh mà con Axie không còn cho.
   html += `<div class="stat-sec">ĐANG CÓ — ${dsCo.length}/${CHIMERA.length}</div>`;
-  html += `<div style="font-size:11px;color:#9aa8d4;margin-bottom:6px;line-height:1.5">Con Axie là <b>thân nhìn thấy</b> của bạn — nó không cộng chỉ số và không tự đánh. Toàn bộ sức mạnh nằm ở lớp nhân vật; lúc ra đòn lớp ấy hiện ra rồi tan.</div>`;
+  html += `<div style="font-size:11px;color:#9aa8d4;margin-bottom:6px;line-height:1.5">Con Axie là <b>thân nhìn thấy</b> của bạn — nó <b>không cộng chỉ số</b> và không tự đánh. Toàn bộ sức mạnh nằm ở lớp nhân vật; lúc ra đòn lớp ấy hiện ra rồi tan.<br>Nhưng <b style="color:#ffd76a">lớp Axie quyết định hệ PHÒNG THỦ</b> của bạn: quái khắc hệ bạn đánh đau hơn 12%, bạn khắc lại thì nhẹ đi 10%. Đổi thân là đổi vùng đất nào dễ thở. Hệ đòn đánh vẫn theo <b>vũ khí</b>.</div>`;
   for (const c of dsCo){
     const o = C.co[c.id], con = (o && o.con) || 0, dung = player.avatar === c.id;
     html += `<div class="skill-row${dung ? '' : ' locked'}" style="align-items:center">
@@ -18907,7 +18965,7 @@ function renderMount(){
       <span class="sk-info"><b style="color:${c.mau}">${c.ten}</b>
         <span style="font-size:10.5px;color:${CHI_SAO_MAU[c.sao]}"> · ${'★'.repeat(c.sao)} · </span>${lopHuyHieu(c.lop)}<span style="font-size:10.5px;color:${CHI_SAO_MAU[c.sao]}">${c.lop}</span>
         ${con ? `<span style="font-size:10.5px;color:#ffd76a"> · trùng ×${con}</span>` : ''}
-        <div class="sk-desc">Thân ${c.lop} — ${c.ten}</div></span>
+        <div class="sk-desc">Thân ${c.lop} — ${c.ten} · phòng thủ hệ <b style="color:${elColor(AXIE_HE[c.lop])}">${(ELEM[AXIE_HE[c.lop]]||{}).glyph||''} ${elName(AXIE_HE[c.lop])}</b></div></span>
       ${dung ? '<span style="font-size:11px;color:#8fd18f">ĐANG LÀM THÂN</span>'
            : `<button class="mini-btn" onclick="window.chiChon('${c.id}')">Đổi thân</button>`}</div>`;
   }

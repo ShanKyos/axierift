@@ -82,7 +82,7 @@ khi tấn công thì ví dụ Dark Wizard sẽ xuất hiện và tung chiêu."*
 
 | | |
 |---|---|
-| **Axie** | thân NHÌN THẤY. **0 chỉ số, 0 kỹ năng, 0 trang bị.** Là ô để cắm NFT. |
+| **Axie** | thân NHÌN THẤY. **0 chỉ số, 0 kỹ năng, 0 trang bị.** Là ô để cắm NFT. Nhưng lớp Axie quyết định **hệ PHÒNG THỦ** — xem mục ⚔ ngay dưới. |
 | **5 lớp** | nơi chứa **toàn bộ** chỉ số, trang bị, kỹ năng, Tiến Hoá, Di Sản |
 | **Lúc đánh** | lớp nhân vật **vật chất hoá KẾ BÊN Axie**, tung chiêu, rồi tan. Axie **không** biến mất — nhân vật đi theo bảo kê. |
 
@@ -91,6 +91,68 @@ trên màn là **một** người, không phải hai — đọc ảnh chụp mà
 tầng mạng: đồng bộ một người chơi là đồng bộ **cả cặp**, và mọi phép đo "có mấy người trong
 khung" phải đếm theo cặp.
 | **Khoá lớp** | chọn một lần lúc tạo nhân vật. **Avatar thì tự do** — mọi NFT đều cắm được. |
+
+### ⚔ LỚP AXIE QUYẾT ĐỊNH HỆ PHÒNG THỦ — quan hệ, KHÔNG phải nấc thang
+
+Thể lệ Vibeathon chấm **Axie Core 35%** với đúng một câu: *"a meaningful interpretation of the
+theme that **affects the game**"*, và luật nói thẳng *"rather than appear only as a cosmetic
+skin"*. Đo trước khi làm: lái cả 16 con qua `calcDerived()` ở cấp 60 ⇒ **0 con làm đổi một điểm
+chỉ số nào**, tắt hẳn avatar cũng đổi 0. Tức con Axie đúng nghĩa đen là một cái skin.
+
+⇒ `SECTS[sect].element` — vốn là **hằng số**, chọn lớp xong là khoá cứng cả đời — nay do con
+Axie đang đeo quyết định. `AXIE_HE` (9 lớp Axie → 5 hệ) + **`heThu(p)` là cửa DUY NHẤT**.
+
+| chiều | hệ lấy từ đâu | hệ số |
+|---|---|---|
+| người → quái | **VŨ KHÍ** (`atkElem`) | ×1,20 / ×0,88 |
+| quái → người | **AXIE** (`heThu`) | ×1,12 / ×0,90 |
+
+**⚠ KHÔNG CỘNG MỘT CHỈ SỐ NÀO, và đó là cả điểm.** Hai hệ số kia đã chạy sẵn; đổi Axie chỉ đổi
+NHÁNH nào được chọn. Luật *"Axie 0 chỉ số"* còn nguyên — đây là một **quan hệ**, không phải một
+nấc thang. Trục sức mạnh từ phía Axie đã bị tháo **ba lần** (bị động `thu` · cấp Chimera · bốn ô
+Cốt) và lần nào cũng quay lại dưới dạng *"chỉ vài dòng chỉ số nhỏ thôi"*. **Đừng "cải tiến" nó
+thành +% kháng.** `tests/test_hethu.js §4` gác đúng chiều đó: đổi qua cả 16 con phải đổi 0 điểm.
+
+**⚠ ĐỪNG ĐỤNG CHIỀU TẤN CÔNG.** Luật bất đối xứng *"đổi vũ khí không bao giờ làm ngươi ăn đòn
+nặng hơn"* đã chốt từ trước và có chú thích tại chỗ. Hai nguồn cho hai CHIỀU thì đọc ra được; ba
+nguồn là ba thứ phải nhớ.
+
+**Đo được sau khi làm** (cùng một con quái hệ Ember, cấp 40, chỉ đổi Axie):
+
+| Axie | hệ | máu mất |
+|---|---|--:|
+| `coghound` Mech | Steel — bị Ember khắc | **675** |
+| `emberjaw` Beast | Ember — trung tính | 608 |
+| `tidewarden` Aquatic | Frost — khắc lại Ember | **510** |
+
+Chênh **32,4%**, lớn hơn 24% lý thuyết vì giáp trừ thẳng khuếch đại — cùng cơ chế đã ghi ở mục
+hố XP. Đây cũng là **lý do chơi để sở hữu nhiều hơn một con Axie**, thứ mà gacha Khế Ước đang
+bán mà trước nay không có.
+
+**⚠ HAI LỚP ĐỔI HỆ MẶC ĐỊNH, biết và chấp nhận:** vì nhân vật mới nào cũng có Axie mặc định
+(`AVA_MAC_DINH`), hệ phòng thủ mặc định suy từ con đó chứ không từ `SECTS`. Dark Knight
+Steel → **Ember**, Dark Lord Stone → **Verdant**; ba lớp còn lại trùng khít hệ cũ. Với 11 map
+(hệ trội: Verdant 4 · Stone 3 · Frost 3 · Ember 1 · Steel 0) thì Dark Knight bất lợi ở nhiều map
+hơn trước, Dark Lord thì ít đi. Muốn giữ y hệt bản cũ thì đổi `AVA_MAC_DINH` — nhưng bảng đó
+chọn theo **hình dáng cho dễ phân biệt ngoài đường**, đổi nó là trả giá bên kia.
+
+**⚠ `heThu` KHÔNG BAO GIỜ được trả rỗng.** Nhánh khắc hệ đọc `if (mobEl && sectEl2)`, nên trả
+`null` là **tắt câm** cả cơ chế mà không một lỗi nào in ra. Chưa có avatar thì lui về hệ của lớp.
+
+**⚠ Đây là bước GỘP 9 → 5, không phải tam giác chính chủ của Axie.** Vòng khắc ở đây là **ngũ
+giác 5 cạnh**, không chứa nổi một tam giác 3 nhóm (①Beast·Bug·Mech ▶ ②Plant·Reptile·Dusk ▶
+③Aquatic·Bird·Dawn ▶ ①). Đổi hẳn sang tam giác là đợt việc RIÊNG và nó **đổi cân bằng** — tỉ lệ
+khắc nhau 20% → 33%. Bước này cố ý không đụng một cạnh nào.
+
+**⚠ Hai dòng hệ phải nằm TRÊN trong bảng Nhân Vật, đừng đẩy xuống cuối mảng `stats`.** Bản đầu
+tôi `push` vào cuối; chụp ra nhìn thì chúng rơi khỏi vùng thấy được và phải cuộn mới gặp. Mà đó
+là hai dòng **duy nhất** trong cả khối người chơi đổi được bằng một lựa chọn — còn lại đều là kết
+quả của cấp và trang bị. *Một cơ chế bị chôn dưới đáy danh sách cuộn thì với người chơi không
+khác gì không tồn tại.*
+
+**Còn treo:** chỗ đổi Axie hiện **tự do ở mọi nơi**. Chủ dự án chưa chốt — ba lựa chọn là (a) mặc
+kệ, coi như chọn build · (b) chỉ đổi trong thành (MU thuần) · (c) tự do nhưng có hồi chiêu. Hiện
+đang là (a) vì đó là hành vi sẵn có, thêm chốt sau là một dòng trong `chiChon()`.
 
 ### ⇒ Đây KHÔNG phải đổi kiến trúc. Là đổi LỚP VẼ.
 
