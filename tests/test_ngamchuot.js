@@ -39,6 +39,16 @@ const pass = m => console.log('PASS ' + m);
   const ZOOM = await page.evaluate(() => zoomNow());
   const mh = (wx, wy, cx, cy) => [(wx - cx) * ZOOM, (wy - cy) * ZOOM];
 
+  // ⚠ PHÍM SUY TỪ THANH CHIÊU, ĐỪNG CHÉP CỨNG SỐ Ô. Bản cũ gõ thẳng '2' cho Meteorite và '3'
+  // cho Inferno — đúng hồi thanh là công thức cố định ['a','tp',O3,SIGNATURE]. Dark Wizard nay
+  // dời Meteorite (`tp`) xuống ô 3 và bỏ trống ô 2, nên cả bốn mục dùng phím '2' bắn vào một ô
+  // RỖNG, và bài đỏ ở chỗ chẳng liên quan gì tới việc ngắm theo con trỏ.
+  const phimCua = async (id) => {
+    const o = await page.evaluate(i => player.skillBar.indexOf(i), id);
+    if (o < 0) throw new Error(`cảnh dựng hỏng: '${id}' không nằm trên thanh chiêu`);
+    return String(o + 1);
+  };
+
   // Chỗ tấm dán rơi xuống = tâm hiệu ứng atlasVfx vừa sinh ra.
   const noNo = () => page.evaluate(() => {
     const e = effects.filter(x => x.type === 'atlasVfx').pop();
@@ -51,7 +61,7 @@ const pass = m => console.log('PASS ' + m);
     // đặt con trỏ lệch hẳn sang một bên, trong tầm 420 của Meteorite
     const [mx, my] = mh(p.x + 260, p.y - 120, p.cx, p.cy);
     await page.mouse.move(mx, my);
-    await page.keyboard.press('2');
+    await page.keyboard.press(await phimCua('tp'));
     await page.waitForTimeout(60);
     const o = await noNo();
     const muon = { x: p.x + 260, y: p.y - 120 };
@@ -76,7 +86,7 @@ const pass = m => console.log('PASS ' + m);
     const dLe = Math.floor(((p.x - p.cx) * ZOOM - 40) / ZOOM);
     const d = Math.min(dLe, 600);
     await page.mouse.move(...mh(p.x - d, p.y, p.cx, p.cy));
-    await page.keyboard.press('2');
+    await page.keyboard.press(await phimCua('tp'));
     await page.waitForTimeout(60);
     const o = await noNo();
     const xa = o ? Math.hypot(o.x - p.x, o.y - (p.y + p.chan)) : -1;
@@ -98,7 +108,7 @@ const pass = m => console.log('PASS ' + m);
       return { x: Math.round(m.x), y: Math.round(m.y) };
     });
     await page.mouse.move(...mh(q.x + 55, q.y + 40, p.cx, p.cy));   // lệch ~68px, trong BAN_HUT 90
-    await page.keyboard.press('2');
+    await page.keyboard.press(await phimCua('tp'));
     await page.waitForTimeout(60);
     const o = await noNo();
     // Lấy chanDy() TỪ GAME. Bản đầu chép cứng 13 — đúng hồi NV_CAO còn 118; nay là 132 nên
@@ -136,8 +146,19 @@ const pass = m => console.log('PASS ' + m);
     // ganMat 0) chứng minh cơ chế đang chạy đúng. Chụp danh sách TRƯỚC rồi tìm cái MỚI: hỏi
     // đúng "cú bấm này sinh ra gì", không hỏi "cái gì còn sót lại cuối mảng".
     await page.evaluate(() => { window.__vfxTruoc = new Set(effects.filter(e => e.type === 'atlasVfx')); });
+    // ⚠ Inferno đã rời thanh mặc định của Dark Wizard (sang Di Sản, xem THANH_LOP). Mục này
+    // vẫn phải LÁI BẰNG PHÍM THẬT — chỗ dễ hỏng là sợi dây con trỏ → điểm giáng, không phải
+    // phép tính — nên tự cắm nó vào một ô còn trống bằng chính `knGan` rồi gõ đúng phím đó.
+    const phimInf = await page.evaluate(() => {
+      const o = player.skillBar.indexOf('dw_inferno');
+      if (o >= 0) return o + 1;
+      const trong = player.skillBar.findIndex((x, i) => i > 0 && !x);
+      if (trong < 0) return 0;
+      return window.knGan(trong, 'dw_inferno') ? trong + 1 : 0;
+    });
+    if (!phimInf) fail('không cắm được Inferno vào ô nào — mục 4 mất chỗ bám');
     await page.mouse.move(...mh(r.xa.x, r.xa.y, p.cx, p.cy));
-    await page.keyboard.press('3');
+    await page.keyboard.press(String(phimInf || 3));
     await page.waitForTimeout(120);
     const sau = await page.evaluate(() => {
       const [gan, xa] = mobs.slice(-2);
@@ -159,7 +180,7 @@ const pass = m => console.log('PASS ' + m);
     await page.mouse.click(mx, my, { button: 'right' });
     await page.waitForTimeout(50);
     const diTo = await page.evaluate(() => moveTarget && { x: Math.round(moveTarget.x), y: Math.round(moveTarget.y) });
-    await page.keyboard.press('2');
+    await page.keyboard.press(await phimCua('tp'));
     await page.waitForTimeout(60);
     const o = await noNo();
     const lech = o ? Math.hypot(o.x - (p.x - 200), o.y - (p.y + 150 + p.chan)) : 1e9;

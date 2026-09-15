@@ -55,17 +55,33 @@ const pass = m => console.log('PASS ' + m);
   else if (r2.sauKhiNapLai !== null) fail('người chơi đã tắt Space mà lần nạp sau lại tự bật lên');
   else pass('tắt Space rồi thì lần nạp sau không tự bật lại');
 
-  // 3) tổng Di Sản vẫn 8,0%
+  // 3) tổng Di Sản vẫn 8,0% — và Flame Cyclone KHÔNG được cộng %ST khi đang nằm trên thanh
+  //
+  // ⚠ ĐO, ĐỪNG SUY TỪ DANH SÁCH. `LEGACY_SECT_SKILLS` nay khai CẢ SÁU chiêu chủ động của lớp và
+  // `calcDerived` TRỪ ĐỘNG những chiêu đang nằm trên thanh — nên "có tên trong bảng" không còn
+  // nghĩa là "được cộng %ST". Mệnh đề cũ suy từ danh sách sẽ đỏ oan; thứ nó thật sự muốn biết
+  // (cyclone có cộng hai lần không) thì cân được: gỡ khỏi thanh phải làm %ST TĂNG đúng bậc.
   const r3 = await p.evaluate(() => {
-    const dk = LEGACY_SECT_SKILLS.filter(id => (VOHOC_DEFS[id] || {}).phai === 'thieulam');
-    return { ds: dk, tong: dk.reduce((a, id) => a + LEGACY_TIER_PCT[VOHOC_DEFS[id].tier], 0),
-             cycloneConTrongDiSan: LEGACY_SECT_SKILLS.includes('dk_cyclone') };
+    startGame('thieulam', null); player.level = 120; player.lvPeak = 120; vhAutoLearn();
+    player.skillBar = defaultSkillBar('thieulam'); calcDerived();
+    const tren = +player.legacyAtkPct.toFixed(2);
+    const i = player.skillBar.indexOf('dk_cyclone');
+    const bar = player.skillBar.slice(); bar[i] = null;
+    player.skillBar = bar; calcDerived();
+    const ngoai = +player.legacyAtkPct.toFixed(2);
+    player.skillBar = defaultSkillBar('thieulam'); calcDerived();
+    return { oThanh: i, tren, ngoai, bac: LEGACY_TIER_PCT[VOHOC_DEFS.dk_cyclone.tier] || 0,
+             pool: LEGACY_SECT_SKILLS.filter(id => (VOHOC_DEFS[id] || {}).phai === 'thieulam').length,
+             // %ST của lớp, bỏ hai hệ tấn chức phụ cộng theo cấp ra ngoài
+             lop: +(tren - LEGACY_UNIVERSAL_PCT.danchi - LEGACY_UNIVERSAL_PCT.tieuhon).toFixed(2) };
   });
   console.log('3) Di Sản:', JSON.stringify(r3));
-  if (r3.cycloneConTrongDiSan) fail('dk_cyclone vừa là tuyệt chiêu bấm được vừa cộng %ST vĩnh viễn');
-  else if (r3.ds.length !== 4) fail(`Dark Knight có ${r3.ds.length} chiêu Di Sản, phải là 4`);
-  else if (Math.abs(r3.tong - 8) > 0.01) fail(`tổng Di Sản ${r3.tong}%, phải là 8,0%`);
-  else pass(`4 chiêu Di Sản, tổng đúng ${r3.tong}% Công Kích`);
+  if (r3.oThanh < 0) fail('dk_cyclone không còn nằm trên thanh mặc định — cảnh dựng chưa đủ, mệnh đề này hết chỗ bám');
+  else if (+(r3.ngoai - r3.tren).toFixed(2) !== r3.bac)
+    fail(`dk_cyclone ở ô ${r3.oThanh + 1} mà %ST không bị trừ đúng bậc: trên thanh ${r3.tren} · ngoài thanh ${r3.ngoai} (chênh phải là ${r3.bac})`);
+  else if (r3.pool !== 6) fail(`pool Di Sản của Dark Knight có ${r3.pool} chiêu, phải là 6`);
+  else if (Math.abs(r3.lop - 8) > 0.01) fail(`%ST Di Sản của lớp là ${r3.lop}%, phải là 8,0%`);
+  else pass(`pool 6 chiêu, Flame Cyclone trên thanh nên không cộng %ST (${r3.tren} → ${r3.ngoai} khi gỡ), lớp đúng ${r3.lop}%`);
 
   // 4) tung chiêu → sinh đúng hiệu ứng, KHÔNG kèm hình vector chung
   const r4 = await p.evaluate(() => {
