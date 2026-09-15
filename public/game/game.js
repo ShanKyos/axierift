@@ -1377,6 +1377,30 @@ const VFX_ATLAS_DEFS = {
   // Inferno (ô 3 của Dark Wizard) — cột lửa mọc từ vòng dung nham, hồn lửa xanh bay quanh.
   fire_pillar:    { k:1, cols:8, rows:2,  frameW:384, frameH:384, frames:16, fps:20, anchorX:183.0, anchorY:317.4, neoR:192.0, cong:false },
   meteor_rain:    { k:1, cols:7, rows:2,  frameW:384, frameH:384, frames:14, fps:22, anchorX:191.1, anchorY:344.1, neoR:191.7, cong:false },
+  // Twisting Slash (ô 1 của Dark Knight) — quạt chém xanh thép, cú chạm loé vàng ở khung 6.
+  // Gói Gemini, bóc nền caro bằng tools/vfx_gemini.py — Gemini KHÔNG xuất được nền trong suốt:
+  // nó VẼ lưới ô caro thành điểm ảnh thật, đo trên cả ba tấm đầu ra `alpha = 0` chiếm 0,0%.
+  // Khung thứ 9 của gói gốc đã BỎ: nó là khung tàn mờ nhất, nhạt tới mức không tách nổi khỏi
+  // lưới, và một khung nhiễu thì tệ hơn một khung thiếu.
+  // ⚠ `anchorX` 46 là mép TRÁI quạt chém, tức chỗ bàn tay — và đó cũng là TÂM QUAY khi bật
+  // `xoay`. Dời nó về giữa ô là lưỡi kiếm vừa quay vừa văng khỏi tay.
+  //   python3 tools/vfx_gemini.py <gói> sx_thieulam_a --luoi 3,3 --bo 8 --fps 18 --canh trai
+  // ⚠ `neoR` 337,9 = 384 − anchorX, tức TẦM VƯƠN KỂ TỪ NEO chứ không phải nửa ô. Chỗ gọi lấy
+  // tỉ lệ vẽ bằng `R / neoR`; neo nằm sát rìa trái nên tầm vươn gần trọn bề rộng ô. Lấy nửa ô
+  // (192) là vẽ to gấp đôi — đo ở lượt cắm đầu: đặc tả 125px, vẽ ra 211px.
+  // ⚠ `cong:false` — VẼ ĐÈ, KHÔNG CỘNG SÁNG. Đo được: tấm này sáng 169 và có viền xanh navy
+  // đậm bao ngoài. Cộng sáng trên nền cát sáng của thị trấn thì cả quạt chém cháy TRẮNG và
+  // viền biến mất — chụp ra là một vệt trắng, không còn ra nhát kiếm xanh thép. Cùng lý do
+  // meteor_rain và fire_pillar đều khai cờ này. Luật: cộng sáng dành cho gói TỐI HƠN nền.
+  sx_thieulam_a:  { k:1, cols:8, rows:1,  frameW:384, frameH:384, frames:8,  fps:18, anchorX:46.1, anchorY:192.0, neoR:337.9, cong:false },
+  // Hai tấm dưới cùng đường ống, cùng gói Gemini. `cong:false` vì cả hai đều sáng hơn nền và
+  // có viền tối riêng — cộng sáng là cháy trắng, mất cả màu lẫn viền (đã chụp ra so).
+  sx_bug_a:       { k:1, cols:6, rows:1,  frameW:384, frameH:384, frames:6,  fps:18, anchorX:46.1, anchorY:192.0, neoR:337.9, cong:false },
+  // ⚠ NỢ ĐÃ BIẾT: tấm này còn lưới lỗ ở quầng sáng và vành tan. Nguyên nhân đo được — nền caro
+  // của gói gốc SÁNG NHẤT trong ba gói (hai tông 156/197, so với 44/96 của Twisting Slash), nên
+  // art trắng-bạc hà rơi đúng dải sáng ấy và phép tách không phân biệt nổi. Không chữa được ở
+  // khâu nhập; phải sinh lại gói trên NỀN MỘT MÀU PHẲNG (tools/vfx_gemini.py --nen '#ff00ff').
+  sx_toanchan_a:  { k:1, cols:5, rows:1,  frameW:384, frameH:384, frames:5,  fps:18, anchorX:46.1, anchorY:192.0, neoR:337.9, cong:false },
 };
 const VFX_ATLAS_IMGS = {};
 const VFX_ATLAS_DUNG = {};   // id → lúc dùng gần nhất (ms)
@@ -1822,9 +1846,14 @@ function veThanKhi(g, t, p){
   g.restore();
   g.globalAlpha = 1; g.globalCompositeOperation = 'source-over';
 }
-function spawnAtlasVfx(id, x, y, scale){
+// `goc`: XOAY tấm dán theo hướng nhân vật. Bỏ trống (mặc định) là KHÔNG xoay — đúng hành vi cũ
+// tới từng điểm ảnh, vì hai atlas đang chạy (meteor_rain · fire_pillar) đều GIÁNG XUỐNG ĐẤT và
+// một hố thiên thạch thì không có hướng. Chỉ tranh có hướng — quạt chém của ô 1 — mới khai xoay,
+// và nó khai bằng cờ `xoay` trong CHIEU_TRANH chứ không phải ở đây: chỗ gọi không được tự quyết,
+// nếu không thì một tấm giáng-xuống-đất nào đó sẽ lặng lẽ bị xoay nghiêng.
+function spawnAtlasVfx(id, x, y, scale, goc){
   const def = VFX_ATLAS_DEFS[id]; if (!def) return;
-  addEffect({ type:'atlasVfx', id, x, y, scale: scale || 0.4, dur: def.frames / def.fps });
+  addEffect({ type:'atlasVfx', id, x, y, scale: scale || 0.4, goc: goc || 0, dur: def.frames / def.fps });
 }
 // One-shot status-effect cue: generic (not per-class) SFX + atlas-clip overlay, played once at the
 // exact moment a status effect is applied (stun/bleed/shield/poison/heal/slow) — not per DoT tick.
@@ -3764,9 +3793,10 @@ function vhKnockback(m, ang, px){
 // VH_VFX: kỹ năng chủ động · style → drawVfx, proj → drawProjStyled.
 // SECT_VFX: 16 chiêu riêng của lớp (8 chiêu chính sx_*_a + 8 tuyệt chiêu sx_*_c) — hình ảnh riêng từng lớp
 const SECT_VFX = {
-  sx_thieulam_a: { style:'bladewhirl',   c2:'#cfe8ff', spin:1.2, dur:0.7 },   // Twisting Slash (Dark Knight) — quét trọn vòng quanh thân
+  // sx_thieulam_a đã GỠ khỏi bảng này — nay có tranh thật trong CHIEU_TRANH. Giữ lại dòng style
+  // là chồng một vòng sáng vector lên đúng chỗ tấm dán đang toả ra, thành hai lớp lệch nhau.
   sx_thieulam_c: { style:'stabburst',    c2:'#cfe8ff', dur:0.85 },            // Death Stab (Dark Knight) — chuỗi nhát đâm liên tiếp
-  sx_toanchan_a: { style:'flash',        c2:'#d8f4ff', proj:'arrow' },        // Triple Shot (Sylvan Ranger) — loạt tên bắn tỉa
+  // sx_toanchan_a đã GỠ khỏi bảng này — nay có tranh thật trong CHIEU_TRANH.
   sx_toanchan_c: { style:'icefall',      c2:'#dff4ff', dur:1.0 },             // Ice Arrow (Sylvan Ranger) — phiến băng kết trên cao rồi rơi xuống vỡ
   sx_baidasan_a: { style:'poisonbloom',  c2:'#b8ff9a', proj:'serpent', dur:1.1 }, // Poison (Dark Wizard) — vũng độc loang ra, sủi bọt
   // Meteorite (Dark Wizard) KHÔNG khai style: nó chạy gói art thật, xem CHIEU_TRANH.
@@ -3774,7 +3804,7 @@ const SECT_VFX = {
   sx_minhgiao_c: { style:'flamewall',    c2:'#ff9a5a', dur:1.15 },            // Flame Strike (Spellblade) — hàng cột lửa dựng lên phía trước
   // QA: Dark Lord (sect id 'bug') chưa từng có entry nào ở đây — cả chiêu chính lẫn Trấn Phái đều rơi
   // về style mặc định chung chung, là lớp DUY NHẤT không có hình ảnh nhận diện riêng khi tung chiêu.
-  sx_bug_a:      { style:'windslash',    c2:'#d0e07a' },                      // Force Wave (Dark Lord) — sóng chấn quyền trượng
+  // sx_bug_a đã GỠ khỏi bảng này — nay có tranh thật trong CHIEU_TRANH.
   sx_bug_c:      { style:'firepillar',   c2:'#ffb15c', dur:1.15 },            // Fire Scream (Dark Lord) — ba vệt lửa chạy ra rồi dựng cột lửa
                       // Hatchling Strike (Unclassed) — cú đấm trần, chưa có binh khí
                       // Wanderer's Resolve (Unclassed) — dồn hết sức vào một đòn
@@ -4385,6 +4415,12 @@ const CHIEU_TRANH = {
   // con quái kia". Sát thương KHÔNG đổi theo hệ số này, nó chỉ là cỡ hình.
   sx_baidasan_c: { atlas:'meteor_rain', neo:'quai', co:0.62 },  // Meteorite — thiên thạch tím rơi xuống, nổ tung nền đất
   dw_inferno:    { atlas:'fire_pillar', neo:'quai', co:0.62 },  // Inferno — cột lửa dựng lên từ vòng dung nham
+  // `xoay:true`: tranh CÓ HƯỚNG ⇒ xoay theo hướng nhân vật, quay quanh chính `anchorX/anchorY`.
+  // Hai tấm trên KHÔNG khai cờ này và không được khai — chúng giáng xuống đất, mà một hố thiên
+  // thạch thì không có hướng; xoay nó là nghiêng cả vạch nền. `tests/test_xoayvfx.js §0` gác.
+  sx_thieulam_a: { atlas:'sx_thieulam_a', xoay:true },  // Twisting Slash — quạt chém Dark Knight
+  sx_bug_a:      { atlas:'sx_bug_a',      xoay:true },  // Force Wave — sóng chấn quyền trượng Dark Lord
+  sx_toanchan_a: { atlas:'sx_toanchan_a', xoay:true },  // Triple Shot — loé cung Sylvan Ranger
 };
 // Chỗ chiêu giáng xuống: CHUỘT CHỈ ĐÂU, CHIÊU GIÁNG ĐÓ.
 //
@@ -4440,7 +4476,12 @@ function spawnSkillVfx(id, v, phase, ang, R, x0, y0){
       addEffect({ type:'vongKiem', x:player.x, y:player.y, dur:1.0, scale:1, wpn: vongKiemVuKhi() });
     else {
       const _cx = x0 == null ? player.x : x0, _cy = (y0 == null ? player.y : y0) + chanDy();
-      spawnAtlasVfx(_tr.atlas, _cx, _cy, (_tr.co || 1) * R / VFX_ATLAS_DEFS[_tr.atlas].neoR);
+      // ⚠ Góc lấy từ tham số `ang` của chính lời gọi, KHÔNG đọc thẳng `player.face`. Hai thứ đó
+      // thường bằng nhau nhưng không phải luôn: nhánh `proj` đặt `player.face = ang` TRƯỚC khi
+      // gọi, còn nhánh Trấn Phái thì chỉ đổi face khi điểm giáng lệch chỗ đứng. Đọc `player.face`
+      // là dựng bản sao thứ hai của một giá trị đang sống, và nó sẽ lệch ở đúng chỗ khó thấy nhất.
+      spawnAtlasVfx(_tr.atlas, _cx, _cy, (_tr.co || 1) * R / VFX_ATLAS_DEFS[_tr.atlas].neoR,
+                    _tr.xoay ? (ang || 0) : 0);
     }
     return;
   }
@@ -12770,8 +12811,18 @@ function render(){
         ctx.save();
         if (def.cong !== false) ctx.globalCompositeOperation = 'lighter';
         ctx.globalAlpha = a > 0.15 ? 1 : a / 0.15; // hold full bright, only fade the last sliver
-        ctx.drawImage(img, col*def.frameW, row*def.frameH, def.frameW, def.frameH,
-          e.x - def.anchorX*sc, e.y - def.anchorY*sc, dw, dh);
+        // ⚠ XOAY QUANH CHÍNH ĐIỂM NEO, không quanh tâm ô. `anchorX/anchorY` là chỗ tranh cắm vào
+        // thế giới (với quạt chém: cán kiếm, tức chỗ nhân vật đứng). Xoay quanh tâm ô thì lưỡi
+        // kiếm vừa quay vừa văng ra khỏi tay — và ở góc 180° nó nằm hẳn phía sau lưng.
+        // `goc` = 0 đi đúng nhánh cũ: dịch rồi vẽ, không gọi rotate, không sai số nào.
+        if (e.goc){
+          ctx.translate(e.x, e.y); ctx.rotate(e.goc);
+          ctx.drawImage(img, col*def.frameW, row*def.frameH, def.frameW, def.frameH,
+            -def.anchorX*sc, -def.anchorY*sc, dw, dh);
+        } else {
+          ctx.drawImage(img, col*def.frameW, row*def.frameH, def.frameW, def.frameH,
+            e.x - def.anchorX*sc, e.y - def.anchorY*sc, dw, dh);
+        }
         ctx.restore(); ctx.globalAlpha = 1;
       }
     }

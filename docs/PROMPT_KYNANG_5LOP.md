@@ -64,6 +64,71 @@ Muốn đổi thì đổi cả hai vế của cặp cho cân, đừng đổi m�
 
 ---
 
+### 0.3 NGUỒN ART — đã thử thật trên ba tấm Gemini + một video
+
+> Chủ dự án gửi ba tấm Gemini (Twisting Slash · Force Wave · Triple Shot) và một video showreel
+> ngày 15-09. Mọi kết luận dưới đây là **số đo trên chính mấy tệp đó**, không phải suy đoán.
+
+**⚠ GEMINI KHÔNG XUẤT ĐƯỢC NỀN TRONG SUỐT — nó VẼ lưới ô caro thành điểm ảnh thật.** Đo cả ba
+tấm: `alpha = 0` chiếm **0,0%**, trong khi ngưỡng nghiệm thu là ≥25%. Cắm thẳng vào game là dán
+một hình chữ nhật xám kín màn hình — đúng cách hai tấm trùm `boss_hacphong` / `boss_tinhhoa`
+đã chết.
+
+Gỡ được, bằng **`tools/vfx_gemini.py`**: lưới caro là một sóng vuông đều nên tách ngược ra được,
+kể cả vùng **bán trong suốt** (biên độ lưới còn lại ở mỗi chỗ nói thẳng ra α, rồi lấy lại màu
+thật bằng `F = (p − (1−α)·B) / α`). Nhưng chất lượng tách phụ thuộc vào chính cái lưới, và ba
+tấm ra ba kết quả khác nhau:
+
+| tấm | hai tông lưới | kết quả |
+|---|---|---|
+| Twisting Slash | 44 / 96 — tối hơn hẳn art | **sạch** |
+| Force Wave | 97 / 146 | **sạch** |
+| Triple Shot | 156 / 197 — sáng, chồng lên dải của art | quầng sáng và vành tan **thủng lỗ** |
+
+⇒ **Chữa ở PROMPT, đừng đuổi theo ở khâu nhập:** thêm một câu bảo Gemini vẽ trên **nền MỘT MÀU
+PHẲNG** — hồng cánh sen `#ff00ff`, xa cả xanh thép, ô liu lẫn ngọc lam. Lúc đó phép tách là một
+phép trừ đúng nghĩa, không còn lưới nào để mà sót: `tools/vfx_gemini.py --nen "#ff00ff"`.
+
+**⚠ VÀ VIDEO TÁCH SẠCH HƠN ẢNH TĨNH — ngược hẳn thứ tôi dự đoán.** Tôi đã định báo là video kém
+hơn, vì lưới của nó tương phản chỉ **24 mức** (38/62) so với **52 mức** của tấm PNG, cộng thêm
+h264 mất mát và độ phân giải chỉ 1280×720. Chụp ra so thì ngược hẳn: video cho viền sắc, không
+sót một mảng caro nào; tấm PNG thì lấm tấm quanh rìa mềm. Lý do thật: lưới của video **tối hơn
+hẳn** art nên tách theo độ sáng là đủ, còn lưới của tấm PNG sáng hơn và nằm chồng đúng dải mà
+rìa mềm của art chiếm. *Đừng suy chất lượng tách từ tương phản của lưới — phải chụp ra so.*
+
+| | Gemini ảnh tĩnh | **Gemini video** | meowa |
+|---|---|---|---|
+| Giữ được nhận dạng qua các khung | được | **được** | được |
+| Nền trong suốt | không — lưới caro | không — lưới caro | **có** |
+| Tách lại được không | tuỳ tương phản lưới | **được, sạch hơn** | không phải tách |
+| Số khung | 6–9, do mình xếp lưới | **24/giây** | 8/16/24/32 |
+| Dấu chìm | có | **có** — khối 48×48 ở góc dưới-phải, ĐỨNG YÊN ⇒ cắt bỏ được | không |
+
+⇒ **Video là nguồn tốt nhất hiện có**, miễn là cắt bỏ góc dấu chìm. Nhược điểm duy nhất: một
+video là một **showreel** nhiều hiệu ứng nối nhau bằng chuyển cảnh mờ, nên phải tự chỉ đoạn.
+Tách khung: `ffmpeg -i <video> -vsync 0 khung_%04d.png` (sandbox cài được qua
+`pip install imageio-ffmpeg`).
+
+### 0.4 ⚙ BA Ô ĐÃ CẮM THẬT VÀ CHỤP TRONG MÀN
+
+| ô | atlas | trạng thái |
+|---|---|---|
+| Dark Knight ô 1 · Twisting Slash | `sx_thieulam_a` | **chạy** — 8 khung, bỏ khung tàn thứ 9 (nhạt tới mức không tách nổi) |
+| Dark Lord ô 1 · Force Wave | `sx_bug_a` | **chạy** — 6 khung |
+| Sylvan Ranger ô 1 · Triple Shot | `sx_toanchan_a` | **chạy, có nợ** — còn lưới lỗ ở quầng sáng, cần sinh lại trên nền phẳng |
+
+Ba thứ đo được lúc cắm, mỗi thứ là một cái bẫy:
+
+1. **`neoR` là TẦM VƯƠN TỪ NEO, không phải nửa ô.** Chỗ gọi lấy tỉ lệ vẽ bằng `R / neoR`. Lấy
+   nửa ô (192) thì đặc tả 125px vẽ ra **211px**. Đúng là `384 − anchorX` = 337,9 ⇒ vẽ ra 119px.
+2. **`cong:false` — vẽ đè, KHÔNG cộng sáng.** Cả ba tấm đều sáng hơn nền và có viền tối riêng;
+   cộng sáng trên nền cát sáng của thị trấn thì quạt chém **cháy trắng** và viền biến mất. Luật
+   cũ vẫn đúng: cộng sáng dành cho gói TỐI HƠN nền.
+3. **Phải xoay, và xoay quanh ĐIỂM NEO.** Xem §2.1 — đã thi công, `tests/test_xoayvfx.js` gác
+   19 mệnh đề, trong đó mệnh đề đáng giá nhất đo hai khoảng lệch ở góc 0° và 180° phải đối xứng
+   (đo được 45,5 vs −46,5 px). Xoay quanh tâm ô cũng làm hình ĐỔI, nên chỉ phép đo ấy phân biệt
+   được hai cách làm.
+
 ## 1. BỐN Ô — bảng chốt
 
 Ba bộ chiếm ba ô đầu. Ô 4 là hào quang phù trợ: nó **không đánh trúng ai** nên không treo tâm
