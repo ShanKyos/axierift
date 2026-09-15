@@ -1584,7 +1584,11 @@ window.NPCS = [
   // đứng ở thành. Lore của bốn người dưới đây viết cho ra chuyện đó: mỗi cái cửa
   // phải nói được vì sao nó tồn tại, không chỉ là một cái nút bấm.
 
-  { id:'thoren', name:'Thợ Rèn · Lò Rèn Hoàng Gia', map:'ardhaven', x:3656, y:1510, img:'assets/npcs/thoren.png', talk:'forge', nhan:'Lò Rèn',
+  // Lệch xuống-trái khỏi trục nhà Lò Rèn (3656,1510) một cách CỐ Ý: tranh NPC mới mang theo
+  // một cái đe của riêng nó, mà nhà `ct_loren` đã có sẵn một cái đe trên gốc cây ở chân nhà.
+  // Đứng đúng trục thì hai cái đe chồng lên nhau cách chừng một bước chân. Dời ra là đọc
+  // thành sân rèn hai bàn thay vì một cái đe bị vẽ hai lần.
+  { id:'thoren', name:'Thợ Rèn · Lò Rèn Hoàng Gia', map:'ardhaven', x:3470, y:1545, img:'assets/npcs/thoren.png', talk:'forge', nhan:'Lò Rèn',
     lore:'"Lò này nhóm lại lần thứ ba rồi. Hai lần trước tắt vì hết than — lần này ta dặn xe than đi hai chuyến một tuần, tắt nữa thì là lỗi của ta."',
     barks:['"Đợi lò đỏ đã, đừng giục."','"Đồ mẻ thì mang đây, đừng vứt."',
            '"Búa nhỏ để khảm, búa lớn để nắn. Cầm nhầm là hỏng cả món."','"Nghe tiếng thép là biết đồ thật hay giả."'] },
@@ -1729,6 +1733,14 @@ window.NPCS = [
   // ⚠ (2870,1340) CŨ LỌT VÀO MÓNG TIỆM THUỐC khi ba công trình dời về lõi — `test_sandat`
   // bắt "kẹt trong vật cản" và `test_diahinh` bắt 4/668 tuyến đi thử không tới nơi, cùng một
   // nguyên nhân. Nay ông ngồi ngoài quảng trường, tây-nam điểm thả.
+  // Kẻ lang thang đứng lẻ phía đông, cách đường ra Cổng Đông một quãng. Cố ý KHÔNG đặt trong
+  // quảng trường: cả bố cục của y là "một người không thuộc về đám đông nào", để giữa chợ thì
+  // mất sạch ý đó.
+  { id:'ah_ronin', name:'Kỵ Sĩ Ronin', map:'ardhaven', x:4900, y:1900, img:'assets/npcs/ronin.png', talk:'quest',
+    lore:'"Ta vượt vết nứt cùng ba mươi người. Về tới đây còn một. Đừng hỏi tên đội — không còn ai gọi tên đội đó nữa."',
+    barks:['"Đứng xa lưỡi thép ra."','"Ta không nhận việc. Ta đợi."',
+           '"Mưa bên này lạ lắm. Nó không rửa được thứ gì cả."','"Đi một mình thì sống lâu hơn."'] },
+
   { id:'ah_onglao', name:'Ông Lão Ngồi Ghế Đá', map:'ardhaven', x:2820, y:1980, img:'assets/npcs/truonglang.png', talk:'quest',
     lore:'"Cái ghế này quay mặt ra phố lớn. Ta ngồi từ lúc mặt trời chưa qua nóc nhà đối diện, tới lúc nó khuất sau đó. Ngày nào cũng vậy, và ta chưa chán ngày nào."',
     barks:['"Ngồi xuống đi, ghế còn chỗ."','"Trước đây chỗ này là bãi đất trống."',
