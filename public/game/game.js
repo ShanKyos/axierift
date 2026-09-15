@@ -2413,10 +2413,33 @@ function decorUnblock(){
   decorObsCum = decorObsCum.filter(o => !phaBo.has(idx(o.x, o.y)));
   if (decor.length !== truoc || decorObsCum.length !== truocCum) rebuildDecorObs();
 }
+// VẬT CẢN CỦA CÔNG TRÌNH `vatTo` — bám theo chính hình vẽ, sinh bởi tools/iso/can_vatto.py.
+//
+// ⚠ VÌ SAO KHÔNG DÙNG KHỐI 460×340 CÓ SẴN: 460×340 là cỡ Ô ĐẤT của khối nhà, không phải cỡ
+// HÌNH nhà. Sprite cao hơn hẳn (quán trọ 512×510), nên cả thân trên và mái nằm NGOÀI hộp chặn.
+// Đo được: nửa dưới mỗi căn chặn 95-100%, nhưng tính cả hình thì 12-35% diện tích vẫn đi được,
+// và toàn bộ chỗ đó nằm ở dải phía BẮC — đúng hướng người chơi đi tới. Ảnh chụp tại (3900,430)
+// cho thấy nhân vật BIẾN MẤT hoàn toàn sau mái Quán Trọ. Với người chơi đó là "xuyên qua nhà".
+//
+// ⚠ NHỚ LẠI THEO MAP. `inObstacle` gọi `obstaclesOf` cho MỌI điểm thử, và `simulateMovePath`
+// thử tới 200×8 điểm một lượt bấm chuột — bung bảng dải mỗi lần gọi là dựng lại vài chục hộp
+// mấy nghìn lần một cú click.
+const _vatCanNho = {};
+function vatToObs(mapId){
+  if (_vatCanNho[mapId]) return _vatCanNho[mapId];
+  const md = MAPS[mapId], B = window.VAT_CAN || {};
+  const ra = [];
+  for (const v of (md && md.vatTo) || []){
+    for (const b of B[v.img] || [])
+      ra.push({ x: v.x + b[0], y: v.y + b[1], wd: b[2], ht: b[3] });
+  }
+  return (_vatCanNho[mapId] = ra);
+}
 function obstaclesOf(mapId){
   const md = MAPS[mapId];
   if (md && md.dungeon) return DGN_OBSTACLES.concat(dgnWallObs());
-  const base = MAP_OBSTACLES[mapId] || [];
+  const _vt = vatToObs(mapId);
+  const base = _vt.length ? (MAP_OBSTACLES[mapId] || []).concat(_vt) : (MAP_OBSTACLES[mapId] || []);
   // decor chỉ tồn tại cho map đang đứng — map khác thì chỉ có vật cản tĩnh
   return mapId === curMap && decorObs.length ? base.concat(decorObs) : base;
 }
