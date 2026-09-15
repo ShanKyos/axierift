@@ -140,18 +140,44 @@ const pass = m => console.log('PASS ' + m);
       sai.push(id + '=' + ((VH_VFX[id] && VH_VFX[id].style) || 'không có'));
     // Chiêu đã có TRANH THẬT thì không khai style vector nữa (giữ cả hai là chồng hai lớp lên
     // nhau) — chữ ký hình ảnh của nó nằm ở CHIEU_TRANH.
-    for (const id of ['dw_dragonspirit', 'dw_inferno', 'sx_baidasan_c']){
-      if (!CHIEU_TRANH[id]) sai.push(id + '=chưa khai tranh');
-      else if (VH_VFX[id] || SECT_VFX[id]) sai.push(id + '=vừa có tranh vừa có hình vector');
+    //
+    // ⚠ DANH SÁCH SUY TỪ `CHIEU_TRANH`, KHÔNG CHÉP CỨNG. Bản cũ liệt tay ba mã, và ngay đợt sau
+    // có thêm ba chiêu nữa có tranh thật (sx_thieulam_a · sx_bug_a · sx_toanchan_a) thì bài này
+    // vừa KHÔNG gác chúng, vừa ĐỎ — vì nó còn đọc `SECT_VFX.sx_thieulam_a.style` của đúng cái
+    // dòng phải gỡ theo luật. Suy từ bảng thì càng thêm tranh càng gác được nhiều, và không còn
+    // danh sách nào để mà mục đi. Cùng lối `mapBanSac()` suy từ `packs`.
+    for (const id in CHIEU_TRANH){
+      const t = CHIEU_TRANH[id];
+      if (VH_VFX[id] || SECT_VFX[id]) sai.push(id + '=vừa có tranh vừa có hình vector');
+      if (!t.atlas && !t.ve) sai.push(id + '=khai tranh mà không có atlas lẫn đường vẽ');
+      if (t.atlas && !VFX_ATLAS_DEFS[t.atlas]) sai.push(id + '=atlas chưa khai trong VFX_ATLAS_DEFS');
     }
-    return { sai, fireScream: SECT_VFX.sx_bug_c.style, twistingSlash: SECT_VFX.sx_thieulam_a.style,
+
+    // ⚠ VÀ GÁC CHIỀU NGƯỢC LẠI, cũng suy từ dữ liệu: mỗi lớp, ô 1 (`_a`) và ô 2 (`_c`) phải có
+    // ĐÚNG MỘT trong hai — tranh thật, hoặc một hình vector RIÊNG. Không có cái nào nghĩa là
+    // chiêu rơi về style mặc định theo kiểu chiêu, tức năm lớp tung ra cùng một hình.
+    // Mệnh đề cũ chốt thẳng `sx_thieulam_a === 'bladewhirl'`: gác được đúng một lớp, và chết
+    // ngay khi lớp ấy có art thật.
+    const oRong = [];
+    for (const sk in SECTS) for (const hau of ['a', 'c']){
+      const id = 'sx_' + sk + '_' + hau;
+      const coTranh = !!CHIEU_TRANH[id];
+      const vec = SECT_VFX[id] && SECT_VFX[id].style;
+      if (coTranh && vec) continue;                      // đã báo ở vòng trên
+      if (!coTranh && !vec) oRong.push(id + '=không có gì');
+      else if (vec && MAC_DINH.includes(vec)) oRong.push(id + '=' + vec + ' (mặc định)');
+    }
+
+    const _bugC = SECT_VFX.sx_bug_c;
+    return { sai, oRong,
+             fireScream: _bugC && _bugC.style,
              penetrationProj: VH_VFX.elf_penetration && VH_VFX.elf_penetration.proj,
-             deuKhacMacDinh: !MAC_DINH.includes(SECT_VFX.sx_bug_c.style) };
+             deuKhacMacDinh: !!_bugC && !MAC_DINH.includes(_bugC.style) };
   });
   console.log('4) hiệu ứng riêng:', JSON.stringify(r4));
   if (r4.sai.length) fail(`tuyệt chiêu dùng hiệu ứng mặc định: ${r4.sai.join(', ')}`);
   if (r4.fireScream !== 'firepillar') fail(`Fire Scream dùng ${r4.fireScream}, phải là firepillar (ba vệt lửa rồi DỰNG CỘT LỬA)`);
-  if (r4.twistingSlash !== 'bladewhirl') fail(`Twisting Slash dùng ${r4.twistingSlash}, phải quét trọn vòng`);
+  if (r4.oRong.length) fail(`ô 1/ô 2 của lớp không có hình riêng: ${r4.oRong.join(', ')}`);
   if (r4.penetrationProj !== 'lance') fail('Penetration không có đạn riêng — dùng mũi tên thường');
   await p3.close();
 

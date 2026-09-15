@@ -429,7 +429,7 @@ window.BOSS_DEFS = {
       { id:'dh1', name:'Chúa Heo Rừng',       lv:40, el:'Thổ',  img:'boar',     x:0.3617, y:0.32, moves:['vach','xung','cuong'] },
       { id:'dh2', name:'Chúa Bầy Gai Tím',        lv:43, el:'Mộc',  img:'wolf',     x:0.4313, y:0.6212, moves:['xung','goi','vach'] },
       { id:'dh3', name:'Chấp Sự Gloam',  lv:46, el:'Thủy', img:'assassin', x:0.7096, y:0.3953, moves:['vach','vong','cuong'] } ],
-    tranai: { id:'dh4', name:'Thủ Lĩnh Đoàn Gloam', lv:50, el:'Hỏa', img:'boss_hacphong', x:0.7235, y:0.8094, moves:['vong','vach','goi','cuong'] } },
+    tranai: { id:'dh4', name:'Thủ Lĩnh Đoàn Gloam', lv:50, el:'Hỏa', img:'boss_hacphong', anh:'tq_daohoa', x:0.7235, y:0.8094, moves:['vong','vach','goi','cuong'] } },
   ngoai: { thuve:[
       { id:'ng1', name:'Đầu Mục Gloam',    lv:13, el:'Kim',  img:'bandit',   x:0.6691, y:0.5042, moves:['vach','xung','cuong'] },
       { id:'ng2', name:'Gai Tím Độc Nhãn',lv:16, el:'Mộc',  img:'wolf',     x:0.2618, y:0.1939, moves:['xung','vong','goi'] },
@@ -449,7 +449,7 @@ window.BOSS_DEFS = {
       { id:'co1', name:'Rễ Cổ Thức Giấc',    lv:6,  el:'Mộc',  img:'mocnhan', x:0.1231, y:0.8842, moves:['vong','vach','cuong'] },
       { id:'co2', name:'Kẻ Canh Vòng Cổng',  lv:9,  el:'Thổ',  img:'thinu',   x:0.4923, y:0.5053, moves:['vach','xung','goi'] },
       { id:'co3', name:'Axie Sa Ngã Đầu Đàn',lv:12, el:'Thủy', img:'bandao',  x:0.7538, y:0.1263, moves:['xung','vong','cuong'] } ],
-    tranai: { id:'co4', name:'Người Giữ Rẻo Corran', lv:14, el:'Mộc', img:'boss_mochu', x:0.7538, y:0.8842, moves:['vong','vach','goi','cuong'] } },
+    tranai: { id:'co4', name:'Người Giữ Rẻo Corran', lv:14, el:'Mộc', img:'boss_mochu', anh:'tq_corran', x:0.7538, y:0.8842, moves:['vong','vach','goi','cuong'] } },
   // Trum Trung Nut dat GIUA trung, khong dat canh cong: bo sinh tu kiem >=700px tinh tu moi
   // diem toi (test_bossplace). Luot dau hai trum roi cach cong 466px va 401px -- bo kiem bat.
   trungnut: { thuve:[
