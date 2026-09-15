@@ -33,7 +33,8 @@ window.I18N_EN = {
   'help.k.party': 'Party',
   'help.k.friend': 'Friends',
   'help.k.settings': 'Settings',
-  'help.k.help': 'This panel',
+  'help.k.ngocbank': 'Jewel Bank — store jewels and Box Kundun',
+  'help.k.help': 'System Menu — Settings · Events · Jewel Bank · Loot Rules',
   'help.k.esc': 'Close the most recently opened panel',
 
   'help.g.auto': 'AUTO-FIGHT',

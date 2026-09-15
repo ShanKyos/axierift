@@ -33,7 +33,8 @@ window.I18N_VI = {
   'help.k.party': 'Tổ Đội',
   'help.k.friend': 'Bạn Bè',
   'help.k.settings': 'Cài Đặt',
-  'help.k.help': 'Chính bảng này',
+  'help.k.ngocbank': 'Ngân Hàng Ngọc — cất ngọc và Box Kundun',
+  'help.k.help': 'Menu Hệ Thống — Cài Đặt · Sự Kiện · Ngân Hàng Ngọc · Lệnh Nhặt',
   'help.k.esc': 'Đóng bảng mở sau cùng',
 
   'help.g.auto': 'TỰ ĐÁNH',

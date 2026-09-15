@@ -20,6 +20,24 @@
 <body>
 <canvas id="game"></canvas>
 
+<!-- ═══════════ MÀN TẢI ═══════════
+     Trước bản này KHÔNG có màn tải nào: cảnh Lunacia mười lớp lắp dần ngay trước mắt người
+     chơi — trời hiện trước, núi hiện sau, nhân vật hiện cuối. Trên mạng chậm nó trông như hỏng.
+
+     ⚠ THANH NÀY CÂN THEO SỐ BYTE THẬT, không theo số tệp và tuyệt đối không theo đồng hồ.
+     Bản kê nằm ở data/taitro.js, sinh bằng tools/title/liet_ke_taitro.cjs từ chính kích thước
+     tệp trên đĩa. Một thanh chạy theo setTimeout là đúng cái thứ mà dự án này đã gỡ một lần rồi
+     (thanh "Tiếp nhận 28%…82%" ở màn chọn máy chủ) — xem QUY TẮC ở CLAUDE.md. -->
+<div id="preload">
+  <div class="pl-inner">
+    <div class="sv-logo"><span class="sv-logo-a">AXIE</span><span class="sv-logo-b">RIFT</span></div>
+    <div class="pl-bar"><i id="pl-fill"></i></div>
+    <div class="pl-hang"><span id="pl-nhom">Đang mở vết nứt…</span><b id="pl-pct">0%</b></div>
+    <div class="pl-byte" id="pl-byte"></div>
+    <div class="pl-tip" id="pl-tip"></div>
+  </div>
+</div>
+
 <!-- HUD -->
 <div id="hud" class="hidden">
   <div id="hud-left">
@@ -142,19 +160,23 @@
       <button class="mc-btn" id="btn-settings" title="Cài Đặt (O)"><img src="assets/ui/ic_caidat.png" alt=""><span>Cài Đặt</span></button>
       <!-- ⚠ Ký hiệu là `≡`, KHÔNG phải `☰`. Cái thứ hai trông giống hệt và cũng đọc ra "menu",
            nhưng nó là quẻ Càn của BÁT QUÁI — Quy tắc số 1 cấm motif kiếm hiệp. -->
-      <button class="mc-btn mc-menu" id="btn-menu" title="Thêm">≡<span>Thêm</span></button>
+      <button class="mc-btn mc-menu" id="btn-menu" title="Menu Hệ Thống (F6)">≡<span>Menu Hệ Thống</span></button>
     </div>
-    <div id="mc-drop" class="hidden">
-      <button id="btn-combatlog"><img src="assets/ui/ic_nhatky.png" alt="">Nhật Ký Chiến Đấu <span id="cl-arrow">▾</span></button>
-      <button id="btn-sukien">⏱ Bảng Sự Kiện</button>
-      <button id="btn-help">❓ Hướng Dẫn &amp; Phím Tắt <span style="opacity:.7">F6</span></button>
-      <button id="btn-music" title="Nhạc nền">♪ Nhạc Nền</button>
-    </div>
+    <!-- ⚠ #mc-drop ĐÃ GỠ. Nó là một thả-xuống bốn dòng treo trên nút ≡, và từ lúc có Menu
+         Hệ Thống (F6) thì hai trong bốn dòng trùng thẳng với nút trong đó (Bảng Sự Kiện ·
+         Hướng Dẫn). Một cái thả-xuống chỉ để chứa hai mục còn lại là một tầng bấm thừa: nay
+         nút ≡ mở luôn Menu Hệ Thống. Nhật Ký Chiến Đấu có công tắc riêng ngay trên chính nó,
+         Nhạc Nền có thanh trượt trong Cài Đặt — không mục nào mất đường vào. -->
   </div>
+  <!-- ⚠ THANH EXP NẰM TRONG #bottom-hud, và đó là cách DUY NHẤT giữ nó bằng ngang dải icon.
+       Chủ dự án chốt: "kéo thanh EXP cho bằng ngang dải icon đi". Bề ngang thanh chiến đấu là
+       KẾT QUẢ của số ô nhân cỡ ô — không có con số nào chép sang được. Bản cũ khai
+       `width: min(520px, 62vw)`, tức một con số rời hẳn: ở màn 1600 nó ra 520px cạnh một thanh
+       756px, và mỗi lần thêm hay bớt một ô là hai bên lệch thêm mà không gì báo.
+       Cắm vào trong rồi `left:0; right:0` thì hai bề ngang BẰNG NHAU THEO CẤU TRÚC. -->
+  <div id="xp-strip" class="hidden"><div class="bar xp"><div id="bar-xp" class="fill"></div><span id="txt-xp"></span></div></div>
 </div>
 
-<!-- Thanh EXP nằm NGAY DƯỚI viên đá Máu, mép dưới màn hình — đúng chỗ MU đặt nó. -->
-<div id="xp-strip" class="hidden"><div class="bar xp"><div id="bar-xp" class="fill"></div><span id="txt-xp"></span></div></div>
 <!-- Tầng Sâu: nút rút lui. Không có nút này thì kho tạm không có cách nào mang về, cả chế độ
      chỉ còn là "cày tới chết" — đúng thứ nó KHÔNG nên là. -->
 <button id="deep-leave" class="hidden" onclick="deepLeave()">⬆ RÚT LUI <i>mang kho tạm về</i></button>
@@ -176,7 +198,15 @@
 
 <!-- Nhật ký chiến đấu: thay cho số sát thương/thông báo bay đầy màn hình lúc tự đánh nhiều quái —
      gộp lại thành 1 dòng chữ ở góc, đọc được thay vì rối mắt -->
+<!-- ⚠ NHẬT KÝ CHIẾN ĐẤU DỜI SANG PHẢI, dưới cột bản đồ. Chủ dự án chốt: bên TRÁI để dành
+     cho khung chat giữa người chơi khi có tầng realtime (xem docs/THIET_KE_ONLINE.md — Giai
+     đoạn 1 mới chỉ có bóng người, chưa có chat). Ghi lại ở đây để đừng ai dọn nốt sườn trái
+     đi: nó đang trống CÓ CHỦ Ý, không phải quên.
+     Tiêu đề + nút thu nay nằm NGAY TRÊN cái nhật ký. Trước đó nút thu nằm trong thả xuống của
+     nút ≡ — tắt xong thì không còn gì trên màn hình chỉ ra đường bật lại. -->
 <div id="combat-log-wrap" class="hidden">
+  <div id="cl-dau"><span>Nhật Ký</span>
+    <button id="btn-combatlog" title="Thu / mở nhật ký"><i id="cl-arrow">▾</i></button></div>
   <div id="combat-log"></div>
 </div>
 
@@ -186,6 +216,8 @@
 <div id="panel-bag" class="panel hidden"></div>
 <div id="panel-skill" class="panel hidden"></div>
 <div id="panel-map" class="panel hidden"></div>
+<div id="panel-ngocbank" class="panel hidden"></div>
+<div id="panel-nhat" class="panel hidden"></div>
 <div id="panel-party" class="panel hidden"></div>
 <div id="panel-friend" class="panel hidden"></div>
 <div id="panel-settings" class="panel hidden"></div>
@@ -277,6 +309,7 @@
 <script src="data/canbang.js"></script>
 <script src="data/chi_anh.js"></script>
 <script src="data/thu_anh.js"></script>
+<script src="data/taitro.js"></script>
 <script src="data/lop_cho.js"></script>
 <script src="data/iso.js"></script>
 <script src="game.js"></script>

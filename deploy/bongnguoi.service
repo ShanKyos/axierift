@@ -1,5 +1,12 @@
 # systemd unit cho máy chủ Bóng Người (Giai đoạn 1 online).
 #
+# ⇒ KHÔNG PHẢI GÕ TỪNG LỆNH DƯỚI ĐÂY. Tất cả gói trong một dòng, chạy trên VPS bằng root:
+#
+#       bash /var/www/axiewuxia/deploy/caidat.sh
+#
+#   (Một dòng vì VPS này vào bằng serial console — dán nhiều dòng là rớt ký tự. Phần dưới giữ
+#   lại để biết script ấy làm gì, và để làm tay khi cần.)
+#
 # ⚠ CÀI NODE TRƯỚC. VPS không có sẵn, và `apt install nodejs` cho Node 12 — quá cũ cho ESM +
 #   tiền tố `node:`. Dùng NodeSource:
 #       curl -fsSL https://deb.nodesource.com/setup_20.x | bash -

@@ -66,6 +66,20 @@ const PORT = process.argv[2] || '8853';
             .map(x => VOHOC_DEFS[x].name);
         })(),
         stDiSan: player.legacyAtkPct,
+        thanhKhai: (typeof THANH_LOP !== 'undefined' && THANH_LOP[sect]) ? THANH_LOP[sect].slice() : null,
+        // pool sáu chiêu trừ phần đang trên thanh, cộng hai hệ tấn chức phụ theo cấp — đúng
+        // công thức `legacyAtkPct` trong calcDerived, tính lại độc lập để đối chiếu.
+        poolTru: (() => {
+          const tren = new Set((player.skillBar || []).filter(Boolean));
+          let t = 0;
+          for (const x of LEGACY_SECT_SKILLS){
+            const v = VOHOC_DEFS[x];
+            if (v && v.phai === player.sect && vhLearned(x) && !tren.has(x)) t += LEGACY_TIER_PCT[v.tier] || 0;
+          }
+          if (player.level >= 48) t += LEGACY_UNIVERSAL_PCT.danchi;
+          if (player.level >= 72) t += LEGACY_UNIVERSAL_PCT.tieuhon;
+          return +t.toFixed(2);
+        })(),
         conNutHoc: /learnVohocUI/.test(html) || /NGOẠI LỚP/.test(html),
       };
       closePanels();
@@ -73,7 +87,7 @@ const PORT = process.argv[2] || '8853';
 
     // ── 2. năm ô buff, năm cơ chế ──
     for (const [sect, bid] of Object.entries(BUFF_SKILL_ID)){
-      if (!bid) continue;   // lớp chưa có chiêu buff (nay chỉ còn Dark Wizard — ô 3 là Inferno)
+      if (!bid) continue;   // lớp chưa có chiêu buff (nay chỉ còn Dark Wizard — ô 3 là Meteorite)
       startGame(sect, null); player.traits = []; player.level = 60; player.lvPeak = 60;
       vhAutoLearn(); calcDerived();
       const t0 = { atk:player.atk, aspd:player.aspd, crit:player.crit, shield:player.vhShield || 0, gk:player.gkBuffT || 0 };
@@ -92,15 +106,21 @@ const PORT = process.argv[2] || '8853';
     // ── 3. hoạt ảnh của 20 ô bấm được ──
     for (const sect of LOP){
       startGame(sect, null); vhAutoLearn();
-      const key = { 0:'sx_' + sect + '_a', 1:'sx_' + sect + '_c' };
-      player.skillBar.forEach((id, i) => {
+      // ⚠ TRA THEO MÃ CHIÊU, KHÔNG THEO CHỈ SỐ Ô. Bản cũ khoá cứng `0 → sx_<lớp>_a` và
+      // `1 → sx_<lớp>_c` — tức giả định chiêu trấn phái LUÔN nằm ở ô 2. Dark Wizard nay đặt
+      // Meteorite (chính là `tp`) xuống ô 3, nên phép tra trượt và bài báo "Meteorite không
+      // khai hoạt ảnh riêng" trong khi nó có nguyên một gói art. `a` và `tp` là MÃ, vị trí của
+      // chúng trên thanh là chuyện khác.
+      const maKey = id => id === 'a' ? 'sx_' + sect + '_a' : id === 'tp' ? 'sx_' + sect + '_c' : null;
+      player.skillBar.forEach((id) => {
         if (!id) return;
+        const i = maKey(id);
         // Chiêu có TRANH THẬT không khai style vector ở đâu cả — chữ ký hình ảnh của nó là tên
         // tấm dán / đường vẽ riêng, ghi trong CHIEU_TRANH. Đọc thẳng từ đó, đừng chép lại
         // danh sách sang bên này: hai danh sách rồi sẽ lệch nhau.
-        const A = CHIEU_TRANH[id] || CHIEU_TRANH[key[i]];
+        const A = CHIEU_TRANH[id] || CHIEU_TRANH[i];
         const c = A ? { style: A.atlas || A.ve }
-                : VH_VFX[id] || SECT_VFX[key[i]] || SECT_VFX[id] || null;
+                : VH_VFX[id] || SECT_VFX[i] || SECT_VFX[id] || null;
         // Chữ ký hình ảnh = kiểu hoạt ảnh + kiểu đạn. Triple Shot và Penetration cùng dùng cú
         // loé 'flash' lúc xuất chiêu, nhưng thứ người chơi nhìn là viên đạn: ba mũi tên ngắn
         // ('arrow') so với một mũi dài kéo vệt sáng xuyên cả hàng ('lance').
@@ -144,19 +164,50 @@ const PORT = process.argv[2] || '8853';
     // data/canbang.js — nên dòng gác này đã siết lại cho cả NĂM lớp, đúng như ghi chú cũ hẹn.
     // Không nới lại ngoại lệ cho lớp nào: một ô trống trên thanh 4 ô là một nút người chơi bấm
     // vào không có gì xảy ra.
+    // ⚠ Ô TRỐNG CHỈ ĐƯỢC PHÉP KHI LỚP KHAI RÕ TRONG `THANH_LOP`. Chủ dự án chốt để trống ô 2 và
+    // ô 4 của Dark Wizard (Meteorite xuống ô 3, Inferno + Evil Spirit sang Di Sản) rồi điền sau.
+    // Cho qua bằng một danh sách miễn trừ trong BÀI KIỂM là mở cửa cho nó lan sang lớp khác mà
+    // không ai thấy; đọc thẳng bảng của game thì ô trống nào cũng phải có người khai ra nó.
     const _thieu = d.bar.map((x, i) => x ? -1 : i).filter(i => i >= 0);
-    if (_thieu.length) fail(`${d.ten} thiếu chiêu ở ô ${_thieu.join(',')} của thanh 4 ô: ${JSON.stringify(d.bar)}`);
-    if (d.diSan.length !== 4) fail(`${d.ten} có ${d.diSan.length} chiêu di sản, phải là 4`);
+    const _choPhep = (d.thanhKhai || []).map((x, i) => x ? -1 : i).filter(i => i >= 0);
+    const _laDu = _thieu.filter(i => !_choPhep.includes(i));
+    if (_laDu.length) fail(`${d.ten} thiếu chiêu ở ô ${_laDu.join(',')} mà KHÔNG khai trong THANH_LOP: ${JSON.stringify(d.bar)}`);
+    else if (_thieu.length) console.log(`    ${d.ten}: ô ${_thieu.map(i=>i+1).join(',')} cố ý để trống (THANH_LOP) — chờ chủ dự án điền`);
+    // ⚠ LUẬT ĐÃ ĐỔI: `LEGACY_SECT_SKILLS` nay khai CẢ SÁU chiêu chủ động của lớp, và Di Sản
+    // THẬT = sáu chiêu đó TRỪ những ô đang nằm trên thanh (`calcDerived` trừ động). Bản cũ chốt
+    // "đúng 4" tức là chép tay KẾT QUẢ của phép trừ — đổi một ô taskbar là phải nhớ sửa bảng,
+    // quên thì %Công Kích lệch âm thầm. Nay chấm hai thứ ĐO ĐƯỢC: pool sáu chiêu, và %ST thật.
+    if (d.diSan.length !== 6) fail(`${d.ten} có ${d.diSan.length} chiêu trong pool Di Sản, phải là 6`);
     if (!d.biDong.length) fail(`${d.ten} không có bị động riêng`);
   }
   if (!bad) pass('5 lớp: mỗi lớp chỉ có chiêu của chính mình (trừ nhánh Kế Thừa của Spellblade)');
-  const pcts = [...new Set(Object.values(r.lop).map(d => d.stDiSan))];
-  if (pcts.length !== 1) fail('%ST di sản lệch giữa các lớp: ' + Object.entries(r.lop).map(([k,d])=>`${d.ten} ${d.stDiSan}`).join(' · '));
-  else pass(`cả 5 lớp cùng +${pcts[0]}% Công Kích từ di sản — không lớp nào được ưu ái`);
+  // ⚠ LUẬT THẬT: %ST Di Sản = pool SÁU chiêu của lớp TRỪ những chiêu đang nằm trên thanh.
+  // Nên "năm lớp bằng nhau" chỉ đúng khi năm lớp cùng cắm bấy nhiêu chiêu Di Sản lên thanh.
+  // Dark Wizard đang cố ý bỏ trống ô 2 và ô 4 (THANH_LOP) nên không trừ được gì ⇒ nó CAO hơn,
+  // và đó là cái giá đúng của việc thiếu hai nút bấm — nó tự về bằng ngay khi hai ô được điền.
+  // Chấm hai thứ riêng: (a) cơ chế trừ có chạy đúng không, (b) các lớp thanh ĐẦY có bằng nhau.
+  const lech = Object.entries(r.lop).filter(([, d]) => d.poolTru !== d.stDiSan);
+  if (lech.length) fail('cơ chế trừ Di Sản theo thanh sai: ' + lech.map(([,d])=>`${d.ten} đo ${d.stDiSan} · tính ${d.poolTru}`).join(' · '));
+  else pass('mọi lớp: %ST Di Sản đúng bằng pool sáu chiêu trừ phần đang nằm trên thanh');
+  const day = Object.entries(r.lop).filter(([, d]) => !(d.thanhKhai || []).some(x => !x));
+  const pcts = [...new Set(day.map(([, d]) => d.stDiSan))];
+  if (day.length < 2) fail(`chỉ còn ${day.length} lớp có thanh đầy — mệnh đề "không lớp nào được ưu ái" hết chỗ bám`);
+  else if (pcts.length !== 1) fail('%ST di sản lệch giữa các lớp thanh ĐẦY: ' + day.map(([,d])=>`${d.ten} ${d.stDiSan}`).join(' · '));
+  else {
+    pass(`${day.length} lớp thanh đầy cùng +${pcts[0]}% Công Kích từ di sản — không lớp nào được ưu ái`);
+    for (const [, d] of Object.entries(r.lop)) if ((d.thanhKhai || []).some(x => !x))
+      console.log(`    ${d.ten}: +${d.stDiSan}% (cao hơn ${(d.stDiSan - pcts[0]).toFixed(1)}) vì đang bỏ trống ô trên thanh — tự về bằng khi điền`);
+  }
 
   // tên chiêu không trùng nhau giữa các lớp (trừ Kế Thừa)
   const tenTheoLop = {};
-  for (const [sect, d] of Object.entries(r.lop)) for (const n of [...d.bar, ...d.diSan, ...d.biDong]) (tenTheoLop[n] = tenTheoLop[n] || []).push(sect);
+  // ⚠ GỘP TRONG CÙNG MỘT LỚP TRƯỚC. `bar` và `diSan` nay GIAO NHAU (pool khai cả sáu chiêu, hai
+  // trong số đó đang nằm trên thanh), nên nối thẳng hai mảng là một chiêu tự trùng với chính nó
+  // và bài báo "trùng giữa các lớp (thieulam+thieulam)" — vô nghĩa. Và bỏ ô trống: `null` không
+  // phải một cái tên.
+  for (const [sect, d] of Object.entries(r.lop))
+    for (const n of new Set([...d.bar, ...d.diSan, ...d.biDong].filter(Boolean)))
+      (tenTheoLop[n] = tenTheoLop[n] || []).push(sect);
   const trung = Object.entries(tenTheoLop).filter(([n, ls]) => ls.length > 1 && !KE_THUA.includes(n));
   if (trung.length) fail('tên chiêu trùng giữa các lớp: ' + trung.map(([n,ls])=>`${n} (${ls.join('+')})`).join(', '));
   else pass('không tên chiêu nào dùng chung giữa hai lớp');
@@ -171,10 +222,13 @@ const PORT = process.argv[2] || '8853';
   if (!B.thieulam) fail('Dark Knight mất chiêu buff ở ô 3 — Bulwark phải là chiêu bấm được');
   else if (!(B.thieulam.khien > 0)) fail('Bulwark (Dark Knight) không dựng khiên');
   else pass(`Bulwark: khiên ${B.thieulam.khien} — cơ chế không lớp nào khác dùng`);
-  // Dark Wizard cũng vậy: ô 3 của lớp này là Inferno (đúng bộ bốn nút Poison · Meteorite ·
-  // Inferno · Dragon Spirit), còn Soul Barrier chuyển sang Di Sản.
-  if (B.baidasan) fail('Dark Wizard lại có chiêu buff ở ô 3 — ô đó nay là Inferno');
-  else pass('Dark Wizard ô 3 là Inferno, không phải chiêu buff');
+  // ⚠ Dark Wizard nay đặt Meteorite (`tp`) xuống ô 3, ô 2 và ô 4 để trống chờ chủ dự án điền;
+  // Inferno và Evil Spirit rời thanh sang Di Sản. `O3_SKILL_ID.baidasan` vì thế là `null`, nên
+  // lớp này không có chiêu buff ở ô 3 — vẫn đúng kết luận cũ, nhưng KHÁC lý do. Câu cũ ghi "ô
+  // đó nay là Inferno" đã thành lời nói dối ngay lúc ô 3 đổi chủ; một mệnh đề XANH mà in ra câu
+  // sai thì còn tệ hơn đỏ, vì không ai đi đọc lại nó.
+  if (B.baidasan) fail('Dark Wizard lại có chiêu buff ở ô 3 — ô đó nay là Meteorite');
+  else pass('Dark Wizard ô 3 là Meteorite (chiêu trấn phái), không phải chiêu buff');
   if (!(B.toanchan.hoiMau > 0 && B.toanchan.stX > 1)) fail('Bless (Sylvan Ranger) không hồi máu'); else pass(`Bless: +${B.toanchan.hoiMau} HP và ×${B.toanchan.stX} ST`);
   if (!(B.minhgiao.tocDanhX > 1.1 && B.minhgiao.stX > 1)) fail('Battle Fury (Spellblade) không cộng tốc đánh'); else pass(`Battle Fury: ×${B.minhgiao.stX} ST và ×${B.minhgiao.tocDanhX} tốc đánh`);
   if (!(B.bug.baoKich > 0.3)) fail('Increase Critical Damage (Dark Lord) không cộng bạo kích'); else pass(`Increase Critical Damage: +${B.bug.baoKich} bạo kích`);
