@@ -46,6 +46,20 @@ const NGUOI_MAX  = parseInt(process.env.NGUOI_MAX || '64', 10);
  * ⚠ CHỐNG SPAM LÀ VIỆC CỦA MÁY CHỦ, không phải của client. Client có thể bị sửa; ô nhập bên
  * client chỉ để người dùng tử tế khỏi vô tình bấm liên tục. Hai lớp, vì chúng chặn hai kiểu
  * khác nhau: `CHAT_NHIP_MS` chặn giữ phím, `CHAT_CUA` chặn dán một loạt rồi bắn dồn.           */
+/* ── GIỚI HẠN NHỊP GÓI `pos` ──────────────────────────────────────────────────────────────
+ * Chat có hai lớp chống spam từ đầu; `pos` thì KHÔNG CÓ GÌ — mà nó mới là gói chạy 10 lần mỗi
+ * giây. Một client sửa đổi bắn 10.000 gói/giây là ăn CPU của cả phòng, và không ai trong phòng
+ * biết vì sao game giật.
+ *
+ * ⚠ ĐỪNG ĐẶT SÁT 10 Hz. Client gửi theo `requestAnimationFrame` nên hai gói có thể dính sát
+ * nhau sau một khung bị nghẽn; chặn sát nhịp là phạt nhầm người chơi tử tế trên máy yếu. Trần
+ * ở đây rộng gấp ba nhịp thật, đủ để bắt kẻ bắn dồn mà không chạm tới ai chơi bình thường.
+ * ⚠ Và ĐỪNG ĐÁ NGAY: một cú bắn dồn lẻ thì BỎ QUA gói là đủ. Chỉ đá khi nó bền — kẻ viết bot
+ * mới giữ được mức đó, còn người chơi thật thì không.                                          */
+const POS_CUA    = 30;       // tối đa ngần này gói `pos`…
+const POS_CUA_MS = 1000;     // …trong ngần này (nhịp thật là 10)
+const POS_QUA_MAX = 200;     // vượt liên tục ngần này gói thì đóng kết nối
+
 const CHAT_DAI    = 200;     // ký tự — cắt, không đá
 const CHAT_NHIP_MS = 700;    // hai câu liền nhau phải cách nhau chừng này
 const CHAT_CUA    = 6;       // tối đa ngần này câu…
@@ -64,6 +78,19 @@ const batDau = Date.now();
 const so = (v, min, max, mac) => (Number.isFinite(v) ? Math.min(max, Math.max(min, v)) : mac);
 const chu = (v, n) => (typeof v === 'string' ? v.slice(0, n).replace(/[\u0000-\u001f]/g, '') : '');
 
+// Tên đã có người đang online dùng thì thêm hậu tố. KHÔNG từ chối kết nối: người thứ hai trùng
+// tên là chuyện thường (hai người cùng đặt "Kiếm Khách"), đá họ ra là phạt nhầm người.
+function tenRieng(xin, id){
+  const dung = new Set();
+  for (const st of nguoi.values()) if (st.id !== id && st.daDatTen) dung.add(st.name);
+  if (!dung.has(xin)) return xin;
+  for (let k = 2; k < 100; k++){
+    const t = (xin + '#' + k).slice(0, TEN_MAX);
+    if (!dung.has(t)) return t;
+  }
+  return ('Khach' + id).slice(0, TEN_MAX);
+}
+
 function capNhat(st, tin) {
   st.map   = chu(tin.map, 32) || st.map;
   st.x     = so(tin.x, -1e5, 1e5, st.x);
@@ -75,12 +102,25 @@ function capNhat(st, tin) {
   st.level = Math.round(so(tin.level, 1, 999, st.level));
   st.speed = so(tin.speed, 0, 2000, st.speed);
   st.sect  = chu(tin.sect, 24) || st.sect;
-  st.name  = chu(tin.name, TEN_MAX) || st.name;
+  // ⚠ TÊN ĐẶT MỘT LẦN RỒI THÔI, VÀ KHÔNG ĐƯỢC TRÙNG AI ĐANG ONLINE.
+  // Bản cũ nhận `name` ở MỌI gói `pos`, tức client đổi tên bất cứ lúc nào. Hồi chỉ có bóng
+  // người thì đó là chuyện nhỏ; từ lúc có CHAT thì nó là mạo danh — ai cũng đổi tên mình thành
+  // tên người khác rồi nói thay họ, và người bị mạo danh không có cách nào biết.
+  //
+  // ⚠ ĐÂY KHÔNG PHẢI XÁC THỰC, và đừng nhầm hai thứ. Không có tài khoản thì không cách nào biết
+  // ai thật sự là ai; thứ chốt này mua được đúng một điều: KHÔNG mạo danh được người đang có
+  // mặt. Muốn hơn thế thì phải đợi giai đoạn có tài khoản (xem docs/THIET_KE_ONLINE.md).
+  if (!st.daDatTen){
+    const xin = chu(tin.name, TEN_MAX);
+    if (xin){ st.name = tenRieng(xin, st.id); st.daDatTen = true; }
+  }
   // ── Hành động ra đòn ──────────────────────────────────────────────────────────────────
   // Bộ đếm chứ không phải thời gian còn lại: một hoạt cảnh 0,22 s lọt gọn giữa hai ảnh 10 Hz,
   // nên gửi "còn bao lâu" là thỉnh thoảng mất hẳn một cú đánh. Một con số chỉ tăng thì không.
   st.atkSeq  = Math.round(so(tin.as, 0, 1e9, st.atkSeq));
   st.castSeq = Math.round(so(tin.cs, 0, 1e9, st.castSeq));
+  st.hitSeq  = Math.round(so(tin.hs, 0, 1e9, st.hitSeq));
+  st.chet    = !!tin.chet;
   st.atkAct  = chu(tin.ak, 16) || st.atkAct;
   st.castAct = chu(tin.ck, 16) || st.castAct;
   // ── Trang bị ──────────────────────────────────────────────────────────────────────────
@@ -146,9 +186,10 @@ wss.khiNoi((ws) => {
   const st = {
     id, map: '', x: 0, y: 0, face: 0, moving: false,
     hp: 1, maxHp: 1, level: 1, speed: 190, sect: 'thieulam',
-    name: 'Khach' + id, nghe: Date.now(),
+    name: 'Khach' + id, daDatTen: false, nghe: Date.now(),
     chatLuc: 0, chatCua: [],     // chống spam, xem CHAT_* ở trên
-    atkSeq: 0, castSeq: 0, atkAct: '', castAct: '',
+    posCua: [], posQua: 0,       // chống bắn dồn `pos`, xem POS_* ở trên
+    atkSeq: 0, castSeq: 0, hitSeq: 0, chet: false, atkAct: '', castAct: '',
     gear: null, gearV: 0,        // số hiệu tăng mỗi lần trang bị đổi
   };
   nguoi.set(id, st);
@@ -163,7 +204,9 @@ wss.khiNoi((ws) => {
     let tin;
     try { tin = JSON.parse(raw); } catch { return; }   // rác thì bỏ qua, đừng đá
     if (!tin || typeof tin !== 'object') return;
-    if (tin.t === 'pos') capNhat(st, tin);
+    if (tin.t === 'pos'){
+      if (!posQua(st, ws)) capNhat(st, tin);
+    }
     else if (tin.t === 'chat') nhanChat(st, ws, tin);
   });
 
@@ -172,6 +215,18 @@ wss.khiNoi((ws) => {
     console.log(`[-] ${id} roi — con ${nguoi.size}`);
   });
 });
+
+// Trả `true` nghĩa là gói này VƯỢT trần — bỏ qua nó. Xem POS_* ở đầu tệp.
+function posQua(st, ws){
+  const gio = Date.now();
+  st.posCua = st.posCua.filter(t => gio - t < POS_CUA_MS);
+  if (st.posCua.length < POS_CUA){ st.posCua.push(gio); st.posQua = 0; return false; }
+  if (++st.posQua >= POS_QUA_MAX){
+    console.log(`[!] ${st.id} ban don ${st.posQua} goi pos — dong ket noi`);
+    ws.dong(1008, 'qua nhanh');    // 1008 = policy violation
+  }
+  return true;
+}
 
 /* ── Chat ────────────────────────────────────────────────────────────────────────────────
  * ⚠ TRẢ LỜI NGƯỜI BỊ CHẶN, ĐỪNG IM. Câu bị nuốt mà không nói gì thì người chơi gõ lại, rồi gõ
@@ -236,7 +291,7 @@ setInterval(() => {
                   f: +st.face.toFixed(2), mv: st.moving ? 1 : 0,
                   hp: Math.round(st.hp), mhp: Math.round(st.maxHp),
                   lv: st.level, sp: Math.round(st.speed), s: st.sect, n: st.name,
-                  as: st.atkSeq, cs: st.castSeq };
+                  as: st.atkSeq, cs: st.castSeq, hs: st.hitSeq, dd: st.chet ? 1 : 0 };
       if (st.atkAct)  e.ak = st.atkAct;
       if (st.castAct) e.ck = st.castAct;
       // ⚠ TRANG BỊ CHỈ GỬI KHI KẾT NỐI NÀY CHƯA CÓ BẢN ẤY. Nhét nó vào mọi ảnh chụp là ~180

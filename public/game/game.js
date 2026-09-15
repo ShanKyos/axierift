@@ -867,7 +867,7 @@ const NV_DANH_GIAY = 0.22, NV_CHU_GIAY = 0.38;
 // đòn nhẹ) — hằng này là thước của phần VẼ, tức "một cú giật đầy đủ dài bao nhiêu". Trước bản
 // này số 0,3 ấy chép cứng ở hai chỗ trong `drawPlayer`, nay có thêm chỗ thứ ba ở `veAvatar`.
 const NV_GIAT_GIAY = 0.30;
-window.NV_HD_GIAY = { a: NV_DANH_GIAY, c: NV_CHU_GIAY };
+window.NV_HD_GIAY = { a: NV_DANH_GIAY, c: NV_CHU_GIAY, h: NV_GIAT_GIAY };
 // Bậc của một đôi cánh, đọc từ chính món đồ. Món đời cũ mang id 'thienthan'/'tieuquy'
 // (bậc 1) hoặc 'phuongduc'/'hacma' (bậc 2) — loadGame() đổi chúng sang đôi của lớp.
 function wingBac(it){ return (it && it.wingBac) || 1; }
@@ -9580,6 +9580,9 @@ function bossHitPlayer(m, mul){
   const gapB = m.def.lv - player.level; // Áp Bức chiều ngược
   if (gapB > 10) dmg = Math.round(dmg*1.6); else if (gapB >= 6) dmg = Math.round(dmg*1.3);
   player.hp -= dmg; player.hurtT = 0.3; player.combatT = 4;
+  // Bộ đếm cú trúng đòn — `net.js` gửi số này thay vì gửi `hurtT` còn lại. Cùng lý do với
+  // `_atkSeq`: một cú giật dài 0,25-0,30 s lọt gọn giữa hai ảnh chụp 10 Hz.
+  player._hitSeq = (player._hitSeq || 0) + 1;
   addFloat(player.x, player.y-30, dmg, '#ff5a3a', 17);
   addEffect({ type:'ring', x:player.x, y:player.y-10, r:26, color:'#ff5a3a' });
   AudioSys.sfx('hurt', 0.8);
@@ -10670,6 +10673,9 @@ function killMob(m, source){
       if (dist(player.x, player.y, m.x, m.y) < R && player.hp > 0){
         const dmgN = Math.max(1, Math.round(mobAtk(m.def) * pct * (1 - player.defRed)));
         player.hp -= dmgN; player.hurtT = 0.25; player.combatT = 4;
+        // Bộ đếm cú trúng đòn — `net.js` gửi số này thay vì gửi `hurtT` còn lại. Cùng lý do với
+        // `_atkSeq`: một cú giật dài 0,25-0,30 s lọt gọn giữa hai ảnh chụp 10 Hz.
+        player._hitSeq = (player._hitSeq || 0) + 1;
         addFloat(player.x, player.y - 40, `✸ -${dmgN}`, DIBIEN.noxac.col, 14);
         if (player.hp <= 0){ player.hp = 0; onDeath(); }
       }
@@ -12291,6 +12297,9 @@ function update(dt){
         addEffect({ type:'ring', x:player.x, y:player.y-10, r:22, color:elC2 });
         for (let i=0;i<4;i++) addEffect({ type:'ink', x:player.x, y:player.y-12, vx:rnd(-70,70), vy:rnd(-90,-20), color:elC2 });
         player.hurtT = 0.25; // viền đỏ nhấp khi trúng đòn
+        // Bộ đếm cú trúng đòn — `net.js` gửi số này thay vì gửi `hurtT` còn lại. Cùng lý do với
+        // `_atkSeq`: một cú giật dài 0,25-0,30 s lọt gọn giữa hai ảnh chụp 10 Hz.
+        player._hitSeq = (player._hitSeq || 0) + 1;
         player.combatT = 4; // P0: vào trạng thái combat — ngừng hồi máu nhanh
         shakeT = Math.max(shakeT, 0.16);
         // Math.max, không phải gán đè: một cú cào nhẹ từng có thể HẠ biên độ của cú vừa nện.
@@ -16791,7 +16800,7 @@ window.NETPLAYERS = [];
 // đối tượng thật vì `p.equip && p.equip.canh` đọc thẳng vào nó.
 function netTaoThan(nid){
   return { _netId: nid, map: '', x: 0, y: 0, face: 0, moving: false, sect: 'thieulam',
-           level: 1, name: '', hp: 1, maxHp: 1, speed: 190,
+           level: 1, name: '', hp: 1, maxHp: 1, speed: 190, chet: false,
            equip: {}, walkPh: 0, sway: 0, swayV: 0, swayDir: 0,
            atkAnim: 0, castT: 0, hurtT: 0, poisonT: 0, deadT: 0,
            nhayT: 0, noiT: 0, ltT: 0, nhat2: 0, buffAtkT: 0 };
@@ -16804,7 +16813,11 @@ window.netTaoThan = netTaoThan;
 // trong khi `typeof player` → "object". Nên `net.js` đọc `window.player` sẽ nhận `undefined`,
 // im lặng không gửi gì, không một lỗi nào in ra — đúng kiểu hỏng tệ nhất.
 // Ai đọc tới đây và định thêm trường: sửa ở ĐÂY, đừng cho net.js với tay vào phạm vi của game.
-window.netDoc = function(){ return { p: player, map: curMap }; };
+// ⚠ `chet` PHẢI ĐI RIÊNG, ĐỪNG SUY TỪ MÁU. Bản đầu để thân người từ xa suy `hp <= 0` và nó SAI
+// một cách rất khó thấy: hồi máu kịp chạy một nhịp giữa lúc máu về 0 và lúc cờ `dead` bật, nên
+// người đã nằm xuống vẫn gửi đi `hp = 0,565` — rồi máy chủ làm tròn thành **1**, và bên kia đọc
+// ra "còn sống". Đo được đúng thế: `{hp: 0.565, dead: true}` ở phía người chết.
+window.netDoc = function(){ return { p: player, map: curMap, chet: dead }; };
 
 /* ═══ GIAI ĐOẠN 2 · TRANG BỊ NHÌN THẤY ĐƯỢC ══════════════════════════════════════════════
  * Người bên kia mặc gì thì phải NHÌN RA. Trước bản này mọi thân người từ xa đều dựng bằng
@@ -17013,7 +17026,7 @@ function drawPlayer(p){
   // thẳng nó là ba chỗ bên dưới hỏi "TA có chết không" trong khi đang vẽ NGƯỜI KHÁC: mình nằm
   // xuống là cả map ai cũng đổ ra nằm, và ngược lại người khác chết vẫn đứng vung kiếm.
   // Người từ xa thì hỏi máu — đó là thứ ảnh chụp có chở theo.
-  const _chet = (p === player) ? dead : ((p.hp || 0) <= 0);
+  const _chet = (p === player) ? dead : !!p.chet;
   // ═══ LAYERING: đất → sau lưng → người → vũ khí → aura quỹ đạo → danh hiệu ═══
   const riding = false; // không còn cơ chế cưỡi; giữ cờ vì vài phép tính bóng đổ đọc nó
   const now = performance.now();

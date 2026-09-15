@@ -3263,11 +3263,66 @@ quái để lái một cú đánh THẬT; tới mục ⑦ thì B nằm ngoài kh
 trống, và **cả bản đúng lẫn bản đã tháo cơ chế đều XANH**. Mục nào đổi chỗ đứng thì mục sau phải
 dựng lại cảnh của mình, và phải TỰ KIỂM là đã dựng được.
 
+### 🛡 HAI CHỐT TRƯỚC PVP — tên không mạo danh được, `pos` không bắn dồn được
+
+| | |
+|---|---|
+| Tên | đặt **MỘT LẦN** ở gói `pos` đầu (`st.daDatTen`), và `tenRieng()` thêm hậu tố nếu trùng ai đang online |
+| Nhịp `pos` | `POS_CUA` 30 gói / `POS_CUA_MS` 1000 (nhịp thật là 10) · vượt bền `POS_QUA_MAX` 200 gói thì đóng |
+| Gác | `tests/test_giapvp.js` (6 mục, **cả sáu đã thử ngược và đều đỏ**) |
+
+**⚠ ĐÂY KHÔNG PHẢI XÁC THỰC — đừng nhầm hai thứ.** Không có tài khoản thì không cách nào biết ai
+thật sự là ai. Thứ chốt tên mua được là đúng một điều: **không mạo danh được người ĐANG CÓ MẶT.**
+Bản cũ nhận `name` ở MỌI gói `pos`, tức đổi tên bất cứ lúc nào — hồi chỉ có bóng người thì là
+chuyện nhỏ, từ lúc có CHAT thì là nói thay người khác mà họ không có cách nào biết.
+
+**⚠ TRÙNG TÊN THÌ ĐỔI, ĐỪNG ĐÁ RA.** Hai người cùng đặt "Kiếm Khách" là chuyện thường; đá người
+thứ hai là phạt nhầm người.
+
+**⚠ ĐỪNG ĐẶT TRẦN NHỊP SÁT 10 Hz.** Client gửi theo `requestAnimationFrame` nên hai gói dính sát
+nhau sau một khung nghẽn là bình thường. Và đừng ĐÁ ngay: một cú bắn dồn lẻ thì BỎ QUA gói là đủ,
+chỉ đá khi nó bền — người chơi thật không giữ được mức đó, bot thì có.
+
+### ☠ TRÚNG ĐÒN VÀ CHẾT ĐÃ ĐỒNG BỘ — và **ĐỪNG SUY CỜ CHẾT TỪ MÁU**
+
+Trúng đòn đi bằng **bộ đếm** `_hitSeq` (cùng lý do `_atkSeq`: cú giật 0,25-0,30 s lọt gọn giữa hai
+ảnh 10 Hz). Chết đi bằng **cờ riêng** `chet`, lấy từ `netDoc()`.
+
+**⚠⚠ ĐÂY LÀ LỖI ĐÃ VIẾT RA RỒI MỚI ĐO RA.** Bản đầu để `drawPlayer` suy `p.hp <= 0` cho thân người
+từ xa — nghe rất hợp lý, và SAI: hồi máu kịp chạy một nhịp giữa lúc máu về 0 và lúc cờ `dead` bật,
+nên người đã nằm xuống vẫn gửi đi **`{hp: 0,565 · dead: true}`**, rồi máy chủ `Math.round` thành
+**1**, và bên kia đọc ra "còn sống". Người chết đứng nguyên đó vung tay.
+
+⚠ **Và nó chỉ hỏng TUỲ LƯỢT** — đo được cả `0,57 → 1` (hỏng) lẫn `0,19 → 0` (không hỏng). Nên phép
+thử ngược phải **ghim máu ở 0,6**; để tự nhiên thì nó xanh chừng nửa số lượt và người sau sẽ kết
+luận nhầm là mệnh đề không gác được gì.
+
+⚠ **`deadT` phải được CỘNG Ở PHÍA NHẬN.** `update()` cộng nó cho người chơi của mình; thân người từ
+xa không bao giờ chạy `update()`, nên thiếu dòng này là **cú ngã đứng hình ở khung ĐẦU, vĩnh viễn**
+— nhìn ra "hình như lag" chứ không ra "chưa làm".
+
+⚠ **HỎI CẢ SỢI DÂY LẪN CHỖ TIÊU THỤ.** Mệnh đề đầu của tôi chỉ hỏi `n.chet` (thứ đến từ dây) và nó
+**KHÔNG ĐỎ** khi tôi trả `drawPlayer` về kiểu suy-từ-máu: dây vẫn chở cờ đúng, chỉ chỗ ĐỌC nó sai.
+Nay hỏi thẳng `window.__veChet` — quyết định mà `drawPlayer` thật sự dùng.
+
+⚠ **Bài kiểm nhiều mục: cảnh của mục trước còn nguyên ở mục sau.** B đứng giữa bãi quái `daohoa`
+nên nó có thể CHẾT trong lúc hai mục đầu chạy; bước dọn của tôi trả máu mà quên trả cờ `dead`, nên
+`deadT` đã chạy 4,5 s trước khi mục đo chết kịp giết nó. Chốt tự kiểm bắt được. *Trả lại trạng thái
+thì phải trả ĐỦ.*
+
+⚠ **ĐỪNG THỔI `maxHp` LÊN ĐỂ LÀM BẤT TỬ trong bài kiểm.** Đã thử `1e9`: hồi máu tính theo phần trăm
+máu trần nên mỗi nhịp kéo lại hàng trăm nghìn máu, nhân vật không chết nổi, và mục đo chết đọc ra
+"hp 840000" ngay sau lệnh giết. Dời quái đi là đủ.
+
+⚠ **Đo một hoạt cảnh NGẮN thì đừng lấy mẫu ở một mốc cố định.** Cú giật dài 0,30 s, ảnh chụp 10 Hz,
+độ trễ đổi theo lượt — đo được `0,017` ở mốc 300 ms và **đúng 0** ở mốc 150 ms, cùng một mã chạy
+tốt. Theo dõi liên tục rồi lấy ĐỈNH thì không còn khe nào để trượt.
+
 ### Còn nợ, biết rõ
 
 | | |
 |---|---|
-| Trạng thái trúng đòn / chết / niệm chú chưa đồng bộ | mới có `atkAnim` và `castT`. `hurtT`/`deadT` còn suy từ `hp` ở phía nhận, nên thân người từ xa không giật khi ăn đòn |
+| Niệm chú của thân người từ xa | `castT` đã đồng bộ, nhưng VFX của chiêu thì chưa — bên kia thấy tư thế niệm mà không thấy chiêu nổ |
 | Thân người từ xa không chở `avatar` khi ai đó đổi giữa chừng… | …thật ra CÓ (`g.av`, ba trạng thái `undefined`/`null`/id). Chỗ còn thiếu là **con Axie không có hoạt cảnh ĐÁNH** — xem "Nợ" ở mục Đổi Vai |
 | `cheatExec` vẫn ship | Giai đoạn 0 chưa làm. Vô hại ở bản offline; phải gỡ trước khi có bất cứ thứ gì chung |
 | Sandbox không SSH được vào VPS | mọi bước cài Node/nginx/systemd phải do chủ dự án chạy tay |
