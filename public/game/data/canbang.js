@@ -426,44 +426,44 @@ window.BOSS_DEFS = {
   // Chỉ CẤP đổi, từ 6/9/12/14 lên bắc cầu giữa Werebear Woods (Trấn Ải C32) và Bug Tribe
   // Tunnels (Vệ Binh Trụ đầu C43).
   daohoa: { thuve:[
-      { id:'dh1', name:'Chúa Heo Rừng',       lv:40, el:'Thổ',  img:'boar',     x:0.3617, y:0.32, moves:['vach','xung','cuong'] },
-      { id:'dh2', name:'Chúa Bầy Gai Tím',        lv:43, el:'Mộc',  img:'wolf',     x:0.4313, y:0.6212, moves:['xung','goi','vach'] },
-      { id:'dh3', name:'Chấp Sự Gloam',  lv:46, el:'Thủy', img:'assassin', x:0.7096, y:0.3953, moves:['vach','vong','cuong'] } ],
-    tranai: { id:'dh4', name:'Thủ Lĩnh Đoàn Gloam', lv:50, el:'Hỏa', img:'boss_hacphong', x:0.7235, y:0.8094, moves:['vong','vach','goi','cuong'] } },
+      { id:'dh1', name:'Chúa Heo Rừng',       lv:40, el:'Plant',  img:'boar',     x:0.3617, y:0.32, moves:['vach','xung','cuong'] },
+      { id:'dh2', name:'Chúa Bầy Gai Tím',        lv:43, el:'Plant',  img:'wolf',     x:0.4313, y:0.6212, moves:['xung','goi','vach'] },
+      { id:'dh3', name:'Chấp Sự Gloam',  lv:46, el:'Plant', img:'assassin', x:0.7096, y:0.3953, moves:['vach','vong','cuong'] } ],
+    tranai: { id:'dh4', name:'Thủ Lĩnh Đoàn Gloam', lv:50, el:'Plant', img:'boss_hacphong', x:0.7235, y:0.8094, moves:['vong','vach','goi','cuong'] } },
   ngoai: { thuve:[
-      { id:'ng1', name:'Đầu Mục Gloam',    lv:13, el:'Kim',  img:'bandit',   x:0.6691, y:0.5042, moves:['vach','xung','cuong'] },
-      { id:'ng2', name:'Gai Tím Độc Nhãn',lv:16, el:'Mộc',  img:'wolf',     x:0.2618, y:0.1939, moves:['xung','vong','goi'] },
-      { id:'ng3', name:'Đặc Vụ Gloam',   lv:19, el:'Thủy', img:'assassin', x:0.3782, y:0.64, moves:['vach','xung','cuong'] } ],
-    tranai: { id:'ng4', name:'Ma Sói Sương Trắng', lv:22, el:'Hỏa', img:'boss_sontac', x:0.0873, y:0.5236, moves:['vach','vong','goi','cuong'] } },
+      { id:'ng1', name:'Đầu Mục Gloam',    lv:13, el:'Beast',  img:'bandit',   x:0.6691, y:0.5042, moves:['vach','xung','cuong'] },
+      { id:'ng2', name:'Gai Tím Độc Nhãn',lv:16, el:'Beast',  img:'wolf',     x:0.2618, y:0.1939, moves:['xung','vong','goi'] },
+      { id:'ng3', name:'Đặc Vụ Gloam',   lv:19, el:'Beast', img:'assassin', x:0.3782, y:0.64, moves:['vach','xung','cuong'] } ],
+    tranai: { id:'ng4', name:'Ma Sói Sương Trắng', lv:22, el:'Beast', img:'boss_sontac', x:0.0873, y:0.5236, moves:['vach','vong','goi','cuong'] } },
   chungnam: { thuve:[
-      { id:'cn1', name:'Kẻ Đổi Phe',        lv:23, el:'Thủy', img:'phando',   x:0.32, y:0.4141, moves:['vach','xung','goi'] },
-      { id:'cn2', name:'Golem Gỗ Cổ Đại',    lv:26, el:'Thổ',  img:'mocnhan',  x:0.5704, y:0.3388, moves:['vong','vach','cuong'] },
-      { id:'cn3', name:'Trưởng Lão Tha Hóa', lv:29, el:'Thủy', img:'boss_phando', x:0.5009, y:0.8094, moves:['xung','vach','vong'] } ],
-    tranai: { id:'cn4', name:'Tướng Quân Werebear Woods', lv:32, el:'Thủy', img:'bandao', x:0.8904, y:0.6024, moves:['vach','xung','vong','cuong'] } },
+      { id:'cn1', name:'Kẻ Đổi Phe',        lv:23, el:'Beast', img:'phando',   x:0.32, y:0.4141, moves:['vach','xung','goi'] },
+      { id:'cn2', name:'Golem Gỗ Cổ Đại',    lv:26, el:'Beast',  img:'mocnhan',  x:0.5704, y:0.3388, moves:['vong','vach','cuong'] },
+      { id:'cn3', name:'Trưởng Lão Tha Hóa', lv:29, el:'Beast', img:'boss_phando', x:0.5009, y:0.8094, moves:['xung','vach','vong'] } ],
+    tranai: { id:'cn4', name:'Tướng Quân Werebear Woods', lv:32, el:'Beast', img:'bandao', x:0.8904, y:0.6024, moves:['vach','xung','vong','cuong'] } },
   // Bốn chỗ đứng chấm bằng máy trên chính bảng vật cản của map (xa điểm thả ≥700px theo luật
   // test_bossplace, cách nhau ≥1200px, không đè gốc cổ thụ) — GIỮ NGUYÊN.
   // ⚠ HOÁN DẢI CẤP (xem MAPS): map này nay là map khởi đầu 1-12, nên bốn con này hạ cấp theo,
   // xuống đúng nhịp mà chuỗi nhiệm vụ chương I bám vào (Trấn Ải C14 là mốc đóng chương). TÊN
   // giữ nguyên tất cả — kể cả Trấn Ải "Người Giữ Rẻo Corran".
   corran: { thuve:[
-      { id:'co1', name:'Rễ Cổ Thức Giấc',    lv:6,  el:'Mộc',  img:'mocnhan', x:0.1231, y:0.8842, moves:['vong','vach','cuong'] },
-      { id:'co2', name:'Kẻ Canh Vòng Cổng',  lv:9,  el:'Thổ',  img:'thinu',   x:0.4923, y:0.5053, moves:['vach','xung','goi'] },
-      { id:'co3', name:'Axie Sa Ngã Đầu Đàn',lv:12, el:'Thủy', img:'bandao',  x:0.7538, y:0.1263, moves:['xung','vong','cuong'] } ],
-    tranai: { id:'co4', name:'Người Giữ Rẻo Corran', lv:14, el:'Mộc', img:'boss_mochu', x:0.7538, y:0.8842, moves:['vong','vach','goi','cuong'] } },
+      { id:'co1', name:'Rễ Cổ Thức Giấc',    lv:6,  el:'Dawn',  img:'mocnhan', x:0.1231, y:0.8842, moves:['vong','vach','cuong'] },
+      { id:'co2', name:'Kẻ Canh Vòng Cổng',  lv:9,  el:'Dawn',  img:'thinu',   x:0.4923, y:0.5053, moves:['vach','xung','goi'] },
+      { id:'co3', name:'Axie Sa Ngã Đầu Đàn',lv:12, el:'Dawn', img:'bandao',  x:0.7538, y:0.1263, moves:['xung','vong','cuong'] } ],
+    tranai: { id:'co4', name:'Người Giữ Rẻo Corran', lv:14, el:'Dawn', img:'boss_mochu', x:0.7538, y:0.8842, moves:['vong','vach','goi','cuong'] } },
   // Trum Trung Nut dat GIUA trung, khong dat canh cong: bo sinh tu kiem >=700px tinh tu moi
   // diem toi (test_bossplace). Luot dau hai trum roi cach cong 466px va 401px -- bo kiem bat.
   trungnut: { thuve:[
-      { id:'tn1', name:'Rễ Trũng Cựa Mình',   lv:46, el:'Mộc',  img:'mocnhan', x:0.22, y:0.52, moves:['vong','vach','cuong'] },
-      { id:'tn2', name:'Kẻ Nhặt Xác Mép Nứt', lv:48, el:'Thổ',  img:'thinu',   x:0.55, y:0.78, moves:['vach','xung','goi'] } ],
-    tranai: { id:'tn3', name:'Thứ Bò Ra Từ Nứt', lv:52, el:'Thủy', img:'bandao', x:0.78, y:0.66, moves:['vong','vach','goi','cuong'] } },
+      { id:'tn1', name:'Rễ Trũng Cựa Mình',   lv:46, el:'Mech',  img:'mocnhan', x:0.22, y:0.52, moves:['vong','vach','cuong'] },
+      { id:'tn2', name:'Kẻ Nhặt Xác Mép Nứt', lv:48, el:'Mech',  img:'thinu',   x:0.55, y:0.78, moves:['vach','xung','goi'] } ],
+    tranai: { id:'tn3', name:'Thứ Bò Ra Từ Nứt', lv:52, el:'Mech', img:'bandao', x:0.78, y:0.66, moves:['vong','vach','goi','cuong'] } },
   // Trum Loi Mon dung o TAN CUNG lan -- di het duong moi gap. Do la phan thuong cua viec di het.
   loimon: { thuve:[],
-    tranai: { id:'lm1', name:'Kẻ Chặn Cuối Lối', lv:50, el:'Thổ', img:'mocnhan', x:0.9300, y:0.5744, moves:['vach','vong','goi','cuong'] } },
+    tranai: { id:'lm1', name:'Kẻ Chặn Cuối Lối', lv:50, el:'Mech', img:'mocnhan', x:0.9300, y:0.5744, moves:['vach','vong','goi','cuong'] } },
   comoc: { thuve:[
-      { id:'cm1', name:'Chỉ Huy Vong Binh',  lv:43, el:'Thổ',  img:'kybinh',   x:0.5867, y:0.64, moves:['xung','vach','goi'] },
-      { id:'cm2', name:'Kẻ An Táng Bóng Tối',lv:46, el:'Thủy', img:'thinu',    x:0.1733, y:0.48, moves:['vong','xung','cuong'] },
-      { id:'cm3', name:'Chúa Tể Bất Tử',     lv:49, el:'Thổ',  img:'mocnhan',  x:0.56, y:0.3022, moves:['vach','vong','goi'] } ],
-    tranai: { id:'cm4', name:'Tướng Quân Bug Tribe Tunnels', lv:52, el:'Mộc', img:'boss_mochu', x:0.8533, y:0.6578, moves:['vong','xung','goi','cuong'] } },
+      { id:'cm1', name:'Chỉ Huy Vong Binh',  lv:43, el:'Bug',  img:'kybinh',   x:0.5867, y:0.64, moves:['xung','vach','goi'] },
+      { id:'cm2', name:'Kẻ An Táng Bóng Tối',lv:46, el:'Bug', img:'thinu',    x:0.1733, y:0.48, moves:['vong','xung','cuong'] },
+      { id:'cm3', name:'Chúa Tể Bất Tử',     lv:49, el:'Bug',  img:'mocnhan',  x:0.56, y:0.3022, moves:['vach','vong','goi'] } ],
+    tranai: { id:'cm4', name:'Tướng Quân Bug Tribe Tunnels', lv:52, el:'Bug', img:'boss_mochu', x:0.8533, y:0.6578, moves:['vong','xung','goi','cuong'] } },
   // ⚠ BỐN TOẠ ĐỘ NÀY DÒ BẰNG MÁY, KHÔNG CHẤM TAY — và đã phải dò lại một lần. Bản đầu đặt trùm
   // theo mắt, giữa các chặng của con đường; `test_bossplace` bắt hai con nằm cách tâm bãi quái
   // 220px và 283px (ngưỡng 300). Trên map dạng LÀN thì trùm và bãi quái buộc phải xen kẽ trên
@@ -471,27 +471,27 @@ window.BOSS_DEFS = {
   // lưới rồi bung lại bãi quái để đo, chọn bộ tốt nhất: gần tâm bãi nhất 403px, gần điểm thả
   // nhất 801px. Đổi `vung` hay thêm cổng thì bãi quái xê dịch — dò lại, đừng nhích tay.
   caungam: { thuve:[
-      { id:'cg1', name:'Kẻ Gác Nhịp Đá',   lv:57, el:'Thủy', img:'xanu',     x:0.3710, y:0.5413, moves:['vach','vong','goi'] },
-      { id:'cg2', name:'Thứ Bám Chân Cầu', lv:59, el:'Thủy', img:'huyetbat', x:0.7135, y:0.5983, moves:['xung','vong','cuong'] },
-      { id:'cg3', name:'Kẻ Đếm Người Qua', lv:61, el:'Thổ',  img:'ttdetu',   x:0.9133, y:0.6980, moves:['vach','xung','goi'] } ],
-    tranai: { id:'cg4', name:'Thứ Ngoi Lên Từ Hồ Ngầm', lv:63, el:'Thủy', img:'boss_tinhhoa', x:0.8277, y:0.8903, moves:['vong','vach','xung','cuong'] } },
+      { id:'cg1', name:'Kẻ Gác Nhịp Đá',   lv:57, el:'Aquatic', img:'xanu',     x:0.3710, y:0.5413, moves:['vach','vong','goi'] },
+      { id:'cg2', name:'Thứ Bám Chân Cầu', lv:59, el:'Aquatic', img:'huyetbat', x:0.7135, y:0.5983, moves:['xung','vong','cuong'] },
+      { id:'cg3', name:'Kẻ Đếm Người Qua', lv:61, el:'Aquatic',  img:'ttdetu',   x:0.9133, y:0.6980, moves:['vach','xung','goi'] } ],
+    tranai: { id:'cg4', name:'Thứ Ngoi Lên Từ Hồ Ngầm', lv:63, el:'Aquatic', img:'boss_tinhhoa', x:0.8277, y:0.8903, moves:['vong','vach','xung','cuong'] } },
   tuyettinh: { thuve:[
-      { id:'tt1', name:'Kẻ Lạc Lối Tuyệt Vọng',lv:63, el:'Thổ',  img:'ttdetu', x:0.1867, y:0.48, moves:['vach','goi','cuong'] },
-      { id:'tt2', name:'Cỏ Dại Băng Giá',     lv:66, el:'Hỏa',  img:'caodo',    x:0.4267, y:0.4978, moves:['xung','vong','goi'] },
-      { id:'tt3', name:'Xoáy Sương Nguyền',    lv:69, el:'Mộc',  img:'boss_tinhhoa', x:0.64, y:0.2844, moves:['vach','xung','vong'] } ],
-    tranai: { id:'tt4', name:'Tướng Quân Bird Tribe Heights', lv:72, el:'Mộc', img:'thinu', x:0.8533, y:0.8178, moves:['vong','vach','xung','cuong'] } },
+      { id:'tt1', name:'Kẻ Lạc Lối Tuyệt Vọng',lv:63, el:'Bird',  img:'ttdetu', x:0.1867, y:0.48, moves:['vach','goi','cuong'] },
+      { id:'tt2', name:'Cỏ Dại Băng Giá',     lv:66, el:'Bird',  img:'caodo',    x:0.4267, y:0.4978, moves:['xung','vong','goi'] },
+      { id:'tt3', name:'Xoáy Sương Nguyền',    lv:69, el:'Bird',  img:'boss_tinhhoa', x:0.64, y:0.2844, moves:['vach','xung','vong'] } ],
+    tranai: { id:'tt4', name:'Tướng Quân Bird Tribe Heights', lv:72, el:'Bird', img:'thinu', x:0.8533, y:0.8178, moves:['vong','vach','xung','cuong'] } },
   mongco: { thuve:[
-      { id:'mc1', name:'Kỵ Sĩ Trưởng Tro Tàn', lv:83, el:'Kim', img:'kybinh',  x:0.2432, y:0.4843, moves:['xung','vach','cuong'] },
-      { id:'mc2', name:'Cung Thủ Tinh Nhuệ Tro Tàn', lv:86, el:'Mộc',  img:'cungthu',  x:0.512, y:0.4843, moves:['vong','xung','goi'] },
-      { id:'mc3', name:'Thống Lĩnh Tro Tàn', lv:89, el:'Kim', img:'cuongbinh',x:0.7808, y:0.7784, moves:['vach','xung','vong'] } ],
-    tranai: { id:'mc4', name:'Tướng Quân Reptile Sunstone Flats', lv:92, el:'Kim', img:'boss_dothong', x:0.9088, y:0.5016, moves:['xung','vong','goi','cuong'] } },
+      { id:'mc1', name:'Kỵ Sĩ Trưởng Tro Tàn', lv:83, el:'Reptile', img:'kybinh',  x:0.2432, y:0.4843, moves:['xung','vach','cuong'] },
+      { id:'mc2', name:'Cung Thủ Tinh Nhuệ Tro Tàn', lv:86, el:'Reptile',  img:'cungthu',  x:0.512, y:0.4843, moves:['vong','xung','goi'] },
+      { id:'mc3', name:'Thống Lĩnh Tro Tàn', lv:89, el:'Reptile', img:'cuongbinh',x:0.7808, y:0.7784, moves:['vach','xung','vong'] } ],
+    tranai: { id:'mc4', name:'Tướng Quân Reptile Sunstone Flats', lv:92, el:'Reptile', img:'boss_dothong', x:0.9088, y:0.5016, moves:['xung','vong','goi','cuong'] } },
   // ⚠ "Tướng Quân" CHỈ dành cho Trấn Ải — mỗi map đúng một con. nm1/nm3 là Vệ Binh Rune;
   // để cả ba cùng tên thì Dusk Marsh có BA con tên Tướng Quân và bảng đếm Trấn Ải nói dối.
   nhanmon: { thuve:[
-      { id:'nm1', name:'Chỉ Huy Bão Tố',     lv:103, el:'Kim', img:'daokhach', x:0.1969, y:0.4211, moves:['vach','xung','cuong'] },
-      { id:'nm2', name:'Huyết Sát Bão Tố',   lv:106, el:'Hỏa',  img:'cuongbinh',x:0.5538, y:0.3368, moves:['vong','vach','goi'] },
-      { id:'nm3', name:'Kẻ Gác Mép Đầm',    lv:109, el:'Thổ',  img:'boss_thienbinh', x:0.3692, y:0.8926, moves:['xung','vong','vach'] } ],
-    tranai: { id:'nm4', name:'Tướng Quân Dusk Marsh', lv:112, el:'Hỏa', img:'boss_thienbinh', x:0.8738, y:0.6737, moves:['vach','xung','vong','cuong'] } },
+      { id:'nm1', name:'Chỉ Huy Bão Tố',     lv:103, el:'Dusk', img:'daokhach', x:0.1969, y:0.4211, moves:['vach','xung','cuong'] },
+      { id:'nm2', name:'Huyết Sát Bão Tố',   lv:106, el:'Dusk',  img:'cuongbinh',x:0.5538, y:0.3368, moves:['vong','vach','goi'] },
+      { id:'nm3', name:'Kẻ Gác Mép Đầm',    lv:109, el:'Dusk',  img:'boss_thienbinh', x:0.3692, y:0.8926, moves:['xung','vong','vach'] } ],
+    tranai: { id:'nm4', name:'Tướng Quân Dusk Marsh', lv:112, el:'Dusk', img:'boss_thienbinh', x:0.8738, y:0.6737, moves:['vach','xung','vong','cuong'] } },
 };
 
 // ═══════════ BỘ GIÁP RIÊNG TỪNG LỚP ═══════════
@@ -749,14 +749,14 @@ window.DUNGEONS = {};
 // trước. VD: Sylvan Ranger chỉ cần dồn Mẫn Tiệp (agi) là đủ mạnh; Dark Wizard cần cả Mẫn Tiệp lẫn Linh
 // Lực (ene). Tổng điểm bonus của mỗi phái GIỮ NGUYÊN so với bản cân bằng trước, chỉ đổi chỗ ghi điểm.
 window.SECTS = {
-  thieulam: { name:'Dark Knight', role:'Chịu Đòn / Liên Đòn cận chiến', element:'Kim', color:'#4c8dff', glow:'#ffe9a0', bonus:{vit:3,def:2,str:1,agi:0,ene:0},
+  thieulam: { name:'Dark Knight', role:'Chịu Đòn / Liên Đòn cận chiến', element:'Beast', color:'#4c8dff', glow:'#ffe9a0', bonus:{vit:3,def:2,str:1,agi:0,ene:0},
     hpMult:1.18, defMult:1.20, dmgMult:0.95, atkSrc:{str:2.0},
     desc:'Giáp tấm nặng, mũ trụ có sừng, đại kiếm hai tay. Dark Knight đứng mũi chịu sào, nuốt trọn đòn của cả bầy rồi trả lại bằng một nhát bổ chậm mà không gì cản nổi. Tiềm năng: dồn hết vào Lực Lượng.',
     skillA:{ name:'Twisting Slash', type:'cone',  cd:4, qi:20, mult:1.6 },
     tp:{ name:'Death Stab', mult:3.0 } },
   // range/basicProj: Sylvan Ranger & Dark Wizard là 2 lớp tầm xa thật (cung/phép) — đòn thường của họ bắn
   // đạn ở khoảng cách này thay vì vung cận chiến như Dark Knight/Spellblade/Dark Lord (xem doBasic()).
-  toanchan: { name:'Sylvan Ranger', role:'Tầm xa / Hỗ trợ', element:'Thủy', color:'#3a9d8b', glow:'#a0ffe9', bonus:{vit:0,def:0,str:0,agi:4,ene:0},
+  toanchan: { name:'Sylvan Ranger', role:'Tầm xa / Hỗ trợ', element:'Bird', color:'#3a9d8b', glow:'#a0ffe9', bonus:{vit:0,def:0,str:0,agi:4,ene:0},
     hpMult:0.90, defMult:0.85, dmgMult:1.05, atkSrc:{agi:2.0},
     desc:'Cung dài, giáp da nhẹ, chân bước không thành tiếng. Sylvan Ranger rót tên từ ngoài tầm với, đồng thời phủ phù trợ lên cả đội — vừa là sát thủ vừa là chỗ dựa. Tiềm năng: chỉ cần dồn Mẫn Tiệp là đủ mạnh.',
     range:380, basicProj:'arrow',
@@ -764,20 +764,20 @@ window.SECTS = {
     // Triple Shot bắn BA mũi, Five Shot (di sản) mới là năm. Mỗi bậc Tiến Hóa +1 mũi.
     skillA:{ name:'Triple Shot', type:'proj', cd:4, qi:20, mult:2.5, count:3 },
     tp:{ name:'Ice Arrow', mult:2.8 } },
-  baidasan: { name:'Dark Wizard', role:'Pháp thuật / Độc tố', element:'Thủy', color:'#7ec850', glow:'#c8ffa0', bonus:{vit:1,def:0,str:0,agi:1,ene:3},
+  baidasan: { name:'Dark Wizard', role:'Pháp thuật / Độc tố', element:'Aquatic', color:'#7ec850', glow:'#c8ffa0', bonus:{vit:1,def:0,str:0,agi:1,ene:3},
     hpMult:0.72, defMult:0.65, dmgMult:1.30, atkSrc:{ene:1.6, agi:0.6},
     desc:'Áo thụng trùm kín, quyền trượng nạm ngọc, thân thể mỏng như giấy. Dark Wizard đứng xa nhất chiến trường và gọi độc tố cùng thiên thạch xuống thay mình. Tiềm năng: cần cả Mẫn Tiệp lẫn Linh Lực.',
     range:420, basicProj:'orb',
     skillA:{ name:'Poison', type:'proj', cd:4, qi:20, mult:1.5 },
     tp:{ name:'Meteorite', mult:3.2, tam:420 } },   // tam: gọi thiên thạch xuống chỗ bầy quái, không phải dưới chân mình
-  minhgiao: { name:'Spellblade', role:'Lai / Bộc phát Hoả', element:'Hỏa', color:'#e8552a', glow:'#ffb060', bonus:{vit:1,def:0,str:2,agi:0,ene:2},
+  minhgiao: { name:'Spellblade', role:'Lai / Bộc phát Hoả', element:'Dusk', color:'#e8552a', glow:'#ffb060', bonus:{vit:1,def:0,str:2,agi:0,ene:2},
     hpMult:1.05, defMult:1.0, dmgMult:1.08, atkSrc:{str:1.1, ene:1.1},
     desc:'Nửa giáp nửa vải, một vai để trần, đại đao bản rộng cháy lửa. Spellblade vừa chém như hiệp sĩ vừa niệm như pháp sư — không cần chờ tới cấp 10 để mạnh. Tiềm năng: cân cả Lực Lượng lẫn Linh Lực.',
     skillA:{ name:'Fire Slash', type:'cone', cd:4, qi:22, mult:1.6 },
     tp:{ name:'Flame Strike', mult:3.2 } },
   // Dark Lord: lớp chỉ huy/triệu hồi — đánh bằng quân triệu ra chứ không bằng tay mình
   // (VOHOC_DEFS): xáp lá cà bằng số đông, không đơn độc.
-  bug: { name:'Dark Lord', role:'Chỉ huy / Triệu hồi', element:'Thổ', color:'#8a9a3a', glow:'#d0e07a', bonus:{vit:2,def:1,str:1,agi:2,ene:0},
+  bug: { name:'Dark Lord', role:'Chỉ huy / Triệu hồi', element:'Plant', color:'#8a9a3a', glow:'#d0e07a', bonus:{vit:2,def:1,str:1,agi:2,ene:0},
     hpMult:1.12, defMult:1.10, dmgMult:0.92, atkSrc:{str:1.8, agi:0.3},
     desc:'Vương miện năm chấu, giáp đen ánh lam, quyền trượng chỉ huy. Dark Lord không bao giờ ra trận một mình — hắn hiệu triệu, và chiến trường tự sạch. Tiềm năng: chủ lực Lực Lượng, dặm thêm Mẫn Tiệp.',
     skillA:{ name:'Force Wave', type:'cone', cd:4, qi:20, mult:1.5 },
@@ -832,13 +832,13 @@ window.MAPS = {
         dan:[{ mob:'bandao', n:15, vai:['can','xa'] }] },
       { id:'bandao_bay', ten:'Rẻo Cánh Gãy', dai:[0.25,0.35], cung:[-20,80], cum:[3,3], tiep:true,
         dan:[{ mob:'bandao', n:12, vai:['bay','nang'] }] },
-      { id:'thinu', ten:'Vườn Thị Nữ', dai:[0.38,0.49], cung:[-30,75], cum:[3,3], tiep:true,
+      { id:'thinu', he:'Plant', ten:'Vườn Thị Nữ', dai:[0.38,0.49], cung:[-30,75], cum:[3,3], tiep:true,
         dan:[{ mob:'thinu', n:18, vai:['can','phap'] }] },
-      { id:'thinu_nang', ten:'Lùm Kén Dày', dai:[0.52,0.62], cung:[-20,80], cum:[3,3], tiep:true,
+      { id:'thinu_nang', he:'Plant', ten:'Lùm Kén Dày', dai:[0.52,0.62], cung:[-20,80], cum:[3,3], tiep:true,
         dan:[{ mob:'thinu', n:15, vai:['nang','can'] }] },
-      { id:'mocnhan', ten:'Mạng Mộc Nhân', dai:[0.65,0.79], cung:[-30,75], cum:[3,3], tiep:true,
+      { id:'mocnhan', he:'Plant', ten:'Mạng Mộc Nhân', dai:[0.65,0.79], cung:[-30,75], cum:[3,3], tiep:true,
         dan:[{ mob:'mocnhan', n:18 }] },
-      { id:'mocnhan_xa', ten:'Hốc Nhả Tơ', dai:[0.82,1.0], cung:[-20,80], cum:[3,3], tiep:true,
+      { id:'mocnhan_xa', he:'Plant', ten:'Hốc Nhả Tơ', dai:[0.82,1.0], cung:[-20,80], cum:[3,3], tiep:true,
         dan:[{ mob:'mocnhan', n:15, vai:['xa','phap'] }] },
     ],
     diTrong: [
@@ -1004,7 +1004,7 @@ window.MAPS = {
     vung: [
       { id:'boar_tusk', ten:'Bãi Cỏ Heo Nanh', dai:[0.12,0.24], cung:[55,170], cum:[3,3],
         dan:[{ mob:'boar_tusk', n:18, vai:['nang','can'] }] },
-      { id:'wolf_alpha', ten:'Đồi Sói Đầu Đàn', dai:[0.27,0.38], cung:[75,185], cum:[3,3],
+      { id:'wolf_alpha', he:'Beast', ten:'Đồi Sói Đầu Đàn', dai:[0.27,0.38], cung:[75,185], cum:[3,3],
         dan:[{ mob:'wolf_alpha', n:18, vai:['can','bay'] }] },
       // ◈ BÃI FARM của Beast Herd Camp — khái niệm "spot" của MU. Chọn miền GIỮA chứ không phải
       // miền xa nhất: một chỗ đáng cày phải VỚI TỚI ĐƯỢC ở đầu dải cấp của map, nếu không nó chỉ
@@ -1012,11 +1012,11 @@ window.MAPS = {
       // quãng giữa — đi bộ tới được từ cấp 14, và vẫn đáng đứng tới cấp 24.
       // Gloam là lính Vaeldra đào ngũ: một cái TRẠI đông người là hình ảnh đúng cho bãi farm,
       // hợp hơn hẳn một đàn thú tình cờ đứng gần nhau.
-      { id:'bandit_vet', ten:'Trại Cựu Binh Gloam', dai:[0.41,0.52], cung:[40,150], cum:[3,3], farm:true,
+      { id:'bandit_vet', he:'Beast', ten:'Trại Cựu Binh Gloam', dai:[0.41,0.52], cung:[40,150], cum:[3,3], farm:true,
         dan:[{ mob:'bandit_vet', n:21, vai:['xa','can','nang'] }] },
-      { id:'caodo_fire', ten:'Vạt Cỏ Cháy', dai:[0.55,0.66], cung:[70,180], cum:[2,2],
+      { id:'caodo_fire', he:'Beast', ten:'Vạt Cỏ Cháy', dai:[0.55,0.66], cung:[70,180], cum:[2,2],
         dan:[{ mob:'caodo_fire', n:10 }] },
-      { id:'gloam_scout', ten:'Chốt Trinh Sát Gloam', dai:[0.69,0.82], cung:[45,160], cum:[3,3],
+      { id:'gloam_scout', he:'Beast', ten:'Chốt Trinh Sát Gloam', dai:[0.69,0.82], cung:[45,160], cum:[3,3],
         // n chia hết cho số cụm thì _vungChiaDan bù về đều tăm tắp (9/3 → 3·3·3). 12/3 → 5·4·3.
         dan:[{ mob:'gloam_scout', n:12, vai:['xa'] }] },
       { id:'chimera_bo', ten:'Bãi Tượng Vỡ Lệnh', dai:[0.85,1.0], cung:[80,190], cum:[2,2],
@@ -1078,15 +1078,15 @@ window.MAPS = {
     vung: [
       { id:'chimera_bo', ten:'Bãi Tượng Vỡ Lệnh', dai:[0.12,0.22], cung:[-35,70], cum:[3,3], tiep:true,
         dan:[{ mob:'chimera_bo', n:15, vai:['nang','can'] }] },
-      { id:'phando', ten:'Nghĩa Địa Phản Loạn', dai:[0.25,0.36], cung:[-25,80], cum:[3,3], tiep:true,
+      { id:'phando', he:'Beast', ten:'Nghĩa Địa Phản Loạn', dai:[0.25,0.36], cung:[-25,80], cum:[3,3], tiep:true,
         dan:[{ mob:'phando', n:18, vai:['can','xa'] }] },
-      { id:'phando_xa', ten:'Rẻo Cung Phản Loạn', dai:[0.39,0.49], cung:[-35,70], cum:[3,3], tiep:true,
+      { id:'phando_xa', he:'Beast', ten:'Rẻo Cung Phản Loạn', dai:[0.39,0.49], cung:[-35,70], cum:[3,3], tiep:true,
         dan:[{ mob:'phando', n:15, vai:['xa','nang'] }] },
-      { id:'xanu', ten:'Đầm Phun Độc', dai:[0.52,0.63], cung:[-25,80], cum:[3,3], tiep:true,
+      { id:'xanu', he:'Beast', ten:'Đầm Phun Độc', dai:[0.52,0.63], cung:[-25,80], cum:[3,3], tiep:true,
         dan:[{ mob:'xanu', n:18, vai:['can','phap'] }] },
-      { id:'xanu_phap', ten:'Hốc Nhựa Độc', dai:[0.66,0.77], cung:[-35,70], cum:[3,3], tiep:true,
+      { id:'xanu_phap', he:'Beast', ten:'Hốc Nhựa Độc', dai:[0.66,0.77], cung:[-35,70], cum:[3,3], tiep:true,
         dan:[{ mob:'xanu', n:15, vai:['phap'] }] },
-      { id:'bandao', ten:'Dốc Sa Ngã', dai:[0.80,1.0], cung:[-25,80], cum:[3,3], tiep:true,
+      { id:'bandao', he:'Beast', ten:'Dốc Sa Ngã', dai:[0.80,1.0], cung:[-25,80], cum:[3,3], tiep:true,
         dan:[{ mob:'bandao', n:12, vai:['bay','can'] }] },
     ],
     diTrong: [
@@ -1285,19 +1285,19 @@ window.MAPS = {
       // trỏ nhầm sang `daohoa` (map khởi đầu ĐỜI TRƯỚC) nên chuyện này lọt suốt nhiều đợt.
       // 0,085 × 3400 = 289px — vẫn ngoài vòng cấm quanh điểm thả (VUNG_CACH_THA 280), và đo lại
       // trong game thì cụm gần nhất rơi vào 330px, lọt trong nửa màn hình 400px.
-      { id:'boar', ten:'Đồng Heo Rừng', dai:[0.085,0.22], cung:[-30,45], cum:[3,3],
+      { id:'boar', he:'Dawn', ten:'Đồng Heo Rừng', dai:[0.085,0.22], cung:[-30,45], cum:[3,3],
         dan:[{ mob:'boar', n:15 }] },   // C1 · Axie Heo Rừng
-      { id:'hautu', ten:'Ruộng Bí Ngô', dai:[0.30,0.38], cung:[-95,-35], cum:[2,2],
+      { id:'hautu', he:'Dawn', ten:'Ruộng Bí Ngô', dai:[0.30,0.38], cung:[-95,-35], cum:[2,2],
         dan:[{ mob:'hautu', n:8 }] },   // C2 · Axie Bí Ngô
-      { id:'wolf', ten:'Bìa Rừng Gai Tím', dai:[0.42,0.52], cung:[10,85], cum:[3,3],
+      { id:'wolf', he:'Bird', ten:'Bìa Rừng Gai Tím', dai:[0.42,0.52], cung:[10,85], cum:[3,3],
         dan:[{ mob:'wolf', n:16 }] },   // C4 · Axie Gai Tím
-      { id:'bandit', ten:'Trại Tay Sai Gloam', dai:[0.56,0.64], cung:[-15,60], cum:[3,3],
+      { id:'bandit', he:'Dawn', ten:'Trại Tay Sai Gloam', dai:[0.56,0.64], cung:[-15,60], cum:[3,3],
         dan:[{ mob:'bandit', n:20, vai:['can','xa'] }] },   // C6 · Tay Sai Gloam — loài chủ đạo của map
-      { id:'caodo', ten:'Vạt Cỏ Dại', dai:[0.68,0.76], cung:[55,110], cum:[2,2],
+      { id:'caodo', he:'Dawn', ten:'Vạt Cỏ Dại', dai:[0.68,0.76], cung:[55,110], cum:[2,2],
         dan:[{ mob:'caodo', n:8 }] },   // C8 · Axie Cỏ Dại
-      { id:'assassin', ten:'Ngã Ba Cướp Đường', dai:[0.80,0.86], cung:[10,85], cum:[2,2],
+      { id:'assassin', he:'Bird', ten:'Ngã Ba Cướp Đường', dai:[0.80,0.86], cung:[10,85], cum:[2,2],
         dan:[{ mob:'assassin', n:3 }] },   // C10 · Cướp Đường Gloam (elite — giữ thưa)
-      { id:'trannhan', ten:'Hàng Tượng Canh Cổng', dai:[0.90,1.0], cung:[-15,60], cum:[3,3],
+      { id:'trannhan', he:'Dawn', ten:'Hàng Tượng Canh Cổng', dai:[0.90,1.0], cung:[-15,60], cum:[3,3],
         dan:[{ mob:'trannhan', n:7 }] },   // C12 · Tượng Đá Canh Cổng
     ],
     diTrong: [
@@ -1371,7 +1371,7 @@ window.MAPS = {
         dan:[{ mob:'thinu', n:13, vai:['can','phap'] }] },
       { id:'mocnhan', ten:'Lòng Trũng', dai:[0.46,0.72], cung:[-25,55], cum:[3,3], tiep:true,
         dan:[{ mob:'mocnhan', n:14, vai:['can','xa'] }] },
-      { id:'bandao', ten:'Mép Nứt Đông', dai:[0.74,1.0], cung:[-15,65], cum:[3,3], tiep:true,
+      { id:'bandao', he:'Mech', ten:'Mép Nứt Đông', dai:[0.74,1.0], cung:[-15,65], cum:[3,3], tiep:true,
         dan:[{ mob:'bandao', n:14 }] },
       { id:'mocnhan2', ten:'Vệt Nứt Nam', dai:[0.36,0.64], cung:[80,140], cum:[3,3], tiep:true,
         dan:[{ mob:'mocnhan', n:13, vai:['can','phap'] }] },
@@ -1441,9 +1441,9 @@ window.MAPS = {
         dan:[{ mob:'mocnhan', n:18, vai:['can','xa'] }] },
       { id:'mocnhan_phap', ten:'Hốc Nhả Tơ', dai:[0.52,0.62], cung:[-115,-20], cum:[3,3], tiep:true,
         dan:[{ mob:'mocnhan', n:15, vai:['phap','xa'] }] },
-      { id:'huyetbat', ten:'Hang Huyết Bức', dai:[0.65,0.79], cung:[-125,-30], cum:[3,3], tiep:true,
+      { id:'huyetbat', he:'Bug', ten:'Hang Huyết Bức', dai:[0.65,0.79], cung:[-125,-30], cum:[3,3], tiep:true,
         dan:[{ mob:'huyetbat', n:18, vai:['bay','can'] }] },
-      { id:'huyetbat_bay', ten:'Vòm Treo Ngược', dai:[0.82,1.0], cung:[-120,-35], cum:[3,3], tiep:true,
+      { id:'huyetbat_bay', he:'Bug', ten:'Vòm Treo Ngược', dai:[0.82,1.0], cung:[-120,-35], cum:[3,3], tiep:true,
         dan:[{ mob:'huyetbat', n:12, vai:['bay','nang'] }] },
     ],
     diTrong: [
@@ -1516,7 +1516,7 @@ window.MAPS = {
       // 500 lần bốc mẫu rơi ra ngoài đa giác, _vungDatCum() phải nới giãn cách hai lần, và cụm
       // cuối cùng đậu cách trùm vùng 220px — `test_bossplace` bắt ngay ("boss đè lên tâm bãi").
       // Để quạt rộng thì chính đa giác làm việc lọc, còn `dai` giữ nguyên bậc thang cấp quái.
-      { id:'huyetbat', ten:'Thềm Đá Ướt', dai:[0.14,0.42], cung:[15,95], cum:[2,3], tiep:true,
+      { id:'huyetbat', he:'Aquatic', ten:'Thềm Đá Ướt', dai:[0.14,0.42], cung:[15,95], cum:[2,3], tiep:true,
         dan:[{ mob:'huyetbat', n:12, vai:['can','xa'] }] },        // C56
       { id:'reunuoc', ten:'Đầu Cầu Rêu', dai:[0.46,0.72], cung:[15,95], cum:[3,3], tiep:true,
         dan:[{ mob:'reunuoc', n:16, vai:['can','phap'] }] },       // C59 — loài riêng của map này
@@ -1589,9 +1589,9 @@ window.MAPS = {
     // Bản cũ chỉ có 3 miền × 2 cụm = 6 bãi trên khổ 2600×1900; khổ mới rộng gấp 3,5 lần nên
     // 6 miền × 3 cụm = 18 bãi, nếu không thì test_domap bắt "mật độ — map rỗng".
     vung: [
-      { id:'ttdetu', ten:'Thềm Băng Thấp', dai:[0.12,0.22], cung:[-25,80], cum:[3,3], tiep:true,
+      { id:'ttdetu', he:'Bird', ten:'Thềm Băng Thấp', dai:[0.12,0.22], cung:[-25,80], cum:[3,3], tiep:true,
         dan:[{ mob:'ttdetu', n:18, vai:['can','nang'] }] },
-      { id:'ttdetu_cao', ten:'Vách Gió Cắt', dai:[0.25,0.35], cung:[-20,75], cum:[3,3], tiep:true,
+      { id:'ttdetu_cao', he:'Bird', ten:'Vách Gió Cắt', dai:[0.25,0.35], cung:[-20,75], cum:[3,3], tiep:true,
         dan:[{ mob:'ttdetu', n:15, vai:['nang'] }] },
       { id:'docyeu', ten:'Ổ Cầu Gai', dai:[0.38,0.50], cung:[-25,80], cum:[3,3], tiep:true,
         dan:[{ mob:'docyeu', n:18, vai:['can','phap'] }] },
@@ -1723,19 +1723,19 @@ window.MAPS = {
         dan:[{ mob:'cuongbinh', n:18, vai:['nang','phap'] }] },
       { id:'cuongbinh_can', ten:'Bờ Lún Gãy Giáo', dai:[0.24,0.33], cung:[-15,85], cum:[3,3], tiep:true,
         dan:[{ mob:'cuongbinh', n:15, vai:['nang','can'] }] },
-      { id:'kylan', ten:'Đầm Kỳ Lân', dai:[0.36,0.46], cung:[-25,80], cum:[3,3], tiep:true,
+      { id:'kylan', he:'Dusk', ten:'Đầm Kỳ Lân', dai:[0.36,0.46], cung:[-25,80], cum:[3,3], tiep:true,
         dan:[{ mob:'kylan', n:15, vai:['can','bay'] }] },
-      { id:'kylan_bay', ten:'Rừng Cọc Chìm', dai:[0.49,0.58], cung:[-15,85], cum:[3,3], tiep:true,
+      { id:'kylan_bay', he:'Dusk', ten:'Rừng Cọc Chìm', dai:[0.49,0.58], cung:[-15,85], cum:[3,3], tiep:true,
         dan:[{ mob:'kylan', n:12, vai:['bay','xa'] }] },
-      { id:'daokhach', ten:'Lối Đao Khách', dai:[0.61,0.71], cung:[-25,80], cum:[3,3], tiep:true,
+      { id:'daokhach', he:'Dusk', ten:'Lối Đao Khách', dai:[0.61,0.71], cung:[-25,80], cum:[3,3], tiep:true,
         dan:[{ mob:'daokhach', n:15, vai:['can','xa'] }] },
-      { id:'daokhach_phap', ten:'Bàn Thờ Ngập Nước', dai:[0.74,0.85], cung:[-15,85], cum:[3,3], tiep:true,
+      { id:'daokhach_phap', he:'Dusk', ten:'Bàn Thờ Ngập Nước', dai:[0.74,0.85], cung:[-15,85], cum:[3,3], tiep:true,
         dan:[{ mob:'daokhach', n:12, vai:['phap','can'] }] },
       // ⚠ MIỀN XA NHẤT PHẢI LÀ LOÀI MẠNH NHẤT. Bản đầu tôi để `cuongbinh` (C102) ở dải 0,88-1,0
       // trong khi `daokhach` (C120) đứng gần hơn — test_vung §2 bắt ngay: "1 cụm ở xa hơn mà yếu
       // hơn tới 18 cấp". Dải `dai` rời nhau mới chỉ đảm bảo THỨ TỰ KHOẢNG CÁCH; thứ tự CẤP còn
       // phải nằm ở chính bảng loài. Ba loài của map này: cuongbinh 102 → kylan 112 → daokhach 120.
-      { id:'daokhach_cuoi', ten:'Chân Trụ Dusk Marsh', dai:[0.88,1.0], cung:[-20,80], cum:[3,3], tiep:true,
+      { id:'daokhach_cuoi', he:'Dusk', ten:'Chân Trụ Dusk Marsh', dai:[0.88,1.0], cung:[-20,80], cum:[3,3], tiep:true,
         dan:[{ mob:'daokhach', n:12, vai:['nang','xa'] }] },
     ],
     diTrong: [

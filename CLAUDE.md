@@ -100,7 +100,12 @@ skin"*. Đo trước khi làm: lái cả 16 con qua `calcDerived()` ở cấp 60
 chỉ số nào**, tắt hẳn avatar cũng đổi 0. Tức con Axie đúng nghĩa đen là một cái skin.
 
 ⇒ `SECTS[sect].element` — vốn là **hằng số**, chọn lớp xong là khoá cứng cả đời — nay do con
-Axie đang đeo quyết định. `AXIE_HE` (9 lớp Axie → 5 hệ) + **`heThu(p)` là cửa DUY NHẤT**.
+Axie đang đeo quyết định. **`heThu(p)` là cửa DUY NHẤT**.
+
+> ⚠ Mục này viết cho **chặng 1**, hồi vòng khắc còn là NGŨ GIÁC năm hệ và có bảng `AXIE_HE` gộp
+> 9 lớp Axie xuống 5. Chặng 2+3 đã đổi hẳn sang **tam giác chín lớp** và **gỡ `AXIE_HE`** — xem
+> mục ngay dưới. Giữ lại phần này vì luật hai-chiều-hai-nguồn và luật "không cộng chỉ số" thì
+> không đổi; chỉ mấy con số và bảng ánh xạ là đã cũ, và chúng được đánh dấu tại chỗ.
 
 | chiều | hệ lấy từ đâu | hệ số |
 |---|---|---|
@@ -129,6 +134,17 @@ Chênh **32,4%**, lớn hơn 24% lý thuyết vì giáp trừ thẳng khuếch �
 hố XP. Đây cũng là **lý do chơi để sở hữu nhiều hơn một con Axie**, thứ mà gacha Khế Ước đang
 bán mà trước nay không có.
 
+> ⚠ **CON SỐ 32,4% LÀ MỘT CON SỐ KHÔNG ĐẠI DIỆN, và tôi đã suýt đem nó đi báo cáo.** Nó đo
+> trên MỘT con quái tự tay chọn. Tính lại trên **đàn quái thật của từng vùng** thì chênh giữa
+> con Axie hợp nhất và con tệ nhất chỉ **7,9%** — vì không vùng nào thuần hệ, mỗi map trộn 3-5
+> hệ nên lợi và hại triệt tiêu nhau. *Đo một mẫu tự chọn rồi gọi nó là kết quả thì lúc nào cũng
+> ra con số mình muốn.* Đó chính là lý do chặng 3 tồn tại.
+
+> ⚠ Đo một đòn thì không đo được gì: mỗi đòn quái mang `rnd(0.85, 1.15)`, tản ±15%, trong khi
+> tín hiệu cần bắt là ±12%/−10%. Bảng trên đo một đòn và ra đúng chiều vì MAY. `test_hethu §2`
+> nay cộng dồn **900 nhịp** và ghim lại người chơi lẫn con quái mỗi nhịp — cùng bài học đã ghi
+> cho `test_elem §4`.
+
 **⚠ HAI LỚP ĐỔI HỆ MẶC ĐỊNH, biết và chấp nhận:** vì nhân vật mới nào cũng có Axie mặc định
 (`AVA_MAC_DINH`), hệ phòng thủ mặc định suy từ con đó chứ không từ `SECTS`. Dark Knight
 Steel → **Ember**, Dark Lord Stone → **Verdant**; ba lớp còn lại trùng khít hệ cũ. Với 11 map
@@ -153,6 +169,92 @@ khác gì không tồn tại.*
 **Còn treo:** chỗ đổi Axie hiện **tự do ở mọi nơi**. Chủ dự án chưa chốt — ba lựa chọn là (a) mặc
 kệ, coi như chọn build · (b) chỉ đổi trong thành (MU thuần) · (c) tự do nhưng có hồi chiêu. Hiện
 đang là (a) vì đó là hành vi sẵn có, thêm chốt sau là một dòng trong `chiChon()`.
+
+### ▲ TAM GIÁC CHÍN LỚP AXIE (chặng 2) + VÙNG MANG LỚP CỦA TỘC NÓ (chặng 3)
+
+Chặng 2 thay **ngũ giác năm hệ** (Steel · Verdant · Stone · Frost · Ember — thừa kế từ đời game
+kiếm hiệp) bằng **tam giác chín lớp Axie chính chủ**:
+
+```
+  ① Beast · Bug · Mech   ▶   ② Plant · Reptile · Dusk   ▶   ③ Aquatic · Bird · Dawn   ▶   ①
+```
+
+Chặng 3 gán cho mỗi vùng lớp của **tộc mang tên nó**, để con Axie đang đeo có nghĩa KHÁC NHAU ở
+những nơi khác nhau.
+
+**⚠ HAI CHẶNG PHẢI ĐI CÙNG NHAU — thử ngược đã chứng minh, không phải suy.** Gỡ riêng chặng 3
+ra (để hệ khoá theo LOÀI như cũ, giữ nguyên tam giác) rồi đo lại:
+
+| | chỉ chặng 2 | chặng 2 + 3 |
+|---|---|---|
+| chênh tốt nhất / tệ nhất trong một vùng | **2,1% – 13,6%** | **24,4% ở cả 10 vùng** |
+| lớp trội chiếm bao nhiêu dân số | 34% – 48% | **65% – 100%** |
+| một nhóm Axie tối ưu ở mấy vùng | **6/11** | **4/11** (sàn toán học) |
+
+Lý do: **loài dùng lại qua nhiều map** — `thinu` có mặt ở bốn map, `mocnhan` bốn, `bandao` bốn,
+`huyetbat` hai. Hệ khoá theo loài thì Bug Tribe Tunnels và Plant Tribe Glade **bắt buộc** trùng
+hệ, và cả cơ chế "chọn Axie theo nơi sắp đi cày" mất nghĩa.
+
+**Kiến trúc: HAI TẦNG, y hệt vai trò.** `MOB_ROLE` là lớp nền, `pk.vai` của bãi thì thắng — ở
+đây `MOBS[].el` là lớp nền, `vung.he` của miền dân số thì thắng. Cửa đọc duy nhất là **`mobHe(m)`**.
+
+| ở đâu | việc |
+|---|---|
+| `ELEM` + `nhom` 0/1/2 + **`heKhac(a,b)`** | bảng và cửa DUY NHẤT hỏi "a có khắc b không" |
+| `ELEMENTS = Object.keys(ELEM)` | suy từ bảng — vũ khí bốc Rune từ đây |
+| `vung: [{ id, he:'Plant', … }]` trong `data/canbang.js` | lớp của miền dân số |
+| `banRaiVung` → `pk.he` → `spawnMob(…, {he})` → **`m.he`** | sợi dây từ dữ liệu tới con quái |
+| `mobHe(m)` = `m.he || m.def.el` | cửa đọc, dùng ở cả tính sát thương lẫn mọi chỗ hiện ra |
+| `heKhacLai(he)` → `banSacHtml` | dòng "mang X · Y · Z tới" trên bảng Bản Đồ |
+
+**⚠ KHÔNG CÒN TRƯỜNG `beats`.** Ngũ giác khắc một-đối-một nên `beats` là một CHUỖI và mã so
+bằng `===`. Tam giác khắc ba-đối-ba; giữ `beats` thành mảng rồi `.includes()` là chép cùng một
+quan hệ ra chín chỗ. `nhom` là nguồn duy nhất.
+
+**⚠⚠ TUYỆT ĐỐI KHÔNG GHI HỆ VÀO `m.def.el`.** `def` thường LÀ chính đối tượng trong `MOBS` —
+`spawnMob` chỉ clone khi vai có hệ số khác 1 — nên ghi vào đó là đổi hệ của loài ấy ở **mọi
+map** cho tới khi tải lại trang. Cùng vết sẹo mà `goldify()` đã ghi.
+
+**⚠ VÀ BÀI KIỂM DẪM ĐÚNG BẪY ĐÓ.** `test_elem` đặt `m.def = {...m.def, el: mobEl}` rồi đo — ra
+**đúng 923 cho cả năm cột**, vì `spawnMob` đã điền `m.he` lúc sinh và `mobHe` đọc nó trước.
+Trông y hệt "khắc hệ chết hẳn". Bài kiểm nào chỉnh hệ của một con quái thì phải chỉnh `m.he`.
+
+**⚠ CHỌN BA CON AXIE Ở BA NHÓM KHÁC NHAU, đừng chọn theo tên lớp.** Tam giác gom chín lớp thành
+**ba** nhóm, nên Mech và Beast — hai tên khác hẳn nhau — là **trung tính với nhau**. `test_hethu`
+bản đầu dùng Mech vs Beast và đo ra 455.613 vs 459.144, tức không chênh gì, đúng như luật nói.
+
+**⚠ NGƯỠNG "không lớp nào tối ưu quá 3/11 vùng" trong `docs/AXIE_CORE.md` là một ngưỡng KHÔNG
+TỒN TẠI** — nó viết hồi vòng khắc còn năm phía. Tam giác chỉ có BA nhóm, nên 11 vùng chia ba
+nhóm thì nhóm đông nhất tối thiểu là `ceil(11/3)` = **4**. Đã sửa cả đặc tả lẫn bài kiểm, và
+ghi lý do tại chỗ. *Một ngưỡng chép từ đặc tả cũ mà không kiểm lại là một bài kiểm đỏ vĩnh viễn
+vì đòi một thứ bất khả.*
+
+**Lớp của vùng — suy từ tên vùng, không bịa:**
+
+| vùng | lớp | | vùng | lớp |
+|---|---|---|---|---|
+| Beast Herd Camp | Beast | | Bird Tribe Heights | Bird |
+| Werebear Woods | Beast | | Reptile Sunstone Flats | Reptile (thuần 100%) |
+| Plant Tribe Glade | Plant | | Dusk Marsh | Dusk (thuần 100%) |
+| Bug Tribe Tunnels | Bug | | Rẻo Rừng Corran | Dawn — rễ Cây Hồn |
+| Aquatic Tribe Causeway | Aquatic | | Trũng Nứt Corran | Mech — đất ngay dưới Nhát Gọi |
+| **Lối Mòn Corran** | **TRỘN, cố ý** — một lối mòn không phải một nơi, không Rune nào cắm ở đó | | | |
+
+`loimon` chênh **11,7%** và là vùng phẳng nhất. Đó là thứ đáng giữ, không phải lỗi: nó là chỗ
+duy nhất không Axie nào hợp hơn Axie nào. `test_tamgiac.js` miễn trừ nó **có nêu tên và lý do** —
+đừng miễn trừ bằng một danh sách không giải thích.
+
+**Nhịp cấp: đổi ~+1%, và con số đó suy được chứ không cần đoán.** Vũ khí bốc hệ đều tay, nên tỉ
+lệ ăn hệ số đổi từ (20% khắc · 20% bị khắc) sang (33% · 33%) ⇒ hệ số nhân trung bình
+`0,2×1,20 + 0,2×0,88 + 0,6×1,0 = 1,016` → `⅓×1,20 + ⅓×0,88 + ⅓×1,0 = 1,0267`, tức **+1,05%**.
+Nằm sâu trong nhiễu của `tools/do_nhipcap.cjs` (chính nó có đỉnh 50% do bốc trúng bộ đồ ngon),
+nên `XP_TABLE` **không chỉnh**. ⚠ Phân bố hệ của quái **không** ảnh hưởng con số này: với một
+con quái bất kỳ, xác suất vũ khí bốc đúng hệ khắc luôn là 3/9.
+
+Gác: **`tests/test_tamgiac.js`** (8 mệnh đề) — hình dạng tam giác · mọi quái/trùm ra lớp hợp lệ
+· **cùng một loài ở hai map phải ra hai lớp** (mệnh đề bắt đúng chuyện chặng 3 có tác dụng hay
+không) · chênh ≥15% mỗi vùng · lớp trội ≥50% · ba nhóm chia nhau 11 vùng · hệ số vẫn đúng
+×1,20/×0,88 · bảng Bản Đồ có nói ra. Thử ngược (gỡ `pk.he`) làm đỏ 4 trong 8.
 
 ### ⇒ Đây KHÔNG phải đổi kiến trúc. Là đổi LỚP VẼ.
 
@@ -394,7 +496,7 @@ max(1, cấp/20)` để theo kịp giá nâng chiêu.
 | Lớp gacha Cổ Vật | `docs/CO_VAT_15.md` mới là ĐỀ XUẤT, chưa chốt. Trần 16% chỉ quản lớp đó — **chỉ số từ 5 lớp KHÔNG có trần**. |
 | Chibi 5 class Axie ở màn tạo nhân vật | chưa thiết kế. `CHIBI_CFG` hiện phân biệt bằng bóng dáng NGƯỜI. |
 | Mốc thay "Giày +6 mở dáng chạy" | avatar bay/chạy thì mốc cũ mất ý nghĩa |
-| Ngũ Hành → tam giác Axie | chưa làm. 40 nhãn `el:` trong `data/canbang.js` vẫn là Kim/Mộc/Thuỷ/Hoả/Thổ — **tàn dư kiếm hiệp, vi phạm Quy tắc số 1**. Đặc tả ở `docs/DOI_VAI_AXIE.md` §7; `hurtMob` không đổi công thức, chỉ đổi nhãn. ~~Lỗi lệch dấu `'Thuỷ'`~~ **đã vá** (`bb2a1bd`) — con Trấn Ải Trũng Nứt từng nằm ngoài toàn bộ hệ khắc hệ. |
+| ~~Ngũ Hành → tam giác Axie~~ | **XONG.** 94 nhãn `el:` (54 trong `game.js` · 40 trong `data/canbang.js`) nay là chín lớp Axie; `hurtMob` không đổi một hệ số nào. Xem mục **▲ TAM GIÁC CHÍN LỚP AXIE** ở trên. |
 
 ---
 

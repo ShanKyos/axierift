@@ -64,7 +64,7 @@ inventory, or you are building an economy on a server that believes whatever the
 reasoning is written out in [`docs/THIET_KE_ONLINE.md`](docs/THIET_KE_ONLINE.md).
 
 **Offline is the default and stays first-class.** With no server in the URL, `net.js` returns on its
-first line and the single-player build runs byte-identically. All 207 regressions run on that path,
+first line and the single-player build runs byte-identically. All 208 regressions run on that path,
 and one of them asserts the reverse direction: no server in the URL must mean no connection.
 
 The two guards worth reading are [`tests/test_wsnho.js`](tests/test_wsnho.js), which drives the
@@ -88,7 +88,7 @@ All numbers below are read out of the running game, not counted by hand.
 | Gear | 11 slots, per-class armour lines, +0…+11 forging, socketing, Chaos Machine, 3 wing tiers |
 | Story | Seven Ancient Runes, one per region — the Nhát Gọi canon ([`docs/LORE_RUNE.md`](docs/LORE_RUNE.md)) |
 | Multiplayer | shared world at `?net=1` — see other players move, fight and chat, on a dependency-free relay |
-| Tests | 207 Playwright regressions against real Chromium + 7 vitest units, all gated in CI |
+| Tests | 208 Playwright regressions against real Chromium + 7 vitest units, all gated in CI |
 
 ## Why it is an Axie game and not a reskin
 
@@ -123,7 +123,7 @@ The part worth reviewing is the discipline around it:
 
 - **CI gates every push to `main`** — typecheck, lint, unit tests, and a syntax check of the engine
   ([`.github/workflows/ci.yml`](.github/workflows/ci.yml)).
-- **207 Playwright regressions** drive the real game in a real browser — they call `startGame()`,
+- **208 Playwright regressions** drive the real game in a real browser — they call `startGame()`,
   `castSkill()`, `turnInQuest()` and tick `update()`, rather than asserting against fixtures.
   `bash tools/reg.sh <outdir>`.
 - **Design decisions are measured, then written down with the measurement.** Level pacing was fitted
@@ -137,7 +137,7 @@ The part worth reviewing is the discipline around it:
 | Path | |
 |---|---|
 | `public/game/` | the game — engine, data, assets. Self-contained, no build |
-| `tests/` | 207 Playwright regressions |
+| `tests/` | 208 Playwright regressions |
 | `server/` | the multiplayer relay — two files, no dependencies, `node server/bongnguoi.js` |
 | `tools/` | asset bakers (Spine → sprite sheets, isometric tiles), measurement scripts, `reg.sh` |
 | `docs/` | decision journal. **Historical by design** — entries are not rewritten when things change, so read dates and cross-check against code. Current canon is `CLAUDE.md` + `docs/LORE_RUNE.md` |

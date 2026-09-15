@@ -32,9 +32,9 @@ making it a power ladder.**
 The answer is a *relationship*, not a number. Your Axie decides **what you are strong and weak
 against** — never how strong you are.
 
-| direction | element comes from | multiplier |
+| direction | class comes from | multiplier |
 |---|---|---|
-| you → monster | **your weapon** | ×1.20 favourable / ×0.88 unfavourable |
+| you → monster | **your weapon's Rune** | ×1.20 favourable / ×0.88 unfavourable |
 | monster → you | **your Axie** | ×1.12 unfavourable / ×0.90 favourable |
 
 Both multipliers already existed and are unchanged. Swapping Axies changes *which branch gets
@@ -103,50 +103,83 @@ to the story's spine instead of running beside it.
 
 A reason to own more than one Axie — which the contract gacha sells and which, before this, had no
 gameplay answer. You pick the body that suits the region you are about to farm, and the Map panel
-already tells you what lives there.
+tells you what lives there and which three classes counter it:
+
+> ◆ Land of **Ashen Scout** 35% · class **▲ Reptile** 100% · bring **Beast · Bug · Mech**
+
+That line is derived from the spawn data at read time, never hand-written, so it cannot drift away
+from what actually spawns.
 
 Crucially it is a *lateral* reason. A second Axie does not make you stronger; it makes you
 better-suited. That distinction is the whole design.
 
-## 5. Status — shipped, in progress, planned
-
-Honest state at time of writing.
+## 5. Status
 
 | stage | what | state |
 |---|---|---|
-| 1 | Axie class decides your defensive element | **shipped** |
-| 2 | Five-element wheel → nine-class Axie triangle | in progress |
-| 3 | Each region's monsters share its tribe's class | in progress |
-| 4 | Map panel and Axie picker show the matchup | planned |
+| 1 | Axie class decides your defensive class | **shipped** |
+| 2 | Five-element wheel → nine-class Axie triangle | **shipped** |
+| 3 | Each region carries its tribe's class | **shipped** |
+| 4 | Axie picker previews the matchup for where you are headed | planned |
 
-Stage 1 is live and measurable: against a single Ember monster, swapping between the best and
-worst Axie changes incoming damage by 32.4%.
+The Map panel already names each region's class and the three classes that counter it — so the
+literacy half of stage 4 is in. What is still missing is the preview *on the Axie itself*.
 
-**But that number is not representative, and stage 1 alone is not enough.** Averaged over the real
-monster mix of each region, the spread between best and worst Axie is only **7.9%**, because no
-region is elementally coherent — every map mixes three to five elements, so advantages and
-disadvantages cancel. Worse, one element is optimal in **7 of 11 regions**, which means the choice
-has a single right answer most of the time.
+### Why stages 2 and 3 had to ship together — measured, not argued
 
-That is precisely what stage 3 fixes, and it is why stages 2 and 3 ship together: giving each
-region its tribe's class makes the regions coherent, which is what makes the choice real.
+Stage 1 shipped first and looked convincing: against a single hand-picked monster, swapping
+between the best and worst Axie changed incoming damage by 32.4%.
+
+**That number was not representative, and finding out why is the interesting part.** Averaged
+over the *real monster mix of each region*, the spread between best and worst Axie was only
+**7.9%**, because no region was elementally coherent — every map mixed three to five elements,
+so advantages and disadvantages cancelled. One element was optimal in **7 of 11 regions**.
+
+The root cause was structural: **monster species are reused across regions.** One wraith species
+appears in four maps, one golem species in four, one fallen-Axie species in four. So long as the
+class lived on the *species*, Bug Tribe Tunnels and Plant Tribe Glade were forced to share a
+class, and choosing an Axie for where you were going could not mean anything.
+
+The fix mirrors an architecture the engine already had for combat roles: species class is the
+base layer, and the **region's population zone overrides it**. We verified it by taking stage 3
+back out and re-measuring:
+
+| | triangle only | triangle + region identity |
+|---|---|---|
+| best-vs-worst spread inside a region | 2.1% – 13.6% | **24.4%, in all 10 combat regions** |
+| dominant class share of the population | 34% – 48% | **65% – 100%** |
+| regions where one Axie group is optimal | **6 of 11** | **4 of 11** — the mathematical floor |
+
+Guarded by `tests/test_tamgiac.js`, which drives the real spawner and fails if any of those
+numbers regresses. Removing the region override turns 4 of its 8 assertions red.
 
 ## 6. Acceptance criteria
 
 Measured before and after, not judged by feel.
 
-**Stage 2 — the triangle**
-- every monster and boss resolves to a valid Axie class
-- each class is favourable against exactly 3 of 9 and unfavourable against 3 of 9
-- the damage formula is unchanged — same multipliers, same call sites
-- levelling pace still reaches level 60 in ~3 hours (`tools/do_nhipcap.cjs`)
-- the full 207-test regression stays green
+**Stage 2 — the triangle** — all met
+- every monster and boss resolves to a valid Axie class — 48 species + every boss ✓
+- each class is favourable against exactly 3 of 9 and unfavourable against 3 of 9 ✓
+- the damage formula is unchanged — measured back as ×1.20 and ×0.88 exactly ✓
+- levelling pace unchanged: a uniformly-rolled weapon now hits a favourable matchup 33% of the
+  time instead of 20%, which moves the average damage multiplier from 1.016 to 1.0267 — **+1.05%**,
+  far inside the measurement noise of `tools/do_nhipcap.cjs`. `XP_TABLE` was not retuned ✓
 
-**Stage 3 — region identity**
-- no class is optimal in more than **3 of 11** regions (currently 7)
-- best-vs-worst spread within a region ≥ **15%** (currently 7.9% average)
-- each region's dominant class is ≥ **50%** of its monster population, so the Map panel's
-  "dominant class" line is telling the truth
+**Stage 3 — region identity** — all met
+- best-vs-worst spread within a region ≥ **15%** — 24.4% in all 10 combat regions ✓
+- each region's dominant class is ≥ **50%** of its monster population — 65% to 100% ✓
+- no Axie group is optimal in more than **4 of 11** regions ✓
+
+> The last criterion originally read "no class optimal in more than 3 of 11". That threshold was
+> written while the wheel still had five sides and turned out to be **unreachable**: the triangle
+> has three groups, so across 11 regions the largest group is at least ⌈11/3⌉ = 4. We corrected
+> the criterion rather than quietly passing a weaker test, and the reasoning is recorded next to
+> the assertion.
+
+**One region is deliberately exempt.** Corran Trail is a path between places, not a place — no
+Rune is set in a trail — so it is the one region with no dominant class, and at 11.7% it is the
+flattest in the game. That is the point: it is the only ground where no Axie suits you better
+than another.
 
 ## 7. Longer-term product vision
 
@@ -175,26 +208,32 @@ best Axie wins, and three earlier versions of this codebase were dismantled for 
 
 ## Appendix A — region to class
 
-| region | class | note |
-|---|---|---|
-| Beast Herd Camp | Beast | from name |
-| Werebear Woods | Beast | werebears |
-| Plant Tribe Glade | Plant | from name |
-| Bug Tribe Tunnels | Bug | from name |
-| Bird Tribe Heights | Bird | from name |
-| Reptile Sunstone Flats | Reptile | from name |
-| Aquatic Tribe Causeway | Aquatic | from name |
-| Dusk Marsh | Dusk | from name |
-| Rẻo Rừng Corran | Dawn | roots of the Tree of Souls — the starter region |
-| Trũng Nứt Corran | Mech | the ground directly under the sky-cut |
-| Lối Mòn Corran | mixed | a path between places, deliberately not a place |
+As shipped, with the measured share of each region's monster population.
+
+| region | class | share | note |
+|---|---|---|---|
+| Beast Herd Camp | Beast | 89% | from name |
+| Werebear Woods | Beast | 84% | werebears |
+| Plant Tribe Glade | Plant | 71% | from name |
+| Bug Tribe Tunnels | Bug | 66% | from name |
+| Bird Tribe Heights | Bird | 65% | from name |
+| Reptile Sunstone Flats | Reptile | 100% | from name |
+| Aquatic Tribe Causeway | Aquatic | 70% | from name |
+| Dusk Marsh | Dusk | 100% | from name |
+| Rẻo Rừng Corran | Dawn | 73% | roots of the Tree of Souls — the starter region |
+| Trũng Nứt Corran | Mech | 68% | the ground directly under the sky-cut |
+| Lối Mòn Corran | mixed | — | a path between places, deliberately not a place |
+
+The two 100% regions are the last two zones in the game, and being pure is correct for them: by
+then the player is expected to read a region at a glance. The rest keep a minority class from the
+same triangle group, so the bestiary shows several Axie classes without muddying the matchup.
 
 ## Appendix B — scope
 
 | | |
 |---|---|
-| element labels to remap | **111** — 71 in `game.js` (monsters, bosses, elite affixes), 40 in `data/canbang.js` (zone bosses) |
-| call sites reading the element table | 22 |
-| test files touching elements | 10, of which 3 directly |
-| new systems added | none — the multipliers, the weapon element and the forge re-roll recipe all already exist |
-| favourable-matchup frequency | 20% → 33% (5-wheel → 3×3 triangle), which is why levelling pace is re-measured rather than assumed |
+| class labels remapped | **94** — 54 in `game.js` (monsters, world bosses, elite affixes), 40 in `data/canbang.js` (zone bosses and generals) |
+| population zones given a region class | 31, across 10 regions |
+| new systems added | none — the multipliers, the weapon element slot and the forge re-roll recipe all already existed |
+| favourable-matchup frequency | 20% → 33% (5-wheel → 3×3 triangle) ⇒ +1.05% average damage |
+| tests | `test_tamgiac.js` added (8 assertions); `test_elem.js`, `test_hethu.js` rewritten |

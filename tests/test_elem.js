@@ -14,13 +14,22 @@ const { chromium } = require('playwright');
     window.TEST_MODE = true; startGame('thieulam', null); travelTo('comoc');
     player.level = 60; calcDerived();
     const o = {};
-    // ── 1. Bảng hệ: tên phương Tây, vòng khắc kín 5 cạnh, không lặp ──
+    // ── 1. Bảng hệ: CHÍN LỚP AXIE, ba nhóm, mỗi nhóm khắc nhóm kế tiếp ──
+    // ⚠ Ngũ giác cũ khắc MỘT-ĐỐI-MỘT nên bản trước của mục này đi theo chuỗi `beats` để kiểm
+    // "vòng kín 5 cạnh". Trường đó đã gỡ — tam giác khắc BA-ĐỐI-BA, và hình dạng phải kiểm là
+    // "mỗi lớp khắc đúng 3 và bị khắc đúng 3", cộng với ba nhóm nối thành một vòng ba cạnh.
     o.ten = ELEMENTS.map(k => elName(k));
-    o.vongKhac = ELEMENTS.map(k => `${elName(k)}>${elName(ELEM[k].beats)}`);
-    const seen = new Set(); let kin = true, cur = ELEMENTS[0];
-    for (let i = 0; i < 5; i++){ if (seen.has(cur)) kin = false; seen.add(cur); cur = ELEM[cur].beats; }
-    o.vongKin = kin && cur === ELEMENTS[0] && seen.size === 5;
-    o.conTuNguHanh = o.ten.some(t => /Kim|Mộc|Thủy|Hỏa|Thổ/.test(t));
+    o.conTuNguHanh = o.ten.some(t => /Kim|Mộc|Thủy|Hỏa|Thổ|Steel|Verdant|Stone|Frost|Ember/.test(t));
+    o.soLop = ELEMENTS.length;
+    o.baNhom = [...new Set(ELEMENTS.map(k => ELEM[k].nhom))].sort().join(',');
+    o.lech = ELEMENTS.filter(a => ELEMENTS.filter(b2 => heKhac(a, b2)).length !== 3
+                              || ELEMENTS.filter(b2 => heKhac(b2, a)).length !== 3);
+    // vòng ba cạnh: nhóm 0 khắc 1 khắc 2 khắc 0, và KHÔNG nhóm nào tự khắc mình
+    o.vongNhom = [0,1,2].every(g => {
+      const a = ELEMENTS.find(k => ELEM[k].nhom === g);
+      const b2 = ELEMENTS.find(k => ELEM[k].nhom === (g + 1) % 3);
+      return heKhac(a, b2) && !heKhac(b2, a) && !heKhac(a, ELEMENTS.find(k => ELEM[k].nhom === g && k !== a));
+    });
 
     // ── 2. Chỉ VŨ KHÍ mới mang hệ ──
     const cnt = { vukhi:0, khac:0, vukhiCoHe:0, khacCoHe:0 };
@@ -37,6 +46,10 @@ const { chromium } = require('playwright');
       const it = genItem(60, 0, 'elite'); it.slot='vukhi'; it.slotName='Vũ Khí'; it.special=false;
       it.element = el; it.main = { k:'atk', v:300, name:'Công Kích' }; it.subs=[]; it.exc=null;
       it.plus=0; it.luck=false; it.perfect=false; it.rarity=0; return it; };
+    // ⚠ `m.he`, KHÔNG phải `m.def.el`. `mobHe()` đọc `m.he` TRƯỚC (miền dân số gán hệ cho
+    // từng con), và `spawnMob` đã điền sẵn `m.he = def.el` lúc sinh — nên sửa mỗi `def` là
+    // phép đo KHÔNG ĐỔI ĐƯỢC GÌ: cả năm cột ra đúng 923 như nhau. Đúng cái bẫy hai tầng mà
+    // `mobHe()` ghi ở chú thích của nó.
     const hitWith = (el, mobEl) => {
       player.equip.vukhi = el === null ? undefined : mkW(el);
       if (el === null) delete player.equip.vukhi;
@@ -45,6 +58,7 @@ const { chromium } = require('playwright');
       mobs = [];
       const m = spawnMob('thinu', { x:1400, y:1400, r:10 }, null, true);
       m.def = Object.assign({}, m.def, { el: mobEl, def: 0, hp: 9e9 });
+      m.he = mobEl;
       m.hp = 9e9; m.maxHp = 9e9; m.shield = 0;
       const before = m.hp;
       hurtMob(m, 1000, 'hit');
@@ -52,16 +66,19 @@ const { chromium } = require('playwright');
       mobs = [];
       return dmg;
     };
-    // hệ quái = hệ mà vũ khí Ember khắc, và hệ khắc ngược lại Ember
-    const emberBeats = ELEM['Hỏa'].beats;                    // Ember khắc gì
-    const beatsEmber = ELEMENTS.find(k => ELEM[k].beats === 'Hỏa'); // gì khắc Ember
-    o.emberKhac = elName(emberBeats); o.khacEmber = elName(beatsEmber);
+    // Lấy MỘT lớp làm mốc rồi SUY ra ba đối tượng từ chính `heKhac` — đừng chép cứng tên lớp:
+    // đổi một dòng trong `ELEM` là bài kiểm nói dối mà không ai biết.
+    const MOC = 'Beast';
+    const mocKhac = ELEMENTS.find(k => heKhac(MOC, k));      // Beast khắc gì
+    const khacMoc = ELEMENTS.find(k => heKhac(k, MOC));      // gì khắc Beast
+    const cungNhom = ELEMENTS.find(k => k !== MOC && ELEM[k].nhom === ELEM[MOC].nhom);
+    o.emberKhac = elName(mocKhac); o.khacEmber = elName(khacMoc);
     o.st = {
-      trung:   hitWith('Hỏa', 'Hỏa'),          // không khắc nhau
-      khac:    hitWith('Hỏa', emberBeats),     // vũ khí khắc quái → phải CAO nhất
-      biKhac:  hitWith('Hỏa', beatsEmber),     // quái khắc vũ khí → phải THẤP nhất
-      khongVK: hitWith(null,  emberBeats),     // không vũ khí → theo hệ LỚP
-      lopKhac: hitWith(null,  ELEM[sectEl].beats),
+      trung:   hitWith(MOC, cungNhom),     // cùng nhóm ⇒ không khắc nhau
+      khac:    hitWith(MOC, mocKhac),      // vũ khí khắc quái → phải CAO nhất
+      biKhac:  hitWith(MOC, khacMoc),      // quái khắc vũ khí → phải THẤP nhất
+      khongVK: hitWith(null,  mocKhac),    // không vũ khí → theo hệ LỚP
+      lopKhac: hitWith(null,  ELEMENTS.find(k => heKhac(sectEl, k))),
     };
     o.heLop = elName(sectEl);
 
@@ -87,7 +104,7 @@ const { chromium } = require('playwright');
       //  (a) TẤT ĐỊNH — `heThu()` phải trơ với vũ khí. Nhanh, không nhiễu, và nói đúng cái luật.
       //  (b) THỐNG KÊ — tổng máu mất qua ~nhiều trăm đòn phải bằng nhau. Cái này bắt được ca mà
       //      (a) mù: ai đó cắm thêm một số hạng vũ khí THẲNG vào nhánh phòng thủ, không qua heThu.
-      const w = mkW('Kim'); player.equip.vukhi = w;
+      const w = mkW(ELEMENTS[0]); player.equip.vukhi = w;
       const mat = {}, heThuTheoVK = {};
       for (const el of ELEMENTS){
         w.element = el; calcDerived();
@@ -95,7 +112,8 @@ const { chromium } = require('playwright');
         player.eva = 0;
         const m = mobs.find(x => x && x.hp > 0);
         if (!m) return { loi: 'không có quái để đo' };
-        m.def = Object.assign({}, m.def, { el:'Hỏa', lv:player.level, atk:400, atkCd:0.01, range:200 });
+        m.def = Object.assign({}, m.def, { el:'Beast', lv:player.level, atk:400, atkCd:0.01, range:200 });
+        m.he = 'Beast';                 // hệ nằm trên CON quái — `mobHe()` đọc nó trước `def.el`
         m.x = player.x + 26; m.y = player.y;
         m.hp = m.maxHp = 999999; m.atkT = 0; m.aggro = 9999; m.target = player;
         // (b) bơm máu lại SAU MỖI tick: không đụng maxHp nên calcDerived không đè được
@@ -140,15 +158,16 @@ const { chromium } = require('playwright');
 
     // ── 5. Đổi Hệ chỉ nhận vũ khí ──
     const armor = genItem(60, 0, 'elite'); armor.slot = 'ao'; armor.element = null;
-    const weap  = mkW('Hỏa');
+    const weap  = mkW('Beast');
     const rec = CHAOS_RECIPES.find(x => x.id === 'element');
     o.doiHe = { nhanGiap: !!rec.match({ items:[armor], jewels:{} }),
                 nhanVuKhi: !!rec.match({ items:[weap], jewels:{} }) };
     return o;
   });
 
+  const ELEMENTS_N = r.soLop;   // SUY từ bảng, đừng chép 5 hay 9 — đã đỏ một lượt vì chép 5
   console.log('tên hệ      :', JSON.stringify(r.ten));
-  console.log('vòng khắc   :', r.vongKhac.join(' · '), '· kín:', r.vongKin);
+  console.log('tam giác    :', r.soLop, 'lớp ·', r.baNhom, '· vòng ba nhóm:', r.vongNhom);
   console.log('gán hệ      :', JSON.stringify(r.gan), '· Cổ Thần có hệ:', r.coThanCoHe);
   console.log('hệ lớp      :', r.heLop, '· Ember khắc', r.emberKhac, '· bị', r.khacEmber, 'khắc');
   console.log('sát thương  :', JSON.stringify(r.st));
@@ -156,11 +175,14 @@ const { chromium } = require('playwright');
   console.log('tổng máu mất theo hệ VŨ KHÍ (phải bằng nhau):', JSON.stringify(r.mat));
   console.log('Đổi Hệ      :', JSON.stringify(r.doiHe));
 
-  if (r.conTuNguHanh) fail(`tên hệ vẫn là Ngũ Hành: ${JSON.stringify(r.ten)}`);
-  if (new Set(r.ten).size !== 5) fail('tên hệ bị trùng');
-  if (!r.vongKin) fail('vòng khắc không kín 5 cạnh — có hệ không khắc ai hoặc khắc lặp');
+  if (r.conTuNguHanh) fail(`tên hệ chưa phải lớp Axie: ${JSON.stringify(r.ten)}`);
+  if (new Set(r.ten).size !== 9) fail(`phải đúng 9 lớp Axie, đo ra ${new Set(r.ten).size}`);
+  if (r.baNhom !== '0,1,2') fail(`phải đúng ba nhóm 0/1/2, đo ra "${r.baNhom}"`);
+  if (r.lech.length) fail(`không khắc đúng 3 / bị khắc đúng 3: ${r.lech.join(', ')}`);
+  if (!r.vongNhom) fail('ba nhóm không nối thành vòng ①▶②▶③▶① (hoặc có nhóm tự khắc mình)');
   if (r.gan.vukhiCoHe !== r.gan.vukhi) fail(`${r.gan.vukhi - r.gan.vukhiCoHe} vũ khí KHÔNG có hệ`);
   if (r.gan.khacCoHe) fail(`${r.gan.khacCoHe} món KHÔNG PHẢI vũ khí vẫn mang hệ — dòng chết như bản cũ`);
+  if (!r.vongNhom) fail('vòng ba nhóm hỏng');
   if (r.coThanCoHe) fail('đồ Cổ Thần (giáp) vẫn mang hệ');
   if (!(r.st.khac > r.st.trung)) fail(`vũ khí khắc hệ quái không tăng ST (${r.st.trung} → ${r.st.khac})`);
   if (!(r.st.biKhac < r.st.trung)) fail(`bị quái khắc không giảm ST (${r.st.trung} → ${r.st.biKhac})`);
@@ -181,9 +203,9 @@ const { chromium } = require('playwright');
     const m = r.mat || {};
     // (a) tất định
     const hv = Object.values(r.heThuTheoVK || {});
-    if (hv.length !== 5 || new Set(hv).size !== 1)
+    if (hv.length !== ELEMENTS_N || new Set(hv).size !== 1)
       fail(`heThu() đổi theo vũ khí: ${JSON.stringify(r.heThuTheoVK)} — hệ phòng thủ phải trơ với vũ khí`);
-    else console.log(`OK   heThu() trơ với cả 5 hệ vũ khí (luôn ${hv[0]})`);
+    else console.log(`OK   heThu() trơ với cả ${ELEMENTS_N} hệ vũ khí (luôn ${hv[0]})`);
     if (r.loi) fail('không dựng được cảnh đo chiều phòng thủ: ' + r.loi);
     else {
       const v = Object.values(m);

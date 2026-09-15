@@ -27,32 +27,38 @@ const pass = m => console.log('PASS ' + m);
   await page.waitForFunction(() => window.__gameReady).catch(()=>{});
   await page.waitForTimeout(300);
 
-  // ── ① Mọi lớp Axie đều tra ra một hệ CÓ THẬT, và cả 5 hệ đều với tới được ─────────────
+  // ── ① LỚP AXIE **CHÍNH LÀ** HỆ — không còn bảng ánh xạ nào ở giữa ─────────────────────
+  // Bản trước có `AXIE_HE` gộp 9 lớp xuống 5 hệ của ngũ giác cũ. Nó đã gỡ: vòng khắc nay CHÍNH
+  // LÀ chín lớp ấy. Mệnh đề này gác đúng chỗ đó — một bảng dịch mọc lại ở giữa là thêm một chỗ
+  // nói dối được, và `heThu()` phải trả về thẳng `CHIMERA[].lop`.
   const r1 = await page.evaluate(() => {
     window.TEST_MODE = true; startGame('thieulam', null);
-    const o = { lopThieu: [], heLa: [], conTheoHe: {}, soLopAxie: 0 };
+    const o = { heLa: [], conTheoHe: {}, soLopAxie: 0, conBangAnhXa: null, thieuTamGiac: [] };
+    o.conBangAnhXa = (typeof window.AXIE_HE !== 'undefined');
     const lops = new Set(CHIMERA.map(c => c.lop));
     o.soLopAxie = lops.size;
-    for (const lop of lops){
-      const he = AXIE_HE[lop];
-      if (!he) o.lopThieu.push(lop);
-      else if (!ELEM[he]) o.heLa.push(lop + '→' + he);
-    }
-    for (const c of CHIMERA){
-      const t = elName(AXIE_HE[c.lop]);
-      (o.conTheoHe[t] = o.conTheoHe[t] || []).push(c.id);
+    for (const lop of lops) if (!ELEM[lop]) o.heLa.push(lop);
+    for (const c of CHIMERA) (o.conTheoHe[c.lop] = o.conTheoHe[c.lop] || []).push(c.id);
+    // mỗi lớp phải khắc ĐÚNG 3 và bị khắc ĐÚNG 3 — đó là hình dạng của tam giác 3×3
+    for (const a of ELEMENTS){
+      const kh = ELEMENTS.filter(b => heKhac(a, b)).length;
+      const bi = ELEMENTS.filter(b => heKhac(b, a)).length;
+      if (kh !== 3 || bi !== 3) o.thieuTamGiac.push(`${a} khắc ${kh} / bị khắc ${bi}`);
     }
     return o;
   });
-  if (r1.lopThieu.length) fail('lớp Axie không có hệ: ' + r1.lopThieu.join(', '));
-  else if (r1.heLa.length) fail('ánh xạ ra hệ không tồn tại: ' + r1.heLa.join(', '));
-  else pass(`cả ${r1.soLopAxie} lớp Axie đều tra ra một hệ có thật`);
+  if (r1.conBangAnhXa) fail('AXIE_HE sống lại — lớp Axie phải LÀ hệ, không qua bảng dịch nào');
+  else if (r1.heLa.length) fail('lớp Axie không có trong bảng hệ: ' + r1.heLa.join(', '));
+  else pass(`cả ${r1.soLopAxie} lớp Axie đều là một hệ có thật, không qua bảng ánh xạ`);
+  if (r1.thieuTamGiac.length) fail('tam giác méo: ' + r1.thieuTamGiac.join(' · '));
+  else pass('tam giác 3×3: mỗi lớp khắc đúng 3 và bị khắc đúng 3 trong 9');
 
-  // Mỗi hệ phải có ÍT NHẤT một con đeo được. Thiếu một hệ nghĩa là người chơi vĩnh viễn không
-  // chọn được nó — cơ chế còn đó mà một nhánh chết, và không lỗi nào báo.
-  const thieuHe = ['Steel','Verdant','Stone','Frost','Ember'].filter(h => !r1.conTheoHe[h]);
-  if (thieuHe.length) fail('không con Axie nào cho hệ: ' + thieuHe.join(', '));
-  else pass('cả 5 hệ đều có Axie đeo được: ' +
+  // Mỗi lớp phải có ÍT NHẤT một con Axie đeo được. Thiếu một lớp nghĩa là người chơi vĩnh viễn
+  // không chọn được nó — cơ chế còn đó mà một nhánh chết, và không lỗi nào báo.
+  const thieuHe = ['Beast','Bug','Mech','Plant','Reptile','Dusk','Aquatic','Bird','Dawn']
+                    .filter(h => !r1.conTheoHe[h]);
+  if (thieuHe.length) fail('không con Axie nào cho lớp: ' + thieuHe.join(', '));
+  else pass('cả 9 lớp đều có Axie đeo được: ' +
     Object.entries(r1.conTheoHe).map(([h, v]) => `${h} ${v.length}`).join(' · '));
 
   // ── ② ĐỔI AXIE PHẢI ĐỔI SÁT THƯƠNG NHẬN VÀO — đo bằng máu thật, không đọc bảng ────────
@@ -76,28 +82,46 @@ const pass = m => console.log('PASS ' + m);
       // đúng mấy trường mà `update` đọc.
       const m = mobs.find(x => x && x.hp > 0);
       if (!m) return null;
-      m.def = Object.assign({}, m.def, { el:'Hỏa', lv:40, atk:400, atkCd:0.01, range:200 });
-      m.x = player.x + 26; m.y = player.y;
-      m.hp = m.maxHp = 999999; m.atkT = 0; m.aggro = 9999; m.target = player;
-      const truoc = player.hp;
-      for (let i = 0; i < 40 && player.hp === truoc; i++) update(1/60);
-      return { he: elName(heThu(player)), mat: truoc - player.hp };
+      // ⚠ Đặt hệ trên CON QUÁI (`m.he`), không trên `m.def`. Miền dân số gán hệ cho từng con
+      // nên `mobHe()` đọc `m.he` TRƯỚC — sửa mỗi `def.el` là phép đo không đổi được gì.
+      m.def = Object.assign({}, m.def, { el:'Beast', lv:40, atk:400, atkCd:0.01, range:200 });
+      m.he = 'Beast';
+      // ⚠⚠ ĐO NHIỀU TRĂM ĐÒN, ĐỪNG ĐO MỘT ĐÒN. Mỗi đòn quái mang `rnd(0.85, 1.15)` — tản ±15%,
+      // trong khi thứ cần đo là ±12% / −10%. Một đòn thì nhiễu NUỐT TRỌN tín hiệu: đo được
+      // 515 · 546 · 524 cho ba con lẽ ra phải tăng dần. Bản trước của mệnh đề này đo đúng một
+      // đòn và xanh vì may — tức nó không gác gì cả.
+      // Và phải GHIM lại người chơi + con quái MỖI NHỊP: người chơi chết thì `update` return
+      // sớm, con quái trôi ra khỏi tầm thì nó thôi đánh, và cả hai đều làm phép đo lặng lẽ về 0.
+      let mat = 0;
+      for (let i = 0; i < 900; i++){
+        m.x = player.x + 26; m.y = player.y;
+        m.hp = m.maxHp = 9e8; m.dead = false; m.aggro = 9999; m.target = player;
+        const truoc = player.hp;
+        update(1/60);
+        if (player.hp < truoc) mat += truoc - player.hp;
+        player.hp = player.maxHp; player.dead = false;
+      }
+      return { he: elName(heThu(player)), mat };
     };
     const out = {};
-    for (const id of ['coghound', 'emberjaw', 'tidewarden']){
+    // ⚠ CHỌN BA CON Ở BA NHÓM KHÁC NHAU, đừng chọn theo tên lớp. Tam giác gom lớp thành BA
+    // nhóm, nên hai lớp khác tên mà cùng nhóm thì trung tính với nhau — bản trước dùng Mech vs
+    // Beast và đo ra 455.613 vs 459.144, tức không chênh gì, đúng như luật nói.
+    //   Dusk (nhóm ②) bị Beast khắc → +12%   ·   Beast (cùng nhóm ①) → trung tính
+    //   Aquatic (nhóm ③) khắc lại Beast → −10%
+    for (const id of ['netherfang', 'emberjaw', 'tidewarden']){
       chiNhan(id);
       out[id] = doMotCon(id);
     }
     return out;
   });
-  const co = r2.coghound, em = r2.emberjaw, ti = r2.tidewarden;
+  const co = r2.netherfang, em = r2.emberjaw, ti = r2.tidewarden;
   if (!co || !em || !ti || !co.mat || !em.mat || !ti.mat){
     fail('không dựng được cảnh đo: ' + JSON.stringify(r2));
   } else {
-    // Steel bị Ember khắc (+12%) · Ember trung tính · Frost khắc lại Ember (−10%)
-    console.log(`  máu mất trước cùng một con quái Ember — Steel ${co.mat} · Ember ${em.mat} · Frost ${ti.mat}`);
+    console.log(`  máu mất trước cùng một con quái Beast — Dusk ${co.mat} · Beast ${em.mat} · Aquatic ${ti.mat}`);
     if (!(co.mat > em.mat && em.mat > ti.mat))
-      fail(`đổi Axie KHÔNG đổi sát thương nhận vào đúng chiều (chờ Steel > Ember > Frost)`);
+      fail(`đổi Axie KHÔNG đổi sát thương nhận vào đúng chiều (chờ Dusk > Beast > Aquatic)`);
     else {
       const bien = ((co.mat - ti.mat) / ti.mat * 100).toFixed(1);
       pass(`đổi Axie đổi sát thương nhận vào: chênh ${bien}% giữa con hợp nhất và con khắc nhất`);
@@ -108,15 +132,15 @@ const pass = m => console.log('PASS ' + m);
   const r3 = await page.evaluate(() => {
     window.TEST_MODE = true; startGame('thieulam', null);
     const o = {};
-    const w = genSpecific('vukhi', 40); w.element = 'Mộc';   // Verdant
+    const w = genSpecific('vukhi', 40); w.element = 'Plant';  // Rune lớp Plant trên vũ khí
     player.equip.vukhi = w;
-    chiNhan('tidewarden'); player.avatar = 'tidewarden';     // Axie hệ Frost
-    o.heDanh = atkElem();          // phải là Mộc — theo VŨ KHÍ
-    o.heThu  = heThu(player);      // phải là Thủy — theo AXIE
+    chiNhan('tidewarden'); player.avatar = 'tidewarden';      // Axie lớp Aquatic
+    o.heDanh = atkElem();          // phải là Plant — theo VŨ KHÍ
+    o.heThu  = heThu(player);      // phải là Aquatic — theo AXIE
     return o;
   });
-  if (r3.heDanh !== 'Mộc') fail(`hệ đòn đánh phải theo vũ khí (Mộc), đo ra ${r3.heDanh}`);
-  else if (r3.heThu !== 'Thủy') fail(`hệ phòng thủ phải theo Axie (Thủy), đo ra ${r3.heThu}`);
+  if (r3.heDanh !== 'Plant') fail(`hệ đòn đánh phải theo vũ khí (Plant), đo ra ${r3.heDanh}`);
+  else if (r3.heThu !== 'Aquatic') fail(`hệ phòng thủ phải theo Axie (Aquatic), đo ra ${r3.heThu}`);
   else pass('hai chiều hai nguồn: đòn đánh theo VŨ KHÍ · phòng thủ theo AXIE');
 
   // ── ④ ĐỔI AXIE PHẢI ĐỔI **0 ĐIỂM** CHỈ SỐ — luật Đổi Vai còn nguyên ──────────────────
@@ -158,7 +182,7 @@ const pass = m => console.log('PASS ' + m);
     // này đỏ vì một lý do chẳng liên quan gì tới thứ nó định gác — đã dẫm đúng thế một lượt.
     const t = (typeof CE === 'function' && CE() ? CE().innerText : '') || document.body.innerText || '';
     return { coDongThu: /Hệ phòng thủ/i.test(t), coDongDanh: /Hệ đòn đánh/i.test(t),
-             coTenHe: /Frost/.test(t) };
+             coTenHe: /Aquatic/.test(t) };
   });
   if (!r6.coDongThu) fail('bảng Nhân Vật không in dòng "Hệ phòng thủ" — người chơi không có cách nào biết cơ chế tồn tại');
   else if (!r6.coTenHe) fail('bảng Nhân Vật in nhãn nhưng không in tên hệ đang mang');
