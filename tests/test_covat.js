@@ -102,6 +102,9 @@ const fail = m => { console.log('FAIL ' + m); loi++; };
              cot:!!(o && o.cot && o.cot.sung && o.cot.sung.uid === 9001),
              su:(C.su || []).map(h => h.id),
              pity5:C.pity5, ve:C.ve.gk,
+             // Nguyệt/Tinh Trần đã gỡ: 60 Tinh ÷ 15 + 25 Nguyệt ÷ 5 = 4 + 5 = 9 Đất Hồn
+             dat:(player.mats && player.mats.datHon) || 0,
+             conTran:('nguyet' in C) || ('tinh' in C),
              laChi:Object.keys(C.co).filter(id => !CV_MAP[id]) };
   });
   console.log('3)', JSON.stringify(r3));
@@ -114,6 +117,9 @@ const fail = m => { console.log('FAIL ' + m); loi++; };
   (r3.con === 3 && r3.lv === 42 && r3.hoa === 2 && r3.cot)
     ? pass('giữ nguyên Cộng Hưởng R3 · cấp 42 · Hoá 2 · mảnh Cốt đã khảm')
     : fail(`mất tiến trình: con=${r3.con} lv=${r3.lv} hoa=${r3.hoa} cot=${r3.cot}`);
+  if (r3.conTran) fail('chimera.nguyet/tinh vẫn còn — di trú chưa delete trường cũ');
+  (r3.dat === 9) ? pass('60 Tinh + 25 Nguyệt → 9 Đất Hồn, không xoá trắng')
+                 : fail(`đổi Trần sang Đất Hồn ra ${r3.dat}, phải 9 (60÷15 + 25÷5)`);
   (r3.su.length === 2 && r3.su.every(id => id.startsWith('cv_')))
     ? pass('lịch sử quay đổi theo, không còn tên con vật')
     : fail('lịch sử quay chưa di trú: ' + JSON.stringify(r3.su));

@@ -4440,20 +4440,28 @@ function chiVe(n, loai, vi){
   if (player && !dead) addFloat(player.x, player.y - 84, `✦ +${n} ${k === 'gk' ? 'Ấn Giao Kết' : 'Ấn Cổ Xưa'}${loai ? ' · ' + loai : ''}`, '#ffd76a', 13);
 }
 window.chiVe = chiVe;
+// Thứ một lượt 3★ cho ra. ĐO ĐỂ CHỌN, không bốc: 1 Đất Hồn = 200 xp, và nuôi một xác lên
+// cấp 80 tốn ~1.866 Đất Hồn. Một vòng pity 90 lượt cho ~78 lượt 3★ ⇒ ~78 Đất Hồn, bằng khoảng
+// 3,5 ngày đi đào Vỉa Cốt (6-9/ngày/vùng). Đủ để lượt 3★ không trắng tay, không đủ để thay
+// Vỉa Cốt. Muốn chỉnh thì chỉnh đúng đây.
+const GACHA_DAT_3SAO = 1;
 function chiState(){
   if (!player.chimera) player.chimera = { eq:null, co:{}, out:true, ve:{ gk:0, cx:0 },
-    pity5:0, pity4:0, bd:false, pity5s:0, pity4s:0, nguyet:0, tinh:0, su:[], tanthu:20 };
+    pity5:0, pity4:0, bd:false, pity5s:0, pity4s:0, su:[], tanthu:20 };
   if (!player.chimera.kho) player.chimera.kho = [];
   return player.chimera;
 }
-// Nhận một xác: chưa có thì thêm mới, có rồi thì lên Cộng Hưởng (trần R6, dư thì đổi Nguyệt Trần).
+// Nhận một xác: chưa có thì thêm mới, có rồi thì lên Cộng Hưởng (trần R6, dư thì đổi Đất Hồn).
 function chiNhan(id){
   const C = chiState(), c = CV_MAP[id];
   if (!c) return { moi:false, con:0 };
   if (!C.co[id]){ C.co[id] = { con:0 }; if (!C.eq) C.eq = id; return { moi:true, con:0 }; }
   if (C.co[id].con < 6){ C.co[id].con++; return { moi:false, con:C.co[id].con }; }
-  C.nguyet += c.sao === 5 ? 25 : 5;
-  return { moi:false, con:6, tran:true };
+  // Xác đã kín Cộng Hưởng thì phần dư thành Đất Hồn — nhiên liệu nuôi chính những xác đó.
+  // Trước đây nó thành `Nguyệt Trần`, một ô đếm KHÔNG có chỗ tiêu nào (xem GO_TRAN).
+  const _d = c.sao === 5 ? 5 : 1;
+  themDatHon(_d, true);
+  return { moi:false, con:6, tran:true, dat:_d };
 }
 // Một lượt quay. banner: 'gk' (Giao Kết, có 50/50) hoặc 'cx' (Vĩnh Cửu).
 function gachaMotLuot(banner){
@@ -4474,7 +4482,11 @@ function gachaMotLuot(banner){
     id = (gk && Math.random() < 0.5) ? ke[Math.floor(Math.random()*ke.length)]
                                      : CHI_4[Math.floor(Math.random()*CHI_4.length)];
   }
-  if (sao === 3){ C.tinh += 15; return { sao:3, id:null, ten:'Mảnh Giáp Vụn', tinh:15 }; }
+  // ⚠ 3★ chiếm ~85-90% số lượt quay, và đây là thứ DUY NHẤT nó cho ra — `id` là null nên
+  // không có món nào vào túi. Bỏ trắng chỗ này là gần chín phần mười lượt quay không cho gì.
+  // Trước đây là 15 Tinh Trần, một ô đếm không có chỗ tiêu; nay là Đất Hồn, thứ đã có sẵn và
+  // nuôi đúng cái mà gacha này đẻ ra.
+  if (sao === 3){ themDatHon(GACHA_DAT_3SAO, true); return { sao:3, id:null, ten:'Mảnh Giáp Vụn', dat:GACHA_DAT_3SAO }; }
   const r = chiNhan(id);
   C.su.unshift({ t:Date.now(), b:banner, id, sao }); if (C.su.length > 200) C.su.length = 200;
   return { sao, id, ten:CV_MAP[id].ten, moi:r.moi, con:r.con, tran:r.tran };
@@ -4510,8 +4522,8 @@ function chiThuMul(){ const c = chiCon(); return (1 + (c >= 5 ? 0.4 : c >= 2 ? 0
 // đầu. Ba thứ dưới đây là ba vòng lặp bù vào chỗ đó, ánh xạ từ đột phá / thiên phú / thánh di
 // vật của Genshin.
 //
-// Tinh Trần và Nguyệt Trần KHÔNG dùng ở đây — chủ dự án giữ hai loại đó cho cửa hàng đổi vật
-// phẩm. Nhiên liệu của hệ này là Đất Hồn (rơi trong màn) và chính những mảnh Cốt thừa.
+// Tinh Trần và Nguyệt Trần ĐÃ GỠ (xem GO_TRAN) — nhiên liệu của hệ này là Đất Hồn (rơi trong
+// màn, và nay cả từ gacha) cùng chính những mảnh Cốt thừa.
 // ════════════════════════════════════════════════════════════════════════════
 
 // ── ① CẤP ───────────────────────────────────────────────────────────────────
@@ -4715,10 +4727,12 @@ function chiCotGom(id){
 }
 // ── HÀNH ĐỘNG ───────────────────────────────────────────────────────────────
 function datHon(){ player.mats = player.mats || {}; return player.mats.datHon || 0; }
-function themDatHon(n){
+function themDatHon(n, im){
   player.mats = player.mats || {};
   player.mats.datHon = (player.mats.datHon || 0) + n;
-  if (player && !dead) addFloat(player.x, player.y - 70, `◈ +${n} Đất Hồn`, '#b8e87a', 12);
+  // `im` = im lặng. Màn quay tự in số trên thẻ, mà một lượt ×10 thì mười dòng chữ bay chồng
+  // lên nhau ngay giữa hoạt cảnh — nên gacha gọi với im = true.
+  if (!im && player && !dead) addFloat(player.x, player.y - 70, `◈ +${n} Đất Hồn`, '#b8e87a', 12);
 }
 // Cho Chimera ăn Đất Hồn. Trần cấp do số lần Hoá quyết định — ăn quá trần thì dừng và trả lại
 // phần thừa, chứ không nuốt mất.
@@ -7361,7 +7375,7 @@ function newPlayer(sectKey){
     tutStep: 0, tutDist: 0,                     // hướng dẫn tân thủ từng bước
     // Khế Ước quay ra Cổ Vật (bộ giáp) — xem docs/GACHA_KHE_UOC.md
     chimera: { eq:null, co:{}, out:true, ve:{ gk:3, cx:1 }, pity5:0, pity4:0, bd:false,
-               pity5s:0, pity4s:0, nguyet:0, tinh:0, su:[], tanthu:20 },
+               pity5s:0, pity4s:0, su:[], tanthu:20 },
     jewels: { chucPhuc: 0, linhHon: 0, sinhMenh: 0, honDon: 0 }, // Tứ Châu (Track HT)
     baohap: {},                            // Box Kundun Ma Tôn Giáng Thế { tier: số lượng }
     truyna: { day:'', state:'none', map:null }, // Truy Nã Lệnh ngày
@@ -7532,7 +7546,7 @@ function loadGame(idx){
     if (player.mount && !player.chimera){
       const _cu = ['petalkin','tidewarden','emberjaw','ironshell','crimsonmaw'];
       const C0 = { eq:null, co:{}, out:!!player.mount.out, ve:{ gk:3, cx:1 }, pity5:0, pity4:0, bd:false,
-                   pity5s:0, pity4s:0, nguyet:0, tinh:0, su:[], tanthu:20 };
+                   pity5s:0, pity4s:0, su:[], tanthu:20 };
       const _t = Math.max(0, Math.min(5, player.mount.tier || 0));
       for (let i = 0; i < _t; i++){ C0.co[_cu[i]] = { con:0 }; C0.eq = _cu[i]; }
       C0.ve.gk += _t * 4;
@@ -7813,6 +7827,24 @@ function loadGame(idx){
     if (player.khoPlus == null) player.khoPlus = 0;
     if (!player.khoNgoc || typeof player.khoNgoc !== 'object') player.khoNgoc = { hap:{} };
     if (player.autoNgoc == null) player.autoNgoc = false;
+    // ═══ GỠ NGUYỆT TRẦN + TINH TRẦN — hai ô đếm chưa bao giờ tiêu được ════════════════
+    // Grep cả tệp lúc gỡ: 0 chỗ trừ đi, cho cả hai. Không phải bỏ sót — chúng được giữ cho một
+    // "cửa hàng đổi vật phẩm" chưa bao giờ dựng. Nay đổi sang Đất Hồn (xem GO_TINH_TRAN).
+    // ⚠ PHẢI CHẠY SAU khi `chiState()` đã vá save, và phải `delete` — thiếu delete thì mỗi lần
+    // tải trang lại cộng thêm một lần nữa.
+    if (player.chimera && ((player.chimera.nguyet || 0) > 0 || (player.chimera.tinh || 0) > 0)){
+      const _ng = player.chimera.nguyet || 0, _tn = player.chimera.tinh || 0;
+      const _dat = Math.floor(_tn / GO_TINH_TRAN) + Math.floor(_ng / GO_NGUYET_TRAN);
+      if (_dat > 0){
+        player.mats = player.mats || {};
+        player.mats.datHon = (player.mats.datHon || 0) + _dat;
+      }
+      setTimeout(() => { if (player) zoneBanner = { text:'✦ NGUYỆT TRẦN + TINH TRẦN ĐÃ GỠ',
+        sub:`${_ng} Nguyệt + ${_tn} Tinh → ${_dat} Đất Hồn · lượt 3★ nay trả thẳng Đất Hồn`,
+        color:'#b8e87a', t:8 }; }, 3400);
+    }
+    if (player.chimera){ delete player.chimera.nguyet; delete player.chimera.tinh; }
+
     // ═══ GỠ KẾ THỪA — hoàn hai vật liệu của nó ════════════════════════════════════════
     // Kế Thừa (leo giai) là trục THỨ HAI trên cùng món đồ, cùng đường với Tấn Phẩm và hệ Phẩm
     // đã gỡ trước. `Mảnh Trang Bị` + `Đá Ấn Trụ` chết theo vì đó là chỗ tiêu DUY NHẤT của cả hai.
@@ -17612,7 +17644,7 @@ function applyTestBoost(){
       for (const k of COT_O_IDS){ const c = cotMoiO('votrung', 'co', k); c.plus = 12;
         while (c.phu.length < 4) cotThemPhu(c); o.cot[k] = c; }
       for (let i = 0; i < 24; i++) C.kho.push(cotMoi(COT_DONG_IDS[i % 7], i % 3 === 0 ? 'tinh' : 'tho')); }
-    C.eq = 'cv_vuonggiap'; C.out = true; C.ve.gk = 120; C.ve.cx = 40; C.nguyet = 200; C.tinh = 500; }
+    C.eq = 'cv_vuonggiap'; C.out = true; C.ve.gk = 120; C.ve.cx = 40; }
   // Tuyệt học: Ám Khí / Cung Tiễn / Cương Khí đều tầng tối đa
   // Sách Kỹ Năng Huyết Ma Thôn Phệ: đã hợp thành
   player.bikip = { pieces: [1,1,1], hmtp: true };
@@ -18039,9 +18071,9 @@ function kuVe(){
     g2.fillStyle = '#e4ebff'; g2.font = '700 27px ' + KU_CHU;
     g2.fillText(cur.ten, cx, cyy + 42);
     g2.fillStyle = cc ? cc.mau : '#9aa8d4'; g2.font = '600 13px "Be Vietnam Pro", sans-serif';
-    g2.fillText(cc ? `Dòng ${CV_DONG[cc.dong].ten} · ${cc.thuTxt}` : `+${cur.tinh} Tinh Trần`, cx, cyy + 63);
+    g2.fillText(cc ? `Dòng ${CV_DONG[cc.dong].ten} · ${cc.thuTxt}` : `+${cur.dat} Đất Hồn`, cx, cyy + 63);
     if (cur.moi) { g2.fillStyle = '#8fd18f'; g2.fillText('★ MỚI', cx, cyy + 82); }
-    else if (cur.tran){ g2.fillStyle = '#ffb15c'; g2.fillText('Cộng Hưởng đã tối đa — đổi Nguyệt Trần', cx, cyy + 82); }
+    else if (cur.tran){ g2.fillStyle = '#ffb15c'; g2.fillText(`Cộng Hưởng đã tối đa — +${cur.dat} Đất Hồn`, cx, cyy + 82); }
     else if (cc){ g2.fillStyle = '#ffd76a'; g2.fillText(`Cộng Hưởng → R${cur.con}`, cx, cyy + 82); }
     const nS = Math.min(cur.sao, Math.floor(k*9)); _kuSao = Math.max(_kuSao, nS);
     for (let i = 0; i < cur.sao; i++){
@@ -18119,7 +18151,7 @@ function renderKheUoc(){
   const ke5 = CV_MAP[gachaKe()], ke4 = gachaKe4().map(id => CV_MAP[id]);
   const conBd = Math.max(0, GACHA_HARD5 - C.pity5);
   let html = moBang({ tieu:'✦ Khế Ước Cổ Vật' });
-  html += `<div style="font-size:12px;color:#9aa8d4;margin-bottom:8px">Ấn Giao Kết <b style="color:#ffd76a">${C.ve.gk||0}</b> · Ấn Cổ Xưa <b style="color:#7ecbff">${C.ve.cx||0}</b> · Nguyệt Trần <b>${C.nguyet||0}</b> · Tinh Trần <b>${C.tinh||0}</b></div>`;
+  html += `<div style="font-size:12px;color:#9aa8d4;margin-bottom:8px">Ấn Giao Kết <b style="color:#ffd76a">${C.ve.gk||0}</b> · Ấn Cổ Xưa <b style="color:#7ecbff">${C.ve.cx||0}</b></div>`;
 
   html += `<div class="ku-banner"><h4>Giao Kết — ${ke5.ten} <span style="color:#ffb15c">★★★★★</span></h4>
     <div style="text-align:center;margin:4px 0"><img src="${cvIconUrl(ke5.id)}" width="72" height="72" alt="" style="border:1px solid #ffb15c;border-radius:8px;background:#0a0a16"></div>
@@ -18605,6 +18637,15 @@ const GO_TULA = 1800;       // 1 Tu La Tinh Thạch cũ = 1800 Lumen — ĐÚNG 
 //   · Mảnh = 150 — cùng đơn vị mà `loadGame` đã dùng cho mọi "mảnh" vụn khác (GO_HUYENTHIET,
 //     và Mảnh Cổ Thần lẻ cũng hoàn đúng 150 một mảnh)
 //   · Đá Ấn Trụ = 1500 — gấp MƯỜI lần Mảnh, đúng tỉ lệ 40 : 4 mà chính công thức Kế Thừa niêm yết
+// Nguyệt Trần / Tinh Trần — hai ô đếm CHƯA BAO GIỜ có chỗ tiêu (cửa hàng đổi vật phẩm không
+// bao giờ được dựng). Vì không có chỗ tiêu nên KHÔNG có giá nào suy ra được từ game; tỉ giá
+// dưới đây lấy từ **chỗ chúng sinh ra**, tức đổi đúng bằng thứ mà cùng sự kiện đó nay trả về:
+//   · 15 Tinh Trần = 1 lượt 3★  = 1 Đất Hồn  (GACHA_DAT_3SAO)
+//   ·  5 Nguyệt Trần            = 1 Đất Hồn  (xác 4★ kín Cộng Hưởng cho 5 Nguyệt, nay cho 1 Đất)
+// Nhờ vậy người chơi cũ nhận đúng thứ mà người chơi mới nhận cho cùng chừng ấy lượt quay —
+// không ai được thêm sức mua từ hư không, cũng không ai bị xoá trắng một con số đã nhìn nó lớn.
+const GO_TINH_TRAN = 15;    // 15 Tinh Trần  = 1 Đất Hồn
+const GO_NGUYET_TRAN = 5;   // 5 Nguyệt Trần = 1 Đất Hồn
 const GO_MANH = 150;
 const GO_TICHMA = GO_MANH * 10;
 // ⚠ Cả năm hằng trên nằm ở dòng ~18580, nhưng mọi chỗ DÙNG chúng đều nằm trong thân hàm

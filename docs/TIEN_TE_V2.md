@@ -77,7 +77,19 @@ cho +8/+9 (khó hơn 2,4× so với bây giờ)? **Sửa đúng một dòng**, v
 - ~~Kế Thừa~~ — chủ dự án chốt **gỡ hẳn** (*"Bỏ luôn và remove code phần kế thừa đi"*). Đã làm:
   công thức · `doKeThua` · `Mảnh Trang Bị` · `Đá Ấn Trụ` · đường rơi · lệnh `/manh` `/tich`.
   Hoàn `GO_MANH` = 150 · `GO_TICHMA` = 1.500. Chi tiết ở CLAUDE.md mục "MÓN ĐỒ CHỈ CÓ MỘT TRỤC".
-- Còn treo đúng **một** câu: hướng đi của **Hồn Thép** (§3 — ba đường A/B/C).
+- ~~Nguyệt Trần + Tinh Trần~~ — chủ dự án chốt **gỡ** (*"tạm thời hãy remove… cho nhẹ và đỡ rối"*).
+  Đã làm, và **không xoá trắng**: đổi sang **Đất Hồn** (`GO_TINH_TRAN` = 15 · `GO_NGUYET_TRAN` = 5).
+
+  ⚠ **Chỗ suýt vỡ:** Tinh Trần là thứ **DUY NHẤT** một lượt 3★ cho ra (`id` là null nên không có
+  món nào vào túi), mà 3★ chiếm **~85-90%** số lượt quay. Gỡ trơn là gần chín phần mười lượt quay
+  không cho gì. Nay 3★ trả thẳng **Đất Hồn** (`GACHA_DAT_3SAO` = 1), và xác kín Cộng Hưởng cũng vậy
+  (5★ → 5 · 4★ → 1). Chọn con số bằng cách **đo**: 1 Đất Hồn = 200 xp, nuôi một xác lên cấp 80 tốn
+  ~1.866 Đất Hồn, một vòng pity 90 lượt cho ~78 lượt 3★ ⇒ ~78 Đất Hồn ≈ **3,5 ngày Vỉa Cốt**.
+  Đủ để lượt 3★ không trắng tay, không đủ để thay Vỉa Cốt.
+
+- Còn treo đúng **một** câu: hướng đi của **Hồn Thép** (§3 — ba đường A/B/C). Sau ba đợt vừa rồi
+  nó gọn hẳn: `Đất Hồn` nay là đầu mối của **cả gacha lẫn Cổ Vật**, nên đường (C) *(chỉ gộp
+  Bản Năng riêng ra)* gần như đã tự làm xong — chỉ còn câu hỏi có gộp `Bản Năng` vào không.
 
 ## §0 — Quyết định này vừa gỡ một cái bẫy tôi chưa báo cáo
 
