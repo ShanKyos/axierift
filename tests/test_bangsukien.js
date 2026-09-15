@@ -94,11 +94,18 @@ async function moBang(p, truoc){
       return o.join(', '); };
     return { bang: ra, that: { maton: that(matonNextBoundary), golden: that(goldenNextBoundary), rift: that(riftNextBoundary) } };
   });
+  // ⚠ SOI CẢ BA SỰ KIỆN THEO GIỜ, không chỉ một. Bản đầu chỉ hỏi hàng Hung Thần, nên chép cứng
+  // dãy giờ của Vực Nứt hay Xâm Lăng Vàng thì bài vẫn XANH — và phép thử ngược đã chứng minh
+  // đúng chỗ đó: bẻ `_rfLich` thành chuỗi cứng, không bài nào đỏ.
+  const BA = [[/Hung Thần/, 'maton'], [/Vực Nứt/, 'rift'], [/Xâm Lăng Vàng/, 'golden']];
   const L_vn = await docLich(p);
+  for (const [re, k] of BA){
+    const c = Object.entries(L_vn.bang).find(([ten]) => re.test(ten));
+    if (!c) { fail(`§2 không tìm thấy hàng ${re.source}`); continue; }
+    if (c[1] === L_vn.that[k]) ok(`§2 ${c[0].replace(/^\S+\s/,'')}: cột lịch khớp hàm mốc thật — ${c[1]}`);
+    else fail(`§2 ${c[0]}: cột lịch "${c[1]}" KHÁC dãy mốc thật "${L_vn.that[k]}" — dãy giờ đang bị chép tay`);
+  }
   const cVn = Object.entries(L_vn.bang).find(([k]) => /Hung Thần/.test(k));
-  if (!cVn) fail('§2 không tìm thấy hàng Hung Thần');
-  else if (cVn[1] === L_vn.that.maton) ok(`§2 cột lịch khớp hàm mốc thật: ${cVn[1]}`);
-  else fail(`§2 cột lịch "${cVn[1]}" KHÁC dãy mốc thật "${L_vn.that.maton}" — dãy giờ đang bị chép tay ở đâu đó`);
 
   const c2 = await b.newContext({ viewport:{ width:1440, height:900 }, timezoneId:'UTC' });
   const p2 = await c2.newPage();
@@ -111,8 +118,15 @@ async function moBang(p, truoc){
   if (cUtc && cVn && cUtc[1] !== cVn[1])
     ok(`§2 hai múi giờ ra hai dãy KHÁC nhau — UTC "${cUtc[1]}" vs VN "${cVn[1]}"`);
   else fail(`§2 hai múi giờ ra dãy GIỐNG nhau ("${cUtc && cUtc[1]}") — hoặc lịch bị chép cứng, hoặc timezoneId không ăn`);
-  if (cUtc && cUtc[1] === L_utc.that.maton) ok('§2 dãy ở UTC cũng khớp hàm mốc');
-  else fail(`§2 ở UTC cột lịch "${cUtc && cUtc[1]}" khác mốc thật "${L_utc.that.maton}"`);
+  // ⚠ VÀ PHẢI SOI LẠI CẢ BA Ở UTC. Đây là chỗ bắt được chép cứng: một dãy giờ viết tay bao giờ
+  // cũng là dãy của MỘT múi giờ, nên nó chỉ khớp ở đúng múi ấy. `test_rift` chạy ở TZ=UTC nên
+  // nó MÙ với chuyện này — đúng cái bẫy đã ghi trong CLAUDE.md và chính nó bị nêu tên.
+  for (const [re, k] of BA){
+    const c = Object.entries(L_utc.bang).find(([ten]) => re.test(ten));
+    if (!c) { fail(`§2 (UTC) không tìm thấy hàng ${re.source}`); continue; }
+    if (c[1] === L_utc.that[k]) ok(`§2 (UTC) ${c[0].replace(/^\S+\s/,'')}: khớp hàm mốc`);
+    else fail(`§2 (UTC) ${c[0]}: "${c[1]}" khác mốc thật "${L_utc.that[k]}"`);
+  }
   await c2.close();
 
   // ── §3 KHÔNG CẮT CỤT TÊN SỰ KIỆN ────────────────────────────────────────────────────
