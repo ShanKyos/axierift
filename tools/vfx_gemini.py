@@ -4,6 +4,18 @@
     python3 tools/vfx_gemini.py <ảnh> <id> --luoi 3,3 [--o 384] [--neo 0.12,0.5]
                                 [--fps 18] [--canh trai|tam|o] [--xem]
 
+QUAN HỆ VỚI HAI TỆP ĐÃ CÓ — đọc trước khi tưởng đây là bản sao:
+
+  · `tools/cat_luoi_gem.py`  cắt một tấm lưới Gemini ra N SPRITE RỜI (vật nhỏ iso, vũ khí,
+    icon), tách nền MAGENTA phẳng, ghi bảng neo. Đầu ra là nhiều tệp.
+  · `tools/vfx_meowa.py`      nhập gói Meowa đã CÓ SẴN alpha thật.
+  · tệp này               đóng một BẢNG KHUNG thành MỘT atlas cho `VFX_ATLAS_DEFS`: căn chụm
+    các khung về một gốc, đo neo, in sẵn dòng để dán. Đầu ra là một tệp `atlas.png`.
+
+  Và nó gánh thêm một việc mà hai tệp kia không cần: **bóc nền CARO**. Xem ngay dưới.
+  ⇒ Muốn nền phẳng thì dùng `--nen "#ff00ff"`, và lúc đó nó mượn ĐÚNG phép đo sắc tím của
+    `cat_luoi_gem.py` chứ không dựng phép tách thứ hai.
+
 Khác `vfx_meowa.py` ở đúng một chỗ, và chỗ đó là cả lý do tệp này tồn tại:
 
 ⚠ GEMINI KHÔNG XUẤT ĐƯỢC NỀN TRONG SUỐT. Nó VẼ cái lưới ô caro — thứ mà trình sửa ảnh dùng để
@@ -208,8 +220,17 @@ def main():
         # Chọn màu xa hẳn bảng màu hiệu ứng — hồng cánh sen `#FF00FF` xa cả xanh, ô liu lẫn
         # ngọc lam của ba tấm đầu.
         B0 = np.array([int(a.nen.lstrip('#')[i:i+2], 16) for i in (0, 2, 4)], dtype=np.float64)
-        d = np.linalg.norm(rgb - B0, axis=2)
-        al = np.clip((d - a.nen_toi) / max(1.0, a.nen_xa - a.nen_toi), 0, 1)
+        # ⚠ VỚI MAGENTA thì ĐO SẮC TÍM, đừng đo khoảng cách RGB — luật này `tools/cat_luoi_gem.py`
+        # đã đo và trả giá trước: Gemini vẽ bóng đổ bằng magenta SẪM, nên lọc theo độ sáng hay
+        # theo khoảng cách tới màu nền CHUẨN sẽ để lại một vũng tím dưới chân vật. Sắc tím
+        # `(R+B)/2 − G` thì nền ra ~210 còn vật liệu ra 20-24, một khoảng trống rộng để đặt ngưỡng.
+        # Dùng chung con số của tệp kia (NGUONG_TIM 120) để hai đường ống không lệch nhau.
+        if abs(B0[0] - 255) < 40 and abs(B0[2] - 255) < 40 and B0[1] < 60:
+            d = (rgb[..., 0] + rgb[..., 2]) / 2.0 - rgb[..., 1]
+            al = 1.0 - np.clip((d - a.nen_toi) / max(1.0, 120.0 - a.nen_toi), 0, 1)
+        else:
+            d = np.linalg.norm(rgb - B0, axis=2)
+            al = np.clip((d - a.nen_toi) / max(1.0, a.nen_xa - a.nen_toi), 0, 1)
         a3 = al[..., None]
         F = np.clip(np.where(a3 > 0.02, (rgb - (1 - a3) * B0) / np.maximum(a3, 1e-6), rgb), 0, 255)
         print('nền phẳng %s · alpha=0 chiếm %.1f%%' % (a.nen, (al < 0.03).mean() * 100))

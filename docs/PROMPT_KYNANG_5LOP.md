@@ -85,9 +85,16 @@ tấm ra ba kết quả khác nhau:
 | Force Wave | 97 / 146 | **sạch** |
 | Triple Shot | 156 / 197 — sáng, chồng lên dải của art | quầng sáng và vành tan **thủng lỗ** |
 
-⇒ **Chữa ở PROMPT, đừng đuổi theo ở khâu nhập:** thêm một câu bảo Gemini vẽ trên **nền MỘT MÀU
-PHẲNG** — hồng cánh sen `#ff00ff`, xa cả xanh thép, ô liu lẫn ngọc lam. Lúc đó phép tách là một
-phép trừ đúng nghĩa, không còn lưới nào để mà sót: `tools/vfx_gemini.py --nen "#ff00ff"`.
+⇒ **Chữa ở PROMPT, đừng đuổi theo ở khâu nhập.** Và đây KHÔNG phải luật mới — dự án đã chốt nó
+từ đợt art nhà cửa: `docs/PROMPT_ART_GEMINI.md` bắt mọi prompt Gemini kết bằng
+**`#FF00FF, completely flat, no gradient`**, và `tools/cat_luoi_gem.py` đã đo sẵn cách tách
+(sắc tím `(R+B)/2 − G`: nền ~210, vật liệu 20-24, ngưỡng 120 nằm giữa khoảng trống đó).
+
+**Ba tấm VFX này đơn giản là không đi theo luật ấy** — vì `PROMPT_ART_GEMINI.md` viết cho nhà
+cửa · vật nhỏ · vũ khí · đồ tiêu hao, chưa có mục nào cho hiệu ứng. Đó là chỗ tài liệu này phải
+trám: mọi prompt ở §3–§6 dưới đây kết bằng đúng câu nền magenta ấy.
+`tools/vfx_gemini.py --nen "#ff00ff"` mượn thẳng phép đo của `cat_luoi_gem.py`, không dựng phép
+tách thứ hai.
 
 **⚠ VÀ VIDEO TÁCH SẠCH HƠN ẢNH TĨNH — ngược hẳn thứ tôi dự đoán.** Tôi đã định báo là video kém
 hơn, vì lưới của nó tương phản chỉ **24 mức** (38/62) so với **52 mức** của tấm PNG, cộng thêm
@@ -230,6 +237,23 @@ hướng: cắm tranh vào lúc này là chiêu **luôn quét sang phải kể c
 Thêm `goc` vào một chỗ duy nhất (~6 dòng) là xong. ⇒ **Ô 1 đặt CUỐI.**
 
 Ô 2 không dính: nó neo trên con quái và là một vụ nổ đối xứng. Ô 3, ô 4 cũng không.
+
+### 2.2a ⚠ DÙNG GEMINI thì ĐỔI CÂU NỀN — một dòng, và nó tiết kiệm cả một đợt bóc nền
+
+Câu phong cách ở §2.2 nói "fully transparent background" — đúng cho **meowa**, vốn xuất được
+alpha thật. **Gemini thì không**: nó vẽ lưới ô caro thành điểm ảnh (xem §0.3). Nên khi đặt bằng
+Gemini, thay mệnh đề nền trong câu phong cách bằng đúng câu mà `docs/PROMPT_ART_GEMINI.md` đã
+chốt cho mọi art Gemini của dự án:
+
+```
+Place the effect on a solid background of pure magenta #FF00FF, completely flat, with no
+gradient, no checkerboard pattern and no transparency grid anywhere in the image.
+```
+
+Ba chữ cuối là chỗ quan trọng: không nói thẳng "no checkerboard" thì Gemini vẫn trả về lưới
+caro, vì với nó lưới caro CHÍNH LÀ cách vẽ "nền trong suốt".
+
+Nhập bằng `python3 tools/vfx_gemini.py <ảnh> <id> --luoi c,r --nen "#ff00ff"`.
 
 ### 2.2 Câu phong cách — dán vào cuối mọi prompt atlas
 
