@@ -76,6 +76,10 @@ function capNhat(st, tin) {
   st.speed = so(tin.speed, 0, 2000, st.speed);
   st.sect  = chu(tin.sect, 24) || st.sect;
   st.name  = chu(tin.name, TEN_MAX) || st.name;
+  // Ra đòn: hai bộ đếm NGƯỢC của game (`atkAnim` 0,22s cho đòn thường · `castT` 0,38s cho chiêu).
+  // Máy chủ chỉ kẹp và chuyển tiếp — nó không biết một đòn dài bao lâu, và không nên biết.
+  st.atk   = so(tin.atk, 0, 2, 0);
+  st.cast  = so(tin.cast, 0, 2, 0);
   st.nghe  = Date.now();
 }
 
@@ -106,7 +110,7 @@ wss.khiNoi((ws) => {
   }
   const id = idKe++;
   const st = {
-    id, map: '', x: 0, y: 0, face: 0, moving: false,
+    id, map: '', x: 0, y: 0, face: 0, moving: false, atk: 0, cast: 0,
     hp: 1, maxHp: 1, level: 1, speed: 190, sect: 'thieulam',
     name: 'Khach' + id, nghe: Date.now(),
     chatLuc: 0, chatCua: [],     // chống spam, xem CHAT_* ở trên
@@ -192,7 +196,8 @@ setInterval(() => {
       ds.push({ i: st.id, x: Math.round(st.x), y: Math.round(st.y),
                 f: +st.face.toFixed(2), mv: st.moving ? 1 : 0,
                 hp: Math.round(st.hp), mhp: Math.round(st.maxHp),
-                lv: st.level, sp: Math.round(st.speed), s: st.sect, n: st.name });
+                lv: st.level, sp: Math.round(st.speed), s: st.sect, n: st.name,
+                a: +st.atk.toFixed(2), c: +st.cast.toFixed(2) });
     }
     // Gửi kèm `map` dù client cũng biết map của chính nó: ảnh chụp phải TỰ NÓI nó thuộc bản đồ
     // nào. Không thì client suy ngầm "ảnh này chắc là map mình đang đứng", và đúng lúc người

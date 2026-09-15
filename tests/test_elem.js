@@ -66,13 +66,77 @@ const { chromium } = require('playwright');
     o.heLop = elName(sectEl);
 
     // ── 4. Hệ vũ khí KHÔNG được đổi đòn quái đánh MÌNH ──
-    const mobToPlayer = (el) => {
-      player.equip.vukhi = mkW(el); calcDerived();
-      // công thức chiều quái→người trong update(): chỉ đọc SECTS[player.sect].element
-      const src = String(window.update).match(/sectEl2 = ([^;]+);/);
-      return src ? src[1].trim() : 'KHÔNG TÌM THẤY';
+    //
+    // ⚠ Mệnh đề này TRƯỚC ĐÂY dò bằng CHUỖI MÃ NGUỒN: `String(window.update).match(/sectEl2 =
+    // ([^;]+);/)` rồi đòi nó đúng bằng `SECTS[player.sect].element`. Nó gác đúng luật nhưng gác
+    // bằng đúng MỘT cách viết, nên đợt cho con Axie quyết định hệ phòng thủ (`heThu`) làm nó đỏ
+    // — trong khi luật thì còn nguyên: `heThu` đọc Axie, không đọc vũ khí.
+    //
+    // Nay đo HÀNH VI: đổi vũ khí qua cả 5 hệ rồi cho cùng một con quái đánh, máu mất phải BẰNG
+    // NHAU. Chặt hơn bản cũ — nó bắt được cả trường hợp ai đó luồn vũ khí vào chiều phòng thủ
+    // qua một hàm trung gian, thứ mà phép dò chuỗi không thấy.
+    const mobToPlayer = () => {
+      travelTo('chungnam');                 // ⚠ startGame thả vào thành an toàn: `mobs` rỗng
+      player.reflect = 0;                   // phản đòn ghi thẳng m.hp — xem CLAUDE.md
+      // ⚠ BA CÁI NHIỄU, cả ba đã làm bài này đỏ oan một lượt mỗi cái:
+      //  1. `mkW(el)` sinh cây vũ khí KHÁC mỗi lần ⇒ lệch vì chỉ số, không vì hệ (527→594).
+      //  2. Mỗi đòn quái mang `rnd(0.85, 1.15)` — tản ±15% ⇒ một đòn không đo được gì (449→571).
+      //  3. Bơm `player.maxHp` lên 1e9 để khỏi chết thì `calcDerived()` tính lại đè ngay.
+      //
+      // Nên tách làm HAI mệnh đề, và chúng bổ cho nhau:
+      //  (a) TẤT ĐỊNH — `heThu()` phải trơ với vũ khí. Nhanh, không nhiễu, và nói đúng cái luật.
+      //  (b) THỐNG KÊ — tổng máu mất qua ~nhiều trăm đòn phải bằng nhau. Cái này bắt được ca mà
+      //      (a) mù: ai đó cắm thêm một số hạng vũ khí THẲNG vào nhánh phòng thủ, không qua heThu.
+      const w = mkW('Kim'); player.equip.vukhi = w;
+      const mat = {}, heThuTheoVK = {};
+      for (const el of ELEMENTS){
+        w.element = el; calcDerived();
+        heThuTheoVK[el] = heThu(player);                 // (a)
+        player.eva = 0;
+        const m = mobs.find(x => x && x.hp > 0);
+        if (!m) return { loi: 'không có quái để đo' };
+        m.def = Object.assign({}, m.def, { el:'Hỏa', lv:player.level, atk:400, atkCd:0.01, range:200 });
+        m.x = player.x + 26; m.y = player.y;
+        m.hp = m.maxHp = 999999; m.atkT = 0; m.aggro = 9999; m.target = player;
+        // (b) bơm máu lại SAU MỖI tick: không đụng maxHp nên calcDerived không đè được
+        //
+        // ⚠ HÂM NÓNG TRƯỚC KHI ĐẾM. Không có bước này thì hai hệ đo ĐẦU ra 19.543 và 30.929
+        // trong khi ba hệ sau ra ~467.000 — không phải cơ chế hỏng, mà là mấy chục tick đầu con
+        // quái còn đang áp sát nên chưa đánh. Thứ tự đo biến thành một biến của phép đo.
+        // ⚠ `update()` THOÁT SỚM khi `dead` — và cờ đó dính lại từ lượt dựng cảnh trước, nên hai
+        // hệ đo đầu ra ĐÚNG 0 trong khi ba hệ sau khớp nhau tới 0,3%. Không phải cơ chế hỏng,
+        // là người chơi đang nằm. Gỡ cờ trước mỗi lượt.
+        if (typeof dead !== 'undefined') dead = false;
+        player.hp = player.maxHp;
+        for (let i = 0; i < 240; i++){
+          player.moveTarget = null; player.eva = 0;
+          m.x = player.x + 26; m.y = player.y; m.hp = m.maxHp; m.target = player; m.aggro = 9999;
+          update(1/60); player.hp = player.maxHp;
+        }
+        // ⚠ GHIM LẠI MỖI TICK. Đặt chỗ đứng một lần ở đầu vòng là không đủ: người chơi tự đi
+        // (AUTO / moveTarget) và con quái tự về bầy, nên sau vài trăm tick chúng rời nhau và
+        // phép đo ra 0 — đúng hai hệ ĐẦU trong vòng lặp, ba hệ sau thì khớp nhau tới 0,3%.
+        // Thứ tự đo biến thành một biến của phép đo, và đó là lỗi của cảnh dựng chứ không phải
+        // của cơ chế.
+        const ghim = () => {
+          player.moveTarget = null; player.eva = 0;
+          if (typeof dead !== 'undefined') dead = false;
+          m.x = player.x + 26; m.y = player.y;
+          m.hp = m.maxHp; m.target = player; m.aggro = 9999;
+        };
+        let tong = 0;
+        for (let i = 0; i < 900; i++){
+          ghim();
+          const truoc = player.hp;
+          update(1/60);
+          if (player.hp < truoc) tong += truoc - player.hp;
+          player.hp = player.maxHp;
+        }
+        mat[el] = Math.round(tong);
+      }
+      return { mat, heThuTheoVK };
     };
-    o.nguonHeChieuNguoc = mobToPlayer('Hỏa');
+    Object.assign(o, mobToPlayer());
 
     // ── 5. Đổi Hệ chỉ nhận vũ khí ──
     const armor = genItem(60, 0, 'elite'); armor.slot = 'ao'; armor.element = null;
@@ -88,7 +152,8 @@ const { chromium } = require('playwright');
   console.log('gán hệ      :', JSON.stringify(r.gan), '· Cổ Thần có hệ:', r.coThanCoHe);
   console.log('hệ lớp      :', r.heLop, '· Ember khắc', r.emberKhac, '· bị', r.khacEmber, 'khắc');
   console.log('sát thương  :', JSON.stringify(r.st));
-  console.log('chiều ngược :', r.nguonHeChieuNguoc);
+  console.log('heThu theo hệ VŨ KHÍ (phải trơ):', JSON.stringify(r.heThuTheoVK));
+  console.log('tổng máu mất theo hệ VŨ KHÍ (phải bằng nhau):', JSON.stringify(r.mat));
   console.log('Đổi Hệ      :', JSON.stringify(r.doiHe));
 
   if (r.conTuNguHanh) fail(`tên hệ vẫn là Ngũ Hành: ${JSON.stringify(r.ten)}`);
@@ -110,8 +175,27 @@ const { chromium } = require('playwright');
   if (!(kBi <= 0.88 && kBi >= 0.60)) fail(`bị khắc ra ${kBi.toFixed(3)}×, phải nằm trong 0,60–0,88×`);
   if (!(kKhac / kBi >= 1.36)) fail(`khoảng cách khắc/bị khắc co lại còn ${(kKhac/kBi).toFixed(2)}× — phải giữ ít nhất 1,36×`);
   if (!(r.st.lopKhac > r.st.khongVK * 0.99)) fail('cởi vũ khí ra thì hệ LỚP phải tiếp quản');
-  if (!/SECTS\[player\.sect\]\.element/.test(r.nguonHeChieuNguoc))
-    fail(`chiều quái→người đọc "${r.nguonHeChieuNguoc}" — phải là hệ LỚP, đổi vũ khí không được làm ngươi ăn đòn nặng hơn`);
+  // Tất cả 5 hệ vũ khí phải cho CÙNG một con số máu mất. Khác nhau dù một điểm nghĩa là hệ vũ
+  // khí đã lọt vào chiều phòng thủ.
+  {
+    const m = r.mat || {};
+    // (a) tất định
+    const hv = Object.values(r.heThuTheoVK || {});
+    if (hv.length !== 5 || new Set(hv).size !== 1)
+      fail(`heThu() đổi theo vũ khí: ${JSON.stringify(r.heThuTheoVK)} — hệ phòng thủ phải trơ với vũ khí`);
+    else console.log(`OK   heThu() trơ với cả 5 hệ vũ khí (luôn ${hv[0]})`);
+    if (r.loi) fail('không dựng được cảnh đo chiều phòng thủ: ' + r.loi);
+    else {
+      const v = Object.values(m);
+      if (!v.length || v.some(x => !x)) fail('đo máu mất ra 0 — cảnh dựng sai, không phải bài xanh');
+      else {
+        const lo = Math.min(...v), hi = Math.max(...v), lech = (hi/lo - 1) * 100;
+        if (lech > 5)
+          fail(`đổi vũ khí làm đổi máu mất ${lech.toFixed(1)}%: ${JSON.stringify(m)} — hệ vũ khí đã lọt vào chiều PHÒNG THỦ`);
+        else console.log(`OK   đổi cả ${v.length} hệ vũ khí, tổng máu mất chỉ lệch ${lech.toFixed(1)}% (nhiễu ±15% mỗi đòn) — vũ khí không chạm chiều phòng thủ`);
+      }
+    }
+  }
   if (r.doiHe.nhanGiap) fail('Đổi Hệ vẫn nhận GIÁP — ăn 1 Hỗn Độn Châu để roll thứ không dùng');
   if (!r.doiHe.nhanVuKhi) fail('Đổi Hệ không nhận vũ khí');
 

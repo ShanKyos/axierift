@@ -104,6 +104,13 @@
       t.ax = t.x || d.x; t.ay = t.y || d.y; t.at = gio;
       t.bx = d.x; t.by = d.y; t.bt = gio + TRE_MS;
       t.face = d.f; t.moving = !!d.mv;
+      // ⚠ LẤY GIÁ TRỊ LỚN HƠN, ĐỪNG GÁN ĐÈ. `atkAnim`/`castT` là hai bộ đếm NGƯỢC kéo dài
+      // 0,22s / 0,38s, trong khi ảnh chụp tới mỗi 100 ms — nên một cú đánh luôn lọt vào 2-3
+      // ảnh, và ảnh thứ hai mang một con số NHỎ HƠN chỗ mà `noiSuy` đã đếm tới. Gán đè là
+      // đòn giật ngược về giữa chừng mỗi 100 ms. Lấy `max` thì một cú đánh mới (giá trị đầy)
+      // cắt ngang được cú đang chạy, còn phần đuôi thì để `noiSuy` đếm nốt.
+      t.atkAnim = Math.max(t.atkAnim || 0, d.a || 0);
+      t.castT   = Math.max(t.castT   || 0, d.c || 0);
       t.hp = d.hp; t.maxHp = d.mhp; t.level = d.lv; t.speed = d.sp;
       t.sect = d.s; t.name = d.n;
       t.map = tin.map || ta0.map;
@@ -145,6 +152,11 @@
       // công thức sang đây là bàn chân trượt đất, và kiểu lệch đó chỉ hiện ra khi nhìn ảnh chụp.
       const dx = x - t.x, dy = y - t.y, dl = Math.hypot(dx, dy);
       t.x = x; t.y = y;
+      // Đếm nốt hai bộ đếm ra đòn. `update()` làm đúng việc này cho người chơi của mình
+      // (`player.atkAnim -= dt`); thân người từ xa không đi qua `update()` nên phải đếm ở đây,
+      // nếu không một cú đánh sẽ ĐỨNG HÌNH ở khung cuối cùng nhận được cho tới ảnh kế tiếp.
+      if (t.atkAnim > 0) t.atkAnim = Math.max(0, t.atkAnim - dt);
+      if (t.castT   > 0) t.castT   = Math.max(0, t.castT   - dt);
       if (typeof window.thanNhip === 'function') window.thanNhip(t, dt, dx, dy, dl > 0.01 ? 1 : 0);
     }
   }
@@ -161,6 +173,9 @@
     ws.send(JSON.stringify({
       t: 'pos', map: ta.map || '',
       x: p.x, y: p.y, face: p.face || 0, moving: !!p.moving,
+      // Ra đòn. Hai con số này là thứ làm lớp nhân vật VẬT CHẤT HOÁ bên cạnh Axie của người
+      // khác — không có chúng thì mọi người chỉ trượt quanh map mà không ai đánh gì.
+      atk: +(p.atkAnim || 0).toFixed(2), cast: +(p.castT || 0).toFixed(2),
       hp: p.hp, maxHp: p.maxHp, level: p.level, speed: p.speed,
       sect: p.sect, name: p.name || ('Khach' + NET.id),
     }));
