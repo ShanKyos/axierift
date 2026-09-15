@@ -1241,6 +1241,14 @@ const MOB_KHUNG = {
   // ⚠ `neoY` ĐO Ở ĐẾ GIÀY (hàng 549/640), KHÔNG ở đáy ảnh: art có vệt khói kéo xuống dưới
   // chân, neo theo đáy là con ma treo lơ lửng cao hơn mặt đất 14% chiều cao ô.
   // fps 10 = đúng nhịp gói gốc khai (Godot: speed 8,0 × duration 0,8 ⇒ 0,1 s mỗi khung).
+  //
+  // Art gốc quá tối để đọc được nét: sáng 0,128 trong khi 24 tấm quái hiện có trung bình 0,658
+  // và viên cỏ Corran là 0,722. Nướng lại có xử lý — LỆNH ĐÚNG, giữ lại để dựng lại được:
+  //   python3 tools/nuong_khungquai.py tq_corran --dung <8 khung>/*.png \
+  //           --chan 549 --cao 256 --sang 0.8754,1.0,1.08 --vien 5,#9ec8e8,0.55
+  // gamma 0,8754 dò ra để độ sáng ĐO ĐƯỢC tăng đúng 25% (0,128 → 0,160); viền rìa lạnh cộng
+  // thêm nên tổng ra 0,217. Vẫn tối hơn quái thường 67% — nó giữ nguyên bản sắc "bóng tối",
+  // chỉ là nay đọc được nếp áo. Lệch chuẩn (độ tách nét) 0,092 → 0,149.
   'tq_corran': { cot:8, hang:1, oRong:256, oCao:256, neoY:0.8578,
                  nhip:{ dung:[0,8,10] } },
 };

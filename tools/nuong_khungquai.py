@@ -38,7 +38,10 @@ BA PHÉP ĐO, và vì sao phải đo chứ không đặt tay:
    đôi ngần ấy mỗi lần đổi hướng.
 """
 import os, sys, glob, argparse
-from PIL import Image
+from PIL import Image, ImageFilter
+
+sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+from vfx_meowa import nang_sang          # dùng LẠI, không chép: xem ghi chú tại chỗ khai ở đó
 
 NHIP = ('dung', 'di', 'danh', 'chet')
 FPS_MAC_DINH = {'dung': 8, 'di': 12, 'danh': 16, 'chet': 10}
@@ -62,6 +65,37 @@ def _cat_dai(spec):
     return [im.crop((i * w, 0, (i + 1) * w, im.height)) for i in range(n)]
 
 
+def vien_ria(im, day, mau, manh):
+    """Rìa sáng lạnh trên mép TRÊN-TRÁI, nằm TRONG đường bao.
+
+    Vì sao rìa TRONG chứ không phải quầng NGOÀI: chủ thể tối đứng trên nền sáng thì quầng ngoài
+    vô hình (sáng chồng sáng). Rìa trong tạo một đường sáng ngay tại ranh giới, nên mắt đọc ra
+    một cái MÉP CÓ KHỐI thay vì một lỗ thủng đen.
+
+    Dựng theo đúng luật đã ghi ở CLAUDE.md mục "Đổ khối": lấy bóng gốc TRỪ bóng đã dời, để còn
+    đúng một dải mép. Phủ nguyên bóng sáng dời vài pixel rồi bóng tối dời ngược lại thì ruột
+    hình bị sáng chồng tối hoá xám — đỏ ra nâu hồng, vàng ra khaki.
+    Dải phải TẮT DẦN (làm nhoè rồi mới tô): một vành đều tăm tắp đọc thành nét viền dán.
+
+    Cộng SÁNG chứ không tô đè: rìa là ánh sáng hắt lên vải, không phải một lớp sơn phủ lên nó.
+    Tô đè thì nếp áo dưới vành biến mất, mà nếp áo mới là thứ vành này sinh ra để cho thấy.
+
+    Nguồn sáng ở TRÊN-TRÁI — cùng quy ước với `applyFormLight` trong game.
+    """
+    import numpy as np
+    a = np.asarray(im).astype(float)
+    al = a[..., 3]
+    doi = np.zeros_like(al)
+    doi[day:, day:] = al[:-day or None, :-day or None]     # bóng dời xuống-phải
+    dai = np.clip(al - doi, 0, 255)                        # còn đúng vành trên-trái
+    dai = np.asarray(Image.fromarray(dai.astype('uint8'))
+                     .filter(ImageFilter.GaussianBlur(day * 0.55))).astype(float)
+    dai *= al / 255.0                                      # kẹp lại trong đường bao
+    k = (dai / 255.0 * manh)[..., None]
+    rgb = np.clip(a[..., :3] + np.array(mau, float) * k, 0, 255)
+    return Image.fromarray(np.dstack([rgb, al]).astype('uint8'))
+
+
 def _gop(a, b):
     if a is None: return b
     if b is None: return a
@@ -78,6 +112,12 @@ def main():
     ap.add_argument('--chan', type=int, default=None,
                     help='hàng của ĐẾ CHÂN trong khung gốc — đè phép đo đáy nhịp `dung`. '
                          'Bắt buộc khi art có khói/hào quang/bóng vẽ sẵn dưới chân.')
+    ap.add_argument('--sang', default='',
+                    help='"gamma,gain,sat" — nâng sáng cho art tối đọc được trên nền sáng. '
+                         'Dùng chung hàm với tools/vfx_meowa.py.')
+    ap.add_argument('--vien', default='',
+                    help='"dày,#rrggbb,mạnh" — rìa sáng lạnh mép trên-trái, NẰM TRONG đường bao. '
+                         'Ví dụ: 5,#9ec8e8,0.55')
     ap.add_argument('--cao', type=int, default=None,
                     help='chiều cao ô ĐẦU RA (px). Không khai thì giữ nguyên cỡ gốc. '
                          'Trùm vẽ ra 106-132px trên màn, nên ô 640 là thừa gấp 5 lần điểm ảnh.')
@@ -135,6 +175,18 @@ def main():
         r = a.cao / oCao
         oRong, oCao = max(1, round(oRong * r)), a.cao
         khung = [k.resize((oRong, oCao), Image.LANCZOS) for k in khung]
+
+    if a.sang:
+        g, gain, sat = (float(v) for v in a.sang.split(','))
+        khung = [nang_sang(k, g, gain, sat) for k in khung]
+
+    # ⚠ Viền chạy SAU khi thu ô, không trước: bề dày phải tính bằng pixel ĐẦU RA. Vẽ ở cỡ gốc
+    # rồi thu 640→256 là vành mỏng đi 2,5 lần và gần như biến mất — cùng bài học "bề dày viền
+    # phải tính theo TỈ LỆ" đã ghi ở mục hào quang +N.
+    if a.vien:
+        _d, _m, _s = a.vien.split(',')
+        rgb = tuple(int(_m.lstrip('#')[i:i+2], 16) for i in (0, 2, 4))
+        khung = [vien_ria(k, int(_d), rgb, float(_s)) for k in khung]
 
     cot = min(COT_TOI_DA, len(khung))
     hang = (len(khung) + cot - 1) // cot
