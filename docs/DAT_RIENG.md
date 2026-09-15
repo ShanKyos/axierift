@@ -101,7 +101,7 @@ nào ra hồn.
 |---|---|---|---|
 | **A. Nguồn tài nguyên theo giờ** | vòng lặp gây nghiện, lý do quay lại | **nguy cơ nuốt ARPG** (§0.3) | ⚠ chỉ làm phần nhỏ |
 | **B. Chỗ TIÊU tài nguyên** | sink thật, đích để cày | không tự vui | ✅ **an toàn nhất** |
-| **C. Chỗ khoe / trang trí** | biểu đạt cá nhân | **game MỘT NGƯỜI — không ai tới xem** | ❌ mỏng |
+| **C. Chỗ khoe / trang trí** | biểu đạt cá nhân | *(xem ghi chú sửa ngay dưới bảng)* | ✅ **hợp lệ** |
 | **D. Trạm chức năng** (kho · lò · dịch chuyển) | tiện tay | tiện ích, không phải nội dung | ✅ làm kèm, đừng làm trục |
 
 **Vai C phải nói thẳng:** đã xác nhận ở phiên trước — game **không có mạng, không có người chơi
@@ -110,6 +110,19 @@ mã). Một ngôi nhà đẹp mà không ai ghé thì chỉ còn giá trị vớ
 đừng đặt cược cả hệ vào đó.
 
 ---
+
+> ⚠ **VAI C ĐÃ ĐƯỢC CHỦ DỰ ÁN SỬA LẠI.** Bản đầu của bảng này chấm vai C là "mỏng" với lý do
+> *"game MỘT NGƯỜI — không ai tới xem"*. Chủ dự án bác lại bằng đúng chữ: *"Cứ làm như bình
+> thường, game rồi sẽ có mạng để người chơi có thể trang trí."* ⇒ **vai C là mục tiêu hợp lệ**,
+> và lý do bác là một sự thật về lộ trình mà khảo sát không có cách nào đo ra từ mã nguồn.
+>
+> Giữ lại dòng cũ ở đây thay vì xoá trắng, đúng lối mục "Khắc Ấn" trong CLAUDE.md: người sau đọc
+> lịch sử git rồi tưởng kết luận cũ còn hiệu lực thì tệ hơn.
+>
+> Phần tài nguyên cho vai C — **có đủ art để xây không** — trả lời ở `docs/DAT_RIENG_ART.md`.
+> Đáp án gọn: kho Axie **không** có món để xây (cả 2,3 GB đúng 2 công trình, đã lấy cả hai),
+> nhưng đường của chính game này thì có và đã chạy — `tools/iso/cat_congtrinh.py` cùng 34 món
+> đặt được đang dùng ở Ardhaven.
 
 ## 4. ĐỀ XUẤT: Đất Riêng là **XƯỞNG**, không phải **NÔNG TRẠI**
 
