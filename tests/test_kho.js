@@ -124,7 +124,7 @@ let bad = 0; const fail = m => { bad++; console.log('FAIL ' + m); };
     player.kho = [genItem(40,0), genItem(40,0)];
     player.jewels = { chucPhuc:9, linhHon:4, sinhMenh:2, honDon:1 };
     player.baohap = { 3:5 };
-    player.khoNgoc = Object.assign({ hap:{ 3:2 } }, { chucPhuc:5, linhHon:0, sinhMenh:0, honDon:0, tuLa:0, honNguyen:0 });
+    player.khoNgoc = Object.assign({ hap:{ 3:2 } }, { chucPhuc:5, linhHon:0, sinhMenh:0, honDon:0, honNguyen:0 });
     window.bagTab = 'kho'; renderBag();
     const h = el('panel-bag').innerHTML;
     // Bấm THẬT cái nút chỉ đường, đừng chỉ hỏi chuỗi onclick có đúng chữ không.
@@ -149,7 +149,7 @@ let bad = 0; const fail = m => { bad++; console.log('FAIL ' + m); };
   // C) Ngăn Ngọc: gửi/rút, và ngọc đang CẤT thì không tiêu được
   const rC = await p.evaluate(() => {
     player.jewels = { chucPhuc:9, linhHon:4, sinhMenh:2, honDon:1 };
-    player.gems = { tuLa:7, honNguyen:3 }; player.baohap = { 3:5 }; player.khoNgoc = { hap:{} };
+    player.gems = { honNguyen:3 }; player.baohap = { 3:5 }; player.khoNgoc = { hap:{} };
     khoNgocGui('chucPhuc', 'all');
     const sauGui = { tui: player.jewels.chucPhuc, kho: player.khoNgoc.chucPhuc };
     khoNgocRut('chucPhuc', 'all');
@@ -167,12 +167,13 @@ let bad = 0; const fail = m => { bad++; console.log('FAIL ' + m); };
   if (rC.sauRut.tui !== 9 || rC.sauRut.kho !== 0) fail('rút ngọc sai số lượng');
   if (rC.hap.tui !== 0 || rC.hap.kho !== 5) fail('gửi Box Kundun sai số lượng');
   if (rC.guiHet.jewels !== 0 || rC.guiHet.gems !== 0) fail('"Gửi hết" bỏ sót ngọc trong túi');
-  if (rC.guiHet.kho !== 26) fail(`"Gửi hết" cất ${rC.guiHet.kho} viên, phải 26 (9+4+2+1 châu = 16, cộng 7+3 đá = 10)`);
+  // 19 chứ không 26: Tu La Tinh Thạch đã gỡ khỏi game (xem GO_TULA), gems chỉ còn Hỗn Nguyên.
+  if (rC.guiHet.kho !== 19) fail(`"Gửi hết" cất ${rC.guiHet.kho} viên, phải 19 (9+4+2+1 châu = 16, cộng 3 Hỗn Nguyên)`);
 
   // C2) ngọc đang cất KHÔNG bỏ vào khay rèn được, và game phải nói rõ nó nằm đâu
   const rC2 = await p.evaluate(() => {
     player.jewels = { chucPhuc:0, linhHon:0, sinhMenh:0, honDon:0 };
-    player.khoNgoc = Object.assign({ hap:{} }, { chucPhuc:9, linhHon:0, sinhMenh:0, honDon:0, tuLa:0, honNguyen:0 });
+    player.khoNgoc = Object.assign({ hap:{} }, { chucPhuc:9, linhHon:0, sinhMenh:0, honDon:0, honNguyen:0 });
     window.forgeTray = [];
     let noi = '';
     const goc = window.chaosSay; window.chaosSay = (m) => { noi = m; };

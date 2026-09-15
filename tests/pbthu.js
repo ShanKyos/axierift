@@ -22,7 +22,7 @@ function dungPbThu(o){
   DUNGEONS['pb_thu'] = {
     boss: o.boss || 'boss_hacphong', bossName: o.bossName || 'Trùm Bài Kiểm',
     waves: o.waves || [ ['bandit','bandit','wolf'], ['bandit','hautu','bandit'], ['assassin','bandit','wolf'] ],
-    rewards: o.rewards || { sach:[1,2], tuLa:[0,0], hon:[0,0], khi:40, bacThem:150, silver:[850,1450] },
+    rewards: o.rewards || { sach:[1,2], tuLa:[0,0], hon:[0,0], khi:40, bacThem:150, silver:[850,1450] },   // tuLa giữ khoá: phần thưởng phó bản nay quy ra Lumen (GO_TULA)
     huntBoss: 'huntBoss' in o ? o.huntBoss : 'boss_cotma1',
     boxTier: o.boxTier || 1,
     timeLimit: 'timeLimit' in o ? o.timeLimit : 480,
