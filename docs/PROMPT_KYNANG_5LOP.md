@@ -619,6 +619,75 @@ chữ khác đã nằm trong ảnh rồi.
 `CHIEU_TRANH` khai `xoay:true`, `spawnAtlasVfx` quay quanh chính điểm neo (xem `tests/test_xoayvfx.js`).
 ⚠ Gen mỗi chiêu một hướng khác nhau là vứt đi cái đó: neo đo được một kiểu, hình quay một kiểu.
 
+#### ✅ ĐÃ CHẠY THẬT — gói đầu tiên (Twisting Slash), và bốn thứ đo được
+
+Chủ dự án gửi gói **Godot 4.2** (`image-3-godot4_2.zip`) và nó đã nhập xong vào
+`sx_thieulam_a`. Bốn điều học được, mỗi điều đổi một dòng trong hướng dẫn ở trên:
+
+**① XUẤT KIỂU GODOT 4.2 LÀ ĐỊNH DẠNG TỐT NHẤT — đừng xin PNG trần.** Gói gồm 4 tệp,
+và `image-3_frames.tres` **nói thẳng ra lưới và nhịp** thay vì bắt đoán:
+
+```
+region = Rect2(0, 0, 640, 640)   ⇒ ô 640px, tấm 2560×2560 ⇒ lưới 4×4
+"speed": 8.0 · 16 AtlasTexture   ⇒ 16 khung @ 8 fps
+```
+
+Với ba tấm Gemini trước đó tôi phải **đo** lưới bằng cách dò mép. Ở đây nó là dữ liệu.
+⇒ Khi đặt gói Meowa, **chọn xuất Godot 4**, không phải PNG hay GIF.
+
+**② NỀN VỀ ĐẶC, KHÔNG TRONG SUỐT — nhưng lần này keyed sạch.** Đo: `alpha == 0` chiếm
+**0,00%**, cả tấm chỉ có **một** mức alpha. Tức ô *"Preserve translucent areas"* trong ảnh
+chụp bảng Meowa **không có tác dụng ở đường này**, hoặc ảnh nguồn còn nền magenta.
+
+⚠ **Và màu nền đã TRÔI**: `#ff00ff` (255,0,255) vào, `(183,61,144)` ra — mô hình hoạt ảnh
+vẽ lại cả khung nên nền bị nén lossy theo. Hệ quả cụ thể: phép thử chroma của
+`vfx_gemini.py --nen` (`(R+B)/2 − G > 120`) cho nền này ra **102,5**, tức **trượt ngưỡng**.
+Phải gọi bằng **màu thật đo được**, đừng gọi bằng màu đã gửi đi:
+
+```bash
+python3 tools/vfx_gemini.py <spritesheet.png> sx_thieulam_a \
+  --luoi 4,4 --o 384 --fps 20 --nen "#b73d90" --nen-toi 26 --nen-xa 90 \
+  --bo 10,11,12,13,14,15
+```
+
+Ngưỡng 26/90 không đoán: biểu đồ khoảng cách RGB tới màu nền có **vùng phẳng rõ rệt** —
+`d<30` bắt 63,4% · `d<60` bắt 65,8% · `d<100` bắt 68,7%, rồi `d<140` vọt lên 85,4% (bắt đầu
+ăn vào art). Cứ đo cái vùng phẳng ấy rồi đặt ngưỡng vào giữa nó.
+
+**③ 6/16 KHUNG LÀ KHUNG CHẾT — cảnh báo "16 khung thì mô hình độn thêm nhịp" là THẬT.**
+Đo đổi giữa hai khung liền nhau (RMS trên thang 0-255):
+
+| | 0→1 | 4→5 | 7→8 | 8→9 | **9→10** | 10→11 | 13→14 | 14→15 |
+|---|---|---|---|---|---|---|---|---|
+| RMS | 12,2 | **37,0** | 11,5 | 7,9 | **1,1** | 1,7 | 1,4 | **0,9** |
+
+Từ khung 9 trở đi đổi 0,9–1,7 — đó là **mức nhiễu nén, không phải chuyển động**. Khung 8 so
+với khung 15 lệch 8,2, còn khung 8 so với khung 9 đã lệch 7,9 ⇒ bảy khung cuối gần như *một
+tấm*. Hoạt ảnh thật dài **10 khung**; `--bo 10,11,12,13,14,15`.
+
+⇒ **Lần sau đặt `--output-frames 8`**, hoặc giữ 16 nhưng câu prompt phải bảo nó **tan đi**
+(`and fades away`), vì `animation_mode: loop` ở đây không quay về tư thế đầu — nó **giữ
+nguyên khung cuối**. Hệ quả: gói không có đoạn tắt dần, hiệu ứng cắt cụt ở khung chót.
+
+**④ ATLAS NẠP LƯỜI ⇒ CÚ TUNG ĐẦU PHIÊN CÓ THỂ KHÔNG VẼ GÌ.** `getVfxAtlasImg()` mới bắt đầu
+tải ở lần gọi đầu, và nhánh vẽ có chốt `img.complete && img.naturalWidth`. Tấm này **1,8 MB**.
+Không có tấm lùi nào như `MOB_KHUNG` có — nên nó không 404, nó chỉ **không vẽ**.
+
+⚠ Đây cũng là cái bẫy đã ăn mất ba lượt chụp của tôi: gọi `spawnAtlasVfx` rồi `render()` trong
+**cùng một `evaluate` đồng bộ** thì ảnh không bao giờ kịp tải ⇒ **cả 10 khung đều trống**, mà
+không lỗi nào in ra. Bài kiểm nào chụp atlas phải hâm trước:
+`await pg.waitForFunction(() => { const i = getVfxAtlasImg(id); return i.complete && i.naturalWidth; })`
+
+⚠ **Và vòng RAF của game vẫn chạy giữa hai lệnh `evaluate`.** Chụp kiểu
+`evaluate(render)` → `screenshot()` → `evaluate(update)` thì vòng RAF đốt hết `dur` 0,5 s
+trước khi tới khung thứ hai — tôi đo ra "chỉ khung 0 có hình" và suýt đổ cho atlas. Phải ghim
+`e.t` rồi `render()` rồi `canvas.toDataURL()` **trong cùng một `evaluate`**.
+
+**Kết quả:** `frames:8 → 10` · `rows:1 → 2` · `fps:18 → 20` (10/20 = 0,50 s, hợp đòn cận chiến;
+để so: `meteor_rain` 0,64 s · `fire_pillar` 0,80 s). Giữ `cong:false` — art này **sáng**
+(0,509) và **lệch chuẩn 0,154**, tức vẽ đè, không cộng sáng. `anchorX/anchorY/neoR` giữ y
+nguyên nên không phải đụng `CHIEU_TRANH` hay bài kiểm nào.
+
 #### Bước 5 — gói về thì làm gì
 
 Không đổi so với §0.9: `tools/vfx_meowa.py` nhận gói, cắt ô, **đo** `anchorX`/`anchorY`/`neoR`
