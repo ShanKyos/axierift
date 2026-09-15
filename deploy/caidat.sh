@@ -199,12 +199,26 @@ fi
 
 oc "XONG"
 nhacCanh3
-if curl -sf --max-time 5 http://127.0.0.1/ws/health >/tmp/.bn-h2 2>&1; then
-  ok "qua nginx: $(cat /tmp/.bn-h2)"
+# ⚠ PHẢI GỬI ĐÚNG `Host`, KHÔNG ĐƯỢC HỎI BẰNG 127.0.0.1 TRƠN. Server block khai
+#   `server_name 14.225.204.107`, nên một request mang `Host: 127.0.0.1` chỉ khớp nó khi
+#   không site nào khác giữ `default_server` — mà bản Debian ship sẵn `sites-enabled/default`
+#   với đúng cờ đó. Bản đầu của dòng này hỏi bằng 127.0.0.1 và in ra một dòng ĐỎ GIẢ trong khi
+#   nginx hoàn toàn lành: người chơi thật gửi Host đúng nên họ không bao giờ gặp cái 404 ấy.
+#   *Một phép kiểm hỏi sai câu hỏi thì tệ hơn không kiểm: nó gửi người ta đi sửa chỗ không hỏng.*
+TEN=$(grep -m1 -oP 'server_name\s+\K[^;]+' "$SB" 2>/dev/null | awk '{print $1}')
+BN_OK=""
+for H in "$TEN" 127.0.0.1; do
+  [ -n "$H" ] || continue
+  if curl -sf --max-time 5 -H "Host: $H" http://127.0.0.1/ws/health >/tmp/.bn-h2 2>&1; then
+    ok "qua nginx (Host: $H): $(cat /tmp/.bn-h2)"; BN_OK=1; break
+  fi
+done
+if [ -n "$BN_OK" ]; then
   echo
   echo "   Mở game ở HAI máy (hoặc hai cửa sổ ẩn danh):"
-  echo "       http://14.225.204.107/?net=1"
+  echo "       http://${TEN:-14.225.204.107}/?net=1"
   echo "   Vào cùng một map là thấy nhau chạy."
 else
-  xx "nginx chưa chuyển tiếp được /ws/health — kiểm: nginx -t ; systemctl status nginx"
+  xx "nginx chưa chuyển tiếp được /ws/health ở bất kỳ Host nào. Chẩn đoán đủ bốn câu:"
+  echo "     bash $KHO/deploy/kiemtra_ws.sh"
 fi
