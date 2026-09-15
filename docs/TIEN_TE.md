@@ -1,6 +1,9 @@
 # Hệ tiền tệ — rà lại và đề xuất gộp (bậc 5)
 
-> **Đây là BẢN ĐỀ XUẤT, chưa thi công.** Chờ chủ dự án chốt ba câu ở §6 rồi mới làm.
+> ⚠ **BẢN NÀY ĐÃ CÓ TRẢ LỜI — đọc `docs/TIEN_TE_V2.md` trước.** Chủ dự án đã chốt hướng:
+> giữ ngọc cho +9, Hỗn Nguyên cho cánh và +10, dọn các nhánh còn lại, rồi dựng một nhánh mới.
+> Ba câu hỏi ở §6 dưới đây **không còn hiệu lực**; §1-§2 (số đo hiện trạng) thì vẫn đúng và
+> V2 dựa vào đó.
 > Mọi con số dưới đây đọc thẳng từ `public/game/game.js`, không ước lượng.
 
 ## §0 — Đây là bậc 5 của một việc đang làm dở, không phải ý mới
