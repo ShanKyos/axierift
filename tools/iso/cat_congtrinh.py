@@ -66,6 +66,35 @@ def cat(duong, so_o=2.0, in_ra=True):
     giu = np.where(dem >= nho)[0]
     vat = np.isin(lab, giu)
     n = n - len(giu) + 1
+    # ②b NGÔI SAO LẤP LÁNH Ở GÓC — mảnh nhỏ NẰM HẲN NGOÀI hộp bao của công trình.
+    #
+    # ⚠ NGƯỠNG CỠ Ở ② KHÔNG BẮT ĐƯỢC NÓ, và con số này đo chứ không đoán: ảnh 2048x2048 cho
+    # `nho` = 838 điểm, còn cái sao bốn cánh Gemini chèn ở góc dưới-phải đặc khoảng 1200-2500
+    # điểm. Nó qua lưới. Màu thì trắng ngà nên sắc tím ra ~15, tức ② coi nó là VẬT LIỆU. Kết quả
+    # là sprite mang theo một đốm sáng lửng lơ cách công trình mấy trăm điểm ảnh — và trong game
+    # nó nằm trên mặt phố, không dính vào cái gì.
+    #
+    # Phân biệt bằng HỘP BAO, không bằng cỡ: cái đe, đống than, khúc gỗ đặt rời của một công
+    # trình đều nằm TRONG hộp bao của chính công trình ấy; đồ trang trí ở góc thì không. Nên
+    # điều kiện là "không giao hộp bao với mảnh lớn nhất", và vẫn kẹp thêm trần cỡ 1% để không
+    # bao giờ vứt nhầm một khối đáng kể.
+    if len(giu) > 1:
+        lab2, n2 = ndimage.label(vat)
+        dem2 = np.bincount(lab2.ravel()); dem2[0] = 0
+        chinh = int(np.argmax(dem2))
+        hop = ndimage.find_objects(lab2)
+        (cy0, cy1), (cx0, cx1) = ((hop[chinh - 1][0].start, hop[chinh - 1][0].stop),
+                                  (hop[chinh - 1][1].start, hop[chinh - 1][1].stop))
+        tran = 0.01 * vat.size
+        for i in range(1, n2 + 1):
+            if i == chinh or dem2[i] > tran:
+                continue
+            sy, sx = hop[i - 1]
+            if sy.stop <= cy0 or sy.start >= cy1 or sx.stop <= cx0 or sx.start >= cx1:
+                vat[lab2 == i] = False
+                if in_ra:
+                    print('  bỏ đốm trang trí ngoài hộp bao: %d điểm tại (%d,%d)'
+                          % (dem2[i], sx.start, sy.start))
     # ── ÉP VỀ ĐÚNG PHÉP CHIẾU CỦA GAME ────────────────────────────────────────────────────
     # ⚠ ĐỪNG ĐO CHÂN ĐẾ CỦA TỪNG TẤM. Đã thử ba cách, cả ba đều sai với một kiểu tranh nào đó:
     #   · "lát cắt ngang rộng nhất ở nửa dưới" — đúng khi có BỆ, sai khi không (tiệm thuốc ra
