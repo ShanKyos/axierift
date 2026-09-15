@@ -1781,6 +1781,43 @@ window.MAPS = {
     spawn:{ x:1300, y:1560 }, dungeon:true, dark:true, trees:10, rocks:40,
     desc:'Đường nứt ăn thẳng xuống dưới lớp đá nền, mọc ra từ hôm Nhát Gọi khắc lên trời. Càng xuống sâu càng xa mọi phiến Rune, nên không tầng nào giống tầng nào — và không tầng nào có luật.',
     packs: [], duhiep: null },
+  // ── ⚔ SÀN ĐẤU ARDHAVEN — map PvP, và là map DUY NHẤT không có gì để cày ─────────────
+  // Chủ dự án chốt: "dựng 1 map pvp… chỉ cần 2 người đánh nhau là được."
+  //
+  // ⚠ KHÔNG `vung`, KHÔNG `herbs`, KHÔNG `boss`, KHÔNG `thu` — và đó là CẢ THIẾT KẾ, không phải
+  // phần chưa làm. Rương Canh tự vắng mặt vì cửa duy nhất của nó là "map có bãi quái"; Vỉa Cốt
+  // cũng thế. Nhét một bãi quái vào đây là biến sàn đấu thành một map cày có thêm người,
+  // và mọi thứ người chơi tới đây để làm sẽ bị AUTO làm hộ.
+  //
+  // ⚠ `min:1` LÀ CỐ Ý. Cửa vào một sàn đấu không nên là cấp — người muốn đấu thì đấu. Chênh
+  // trang bị thì vẫn chênh, nhưng đó là chuyện của luật đấu, không phải của cái cổng.
+  //
+  // Khổ 1800×1400 — NHỎ hơn mọi map khác (map nhỏ thứ nhì là 6400×1400). Chủ ý: hai người vào
+  // là nhìn thấy nhau ngay, không phải đi tìm. Sàn là một đa giác 16 đỉnh xấp xỉ hình bầu dục
+  // nên không có góc chết để đứng nấp.
+  pvp: { name:'Sàn Đấu Ardhaven', min:1, range:'—', type:'freepk', pvp:true,
+    w:1800, h:1400, ground:'#2a2119', patch:'#7a6a4a',
+    sanIso:true, isoCo:['nen_da1','nen_da2','nen_da3','nen_da4'],
+    isoDat:['nen_soi1','nen_soi2','nen_soi3','nen_soi4'],
+    isoVet:['vet_soi1','vet_soi2'],
+    isoCay:0, isoNho:0, trees:0, rocks:0, herbs:false,
+    desc:'Bảy người lính Vaeldra qua Nhát Gọi mang theo một cái lò và một thói quen: sáng nào cũng có hai người xuống sân mà thử nhau. Sân ấy còn đây. Không có gì để đào, không có gì để giết — chỉ có người đứng đối diện.',
+    spawn:{ x:900, y:1140 }, spawnFrom:{ ardhaven:{ x:900, y:1140 } },
+    // ⚠ HAI GÓC ĐỨNG, và nếu thiếu thì lỗi hiện ra RẤT GIỐNG "mạng không chạy": mọi nhân vật
+    // vào map đều rơi vào ĐÚNG một `spawn`, nên hai người vừa vào là hai thân chồng khít lên
+    // nhau lệch 0,0px. Đã mắc đúng chuyện đó khi thử Bóng Người lần đầu (xem CLAUDE.md).
+    // Chọn góc theo id máy chủ cấp (`NET.id`) — xem `pvpGoc()` trong game.js.
+    goc: [{ x:300, y:700 }, { x:1500, y:700 }],
+    diTrong: [
+      [1690,700], [1630,930], [1459,1124], [1202,1254],
+      [900,1300], [598,1254], [341,1124], [170,930],
+      [110,700], [170,470], [341,276], [598,146],
+      [900,100], [1202,146], [1459,276], [1630,470]
+    ],
+    // Khai rỗng TƯỜNG MINH, đừng để thiếu khoá. `packsOf()` đọc `md.packs` và một map chưa ai
+    // vào thì nó còn `undefined` — `.map(...)` trên đó ném ngay giữa vòng dựng thế giới. Cùng
+    // cái bẫy đã ghi ở mục MIỀN DÂN SỐ; `deep` khai rỗng cũng vì lý do này.
+    packs: [], duhiep: null },
 };
 
 // ═══════════ GDD Đợt 2 — A: ĐỊA HÌNH CẢN ĐƯỜNG + ẢI CẤP ═══════════

@@ -64,6 +64,12 @@
       // thoát ký tự. Nhét HTML vào đây là dựng một chỗ thứ hai biết về giao diện.
       if (tin.t === 'chat' && typeof window.netChatNhan === 'function') { window.netChatNhan(tin); return; }
       if (tin.t === 'chat-chan' && typeof window.netChatChan === 'function') { window.netChatChan(tin.ly); return; }
+      // ⚔ Sàn đấu. Cùng lối với chat: net.js là sợi dây, game.js quyết vẽ gì. Ba tin riêng chứ
+      // không một tin mang cờ — `pvp-mau` phải giật người, `pvp-hoi` thì tuyệt đối không được
+      // (một cú giật lúc hồi sinh đọc ra là "vừa dựng lại trận đã ăn đòn").
+      if (tin.t === 'pvp-mau' && typeof window.netPvpMau === 'function') { window.netPvpMau(tin); return; }
+      if (tin.t === 'pvp-ket' && typeof window.netPvpKet === 'function') { window.netPvpKet(tin); return; }
+      if (tin.t === 'pvp-hoi' && typeof window.netPvpHoi === 'function') { window.netPvpHoi(tin); return; }
     };
 
     ws.onclose = () => {
@@ -118,6 +124,9 @@
       t.face = d.f; t.moving = !!d.mv;
       t.hp = d.hp; t.maxHp = d.mhp; t.level = d.lv; t.speed = d.sp; t.chet = !!d.dd;
       t.sect = d.s; t.name = d.n;
+      // Máu TRẬN — chỉ có mặt khi người ấy đang đứng trong sàn đấu. `0` là "không ở trận nào",
+      // không phải "sắp chết"; `veNhanNet` phân biệt bằng `pvpMax > 0`.
+      t.pvpHp = d.ph || 0; t.pvpMax = d.pm || 0;
       t.map = tin.map || ta0.map;
       // ── Trang bị: chỉ tới khi nó ĐỔI (xem chú thích ở máy chủ) ────────────────────────
       // Dựng lại một `equip` giả bằng hàm của game, để thân người từ xa đi qua ĐÚNG đường vẽ
@@ -223,6 +232,16 @@
     }
     ws.send(JSON.stringify(goi));
   }
+
+  /* ── Gửi một cú đánh trong sàn đấu ───────────────────────────────────────────────────
+   * Trả `false` khi chưa nối — bên gọi nói ra, đừng nuốt. Máy chủ mới là nơi quyết cú này có
+   * ăn hay không (khoảng cách, nhịp, trần sát thương): ở đây chỉ gửi.                        */
+  window.netPvpDanh = function (id, dmg) {
+    const ws = NET.ws;
+    if (!ws || ws.readyState !== 1 || !(id > 0)) return false;
+    ws.send(JSON.stringify({ t: 'pvp-danh', den: id, dmg: Math.max(1, Math.round(dmg) || 1) }));
+    return true;
+  };
 
   /* ── Gửi chat ────────────────────────────────────────────────────────────────────────
    * Trả `false` khi chưa nối, để bên gọi NÓI RA thay vì nuốt câu của người chơi. Một ô chat

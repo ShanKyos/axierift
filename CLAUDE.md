@@ -3328,6 +3328,104 @@ theo, không bằng cách nới luật:
   bao giờ vật chất hoá. Chốt tự kiểm của chính mục ấy bắt được — *đỏ ở chốt cảnh dựng, không đỏ
   ở mệnh đề*, đúng như nó phải thế.
 
+### ⚔ SÀN ĐẤU ARDHAVEN — PvP đã chạy, và **MÁU TRẬN LÀ MỘT TÚI RIÊNG**
+
+Chủ dự án chốt: *"Dựng 1 map pvp và làm thử xem. Chỉ cần 2 người đánh nhau là được."* Đã chạy
+thật: hai trình duyệt, đi bộ qua cổng, đánh nhau, có kẻ thắng người thua.
+
+| | |
+|---|---|
+| Map | `pvp` trong `data/canbang.js` — *Sàn Đấu Ardhaven*, 1800×1400, `type:'freepk'`, `pvp:true` |
+| Cổng vào | `ardhaven (3820,1840)` → `pvp`, và cổng ra `pvp (900,1140)` → `ardhaven` |
+| Client | `PVP_MAP` · `PVP_HE` · `pvpDangO()` · `pvpGoc()` · `nearestNguoi()` · `pvpTran` · `drawPvpHUD()` |
+| Máy chủ | `nhanPvpDanh()` · `phatSan()` · `st.pvpHp/pvpMax/pvpChet/pvpHit` trong `bongnguoi.js` |
+| Dây | `netPvpDanh` gửi · `pvp-mau` / `pvp-ket` / `pvp-hoi` nhận, trong `net.js` |
+| Gác | `tests/test_pvp.js` (8 mệnh đề, **cả tám đã thử ngược và đều đỏ**) |
+
+**⚠⚠ QUYẾT ĐỊNH LỚN NHẤT: máu trận KHÔNG phải `player.hp`.** Ba lý do, mỗi lý do đủ để một mình
+nó quyết:
+1. `player.hp` nằm trên **máy của người BỊ đánh** — để nó quyết thì ai cũng bất tử bằng một dòng
+   devtools, và người thắng không có cách nào biết mình đang bị lừa.
+2. Chết thật thì `onDeath()` chạy: ném về map an toàn, mất tiến độ. **Thua một trận đấu không
+   được phép đụng vào bản lưu.**
+3. Túi riêng thì máy chủ giữ được, và nó mở **một** con số ra cho cả hai bên cùng nhìn.
+
+Nhưng túi ấy **khởi tạo bằng `maxHp` THẬT**, nên trang bị và cấp vẫn quyết thắng thua — đúng cái
+*"mang progress và đồ"* chủ dự án hỏi. `test_pvp §5` là mệnh đề nặng nhất của cả bài: nó đo
+`player.hp` · `dead` · `curMap` · `level` · `xp` của người vừa bị hạ và đòi **không một cái nào
+suy suyển**. Thử ngược (trừ thẳng vào `player.hp`) ra `1115 → 43` — đỏ ngay.
+
+**⚠ HAI GÓC ĐỨNG (`md.goc`), và thiếu nó thì lỗi trông y hệt "mạng không chạy".** Mọi nhân vật
+vào một map đều rơi vào **đúng một** `spawn`, nên hai người vừa vào là hai thân **chồng khít lên
+nhau lệch 0,0px** — đúng cái đã làm mất một vòng chẩn đoán ở lượt thử Bóng Người đầu tiên. Chọn
+góc theo **`NET.id`** (thứ duy nhất được máy chủ bảo đảm khác nhau giữa hai client), đừng bốc
+ngẫu nhiên: ngẫu nhiên thì một nửa số lượt hai người vẫn cùng một góc, tức lỗi cũ quay lại nhưng
+chỉ một nửa số lần.
+
+**⚠ KHÔNG hệ số phẳng nào cân được cả hai đầu — đo rồi mới biết.** Quét 5 lớp × 3 cấp × có/không
+BiS:
+
+| cảnh | `atk/maxHp` | `aspd` |
+|---|---|---|
+| tay trần (thieulam, mọi cấp) | 0,037 | 0,74 |
+| tay trần (toanchan cấp 20) | 0,083 | 0,79 |
+| BiS (`applyTestBoost`) | 0,089 | **0,25** |
+| BiS (toanchan cấp 120) | **0,266** | 0,25 |
+
+Tỉ lệ trải **7 lần**, mà `aspd` lại nhanh thêm **3 lần** ở đầu BiS ⇒ 21 lần chênh về tốc độ hạ.
+Nên chia việc: `PVP_HE = 1,0` đặt theo cảnh THẬT (trang bị thường), còn **trần một cú của máy
+chủ** `PVP_TRAN_DMG = 0,06` mới là thứ bó đầu BiS. Đo được: trận **17-32 cú**, tức ~4 giây (hai
+bên full BiS) tới ~24 giây (hai bên tay trần). **Bốn giây là đầu trên ĐÃ BIẾT, không phải chỗ
+chưa đo.**
+
+**⚠ TRẦN MỘT CÚ LÀM HAI VIỆC** — và đó là lý do nó đáng có: vừa chặn một client sửa đổi bắn một
+phát chết (`test_pvp §6` bắn thẳng `1e9` và đo ra 5,9%), vừa là cái duy nhất bó được cân bằng ở
+đầu trên. Nới nó là hai người full BiS hạ nhau trong vài cú; hạ nữa là trang bị hết nghĩa.
+
+**⚠ VÀ ĐÂY KHÔNG PHẢI CHỐNG GIAN LẬN — đừng đọc nó thành lời hứa kia.** Máy chủ không biết `atk`
+của ai (cho nó biết là phải chở cả `calcDerived` lên đấy). Ba hàng rào là để **bó thiệt hại**:
+**khoảng cách** (máy chủ có cả hai toạ độ ⇒ hàng rào THẬT), **nhịp** (`PVP_NHIP_MS` 120), và
+**trần một cú**. Kẻ sửa client đánh đau hơn — nhưng không một phát chết, không đánh xuyên map,
+không bắn 100 phát một giây.
+
+**⚠ CHỈ ĐÒN THƯỜNG.** Chiêu thức đi qua `hurtMob` ở hàng chục chỗ, mỗi chỗ một hình học riêng;
+nối tất cả vào PvP là một đợt việc riêng. Nói ra thay vì nối nửa vời — một chiêu nổ trùm qua
+người mà họ không mất máu là đúng cái "hứa suông" mà luật `pham` đã cấm.
+
+**Năm chỗ đã vấp, ghi lại:**
+1. **`return` giữa `update(dt)`.** Nhánh PvP của `pendingHit` nằm **trong** `update`, không phải
+   trong một hàm riêng — một `return` ở đó bỏ qua toàn bộ phần còn lại của khung (đạn, hồi chiêu,
+   nhặt đồ, sự kiện) và **chỉ ở đúng cái khung có một cú đánh PvP tới hạn**. Nhìn ra là "game
+   giật một cái mỗi lần đánh", không ra một lỗi. Phải là `else`.
+2. **Reset máu trận phải hỏi TRƯỚC dòng `curMap = mapId`** trong `travelTo` — sau dòng ấy thì
+   `curMap` đã bằng `mapId` và điều kiện không bao giờ đúng.
+3. **Cộng vào một bộ đếm RIÊNG (`st.pvpHit`), đừng ghi đè `st.hitSeq`.** `capNhat` ghi `hitSeq`
+   từ client ở mỗi gói `pos` (10 Hz), nên cộng thẳng vào đó là mất ngay ở gói kế tiếp. Nhờ bộ
+   đếm riêng, cú giật của người bị đánh đi qua **đúng sợi dây `hs` đã có** — không thêm cơ chế.
+4. **Báo máu trận NGAY LÚC VÀO, đừng đợi cú đánh đầu tiên.** Ảnh chụp chở `ph/pm` của người
+   KHÁC nhưng không bao giờ chở của chính mình ⇒ người vừa vào nhìn thanh máu của **trận trước**
+   cho tới lúc ăn đòn. Và `pvpMax = 0` lúc cú đầu bay tới thì trần một cú (tính theo `pvpMax`)
+   cũng bằng 0 ⇒ cú đầu tiên kẹp xuống 1 sát thương.
+5. **Trong sàn đấu, `doBasic` phải chạy tới NGƯỜI khi ngoài tầm.** Sàn không có con quái nào nên
+   nhánh cũ rơi thẳng xuống câu *"không có quái trong tầm — mở M hoặc Chọn Trận để tới bãi
+   quái"*: đứng giữa sàn đấu mà game bảo đi tìm bãi quái, và nhân vật đứng im.
+
+**Ba bài kiểm CŨ phải đi theo, và cả ba là "theo nội dung", không phải "nới luật":**
+`test_thegioi §1` (sàn đấu không có chỗ trên bản đồ thế giới — nó không giáp vùng nào nên không
+có hướng nào đúng để vẽ) · `test_domap` (mọi ngưỡng của bài đo *"map có đủ thứ để làm không"*,
+mà sàn đấu **cố ý** không có gì — cách duy nhất làm nó xanh là nhét một bãi quái vào sàn đấu,
+tức làm hỏng chính cái map) · cả hai lọc bằng `md.pvp`. `test_noimap` thì **xanh sẵn** và đó là
+bằng chứng cổng chạy: nó lan theo đúng đường người chơi và tới được `pvp`.
+
+**⚠ MAP CỐ Ý RỖNG.** Không `vung`, không `herbs`, không `boss`, không `thu` — nên Rương Canh và
+Vỉa Cốt tự vắng mặt (cửa duy nhất của cả hai là *"map có bãi quái"*). Nhét một bãi quái vào đây
+là biến sàn đấu thành một map cày có thêm người, và mọi thứ người chơi tới đây để làm sẽ bị AUTO
+làm hộ. `packs: []` / `duhiep: null` vẫn phải khai **tường minh** — `packsOf()` đọc `md.packs` và
+`.map(...)` trên `undefined` ném ngay giữa vòng dựng thế giới.
+
+**⚠ Sàn đấu KHÔNG mở điểm dịch chuyển** (`travelTo` loại cả `md.dungeon` lẫn `md.pvp`): mở ra thì
+bảng Bản Đồ có một nút dịch chuyển thẳng vào giữa một trận đang đánh.
+
 ### Còn nợ, biết rõ
 
 | | |

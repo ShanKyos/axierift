@@ -29,7 +29,12 @@ let bad = 0; const fail = m => { bad++; console.log('FAIL ' + m); };
 
   // ---- 1. đủ vùng ----
   const r1 = await p.evaluate(() => {
-    const canCo = Object.keys(MAPS).filter(k => !MAPS[k].dungeon);
+    // ⚠ `md.pvp` cũng bị loại, cùng lý do `dungeon` bị loại: `THE_GIOI` là phép NHÚNG ĐỊA LÝ
+    // của Lunacia — mười hai vùng có cạnh chung và có hướng với nhau. Sàn đấu là một cái sân
+    // bên trong thành, vào bằng cổng dịch chuyển; nó không giáp vùng nào nên không có hướng
+    // nào đúng để vẽ. Cắm bừa một toạ độ cho nó là làm chính bài §2 (biển cổng phải khớp
+    // hướng thật) nói dối.
+    const canCo = Object.keys(MAPS).filter(k => !MAPS[k].dungeon && !MAPS[k].pvp);
     const co = Object.keys(THE_GIOI);
     return { thieu: canCo.filter(k => !THE_GIOI[k]), thua: co.filter(k => !MAPS[k] || MAPS[k].dungeon),
       soVung: Object.keys(tgBoCuc()).length };

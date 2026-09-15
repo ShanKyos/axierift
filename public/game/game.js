@@ -2444,6 +2444,20 @@ const GATES = [
   // đi lên. Phím G ở đây chạy nhánh RÚT LUI (deepLeave) chứ không travelTo — `to` chỉ là chỗ về.
   { map:'deep', x:1300, y:1660, to:'ardhaven', portal:true, label:'Xuất Môn',
     name:'Rời Tầng Sâu → Sapidae Chiefdom' },
+  // ── ⚔ SÀN ĐẤU ARDHAVEN ───────────────────────────────────────────────────────────
+  // Chỗ đứng QUÉT BẰNG MÁY, không chấm tay (luật CLAUDE.md). Bộ ràng buộc: trong đa giác sàn ·
+  // cách mọi NPC ≥200px · ngoài mọi `vatTo` và mọi khối nhà +40px lề · cách mọi cổng khác
+  // ≥600px · cách điểm thả ≥500px. Cả thành có 14.754 điểm thoả; (3820,1840) là điểm LỀ LỚN
+  // NHẤT trong dải "đi bộ 500-900px từ điểm thả" — 420px lề, 623px từ chỗ vừa rơi xuống, tức
+  // người chơi đi ngang qua nó chứ không phải đi tìm. Dịch tay mấy số này thì quét lại.
+  //
+  // `portal` chứ không phải cổng đá: sàn đấu KHÔNG phải một hướng của thế giới. Và tên cố ý
+  // KHÔNG bắt đầu bằng "Lối " — `test_noimap` nhận diện lối rìa hoang dã bằng đúng tiền tố đó
+  // rồi đòi điểm tới phải nằm sát rìa map.
+  { map:'ardhaven', x:3820, y:1840, to:'pvp', portal:true, label:'Sàn Đấu',
+    name:'Sàn Đấu Ardhaven — đấu tay đôi' },
+  { map:'pvp', x:900, y:1140, to:'ardhaven', portal:true, label:'Rời Sàn',
+    name:'Rời Sàn Đấu → Sapidae Chiefdom' },
 
   // ── B1 · NỐI MAP BẰNG RÌA ────────────────────────────────────────────────
   // ⚠ ĐÂY LÀ MỘT BẢN VÁ LỖI, KHÔNG CHỈ LÀ TÍNH NĂNG. Trước bản này, Bug Tribe Tunnels (cấp 40),
@@ -11338,12 +11352,20 @@ function doBasic(){
   const sect = SECTS[player.sect] || SECTS.thieulam;
   const rng = atkRange();   // Đại Thành có nút cộng tầm — xem atkRange()
   const ranged = rng > 200; // Dark Wizard/Sylvan Ranger: đòn thường bắn đạn tầm xa (đánh xa kiểu vây), phái khác vung cận chiến như trước
-  const t = nearestMob(rng);
+  // ⚠ TRONG SÀN ĐẤU THÌ NGƯỜI ĐỨNG TRƯỚC QUÁI trong thứ tự nhắm — nhưng sàn đấu không có quái
+  // nào, nên vế `|| nearestMob` chỉ là chỗ dựa nếu sau này ai thêm quái vào đấy. Ngoài sàn đấu
+  // thì `nguoi` luôn `null`: `pvpDangO()` khoá theo đúng một khoá map.
+  const nguoi = pvpDangO() ? nearestNguoi(rng) : null;
+  const t = nguoi || nearestMob(rng);
   // Ngoài tầm: trước đây bấm Space là IM LẶNG tuyệt đối — không nhích chân, không chữ. Chơi thử:
   // 70 lần bấm ở cấp 1, 0 quái chết. Tutorial ghi "đánh quái gần nhất" nên ai cũng tưởng nhân vật
   // tự chạy tới. Nay đúng là tự chạy tới, tới tầm thì đánh (xem _spaceQueued trong update()).
   if (!t && !player.auto){
-    const far = nearestMob(720);
+    // ⚠ TRONG SÀN ĐẤU PHẢI CHẠY TỚI NGƯỜI, không phải tới quái. Sàn đấu không có con quái nào,
+    // nên nhánh cũ rơi thẳng xuống câu "không có quái trong tầm — mở M hoặc Chọn Trận để tới
+    // bãi quái": đứng giữa một sàn đấu mà game bảo đi tìm bãi quái. Và tệ hơn, nhân vật đứng
+    // im — trong khi cả tính năng này là hai người đi tới chỗ nhau.
+    const far = (pvpDangO() && nearestNguoi(720)) || nearestMob(720);
     if (far){
       setMoveTarget(far.x, far.y); player._spaceQueued = true;
       if ((player._spaceSayT || 0) <= 0){ addFloat(player.x, player.y-44, '→ Chạy tới ' + far.name, '#9fd8ff', 12); player._spaceSayT = 2; }
@@ -11373,11 +11395,24 @@ function doBasic(){
                player.face, 95, _wf ? _wf.col : sect.color, _wf ? _wf.glow : sect.glow);
   }
   if (t){
+    if (nguoi){
+      // ⚠ ĐÒN LÊN NGƯỜI KHÔNG ĐI QUA `hurtMob` — nó là điểm áp sát thương lên QUÁI, và máu của
+      // người bên kia không nằm trên máy này. Đi qua `pendingHit` để dùng lại đúng khoảnh khắc
+      // lưỡi chạm (0,09 s, xem hSwing) và đúng phép whiff khi đối thủ chạy khỏi tầm.
+      //
+      // Lớp tầm xa thì hẹn theo ĐƯỜNG BAY THẬT (`dist/520`, đúng tốc độ viên đạn vẽ ra bên
+      // dưới), không phải 0,09 s — nếu không thì mũi tên còn giữa đường mà máu đã trừ, và đó
+      // là thứ nhìn ra ngay chứ không phải một sai lệch trừu tượng.
+      const _d = dist(player.x, player.y, t.x, t.y);
+      player.pendingHit = { t: ranged ? Math.min(1.2, _d / 520) : 0.09,
+                            dmg: player.atk * rnd(0.9, 1.12) * PVP_HE,
+                            reach: rng * 1.15, nguoi: t._netId };
+    }
     if (ranged){
       const ang = Math.atan2(t.y-player.y, t.x-player.x);
       const _wp = weaponFx();
       projectiles.push({ x:player.x, y:player.y-10, ang, speed:520, dmg:player.atk*rnd(0.9,1.12), kind:'basic', life:0.9, color:_wp ? _wp.col : sect.color, style:sect.basicProj || 'orb' });
-    } else {
+    } else if (!nguoi) {
       // Hẹn sát thương tới KHUNG TIẾP XÚC thay vì nổ ngay khung đầu. hSwing() đẩy khoảnh khắc
       // lưỡi thật sự chạm ra p≈0.41, nên bắn âm thanh/khựng hình/sát thương ở p=0 là lệch ~8
       // khung — tay còn chưa nhấc lên mà quái đã trúng đòn.
@@ -12628,11 +12663,27 @@ function update(dt){
     if (player.pendingHit.t <= 0){
       const ph = player.pendingHit; player.pendingHit = null;
       player._tpBo = 0;   // đòn thường KHÔNG thuộc bộ nào — để nguyên cờ là nó ăn ké bộ của chiêu vừa tung
-      const tgt = nearestMob(ph.reach);
-      if (tgt){
-        let dmg = ph.dmg, src = 'hit';
-        if (Math.random() < player.crit){ dmg *= (player.critDmgMult || 2); src = 'crit'; }
-        hurtMob(tgt, dmg, src);
+      // ⚠ `else if`, KHÔNG PHẢI `return`. Khối này nằm GIỮA `update(dt)`, không phải trong một
+      // hàm riêng — một `return` ở đây bỏ qua toàn bộ phần còn lại của khung: đạn, hồi chiêu,
+      // nhặt đồ, sự kiện. Và nó chỉ xảy ra ở đúng cái khung có một cú đánh PvP hẹn tới hạn,
+      // nên nhìn ra là "game giật một cái mỗi lần đánh", không ra một lỗi.
+      if (ph.nguoi){
+        // Tìm LẠI người ấy ở thời điểm chạm — cùng phép whiff với quái: họ chạy khỏi tầm hoặc
+        // vừa bị hạ thì cú này HỤT. Không tự chuyển sang đánh người khác đứng gần hơn: người
+        // chơi đã chọn mục tiêu lúc bấm, đổi hộ là cướp mất lựa chọn đó.
+        const np = window.NETPLAYERS.find(n => n._netId === ph.nguoi);
+        if (np && !np.chet && dist(player.x, player.y, np.x, np.y) <= ph.reach){
+          let dmg = ph.dmg;
+          if (Math.random() < player.crit) dmg *= (player.critDmgMult || 2);
+          pvpDanh(np, dmg);
+        }
+      } else {
+        const tgt = nearestMob(ph.reach);
+        if (tgt){
+          let dmg = ph.dmg, src = 'hit';
+          if (Math.random() < player.crit){ dmg *= (player.critDmgMult || 2); src = 'crit'; }
+          hurtMob(tgt, dmg, src);
+        }
       }
     }
   }
@@ -13256,6 +13307,7 @@ function render(){
   drawBeaconArrow(); // GDD Đợt 2 B2: mũi tên chỉ hướng khi mục tiêu ngoài màn hình
   if (DGN) drawDungeonHUD(); // HUD phó bản: đợt quái + thanh máu boss
   if (DEEP) drawDeepHUD();   // HUD Tầng Sâu: tầng hiện tại + kho tạm chưa vào túi
+  drawPvpHUD();              // HUD sàn đấu: máu TRẬN (không phải máu nhân vật)
   { const _dl = el('deep-leave'); if (_dl) _dl.classList.toggle('hidden', !DEEP); }
 
   // Cốt truyện — HAI bộ đếm, không phải một. Trước đây cả hiệu ứng này lẫn chú thích của nó nói
@@ -17000,7 +17052,7 @@ function netTaoThan(nid){
   return { _netId: nid, map: '', x: 0, y: 0, face: 0, moving: false, sect: 'thieulam',
            level: 1, name: '', hp: 1, maxHp: 1, speed: 190, chet: false,
            equip: {}, walkPh: 0, sway: 0, swayV: 0, swayDir: 0,
-           atkAnim: 0, castT: 0, hurtT: 0, poisonT: 0, deadT: 0,
+           atkAnim: 0, castT: 0, hurtT: 0, poisonT: 0, deadT: 0, pvpHp: 0, pvpMax: 0,
            nhayT: 0, noiT: 0, ltT: 0, nhat2: 0, buffAtkT: 0 };
 }
 window.netTaoThan = netTaoThan;
@@ -17084,7 +17136,13 @@ function veNhanNet(np){
   }
   const w = np._nhanW, x = np.x, y = np.y - cao - 10;
   // thanh máu — rẻ, và đứng cạnh một người không biết họ còn bao nhiêu máu thì vô nghĩa
-  const bw = 34, bh = 3, hpK = clamp((np.hp || 0) / Math.max(1, np.maxHp || 1), 0, 1);
+  // ⚠ TRONG SÀN ĐẤU PHẢI ĐỌC MÁU TRẬN, KHÔNG ĐỌC `np.hp`. `np.hp` là máu THẬT của nhân vật
+  // bên kia, thứ mà trận đấu cố ý không đụng tới — vẽ nó ở đây là một thanh máu đầy cứng suốt
+  // trận, tức là thanh máu nói dối đúng lúc nó là thứ duy nhất người chơi nhìn.
+  const _tran = pvpDangO() && (np.pvpMax || 0) > 0;
+  const bw = 34, bh = 3,
+        hpK = _tran ? clamp((np.pvpHp || 0) / np.pvpMax, 0, 1)
+                    : clamp((np.hp || 0) / Math.max(1, np.maxHp || 1), 0, 1);
   ctx.fillStyle = 'rgba(8,10,14,.62)';
   ctx.fillRect(x - bw/2 - 1, y + 3, bw + 2, bh + 2);
   ctx.fillStyle = hpK > 0.3 ? '#5fd07a' : '#d05f5f';
@@ -17095,6 +17153,165 @@ function veNhanNet(np){
   ctx.textAlign = 'center'; ctx.textBaseline = 'alphabetic';
   ctx.fillStyle = '#dfe6f5';
   ctx.fillText(np.name || '?', x, y);
+  ctx.restore();
+}
+
+/* ═══ ⚔ SÀN ĐẤU — ĐẤU TAY ĐÔI (Giai đoạn 2b online) ══════════════════════════════════════
+ * Chủ dự án chốt: *"Dựng 1 map pvp và làm thử xem. Chỉ cần 2 người đánh nhau là được."*
+ *
+ * ⚠⚠ MÁU TRẬN LÀ MỘT TÚI RIÊNG, KHÔNG PHẢI `player.hp` — và đây là quyết định lớn nhất của cả
+ * khối này. Ba lý do, mỗi lý do đủ để một mình nó quyết:
+ *   ① `player.hp` nằm trên MÁY CỦA NGƯỜI BỊ ĐÁNH. Để nó quyết thì ai cũng bất tử bằng một dòng
+ *      devtools, và người thắng không có cách nào biết mình đang bị lừa.
+ *   ② Chết thật thì `onDeath()` chạy: rơi vào map an toàn, mất tiến độ, trôi cả phiên. Một trận
+ *      đấu thua không được phép đụng vào bản lưu.
+ *   ③ Túi riêng thì máy chủ giữ được — và nó MỞ SỐ ra cho cả hai bên nhìn cùng một con số.
+ * Nhưng túi ấy KHỞI TẠO BẰNG `maxHp` THẬT, nên trang bị và cấp vẫn quyết thắng thua: đúng cái
+ * "mang progress và đồ" mà chủ dự án hỏi.
+ *
+ * ⚠ SÁT THƯƠNG DO KẺ ĐÁNH TÍNH, MÁY CHỦ KẸP LẠI. Máy chủ không biết `atk` của ai, và cho nó
+ * biết là phải chở cả `calcDerived` lên đấy — việc của giai đoạn có kho đồ trên máy chủ. Nên
+ * ở đây: client gửi con số, máy chủ kiểm KHOẢNG CÁCH (nó có cả hai toạ độ), kiểm NHỊP, và kẹp
+ * một cú vào `PVP_TRAN_DMG` phần máu trận. Ai sửa client thì đánh đau hơn — nhưng không bao giờ
+ * một phát chết, không đánh xuyên map, và không bắn 100 phát một giây. Đó là hàng rào ĐO ĐƯỢC,
+ * không phải một lời hứa chống gian lận. Đừng đọc nó thành lời hứa kia.
+ *
+ * ⚠ CHỈ ĐÒN THƯỜNG. Chiêu thức đi qua `hurtMob` ở hàng chục chỗ (nón, vòng, sóng dư chấn, đạn
+ * xuyên) và mỗi chỗ là một hình học riêng; nối tất cả vào PvP là một đợt việc riêng, không phải
+ * một dòng thêm vào. Nói ra ở đây thay vì nối nửa vời: một chiêu nổ trùm qua người mà họ không
+ * mất máu là đúng cái "hứa suông" mà luật `pham` đã cấm.                                        */
+const PVP_MAP = 'pvp';
+/* Quy đổi Công Kích → sát thương lên NGƯỜI.
+ *
+ * ⚠ ĐO TRƯỚC KHI CHỌN, và phép đo nói một chuyện khác hẳn phỏng đoán đầu tiên của tôi (0,30 vì
+ * "atk/maxHp ≈ 0,10-0,14"). Quét 5 lớp × 3 cấp × có/không trang bị BiS:
+ *
+ *   | cảnh                        | atk/maxHp | aspd  |
+ *   |-----------------------------|-----------|-------|
+ *   | trần, cấp 20-120            | 0,037     | 0,74  |  ← thieulam, đáy
+ *   | trần, toanchan cấp 20       | 0,083     | 0,79  |
+ *   | BiS (`applyTestBoost`)      | 0,089     | 0,25  |
+ *   | BiS, toanchan cấp 120       | 0,266     | 0,25  |  ← đỉnh
+ *
+ * Tức tỉ lệ ấy trải **7 lần** giữa đáy và đỉnh, mà `aspd` lại nhanh thêm **3 lần** ở đầu BiS —
+ * cộng lại là 21 lần chênh về tốc độ hạ. KHÔNG hệ số phẳng nào cho cả hai đầu một trận dài
+ * bằng nhau; đừng đi tìm con số ấy.
+ *
+ * Nên chia việc: hệ số này đặt theo cảnh THẬT (trang bị thường) và trần một cú của máy chủ
+ * (`PVP_TRAN_DMG`) mới là thứ bó đầu BiS lại. Đo được ở `PVP_HE = 1,0`:
+ * trận 17-32 cú, tức ~4 giây (hai bên full BiS) tới ~24 giây (hai bên tay trần).
+ * Bốn giây là ĐẦU TRÊN đã biết, không phải chỗ chưa đo. */
+const PVP_HE = 1.0;
+function pvpDangO(){ return curMap === PVP_MAP && !!(window.NET && window.NET.on); }
+
+// Máu trận CỦA MÌNH. `max` = 0 nghĩa là chưa vào trận nào — phân biệt với "máu đầy", vì một
+// thanh máu 0/0 vẽ ra trông hệt một người sắp chết.
+let pvpTran = { hp: 0, max: 0, chet: false };
+window.pvpTranDoc = () => pvpTran;
+
+// ⚠ HAI GÓC ĐỨNG. Mọi nhân vật vào một map đều rơi vào ĐÚNG một `spawn`, nên hai người vừa vào
+// là hai thân CHỒNG KHÍT lên nhau, lệch 0,0px — và cái đó đọc ra là "mạng không chạy" chứ không
+// đọc ra "hai người đang đứng chồng lên nhau". Đã mất một vòng chẩn đoán vì đúng chuyện đó ở
+// lượt thử Bóng Người đầu tiên (xem CLAUDE.md, mục THỬ HAI NGƯỜI).
+//
+// ⚠ CHỌN GÓC THEO `NET.id`, ĐỪNG BỐC NGẪU NHIÊN. `id` là thứ DUY NHẤT ở đây được máy chủ bảo
+// đảm khác nhau giữa hai client. Bốc ngẫu nhiên thì một nửa số lượt hai người vẫn cùng một góc,
+// tức là lỗi cũ quay lại nhưng chỉ một nửa số lần — kiểu hỏng khó lần nhất.
+function pvpGoc(md){
+  const gs = md && md.goc;
+  if (!gs || !gs.length) return null;
+  const id = (window.NET && window.NET.on && window.NET.id) || 0;
+  return gs[(id > 0 ? id - 1 : 0) % gs.length];
+}
+
+// Thân người từ xa gần nhất còn đứng được. Cùng khuôn `nearestMob`, và CỐ Ý là một hàm riêng:
+// gộp người vào `nearestMob` là mọi chiêu, mọi đạn, mọi AUTO trong cả game bỗng nhiên nhắm được
+// vào người chơi khác — ở mọi bản đồ.
+function nearestNguoi(range){
+  let best = null, bd = range;
+  for (const np of window.NETPLAYERS){
+    if (np.map !== curMap || np.chet) continue;
+    if ((np.pvpMax || 0) > 0 && (np.pvpHp || 0) <= 0) continue;   // đã bị hạ, đang chờ dựng lại
+    const d = dist(player.x, player.y, np.x, np.y);
+    if (d < bd){ bd = d; best = np; }
+  }
+  return best;
+}
+
+// Gửi một cú lên máy chủ. Trả `false` khi chưa nối — bên gọi phải nói ra, đừng nuốt.
+function pvpDanh(np, dmg){
+  if (!np || !np._netId) return false;
+  return typeof window.netPvpDanh === 'function' && window.netPvpDanh(np._netId, Math.max(1, Math.round(dmg)));
+}
+
+/* Máy chủ báo máu đổi. `d = {id, hp, max, tu, dmg, ten}` — `id` là người BỊ đánh.
+ * ⚠ Tin này tới CẢ HAI bên, kể cả người bị đánh (ảnh chụp không bao giờ chở chính mình). Thiếu
+ * vế đó thì người bị đánh là người DUY NHẤT không thấy mình đang mất máu. */
+window.netPvpMau = function(d){
+  if (!d || !player) return;
+  const ta = (window.NET && window.NET.id) || 0;
+  if (d.id === ta){
+    pvpTran.hp = d.hp; pvpTran.max = d.max; pvpTran.chet = d.hp <= 0;
+    // Đi qua ĐÚNG đường mà một cú trúng đòn của quái đi qua: giật người, rung màn, loé đỏ. Vẽ
+    // riêng một hiệu ứng "trúng đòn PvP" là dựng bản sao thứ hai của một cảm giác đang sống.
+    player.hurtT = 0.3; player.combatT = 4;
+    player._hitSeq = (player._hitSeq || 0) + 1;
+    addFloat(player.x, player.y - 30, d.dmg, '#ff5a3a', 17);
+    addEffect({ type:'ring', x:player.x, y:player.y - 10, r:26, color:'#ff5a3a' });
+    AudioSys.sfx('hurt', 0.8);
+  } else {
+    const np = window.NETPLAYERS.find(n => n._netId === d.id);
+    if (np){ np.pvpHp = d.hp; np.pvpMax = d.max;
+             if (d.tu === ta) addFloat(np.x, np.y - 30, d.dmg, '#ffd76a', 17); }
+  }
+};
+
+/* Kết trận. `d = {thang, thua, tenThang, tenThua}` */
+window.netPvpKet = function(d){
+  if (!d || !player) return;
+  const ta = (window.NET && window.NET.id) || 0;
+  const thang = d.thang === ta;
+  if (d.thua === ta) pvpTran.chet = true;
+  // ⚠ Tên do NGƯỜI KHÁC đặt — nó đi vào `zoneBanner`, mà banner vẽ bằng `ctx.fillText` chứ
+  // không phải `innerHTML`, nên không có đường nào thành HTML. Giữ đúng nếp đó nếu ai dời
+  // banner này sang DOM: xem luật thoát ký tự ở khối CHAT.
+  zoneBanner = { text: thang ? '⚔ THẮNG' : (d.thua === ta ? '☠ BỊ HẠ' : '⚔ KẾT TRẬN'),
+                 sub: `${d.tenThang || '?'} hạ ${d.tenThua || '?'} — dựng lại trận sau ít giây`,
+                 color: thang ? '#ffd76a' : '#ff7a6a', t: 4.5 };
+  AudioSys.sfx(thang ? 'quest' : 'hurt', 0.9);
+};
+
+/* Máy chủ dựng lại trận (hồi sinh). `d = {id, hp, max}` — đi chung một cửa với `netPvpMau` thì
+ * gọn hơn, nhưng tách ra vì chỗ này KHÔNG được giật người và KHÔNG được in số sát thương. */
+window.netPvpHoi = function(d){
+  if (!d || !player) return;
+  const ta = (window.NET && window.NET.id) || 0;
+  if (d.id === ta){
+    pvpTran.hp = d.hp; pvpTran.max = d.max; pvpTran.chet = false;
+    addFloat(player.x, player.y - 60, '⚔ Trận mới', '#9fe0ff', 15);
+  } else {
+    const np = window.NETPLAYERS.find(n => n._netId === d.id);
+    if (np){ np.pvpHp = d.hp; np.pvpMax = d.max; }
+  }
+};
+
+// HUD trận — một thanh máu của mình ở giữa trên. Chỉ hiện trong sàn đấu và chỉ khi đã vào trận.
+// ⚠ Vẽ SAU `ctx.restore()` của khối thế giới (gọi từ vùng HUD), nên toạ độ ở đây là MÀN HÌNH.
+function drawPvpHUD(){
+  if (!pvpDangO() || pvpTran.max <= 0) return;
+  const w = Math.min(360, W * 0.34), h = 14, x = W/2 - w/2, y = 74;
+  const k = clamp(pvpTran.hp / pvpTran.max, 0, 1);
+  ctx.save();
+  ctx.fillStyle = 'rgba(8,10,14,.70)'; ctx.fillRect(x - 2, y - 2, w + 4, h + 4);
+  ctx.fillStyle = k > 0.3 ? '#5fd07a' : '#d05f5f'; ctx.fillRect(x, y, w * k, h);
+  ctx.strokeStyle = 'rgba(232,74,58,.85)'; ctx.lineWidth = 1; ctx.strokeRect(x - 2.5, y - 2.5, w + 5, h + 5);
+  ctx.font = 'bold 12px "Be Vietnam Pro", sans-serif'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+  ctx.fillStyle = '#e4ebff';
+  ctx.fillText(`⚔ MÁU TRẬN ${Math.round(pvpTran.hp)} / ${Math.round(pvpTran.max)}`, W/2, y + h/2);
+  if (pvpTran.chet){
+    ctx.font = 'bold 13px "Be Vietnam Pro", sans-serif'; ctx.fillStyle = '#ff9a8a';
+    ctx.fillText('Đang chờ dựng lại trận…', W/2, y + h + 16);
+  }
   ctx.restore();
 }
 
@@ -26206,6 +26423,11 @@ window.travelTo = function(mapId, from){
   if (DEEP && mapId !== DEEP_MAP){ window.deepLeave(mapId); return; }
   const md = MAPS[mapId];
   if (!md || !player) return;
+  // Rời sàn đấu ⇒ quên máu trận NGAY, và phải hỏi TRƯỚC dòng `curMap = mapId` bên dưới — sau
+  // dòng ấy thì `curMap` đã bằng `mapId` và điều kiện không bao giờ đúng. Máy chủ cũng xoá,
+  // nhưng nó không gửi tin nào khi ta đi ra (`phatSan` chỉ tới người đang ĐỨNG trong sàn — mà
+  // ta vừa rời), nên chốt này là chỗ DUY NHẤT dọn được phía client.
+  if (curMap === PVP_MAP && mapId !== PVP_MAP) pvpTran = { hp: 0, max: 0, chet: false };
   const g = mapGate(mapId);
   if (!g.ok && !window.TEST_MODE){
     const msg = g.why === 'lv' ? `Cần cấp ${g.need} để vào ${md.name}!`
@@ -26234,7 +26456,8 @@ window.travelTo = function(mapId, from){
   _bgTruoc = from || curMap;
   mapBgOf(mapId); mapBgDon(mapId);
   setTimeout(fxApply, 0);   // lớp phủ CSS theo bản đồ mới (tối / vignette)
-  const sp = (from && md.spawnFrom && md.spawnFrom[from]) || md.spawn;
+  // Sàn đấu: rơi vào một trong hai GÓC, không rơi chung một điểm — xem `pvpGoc()`.
+  const sp = (md.pvp && pvpGoc(md)) || (from && md.spawnFrom && md.spawnFrom[from]) || md.spawn;
   player.x = sp.x; player.y = sp.y;
   const _fp = nearestFree(curMap, player.x, player.y); player.x = _fp.x; player.y = _fp.y; // GDD Đợt 2 A: không spawn vào vùng cấm
   player.hintOff = {}; // B3: qua map mới → các Nhắc Việc đã tắt hiện lại
@@ -26253,7 +26476,9 @@ window.travelTo = function(mapId, from){
   // Điểm dịch chuyển: lần đầu đặt chân tới 1 vùng (dù được nhiệm vụ dẫn tới hay tự dịch chuyển
   // khi vừa đủ điều kiện) sẽ mở khoá nút "Dịch Chuyển" cho vùng đó trong Bản Đồ (M) từ giờ về sau.
   if (!player.wpUnlocked) player.wpUnlocked = {};
-  if (!md.dungeon && !player.wpUnlocked[mapId]){
+  // ⚠ Sàn đấu KHÔNG mở điểm dịch chuyển, cùng lý do phó bản không mở: vào thì đi qua cổng cho
+  // đàng hoàng. Mở ra thì bảng Bản Đồ có một nút dịch chuyển thẳng vào giữa một trận đang đánh.
+  if (!md.dungeon && !md.pvp && !player.wpUnlocked[mapId]){
     player.wpUnlocked[mapId] = true;
     addFloat(player.x, player.y - 70, '🚩 Đã mở khoá điểm dịch chuyển: ' + md.name, '#ffd76a', 14);
     AudioSys.sfx('quest', 0.8);
