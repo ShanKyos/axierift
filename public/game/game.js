@@ -1172,6 +1172,10 @@ const MAP_VAT_SRC = {
   ct_loren: 'assets/iso/ct_loren.png',   // Lò Rèn Hoàng Gia
   ct_duoc:  'assets/iso/ct_duoc.png',    // Tiệm Thuốc
   ct_vukhi: 'assets/iso/ct_vukhi.png',   // Vũ Khí Phường
+  ct_quantro:   'assets/iso/ct_quantro.png',     // Quán Trọ        — NPC `trachu`
+  ct_thapvach:  'assets/iso/ct_thapvach.png',    // Chòi Trông Vách — NPC `ah_vachgio`
+  ct_saanhlenh: 'assets/iso/ct_saanhlenh.png',   // Sảnh Lệnh       — NPC `bodau`
+  ct_chuong:    'assets/iso/ct_chuong.png',      // Dãy Chuồng      — NPC `ah_mucdong`
 };
 const _vatIm = {};
 function vatTai(ten){
