@@ -14,6 +14,9 @@ Axie carries none of it, so any Axie can be any class.
 
 **▶ Live build: http://14.225.204.107/?test=1** — nothing to install, nothing to sign up for.
 
+No wallet, no platform account, no token, nothing onchain — not as a fallback, but because none
+of it is in the build. Progress is saved to `localStorage` in your own browser.
+
 That `?test=1` starts you wearing a full set of real art gear instead of bare-skinned, so the
 character and equipment art is visible from the first second. It grants no levels and no currency —
 the game underneath is the normal one.
@@ -40,6 +43,55 @@ server; the game degrades to local-only play, which is enough to see everything 
 
 *Level 40 in Werebear Woods. The orange Axie is the player; the armoured figure beside it is the
 Dark Knight layer, summoned for the swing. It fades after the hit — the Axie never leaves.*
+
+## What you actually do
+
+Pick one of five classes, and an Axie to be. Then it is an MU-shaped action-RPG: right-click to
+walk, Space to swing, `1`–`4` for the four skills you dragged onto the bar yourself.
+
+The loop, in the order you meet it:
+
+1. **Clear a camp.** Monsters stand in camps, and a camp's *role* — tank, ranged, caster, healer —
+   is set by the camp, not the species. So three species produce six different fights, and the two
+   roles auto-play handles worst (casters and healers) are the reason you take the mouse back.
+2. **Pick the loot up off the ground.** Nothing teleports into your bag. Drops land, bounce, and
+   sit there for 45 seconds with a name tag coloured by rarity.
+3. **Put it on, then beat on it.** Eleven slots, per-class armour lines, sockets, and forging from
+   +0 to +11 — where +7 is the threshold that starts to glow, and the glow reads by *hue*, not
+   brightness, so +9 and +11 are different objects rather than the same object brighter.
+4. **Go somewhere on purpose.** Warded Chests sit at fixed spots with a four-role guard camp and
+   open once per character, ever — so the map becomes a place you remember. Bone Seams move to
+   three new coordinates every real day, which is the one thing in the world that auto-play cannot
+   put on a schedule.
+5. **Be somewhere at a time.** Three world events run off the real clock — a world boss every four
+   hours, a golden invasion on the odd offset, a rift lord four times a day. Nothing is stored;
+   arrive late and you missed it.
+
+Chapters of the main quest each close on that region's General, and each opens exactly one system —
+and every one of those gates has a real quest guarding it rather than a tooltip mentioning it.
+
+## Controls
+
+Desktop keyboard and mouse. In game, `F6` shows this same table, and Settings has an English toggle.
+
+| | |
+|---|---|
+| Right-click | Walk there — works on the minimap too |
+| `Space` | Basic attack |
+| `1` `2` `3` `4` | The four skill slots (you assign them by dragging from the skill tree) |
+| `R` / `T` | Red Potion / Mana Flask |
+| `Z` | Toggle auto-fight |
+| `J` | Pick up loot · open a Warded Chest · mine a Bone Seam · gather herbs |
+| `E` | Talk to whoever is nearby |
+| `C` `V` `B` `K` `M` `Q` | Character · Gear · Bag · Skills · Map · Quest log |
+| `N` · `O` · `F6` · `Esc` | Jewel bank · Settings · Help · Close |
+
+**First five minutes.** You start inside **Sapidae Chiefdom** — the walled hub, which is the
+Ardhaven quarter that came through the rift. Take the **West Gate** to Rẻo Rừng Corran (*Corran
+Woodstrip*), levels 1–12, and kill something. Press `Q` for what the quest chain wants next.
+
+Mind which gate: the four hub gates lead to level 1, 10, 20 and **60** regions respectively, and
+nothing stops you walking out of the wrong one. West is the one meant for a new character.
 
 ## Playing together
 
@@ -112,6 +164,98 @@ another thousand years, but while it sits in the fire, the law it held is simply
 against, using Axie Infinity's own nine-class triangle — never how strong you are. The full design,
 with the measurements behind it and an honest account of what is shipped versus planned, is in
 **[`docs/AXIE_CORE.md`](docs/AXIE_CORE.md)**.
+
+## Where this goes next
+
+The design has one line it does not cross: **an Axie never grants a stat.** Every expansion below
+is a matchup, a profile, or a choice — because the moment an Axie grants +damage, this becomes a
+game where the best Axie wins. Three earlier versions of this codebase were dismantled for exactly
+that, and the removals are logged.
+
+**Near term — matchup literacy.** The Map panel already names each region's class and the three
+classes that counter it. The other half is the Axie picker: preview how each body performs where
+you are headed, so a player learns the triangle by playing rather than by reading.
+
+**Mid term — parts, not just class.** An Axie is six body parts, each with its own class. Today
+only the overall class is read. Reading parts would let two Beast Axies differ from each other —
+again laterally: a resistance profile, not a stat line.
+
+**Long term — the Rune economy.** Weapons carry class Runes today as a rolled property. The canon
+supports making Runes something you *carve*: transfer one between weapons, or inscribe one you
+recovered from a region's Ancient Rune. That turns the story's central object into the item
+economy's central verb.
+
+**And the multiplayer has a stated stopping point, not an open promise.** Phase 1 is shared
+presence — see each other move, fight and chat. Everything past it (shared monsters, party loot, a
+shared boss health bar) needs real accounts and a server-side inventory first, because a relay that
+believes the client cannot be allowed to mint anything. The seven-phase route is in
+[`docs/KHAO_SAT_ONLINE.md`](docs/KHAO_SAT_ONLINE.md); the fork in the road is in
+[`docs/THIET_KE_ONLINE.md`](docs/THIET_KE_ONLINE.md).
+
+## Browsers, devices, and known issues
+
+**Tested:** desktop **Chromium**, mouse and keyboard — 208 Playwright regressions drive the actual
+game in a real Chromium on every change, so that is the browser with evidence behind it. The engine
+is canvas 2D with no WebGL and no build step, so other modern desktop browsers should work, but
+Firefox and Safari have not been tested and I am not going to claim them. Settings has quality and
+resolution scalers (down to 50%) for weaker machines, with an auto mode.
+
+**Not supported:** touch. There is no mobile control scheme; WASD was removed in favour of
+click-to-move and the UI assumes a pointer and a keyboard. It will render on a phone and it will
+not play well.
+
+**Known issues, measured rather than guessed:**
+
+| | |
+|---|---|
+| **The interface is Vietnamese first.** English is a toggle in Settings, backed by a 572-entry dictionary plus 137 pattern rules. Coverage is good but not complete — only 35 strings go through the real `t()` layer, and the rest rely on that dictionary | the honest read: an English-speaking judge can play it, and will still meet Vietnamese text |
+| **The live link is a raw IP over plain HTTP.** No TLS, no domain | browsers will flag it as not secure; there is nothing to enter, so nothing is at risk, but it looks worse than it is |
+| **Walk and run cycles slide.** Measured: the planted foot only carries ~49% of the visual stride, so 51% of the distance is slide baked into the drawings | no code value fixes it; the cycles have to be redrawn. Spec and acceptance thresholds: [`docs/DAT_HANG_TUONG_DI.md`](docs/DAT_HANG_TUONG_DI.md) |
+| **Armour art covers 3 of 35** class × tier combinations; the rest fall back to the bare body | adding one is a data row, not code — the debt is art, not engineering |
+| **Spellblade is missing a sprite row** — 96 cells where the other four classes have 112 | its run block only reads the first half of the cycle |
+| **Level pacing above 60 cannot currently be re-measured.** `tools/do_nhipcap.cjs` returns zero XP/hour at levels 60+ | pre-existing, not caused by recent work — verified by re-running the tool against an earlier commit, which produces the identical zeros. So the "33 hours to 120" figure in the docs is not a live measurement today, and we say so where it appears |
+| **`cheatExec` still ships**, and the multiplayer relay has no authority | harmless offline; it has to go before anything shared has value |
+| **Two regression tests are dice-rolls**, not deterministic | both documented in [`CLAUDE.md`](CLAUDE.md) with the measurements that separate "red because of my change" from "red because of the dice" |
+
+## Submission notes
+
+**AI tools used — materially, for nearly all of it.** The code was written with **Claude Code**
+(Opus), working from [`CLAUDE.md`](CLAUDE.md) as a living spec; that file is also the post-mortem
+log, so the mistakes are on the record next to the numbers that exposed them. Character, weapon and
+armour art was generated with **Meowa** as Spine packages and baked to sprite sheets by the scripts
+in `tools/spine/`. Isometric ground tiles and world props were rendered with **Blender** (via the
+`bpy` PyPI module) from `tools/iso/`.
+
+**Pre-existing work and provenance.** The engine was migrated from an earlier wuxia action-RPG by
+the same author — same codebase lineage, different game; the migration is finished and logged. No
+starter template or fork. Axie character rigs, VFX clips and UI jewel icons come from the official
+[`axieinfinity/axie-origins-asset-kit`](https://github.com/axieinfinity/axie-origins-asset-kit).
+Fonts are Baloo 2 under the SIL Open Font Licence, vendored with its licence file in
+`public/game/fonts/`. Audio is vendored under its own terms. The game itself ships **no runtime
+dependencies** — canvas 2D and vanilla JS; `npm` is only for the optional shell and the test
+harness.
+
+**Rights and safety.** No wallet, no account, no token, no onchain mechanic anywhere in the build.
+No personal data is collected — progress lives in your browser's `localStorage`. The one network
+feature, chat, escapes every line through `createElement` + `textContent` rather than `innerHTML`,
+with rate limiting enforced server-side rather than in the client;
+[`tests/test_chat.js`](tests/test_chat.js) asserts that by querying the DOM for injected elements,
+not by string-matching. Licensing is deliberately source-available rather than MIT, and
+[`LICENSE`](LICENSE) explains why.
+
+**Not included:** a demonstration video. The live build and this repository are the submission.
+
+## Where to look, per judging criterion
+
+Not a self-assessment — just the shortest path to the evidence for each one.
+
+| Criterion | Where it lives | What to check |
+|---|---|---|
+| **Axie Core** | [`docs/AXIE_CORE.md`](docs/AXIE_CORE.md) · [`tests/test_tamgiac.js`](tests/test_tamgiac.js) | The nine-class triangle decides matchups and never stats. Opens with the measurement that showed the first version had failed — all 16 Axies changed exactly zero stats — and shows what each later stage moved, including a before/after taken by removing a stage and re-measuring |
+| **Gameplay** | [What you actually do](#what-you-actually-do) · the live build | Roles are set per camp, not per species. Loot lands on the ground. Chests open once per character. Seams move daily. Events run on the real clock |
+| **Product vision** | [Where this goes next](#where-this-goes-next) · [`docs/AXIE_CORE.md`](docs/AXIE_CORE.md) §7 | Three layers that deepen Axie identity without selling power, and a multiplayer roadmap with a stated stopping point |
+| **Feasibility** | this repo | It is already built and already running. No build step, no runtime dependencies, no database; the multiplayer server is two files and needs only `node` |
+| **Prototype & docs** | [`CLAUDE.md`](CLAUDE.md) · `tools/reg.sh` · [`docs/BANG_MAP.md`](docs/BANG_MAP.md) | 208 browser regressions plus CI on every push. Design decisions are recorded with the measurement that produced them, and the known-issues table above is the same standard applied to what is still wrong |
 
 ## How it's built
 
