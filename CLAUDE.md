@@ -490,6 +490,75 @@ Sau đợt gán: vai/map từ `3,3,3,4,2,4,2` lên `4,4,6,6,6,6,6` — **tăng d
 - Từ cấp 24 trở đi mỗi map phải có **≥1 bãi Pháp Sư và ≥1 Kẻ Tiếp Sức** — hai thứ AUTO xử lý
   dở nhất, cũng là lý do người chơi phải tự cầm chuột. `tests/test_bansac.js` gác.
 
+### 🎞 BẢNG KHUNG QUÁI (`MOB_KHUNG`) + TRANH RIÊNG CHO TRÙM (`anh:`)
+
+Quái và trùm mặc định là MỘT tấm tĩnh. Khai một khoá là loài/con đó có hoạt ảnh; không khai thì
+vẽ y như trước, không lệch một pixel. Máy chạy theo dữ liệu — art về chỉ thêm một dòng.
+
+| Muốn gì | Khai ở đâu |
+|---|---|
+| quái/trùm có hoạt ảnh | `MOB_KHUNG` trong `game.js` |
+| trùm có tranh riêng (thắng cả sprite mượn lẫn khung xương) | `anh:'<tên tệp>'` trong `BOSS_DEFS` |
+
+- **Khoá `MOB_KHUNG` là TÊN TỆP, không phải khoá mob** — `assassin.png` phục vụ 3 loài,
+  `duhiep.png` 3 loài nữa, nên một bảng khung là cả ba cùng có hoạt ảnh.
+- Tấm khung ở `assets/mobs/kh/<tên>.png`, tấm tĩnh lùi ở `assets/mobs/<tên>.png`. **Cả hai đều
+  bắt buộc**: bảng khung nạp lười, thiếu tấm lùi là mấy trăm mili giây đầu xin một tệp không tồn
+  tại (404) rồi con trùm chớp thành đốm mực. `nuong_khungquai.py` xuất cả hai.
+- ⚠ **Nhịp `di` chạy theo QUÃNG ĐƯỜNG ĐÃ ĐI**, `danh` theo `lungeT`, `chet` theo `deadT` rồi
+  **dừng** ở khung cuối. Chỉ `dung` chạy theo đồng hồ. Chia nhịp đi theo thời gian là bàn chân
+  trượt đất — bài học đã trả giá ở `SAI_CHAN`.
+- ⚠ **`mobDoBuoc()` ĐO chuyển động thật, không đọc cờ do AI đặt** — quái dời chỗ ở NĂM nhánh
+  trong `update()`; đặt cờ từng chỗ thì chỗ thứ sáu thêm sau sẽ lặng lẽ không có hoạt ảnh.
+- ⚠ **Nhịp `chet` cắm ở nhánh `'deadmob'`, KHÔNG ở `drawMob`** — xác quái có đường vẽ riêng.
+- ⚠ **Năm loài khai CẢ `skel` LẪN `img`** (`trannhan · chimera_bo · kybinh · kylan ·
+  boss_sontac`) và đang hiện bằng khung xương. **Đừng đảo thứ tự skel/img để "dọn"** — làm thế
+  là âm thầm đổi tạo hình năm loài mà không ai yêu cầu. Muốn con nào dùng tranh thì khai `anh`.
+
+#### ⚠ `neoY` LÀ BÀN CHÂN, KHÔNG PHẢI ĐÁY ẢNH
+
+Công cụ mặc định đo đáy nhịp `dung` rồi coi đó là bàn chân. **Sai ngay khi art có khói, hào
+quang, vũng nước hay bóng vẽ sẵn dưới đế.** Đo trên gói trùm bóng ma đầu tiên: đế giày ở hàng
+549, đáy khói ở 640 — lệch **91px trên ô 640 (14%)**, tức con trùm treo lơ lửng đúng ngần ấy.
+Khai `--chan <hàng>` để đè. Và khi cả bộ chỉ có MỘT nhịp thì phép đo suy biến: đáy `dung` ==
+đáy chung ⇒ `neoY` luôn ra đúng 1.0, một con số vô nghĩa mà công cụ trả về trong im lặng.
+
+#### ⚠ ART TỐI: ĐỘ SÁNG TRUNG BÌNH KHÔNG DỰ ĐOÁN ĐƯỢC "đọc ra hay không"
+
+Ngưỡng đầu tiên tôi đặt — *"chênh độ sáng với nền phải > 0,28"* — **sai, và con trùm thứ hai
+chứng minh ngay**. Kỵ sĩ bóng đêm (`tq_daohoa`) chênh **0,273**, tức TRƯỢT ngưỡng, nhưng chụp ra
+thì đọc rõ từng chi tiết và không cần xử lý một bước nào.
+
+| | sáng | **lệch chuẩn** | bão hoà |
+|---|---|---|---|
+| bóng ma (`tq_corran`) gốc | 0,128 | **0,092** | 0,320 |
+| kỵ sĩ (`tq_daohoa`) | 0,237 | **0,209** | 0,498 |
+
+Thứ quyết định là **LỆCH CHUẨN — độ tách giữa các mảng sáng tối BÊN TRONG con vật**, không phải
+độ sáng trung bình. Con bóng ma là một khối gần như một sắc nên ở 113px nó thành cái bóng đen;
+con kỵ sĩ có xương trắng ngà, lửa xanh và áo choàng đỏ nằm cạnh nhau nên mắt bám được ngay, dù
+trung bình còn tối hơn cả nền.
+
+⇒ **Đo lệch chuẩn trước khi quyết xử lý.** Dưới ~0,12 thì mới cần nâng sáng + viền rìa; trên đó
+thì để nguyên. Áp cùng một liều cho mọi gói là chữa bệnh không có bệnh, và nó làm mất chính cái
+tương phản gốc mà art đã có.
+
+#### ⚠ VÀ độ sáng NỀN vẫn phải đo — nhưng để chọn MAP, không để chọn liều
+
+Gói bóng ma (Tướng Quân `corran`) đo ra **sáng 0,129 · bão hoà 0,308**, trong khi 24 tấm quái
+hiện có trung bình **0,658 / 0,591** và viên cỏ Corran là **0,722**. Tức nó **tối hơn 80%** mọi
+thứ quanh nó. Trên nền sáng thì đó là bóng dáng đọc được ngay; trên nền tối thì nó biến mất.
+Quét cả tám map: chỉ **Werebear Woods (nền 0,363) là CHÌM**, Dusk Marsh (0,412) sát ngưỡng.
+⇒ Art tối dùng được, nhưng **không phải khuôn chung cho cả 11 Tướng Quân** — và phải đo nền map
+đích trước khi cắm, đừng suy từ map khác.
+
+Cỡ đo được để khỏi đoán: trùm vẽ ra **113px thân** (hộp 132px) · avatar người chơi **74px** ·
+quái thường **53px** · lớp nhân vật `NV_THAN_PX` **95px**.
+
+Công cụ: `tools/nuong_khungquai.py` (nhận khung đã render — dải, thư mục, hay xuất từ Godot/Spine
+— rồi **đo** hộp ô và `neoY`, in ra mục dán thẳng). Bài kiểm: `tests/test_khungquai.js` (28 mục).
+Đặc tả đặt hàng: `docs/DAT_HANG_ART_3_4_5.md` · prompt: `docs/PROMPT_QUAI_VA_TUONGQUAN.md`.
+
 ### 🗺 BẢN SẮC MAP SUY RA TỪ DỮ LIỆU, KHÔNG CHÉP CỨNG
 
 `mapBanSac(id)` tính **loài chủ đạo · hệ trội · Dòng Cốt độc quyền** từ chính `packs`, và
@@ -2809,8 +2878,12 @@ vào nó để dọn hộ.
 có thanh máu, xếp lớp đúng theo chiều sâu.
 
 **KHÔNG làm gì:** không tài khoản, không cơ sở dữ liệu, không quyền quyết định, không chống gian
-lận, không PvP, không chat, không đồng bộ quái. **Đó là chủ ý.** Đây là giai đoạn nhỏ nhất chứng
-minh được cả hướng đi. Đừng bắt `server/bongnguoi.js` gánh thêm việc — mọi thứ có giá trị lâu dài
+lận, không PvP, không đồng bộ quái. **Đó là chủ ý.** Đây là giai đoạn nhỏ nhất chứng minh được cả
+hướng đi.
+
+> ⚠ Câu trên **trước đây còn ghi "không chat"** — nay đã có (mục 💬 CHAT). Và trang bị · cánh ·
+> hành động ra đòn cũng đã đồng bộ (mục 👁 GIAI ĐOẠN 2). Giữ lại chỗ này để thấy ranh giới đã dời
+> tới đâu, chứ đừng đọc nó như trạng thái hiện tại. Đừng bắt `server/bongnguoi.js` gánh thêm việc — mọi thứ có giá trị lâu dài
 (sinh vật phẩm, cộng tiền tệ, máu boss chung) phải đợi tới lúc có tài khoản thật và kho đồ trên
 máy chủ, xem `docs/THIET_KE_ONLINE.md` mục "Ngã ba phải chọn".
 
@@ -3032,12 +3105,119 @@ sử là việc của giai đoạn có tài khoản thật.
 được trước khi vào là điều hay. Kênh Vùng thì đòi phải đứng trong một bản đồ, và nói rõ lý do
 khi chưa vào.
 
+### 👁 GIAI ĐOẠN 2 · TRANG BỊ · CÁNH · HÀNH ĐỘNG RA ĐÒN — ĐÃ ĐỒNG BỘ
+
+Giai đoạn 1 dừng ở "nhìn thấy nhau CHẠY": mọi thân người từ xa dựng bằng `equip: {}`, nên ai cũng
+cởi trần, không cánh, và đứng như tượng trong lúc đánh nhau. Nay hết.
+
+**Câu hỏi chủ dự án hỏi trước khi làm — *"có cần build hết assets/skills rồi mới đồng bộ không"* —
+câu trả lời đo được là KHÔNG**, và ba thứ nằm ở ba mức phụ thuộc art khác hẳn nhau:
+
+| | phụ thuộc art | đo được |
+|---|---|---|
+| hành động ra đòn | **0** | `player.atkAct`/`castAct` là giá trị TÍNH RA, không tra tệp nào |
+| cánh | **0 thêm** | `veCanh()` là hàm DUY NHẤT, dùng chung mọi lớp; `WING_BANG` là dữ liệu |
+| trang bị | 3/35 | `NV_GIAP` mới có `thieulam\|1` · `baidasan\|1` · `baidasan\|7` |
+
+Lý do cốt lõi: thân người từ xa đi **CÙNG một đường vẽ** với nhân vật của mình, nên người bên kia
+trông đẹp đúng bằng thân của chính mình đang trông. Art về sau nâng cả hai bên miễn phí.
+
+| | |
+|---|---|
+| Dựng / áp mô tả | `NET_O_DO` · `window.netTrangBi()` · `window.netApTrangBi(t, g)` trong `game.js`, ngay dưới `netDoc` |
+| Vệ sinh phía máy chủ | `locTrangBi()` · `st.gear`/`st.gearV` · `ws.__gearV` trong `bongnguoi.js` |
+| Bộ đếm cú ra đòn | `player._atkSeq` / `_castSeq`, tăng ở ĐÚNG hai chỗ ghi `atkAnim`/`castT` |
+| Độ dài hoạt cảnh | `NV_DANH_GIAY` 0,22 · `NV_CHU_GIAY` 0,38 · `window.NV_HD_GIAY` |
+| Gác | `tests/test_dongbodo.js` (7 mệnh đề, **cả bảy đã thử ngược và đều đỏ**) |
+
+**⚠ GỬI CHỮ KÝ, KHÔNG GỬI `player.equip`.** Một món thật nặng 474 byte × 11 ô ≈ **5 KB mỗi người
+mỗi ảnh chụp**, để chở những trường tầng vẽ không hề đọc. Tầng vẽ chỉ cần bốn thứ mỗi ô: `def`
+(ra bộ art và lớp) · `tier` · `plus` · mức quý. **Đo được: mô tả gọn 190 byte.**
+
+**⚠ VÀ NÓ DỰNG LẠI MỘT `equip` GIẢ chứ không tự vẽ lấy.** `gearVisual()` · `nvLopCuaEquip()` ·
+`heroSprite()` · `veCanh()` chạy y nguyên trên thân người từ xa. Viết một đường vẽ thứ hai "cho
+gọn" là bộ giáp mới nướng sẽ hiện trên mình mà không hiện trên họ.
+
+**⚠ BỘ ĐẾM, KHÔNG PHẢI THỜI GIAN CÒN LẠI.** Hoạt cảnh đánh dài 0,22 s lọt gọn giữa hai ảnh chụp
+10 Hz — gửi "còn bao lâu" là thỉnh thoảng mất hẳn một cú đánh, mà mất kiểu đó không ai lần ra.
+Một con số chỉ tăng thì không có khe nào để lọt. ⚠ Lần ĐẦU nhìn thấy một người thì chỉ GHI NHẬN
+bộ đếm, đừng nổ hoạt cảnh: họ có thể đã đánh 500 cú trước đó, và coi đó là "vừa bắt đầu" thì ai
+lọt vào tầm mắt cũng vung kiếm một cái chào.
+
+**⚠ ĐẾM NGƯỢC HAI ĐỒNG HỒ ẤY Ở `noiSuy`, ĐỪNG NHÉT VÀO `thanNhip`.** `update()` đã đếm ngược cho
+người chơi của mình; `thanNhip` thì CẢ HAI bên cùng gọi ⇒ mình bị trừ hai lần. Thiếu hẳn phép đếm
+ngược thì thân người từ xa **kẹt vĩnh viễn ở khung vung kiếm** — một pho tượng đang giơ kiếm.
+
+**⚠ TRANG BỊ CHỈ GỬI KHI ĐỔI, và cửa nhớ là PER-KẾT-NỐI.** Nhét vào mọi ảnh chụp là 190 byte × 9
+người × 10 Hz ≈ **16 KB/s mỗi client**, gấp ba cả gói tin hiện tại, cho một thứ đổi vài phút một
+lần. Máy chủ giữ `st.gearV` và mỗi kết nối giữ `ws.__gearV` — người mới nhìn thấy nhau thì chưa có
+khoá đó nên tự nhận đủ ngay ảnh đầu. Không cần gửi lại phòng hờ: WebSocket chạy trên TCP.
+
+**⚠ MÔ TẢ RỖNG LÀ MỘT CÂU TRẢ LỜI.** Bản đầu `locTrangBi` trả `null` khi không nhận ra ô nào rồi
+máy chủ bỏ qua — nên **THÁO HẾT ĐỒ RA là mọi người vẫn thấy ta mặc nguyên bộ cũ**, và chính người
+tháo đồ là người duy nhất không nhìn thấy nó.
+
+**⚠ `_doCuoi` (chữ ký đã gửi) PHẢI XOÁ Ở `ws.onopen`.** Máy chủ dựng trạng thái mới toanh cho mỗi
+kết nối, nên sau khi rớt và nối lại nó không còn nhớ ta mặc gì — mà client thì thấy "chữ ký không
+đổi" rồi im lặng không gửi. Ta cởi trần với mọi người tới lần thay đồ kế tiếp.
+
+**⚠ `wingDef(it)` NAY NHẬN `sectDp` — nợ cũ đã trả.** Nhánh dự phòng trước đây lui về `player.sect`:
+vô hại hồi chỉ có một người trên màn, nhưng từ lúc đồng bộ cánh thì một Dark Wizard đứng cạnh sẽ
+mọc **đôi cánh của LỚP MÌNH**, và không lỗi nào báo — đôi cánh vẫn vẽ ra, chỉ là sai người.
+
+**⚠ `dead` LÀ BIẾN TOÀN CỤC CỦA NGƯỜI CHƠI NÀY**, mà `drawPlayer` nay vẽ cả thân người từ xa. Ba
+chỗ trong hàm đọc thẳng nó ⇒ **mình nằm xuống là lớp nhân vật của mọi người quanh mình thôi vật
+chất hoá** (`_lopHien` có `!dead`), tức họ vung kiếm trong vô hình. Nay `_chet = (p === player) ?
+dead : (p.hp <= 0)`.
+
+#### 📐 NĂM PHÉP ĐO HỎNG TRƯỚC KHI RA ĐƯỢC MỘT PHÉP ĐO ĐÚNG — đừng lặp lại
+
+Mệnh đề ⑦ (rò rỉ `dead`) mất **năm lượt** mới gác được gì, và mỗi lượt hỏng một kiểu khác nhau.
+Tất cả đều là bài học chung cho mọi phép đo điểm ảnh trong dự án này:
+
+1. **Đo một thân người ĐỨNG YÊN thì không thấy gì** — đứng yên thì thứ trên màn là con AXIE, mà
+   con Axie chẳng liên quan tới chuyện ai chết. Rò rỉ hiện ra đúng **39/16.500** điểm ảnh (cái
+   vòng dưới chân). Phải đo LÚC RA ĐÒN, chỗ `_lopHien` thật sự cắn.
+2. **Ô đo phải trùm cả LỚP NHÂN VẬT, không chỉ trùm con Axie.** Nó đứng KẾ BÊN — tới
+   `AVA_CHAN_TRUOC`(72) phía trước cộng `AVA_CHAN_BEN`(56) sang bên, tức ~91px. Ô 150px (nửa bề
+   rộng 75) cắt cụt đúng thứ cần đo.
+3. **Ô ĐỐI CHỨNG phải nằm TRONG canvas.** Đặt ở `(bx+700, by−340)` là ra ngoài khung; `getImageData`
+   kẹp về góc trên-trái và trả một vùng trống ⇒ nó ra 0 ở MỌI trường hợp. *Một ô đối chứng luôn
+   xanh không gác được gì* — cùng họ với "một cái chốt đúng ở mọi trạng thái".
+4. **Hai người đứng cách nhau 80px thì ô trùm cả hai.** Ô rộng 340 quanh B mà A ở cách 80 ⇒ đo
+   luôn thân của A, thứ đúng ra PHẢI đổi khi A chết. Đỏ 5.281 điểm ảnh trên **mã đúng**.
+5. **Và cuối cùng, cái lớn nhất: SÀN NHIỄU CỦA MỘT THÂN NGƯỜI ĐANG ĐỘNG LỚN HƠN TÍN HIỆU.** Hai
+   lượt vẽ LIÊN TIẾP, CÙNG điều kiện, của một thân người đang vung kiếm lệch nhau **6.545/102.000
+   điểm ảnh** — cánh vỗ, hào quang đập, vũ khí bay, tất cả chạy theo `performance.now()`. Con số
+   6.532 mà tôi tưởng là "rò rỉ" chính là nhiễu đó. ⇒ Mục ⑦ nay **KHÔNG đo điểm ảnh**:
+   `drawPlayer` phơi thẳng `_chet` và `_lopHien` ra **`window.__veChet`** (chỉ khi `TEST_MODE`),
+   khoá theo từng thân người — cùng lối với `__neoVe`/`__veThan`.
+
+**⚠ Ô ĐỐI CHỨNG KHÔNG PHẢI SÀN NHIỄU.** Nó đứng ở chỗ KHÔNG CÓ AI nên nó chỉ bắt nhiễu của NỀN,
+không bắt nhiễu của chính thân người đang đo. Hai thứ khác nhau, và mục ② cần CẢ HAI.
+
+**⚠ CON AXIE THỞ ~8 FPS ⇒ SÀN NHIỄU LƯỠNG CỰC, PHẢI LẤY TRUNG VỊ.** Đo 10 cặp khung liên tiếp
+trên một thân người ĐỨNG YÊN: `507·444·501·527·458·`**`5221`**`·509·448·441·377`. Một lượt render
+tốn ~13 ms nên cứ chừng 10 khung lại có đúng một lần nhảy khung hình của con Axie. Lấy MỘT cặp là
+10% số lượt rơi trúng đỉnh; lấy MAX là 100%. Đã đỏ 2/3 lượt trước khi đổi sang trung vị — và
+TÍN HIỆU cũng phải lấy trung vị, vì một lượt đo đơn lẻ rơi trúng đỉnh ấy sẽ được độn thêm 5.200
+điểm ảnh, tức xanh kể cả khi chẳng có gì đổi.
+
+**⚠ HAI THỨ PHẢI LẮNG TRƯỚC KHI ĐO, THEO HAI ĐỒNG HỒ KHÁC NHAU:** `bayCao` nhích 8% về đích MỖI
+LẦN `render()` (hâm bằng vòng render), còn ART BỘ GIÁP tải theo MẠNG (hâm bằng `await`). Chỉ làm
+một trong hai là sàn nhiễu nhảy 498 → 5.146 tuỳ lượt.
+
+**⚠ Và một bài kiểm nhiều mục thì mục sau THỪA HƯỞNG cảnh của mục trước.** Mục ③ dời B tới chỗ con
+quái để lái một cú đánh THẬT; tới mục ⑦ thì B nằm ngoài khung hình của A, ô đo rơi vào góc canvas
+trống, và **cả bản đúng lẫn bản đã tháo cơ chế đều XANH**. Mục nào đổi chỗ đứng thì mục sau phải
+dựng lại cảnh của mình, và phải TỰ KIỂM là đã dựng được.
+
 ### Còn nợ, biết rõ
 
 | | |
 |---|---|
-| `wingDef(it)` lui về `player.sect` khi không tra được `it.wing` | thân người từ xa sẽ mượn cánh theo lớp của NGƯỜI CHƠI. Chưa nổ vì giai đoạn 1 không đồng bộ trang bị; phải sửa trước Giai đoạn 2 |
-| Trang bị / hành động ra đòn / cánh | chưa đồng bộ — Giai đoạn 2. Gửi **chữ ký** `gearVisual`, KHÔNG gửi `player.equip` (một món 474 byte × 11 ô = ~5 KB mỗi người mỗi ảnh chụp) |
+| Trạng thái trúng đòn / chết / niệm chú chưa đồng bộ | mới có `atkAnim` và `castT`. `hurtT`/`deadT` còn suy từ `hp` ở phía nhận, nên thân người từ xa không giật khi ăn đòn |
+| Thân người từ xa không chở `avatar` khi ai đó đổi giữa chừng… | …thật ra CÓ (`g.av`, ba trạng thái `undefined`/`null`/id). Chỗ còn thiếu là **con Axie không có hoạt cảnh ĐÁNH** — xem "Nợ" ở mục Đổi Vai |
 | `cheatExec` vẫn ship | Giai đoạn 0 chưa làm. Vô hại ở bản offline; phải gỡ trước khi có bất cứ thứ gì chung |
 | Sandbox không SSH được vào VPS | mọi bước cài Node/nginx/systemd phải do chủ dự án chạy tay |
 
@@ -3120,6 +3300,22 @@ một buổi truy lại từ đầu, và đừng vội đổ cho commit của m�
 |---|---|---|
 | `test_ngamchuot §4` | *"con quái cạnh chân cũng mất máu"*, `ganMat` = **đúng 1** | xanh 3/3 khi chạy riêng · mục này **đã** `player.reflect = 0` rồi, nên 1 máu ấy tới từ nguồn KHÁC, chưa truy ra. Ngưỡng là `ganMat > 0` nên đúng một điểm máu của một cơ chế khác cũng đủ làm đỏ |
 | `test_tamphap §3` | *"số lần bị khoá chân không giảm hẳn (47 → 28)"* | xanh 3/3 khi chạy riêng · đây là phép đo THỐNG KÊ, mẫu mỏng |
+
+✅ **`test_tamphap §2` (*"định thân KHÔNG khoá được chân: đi được 46px"*) ĐÃ SỬA TẬN GỐC** — ghi lại
+vì nó là khuôn mẫu cho cả loại: **một mục đo trên cảnh mà mục TRƯỚC để lại.** `keoQuaiDanh` ghim
+quái ngay sát người chơi và ép nó đánh 800 nhịp, rồi để nguyên nó đấy; khối đo định thân chạy tiếp
+30 nhịp và giả định không ai đụng vào người chơi. Đo được ngay trước khối ấy: **2 con còn sống
+trong 200px, con gần nhất cách 8px**. Một cú nện văng dời được người chơi vài chục px **kể cả lúc
+đang bị khoá chân** (mục ③ đo được nó xảy ra 10/800 nhịp), và mệnh đề đọc ra thành "định thân
+không khoá được". `dinhT` lúc đó vẫn còn 3,5 — tức chân BỊ khoá thật, thứ dời người là cái khác.
+
+⇒ Nay mục ấy dời quái ra xa trước khi đo rồi trả về, và **tự kiểm** là đã dọn được (`quaiGan` phải
+bằng 0) — bỏ bước dọn ra thì chốt tự kiểm đỏ ngay, đã thử. *Luật chung: mục nào đổi chỗ đứng hay
+để lại quái thì mục sau phải dựng lại cảnh của mình, và phải chứng minh là đã dựng được.*
+
+⚠ **Và đừng tin phép đo đầu tiên của chính mình.** Lượt dò đầu tôi đặt lại `player.x/y` về giữa map
+trước mỗi lượt đo — tức dời người chơi ra xa đúng con quái cần quan sát, rồi đọc ra `quaiGan: 0` và
+suýt kết luận "giả thuyết sai". Bỏ hai dòng đặt lại ấy thì ra `quaiGan: 2, gần nhất 8px`.
 
 **Cách phân biệt "đỏ do mình" với "đỏ do xúc xắc", làm theo thứ tự này:** chạy riêng bài đó
 **3 lượt** trên cây của mình → rồi chạy trên cây **trước commit của mình** (`git worktree add`).

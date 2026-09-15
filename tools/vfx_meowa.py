@@ -38,7 +38,10 @@ một tấm sheet cộng một tệp `.tres` của Godot. Ba việc riêng ở �
 """
 import os, re, sys, argparse, glob
 import numpy as np
-from scipy import ndimage
+# scipy CHỈ phục vụ hai cờ vá tranh (`--caro`, `--suong`), nên nhập MUỘN trong đúng hai hàm
+# cần nó. Nhập ở đầu tệp thì mọi công cụ khác muốn dùng lại `nang_sang()` — một hàm numpy
+# thuần — cũng bị bắt cài scipy theo. Chép hàm ấy sang tệp khác để né thì lại là bản sao
+# thứ hai của một luật đang sống, thứ tài liệu này cấm ở nhiều chỗ.
 from PIL import Image
 
 Image.MAX_IMAGE_PIXELS = None
@@ -84,6 +87,7 @@ O_CARO = 2 * P_CARO + 4   # rộng hơn hai ô thì không còn là ô caro
 def _va_o(rgb, al):
     """Trả lại phần bị ô caro đục mất: ô alpha 0 và ô đục-nhưng-đen giữa vùng sáng. Chỉ vá mảng
     đúng cỡ một ô — khoảng trống thật (lòng vòng sét) rộng hơn nhiều, đụng vào là bôi trắng."""
+    from scipy import ndimage
     duc = al > 127
     lum = rgb[..., 0] * .3 + rgb[..., 1] * .59 + rgb[..., 2] * .11
     lo = ndimage.binary_fill_holes(duc) & ~duc
@@ -111,6 +115,7 @@ def bo_o_caro(im):
     """Dạng thứ ba: lưới ô caro đục hẳn giữa khói tối, chỉ chênh ~15/255. Làm mượt bằng hai lượt
     hộp một chu kì (≈ tam giác hai chu kì), chỉ ở pixel TỐI mà phần dư quanh nó đúng tầm biên độ
     ấy — bóng đổ thật có phần dư lớn hơn nhiều nên giữ nguyên."""
+    from scipy import ndimage
     a = np.asarray(im).astype(float)
     rgb, al = _va_o(a[..., :3], a[..., 3])
     op = (al > 127).astype(float)
@@ -137,6 +142,7 @@ def va_suong(im):
     một nhân, rồi mới chia ngược. Làm mượt riêng alpha thì màu của ô rỗng (thường là xám hoặc
     đen) lẫn vào, ra một lớp bẩn xám; nhân sẵn thì ô rỗng có trọng số 0 nên không góp gì.
     Nét đặc bị loại khỏi cả tử lẫn mẫu, nếu không thì bóng ma trắng loang ra thành quầng."""
+    from scipy import ndimage
     a = np.asarray(im).astype(float)
     rgb, al = a[..., :3], a[..., 3]
     dac = al >= DAC

@@ -46,7 +46,15 @@
     try { ws = new WebSocket(NET.url); } catch (e) { hen(); return; }
     NET.ws = ws; NET.tinhTrang = 'dang-noi';
 
-    ws.onopen = () => { NET.tinhTrang = 'da-noi'; console.log('[net] da noi', NET.url); };
+    ws.onopen = () => {
+      NET.tinhTrang = 'da-noi';
+      // ⚠ QUÊN CHỮ KÝ TRANG BỊ ĐÃ GỬI. Máy chủ dựng một trạng thái MỚI toanh cho mỗi kết nối,
+      // nên sau khi rớt và nối lại nó không còn nhớ ta mặc gì. Không xoá chỗ này thì `gui()`
+      // thấy "chữ ký không đổi" rồi im lặng không gửi lại — và ta cởi trần với mọi người cho
+      // tới lần thay đồ kế tiếp. Không lỗi nào báo, mà phải rớt mạng một lần mới thấy.
+      _doCuoi = null;
+      console.log('[net] da noi', NET.url);
+    };
 
     ws.onmessage = (ev) => {
       let tin; try { tin = JSON.parse(ev.data); } catch { return; }
@@ -89,6 +97,10 @@
         // bản sao thứ hai của một hợp đồng đang sống — thêm một trường bên kia là nổ bên này.
         t = window.netTaoThan(d.i);
         t.ax = d.x; t.ay = d.y; t.at = gio;
+        // ⚠ GHI NHẬN BỘ ĐẾM MÀ KHÔNG NỔ HOẠT CẢNH. Người này có thể đã đánh 500 cú trước khi ta
+        // nhìn thấy họ; coi lần đầu gặp là "vừa bắt đầu một đòn" thì ai lọt vào tầm mắt cũng
+        // vung kiếm một cái chào — kể cả người đang đứng yên trong thành.
+        t._asCuoi = d.as; t._csCuoi = d.cs;
         NET.than.set(d.i, t);
       }
       // mốc cũ = chỗ ĐANG vẽ, không phải mốc `b` trước đó: nếu một ảnh tới trễ thì nhảy từ chỗ
@@ -107,6 +119,19 @@
       t.hp = d.hp; t.maxHp = d.mhp; t.level = d.lv; t.speed = d.sp;
       t.sect = d.s; t.name = d.n;
       t.map = tin.map || ta0.map;
+      // ── Trang bị: chỉ tới khi nó ĐỔI (xem chú thích ở máy chủ) ────────────────────────
+      // Dựng lại một `equip` giả bằng hàm của game, để thân người từ xa đi qua ĐÚNG đường vẽ
+      // mà người chơi của mình đi qua — `gearVisual` · `heroSprite` · `veCanh` không cần biết
+      // ai là ai.
+      if (d.g && typeof window.netApTrangBi === 'function') window.netApTrangBi(t, d.g);
+      // ── Hành động ra đòn ─────────────────────────────────────────────────────────────
+      // Tên tư thế đi riêng khỏi bộ đếm: nó là trạng thái (lớp nào vung kiểu gì), còn bộ đếm là
+      // sự kiện. Gộp chúng lại là đổi vũ khí xong phải đợi cú đánh kế tiếp mới đúng tư thế.
+      if (d.ak) t.atkAct = d.ak;
+      if (d.ck) t.castAct = d.ck;
+      const G = window.NV_HD_GIAY || { a: 0.22, c: 0.38 };
+      if (d.as !== t._asCuoi){ t._asCuoi = d.as; t.atkAnim = G.a; }
+      if (d.cs !== t._csCuoi){ t._csCuoi = d.cs; t.castT  = G.c; }
     }
     for (const id of [...NET.than.keys()]) if (!con.has(id)) NET.than.delete(id);
     capNhatMang();
@@ -146,10 +171,19 @@
       const dx = x - t.x, dy = y - t.y, dl = Math.hypot(dx, dy);
       t.x = x; t.y = y;
       if (typeof window.thanNhip === 'function') window.thanNhip(t, dt, dx, dy, dl > 0.01 ? 1 : 0);
+      // ⚠ ĐẾM NGƯỢC HOẠT CẢNH RA ĐÒN Ở ĐÂY, KHÔNG NHÉT VÀO `thanNhip`. `update()` đã đếm ngược
+      // hai đồng hồ này cho người chơi của mình; `thanNhip` thì CẢ HAI bên cùng gọi, nên đặt
+      // vào đó là người chơi của mình bị trừ hai lần và mọi cú đánh ngắn đi một nửa.
+      if (t.atkAnim > 0) t.atkAnim = Math.max(0, t.atkAnim - dt);
+      if (t.castT   > 0) t.castT   = Math.max(0, t.castT   - dt);
     }
   }
 
   /* ── Gửi vị trí của mình ─────────────────────────────────────────────────────────────*/
+  // Chữ ký bộ đồ đã gửi lần cuối — `null` = chưa gửi lần nào. ⚠ Khai TRÊN `gui()`: `let` có vùng
+  // chết, và `ws.onopen` ở trên có gán vào nó. Hôm nay không nổ vì cả hai chỗ chỉ chạy sau khi
+  // thân hàm bao ngoài đã chạy xong, nhưng đó là thứ đúng vì lý do KHÁC lý do ta nghĩ.
+  let _doCuoi = null;
   function gui() {
     const ws = NET.ws;
     // ⚠ Qua `netDoc()`, KHÔNG đọc `window.player`. `player` và `curMap` khai bằng `let` ở tầng
@@ -158,12 +192,25 @@
     const ta = (typeof window.netDoc === 'function') ? window.netDoc() : null;
     const p = ta && ta.p;
     if (!ws || ws.readyState !== 1 || !p) return;
-    ws.send(JSON.stringify({
+    const goi = {
       t: 'pos', map: ta.map || '',
       x: p.x, y: p.y, face: p.face || 0, moving: !!p.moving,
       hp: p.hp, maxHp: p.maxHp, level: p.level, speed: p.speed,
       sect: p.sect, name: p.name || ('Khach' + NET.id),
-    }));
+      // Bộ đếm cú ra đòn, xem `_atkSeq` trong game.js. Gửi con số chứ không gửi thời gian còn
+      // lại: 0,22 s lọt gọn giữa hai ảnh 10 Hz.
+      as: p._atkSeq || 0, cs: p._castSeq || 0,
+      ak: p.atkAct || '', ck: p.castAct || '',
+    };
+    // ⚠ TRANG BỊ CHỈ GỬI KHI ĐỔI. Nó đổi vài phút một lần mà ảnh chụp thì 10 lần một giây —
+    // gửi kèm mọi lần là trả băng thông cho một thứ đứng yên. So bằng CHỮ KÝ chứ không so bằng
+    // tham chiếu: `netTrangBi()` dựng một đối tượng mới mỗi lượt gọi nên `!==` luôn đúng.
+    if (typeof window.netTrangBi === 'function'){
+      const g = window.netTrangBi();
+      const ky = g ? JSON.stringify(g) : '';
+      if (ky !== _doCuoi){ _doCuoi = ky; if (g) goi.g = g; }
+    }
+    ws.send(JSON.stringify(goi));
   }
 
   /* ── Gửi chat ────────────────────────────────────────────────────────────────────────
