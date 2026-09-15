@@ -9462,6 +9462,9 @@ function phimXuong(e){
   // tinh tung đồ rồi tự chọn lúc bấm. Bắt phím chỉ khi bảng lò đang mở, nên không giẫm lên
   // ô gõ nào khác (ô nhập đã thoát ở dòng đầu hàm).
   if (e.key === 'Enter' && typeof loMo === 'function' && loMo()){ e.preventDefault(); window.doChaos(); return; }
+  // ENTER MỞ Ô CHAT — đặt SAU chốt Lò Hỗn Độn ở trên, vì lò đang mở thì Enter thuộc về lò.
+  // Khi ô chat đang có tiêu điểm thì hàm này đã `return` ở dòng đầu (target là INPUT).
+  if (e.key === 'Enter' && window.NET && window.NET.on && player){ e.preventDefault(); chatTieuDiem(); return; }
   if (e.key >= '1' && e.key <= '4' && player){ // taskbar 4 ô kỹ năng (chính/phụ/buff/tuyệt chiêu)
     const id = player.skillBar[+e.key - 1];
     // Ô cắm BỊ ĐỘNG không tung được — nói ra thay vì im lặng, nếu không người chơi bấm mãi và
@@ -16472,6 +16475,110 @@ function netDonBayCao(){
   for (const k of _bayCao.keys()) if (!con.has(k)) _bayCao.delete(k);
 }
 
+/* ═══ CHAT (Giai đoạn 2 online) ═════════════════════════════════════════════════════════
+ * net.js là sợi dây, chỗ này là giao diện. Hai kênh: `the-gioi` (mọi người đang online) và
+ * `vung` (chỉ ai đứng cùng bản đồ).
+ *
+ * ⚠⚠ LỜI NGƯỜI KHÁC GÕ LÀ DỮ LIỆU, KHÔNG PHẢI HTML. Mọi dòng dựng bằng `createElement` +
+ * `textContent`. Nối chuỗi vào `innerHTML` ở đây là mở cửa cho bất kỳ ai gõ một thẻ `<img
+ * onerror=…>` vào ô chat rồi nó chạy trên máy MỌI người trong kênh. Máy chủ đã cắt ký tự điều
+ * khiển và giới hạn độ dài, nhưng nó KHÔNG thoát HTML — và nó không nên làm thế: thoát HTML là
+ * việc của chỗ hiển thị, vì chỉ chỗ đó mới biết nó đang dựng cái gì.                            */
+const CHAT_MAU = { 'the-gioi': '#ffd98a', 'vung': '#9fe0ff', 'he': '#8e97bb' };
+let chatKenh = 'the-gioi';
+
+function chatEl(id){ return el(id); }
+
+// Hiện khối chat CHỈ khi có nối mạng. Bày một ô chat mà không ai nhận được là đúng cái lỗi
+// "một cái vỏ giả vờ là máy chạy" đã ghi ở mục Tổ Đội.
+function chatDung(){
+  const w = chatEl('chat-wrap'); if (!w) return;
+  const on = !!(window.NET && window.NET.on);
+  w.classList.toggle('hidden', !on);
+  if (!on) return;
+  const tt = window.NET.tinhTrang;
+  const s = chatEl('chat-trangthai'), inp = chatEl('chat-input');
+  if (s) s.textContent = tt === 'da-noi' ? '● đang nối' : tt === 'dang-noi' ? '○ đang kết nối…' : '○ mất kết nối';
+  if (inp){
+    inp.disabled = tt !== 'da-noi';
+    inp.placeholder = tt === 'da-noi' ? 'Enter để nói…' : 'chưa nối được máy chủ';
+  }
+}
+
+function chatThem(kenh, ten, loi, tuMinh){
+  const log = chatEl('chat-log'); if (!log) return;
+  const row = document.createElement('div');
+  row.className = 'ch-row';
+  if (kenh === 'he'){
+    row.style.color = CHAT_MAU.he; row.textContent = loi;
+  } else {
+    const nhan = document.createElement('span');
+    nhan.className = 'ch-ten';
+    nhan.style.color = CHAT_MAU[kenh] || '#e8ecff';
+    // Nhãn kênh đứng trước TÊN, nên đọc một dòng là biết nó tới từ đâu — người chơi hay
+    // trả lời nhầm kênh khi hai kênh trộn vào một khung mà không có dấu.
+    nhan.textContent = (kenh === 'vung' ? '[Vùng] ' : '[TG] ') + (ten || '?') + ': ';
+    row.appendChild(nhan);
+    const than = document.createElement('span');
+    than.textContent = loi;                    // ⇐ textContent, KHÔNG innerHTML
+    if (tuMinh) than.style.color = '#ffffff';
+    row.appendChild(than);
+  }
+  log.appendChild(row);
+  while (log.children.length > 120) log.removeChild(log.firstChild);
+  log.scrollTop = log.scrollHeight;            // chat cuộn XUỐNG, ngược với nhật ký
+}
+
+window.netChatNhan = function(tin){
+  chatThem(tin.kenh, tin.ten, tin.loi, window.NET && tin.tu === window.NET.id);
+};
+// ⚠ Máy chủ chặn thì phải NÓI RA. Nuốt im thì người chơi gõ lại, rồi gõ lại nữa — tức chính
+// cái chống spam lại sinh ra spam.
+window.netChatChan = function(ly){
+  chatThem('he', null, ly === 'nhanh' ? 'Nói chậm lại một chút.'
+                     : ly === 'nhieu' ? 'Nói hơi nhiều — chờ vài giây rồi nói tiếp.'
+                     : ly === 'chua-vao' ? 'Kênh Vùng cần bạn đang đứng trong một bản đồ.'
+                     : 'Câu vừa rồi không gửi được.');
+};
+
+function chatDoiKenh(k){
+  chatKenh = (k === 'vung') ? 'vung' : 'the-gioi';
+  document.querySelectorAll('.chat-tab').forEach(b => b.classList.toggle('on', b.dataset.kenh === chatKenh));
+  const inp = chatEl('chat-input'); if (inp) inp.focus();
+}
+function chatTieuDiem(){ const i = chatEl('chat-input'); if (i && !i.disabled) i.focus(); }
+function chatGuiUI(){
+  const inp = chatEl('chat-input'); if (!inp) return;
+  const loi = inp.value.trim(); if (!loi){ inp.blur(); return; }
+  // ⚠ Chỉ XOÁ Ô khi gửi được. Gửi hỏng mà vẫn xoá là lấy mất câu người ta vừa gõ.
+  if (typeof window.netChatGui === 'function' && window.netChatGui(chatKenh, loi)) inp.value = '';
+  else chatThem('he', null, 'Chưa nối được máy chủ — câu chưa gửi đi.');
+}
+
+function chatNoi(){
+  const inp = chatEl('chat-input');
+  if (inp){
+    inp.addEventListener('keydown', e => {
+      if (e.key === 'Enter'){ e.preventDefault(); chatGuiUI(); }
+      else if (e.key === 'Escape'){ e.preventDefault(); inp.blur(); }
+      e.stopPropagation();          // đừng để phím gõ rơi xuống phím tắt của game
+    });
+  }
+  document.querySelectorAll('.chat-tab').forEach(b =>
+    b.addEventListener('click', () => chatDoiKenh(b.dataset.kenh)));
+  const thu = chatEl('chat-thu');
+  if (thu) thu.addEventListener('click', () => {
+    const l = chatEl('chat-log'), i = chatEl('chat-input');
+    const dong = !l.classList.contains('cl-closed');
+    l.classList.toggle('cl-closed', dong); i.classList.toggle('cl-closed', dong);
+    thu.firstChild.textContent = dong ? '▸' : '▾';
+  });
+  chatDung();
+  // Nhãn trạng thái đổi theo kết nối, mà kết nối thì không báo ra ngoài. 1 Hz là đủ cho một
+  // dòng chữ và rẻ hơn hẳn việc móc vào vòng vẽ 60 Hz.
+  if (window.NET && window.NET.on) setInterval(chatDung, 1000);
+}
+
 // ⚠ `p` là THÂN NGƯỜI phải vẽ, không nhất thiết là `player`. Trước bản nối mạng hàm này không
 // nhận tham số nào và dòng thứ ba là `const p = player` — tức cả tầng vẽ khẳng định thế giới chỉ
 // có một người chơi. Nay người chơi khác đi qua cùng một cửa này, nên hai luật:
@@ -19292,6 +19399,10 @@ window.doTayTuy = function(confirmed){
 // ---------- Sect select / boot ----------
 function startGame(sectKey, quze){
   taiTroDong();   // màn tải (nếu còn) — cửa duy nhất vào thế giới là chỗ đúng để đóng nó
+  // Chat nối ở đây vì đây là cửa duy nhất vào thế giới — cùng lý do với taiTroDong() ở trên.
+  // ⚠ Cờ chặn gọi hai lần: `startGame` chạy lại được (đổi nhân vật, bài kiểm), mà gắn listener
+  // hai lần là một câu chat gửi đi hai lần.
+  if (!window._chatDaNoi){ window._chatDaNoi = true; try { chatNoi(); } catch (e) { console.error('[chat]', e); } }
   // ⚠ DỪNG cảnh màn chờ NGAY Ở ĐÂY, đừng trông vào chỗ gọi. titleAlive() tắt vòng lặp khi CẢ
   // HAI màn (#sect-select, #intro-story) đã ẩn — mà đường vào game nào cũng chỉ ẩn đúng một
   // cái rồi gọi startGame, nên chỉ cần một đường quên ẩn cái kia là cảnh Lunacia mười lớp

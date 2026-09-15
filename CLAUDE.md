@@ -2789,7 +2789,18 @@ map khác. `onDeath()` phải dọn: `sigilReset()` (vũng độc + sóng hẹn 
 Lưu ý `respawn()` chỉ gọi `buildWorld()` khi chết ở map KHÔNG an toàn, nên không thể trông
 vào nó để dọn hộ.
 
-## 🌐 ONLINE — Giai đoạn 1 "Bóng Người" ĐÃ THI CÔNG, và nó dừng đúng ở đó
+## 🌐 ONLINE — Giai đoạn 1 "Bóng Người" ĐÃ CHẠY THẬT TRÊN PRODUCTION
+
+> **Chốt 2026-09-15:** phần online đã **hoàn thiện sơ bộ** và nghiệm thu trên VPS thật, không
+> phải chỉ trong bài kiểm. Chủ dự án mở hai cửa sổ và thấy nhau chạy. Bảy mục của
+> `deploy/kiemtra_ws.sh` xanh hết: máy chủ sống · `sites-enabled` là symlink thật · cấu hình
+> ĐANG NẠP có `location /ws` · bắt tay WebSocket qua nginx ra `101` · trang nạp `net.js` ·
+> và bản `net.js` đi qua nginx đúng là bản đã vá.
+>
+> **Việc tiếp theo chủ dự án chốt: HỆ THỐNG CHAT** (kênh Thế Giới + kênh vùng) — xem mục
+> "💬 CHAT" bên dưới.
+
+### Nó dừng đúng ở đó — đọc trước khi hứa thêm gì
 
 > Thiết kế đầy đủ: **`docs/THIET_KE_ONLINE.md`** · khảo sát + lộ trình 7 giai đoạn:
 > **`docs/KHAO_SAT_ONLINE.md`** · mẫu giao thức/lược đồ: `docs/online-samples/`
@@ -2971,6 +2982,55 @@ không phải một bản hỏng bất kỳ.
   Cách đúng: vẽ **cả hai lượt trong CÙNG một `evaluate`** (trôi còn ~1 ms) **và** đo thêm một ô
   **đối chứng** ở chỗ không có ai đứng, rồi đòi ô có bóng phải đổi nhiều hơn hẳn. Đo được sau
   khi sửa: **4.725 điểm ảnh đổi ở ô có bóng, 0 ở ô đối chứng**; gỡ nhánh vẽ đi thì còn 54.
+
+### 💬 CHAT — hai kênh, KHÔNG lịch sử, và chống spam nằm ở MÁY CHỦ
+
+| | |
+|---|---|
+| Kênh | **Thế Giới** (mọi người đang online) · **Vùng** (chỉ ai đứng cùng bản đồ) |
+| Máy chủ | `nhanChat()` trong `server/bongnguoi.js` · `CHAT_DAI` 200 · `CHAT_NHIP_MS` 700 · `CHAT_CUA` 6 câu / 10 giây |
+| Sợi dây | `window.netChatGui()` gửi · `window.netChatNhan/netChatChan` nhận, trong `net.js` |
+| Giao diện | `chatThem()` · `chatDung()` · `chatNoi()` trong `game.js`; `#chat-wrap` góc dưới-TRÁI |
+| Gác | `tests/test_chat.js` (5 mệnh đề) |
+
+**⚠⚠ LỜI NGƯỜI KHÁC GÕ LÀ DỮ LIỆU, KHÔNG PHẢI HTML.** Mọi dòng dựng bằng `createElement` +
+`textContent`. Nối chuỗi vào `innerHTML` ở đây là ai cũng gõ được `<img onerror=…>` vào ô chat
+rồi nó chạy trên máy **mọi người trong kênh**. Máy chủ cắt độ dài và ký tự điều khiển nhưng
+**không** thoát HTML, và nó không nên làm thế: thoát HTML là việc của chỗ hiển thị, vì chỉ chỗ
+đó mới biết nó đang dựng cái gì. `test_chat §3` hỏi thẳng DOM (`querySelectorAll('img').length`),
+không hỏi chuỗi — hỏi chuỗi thì một bản vá nửa vời (thoát `<` mà quên `"`) vẫn xanh.
+
+**⚠ CHỐNG SPAM Ở MÁY CHỦ.** Ô nhập bên client chỉ để người tử tế khỏi vô tình bấm liên tục;
+client sửa được. Hai lớp vì chúng chặn hai kiểu khác nhau: `CHAT_NHIP_MS` chặn **giữ phím**,
+`CHAT_CUA` chặn **dán một loạt rồi bắn dồn**.
+
+**⚠ BỊ CHẶN THÌ PHẢI NÓI RA** (`chat-chan` → `netChatChan`). Nuốt im thì người chơi gõ lại, rồi
+gõ lại nữa — tức chính cái chống spam lại **sinh ra** spam, và họ tưởng game hỏng.
+
+**⚠ CHỈ XOÁ Ô KHI GỬI ĐƯỢC.** `netChatGui()` trả `false` lúc chưa nối; xoá ô bất kể là lấy mất
+câu người ta vừa gõ.
+
+**Bốn chỗ đã vấp, ghi lại:**
+1. **Chính bộ chống spam nuốt mất phép đo an toàn.** Lượt đo đầu, câu thử XSS bắn ngay sau mấy
+   câu trước nên bị chặn, và dòng cuối hoá ra là *"Nói chậm lại một chút"* — bài **xanh mà chưa
+   kiểm được gì**. Mệnh đề ③ nay chờ qua nhịp chống spam **rồi** mới đo, và nó khẳng định câu
+   thử đã tới nơi trước khi kết luận là an toàn.
+2. **Khối chat ẨN khi không có mạng** (`chatDung()` hỏi `NET.on`). Bày một ô chat gõ được mà
+   không ai nhận là đúng cái lỗi *"một cái vỏ giả vờ là máy chạy"* ở mục Tổ Đội. `§0` gác.
+3. **Phím Enter phải đứng SAU chốt Lò Hỗn Độn** trong `phimXuong` — lò đang mở thì Enter thuộc
+   về lò. Khi ô chat có tiêu điểm thì `phimXuong` đã `return` ở dòng đầu (`target.tagName ===
+   'INPUT'`), nên không cần chốt thứ hai; nhưng ô nhập vẫn `stopPropagation` để phím gõ không
+   rơi xuống phím tắt.
+4. **`chatNoi()` gọi trong `startGame` và có cờ chặn gọi hai lần.** `startGame` chạy lại được
+   (đổi nhân vật, bài kiểm), mà gắn listener hai lần là **một câu chat gửi đi hai lần**.
+
+**KHÔNG lưu lịch sử — cố ý.** Máy chủ này không có cơ sở dữ liệu; một lịch sử chat trong RAM thì
+mất theo lần khởi động lại kế tiếp, mà cron deploy khởi động lại nó mỗi khi `server/` đổi. Lịch
+sử là việc của giai đoạn có tài khoản thật.
+
+**Kênh Thế Giới tới cả người còn ở màn chờ** (chưa có `map`) — họ vẫn là người đang online, nghe
+được trước khi vào là điều hay. Kênh Vùng thì đòi phải đứng trong một bản đồ, và nói rõ lý do
+khi chưa vào.
 
 ### Còn nợ, biết rõ
 
