@@ -9,6 +9,7 @@
 //   3. Sylvan Ranger có 0 chiêu chủ động trong cây lớp — cả bốn đều bị động/buff.
 const { chromium } = require('playwright');
 let bad = 0; const fail = m => { bad++; console.log('FAIL ' + m); };
+const pass = m => console.log('PASS ' + m);
 (async () => {
   const b = await chromium.launch({ executablePath: '/opt/pw-browsers/chromium' });
   const errs = [];
@@ -28,7 +29,9 @@ let bad = 0; const fail = m => { bad++; console.log('FAIL ' + m); };
     const out = {};
     for (const sk in SECTS){
       const bar = defaultSkillBar(sk);
-      out[sk] = { so: bar.length, o4: bar[3] };
+      out[sk] = { so: bar.length, o4: bar[3],
+        // ô trống chỉ hợp lệ khi chính game khai ra nó — xem THANH_LOP trong game.js
+        khaiTrong: !!(typeof THANH_LOP !== 'undefined' && THANH_LOP[sk] && !THANH_LOP[sk][3]) };
     }
     return { lop: out, oHTML: document.querySelectorAll('.sk-slot').length,
              sig: Object.keys(SIGNATURE_SKILL).length };
@@ -36,9 +39,14 @@ let bad = 0; const fail = m => { bad++; console.log('FAIL ' + m); };
   console.log('1) ô thứ 4 theo lớp:', JSON.stringify(r1));
   for (const sk in r1.lop){
     if (r1.lop[sk].so !== 4) fail(`lớp ${sk} có ${r1.lop[sk].so} ô, phải là 4`);
-    if (!r1.lop[sk].o4) fail(`lớp ${sk} không có tuyệt chiêu ở ô 4`);
+    // ⚠ Ô 4 TRỐNG chỉ được tha khi `THANH_LOP` khai rõ. Chủ dự án chốt để trống ô 2 + ô 4 của
+    // Dark Wizard rồi điền sau; miễn trừ bằng một danh sách tên lớp NGAY TRONG BÀI KIỂM thì lần
+    // sau có lớp thứ hai rơi vào cùng trạng thái sẽ lọt êm.
+    if (!r1.lop[sk].o4 && !r1.lop[sk].khaiTrong) fail(`lớp ${sk} không có tuyệt chiêu ở ô 4`);
+    else if (!r1.lop[sk].o4) console.log(`    ${sk}: ô 4 cố ý để trống (THANH_LOP) — chờ chủ dự án điền`);
   }
-  const o4 = Object.values(r1.lop).map(x => x.o4);
+  const o4 = Object.values(r1.lop).map(x => x.o4).filter(Boolean);   // ô để trống không tính là "trùng"
+
   if (new Set(o4).size !== o4.length) fail(`hai lớp dùng chung một tuyệt chiêu: ${o4.join(', ')}`);
   if (r1.oHTML < 4) fail(`HTML chỉ có ${r1.oHTML} nút kỹ năng — ô 4 không hiện ra`);
 
@@ -56,13 +64,25 @@ let bad = 0; const fail = m => { bad++; console.log('FAIL ' + m); };
     mouseWorld.x = player.x + 200; mouseWorld.y = player.y;
     castSkill(id);
     await new Promise(r => setTimeout(r, 900));
+    // ⚠ ĐO %ST THẬT, đừng suy từ việc chiêu có mặt trong `LEGACY_SECT_SKILLS`. Bảng đó nay khai
+    // CẢ SÁU chiêu chủ động của lớp, và `calcDerived` TRỪ ĐỘNG những chiêu đang nằm trên thanh —
+    // nên "có tên trong bảng" không còn nghĩa là "được cộng %ST". Mệnh đề cũ suy từ danh sách sẽ
+    // đỏ oan; cái nó thật sự muốn biết là chiêu ô 4 có bị cộng hai lần không, mà chuyện đó thì
+    // cân được: gỡ khỏi thanh phải LÀM %ST TĂNG, còn để trên thanh thì không.
+    calcDerived(); const pctTren = player.legacyAtkPct;
+    const _bar = player.skillBar.slice(); player.skillBar = [_bar[0], _bar[1], _bar[2], null];
+    calcDerived(); const pctNgoai = player.legacyAtkPct;
+    player.skillBar = _bar; calcDerived();
     return { chieu: id, ten: (skillInfo(id)||{}).name,
       trung: mobs.filter((m,i) => m.hp < hp0[i]).length,
-      conLaiTrongDiSan: LEGACY_SECT_SKILLS.includes(id) };
+      pctTren: +pctTren.toFixed(2), pctNgoai: +pctNgoai.toFixed(2),
+      bacMong: LEGACY_TIER_PCT[(VOHOC_DEFS[id] || {}).tier] || 0 };
   });
   console.log('2) bấm ô 4:', JSON.stringify(r2));
   if (!r2.trung) fail(`bấm tuyệt chiêu ${r2.ten} mà không con nào trúng đòn`);
-  if (r2.conLaiTrongDiSan) fail(`${r2.chieu} vừa nằm ở ô 4 vừa còn trong Di Sản Cũ — cộng %ST hai lần`);
+  if (r2.bacMong && +(r2.pctNgoai - r2.pctTren).toFixed(2) !== r2.bacMong)
+    fail(`${r2.chieu} ở ô 4 mà %ST Di Sản không bị trừ đúng bậc: trên thanh ${r2.pctTren} · ngoài thanh ${r2.pctNgoai} (chênh phải là ${r2.bacMong})`);
+  else if (r2.bacMong) pass(`${r2.chieu} ở ô 4 thì KHÔNG cộng %ST (${r2.pctTren} → ${r2.pctNgoai} khi gỡ ra)`);
   await p1.close();
 
   // ---- 3. Mỗi chiêu một biểu tượng riêng, và không còn ô nào dùng art mượn tạm ----
@@ -90,13 +110,19 @@ let bad = 0; const fail = m => { bad++; console.log('FAIL ' + m); };
     return { soChieu: Object.keys(VOHOC_DEFS).length, soBieuTuong: Object.keys(SK_ICON_SYMS).length,
              thieu, chung, artMuon,
              oTaskbar: player.skillBar.map(id => { const i = id && skillInfo(id);
-               return i && i.icon ? (String(i.icon).startsWith('data:') ? 'vẽ' : String(i.icon)) : 'TRỐNG'; }) };
+               return i && i.icon ? (String(i.icon).startsWith('data:') ? 'vẽ' : String(i.icon)) : 'TRỐNG'; }),
+             khaiTrong: (typeof THANH_LOP !== 'undefined' && THANH_LOP[player.sect])
+               ? THANH_LOP[player.sect].map(x => !x) : [] };
   });
   console.log('3) biểu tượng:', JSON.stringify(r3));
   if (r3.thieu.length) fail(`${r3.thieu.length} chiêu chưa có biểu tượng riêng: ${r3.thieu.join(', ')}`);
   if (r3.soBieuTuong < 20) fail(`chỉ có ${r3.soBieuTuong} biểu tượng cho ${r3.soChieu} chiêu — vẫn dùng chung quá nhiều`);
   if (r3.artMuon.length) fail(`còn ô kỹ năng trỏ vào art mượn tạm: ${r3.artMuon.join(', ')}`);
-  if (r3.oTaskbar.some(x => x === 'TRỐNG')) fail(`taskbar còn ô không có icon: ${JSON.stringify(r3.oTaskbar)}`);
+  // Ô cố ý để trống (THANH_LOP) thì không có chiêu nên cũng không có icon — đó không phải lỗi
+  // icon. Ô trống KHÔNG khai thì vẫn là lỗi, và §1 ở trên mới là chỗ gác chuyện đó.
+  const _khaiTrong = r3.khaiTrong || [];
+  const _mat = r3.oTaskbar.map((x, i) => (x === 'TRỐNG' && !_khaiTrong[i]) ? i : -1).filter(i => i >= 0);
+  if (_mat.length) fail(`taskbar còn ô không có icon: ô ${_mat.map(i=>i+1).join(',')} trong ${JSON.stringify(r3.oTaskbar)}`);
   else console.log(`   4 ô taskbar đều có icon: ${JSON.stringify(r3.oTaskbar)}`);
 
   // ---- 4. Năm chiêu đặc trưng có hiệu ứng RIÊNG, không rơi về style mặc định theo kiểu chiêu ----

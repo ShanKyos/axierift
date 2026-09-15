@@ -1641,19 +1641,64 @@ Test: `node <scratchpad>/test_itemcompare.js`.
 
 ## Hệ thống kỹ năng (đã tối giản)
 
-Taskbar cố định **4 ô**: chiêu chính (`a`) · chiêu phụ (`tp`) · ô 3 riêng từng lớp
-(`O3_SKILL_ID`) · tuyệt chiêu (`SIGNATURE_SKILL`). Không cho người chơi tự gán. Các chiêu cũ
-không còn bấm được đã quy thành **% Công Kích vĩnh viễn** (`LEGACY_SECT_SKILLS` /
-`legacyAtkPct` trong `calcDerived()`), hiện ở mục Di Sản trong panel K.
+Taskbar **4 ô**, nay người chơi tự gán được (xem mục 🎯 bên dưới). Thanh MẶC ĐỊNH do
+**`defaultSkillBar(sect)`** dựng, và nó đọc **`THANH_LOP`** trước — không còn là một công thức
+cố định `['a','tp',O3,SIGNATURE]`. Các chiêu không nằm trên thanh quy thành **% Công Kích vĩnh
+viễn** (`LEGACY_SECT_SKILLS` / `legacyAtkPct` trong `calcDerived()`), hiện ở tab Khác.
 
-Ô 3 **không nhất thiết là chiêu buff**. Bộ bốn nút phải là bộ bốn chiêu mà lớp ấy thực sự nổi
-tiếng vì nó. Dark Wizard là Poison · Meteorite · Inferno · Dragon Spirit, nên Soul Barrier
-nhường chỗ cho Inferno và chuyển sang Di Sản — y như chiêu buff của Dark Knight đã làm.
-`BUFF_SKILL_ID` nay **suy ra** từ `O3_SKILL_ID` (ô 3 nào có `type:'buff'`), không khai tay.
+Ô 3 **không nhất thiết là chiêu buff**; `BUFF_SKILL_ID` **suy ra** từ `O3_SKILL_ID` (ô 3 nào có
+`type:'buff'`), không khai tay.
 
-Một chiêu **không được vừa bấm được vừa cộng %ST vĩnh viễn**. Đưa chiêu nào lên taskbar thì
-đồng thời gỡ nó khỏi `LEGACY_SECT_SKILLS`, và đẩy một chiêu khác vào thế chỗ sao cho mỗi lớp
-vẫn đúng **4 chiêu Di Sản = +8,0% Công Kích** (`test_kynang5lop` bắt lỗi lệch giữa các lớp).
+### ⚠ DI SẢN = SÁU CHIÊU CỦA LỚP **TRỪ** NHỮNG Ô ĐANG TRÊN THANH
+
+Một chiêu **không được vừa bấm được vừa cộng %ST vĩnh viễn** — luật đó không đổi. Đổi là **cách
+giữ** nó. `calcDerived()` đã trừ động theo thanh từ đợt kéo thả, nên `LEGACY_SECT_SKILLS` nay
+khai **cả sáu** chiêu chủ động của mỗi lớp (ngoài `a` và `tp`) và để phép trừ tự lo.
+
+Bản cũ khai đúng bốn chiêu "không nằm trên thanh" — tức **chép tay KẾT QUẢ của phép trừ**. Mỗi
+lần đổi một ô taskbar là phải nhớ sửa bảng cho khớp, quên thì %Công Kích lệch **âm thầm**. Cùng
+họ với bước "rồi chép sang…" của `ISO_NEO`.
+
+Số liệu không đổi với bốn lớp kia (hai chiêu vừa thêm đang nằm trên thanh nên bị trừ ra):
+pool 12,0 − 4,0 · 13,0 − 5,0 · 12,0 − 4,0 · 12,5 − 4,5 ⇒ vẫn **+8,0%** như trước.
+
+### 🔮 DARK WIZARD: METEORITE XUỐNG Ô 3, Ô 2 VÀ Ô 4 ĐỂ TRỐNG
+
+Chủ dự án chốt (nguyên văn): *"Chuyển lại tuyệt chiêu meteriote sẽ là chiêu trấn phái 3 của DW.
+2 chiêu còn lại là inferno + evil spirit sẽ nằm ở chiêu khác"* — và về hai ô trống:
+*"cứ để trống mình sẽ fill sau"*.
+
+| | |
+|---|---|
+| thanh DW | `['a', null, 'tp', null]` trong **`THANH_LOP`** |
+| ô 3 | **Meteorite** — chính là `tp`, không phải một mã riêng |
+| Inferno · Evil Spirit | rời thanh, sang tab Khác thành Di Sản |
+| `O3_SKILL_ID.baidasan` · `SIGNATURE_SKILL.baidasan` | **`null`** = ô để trống CÓ CHỦ Ý |
+
+- **⚠ `defaultSkillBar` phải `.slice()`.** Bản công thức dựng mảng literal nên mảng mới là mặc
+  nhiên; đọc từ một bảng thì không — thiếu `.slice()` là mọi nhân vật cùng lớp dùng CHUNG một
+  mảng và cú kéo thả đầu tiên sửa luôn bảng gốc cho cả phiên.
+- **DW tạm ở +12,5%** thay vì 8,0%: không chiêu nào bị trừ vì thanh thiếu hai ô. Đó là cái giá
+  đúng của việc thiếu hai nút bấm, và nó **tự về 8%** ngay khi hai ô được điền (Inferno 2,5 +
+  Evil Spirit 2,0 = đúng 4,5 chênh lệch). Đừng "sửa" bằng cách hạ bậc chiêu.
+- **⚠ Ô TRỐNG PHẢI ĐƯỢC KHAI RA.** Ba bài kiểm (`test_kynang5lop` · `test_tuyetchieu` ·
+  `test_canbanglop`) đọc thẳng `THANH_LOP` để biết ô nào được phép trống. Miễn trừ bằng một danh
+  sách tên lớp NGAY TRONG BÀI KIỂM là mở cửa cho lớp thứ hai rơi vào cùng trạng thái mà lọt êm.
+
+#### Bốn mệnh đề đã mục vì chúng đoán VỊ TRÍ thay vì hỏi MÃ CHIÊU
+
+Cả bốn đỏ ngay khi `tp` rời ô 2 — và cả bốn đều đỏ vì cách hỏi, không vì cơ chế:
+
+1. `test_kynang5lop` §3 khoá cứng `0 → sx_<lớp>_a`, `1 → sx_<lớp>_c` ⇒ báo *"Meteorite không khai
+   hoạt ảnh riêng"* trong khi nó có nguyên một gói art. Tra theo **mã** (`id === 'tp'`), không
+   theo chỉ số ô.
+2. `test_tuyetchieu` §2 suy "cộng %ST hai lần" từ việc chiêu **có tên trong** `LEGACY_SECT_SKILLS`.
+   Danh sách nay khai cả sáu nên phép suy đó hỏng; **đo** %ST thật (gỡ khỏi thanh phải làm nó tăng).
+3. `test_kynang5lop` gộp `bar` + `diSan` để dò trùng tên — hai mảng nay GIAO NHAU nên một chiêu
+   tự trùng với chính nó, ra `"Bulwark (thieulam+thieulam)"`. Gộp trong cùng lớp trước, và bỏ `null`.
+4. `test_ganchieu` §3 lấy **chiêu Di Sản đầu danh sách** rồi kéo lên thanh — chiêu đó nay rất có
+   thể đang ở ô 3, kéo sang ô 2 thì vẫn trên thanh, %ST tụt 0. Cảnh phải tự bảo đảm tiền đề:
+   chọn chiêu **chưa nằm trên thanh**, và nói ra khi không tìm được cái nào.
 
 ### 💠 ĐIỂM TIỀM NĂNG NAY CÓ **HAI** CHỖ TIÊU — trần 5 điểm mỗi chiêu
 

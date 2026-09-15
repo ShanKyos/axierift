@@ -3082,11 +3082,17 @@ const VOHOC_DEFS = window.VOHOC_DEFS;
 // thì lớp mất bị động riêng và bài kiểm bị động (+15% Sinh Lực) mất chỗ bám. Thay vào đó thêm
 // HẲN một chiêu thứ sáu — Bulwark — vì Dark Knight là lớp duy nhất chỉ có 5 chiêu chủ động trong
 // khi bốn lớp kia có 6. Xem chú thích tại dk_bulwark trong data/canbang.js.
-// Ô 3 của từng lớp. KHÔNG nhất thiết là chiêu phù trợ: bộ bốn nút của Dark Wizard trong MU là
-// Poison · Meteorite · Inferno · Dragon Spirit, nên ô 3 của lớp này là Inferno chứ không phải Soul
-// Barrier. Soul Barrier chuyển sang Di Sản (+%Công Kích vĩnh viễn) đúng như chiêu buff của Dark
-// Knight đã làm — một chiêu không thể vừa bấm được vừa cộng %ST vĩnh viễn.
-const O3_SKILL_ID = { thieulam:'dk_bulwark', toanchan:'elf_greaterdmg', baidasan:'dw_inferno', minhgiao:'mg_battlefury', bug:'dl_commandaura' };
+// Ô 3 của từng lớp. KHÔNG nhất thiết là chiêu phù trợ.
+//
+// ⚠ Dark Wizard là `null` — chủ dự án chốt dời **Meteorite** (chính là `tp`) xuống ô 3, còn
+// Inferno và Evil Spirit (Dragon Spirit) rời thanh sang Di Sản. Chú thích cũ ở đây ghi "ô 3 của
+// lớp này là Inferno"; giữ nguyên câu đó sau khi ô 3 đổi chủ là để lại một lời nói dối ngay
+// cạnh dòng dữ liệu nói ngược lại.
+// ⚠ `null` = Ô ĐỂ TRỐNG CÓ CHỦ Ý, chờ chủ dự án điền — không phải "quên khai". Dark Wizard dời
+// Meteorite (chính là `tp`) xuống ô 3, nên ô 2 và ô 4 bỏ trống; Inferno và Evil Spirit rời thanh
+// sang tab Khác thành Di Sản. `tests/test_tuyetchieu.js` đọc `THANH_LOP` để biết ô nào được phép
+// trống — nên bỏ trống thêm một ô ở lớp khác vẫn là bài ĐỎ, đúng như nó vốn gác.
+const O3_SKILL_ID = { thieulam:'dk_bulwark', toanchan:'elf_greaterdmg', baidasan:null, minhgiao:'mg_battlefury', bug:'dl_commandaura' };
 // Lớp nào có chiêu PHÙ TRỢ thật ở ô 3 — suy ra từ chính kiểu chiêu, không khai tay hai lần.
 const BUFF_SKILL_ID = {};
 for (const _sk in O3_SKILL_ID){
@@ -3102,7 +3108,7 @@ for (const _sk in O3_SKILL_ID){
 const SIGNATURE_SKILL = {
   thieulam: 'dk_cyclone',        // Flame Cyclone — vũ khí rời tay xoay quanh thân trong vòng lửa
   toanchan: 'elf_penetration',   // Penetration — mũi tên xuyên cả hàng
-  baidasan: 'dw_dragonspirit',   // Dragon Spirit — bầy long hồn giăng vòng quanh người
+  baidasan: null,                // ĐỂ TRỐNG — xem THANH_LOP. Evil Spirit (Dragon Spirit) rời thanh sang Di Sản.
   minhgiao: 'mg_powerslash',     // Power Slash — sóng ánh sáng từ nhát chém
   bug:      'dl_chaoticdiseier', // Earthquake — giậm đất, nền nứt thành vòng (id cũ, xem VOHOC_DEFS)
 };
@@ -3319,7 +3325,17 @@ function knRaSoat(){
   }
   player.skillBar = thay;
 }
-function defaultSkillBar(sect){ return ['a', 'tp', O3_SKILL_ID[sect] || null, SIGNATURE_SKILL[sect] || null]; }
+// Thanh chiêu mặc định. Trước đây là một CÔNG THỨC cố định `['a','tp',O3,SIGNATURE]` — nó giả
+// định ô 2 LUÔN là chiêu trấn phái, mà Dark Wizard nay đặt Meteorite (`tp`) xuống ô 3.
+//
+// ⚠ PHẢI TRẢ VỀ MẢNG MỚI MỖI LẦN GỌI. Bản công thức dựng mảng literal nên chuyện đó là mặc
+// nhiên; đọc từ một bảng thì không — thiếu `.slice()` là mọi người chơi cùng lớp dùng CHUNG
+// một mảng, và cú kéo thả đầu tiên sửa luôn cái bảng gốc cho cả phiên.
+const THANH_LOP = { baidasan: ['a', null, 'tp', null] };
+function defaultSkillBar(sect){
+  const t = THANH_LOP[sect];
+  return t ? t.slice() : ['a', 'tp', O3_SKILL_ID[sect] || null, SIGNATURE_SKILL[sect] || null];
+}
 // Phím Space gán sẵn TUYỆT CHIÊU của lớp — trước đây Space mặc định là đòn đánh thường, nên ô
 // 4 nằm đó mà phần lớn người chơi không bao giờ bấm tới: nó chỉ hiện trên thanh, muốn dùng
 // phải rê chuột xuống bấm giữa lúc đang đánh nhau.
@@ -3341,12 +3357,24 @@ const LEGACY_TIER_PCT = { so:1.5, trung:2, cao:2.5, than:3.5 };
 // Mỗi lớp ĐÚNG bốn chiêu di sản, cùng bậc sơ/trung/trung/cao = +8,0% Công Kích. Bản cũ chia
 // không đều: Dark Knight được 4,0% còn Dark Wizard 9,5% — cùng một hệ thống mà chênh nhau 5,5%
 // Công Kích vĩnh viễn chỉ vì lớp này tình cờ khai nhiều chiêu hơn lớp kia.
+// ⚠ ĐÂY LÀ CẢ SÁU CHIÊU CHỦ ĐỘNG CỦA LỚP (ngoài `a` và `tp`), KHÔNG PHẢI BỐN.
+//
+// Luật thật là **Di Sản = chiêu của lớp TRỪ những ô đang nằm trên thanh**, và `legacyAtkPct`
+// trong `calcDerived` đã trừ động theo thanh từ đợt kéo thả. Bản cũ khai đúng bốn chiêu "không
+// nằm trên thanh" — tức chép tay KẾT QUẢ của phép trừ ấy, nên mỗi lần đổi một ô taskbar là phải
+// nhớ sửa bảng này cho khớp, mà quên thì không lỗi nào báo, chỉ là %Công Kích lệch âm thầm.
+// Khai đủ sáu thì phép trừ tự lo, và bảng này thôi phải theo dõi thanh chiêu.
+//
+// Số liệu không đổi với bốn lớp kia: hai chiêu vừa thêm vào đều đang nằm trên thanh nên bị trừ
+// ra ⇒ vẫn đúng +8,0% như trước (đo lại: 12,0−4,0 · 13,0−5,0 · 12,0−4,0 · 12,5−4,5).
+// Dark Wizard đang bỏ trống ô 2 và ô 4 nên KHÔNG chiêu nào bị trừ ⇒ +12,5%. Đó là cái giá đúng
+// của việc thiếu hai nút bấm, và nó TỰ về 8% ngay khi chủ dự án điền hai ô ấy.
 const LEGACY_SECT_SKILLS = [
-  'dk_ragefulblow','dk_lunge','dk_impale','dk_fallingslash',
-  'elf_poisonarrow','elf_greaterdef','elf_holybolt','elf_fiveshot',
-  'dw_lightning','dw_ice','dw_twister','dw_shield',   // Inferno rời khỏi đây: nay là ô 3 bấm được
-  'mg_fireball','mg_powerwave','mg_twistingslash','mg_giganticstorm',
-  'dl_force','dl_electricspark','dl_fireburst','dl_darkhorse'];
+  'dk_bulwark','dk_cyclone','dk_ragefulblow','dk_lunge','dk_impale','dk_fallingslash',
+  'elf_greaterdmg','elf_penetration','elf_poisonarrow','elf_greaterdef','elf_holybolt','elf_fiveshot',
+  'dw_inferno','dw_dragonspirit','dw_lightning','dw_ice','dw_twister','dw_shield',
+  'mg_battlefury','mg_powerslash','mg_fireball','mg_powerwave','mg_twistingslash','mg_giganticstorm',
+  'dl_commandaura','dl_chaoticdiseier','dl_force','dl_electricspark','dl_fireburst','dl_darkhorse'];
 // Bị động CÓ TÁC DỤNG THẬT (xem calcDerived / regen / hurtMob) — không quy đổi thành %ST, vì
 // bản cũ ghi "+15% HP, +10% giảm sát thương" mà không nối vào đâu cả: người chơi đọc xong tưởng
 // mình có, thực tế chỉ được +2,5% Công Kích.
