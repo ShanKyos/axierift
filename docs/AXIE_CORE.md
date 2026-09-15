@@ -161,9 +161,18 @@ Measured before and after, not judged by feel.
 - every monster and boss resolves to a valid Axie class — 48 species + every boss ✓
 - each class is favourable against exactly 3 of 9 and unfavourable against 3 of 9 ✓
 - the damage formula is unchanged — measured back as ×1.20 and ×0.88 exactly ✓
-- levelling pace unchanged: a uniformly-rolled weapon now hits a favourable matchup 33% of the
-  time instead of 20%, which moves the average damage multiplier from 1.016 to 1.0267 — **+1.05%**,
-  far inside the measurement noise of `tools/do_nhipcap.cjs`. `XP_TABLE` was not retuned ✓
+- levelling pace unchanged — but the evidence here is analytical, not measured, and we say so:
+  a uniformly-rolled weapon now hits a favourable matchup 33% of the time instead of 20%, which
+  moves the average damage multiplier from 1.016 to 1.0267, i.e. **+1.05%**. The mob distribution
+  does not affect that figure: against any given monster the chance a random weapon counters it
+  is always 3/9. `XP_TABLE` was not retuned.
+
+  > We could not confirm this by running `tools/do_nhipcap.cjs`, because that tool currently
+  > returns zero XP/hour at levels 60 and above. We checked whether our change caused it by
+  > re-running the tool against a worktree of the commit immediately *before* this work: it
+  > produces the identical zeros. So the tool has a pre-existing blind spot above level 60, and
+  > the level-60+ pacing numbers elsewhere in this repo cannot presently be reproduced. We would
+  > rather say that than quote a measurement we did not take.
 
 **Stage 3 — region identity** — all met
 - best-vs-worst spread within a region ≥ **15%** — 24.4% in all 10 combat regions ✓

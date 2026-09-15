@@ -813,6 +813,28 @@ thành CỤC ở vài cấp lẻ. Phép xấp xỉ trung bình báo 3,00 giờ t
 bị" — đo lại kiểu đó thì từ cấp 10 trở lên nhân vật **CHẾT trước khi giết được con nào** (atk 35 vs
 quái 1.052 máu), tức mốc cũ không thể sinh ra từ phép đo mà nó tự mô tả.
 
+#### ⚠ `do_nhipcap.cjs` KHÔNG ĐO ĐƯỢC TỪ CẤP 60 TRỞ LÊN — đo được, CHƯA truy ra nguyên nhân
+
+Chạy lại công cụ (2026-09-15, `--giay 150 --lap 3`) thì các mốc **60 · 65 · 70 · 80 · 100 · 119**
+trả về **0 XP/giờ**, nên `GIỜ ĐỂ LÊN CẤP 60` in ra `Infinity`. Mốc 30 cũng rơi vào đó. Các mốc
+1-55 vẫn cho số bình thường.
+
+**Nó KHÔNG phải do đợt tam giác lớp Axie.** Đã dựng worktree ở commit ngay TRƯỚC đợt đó
+(`8414e35`), phục vụ ở một cổng riêng, chạy cùng tham số: **ra đúng cùng một bảng số 0**
+(`gan: 0`, `xpGio: 0` ở cả ba mốc 60/70/100). Đây là cách duy nhất phân biệt "đỏ do mình" với
+"đỏ có sẵn" — xem mục `rc=124` để biết vì sao phải làm đúng thứ tự ấy.
+
+Cũng **không** phải do máy bận: chạy lại lúc máy rỗi vẫn ra 0.
+
+Đã loại được một giả thuyết: *"AUTO không tới nổi bãi quái trên map khổ lớn"*. Lái thử 3.600
+nhịp ở `mongco` và `nhanmon` thì người chơi đứng trong tầm 260px của quái **95% và 58% số nhịp**
+— tức nó TỚI ĐƯỢC bãi. Vậy chỗ hỏng nằm ở khúc sau, chưa truy ra.
+
+⚠ **Hệ quả phải nói thẳng: mọi con số nhịp cấp từ 60 trở lên trong tài liệu này (33,4 giờ tới
+cấp 120) hiện KHÔNG đo lại được.** Chúng vẫn có thể đúng — bảng `XP_TABLE` không đổi — nhưng
+đừng trích chúng như một phép đo còn hiệu lực cho tới khi công cụ chạy lại được. *Một số đo mà
+công cụ sinh ra nó đã hỏng thì là một con số chép tay, dù nó từng được đo thật.*
+
 #### 🕳 BỐN HỐ XP CÒN LẠI — nợ NỘI DUNG, cố ý không nướng vào bảng cấp
 
 Số đo thấp hơn đường khớp >55% ở **cấp 5 · 35 · 55 · 70 · 119** — tất cả đều ở NÓC một dải map.
