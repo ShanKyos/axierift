@@ -51,7 +51,11 @@
     ws.onmessage = (ev) => {
       let tin; try { tin = JSON.parse(ev.data); } catch { return; }
       if (tin.t === 'chao') { NET.id = tin.id; return; }
-      if (tin.t === 'anh') nhanAnh(tin);
+      if (tin.t === 'anh') { nhanAnh(tin); return; }
+      // Chat: net.js chỉ là sợi dây. Việc VẼ thuộc về game.js — nó giữ DOM, bảng màu và luật
+      // thoát ký tự. Nhét HTML vào đây là dựng một chỗ thứ hai biết về giao diện.
+      if (tin.t === 'chat' && typeof window.netChatNhan === 'function') { window.netChatNhan(tin); return; }
+      if (tin.t === 'chat-chan' && typeof window.netChatChan === 'function') { window.netChatChan(tin.ly); return; }
     };
 
     ws.onclose = () => {
@@ -161,6 +165,18 @@
       sect: p.sect, name: p.name || ('Khach' + NET.id),
     }));
   }
+
+  /* ── Gửi chat ────────────────────────────────────────────────────────────────────────
+   * Trả `false` khi chưa nối, để bên gọi NÓI RA thay vì nuốt câu của người chơi. Một ô chat
+   * gõ xong bấm Enter rồi không có gì xảy ra là kiểu hỏng tệ nhất: người ta gõ lại.            */
+  window.netChatGui = function (kenh, loi) {
+    const ws = NET.ws;
+    if (!ws || ws.readyState !== 1) return false;
+    loi = String(loi == null ? '' : loi).slice(0, 200);
+    if (!loi.trim()) return false;
+    ws.send(JSON.stringify({ t: 'chat', kenh: kenh === 'vung' ? 'vung' : 'the-gioi', loi }));
+    return true;
+  };
 
   /* ── Vòng riêng ──────────────────────────────────────────────────────────────────────
    * KHÔNG móc vào `loop()` của game: vòng đó nằm trong `try/catch` và một lỗi mạng ở đây sẽ

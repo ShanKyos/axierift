@@ -9489,6 +9489,9 @@ function phimXuong(e){
   // tinh tung đồ rồi tự chọn lúc bấm. Bắt phím chỉ khi bảng lò đang mở, nên không giẫm lên
   // ô gõ nào khác (ô nhập đã thoát ở dòng đầu hàm).
   if (e.key === 'Enter' && typeof loMo === 'function' && loMo()){ e.preventDefault(); window.doChaos(); return; }
+  // ENTER MỞ Ô CHAT — đặt SAU chốt Lò Hỗn Độn ở trên, vì lò đang mở thì Enter thuộc về lò.
+  // Khi ô chat đang có tiêu điểm thì hàm này đã `return` ở dòng đầu (target là INPUT).
+  if (e.key === 'Enter' && window.NET && window.NET.on && player){ e.preventDefault(); chatTieuDiem(); return; }
   if (e.key >= '1' && e.key <= '4' && player){ // taskbar 4 ô kỹ năng (chính/phụ/buff/tuyệt chiêu)
     const id = player.skillBar[+e.key - 1];
     // Ô cắm BỊ ĐỘNG không tung được — nói ra thay vì im lặng, nếu không người chơi bấm mãi và
@@ -16499,6 +16502,110 @@ function netDonBayCao(){
   for (const k of _bayCao.keys()) if (!con.has(k)) _bayCao.delete(k);
 }
 
+/* ═══ CHAT (Giai đoạn 2 online) ═════════════════════════════════════════════════════════
+ * net.js là sợi dây, chỗ này là giao diện. Hai kênh: `the-gioi` (mọi người đang online) và
+ * `vung` (chỉ ai đứng cùng bản đồ).
+ *
+ * ⚠⚠ LỜI NGƯỜI KHÁC GÕ LÀ DỮ LIỆU, KHÔNG PHẢI HTML. Mọi dòng dựng bằng `createElement` +
+ * `textContent`. Nối chuỗi vào `innerHTML` ở đây là mở cửa cho bất kỳ ai gõ một thẻ `<img
+ * onerror=…>` vào ô chat rồi nó chạy trên máy MỌI người trong kênh. Máy chủ đã cắt ký tự điều
+ * khiển và giới hạn độ dài, nhưng nó KHÔNG thoát HTML — và nó không nên làm thế: thoát HTML là
+ * việc của chỗ hiển thị, vì chỉ chỗ đó mới biết nó đang dựng cái gì.                            */
+const CHAT_MAU = { 'the-gioi': '#ffd98a', 'vung': '#9fe0ff', 'he': '#8e97bb' };
+let chatKenh = 'the-gioi';
+
+function chatEl(id){ return el(id); }
+
+// Hiện khối chat CHỈ khi có nối mạng. Bày một ô chat mà không ai nhận được là đúng cái lỗi
+// "một cái vỏ giả vờ là máy chạy" đã ghi ở mục Tổ Đội.
+function chatDung(){
+  const w = chatEl('chat-wrap'); if (!w) return;
+  const on = !!(window.NET && window.NET.on);
+  w.classList.toggle('hidden', !on);
+  if (!on) return;
+  const tt = window.NET.tinhTrang;
+  const s = chatEl('chat-trangthai'), inp = chatEl('chat-input');
+  if (s) s.textContent = tt === 'da-noi' ? '● đang nối' : tt === 'dang-noi' ? '○ đang kết nối…' : '○ mất kết nối';
+  if (inp){
+    inp.disabled = tt !== 'da-noi';
+    inp.placeholder = tt === 'da-noi' ? 'Enter để nói…' : 'chưa nối được máy chủ';
+  }
+}
+
+function chatThem(kenh, ten, loi, tuMinh){
+  const log = chatEl('chat-log'); if (!log) return;
+  const row = document.createElement('div');
+  row.className = 'ch-row';
+  if (kenh === 'he'){
+    row.style.color = CHAT_MAU.he; row.textContent = loi;
+  } else {
+    const nhan = document.createElement('span');
+    nhan.className = 'ch-ten';
+    nhan.style.color = CHAT_MAU[kenh] || '#e8ecff';
+    // Nhãn kênh đứng trước TÊN, nên đọc một dòng là biết nó tới từ đâu — người chơi hay
+    // trả lời nhầm kênh khi hai kênh trộn vào một khung mà không có dấu.
+    nhan.textContent = (kenh === 'vung' ? '[Vùng] ' : '[TG] ') + (ten || '?') + ': ';
+    row.appendChild(nhan);
+    const than = document.createElement('span');
+    than.textContent = loi;                    // ⇐ textContent, KHÔNG innerHTML
+    if (tuMinh) than.style.color = '#ffffff';
+    row.appendChild(than);
+  }
+  log.appendChild(row);
+  while (log.children.length > 120) log.removeChild(log.firstChild);
+  log.scrollTop = log.scrollHeight;            // chat cuộn XUỐNG, ngược với nhật ký
+}
+
+window.netChatNhan = function(tin){
+  chatThem(tin.kenh, tin.ten, tin.loi, window.NET && tin.tu === window.NET.id);
+};
+// ⚠ Máy chủ chặn thì phải NÓI RA. Nuốt im thì người chơi gõ lại, rồi gõ lại nữa — tức chính
+// cái chống spam lại sinh ra spam.
+window.netChatChan = function(ly){
+  chatThem('he', null, ly === 'nhanh' ? 'Nói chậm lại một chút.'
+                     : ly === 'nhieu' ? 'Nói hơi nhiều — chờ vài giây rồi nói tiếp.'
+                     : ly === 'chua-vao' ? 'Kênh Vùng cần bạn đang đứng trong một bản đồ.'
+                     : 'Câu vừa rồi không gửi được.');
+};
+
+function chatDoiKenh(k){
+  chatKenh = (k === 'vung') ? 'vung' : 'the-gioi';
+  document.querySelectorAll('.chat-tab').forEach(b => b.classList.toggle('on', b.dataset.kenh === chatKenh));
+  const inp = chatEl('chat-input'); if (inp) inp.focus();
+}
+function chatTieuDiem(){ const i = chatEl('chat-input'); if (i && !i.disabled) i.focus(); }
+function chatGuiUI(){
+  const inp = chatEl('chat-input'); if (!inp) return;
+  const loi = inp.value.trim(); if (!loi){ inp.blur(); return; }
+  // ⚠ Chỉ XOÁ Ô khi gửi được. Gửi hỏng mà vẫn xoá là lấy mất câu người ta vừa gõ.
+  if (typeof window.netChatGui === 'function' && window.netChatGui(chatKenh, loi)) inp.value = '';
+  else chatThem('he', null, 'Chưa nối được máy chủ — câu chưa gửi đi.');
+}
+
+function chatNoi(){
+  const inp = chatEl('chat-input');
+  if (inp){
+    inp.addEventListener('keydown', e => {
+      if (e.key === 'Enter'){ e.preventDefault(); chatGuiUI(); }
+      else if (e.key === 'Escape'){ e.preventDefault(); inp.blur(); }
+      e.stopPropagation();          // đừng để phím gõ rơi xuống phím tắt của game
+    });
+  }
+  document.querySelectorAll('.chat-tab').forEach(b =>
+    b.addEventListener('click', () => chatDoiKenh(b.dataset.kenh)));
+  const thu = chatEl('chat-thu');
+  if (thu) thu.addEventListener('click', () => {
+    const l = chatEl('chat-log'), i = chatEl('chat-input');
+    const dong = !l.classList.contains('cl-closed');
+    l.classList.toggle('cl-closed', dong); i.classList.toggle('cl-closed', dong);
+    thu.firstChild.textContent = dong ? '▸' : '▾';
+  });
+  chatDung();
+  // Nhãn trạng thái đổi theo kết nối, mà kết nối thì không báo ra ngoài. 1 Hz là đủ cho một
+  // dòng chữ và rẻ hơn hẳn việc móc vào vòng vẽ 60 Hz.
+  if (window.NET && window.NET.on) setInterval(chatDung, 1000);
+}
+
 // ⚠ `p` là THÂN NGƯỜI phải vẽ, không nhất thiết là `player`. Trước bản nối mạng hàm này không
 // nhận tham số nào và dòng thứ ba là `const p = player` — tức cả tầng vẽ khẳng định thế giới chỉ
 // có một người chơi. Nay người chơi khác đi qua cùng một cửa này, nên hai luật:
@@ -19319,6 +19426,10 @@ window.doTayTuy = function(confirmed){
 // ---------- Sect select / boot ----------
 function startGame(sectKey, quze){
   taiTroDong();   // màn tải (nếu còn) — cửa duy nhất vào thế giới là chỗ đúng để đóng nó
+  // Chat nối ở đây vì đây là cửa duy nhất vào thế giới — cùng lý do với taiTroDong() ở trên.
+  // ⚠ Cờ chặn gọi hai lần: `startGame` chạy lại được (đổi nhân vật, bài kiểm), mà gắn listener
+  // hai lần là một câu chat gửi đi hai lần.
+  if (!window._chatDaNoi){ window._chatDaNoi = true; try { chatNoi(); } catch (e) { console.error('[chat]', e); } }
   // ⚠ DỪNG cảnh màn chờ NGAY Ở ĐÂY, đừng trông vào chỗ gọi. titleAlive() tắt vòng lặp khi CẢ
   // HAI màn (#sect-select, #intro-story) đã ẩn — mà đường vào game nào cũng chỉ ẩn đúng một
   // cái rồi gọi startGame, nên chỉ cần một đường quên ẩn cái kia là cảnh Lunacia mười lớp
@@ -29178,26 +29289,50 @@ function fmtCountdown(ms){
   return h > 0 ? `${h}g${String(m % 60).padStart(2,'0')}` : (m > 0 ? `${m} phút` : 'sắp diễn ra!');
 }
 function fmtClock(t){ const d = new Date(t); return String(d.getHours()).padStart(2,'0') + ':' + String(d.getMinutes()).padStart(2,'0'); }
+// ⚠ LỊCH TRÌNH SUY TỪ CHÍNH HÀM MỐC GIỜ — đừng bao giờ chép tay dãy giờ vào một chuỗi.
+//
+// Dòng tiêu đề cũ của bảng này in cứng *"Hung Thần 0h·4h·8h… · Xâm Lăng Vàng 2h·6h·10h…"*, và
+// nó là một LỜI NÓI DỐI với gần như toàn bộ người chơi: mốc neo theo **UTC** (xem khối
+// `matonNextBoundary`), còn `fmtClock` in theo giờ **MÁY NGƯỜI CHƠI**. Đo được ở
+// `Asia/Ho_Chi_Minh`: Hung Thần thật sự rơi vào **03:00 · 07:00 · 11:00 · 15:00 · 19:00 ·
+// 23:00**, Xâm Lăng Vàng **01:00 · 05:00 · 09:00…**, Vực Nứt **01:00 · 07:00 · 13:00 · 19:00**.
+// Người Việt đọc "0h" rồi thức tới nửa đêm là lệch đúng 3 tiếng, mà **không có gì báo sai**.
+//
+// Nên hàm này đi BỘ qua đúng cái hàm mốc mà game dùng để kích hoạt sự kiện, suốt một ngày của
+// người chơi, rồi in ra bằng `fmtClock`. Đổi `MATON_CHU_KY` hay `GOLDEN_LECH` là cột lịch tự
+// theo — không có bảng thứ hai để mà lệch. Cùng lối với `mapBanSac()` suy từ `packs`.
+function lichGio(mocKe, now){
+  const d = new Date(now); d.setHours(0, 0, 0, 0);
+  const dau = d.getTime(), cuoi = dau + 86400000;
+  const ra = [];
+  // `mocKe(sau)` trả mốc ĐẦU TIÊN LỚN HƠN `sau`, nên lùi 1ms để không bỏ sót mốc đúng 00:00.
+  for (let t = mocKe(dau - 1); t < cuoi && ra.length < 24; t = mocKe(t)) ra.push(fmtClock(t));
+  return ra.join(', ');
+}
 function eventList(now){
   const list = [];
   if (typeof MATON !== 'undefined'){
+    const _mtLich = lichGio(matonNextBoundary, now);
     list.push(MATON.active
       ? { icon:'☠', name:'Hung Thần Giáng Thế', map: MATON.map, at: MATON.endsAt, active:true, color:'#e84a6a',
-          sub:`ĐANG DIỄN RA tại ${MAPS[MATON.map].name} — còn ${fmtCountdown(MATON.endsAt - now)}` }
+          lich:_mtLich, sub:`ĐANG DIỄN RA tại ${MAPS[MATON.map].name} — còn ${fmtCountdown(MATON.endsAt - now)}` }
       : { icon:'☠', name:'Hung Thần Giáng Thế', map: matonMapFor(MATON.next || matonNextBoundary(now)),
-          at: MATON.next || matonNextBoundary(now), active:false, color:'#c07fe0',
+          at: MATON.next || matonNextBoundary(now), active:false, color:'#c07fe0', lich:_mtLich,
           sub:`${fmtClock(MATON.next || matonNextBoundary(now))} · ${MAPS[matonMapFor(MATON.next || matonNextBoundary(now))].name} — hạ trùm nhận Box Kundun lớn` });
+    const _rfLich = lichGio(riftNextBoundary, now);
     list.push(RIFT.active
       ? { icon:'✹', name:'Chúa Tể Vực Nứt', map: null, at: RIFT.endsAt, active:true, color:'#a06aff',
+          lich:_rfLich, noi:'Mọi bãi săn',
           sub:`ĐANG DIỄN RA ở MỌI bãi săn — còn ${fmtCountdown(RIFT.endsAt - now)} · đã hạ ${RIFT.kills}/${RIFT_MAX_KILLS}` }
-      : { icon:'✹', name:'Chúa Tể Vực Nứt', map: null,
-          at: RIFT.next || riftNextBoundary(now), active:false, color:'#a06aff',
-          sub:`${fmtClock(RIFT.next || riftNextBoundary(now))} · 6 tiếng/lần (0h·6h·12h·18h) — nứt ở mọi bãi săn (cấp ${RIFT_MIN_LV}+), trùm luôn trên tầm bạn 6 cấp` });
+      : { icon:'✹', name:'Chúa Tể Vực Nứt', map: null, noi:'Mọi bãi săn',
+          at: RIFT.next || riftNextBoundary(now), active:false, color:'#a06aff', lich:_rfLich,
+          sub:`${fmtClock(RIFT.next || riftNextBoundary(now))} · nứt ở mọi bãi săn (cấp ${RIFT_MIN_LV}+), trùm luôn trên tầm bạn 6 cấp` });
+    const _gdLich = lichGio(goldenNextBoundary, now);
     list.push(GOLDEN.active
       ? { icon:'✹', name:'Xâm Lăng Vàng', map: GOLDEN.map, at: GOLDEN.endsAt, active:true, color:'#ffd76a',
-          sub:`ĐANG DIỄN RA tại ${MAPS[GOLDEN.map].name} — còn ${fmtCountdown(GOLDEN.endsAt - now)} · còn ${GOLDEN.left || '?'} quái vàng` }
+          lich:_gdLich, sub:`ĐANG DIỄN RA tại ${MAPS[GOLDEN.map].name} — còn ${fmtCountdown(GOLDEN.endsAt - now)} · còn ${GOLDEN.left || '?'} quái vàng` }
       : { icon:'✹', name:'Xâm Lăng Vàng', map: goldenMapFor(GOLDEN.next || goldenNextBoundary(now)),
-          at: GOLDEN.next || goldenNextBoundary(now), active:false, color:'#ffd76a',
+          at: GOLDEN.next || goldenNextBoundary(now), active:false, color:'#ffd76a', lich:_gdLich,
           sub:`${fmtClock(GOLDEN.next || goldenNextBoundary(now))} · ${MAPS[goldenMapFor(GOLDEN.next || goldenNextBoundary(now))].name} — mỗi quái vàng rơi 1 Box Kundun (I-V theo map)` });
   }
   // Vỉa Cốt — sự kiện duy nhất trong danh sách này KHÔNG chạy theo đồng hồ mà theo NGÀY, và là
@@ -29207,7 +29342,7 @@ function eventList(now){
     for (const v of viaHomNay()){
       const D = COT_DONG[v.dong], het = viaDaLay(v.map);
       list.push({ icon:'◆', name:`Vỉa Cốt ${D.ten}`, map: v.map, at: _mai.getTime(), active: !het,
-        color: het ? '#8a8a8a' : D.mau,
+        color: het ? '#8a8a8a' : D.mau, lich:'Mỗi ngày · đổi chỗ lúc 00:00', xong: het,
         sub: het
           ? `Đã khai hôm nay tại ${MAPS[v.map].name} — mai vỉa mọc chỗ khác`
           : `${MAPS[v.map].name} — mỗi ngày MỘT lần, 3 mảnh Cốt ${D.ten} (28% ra Cổ). Xem chấm kim cương trên bản đồ nhỏ.` });
@@ -29215,6 +29350,7 @@ function eventList(now){
   }
   const mid = new Date(now); mid.setHours(24, 0, 0, 0);
   list.push({ icon:'⚔', name:'Truy Nã Lệnh & Mục Tiêu Ngày', at: mid.getTime(), active:false, color:'#7ecbff',
+              lich:'Mỗi ngày · làm mới 00:00', noi:'Sapidae Chiefdom',
               sub:`Làm mới lúc 00:00 — còn ${fmtCountdown(mid.getTime() - now)}` });
   return list;
 }
@@ -29232,24 +29368,70 @@ window.goEventMap = function(id){
   }
   travelTo(id);
 };
+// ═══ BẢNG SỰ KIỆN LÀ MỘT LƯỚI CÓ CỘT, KHÔNG PHẢI MỘT CHỒNG THẺ ═══════════════════════════
+//
+// Chủ dự án đưa ảnh mẫu MU và chốt: *"Đừng thiết kế kiểu kéo thẳng xuống nhìn khó lắm. Như vậy
+// khi chơi online người chơi mới biết đang là sự kiện gì."* Bản cũ là bảy cái thẻ xếp dọc, mỗi
+// thẻ một câu văn xuôi — muốn so "cái nào sắp tới trước" thì phải ĐỌC bảy câu rồi tự nhớ. Lưới
+// thì mắt quét được một cột: mọi con số đếm ngược nằm thẳng hàng nhau.
+//
+// ⚠ TÊN MAP TRONG ẢNH MẪU LÀ TÊN RIÊNG CỦA MU (Lorencia · Noria · Devias · Blood Castle ·
+// Devil Square) — Quy tắc số 2 cấm tuyệt đối. Lấy HÌNH DẠNG bảng, không lấy nội dung: cột Map
+// đọc thẳng `MAPS[...].name` của game này.
+//
+// ⚠ KHÔNG dựng phân trang. Ảnh mẫu có "1/1" vì nó phân trang sẵn cho danh sách dài; ở đây
+// `eventList()` ra 7 dòng và nút lật trang sẽ vĩnh viễn hiện 1/1 — tức một nút bấm không ra gì,
+// đúng cái đã phải gỡ ở sảnh F6 (bảng xếp hạng) và ở `openEvoPanel` của test_cayky.
+const SK_COT = [
+  { t:'TT',         k:'tt'   },
+  { t:'Tên Sự Kiện', k:'ten' },
+  { t:'Nơi Diễn Ra', k:'noi' },
+  { t:'Lịch Trình',  k:'lich' },
+  { t:'Thời Gian',   k:'tg'  },
+  { t:'Tham Gia',    k:'di'  },
+];
 window.openEventBoard = function(){
   if (!player) return;
   const now = Date.now();
+  const ds = eventList(now);
   let rows = '';
-  for (const e of eventList(now)){
-    rows += `<div style="display:flex;align-items:center;gap:10px;text-align:left;background:rgba(255,255,255,.04);
-        border:1px solid ${e.active ? e.color : 'rgba(255,255,255,.10)'};border-radius:10px;padding:9px 12px;margin:7px 0">
-      <span style="font-size:20px;color:${e.color}">${e.icon}</span>
-      <span style="flex:1"><b style="color:${e.color}">${e.name}</b>${e.active ? ' <b style="color:#ffd76a">● LIVE</b>' : ''}<br>
-        <span style="font-size:12px;opacity:.8">${e.sub}</span></span>
-      ${e.map ? `<button class="mini-btn" onclick="goEventMap('${e.map}')">${e.active ? 'Tới Ngay' : 'Xem Map'}</button>` : ''}</div>`;
-  }
+  ds.forEach((e, i) => {
+    // Cột Nơi Diễn Ra: `map` là một khoá map thật ⇒ tra tên; `noi` là chữ cho sự kiện không
+    // thuộc map nào (Vực Nứt nứt ở MỌI bãi). Thiếu cả hai thì để gạch ngang, đừng in "null".
+    const noi = e.map ? (MAPS[e.map] ? MAPS[e.map].name : e.map) : (e.noi || '—');
+    // ⚠ "ĐANG DIỄN RA" CHỈ DÀNH CHO SỰ KIỆN THEO GIỜ. Vỉa Cốt khai `active = !đã khai`, tức nó
+    // bật SUỐT NGÀY — ảnh chụp bản đầu ra bốn hàng xanh lè cùng lúc (ba Vỉa + Xâm Lăng Vàng),
+    // và lúc đó màu xanh hết nghĩa. Mà "biết đang là sự kiện gì" mới là cả lý do cái bảng này
+    // tồn tại. Nên Vỉa đi nhãn riêng — vẫn xanh, nhưng xanh nhạt và KHÔNG tô sáng cả hàng.
+    // (Không đụng vào `e.active`: chip đồng hồ HUD đọc chung trường đó.)
+    const ngay = !!e.lich && /Mỗi ngày/.test(e.lich);       // sự kiện theo NGÀY, không theo giờ
+    const live = e.active && !e.xong && !ngay;              // sự kiện theo GIỜ đang mở cửa
+    const tg = e.xong ? `<i style="color:#8a8a8a">đã khai hôm nay</i>`
+      : live ? `<b style="color:#7fe08a">Đang diễn ra</b>`
+      : e.active && ngay ? `<b style="color:#a8d8ae">Sẵn hôm nay</b>`
+      : `<b style="color:#ffd76a">${fmtCountdown(e.at - now)}</b>`;
+    const di = e.map
+      ? `<button class="sk-di${live ? ' sk-di-live' : ''}" onclick="goEventMap('${e.map}')">${e.active && !e.xong ? 'Tới Ngay' : 'Xem'}</button>`
+      : '';
+    rows += `<div class="sk-hang${live ? ' sk-live' : ''}" title="${e.sub.replace(/"/g,'&quot;')}">`
+      + `<span class="sk-tt">${i + 1}</span>`
+      + `<span class="sk-ten"><i style="color:${e.color}">${e.icon}</i> ${e.name}</span>`
+      + `<span class="sk-noi">${noi}</span>`
+      + `<span class="sk-lich">${e.lich || '—'}</span>`
+      + `<span class="sk-tg">${tg}</span>`
+      + `<span class="sk-di-o">${di}</span></div>`;
+  });
   const inner = lopPhuMo();   // lopPhuMo tự closePanels rồi mới hiện — xem ghi chú ở tầng nổi
   if (!inner) return;
   inner.innerHTML = `
-    <h2 style="color:#ffd76a">⏱ BẢNG SỰ KIỆN</h2>
-    <div style="font-size:12.5px;opacity:.75;margin-bottom:4px">Chạy theo giờ thật: Hung Thần 0h·4h·8h… · Xâm Lăng Vàng 2h·6h·10h… · <b style="color:#a06aff">Chúa Tể Vực Nứt 0h·6h·12h·18h</b> (4 lượt/ngày, nứt ở mọi bãi săn)</div>
-    ${rows}
+    <h2 style="color:#ffd76a">⏱ HỆ THỐNG SỰ KIỆN</h2>
+    <div class="sk-bang">
+      <div class="sk-dau">${SK_COT.map(c => `<span class="sk-${c.k}">${c.t}</span>`).join('')}</div>
+      ${rows}
+    </div>
+    <div class="sk-ghi">Giờ trong bảng là <b>giờ trên máy bạn</b> — mốc sự kiện chung cho mọi
+      người chơi nên hai múi giờ khác nhau sẽ đọc ra hai dãy giờ khác nhau, nhưng vẫn là cùng
+      một khoảnh khắc.</div>
     <button class="big-btn" style="margin-top:10px" onclick="lopPhuDong()">Đóng</button>`;
 };
 

@@ -37,6 +37,20 @@ const IM_LANG_MS = 30000;  // không nghe thấy gì trong ngần này thì coi 
 const TEN_MAX    = 24;
 const NGUOI_MAX  = parseInt(process.env.NGUOI_MAX || '64', 10);
 
+/* ── CHAT ────────────────────────────────────────────────────────────────────────────────
+ * Hai kênh: `the-gioi` (mọi người) và `vung` (chỉ ai đang đứng cùng bản đồ). Không lưu gì —
+ * cùng lý do với ảnh chụp vị trí: máy chủ này KHÔNG có cơ sở dữ liệu, và một lịch sử chat nằm
+ * trong RAM thì mất theo lần khởi động lại kế tiếp. Ai cần lịch sử thì đó là việc của giai
+ * đoạn có tài khoản thật.
+ *
+ * ⚠ CHỐNG SPAM LÀ VIỆC CỦA MÁY CHỦ, không phải của client. Client có thể bị sửa; ô nhập bên
+ * client chỉ để người dùng tử tế khỏi vô tình bấm liên tục. Hai lớp, vì chúng chặn hai kiểu
+ * khác nhau: `CHAT_NHIP_MS` chặn giữ phím, `CHAT_CUA` chặn dán một loạt rồi bắn dồn.           */
+const CHAT_DAI    = 200;     // ký tự — cắt, không đá
+const CHAT_NHIP_MS = 700;    // hai câu liền nhau phải cách nhau chừng này
+const CHAT_CUA    = 6;       // tối đa ngần này câu…
+const CHAT_CUA_MS = 10000;   // …trong ngần này
+
 /** id kết nối → trạng thái mới nhất. Một `Map` trong RAM là đủ; xem §4.3 "cái gì là THỪA". */
 const nguoi = new Map();
 let idKe = 1;
@@ -95,6 +109,7 @@ wss.khiNoi((ws) => {
     id, map: '', x: 0, y: 0, face: 0, moving: false,
     hp: 1, maxHp: 1, level: 1, speed: 190, sect: 'thieulam',
     name: 'Khach' + id, nghe: Date.now(),
+    chatLuc: 0, chatCua: [],     // chống spam, xem CHAT_* ở trên
   };
   nguoi.set(id, st);
   ws.__id = id;
@@ -106,6 +121,7 @@ wss.khiNoi((ws) => {
     try { tin = JSON.parse(raw); } catch { return; }   // rác thì bỏ qua, đừng đá
     if (!tin || typeof tin !== 'object') return;
     if (tin.t === 'pos') capNhat(st, tin);
+    else if (tin.t === 'chat') nhanChat(st, ws, tin);
   });
 
   ws.khiDong(() => {
@@ -113,6 +129,34 @@ wss.khiNoi((ws) => {
     console.log(`[-] ${id} roi — con ${nguoi.size}`);
   });
 });
+
+/* ── Chat ────────────────────────────────────────────────────────────────────────────────
+ * ⚠ TRẢ LỜI NGƯỜI BỊ CHẶN, ĐỪNG IM. Câu bị nuốt mà không nói gì thì người chơi gõ lại, rồi gõ
+ * lại nữa — tức chính cái chống spam lại sinh ra spam, và họ tưởng game hỏng.                  */
+function nhanChat(st, ws, tin) {
+  const kenh = tin.kenh === 'vung' ? 'vung' : 'the-gioi';
+  const loi = chu(tin.loi, CHAT_DAI).trim();
+  if (!loi) return;
+  const gio = Date.now();
+  if (gio - st.chatLuc < CHAT_NHIP_MS) { ws.gui(JSON.stringify({ t: 'chat-chan', ly: 'nhanh' })); return; }
+  st.chatCua = st.chatCua.filter(t => gio - t < CHAT_CUA_MS);
+  if (st.chatCua.length >= CHAT_CUA) { ws.gui(JSON.stringify({ t: 'chat-chan', ly: 'nhieu' })); return; }
+  // Kênh vùng mà chưa đứng ở bản đồ nào (còn ở màn chờ) thì không có ai để nói cùng.
+  if (kenh === 'vung' && !st.map) { ws.gui(JSON.stringify({ t: 'chat-chan', ly: 'chua-vao' })); return; }
+  st.chatLuc = gio; st.chatCua.push(gio);
+
+  const goi = JSON.stringify({ t: 'chat', kenh, tu: st.id, ten: st.name, loi, ts: gio });
+  for (const w of wss.clients) {
+    if (!w.dangMo) continue;
+    const ai = nguoi.get(w.__id);
+    if (!ai) continue;
+    // Kênh vùng chỉ tới người CÙNG bản đồ. Kênh thế giới tới tất cả, kể cả người còn ở màn chờ
+    // — họ vẫn là người đang online, và nghe được trước khi vào là một điều hay chứ không dở.
+    if (kenh === 'vung' && ai.map !== st.map) continue;
+    w.gui(goi);
+  }
+  console.log(`[${kenh}] ${st.name}: ${loi}`);
+}
 
 /* ── Vòng phát ảnh chụp ──────────────────────────────────────────────────────────────────
  * Lọc theo `map` là toàn bộ phần "quản lý tầm nhìn" cần có ở quy mô này: 10 người chia trên
