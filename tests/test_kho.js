@@ -110,22 +110,41 @@ let bad = 0; const fail = m => { bad++; console.log('FAIL ' + m); };
   if (!rB3.khoDay.conTen || rB3.khoDay.tui !== 1) fail('kho đầy mà vẫn nuốt mất món trong túi');
   if (rB3.tuiDay.tui !== rB3.tuiDay.nTruoc || rB3.tuiDay.kho !== 1) fail('túi đầy mà vẫn lấy mất món khỏi kho');
 
-  // B4) tab Kho vẽ được, và ngăn ngọc là chỗ XEM (không có nút gửi)
+  // B4) tab Kho vẽ được, và nó CHỈ ĐƯỜNG tới Ngân Hàng Ngọc chứ không vẽ lại ngăn ngọc
+  //
+  // ⚠ NGĂN NGỌC ĐÃ DỜI RA BẢNG RIÊNG (phím N). Mệnh đề cũ ở đây đòi tab Kho tự vẽ ≥8 icon
+  // ngọc; nay đòi thế là đòi HAI cửa cùng vẽ một thứ, tức hai chỗ phải nhớ sửa — đúng cái
+  // mà đợt dời này đi gỡ. Nhưng KHÔNG xoá mệnh đề cho xanh: nó đổi thành hai vế mạnh hơn.
+  //   ① tab Kho phải nói ngăn ngọc đang cất BAO NHIÊU (nếu không thì người chơi mở Túi Đồ ra
+  //      và không có dấu hiệu nào cho biết mình còn ngọc gửi ở đâu đó);
+  //   ② cái nút chỉ đường phải MỞ RA ĐƯỢC BẢNG CÓ NỘI DUNG — một nút bấm không ra gì thì tệ
+  //      hơn hẳn không có nút (bài học `openEvoPanel` của test_cayky).
+  // Sáu icon ngọc và chuyện gửi/rút ăn thật thì `test_hethong §4/§5` gác ở nhà mới của chúng.
   const rB4 = await p.evaluate(() => {
     player.kho = [genItem(40,0), genItem(40,0)];
     player.jewels = { chucPhuc:9, linhHon:4, sinhMenh:2, honDon:1 };
     player.baohap = { 3:5 };
+    player.khoNgoc = Object.assign({ hap:{ 3:2 } }, { chucPhuc:5, linhHon:0, sinhMenh:0, honDon:0, tuLa:0, honNguyen:0 });
     window.bagTab = 'kho'; renderBag();
     const h = el('panel-bag').innerHTML;
+    // Bấm THẬT cái nút chỉ đường, đừng chỉ hỏi chuỗi onclick có đúng chữ không.
+    const nut = [...el('panel-bag').querySelectorAll('button')].find(b2 => /Ngân Hàng Ngọc/.test(b2.textContent));
+    if (nut) nut.click();
+    const bank = document.getElementById('panel-ngocbank');
     return { coTab: /Kho<\/button>|>Kho</.test(h), oKho: (h.match(/khoWithdraw\(/g)||[]).length,
-             coNganNgoc: /NGĂN NGỌC/.test(h), anhNgoc: (h.match(/<img[^>]+data:image\/png/g)||[]).length,
-             coNutGuiNgoc: /guiNgoc|depositJewel/.test(h) };
+             coNganNgoc: /NGĂN NGỌC/.test(h),
+             // 5 châu + 2 hạp = 7 đang cất; con số phải hiện ra chứ không phải một nhãn trơn.
+             soDangCat: (h.match(/đang cất (\d+)/) || [])[1],
+             veLaiTabKho: !!nut,
+             bankMo: !!bank && !bank.classList.contains('hidden'),
+             bankCoHang: !!bank && bank.querySelectorAll('.nb-row').length >= 6 };
   });
   console.log('   tab Kho:', JSON.stringify(rB4));
   if (rB4.oKho !== 2) fail(`vẽ ${rB4.oKho} ô kho, phải 2`);
   if (!rB4.coNganNgoc) fail('thiếu ngăn ngọc');
-  if (rB4.anhNgoc < 8) fail(`ngăn ngọc chỉ có ${rB4.anhNgoc} icon`);
-  if (rB4.coNutGuiNgoc) fail('có nút gửi ngọc — ngọc là ô đếm, gửi đi đâu?');
+  if (rB4.soDangCat !== '7') fail(`tab Kho báo đang cất "${rB4.soDangCat}", phải 7 (5 châu + 2 Box Kundun) — người chơi không có dấu hiệu nào khác để biết mình còn ngọc gửi`);
+  if (!rB4.veLaiTabKho) fail('tab Kho không có nút chỉ sang Ngân Hàng Ngọc — ngăn ngọc đã dời đi mà không để lại lối nào');
+  if (!rB4.bankMo || !rB4.bankCoHang) fail(`nút chỉ đường CHẾT — bảng mở:${rB4.bankMo} · số hàng ngọc:${rB4.bankCoHang}`);
 
   // C) Ngăn Ngọc: gửi/rút, và ngọc đang CẤT thì không tiêu được
   const rC = await p.evaluate(() => {

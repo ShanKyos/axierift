@@ -7269,7 +7269,7 @@ function donDuoc(it, muc){
   return true;                                  // mức 1-2: thêm đồ có Vận
 }
 function donMuc(){ return player && player.donMuc != null ? player.donMuc : 1; }
-window.setDonMuc = function(v){ player.donMuc = Math.max(0, Math.min(2, +v)); saveGame(); renderBag(); };
+window.setDonMuc = function(v){ player.donMuc = Math.max(0, Math.min(2, +v)); saveGame(); renderBag(); nhatVeLai(); };
 // Một chỗ duy nhất cho cả túi lẫn kho: hai nơi khác nhau ở CHỖ CHỨA chứ không khác ở luật.
 // Trả về chỉ số theo thứ tự GIẢM DẦN để bên gọi splice không lệch.
 function donChon(list, vut){
@@ -7362,7 +7362,7 @@ window.autoEquipBest = function(){
   addFloat(player.x, player.y-56, swapped ? `⚡ Mặc đồ tốt nhất: thay ${swapped} món, +${gained} lực chiến!` : 'Trang bị đã tối ưu!', swapped ? '#6ae88a' : '#8a8a8a', 14);
   AudioSys.sfx('quest', 0.5);
 };
-window.toggleAutoEquip = function(v){ player.autoEquip = v; saveGame(); };
+window.toggleAutoEquip = function(v){ player.autoEquip = v; saveGame(); nhatVeLai(); };
 
 // ---------- Derived stats ----------
 // THẦN BINH đã GỠ. Nó là một trục nâng cấp thứ hai chạy song song với trang bị: mười tầng,
@@ -9405,12 +9405,19 @@ function uiSyncBgmBtn(){
   if (b0) b0.classList.toggle('hidden', Object.keys(BGM_TRACKS).length === 0 && !BGM_INTRO && !BGM_BOSS);
 }
 uiSyncBgmBtn();
-document.getElementById('btn-music').addEventListener('click', ()=>{
-  SETTINGS.bgm = SETTINGS.bgm > 0 ? 0 : 35;
-  saveSettings(); AudioSys.refreshBgmVol();
-  const b = document.getElementById('btn-music');
-  if (b) b.style.opacity = SETTINGS.bgm > 0 ? '1' : '0.4';
-});
+// ⚠ KIỂM NULL. Nút ♪ nằm trong `#mc-drop` — cái thả xuống ĐÃ GỠ khi nút ≡ chuyển sang mở
+// thẳng Menu Hệ Thống. `getElementById(...).addEventListener` trên một phần tử không còn tồn
+// tại ném "Cannot read properties of null" NGAY LÚC NẠP TRANG và giết chết mọi thứ đăng ký
+// phía sau nó — đúng cái bẫy đã ghi ở vòng nối bảng (`btn-inv`). Nhạc nền vẫn chỉnh được:
+// thanh trượt 🎵 trong Cài Đặt là cửa đầy đủ hơn cái nút bật/tắt này.
+{
+  const bm = document.getElementById('btn-music');
+  if (bm) bm.addEventListener('click', ()=>{
+    SETTINGS.bgm = SETTINGS.bgm > 0 ? 0 : 35;
+    saveSettings(); AudioSys.refreshBgmVol();
+    bm.style.opacity = SETTINGS.bgm > 0 ? '1' : '0.4';
+  });
+}
 
 // ---------- Input ----------
 // ⚠ HÀM CÓ TÊN, VÀ PHƠI RA `window`. Không phải để gọi từ ngoài — để bài kiểm ĐỌC ĐƯỢC nó.
@@ -9455,6 +9462,11 @@ function phimXuong(e){
   // F6 — bảng Hướng Dẫn & Phím Tắt. preventDefault vì F6 mặc định của trình duyệt là nhảy
   // focus sang thanh địa chỉ: không chặn thì bấm một cái là mất luôn bàn phím khỏi game.
   if (e.key === 'F6'){ e.preventDefault(); togglePanel('help'); }
+  // N — Ngân Hàng Ngọc. ⚠ KHÔNG dùng J như ảnh mẫu MU: ở game này J đã là phím NHẶT ĐỒ (và
+  // mở Rương Canh, khai Vỉa Cốt, hái thảo dược), có hẳn một nút riêng trên thanh chiến đấu và
+  // một luật trong CLAUDE.md buộc nút với phím phải làm cùng một việc. Cướp J cho một cửa sổ
+  // là lấy mất đường DUY NHẤT nhặt đồ bằng bàn phím.
+  if (e.key.toLowerCase() === 'n' && !e.ctrlKey && !e.altKey && !e.metaKey) togglePanel('ngocbank');
   // F không còn mở lò từ xa nữa — nó ĐƯA NGƯỜI CHƠI TỚI thợ rèn. Đứng cạnh rồi bấm F thì mở.
   if (e.key.toLowerCase()==='f') window.openForgePanel();
   // Phím T dành riêng cho thu phục Linh Thú — Khế Ước mở qua C, tắt/bật avatar bằng X.
@@ -16954,29 +16966,19 @@ for (const [_id, _pn] of [['btn-char','char'], ['btn-inv','inv'], ['btn-bag','ba
   const _b = el(_id);
   if (_b) _b.addEventListener('click', () => togglePanel(_pn));
 }
-// ── CỘT MENU: thu gọn · thả xuống · Bảng Sự Kiện ──────────────────────────
+// ── CỘT MENU: nút ≡ mở Menu Hệ Thống ─────────────────────────────────────
 {
-  const cot = el('menu-cot'), drop = el('mc-drop'), bmenu = el('btn-menu');
-  if (bmenu && drop) bmenu.addEventListener('click', (e2) => {
-    e2.stopPropagation();
-    drop.classList.toggle('hidden');
-    AudioSys.sfx('ui', 0.5);
-  });
-  // Bấm ra ngoài là đóng — thả xuống mà phải bấm đúng nút mới đóng được thì nó thành cái bảng.
-  if (drop) document.addEventListener('click', (e2) => {
-    if (!drop.classList.contains('hidden') && !drop.contains(e2.target) && e2.target !== bmenu)
-      drop.classList.add('hidden');
-  });
-  // ⚠ `btn-qlog` KHÔNG còn đi qua togglePanel: Nhật Ký đã cắm vào cột nên `map['qlog']` là
+  const cot = el('menu-cot'), bmenu = el('btn-menu');
+  // ⚠ Nút ≡ nay MỞ THẲNG bảng, không thả xuống nữa. `#mc-drop` và `btn-sukien` đã gỡ khỏi
+  // HTML — xem chú thích tại chỗ. Giữ kiểm null vì chỗ này chạy lúc nạp tệp.
+  if (bmenu) bmenu.addEventListener('click', () => togglePanel('help'));
+  // ⚠ `btn-qlog` KHÔNG đi qua togglePanel: Nhật Ký đã cắm vào cột nên `map['qlog']` là
   // `undefined`, và togglePanel gặp khoá lạ thì IM LẶNG bỏ qua — nút vẫn bấm được, vẫn kêu,
   // và không làm gì cả. Kiểu hỏng đó không ném lỗi nên không ai phát hiện.
   { const bq = el('btn-qlog'); if (bq) bq.addEventListener('click', () => toggleQlog()); }
-  const bsk = el('btn-sukien');
-  if (bsk) bsk.addEventListener('click', () => { if (window.openEventBoard) window.openEventBoard(); });
   // ⚠ CHỦ ĐỘNG BỎ QUA `SETTINGS.menuCot` CŨ. Nút thu gọn đã gỡ khi menu dời lên thanh chiến
   // đấu, nhưng cờ `menuCot:false` vẫn còn trong những bản lưu của người đã từng thu cột lại —
-  // khôi phục theo nó là menu biến mất vĩnh viễn và KHÔNG còn nút nào mở lại. Dọn luôn cờ để
-  // nó không nằm lại trong save như một quả mìn.
+  // khôi phục theo nó là menu biến mất vĩnh viễn và KHÔNG còn nút nào mở lại.
   if (SETTINGS.menuCot === false){ SETTINGS.menuCot = true; saveSettings(); }
   if (cot) cot.classList.remove('thu');
 }
@@ -20462,7 +20464,7 @@ function togglePanel(which){
   // ⚠ KHÔNG có khoá 'qlog' ở đây: Nhật Ký thôi là cửa sổ nổi (xem `.bang-cam`). Cắm lại vào
   // bảng này là mở Túi Đồ thì một mảnh HUD biến mất.
   const map = { char:'panel-char', inv:'panel-inv', bag:'panel-bag', skill:'panel-skill', map:'panel-map', settings:'panel-settings', help:'panel-help',
-                party:'panel-party', friend:'panel-friend' };
+                party:'panel-party', friend:'panel-friend', ngocbank:'panel-ngocbank', nhat:'panel-nhat' };
   const id = map[which];
   const p = el(id);
   if (!p) return;                     // khoá lạ thì im lặng bỏ qua, không ném lỗi giữa lượt chơi
@@ -20528,7 +20530,7 @@ function togglePanel(which){
 // 'xh' (Tổ Đội + Bạn Bè) là một nhóm của main, giữ nguyên. 'qlog' không còn ở đây vì Nhật Ký
 // đã cắm vào cột phải.
 const BANG_NHOM = { char:'nv', inv:'do', bag:'do', skill:'kn', map:'bd', settings:'cd', help:'hd',
-                    party:'xh', friend:'xh' };
+                    party:'xh', friend:'xh', ngocbank:'ng', nhat:'ln' };
 // Nhóm được phép ở chung màn hình với nhóm khác. 'do' là hai NỬA của một cửa sổ nên nó tự
 // mở kèm nhau qua BANG_NHOM; không khai ở đây, nếu không mở Túi Đồ là bảng Bản Đồ nằm lại.
 const BANG_SONG = {};
@@ -20544,6 +20546,8 @@ window.capNhatCotBang = capNhatCotBang;
 function renderPanel(which){
   if (which==='settings'){ renderSettings(); return; }
   if (which==='help'){ renderHelpPanel(); return; }
+  if (which==='ngocbank'){ renderNgocBank(); return; }
+  if (which==='nhat'){ renderLenhNhat(); return; }
   if (which==='char'){ window.charTab = 'info'; renderCharPanel(); }
   else if (which==='inv') renderInv();
   else if (which==='bag') renderBag();
@@ -20559,7 +20563,7 @@ let _bangChong = [];
 // ⚠ `panel-qlog` KHÔNG có trong danh sách này (và không có trong `map` của togglePanel):
 // nó đã thành khối cắm trong cột phải. Cắm lại vào đây là ESC đóng mất một mảnh HUD.
 const _MOI_BANG = ['panel-char','panel-inv','panel-bag','panel-skill','panel-map','panel-quest',
-                   'panel-settings','panel-stage','panel-forge','panel-help',
+                   'panel-settings','panel-stage','panel-forge','panel-help','panel-ngocbank','panel-nhat',
                    'panel-party','panel-friend'];
 function bangDangMo(){ return _MOI_BANG.filter(id => { const e2 = el(id); return e2 && !e2.classList.contains('hidden'); }); }
 function bangGhiChong(id){
@@ -20639,7 +20643,7 @@ window.closePanels = closePanels;
 // Không có cái này thì người chơi không đọc được mình đang đứng ở cửa nào — mà đó chính là
 // việc của một thanh menu.
 const MC_BANG = { 'btn-char':'panel-char', 'btn-bag':'panel-bag', 'btn-skill':'panel-skill',
-                  'btn-map':'panel-map', 'btn-settings':'panel-settings',
+                  'btn-map':'panel-map', 'btn-settings':'panel-settings', 'btn-menu':'panel-help',
                   'btn-party':'panel-party', 'btn-friend':'panel-friend' };
 function capNhatMenuCot(){
   for (const bid in MC_BANG){
@@ -21938,6 +21942,21 @@ function khoList(){ if (!player.kho) player.kho = []; return player.kho; }
 // Ngọc gửi vào kho thì KHÔNG tiêu được cho tới khi rút ra — giống ngân hàng ngọc của MU. Đó là
 // thứ làm ngăn này có nghĩa thật chứ không phải chuyển số qua lại: nó là chỗ CẤT, và cất thì
 // phải rút mới dùng. Lò Hỗn Độn / Rèn chỉ đọc player.jewels, không đọc kho.
+// ═══ ICON NGỌC — TRANH THẬT, không phải một hình vẽ đổi màu ═══════════════════════════
+// Nguồn: kit Axie chính chủ `cc-axie-gtk2d/.../Materials/gem_cutter` (viên đã mài) và
+// `gemstone_mine` (quặng thô), nướng bằng `tools/ui/nuong_ngoc.py` — 6 tệp, 16,3 KB.
+// Trước đó cả sáu loại dùng chung `consumArtUrl('orb'|'stone')`: MỘT hình dựng bằng canvas,
+// khác nhau đúng một tham số màu. Xếp thành cột thì sáu hàng là sáu cái đĩa giống hệt nhau —
+// người chơi phải đọc CHỮ mới biết hàng nào là hàng nào, tức icon không làm việc của icon.
+// ⚠ Ghép theo `JEWEL_COLORS` đã có sẵn, đừng bốc đại: màu đó chạy ở nhãn đồ rơi, chấm trên
+// đất và khung Lò. Icon lệch màu với nhãn của chính nó là bắt người chơi học hai lần.
+// ⚠ "Thạch" lấy QUẶNG THÔ, "châu" lấy VIÊN MÀI — Tu La / Hỗn Nguyên là đá, không phải ngọc.
+const NGOC_ANH = {
+  chucPhuc:'assets/ui/ngoc_chucPhuc.webp', linhHon:'assets/ui/ngoc_linhHon.webp',
+  sinhMenh:'assets/ui/ngoc_sinhMenh.webp', honDon:'assets/ui/ngoc_honDon.webp',
+  tuLa:'assets/ui/ngoc_tuLa.webp',         honNguyen:'assets/ui/ngoc_honNguyen.webp',
+};
+function ngocMau(k){ return k === 'tuLa' ? '#ff9a4d' : k === 'honNguyen' ? '#c07fe0' : (JEWEL_COLORS[k] || '#9aa8d4'); }
 const KHO_NGOC_KEYS = ['chucPhuc','linhHon','sinhMenh','honDon','tuLa','honNguyen'];
 function khoNgoc(){
   if (!player.khoNgoc) player.khoNgoc = { hap:{} };
@@ -21964,14 +21983,14 @@ window.khoNgocGui = function(k, n){
   const v = n === 'all' ? co : Math.min(co, n || 1);
   if (v <= 0) return;
   ngocTuiSet(k, co - v); K[k] += v;
-  saveGame(); renderBag();
+  saveGame(); ngocVeLai();
 };
 window.khoNgocRut = function(k, n){
   const K = khoNgoc();
   const v = n === 'all' ? K[k] : Math.min(K[k], n || 1);
   if (v <= 0) return;
   K[k] -= v; ngocTuiSet(k, ngocTui(k) + v);
-  saveGame(); renderBag();
+  saveGame(); ngocVeLai();
 };
 window.khoHapGui = function(t, n){
   const K = khoNgoc(); const bh = player.baohap || (player.baohap = {});
@@ -21979,14 +21998,14 @@ window.khoHapGui = function(t, n){
   const v = n === 'all' ? co : Math.min(co, n || 1);
   if (v <= 0) return;
   bh[t] = co - v; K.hap[t] = (K.hap[t] || 0) + v;
-  saveGame(); renderBag();
+  saveGame(); ngocVeLai();
 };
 window.khoHapRut = function(t, n){
   const K = khoNgoc(); const bh = player.baohap || (player.baohap = {});
   const v = n === 'all' ? (K.hap[t] || 0) : Math.min(K.hap[t] || 0, n || 1);
   if (v <= 0) return;
   K.hap[t] -= v; bh[t] = (bh[t] || 0) + v;
-  saveGame(); renderBag();
+  saveGame(); ngocVeLai();
 };
 
 // Ghép hộp: 3 hộp bậc N trong TÚI → 1 hộp bậc N+1.
@@ -22003,7 +22022,7 @@ window.ghepHap = function(t){
   bh[t + 1] = (bh[t + 1] || 0) + 1;
   const d = BAOHAP_TIERS[t + 1];
   if (player) addFloat(player.x, player.y - 66, `⚒ ${GHEP_HAP_CAN} hộp → 1 ${d.name}`, d.color, 15);
-  saveGame(); renderBag();
+  saveGame(); ngocVeLai();
 };
 window.khoNgocGuiHet = function(){
   let n = 0;
@@ -22011,15 +22030,120 @@ window.khoNgocGuiHet = function(){
   const bh = player.baohap || {};
   for (const t in bh){ if (bh[t] > 0){ khoNgoc().hap[t] = (khoNgoc().hap[t] || 0) + bh[t]; n += bh[t]; bh[t] = 0; } }
   addFloat(player.x, player.y-40, n ? `Gửi ${n} món vào ngăn ngọc` : 'Không có gì để gửi', n ? '#7ecbff' : '#8a8a8a', 13);
-  saveGame(); renderBag();
+  saveGame(); ngocVeLai();
 };
-window.toggleAutoNgoc = function(v){ player.autoNgoc = v; saveGame(); };
+// Ngăn Ngọc nay hiện ở HAI cửa — bảng riêng (phím N) và tab Kho của Túi Đồ. Mọi hàm gửi/rút
+// phải vẽ lại CẢ HAI, nếu không thì bấm ở cửa này mà con số ở cửa kia đứng im, và người chơi
+// đọc ra là "bấm không ăn". Cửa nào đang đóng thì hàm vẽ của nó tự `return` — gọi thừa không
+// tốn gì, còn quên gọi thì không lỗi nào báo.
+function ngocVeLai(){
+  try { renderBag(); } catch { /* bảng Túi Đồ chưa dựng */ }
+  // ⚠ Hỏi `.hidden` Ở ĐÂY, đừng hỏi trong hàm vẽ: `togglePanel` gọi `renderPanel()` TRƯỚC khi
+  // gỡ cờ `.hidden`, nên một hàm vẽ tự chặn theo cờ đó sẽ mở bảng ra một cái khung TRỐNG.
+  const np = el('panel-ngocbank');
+  if (np && !np.classList.contains('hidden')) renderNgocBank();
+}
+window.toggleAutoNgoc = function(v){ player.autoNgoc = v; saveGame(); ngocVeLai(); nhatVeLai(); };
+// Cùng lý do với `ngocVeLai`: bốn công tắc dưới đây có mặt ở HAI bảng (Lệnh Nhặt và cụm
+// "⚙ Tự động" trong Túi Đồ). Bật ở bảng này mà bảng kia còn hiện trạng thái cũ thì người chơi
+// tưởng nó không ăn — và đó là kiểu hỏng không ném lỗi.
+function nhatVeLai(){
+  const np = el('panel-nhat');
+  if (np && !np.classList.contains('hidden')) renderLenhNhat();
+}
 // Tự động gửi ngọc: gọi ngay lúc nhặt, nên ngọc mới vào thẳng kho thay vì nằm trong túi.
 function autoGuiNgoc(k){
   if (!player.autoNgoc) return;
   const co = ngocTui(k);
   if (co > 0){ khoNgoc()[k] += co; ngocTuiSet(k, 0); }
 }
+// ════════════ NGÂN HÀNG NGỌC — bảng riêng (phím N) ════════════════════════════════════
+// Máy đã có sẵn từ lâu (`khoNgoc` · `khoNgocGui/Rut` · `autoGuiNgoc`); thứ thiếu là một CHỖ
+// ĐỨNG. Trước bản này nó là khối thứ ba trong tab "Kho" của Túi Đồ, dưới ngăn trang bị — tức
+// muốn cất ngọc phải mở Túi Đồ, đổi tab, rồi cuộn. Chủ dự án đưa ảnh mẫu MU và chốt tách ra.
+//
+// ⚠ NĂM NÚT 01/10/20/30/** LÀ GỬI, KHÔNG PHẢI RÚT. Trong MU cái bảng này là chỗ CẤT: bấm số
+// là đẩy chừng ấy viên vào ngân hàng. Rút thì hiếm hơn nhiều (chỉ khi sắp rèn) nên nó là một
+// nút `⬆` cuối hàng, không phải một hàng số thứ hai — hai hàng số cạnh nhau thì bấm nhầm.
+// `khoNgocGui(k, n)` nhận sẵn số hoặc `'all'`, nên năm nút là năm lời gọi cùng một cửa.
+const NB_BUOC = [1, 10, 20, 30];
+function renderNgocBank(){
+  const p = el('panel-ngocbank'); if (!p) return;
+  const K = khoNgoc();
+  const tongKho = KHO_NGOC_KEYS.reduce((a, k) => a + K[k], 0)
+                + Object.values(K.hap).reduce((a, b) => a + b, 0);
+  let h = moBang({ tieu:'Ngân Hàng Ngọc', mat:'◈', dong:`đang cất ${tongKho}` });
+  h += `<div class="nb-list">`;
+  for (const k of KHO_NGOC_KEYS){
+    const mau = ngocMau(k), tui = ngocTui(k), kho = K[k];
+    h += `<div class="nb-row">
+      <img class="nb-ic" src="${NGOC_ANH[k]}" alt="">
+      <div class="nb-ten"><b style="color:${mau}">${ngocTen(k)}</b><span>×${tui} trong túi</span></div>
+      <div class="nb-nut">${NB_BUOC.map(n => `<button class="nb-b" ${tui >= n ? '' : 'disabled'}
+          onclick="khoNgocGui('${k}',${n})" title="Gửi ${n} viên vào ngân hàng">${String(n).padStart(2,'0')}</button>`).join('')}
+        <button class="nb-b" ${tui ? '' : 'disabled'} onclick="khoNgocGui('${k}','all')" title="Gửi hết ${tui} viên">**</button></div>
+      <span class="nb-kho" style="color:${mau}">${kho}</span>
+      <button class="nb-b nb-rut" ${kho ? '' : 'disabled'} onclick="khoNgocRut('${k}','all')" title="Rút hết ${kho} viên về túi">⬆</button>
+    </div>`;
+  }
+  h += `</div>`;
+  // Box Kundun cũng cất ở đây — cùng một ngăn, và người chơi đã quen tìm nó ở tab Kho cũ.
+  // Chỉ bày tầng nào có thật, không dựng bảy hàng rỗng.
+  let hap = '';
+  for (let t = 1; t < BAOHAP_TIERS.length; t++){
+    const d = BAOHAP_TIERS[t];
+    const tui = (player.baohap && player.baohap[t]) || 0, kho = K.hap[t] || 0;
+    if (!tui && !kho) continue;
+    hap += `<div class="nb-row">
+      <img class="nb-ic" src="${consumArtUrl('box', d.color)}" alt="">
+      <div class="nb-ten"><b style="color:${d.color}">${d.name}</b><span>×${tui} trong túi</span></div>
+      <div class="nb-nut">
+        ${t < BAOHAP_TIERS.length - 1 ? `<button class="nb-b" ${tui >= GHEP_HAP_CAN ? '' : 'disabled'} onclick="ghepHap(${t})"
+          title="Ghép ${GHEP_HAP_CAN} ${d.name} thành 1 ${BAOHAP_TIERS[t+1].name}">⚒</button>` : ''}
+        <button class="nb-b" ${tui ? '' : 'disabled'} onclick="khoHapGui(${t},'all')" title="Gửi hết vào ngân hàng">**</button></div>
+      <span class="nb-kho" style="color:${d.color}">${kho}</span>
+      <button class="nb-b nb-rut" ${kho ? '' : 'disabled'} onclick="khoHapRut(${t},'all')" title="Rút hết về túi">⬆</button>
+    </div>`;
+  }
+  if (hap) h += `<div class="stat-sec">BOX KUNDUN</div><div class="nb-list">${hap}</div>`;
+  h += `<div class="nb-chan">
+    <button class="mini-btn" onclick="khoNgocGuiHet()">⬇ Gửi hết</button>
+    <label><input type="checkbox" ${player.autoNgoc?'checked':''} onchange="window.toggleAutoNgoc(this.checked)"> Tự động gửi ngọc khi nhặt</label>
+  </div>
+  <div class="nb-note">Ngọc đang cất <b>không tiêu được</b> — Lò Hỗn Độn và phép ép ngọc chỉ đọc số trong túi. Đó là điều làm cái ngăn này có nghĩa thật chứ không phải chuyển số qua lại.</div>`;
+  p.innerHTML = h;
+}
+
+// ════════════ LỆNH NHẶT — gom mọi công tắc "tự động làm gì với đồ rơi" ════════════════
+// ⚠ KHÔNG đẻ ra cờ mới. Bốn công tắc dưới đây đều ĐANG CHẠY sẵn, chỉ là chúng nằm rải ở ba
+// chỗ khác nhau: `autoNgoc` trong tab Kho, `autoSell`/`autoEquip` nhét trong cụm "⚙ Tự động"
+// của Túi Đồ, `donMuc` ở thanh dọn. Người chơi muốn đổi cách game xử lý đồ rơi thì phải nhớ
+// ba nơi. Bảng này là MỘT nơi — và nó đọc/ghi đúng mấy cờ cũ, không phải bản sao thứ hai.
+function renderLenhNhat(){
+  const p = el('panel-nhat'); if (!p) return;
+  const ac = autoCfgNow();
+  const tick = (on, ham, chu, mo) =>
+    `<div class="set-row"><span>${chu}${mo ? ` <i>${mo}</i>` : ''}</span>
+      <button class="mini-btn ${on ? '' : 'tat'}" onclick="${ham}">${on ? 'BẬT' : 'TẮT'}</button></div>`;
+  let h = moBang({ tieu:'Lệnh Nhặt', mat:'✋', dong:'game tự làm gì với thứ vừa rơi ra' });
+  h += tick(!!player.autoNgoc, 'window.toggleAutoNgoc(!player.autoNgoc)',
+            '◈ Tự gửi ngọc vào Ngân Hàng khi nhặt', '(nhặt xong vào thẳng ngăn cất)');
+  h += tick(!!player.autoSell, 'window.toggleAutoSell(!player.autoSell)',
+            '💰 Tự bán đồ trơn khi nhặt', '(đồ không Vận, không Hoàn Hảo, chưa rèn)');
+  h += tick(player.autoEquip !== false, 'window.toggleAutoEquip(player.autoEquip === false)',
+            '🛡 Tự mặc món mạnh hơn', '(chỉ đổi khi lực chiến cao hơn rõ rệt)');
+  const opt = DON_MUC_TEN.map((t2, v) => `<option value="${v}" ${donMuc() === v ? 'selected' : ''}>${t2}</option>`).join('');
+  h += `<div class="set-row"><span>🗑 Mức dọn túi hàng loạt</span>
+    <select class="don-sel" onchange="setDonMuc(this.value)">${opt}</select></div>`;
+  // ⚠ Dòng này CHỈ ĐỌC. Tầm hút là một con số của Tự Đánh và nó đã có một nhà ở Cài Đặt;
+  // dựng thanh trượt thứ hai ở đây là hai cửa cùng sửa một cờ — kiểu thừa đã phải dọn ở bảng
+  // Nhân Vật. Nút bên dưới đưa người chơi tới đúng chỗ sửa.
+  h += `<div class="nb-note">Khi bật <b>Tự Đánh (Z)</b>, tầm hút đồ nới gấp ba — đang quét quanh điểm neo <b style="color:#ffd76a">${ac.range}px</b>.
+    Lớp tầm xa giết quái cách 200px, nên không nới thì cày cả tiếng xong bỏ lại nguyên bãi đồ dưới đất.</div>
+    <div class="forge-actions"><button class="mini-btn" onclick="togglePanel('settings')">⚙ Mở Cài Đặt</button></div>`;
+  p.innerHTML = h;
+}
+
 window.khoDeposit = function(i){
   const it = player.inv[i];
   if (!it) return;
@@ -22073,43 +22197,14 @@ function bagSecKho(){
     h += `</div>`;
   }
 
-  // Ngăn Ngọc — gửi/rút như ngân hàng ngọc của MU. Ngọc đang CẤT thì không tiêu được: Lò Hỗn
-  // Độn và Rèn chỉ đọc player.jewels/gems, không đọc kho. Đó là thứ làm ngăn này có nghĩa thật.
+  // ⚠ NGĂN NGỌC ĐÃ DỜI RA BẢNG RIÊNG (phím N) — đừng dựng lại khối đó ở đây. Nó từng là
+  // khối thứ ba của tab này, nằm dưới ngăn trang bị: muốn cất một viên ngọc phải mở Túi Đồ,
+  // đổi tab, rồi cuộn qua cả lưới đồ. Hai cửa cùng vẽ một thứ cũng là hai chỗ phải nhớ sửa.
   const K = khoNgoc();
   const tongKho = KHO_NGOC_KEYS.reduce((a, k) => a + K[k], 0)
                 + Object.values(K.hap).reduce((a, b) => a + b, 0);
-  h += `<div class="chaos-sec">NGĂN NGỌC <span class="chaos-sub">đang cất ${tongKho} — cất thì phải rút mới dùng được</span></div>`;
-  h += `<div class="bag-bar">
-    <button class="mini-btn" onclick="khoNgocGuiHet()">⬇ Gửi hết</button>
-    <label><input type="checkbox" ${player.autoNgoc?'checked':''} onchange="window.toggleAutoNgoc(this.checked)"> Tự động gửi ngọc khi nhặt</label></div>`;
-  h += `<div class="ngoc-grid">`;
-  for (const k of KHO_NGOC_KEYS){
-    const la = k === 'tuLa' || k === 'honNguyen';
-    const co = la ? '#e8552a' : JEWEL_COLORS[k];
-    const cor = k === 'honNguyen' ? '#b08ae8' : co;
-    const tui = ngocTui(k), kho = K[k];
-    h += `<div class="ngoc-row">
-      <img class="consum-ic sm" src="${consumArtUrl(la ? 'stone' : 'orb', cor)}" alt="">
-      <span class="ng-name" style="color:${cor}">${ngocTen(k)}</span>
-      <span class="ng-num">túi <b>${tui}</b> · kho <b style="color:${cor}">${kho}</b></span>
-      <button class="mini-btn" ${tui?'':'disabled'} onclick="khoNgocGui('${k}','all')" title="Gửi hết vào kho">⬇</button>
-      <button class="mini-btn" ${kho?'':'disabled'} onclick="khoNgocRut('${k}','all')" title="Rút hết về túi">⬆</button></div>`;
-  }
-  for (let t = 1; t < BAOHAP_TIERS.length; t++){
-    const d = BAOHAP_TIERS[t];
-    const tui = (player.baohap && player.baohap[t]) || 0, kho = K.hap[t] || 0;
-    if (!tui && !kho) continue;                 // không bày tầng nào cả hai bên đều rỗng
-    h += `<div class="ngoc-row">
-      <img class="consum-ic sm" src="${consumArtUrl('box', d.color)}" alt="">
-      <span class="ng-name" style="color:${d.color}">${d.name}</span>
-      <span class="ng-num">túi <b>${tui}</b> · kho <b style="color:${d.color}">${kho}</b></span>
-      ${t < BAOHAP_TIERS.length - 1
-        ? `<button class="mini-btn" ${tui >= GHEP_HAP_CAN ? '' : 'disabled'} onclick="ghepHap(${t})"
-             title="Ghép ${GHEP_HAP_CAN} ${d.name} thành 1 ${BAOHAP_TIERS[t+1].name}">⚒</button>` : ''}
-      <button class="mini-btn" ${tui?'':'disabled'} onclick="khoHapGui(${t},'all')" title="Gửi hết vào kho">⬇</button>
-      <button class="mini-btn" ${kho?'':'disabled'} onclick="khoHapRut(${t},'all')" title="Rút hết về túi">⬆</button></div>`;
-  }
-  h += `</div>`;
+  h += `<div class="chaos-sec">NGĂN NGỌC <span class="chaos-sub">đang cất ${tongKho}</span></div>`;
+  h += `<div class="forge-actions"><button class="mini-btn" onclick="togglePanel('ngocbank')">◈ Mở Ngân Hàng Ngọc (N)</button></div>`;
   return h;
 }
 window.bagTab = 'gear';
@@ -22487,7 +22582,7 @@ function renderBag(){
   el('panel-bag').innerHTML = html;
 }
 window.selectBagItem = function(i){ window.bagSel = (window.bagSel === i) ? -1 : i; renderBag(); };
-window.toggleAutoSell = function(v){ player.autoSell = v; saveGame(); };
+window.toggleAutoSell = function(v){ player.autoSell = v; saveGame(); nhatVeLai(); };
 // hành động túi đồ → refresh cả 2 panel (override)
 // `oDich` — ô muốn mặc vào. Bỏ trống thì dùng ô mặc định của chính món đó; truyền vào khi
 // người chơi thả món vũ khí sang ô Vũ Khí 2.
@@ -24931,6 +25026,9 @@ function moBang({ tieu, dong, mat, tabs, chon, ham, dongX = true }){
 }
 
 // ---------- Bảng Cài Đặt ----------
+const SET_TABS = [{ id:'chung', ten:'Thiết Lập' }, { id:'phim', ten:'Phím Tắt' }];
+window.setTab = 'chung';
+window.setSetTab = function(v){ window.setTab = v; renderSettings(); };
 function renderSettings(){
   const p = el('panel-settings'); if (!p) return;
   const slider = (key, val) => `<input type="range" min="0" max="100" value="${val}" oninput="setOpt('${key}', this.value, true)" onchange="setOpt('${key}', this.value)">`;
@@ -24938,7 +25036,18 @@ function renderSettings(){
   const _acS = (typeof player !== 'undefined' && player && player.autoCfg) ? player.autoCfg : { skill:true, potion:true, potionPct:40, range:430, boss:false };
   const togA = (key) => `<button class="mini-btn ${_acS[key] ? '' : 'tat'}" onclick="toggleAutoCfg('${key}')">${_acS[key] ? 'BẬT' : 'TẮT'}</button>`;
   const sldA = (key, min, max, step, txt) => `<input type="range" min="${min}" max="${max}" step="${step}" value="${_acS[key]}" oninput="setAutoCfg('${key}', this.value, true)" onchange="setAutoCfg('${key}', this.value)"><span style="font-size:11px;color:#ffb15c">${txt}</span>`;
-  p.innerHTML = moBang({ tieu:'Cài Đặt' }) + `
+  // ⚠ HAI TAB, và tab thứ hai KHÔNG phải nội dung mới — nó là bảng phím tắt vốn nằm ở F6.
+  // Chủ dự án đưa ảnh mẫu (Thiết lập / Phím tắt / Gửi BUG) và chốt bố cục đó; F6 thì thành
+  // sảnh Menu Hệ Thống. Dồn hai thứ vào một cửa sổ là đúng: "đổi cách chơi" và "cách chơi
+  // hiện là gì" luôn được tra trong cùng một lần mở.
+  // ("Gửi BUG" trong ảnh chưa làm — chưa có chỗ nhận, mà một cái tab gửi vào hư không thì tệ
+  // hơn không có tab.)
+  if (window.setTab === 'phim'){
+    p.innerHTML = moBang({ tieu:'Cài Đặt', mat:'⚙', tabs:SET_TABS, chon:'phim', ham:'setSetTab' })
+                + hdNoiDung();
+    return;
+  }
+  p.innerHTML = moBang({ tieu:'Cài Đặt', mat:'⚙', tabs:SET_TABS, chon:'chung', ham:'setSetTab' }) + `
     <div class="set-row"><span>🎵 Nhạc nền</span>${slider('bgm', SETTINGS.bgm)}</div>
     <div class="set-row"><span>🔔 Hiệu ứng âm thanh</span>${slider('sfx', SETTINGS.sfx)}</div>
     <div class="set-row"><span>🔭 Tầm nhìn <i>(kéo gần thì mỗi khung hình chứa ít thế giới hơn — map thấy rộng hơn)</i></span><span>${
@@ -28103,6 +28212,7 @@ const HD_BANG = [
     ['P',   'help.k.party'],
     ['H',   'help.k.friend'],
     ['O',   'help.k.settings'],
+    ['N',   'help.k.ngocbank'],
     ['F6',  'help.k.help'],
     ['Esc', 'help.k.esc'],
   ]},
@@ -28116,28 +28226,61 @@ function autoCfgNow(){
     ? player.autoCfg : { skill:true, potion:true, potionPct:40, range:430, boss:false };
 }
 window.HD_BANG = HD_BANG;   // bài kiểm đọc thẳng bảng này, đừng chép sang chỗ khác
-function renderHelpPanel(){
-  const p = el('panel-help'); if (!p) return;
+// Nội dung PHÍM TẮT tách riêng: nó nay có HAI chỗ dùng — tab "Phím Tắt" của Cài Đặt, và
+// không chỗ nào khác. Tách ra vì `moBang` là việc của cái BẢNG, còn bảng chứa nó đã đổi.
+function hdNoiDung(){
   const ac = autoCfgNow();
   const co = v => v ? '<b style="color:#7ec850">BẬT</b>' : '<b style="color:#c08a6a">TẮT</b>';
-  let h = moBang({ tieu: t('help.title'), mat:'❓' });
+  let h = '';
   for (const nhom of HD_BANG){
     h += `<div class="stat-sec">${t(nhom.ten)}</div><div class="hd-luoi">`;
     for (const [phim, khoa] of nhom.hang)
       h += `<div class="hd-hang"><kbd class="hd-phim">${phim}</kbd><span>${t(khoa)}</span></div>`;
     h += `</div>`;
   }
-  // ⚠ MỤC NÀY CHỈ ĐỌC, KHÔNG CHỨA CÔNG TẮC. Công tắc Tự Đánh đã có một nhà ở Cài Đặt (O);
-  // dựng bộ thứ hai ở đây là hai cửa cùng sửa một cờ, và tới lúc thêm một tuỳ chọn thì chắc
-  // chắn có một bên bị quên. Số hiện ra đọc thẳng từ `player.autoCfg` nên nó không nói dối
-  // được, còn nút ở dưới đưa người chơi tới đúng chỗ sửa.
+  // ⚠ MỤC NÀY CHỈ ĐỌC, KHÔNG CHỨA CÔNG TẮC. Công tắc Tự Đánh đã có một nhà ở tab Thiết Lập
+  // ngay bên cạnh; dựng bộ thứ hai ở đây là hai cửa cùng sửa một cờ, và tới lúc thêm một tuỳ
+  // chọn thì chắc chắn có một bên bị quên. Số hiện ra đọc thẳng `player.autoCfg` nên nó không
+  // nói dối được.
   h += `<div class="stat-sec">${t('help.g.auto')}</div>`
      + `<div class="bonus-list">${t('help.auto.intro')}<br>`
      + `• ${t('help.auto.skill')}: ${co(ac.skill)}<br>`
      + `• ${t('help.auto.potion')}: ${co(ac.potion)} — ${t('help.auto.below')} <b style="color:#ffd76a">${ac.potionPct}%</b><br>`
      + `• ${t('help.auto.range')}: <b style="color:#ffd76a">${ac.range}px</b><br>`
-     + `• ${t('help.auto.boss')}: ${co(ac.boss)}</div>`
-     + `<div class="forge-actions"><button class="mini-btn" onclick="togglePanel('settings')">⚙ ${t('help.auto.open')}</button></div>`;
+     + `• ${t('help.auto.boss')}: ${co(ac.boss)}</div>`;
+  return h;
+}
+
+// ════════════ MENU HỆ THỐNG (F6) — một cái SẢNH, không phải một bảng nội dung ════════════
+// Chủ dự án đưa ảnh mẫu MU và chốt: F6 ra một lưới nút gom bốn cửa — Cài Đặt · Sự Kiện ·
+// Ngân Hàng Ngọc · Lệnh Nhặt. (Bảng xếp hạng trong ảnh thì bỏ: game này chưa có máy chủ xếp
+// hạng, mà một nút bấm vào không ra gì thì tệ hơn hẳn không có nút.)
+//
+// ⚠ NỘI DUNG CŨ CỦA F6 (phím tắt) KHÔNG MẤT — nó thành tab "Phím Tắt" của Cài Đặt, đúng chỗ
+// ảnh mẫu thứ hai đặt nó. Giữ `panel-help` làm id để `BANG_NHOM`, `MC_BANG`, danh sách ESC và
+// mấy bài kiểm cũ không phải sửa theo một cái tên mới.
+//
+// Ba ô đếm tiền ở đầu bảng lấy đúng khuôn hàng WCoinC/WCoinP/GoblintP trong ảnh — và ba loại
+// tiền ở đây đã có sẵn, không bịa thêm cái nào.
+const SYS_NUT = [
+  { mat:'⚙',  ten:'Cài Đặt',         phim:'O',  lam:"togglePanel('settings')" },
+  { mat:'⏱', ten:'Sự Kiện',          phim:'',   lam:"openEventBoard()" },
+  { mat:'◈',  ten:'Ngân Hàng Ngọc',  phim:'N',  lam:"togglePanel('ngocbank')" },
+  { mat:'✋', ten:'Lệnh Nhặt',        phim:'',   lam:"togglePanel('nhat')" },
+];
+function renderHelpPanel(){
+  const p = el('panel-help'); if (!p) return;
+  const vi = [
+    ['◈', 'Lumen',        (player && player.silver) || 0,                         '#ffd76a'],
+    ['✦', 'Ấn Giao Kết',  (player && player.chimera && player.chimera.ve && player.chimera.ve.gk) || 0, '#b08ae8'],
+    ['♦', 'Shard',        (player && player.shard) || 0,                          '#7ecbff'],
+  ];
+  let h = moBang({ tieu:'Menu Hệ Thống', mat:'≡' });
+  h += `<div class="sys-vi">${vi.map(([g, ten, so, mau]) =>
+      `<span><i style="color:${mau}">${g}</i> ${ten}: <b style="color:${mau}">${so.toLocaleString('vi-VN')}</b></span>`).join('')}</div>`;
+  h += `<div class="sys-luoi">${SYS_NUT.map(n =>
+      `<button class="sys-nut" onclick="${n.lam}"><i>${n.mat}</i><span>${n.ten}</span>${
+        n.phim ? `<kbd>${n.phim}</kbd>` : ''}</button>`).join('')}</div>`;
   p.innerHTML = h;
 }
 

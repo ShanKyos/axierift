@@ -1957,6 +1957,105 @@ mặc định và mệnh đề xanh kể cả khi `loadGame` ép lại thanh).
 ⚠ Dòng chân khung chi tiết phải nói đúng: nó từng viết *"Không nằm trên thanh chiêu (4 ô cố
 định)"*. Câu đó nay là lời nói dối ngay ở ô mà người chơi vừa tự kéo vào.
 
+## ≡ THANH DƯỚI CHIA BA CỤM · F6 LÀ **SẢNH**, KHÔNG PHẢI BẢNG PHÍM TẮT
+
+Chủ dự án đưa ảnh mẫu MU và chốt bố cục. Hai đợt việc, ghi chung vì chúng dùng chung một luật.
+
+### Thanh dưới: trái — giữa — phải, và thanh EXP neo VÀO thanh
+
+| cụm | id | có gì |
+|---|---|---|
+| trái | `#mc-trai` | Nhân Vật · Túi Đồ · Kỹ Năng · Nhiệm Vụ |
+| giữa | `#skillbar` | bốn ô chiêu + mấy nút chiến đấu |
+| phải | `#menu-cot` | Tổ Đội · Hảo Hữu · Bản Đồ · Cài Đặt · `≡` |
+
+- ⚠ **Nút hai bên NHỎ HƠN ô chiêu** (30px vs 40px). Tôi từng cho cả 22 ô cùng 40px, viết hẳn
+  một chú thích CSS bênh vực nó, rồi **khoá luôn bằng một khẳng định trong `test_huongdan`** —
+  tức là nướng cái sai vào bộ kiểm. Chủ dự án nhìn ảnh mẫu và gọi ngay: *"sao nó dài quá vậy"*.
+  Thanh đo được **865 → 756px**. Khẳng định cũ đã gỡ; `test_thanhcum §7` nay chốt HAI vế —
+  nút menu phải nhỏ hơn ô chiêu **và** ≥26px (đừng chữa quá tay thành một dải chấm bấm không trúng).
+- ⚠ **Trần bề rộng chốt bằng PX TUYỆT ĐỐI (800), không bằng % khung nhìn.** Bản đầu tôi chốt
+  "≤52% khung nhìn" đo ở 1600px; bộ kiểm chạy ở 1440 nên **đúng cái thanh 756px ấy thành 52,5%**
+  và bài đỏ vì một lý do chẳng liên quan gì tới thứ nó định gác.
+- ⚠ **`#xp-strip` là CON của `#bottom-hud`** (`position:absolute; left:0; right:0`), không neo
+  vào khung nhìn. Đó là cách DUY NHẤT giữ nó bằng ngang dải icon khi thanh co giãn —
+  `left:50%; transform:translateX(-50%)` cho ra một thanh rộng cố định, lệch ngay khi đổi cỡ màn.
+  `test_thanhcum §8` đo ở **hai** bề rộng khung nhìn, vì ở đúng một bề rộng thì mọi cách neo đều xanh.
+- ⚑ và ♥ vẫn là **ký tự**, không phải tranh: `ic_*.png` chưa có art cho Tổ Đội / Hảo Hữu.
+- ⚠ **Nút menu là `≡`, KHÔNG phải `☰`.** `☰` là quẻ Càn của bát quái — Quy tắc số 1 cấm.
+
+### F6 = Menu Hệ Thống (sảnh bốn nút). Bảng phím tắt thành **tab của Cài Đặt**
+
+`SYS_NUT` khai bốn nút (Cài Đặt · Sự Kiện · Ngân Hàng Ngọc · Lệnh Nhặt) + hàng ba loại tiền
+(đúng khuôn WCoinC/WCoinP/GoblintP trong ảnh — ba loại tiền ở đây **đã có sẵn**, không bịa thêm).
+**Bảng xếp hạng trong ảnh thì BỎ**: chưa có máy chủ xếp hạng, mà một nút bấm vào không ra gì thì
+tệ hơn hẳn không có nút — cùng bài học `openEvoPanel` của `test_cayky`.
+
+- **Giữ id `panel-help`.** `BANG_NHOM`, `MC_BANG`, danh sách ESC và mấy bài kiểm cũ đều gọi tên
+  đó; đổi tên là sửa năm chỗ để được đúng một cái tên đẹp hơn.
+- **Nội dung cũ KHÔNG mất** — `hdNoiDung()` tách ra khỏi `renderHelpPanel()` và thành tab
+  **Phím Tắt** của Cài Đặt (`SET_TABS`, `window.setSetTab`), đúng chỗ ảnh mẫu đặt nó.
+- ⚠ **KHÔNG cướp phím J như ảnh mẫu MU** (*"Ngân hàng ngọc (J)"*). J ở game này là **NHẶT ĐỒ**,
+  và đó là đường DUY NHẤT nhặt đồ bằng bàn phím. Dùng **N**. `test_hethong §3` gác cả hai chiều.
+
+### ⚠ HÀM VẼ KHÔNG ĐƯỢC TỰ CHẶN THEO `.hidden` — `togglePanel` vẽ TRƯỚC khi gỡ cờ
+
+Đã ghi ở mục panel, nhưng nó suýt tái diễn ở đúng hai bảng mới: `renderNgocBank()` và
+`renderLenhNhat()` mà tự `return` khi bảng còn `.hidden` thì mở ra một **cái khung TRỐNG**.
+Cửa hỏi `.hidden` là `ngocVeLai()` / `nhatVeLai()` — hàm vẽ thì vẽ vô điều kiện.
+
+Và hai bảng ấy là lý do hai hàm kia tồn tại. ⚠ **Ngăn ngọc VẼ ở đúng MỘT nơi** — bảng phím N.
+Tab Kho của Túi Đồ chỉ còn **một con số "đang cất" + một nút chỉ đường**; dựng lại khối ngọc ở
+đó là hai cửa cùng vẽ một thứ, tức hai chỗ phải nhớ sửa. Nhưng con số kia thì vẫn phải VẼ LẠI
+khi gửi/rút, và bốn công tắc nhặt thì **thật sự có ở hai nơi** (Lệnh Nhặt *và* cụm "⚙ Tự động"
+của Túi Đồ). Mọi hàm gửi/rút/bật-tắt phải vẽ lại cả hai — sáu chỗ từng chỉ gọi `renderBag()`.
+Bấm ở cửa này mà số ở cửa kia đứng im thì người chơi đọc ra là *"bấm không ăn"*, và **không lỗi
+nào báo**.
+
+⚠ **Nút `♪` đã gỡ theo `#mc-drop`**, và đó là chủ ý: thanh trượt 🎵 trong Cài Đặt là cửa đầy đủ
+hơn một cái nút bật/tắt. `test_nhacnen` **không xoá mệnh đề cho xanh** — nó đi theo sang cửa mới
+và mạnh lên: mệnh đề cũ chỉ hỏi nút có `.hidden` không (nút chết vẫn xanh), mệnh đề mới **kéo
+thanh trượt thật** rồi đòi `SETTINGS.bgm` phải đổi.
+
+### Ngân Hàng Ngọc: sáu ICON TRANH THẬT, không phải một hình vẽ đổi màu
+
+`NGOC_ANH` → `assets/ui/ngoc_*.webp`, nướng bằng `tools/ui/nuong_ngoc.py` từ kit Axie chính chủ
+(96px, **fit-square** chứ không kéo giãn; cả sáu chỉ **16,3 KB**). Trước đó sáu loại dùng chung
+một hình canvas đổi màu — che màu đi thì không ai phân biệt được loại nào, đúng bài học đã ghi ở
+mục chibi (*"tô đặc một màu rồi nhìn"*).
+Màu nhãn lấy từ `JEWEL_COLORS` đang chạy (`ngocMau()`), nên **icon và chữ không thể nói hai đằng**.
+
+### Lệnh Nhặt: gom công tắc, **KHÔNG đẻ cờ mới**
+
+Bốn công tắc (`autoNgoc` · `autoSell` · `autoEquip` · `donMuc`) đều **đang chạy sẵn**, chỉ là
+chúng nằm rải ở ba chỗ. Bảng này là MỘT nơi đọc/ghi đúng mấy cờ cũ, không phải bản sao thứ hai.
+Dòng tầm hút **chỉ ĐỌC** kèm nút sang Cài Đặt — dựng thanh trượt thứ hai ở đây là hai cửa cùng
+sửa một cờ, đúng kiểu thừa đã phải dọn ở bảng Nhân Vật.
+
+### Nhật Ký Chiến Đấu sang nửa PHẢI — sườn trái để dành cho CHAT
+
+Chưa có chat người-với-người; ghi nhận chỗ trước để khi làm không phải dời một lần nữa.
+`test_hethong §8` gác: `#combat-log-wrap` phải nằm ở nửa phải màn.
+
+⚠ **Gỡ một khối HTML thì soát mọi `getElementById` trỏ vào nó.** Gỡ `#mc-drop` để lại
+`document.getElementById('btn-music').addEventListener(...)` không chốt null — nó ném **ngay lúc
+nạp trang** và giết mọi lượt đăng ký phía sau. Cùng cái bẫy đã ghi cho `btn-inv`.
+
+Gác: `tests/test_thanhcum.js` (8 mệnh đề) · `tests/test_hethong.js` (18 khẳng định, **chín** phép
+thử ngược đều đỏ). Ba bài CŨ phải theo nội dung sang nhà mới — `test_huongdan §2` (bảng phím nay
+ở tab Cài Đặt) · `test_kho B4` (tab Kho nay chỉ đường) · `test_nhacnen` (thanh trượt thay nút ♪);
+cả ba **mạnh lên chứ không nhẹ đi**, và cả năm phép thử ngược của chúng đều đỏ. *Một bài kiểm đỏ
+vì nội dung DỜI CHỖ thì sửa bằng cách đi theo nó, không phải bằng cách xoá mệnh đề.*
+⚠ `test_hethong §7` bản đầu chốt *"nhãn khớp `BẬT|TẮT`"* — xanh ở **cả hai** trạng thái, tức không
+gác gì. Đổi thành *"nhãn phải ĐỔI"*, và đúng phép thử ngược đó mới bắt được `toggleAutoNgoc` quên
+gọi `nhatVeLai()`. *Một cái chốt đúng ở mọi trạng thái là một cái chốt không chốt gì* — cùng bệnh
+với luật `≤60% là kill` và với *"đúng 7 NPC có trang thoại"*.
+
+⚠ **Một phép thử ngược IM LẶNG là bằng chứng cái QUE DÒ hỏng, không phải bằng chứng mệnh đề yếu.**
+Đã suýt kết luận ngược: que dò của tôi thay chuỗi `"left:0; right:0;"` trong `style.css`, mà chuỗi
+đó có mặt ở nhiều rule chẳng liên quan — phép đột biến rơi nhầm chỗ và bài vẫn xanh. **Mỏ neo của
+phép thử ngược phải DUY NHẤT**, và phải đếm số lần xuất hiện trước khi thay.
+
 
 ## ⚠ QUY TẮC SỐ 3: KHÔNG DÙNG VECTOR. CHẤM HẾT.
 

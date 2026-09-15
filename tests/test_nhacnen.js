@@ -38,8 +38,24 @@ const URL = 'http://localhost:8871/index.html?max=1';
       soBanKhacNhau: new Set(Object.values(BGM_TRACKS)).size,
       nhacTrum: BGM_BOSS,
       thieuTep,
-      hienNutNhac: !!document.getElementById('btn-music') &&
-                   !document.getElementById('btn-music').classList.contains('hidden'),
+      // ⚠ NÚT ♪ ĐÃ GỠ cùng khối `#mc-drop` (nút ≡ nay mở thẳng Menu Hệ Thống). Mệnh đề này
+      // KHÔNG bị xoá cho xanh — nó gác một điều vẫn đúng: *có nhạc thì phải có đường chỉnh
+      // nhạc, và đường đó phải ĂN THẬT*. Nay là thanh trượt 🎵 trong Cài Đặt, vốn là cửa đầy
+      // đủ hơn cái nút bật/tắt cũ. Và bài này LÁI nó chứ không chỉ hỏi phần tử có tồn tại —
+      // một thanh trượt có mặt mà không nối vào `SETTINGS.bgm` thì trông y hệt một cái đang
+      // chạy. (Nút cũ chỉ bị hỏi `.hidden`, tức nó có thể chết mà mệnh đề vẫn xanh.)
+      chinhNhac: (() => {
+        closePanels(); togglePanel('settings'); window.setSetTab('chung');
+        const sl = [...document.querySelectorAll('#panel-settings input[type=range]')]
+          .find(r => /bgm/i.test(r.getAttribute('oninput') || ''));
+        if (!sl) return { co:false };
+        const truoc = SETTINGS.bgm;
+        sl.value = String(truoc > 0 ? 0 : 60);
+        sl.dispatchEvent(new Event('input', { bubbles:true }));
+        const sau = SETTINGS.bgm;
+        sl.value = String(truoc); sl.dispatchEvent(new Event('input', { bubbles:true }));
+        return { co:true, doi: Number(sau) !== Number(truoc), truoc, sau };
+      })(),
     };
   });
 
@@ -53,7 +69,8 @@ const URL = 'http://localhost:8871/index.html?max=1';
   if (out.soBanKhacNhau < 8) fail(`chỉ ${out.soBanKhacNhau} bản nhạc khác nhau — cả thế giới nghe gần như một bài`);
   if (!out.nhacTrum) fail('trận trùm không có nhạc riêng — playBgm(BGM_BOSS) đang chạy rỗng');
   if (out.thieuTep.length) fail(`khai tên trong BGM_TRACKS mà THIẾU TỆP: ${out.thieuTep.join(', ')}`);
-  if (!out.hienNutNhac) fail('có nhạc mà nút ♪ vẫn ẩn');
+  if (!out.chinhNhac.co) fail('có nhạc mà KHÔNG có đường nào chỉnh — nút ♪ đã gỡ thì thanh trượt 🎵 trong Cài Đặt phải là cửa thay thế');
+  else if (!out.chinhNhac.doi) fail(`thanh trượt 🎵 có mặt nhưng KHÔNG ăn vào SETTINGS.bgm (${out.chinhNhac.truoc} → ${out.chinhNhac.sau}) — một cái nút chết trông y hệt một cái đang chạy`);
   console.log('errors:', JSON.stringify(errs));
   console.log(bad === 0 && errs.length === 0 ? 'PASS' : 'FAIL(' + bad + ')');
   await b.close();
