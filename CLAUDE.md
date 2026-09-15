@@ -3232,6 +3232,22 @@ một buổi truy lại từ đầu, và đừng vội đổ cho commit của m�
 | `test_ngamchuot §4` | *"con quái cạnh chân cũng mất máu"*, `ganMat` = **đúng 1** | xanh 3/3 khi chạy riêng · mục này **đã** `player.reflect = 0` rồi, nên 1 máu ấy tới từ nguồn KHÁC, chưa truy ra. Ngưỡng là `ganMat > 0` nên đúng một điểm máu của một cơ chế khác cũng đủ làm đỏ |
 | `test_tamphap §3` | *"số lần bị khoá chân không giảm hẳn (47 → 28)"* | xanh 3/3 khi chạy riêng · đây là phép đo THỐNG KÊ, mẫu mỏng |
 
+✅ **`test_tamphap §2` (*"định thân KHÔNG khoá được chân: đi được 46px"*) ĐÃ SỬA TẬN GỐC** — ghi lại
+vì nó là khuôn mẫu cho cả loại: **một mục đo trên cảnh mà mục TRƯỚC để lại.** `keoQuaiDanh` ghim
+quái ngay sát người chơi và ép nó đánh 800 nhịp, rồi để nguyên nó đấy; khối đo định thân chạy tiếp
+30 nhịp và giả định không ai đụng vào người chơi. Đo được ngay trước khối ấy: **2 con còn sống
+trong 200px, con gần nhất cách 8px**. Một cú nện văng dời được người chơi vài chục px **kể cả lúc
+đang bị khoá chân** (mục ③ đo được nó xảy ra 10/800 nhịp), và mệnh đề đọc ra thành "định thân
+không khoá được". `dinhT` lúc đó vẫn còn 3,5 — tức chân BỊ khoá thật, thứ dời người là cái khác.
+
+⇒ Nay mục ấy dời quái ra xa trước khi đo rồi trả về, và **tự kiểm** là đã dọn được (`quaiGan` phải
+bằng 0) — bỏ bước dọn ra thì chốt tự kiểm đỏ ngay, đã thử. *Luật chung: mục nào đổi chỗ đứng hay
+để lại quái thì mục sau phải dựng lại cảnh của mình, và phải chứng minh là đã dựng được.*
+
+⚠ **Và đừng tin phép đo đầu tiên của chính mình.** Lượt dò đầu tôi đặt lại `player.x/y` về giữa map
+trước mỗi lượt đo — tức dời người chơi ra xa đúng con quái cần quan sát, rồi đọc ra `quaiGan: 0` và
+suýt kết luận "giả thuyết sai". Bỏ hai dòng đặt lại ấy thì ra `quaiGan: 2, gần nhất 8px`.
+
 **Cách phân biệt "đỏ do mình" với "đỏ do xúc xắc", làm theo thứ tự này:** chạy riêng bài đó
 **3 lượt** trên cây của mình → rồi chạy trên cây **trước commit của mình** (`git worktree add`).
 Xanh 3/3 ở vế đầu và xanh ở vế sau thì nó không phải của mình. *Đừng kết luận chỉ bằng "trông

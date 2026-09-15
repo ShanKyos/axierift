@@ -146,10 +146,25 @@ const PORT = process.argv[2] || '8853';
     IDS.forEach(x => { player.vohoc[x] = true; }); calcDerived();
 
     // ② phần hai: định thân KHOÁ được cả di chuyển lẫn ra chiêu
+    // ⚠ DỌN QUÁI RA XA TRƯỚC KHI ĐO CHÂN — `keoQuaiDanh` ở trên vừa GHIM quái ngay sát người
+    // chơi và để nó đánh thật 800 nhịp, rồi để nguyên nó đấy. Đo được ngay trước khối này: 2 con
+    // còn sống trong 200px, con gần nhất cách **8px**. Khối dưới chạy tiếp 30 nhịp và giả định
+    // người chơi không bị ai đụng vào — trong khi một cú NỆN VĂNG dời được người chơi vài chục
+    // px kể cả lúc đang bị khoá chân, và chính mục ③ đo được nó xảy ra 10/800 nhịp.
+    // Hậu quả: mệnh đề đọc ra thành "định thân KHÔNG khoá được chân: đi được 46px" — đỏ vì một
+    // cơ chế KHÁC HẲN. Đã đỏ đúng như thế một lượt trong hồi quy, còn chạy riêng thì xanh 3/3:
+    // nện văng có rơi vào 30 nhịp ấy hay không là chuyện xúc xắc, nên bài đỏ theo may rủi chứ
+    // không theo lỗi. (`dinhT` lúc đó vẫn còn 3,5 — chân BỊ khoá thật; thứ dời người là cái khác.)
+    // Trả quái về chỗ cũ ngay sau khi đo, vì vế thứ hai (cấm ra chiêu) cần cảnh y như trước.
+    const _giuQuai = mobs.map(m => ({ m, x: m.x, y: m.y, atkT: m.atkT, zone: m.zone }));
+    for (const q of _giuQuai){ q.m.x = player.x + 4000; q.m.y = player.y + 4000; q.m.atkT = 99; q.m.zone = null; }
     player.dinhT = 5; const x0 = player.x, y0 = player.y;
     moveTarget = { x: player.x + 600, y: player.y }; player.auto = false;
     for (let i = 0; i < 30; i++) update(0.05);
-    o.dinh = { diDuoc: Math.round(Math.hypot(player.x - x0, player.y - y0)), conT: +(player.dinhT||0).toFixed(2) };
+    o.dinh = { diDuoc: Math.round(Math.hypot(player.x - x0, player.y - y0)), conT: +(player.dinhT||0).toFixed(2),
+               // tự kiểm cảnh dựng: phép dọn phải THẬT SỰ dọn được, nếu không mệnh đề lại đỏ theo xúc xắc
+               quaiGan: mobs.filter(m => !m.dead && Math.hypot(m.x - player.x, m.y - player.y) < 200).length };
+    for (const q of _giuQuai){ q.m.x = q.x; q.m.y = q.y; q.m.atkT = q.atkT; q.m.zone = q.zone; }
     player.dinhT = 5; player.cd = {}; player.qi = player.maxQi;
     const _cdTruoc = JSON.stringify(player.cd);
     castSkill('a');
@@ -211,7 +226,9 @@ const PORT = process.argv[2] || '8853';
   else pass(`③ quái gây thật và kháng ăn thật: nện văng ${r.quaiNang.vang}→${r.quaiNangK.vang} · khoá chân ${r.quaiPhap.khoa}→${r.quaiPhapK.khoa} (trên 800 nhịp)`);
 
   const D = r.dinh;
-  if (D.diDuoc > 5) fail(`② định thân KHÔNG khoá được chân: đi được ${D.diDuoc}px`);
+  if (D.quaiGan) fail(`② cảnh dựng hỏng: còn ${D.quaiGan} con quái sát người chơi trong lúc đo chân — `
+                    + 'một cú nện văng của chúng sẽ đọc ra thành "định thân không khoá được"');
+  else if (D.diDuoc > 5) fail(`② định thân KHÔNG khoá được chân: đi được ${D.diDuoc}px`);
   else if (D.raChieuDuoc) fail('② định thân không khoá được VÕ CÔNG — ảnh gốc ghi rõ "không thể di chuyển VÀ sử dụng võ công"');
   else pass(`② định thân khoá cả chân lẫn chiêu (đi ${D.diDuoc}px)`);
 
