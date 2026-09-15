@@ -21,7 +21,7 @@ oc(){ printf '\n\033[1;36m══ %s\033[0m\n' "$*"; }
 [ "$(id -u)" = 0 ] || { xx "Phải chạy bằng root."; exit 1; }
 
 # ── 1. Máy chủ Bóng Người có sống không (bỏ qua nginx) ────────────────────────────────
-oc "1/6  Máy chủ (thẳng, không qua nginx)"
+oc "1/7  Máy chủ (thẳng, không qua nginx)"
 if curl -sf --max-time 5 "http://127.0.0.1:$CONG/health" -o /tmp/.k1; then
   ok "cổng $CONG trả lời: $(cat /tmp/.k1)"
 else
@@ -36,7 +36,7 @@ fi
 #   BẢN CHÉP chứ không phải symlink (hoặc nginx.conf không include sites-enabled), thì sửa
 #   `sites-available` là VÔ HÌNH — `nginx -t` vẫn xanh, reload vẫn chạy, và /ws 404 ở MỌI Host.
 #   `nginx -T` in ra cấu hình ĐANG NẠP, nên nó là trọng tài duy nhất ở đây.
-oc "2/6  Tệp đã sửa có phải tệp nginx đọc không"
+oc "2/7  Tệp đã sửa có phải tệp nginx đọc không"
 grep -q 'location /ws' "$SB" && ok "$SB có 'location /ws'" || xx "$SB THIẾU 'location /ws'"
 SE=/etc/nginx/sites-enabled/axiewuxia
 if [ -L "$SE" ]; then ok "sites-enabled/axiewuxia là symlink → $(readlink -f "$SE")"
@@ -59,7 +59,7 @@ ok "server_name = ${TEN:-（không khai）}"
 # ── 3. Còn site nào khác giữ default_server không ─────────────────────────────────────
 # Đây là câu hỏi quyết định: nếu có, thì mọi request có Host LẠ (kể cả 127.0.0.1) đi vào
 # site đó, và phép kiểm bằng 127.0.0.1 sẽ đỏ dù trang hoàn toàn lành.
-oc "3/6  Ai là default_server"
+oc "3/7  Ai là default_server"
 DS=$(grep -rl 'default_server' /etc/nginx/sites-enabled/ /etc/nginx/conf.d/ 2>/dev/null)
 if [ -n "$DS" ]; then
   xx "có site khác giữ default_server:"; echo "$DS" | sed 's/^/     /'
@@ -73,7 +73,7 @@ ls /etc/nginx/sites-enabled/ 2>/dev/null | sed 's/^/     site bật: /'
 # ⚠ ĐỪNG ĐỌC MỤC NÀY THÀNH "WEBSOCKET CHẠY". `location = /ws/health` là khối khớp CHÍNH XÁC và
 #   nó chỉ đặt mỗi header `Host`; bắt tay WebSocket đi qua khối `location /ws` (khớp tiền tố),
 #   nơi mới có `Upgrade`/`Connection`. Hai khối khác nhau. Mục 5 mới là mục trả lời câu thật.
-oc "4/6  /ws/health qua nginx (chỉ nói: proxy có tới máy chủ không)"
+oc "4/7  /ws/health qua nginx (chỉ nói: proxy có tới máy chủ không)"
 THU(){
   M=$(curl -s -o /tmp/.k4 -w '%{http_code}' --max-time 5 -H "Host: $2" http://127.0.0.1/ws/health)
   if [ "$M" = 200 ]; then ok "Host: $2 → 200 · $(cat /tmp/.k4)"; TOT=1
@@ -87,7 +87,7 @@ THU lo 127.0.0.1
 # Phải ra `101 Switching Protocols`. Ra 200/404/502 nghĩa là nginx KHÔNG chuyển tiếp nâng cấp:
 # gần như luôn là `proxy_set_header Upgrade/Connection` thiếu, hoặc `$connection_upgrade` rỗng
 # vì khối `map` không được nạp.
-oc "5/6  Bắt tay WebSocket qua nginx"
+oc "5/7  Bắt tay WebSocket qua nginx"
 BT=$(curl -i -s --max-time 5 --http1.1 -H "Host: ${TEN:-127.0.0.1}" \
       -H "Upgrade: websocket" -H "Connection: Upgrade" \
       -H "Sec-WebSocket-Key: dGhlIHNhbXBsZSBub25jZQ==" -H "Sec-WebSocket-Version: 13" \
@@ -104,7 +104,7 @@ esac
 # ── 6. Trang có thật sự nạp net.js không ──────────────────────────────────────────────
 # Máy chủ lành + nginx lành mà vẫn không thấy bóng người thì chỉ còn phía trang: thẻ script
 # thiếu, hoặc net.js 404, hoặc trình duyệt giữ bản index.html cũ.
-oc "6/6  Trang có nạp net.js không"
+oc "6/7  Trang có nạp net.js không"
 curl -s --max-time 5 -H "Host: ${TEN:-127.0.0.1}" http://127.0.0.1/index.html > /tmp/.k6
 grep -q 'net\.js' /tmp/.k6 && ok "index.html có thẻ <script src=\"net.js\">" \
   || xx "index.html KHÔNG nhắc net.js — VPS chưa kéo bản mới? (git -C /var/www/axiewuxia log -1)"
@@ -112,6 +112,18 @@ M6=$(curl -s -o /dev/null -w '%{http_code}' --max-time 5 -H "Host: ${TEN:-127.0.
 [ "$M6" = 200 ] && ok "net.js tải được (HTTP 200)" || xx "net.js → HTTP $M6"
 CC=$(curl -sI --max-time 5 -H "Host: ${TEN:-127.0.0.1}" http://127.0.0.1/index.html | grep -i '^cache-control' | tr -d '\r')
 ok "${CC:-（không có Cache-Control cho index.html）}"
+
+# ── 7. TRÌNH DUYỆT NHẬN ĐƯỢC BẢN net.js NÀO ──────────────────────────────────────────
+# ⚠ Câu hỏi thật không phải "đĩa có bản mới chưa" mà là "thứ ĐI QUA NGINX tới trình duyệt có
+#   bản mới chưa" — hai cái đó lệch nhau được (VPS chưa kéo · nginx phục vụ thư mục khác).
+#   Dấu nhận: `gio + TRE_MS` chỉ có trong bản đã vá lỗi "thân người từ xa đứng chết".
+oc "7/7  net.js tới trình duyệt là bản nào"
+echo "     commit trên VPS: $(git -C /var/www/axiewuxia log -1 --format='%h %s' 2>/dev/null | cut -c1-70)"
+D=$(grep -c 'gio + TRE_MS' /var/www/axiewuxia/public/game/net.js 2>/dev/null || echo 0)
+W=$(curl -s --max-time 5 -H "Host: ${TEN:-127.0.0.1}" http://127.0.0.1/net.js | grep -c 'gio + TRE_MS')
+[ "${D:-0}" -gt 0 ] && ok "trên ĐĨA: đã có bản vá" || xx "trên ĐĨA: CHƯA có bản vá (VPS chưa kéo — đợi 2 phút)"
+if [ "${W:-0}" -gt 0 ]; then ok "QUA NGINX: đã có bản vá ⇒ chỉ cần Ctrl+Shift+R ở trình duyệt"
+else xx "QUA NGINX: CHƯA có bản vá — trình duyệt đang nhận mã cũ, thân người từ xa sẽ đứng chết"; fi
 
 echo
 if [ -n "$WS_OK" ]; then
