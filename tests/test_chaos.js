@@ -87,11 +87,30 @@ const { chromium } = require('playwright');
       chaosAddItem(it.uid); chaosAddJewel('sinhMenh'); chaosPickRecipe('life');
       const rate = chaosCurrent().p.rate; doChaos(); await xong();
       o.sinhMenh = { rate, bac: it.life }; }
-    // 3d Rèn thường: Huyền Thiết đã gỡ, phí rèn nay TRỌN VẸN bằng Lumen (xem GO_HUYENTHIET)
+    // 3d "Rèn Thường" ĐÃ GỠ — đoạn +1→+9 nay CHỈ ép ngọc. Gác chiều ngược lại: món +0 bỏ vào
+    // khay thì KHÔNG công thức nào trong nhóm Rèn được nhận nó, và forgeRule phải TỪ CHỐI mọi
+    // mốc ≤9 thay vì trả một luật gần đúng.
     reset();
-    { const it = player.equip.tay; it.plus = 0; const s0 = player.silver;
-      chaosAddItem(it.uid); chaosPickRecipe('ren'); doChaos(); await xong();
-      o.renThuong = { plus: it.plus, truBac: s0 - player.silver > 0 }; }
+    { const it = player.equip.tay; it.plus = 0;
+      chaosAddItem(it.uid);
+      let neRule = null;
+      try { forgeRule(5); neRule = 'KHONG NEM'; } catch { neRule = 'nem'; }
+      // `bless`/`soul`/`life` VẪN PHẢI CÒN — chúng là MẶT TIỀN của epNgoc trong lò (luật nằm ở
+      // NGOC_EP, dùng chung với đường ép thẳng trong túi), không phải đường rèn thứ hai.
+      // Thứ phải biến mất là công thức ăn Lumen + Tu La: `ren`.
+      o.renDaGo = { khop: chaosMatches().map(x => x.rec.id), forgeRule5: neRule }; }
+    // 3d' Trần mới là +12: món +11 tại Lò Rèn Hoàng Gia phải vào được Phá Thiên Kiếp.
+    reset(); goRoyal(true);
+    { const it = player.equip.tay; it.plus = 11;
+      chaosAddItem(it.uid);
+      for (let i = 0; i < 4; i++) chaosAddJewel('chucPhuc');
+      for (let i = 0; i < 4; i++) chaosAddJewel('linhHon');
+      chaosAddJewel('honDon');
+      const m = chaosMatches().find(x => x.rec.id === 'phathien');
+      o.plus11 = { co: !!m, muc: m ? m.p.title : null };
+      const it12 = player.equip.tay; it12.plus = 12; chaosClear(); chaosAddItem(it12.uid);
+      o.plus12Dung = !chaosMatches().some(x => x.rec.id === 'phathien'); }
+    goRoyal(false);
     // (3e Tấn Phẩm đã gỡ cùng công thức.)
     // 3f Kế Thừa
     reset();
@@ -130,6 +149,7 @@ const { chromium } = require('playwright');
 
   console.log(JSON.stringify(r, null, 1));
   let bad = 0; const fail = m => { console.log('FAIL', m); bad++; };
+  const pass_ = m => console.log('PASS', m);
   if (r.tenDinhKiemHiep.length) fail(`còn tên kiếm hiệp: ${r.tenDinhKiemHiep.join(', ')}`);
   // 8 chứ không 40: hệ phẩm đã gỡ nên ITEM_NAMES còn ĐÚNG MỘT tên lui mỗi ô, không phải năm
   // tên chọn theo phẩm. (Trước đó là 40 = 8 ô × 5 phẩm; trước nữa là 45 khi còn ô Quần.)
@@ -138,7 +158,7 @@ const { chromium } = require('playwright');
   // nghĩa chủ dự án chốt: Cánh CHÍNH LÀ áo choàng của Dark Lord). Gác ngược lại: nó phải BIẾN MẤT.
   if (r.khayTrong.includes('cloak'))
     fail(`công thức 'cloak' vẫn còn trong Lò Hỗn Độn: ${JSON.stringify(r.khayTrong)}`);
-  if (!r.motMon_plus3.includes('ren')) fail('1 món +3 trong khay mà không ra Rèn Thường');
+  if (r.motMon_plus3.includes('ren')) fail(`'Rèn Thường' sống lại — đoạn +1→+9 phải CHỈ ép ngọc: ${JSON.stringify(r.motMon_plus3)}`);
   if (!r.themChucPhuc.includes('bless')) fail('bỏ Chúc Phúc vào khay mà công thức bless chưa đủ');
   if (!r.plus9_ngoaiLoRen.includes('phathien(khoá)'))
     fail(`ngoài Lò Rèn Hoàng Gia mà Phá Thiên không bị khoá: ${JSON.stringify(r.plus9_ngoaiLoRen)}`);
@@ -152,8 +172,12 @@ const { chromium } = require('playwright');
   // 50% PHẲNG mọi bậc, dùng chung con số với đường ép thẳng trong túi (NGOC_EP.sinhMenh.rate).
   // Bản cũ giảm dần 75→27 nên cùng một viên ngọc mà lò và túi lại hai tỉ lệ khác nhau.
   if (r.sinhMenh.rate !== 50) fail(`Sinh Mệnh mọi bậc phải 50%, đo ${r.sinhMenh.rate}`);
-  if (r.renThuong.plus !== 1) fail(`Rèn Thường +0→+1 hỏng (ra +${r.renThuong.plus})`);
-  if (!r.renThuong.truBac) fail('Rèn Thường không trừ Lumen');
+  if (r.renDaGo.khop.includes('ren'))
+    fail(`món +0 vẫn khớp 'Rèn Thường': ${JSON.stringify(r.renDaGo.khop)}`);
+  else pass_(`món +0 chỉ còn đường ngọc: ${JSON.stringify(r.renDaGo.khop)}`);
+  if (r.renDaGo.forgeRule5 !== 'nem') fail('forgeRule(5) không ném lỗi — mốc ≤9 phải bị từ chối, không trả luật gần đúng');
+  if (!r.plus11.co) fail('món +11 tại Lò Rèn Hoàng Gia không vào được Phá Thiên Kiếp — trần +12 chưa mở');
+  if (!r.plus12Dung) fail('món +12 vẫn rèn tiếp được — trần phải dừng ở +12');
   if (r.keThua.den !== r.keThua.tu + 1) fail(`Kế Thừa: giai ${r.keThua.tu} → ${r.keThua.den}`);
   if (!r.honLoan.co) fail('không nhận ra công thức Lò Hỗn Loạn');
   if (r.honLoan.conLai !== 0) fail(`Lò Hỗn Loạn còn sót ${r.honLoan.conLai} món hiến tế`);

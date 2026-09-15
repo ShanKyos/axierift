@@ -1457,20 +1457,60 @@ mỗi món nay mang `gx`,`gy` = ô trên-trái nó chiếm, và chiếm một KH
 - Kích thước ở `BAG_SIZES` / `BAG_SIZES_LINE`; đo bằng `bagKichThuoc(it)`.
 - Quầy Shard nới theo **HÀNG** (`BAG_COLS` = 8 ô), không theo ô lẻ.
 
-### Ép ngọc thẳng vào đồ
+### ⚒ RÈN: HAI ĐOẠN, HAI NƠI, KHÔNG CHỒNG NHAU
 
-Chúc Phúc và Linh Hồn **không cần tới lò** — bấm viên ngọc trong túi rồi bấm món đồ, ở bất cứ
-đâu, đúng như MU. Luật nằm ở **`NGOC_EP` / `epNgoc()`**, và Lò Hỗn Độn chỉ là mặt tiền gọi lại
-cùng hàm đó. Sửa tỉ lệ hay trần thì sửa `NGOC_EP`, đừng sửa hai nơi.
+Chủ dự án chốt: **ép ngọc lo +1→+9 · Lò lo +10 · +11 · +12.** Không đoạn nào hai bên cùng làm.
 
-| | trần | tỉ lệ | hỏng thì |
-|---|---|---|---|
-| ◎ Chúc Phúc | +6 | 100% | không bao giờ hỏng |
-| ◉ Linh Hồn | +9 | 50% | tụt 1 cấp |
-| Phá Thiên Kiếp | +11 | 50/45% | VỠ VỤN (☂ giữ được) |
+| | trần | tiêu gì | tỉ lệ | hỏng thì |
+|---|---|---|---|---|
+| ◎ Chúc Phúc | +6 | 1 viên | 100% | không bao giờ hỏng |
+| ◉ Linh Hồn | +9 | 1 viên | 50% | tụt 1 cấp |
+| Phá Thiên Kiếp *(chỉ tại Lò Rèn Hoàng Gia)* | **+12** | ❖ Hỗn Nguyên 3/5/9 + ngọc 2/3/4 + Lumen | 50/45/**40**% | VỠ VỤN (☂ giữ được) |
 
-⚠ Linh Hồn từng cho tới +11 — tức là nó ăn đứt Phá Thiên Kiếp ở cả hai mức. Đừng nới lại trần
-đó mà không gỡ Phá Thiên Kiếp đi cùng.
+Luật ép ngọc nằm ở **`NGOC_EP` / `epNgoc()`**; Lò chỉ là mặt tiền gọi lại cùng hàm đó.
+Luật Lò nằm ở **`forgeRule()`**, và nó **ném lỗi với mọi mốc ≤9** — cố ý, xem dưới.
+
+**⚠ TỪNG CÓ BA ĐƯỜNG ĐƯA MÓN ĐỒ LÊN +9. Hai đường đã gỡ, đừng dựng lại.**
+
+| | đường | luật cũ |
+|---|---|---|
+| ① *(giữ)* | `epNgoc` — ép thẳng trong túi | Chúc Phúc tới +6 · Linh Hồn 50% tới +9 · xịt **tụt 1** |
+| ② *(GỠ)* | `Rèn Thường` ở Lò | Lumen + Tu La · 75/65/50% · xịt +8/+9 **VỀ 0** |
+| ③ *(GỠ)* | `useJewel('linhHon')` ở NPC Thợ Rèn | Linh Hồn 50% **tới tận +11**, không cần gì khác |
+
+Mỗi cái là một lỗi riêng, và **không cái nào lộ ra khi đọc code một chỗ**:
+
+- **② lệch ① ở LUẬT XỊT.** Ai đọc ra bảng sẽ rèn +7 ở Lò (75% thay vì 50%) rồi chuyển sang ngọc
+  cho +8/+9 (tụt 1 thay vì về 0). Ai không đọc ra thì mất đồ. Đó không phải chiều sâu — đó là
+  một cái bẫy do hai hệ làm cùng một việc bằng hai bảng luật.
+- **③ ăn đứt Phá Thiên Kiếp** ở cả hai mốc cuối: không Hỗn Nguyên, không Hỗn Độn, không rủi ro
+  vỡ đồ. Mục này **đã cảnh báo đúng câu đó** từ trước — *"Linh Hồn từng cho tới +11… đừng nới
+  lại trần đó"* — nhưng lần sửa ấy chỉ hạ trần trong `NGOC_EP`, còn `useJewel()` thì bỏ lọt **vì
+  nó không đi qua `ngocEpDuoc()`**. Nay nó đọc thẳng `NGOC_EP.linhHon.tran`.
+
+⚠ **Thêm đường ép ngọc thứ tư thì phải đọc trần từ `NGOC_EP`, đừng chép cứng con số.**
+⚠ **`forgeRule` NÉM LỖI với target ngoài 10-12**, không trả một luật gần đúng — để một công thức
+mới lỡ gọi `forgeRule(5)` thì vỡ ngay thay vì lặng lẽ dựng lại đường thứ hai lên +9.
+⚠ **Trần +12 nằm ở HAI chỗ**: điều kiện `match` của Phá Thiên Kiếp *và* đoạn kẹp đồ đời cũ trong
+`loadGame` (`plus > 12`). Sửa một chỗ thì món vừa rèn lên +12 bị kẹp ngược về +11 ở lần tải trang
+kế tiếp, mất một lượt Phá Thiên Kiếp mà không có một dòng báo nào.
+
+**Tu La Tinh Thạch đã ra khỏi game** cùng với ② (`GO_TULA` = 1.800◈, đúng giá tiệm cũ). Phần nó
+giữ ở Phá Thiên Kiếp đã dồn vào Hỗn Nguyên **theo đúng giá tiệm**, phần lẻ bù bằng Lumen nên
+tổng chi phí không đổi một đồng: +10 cũ 3 Tu La + 1 Hỗn = 8.000◈ → 3 Hỗn = 7.800◈ + 200◈.
+Di trú hoàn ở **hai** chỗ — túi (`gems.tuLa`) **và Ngăn Ngọc** (`khoNgoc.tuLa`); ngọc đã cất thì
+không tiêu được, bỏ sót chỗ thứ hai là mất trắng mà không báo.
+
+**⚠ GỠ ② LÀM ĐOẠN +6→+9 DỄ ĐI 35%** — đo 20.000 lượt, và ngược với dự đoán ban đầu: đường Lò
+75/65/50% nhưng xịt +8/+9 **về 0** tốn **22,7** lượt; ép ngọc 50% phẳng nhưng xịt chỉ **tụt 1**
+tốn **14,8**. "Tụt 1 cấp" nhẹ hơn "về 0" nhiều hơn là 25% tỉ lệ nặng hơn. Ở nhịp ~2 Linh Hồn/giờ
+là ~7 giờ cho một món lên +9 (port "về 0" sang ngọc thì 35,9 lượt ≈ 18 giờ, gấp 2,4×).
+*Bài học: tỉ lệ nhìn thì nặng hơn, nhưng LUẬT XỊT mới là thứ quyết định — đo, đừng đoán.*
+Luật "về 0" là quyết định cũ của chủ dự án nhưng nó gắn vào `forgeRule`, nên nó đi theo ②.
+Muốn đưa về thì thêm `fail` cho từng mốc trong `NGOC_EP` — một dòng.
+
+**Bài kiểm:** `tests/test_renxit.js` (4 mục — nó **chạy cả hai đường ép ngọc** chứ không đọc con
+số) · `test_chaos` §3d gác chiều ngược lại: `'Rèn Thường'` sống lại là bài đỏ.
 
 ### Cánh — 3 bậc × 6 lớp, khoá theo lớp
 

@@ -7371,7 +7371,7 @@ function newPlayer(sectKey){
     mastery: {}, mpts: 0, mptsTotal: 0, mRespec: 0, // Đại Thành: {nút: điểm} · điểm chưa dùng · tổng đã nhận · số lần tẩy điểm
     // hệ thêm ở bản GDD đời trước
     khi: 0,                                    // Instinct — tiền tệ nâng cấp bậc cao
-    gems: { tuLa: 0, honNguyen: 0 },           // Tu La Tinh Thạch / Hỗn Nguyên Thạch
+    gems: { honNguyen: 0 },                    // Hỗn Nguyên Thạch (Tu La đã gỡ — xem GO_TULA)
     mats: { manh:0, tichMa:0 },   // Vật liệu Kế Thừa (Drop v2.0)
     bossPity: 0,                               // Pity đai: đếm Vệ Binh Trụ không ra Thần
     chinhPhat: { date:'', count:0 },           // Chinh Phạt Cổng Vực 1 lần/ngày
@@ -7584,7 +7584,7 @@ function loadGame(idx){
       if (Array.isArray(player.inv)) player.inv = player.inv.map(_doiCanh);
       if (Array.isArray(player.kho)) player.kho = player.kho.map(_doiCanh);
     }
-    if (!player.gems) player.gems = { tuLa: 0, honNguyen: 0 };
+    if (!player.gems) player.gems = { honNguyen: 0 };
     if (player.charms == null) player.charms = 0;
     delete player.tienDan;   // Đá Thăng Cấp gỡ cùng hệ Thuần Thục — nó không còn nơi tiêu
     // Save cũ mang ba trường của hệ Thuần Thục đã gỡ — dọn luôn, đừng để chúng nằm lại
@@ -7759,8 +7759,8 @@ function loadGame(idx){
           else if (t <= 9){ _s += 9000*t; _m += 9*t; _tl += t-3; _hn += t-6; _cp += t-6; }
           else { _s += 15000*t; _m += 14*t; _tl += t; _hn += t-6; _cp += t-6; _lh += Math.max(0, t-8); _hd += 1; }
         }
-        if (_tl){ player.gems = player.gems || { tuLa:0, honNguyen:0 }; player.gems.tuLa += _tl; }
-        if (_hn){ player.gems = player.gems || { tuLa:0, honNguyen:0 }; player.gems.honNguyen += _hn; }
+        if (_tl){ player.gems = player.gems || { honNguyen:0 }; player.silver += _tl * GO_TULA; }
+        if (_hn){ player.gems = player.gems || { honNguyen:0 }; player.gems.honNguyen += _hn; }
         if (_cp || _lh || _hd){
           player.jewels = player.jewels || { chucPhuc:0, linhHon:0, sinhMenh:0, honDon:0 };
           player.jewels.chucPhuc += _cp; player.jewels.linhHon += _lh; player.jewels.honDon += _hd;
@@ -7813,6 +7813,26 @@ function loadGame(idx){
     if (player.khoPlus == null) player.khoPlus = 0;
     if (!player.khoNgoc || typeof player.khoNgoc !== 'object') player.khoNgoc = { hap:{} };
     if (player.autoNgoc == null) player.autoNgoc = false;
+    // ═══ GỘP TIỀN TỆ — bậc 5: Tu La Tinh Thạch ra khỏi game ════════════════════════════
+    // Chủ dự án chốt: ép ngọc lo +1→+9, Lò lo +10/+11/+12. "Rèn Thường" — đường Lumen + Tu La
+    // lên +9 — gỡ theo, và Tu La mất chỗ tiêu chính. Phần nó còn giữ ở Phá Thiên Kiếp đã dồn
+    // vào Hỗn Nguyên theo đúng giá tiệm (xem forgeRule), nên ở đây chỉ còn việc hoàn tồn kho.
+    // ⚠ HOÀN Ở HAI CHỖ: túi (`gems.tuLa`) VÀ Ngăn Ngọc (`khoNgoc.tuLa`). Ngọc CẤT trong kho thì
+    // không tiêu được, nên bỏ sót chỗ thứ hai là người chơi nào lỡ cất Tu La sẽ mất trắng mà
+    // không có một dòng báo nào — đúng cái bẫy "bỏ sót `eq`" đã dẫm ở đợt di trú Cổ Vật.
+    {
+      const _tlTui = (player.gems && player.gems.tuLa) || 0;
+      const _tlKho = (player.khoNgoc && player.khoNgoc.tuLa) || 0;
+      const _tl = _tlTui + _tlKho;
+      if (_tl > 0){
+        player.silver += _tl * GO_TULA;
+        setTimeout(() => { if (player) zoneBanner = { text:'◆ TU LA TINH THẠCH ĐÃ NGỪNG DÙNG',
+          sub:`${_tl} viên → ${(_tl * GO_TULA).toLocaleString('vi-VN')}◈ Lumen · rèn +1→+9 nay chỉ bằng ngọc`,
+          color:'#e8552a', t:7 }; }, 2200);
+      }
+      if (player.gems) delete player.gems.tuLa;
+      if (player.khoNgoc) delete player.khoNgoc.tuLa;
+    }
     // ═══ GỘP TIỀN TỆ — bậc 4: Tâm Đắc nhập vào Instinct ═══════════════════════════════
     // Tỉ giá lấy từ chính chỗ tiêu: nâng trọn một chiêu 1→120 trước đây tốn 21💠, nay tốn thêm
     // ~84.800 Instinct so với đường cong nền — chia ra tròn 4.000 Instinct một viên Tâm Đắc.
@@ -7952,9 +7972,12 @@ function loadGame(idx){
       }
     }
 
-    // clamp old +12..+15 gear to the new +11 cap
-    for (const s in player.equip) if (player.equip[s] && player.equip[s].plus > 11) player.equip[s].plus = 11;
-    for (const it of player.inv) if (it.plus > 11) it.plus = 11;
+    // Kẹp đồ đời cũ về trần hiện hành. Trần nay là +12 (trước là +11, trước nữa có save +15).
+    // ⚠ Con số này phải ĐI THEO trần của Lò — để nguyên 11 sau khi mở +12 thì món vừa rèn lên
+    // +12 sẽ bị kẹp ngược về +11 ở lần tải trang kế tiếp, và người chơi mất một lượt Phá Thiên
+    // Kiếp mà không có một dòng báo nào.
+    for (const s in player.equip) if (player.equip[s] && player.equip[s].plus > 12) player.equip[s].plus = 12;
+    for (const it of player.inv) if (it.plus > 12) it.plus = 12;
     let maxUid = 0;
     for (const s in player.equip) if (player.equip[s]) maxUid = Math.max(maxUid, player.equip[s].uid);
     for (const it of player.inv) maxUid = Math.max(maxUid, it.uid);
@@ -9448,7 +9471,7 @@ function computeKillRewards(m, source, P, rng){
   const d = m.def;
   const rw = {
     xp:0, xpMul:1, silver:0, khi:0, kills:1,
-    gems:{ tuLa:0, honNguyen:0 }, bikipVH:0,
+    gems:{ honNguyen:0 }, bikipVH:0,
     mats:{ manh:0, tichMa:0 },
     wings:[], items:[], autoSold:[],
     bossPity:null, firstDrop:false, chinhPhat:false, dropSrc:null, gotThan:false,
@@ -9475,8 +9498,9 @@ function computeKillRewards(m, source, P, rng){
     const _oCanh = BAG_SIZES.canh[0] * BAG_SIZES.canh[1];
     if (R() < 0.12 && _sotCho >= _oCanh){ rw.wings.push(Math.floor(R()*2)); _sotCho -= _oCanh; }
   }
-  // đá quý: Tu La (cấp 3+), Hỗn Nguyên (tinh anh)
-  if (d.lv >= 3 && R() < 0.15) rw.gems.tuLa = 1;
+  // Đá rèn: Hỗn Nguyên từ tinh anh. Tu La (15% quái thường lv≥3) ĐÃ GỠ cùng với Rèn Thường —
+  // xem GO_TULA. Cố ý KHÔNG dồn 15% đó sang Hỗn Nguyên: Tu La chỉ nuôi đoạn +7→+9, mà đoạn ấy
+  // nay là việc của Linh Hồn Châu, vốn đã có đường rơi riêng (NGOC_MOI_GIO).
   if (d.elite && R() < 0.35) rw.gems.honNguyen = 1;
   // Sách Kỹ Năng từ tinh anh/boss
   const _bkR = d.bossKind === 'tranai' ? 0.35 : (d.bossKind === 'thuve' || d.boss) ? 0.12 : d.elite ? 0.03 : 0;
@@ -9549,7 +9573,6 @@ function applyRewards(rw, m){
     if (bagThem(_w)) addFloat(m.x, m.y-114, `${_d.name}!`, _d.color, 15);
     else dropToGround({ k:'item', it:_w }, m.x, m.y);
   }
-  if (rw.gems.tuLa){ player.gems.tuLa += rw.gems.tuLa; logCombat('+1 ◆ Tu La Tinh Thạch', '#e84a6a'); }
   if (rw.gems.honNguyen){ player.gems.honNguyen += rw.gems.honNguyen; logCombat('+1 ❖ Hỗn Nguyên Thạch', '#b08ae8'); }
   if (rw.bikipVH){ player.bikipVH = (player.bikipVH || 0) + rw.bikipVH; addFloat(m.x, m.y-100, '+1 📜 Sách Kỹ Năng', '#ffb15c', 13); }
   if (m.def.boss) cotBossVung(m.x, m.y);   // cầu tạm cho Cốt Chimera — xem chú thích trên cotRoi
@@ -16091,23 +16114,50 @@ window.addAttr = function(k, n){
 };
 
 window.forgeUseCharm = false;
-// GDD 3 giai đoạn: +1~6 an toàn 100% · +7~9 Đập Ngọc Tu La, xịt tụt 1 cấp · +10/+11 CHỈ tại Lò Rèn Hoàng Gia
-// Huyền Thiết đã gỡ khỏi bảng này (nó là chỗ tiêu cuối cùng của loại tiền đó). Phần nó gánh
+// Huyền Thiết — ô đếm nguyên liệu rèn cũ — đã gỡ, và mọi chi phí từng ghi bằng Huyền Thiết
 // chuyển sang BẠC theo đúng tỉ giá tiệm bán ra: 750 Lumen / 5 viên = 150 Lumen một viên. Cường hoá
 // vì thế không rẻ đi một đồng nào — chỉ bớt một ô đếm người chơi phải theo dõi.
+// ⚠ HẰNG NÀY CÒN ĐƯỢC `loadGame()` DÙNG Ở BẢY CHỖ (hoàn Thần Binh · Đài Hội Lực · Linh Thú ·
+// Mảnh Cổ Thần…). Xoá nó đi thì `loadGame` ném ReferenceError và trả false — tức MỌI save cũ
+// không mở được, mà `node --check` vẫn xanh vì đó là lỗi lúc chạy. Đã lỡ xoá nó một lần trong
+// chính đợt gỡ Tu La này, và triệu chứng hiện ra ở tận bài kiểm hoàn tiền.
 const GO_HUYENTHIET = 150;   // 1 Huyền Thiết cũ = 150 Lumen (giá tiệm r_mat5: 750 Lumen / 5 viên)
+// ═══ RÈN: HAI ĐOẠN, HAI NƠI, KHÔNG CHỒNG NHAU ═══════════════════════════════════════
+// Chủ dự án chốt: **ép ngọc lo +1→+9, Lò lo +10/+11/+12.** Không có đoạn nào hai bên cùng làm.
+//
+// Trước bản này có tới BA đường đưa món đồ lên +9, mỗi đường một bảng luật:
+//   ① ép ngọc thẳng trong túi (`epNgoc`)      — Chúc Phúc tới +6, Linh Hồn 50% tới +9, xịt tụt 1
+//   ② "Rèn Thường" ở Lò Hỗn Độn (`forgeRule`) — Lumen + Tu La, 75/65/50%, xịt +8/+9 VỀ 0
+//   ③ `useJewel('linhHon')` ở NPC Thợ Rèn     — Linh Hồn 50% **tới tận +11**, không cần gì khác
+// ② và ③ đều đã gỡ. Mỗi cái là một lỗi riêng, và không cái nào lộ ra khi đọc code một chỗ:
+//   · ② lệch ③① ở LUẬT XỊT, nên ai đọc ra bảng sẽ rèn +7 ở Lò (75% thay vì 50%) rồi chuyển
+//     sang ngọc cho +8/+9 (tụt 1 thay vì về 0). Ai không đọc ra thì mất đồ. Đó không phải
+//     chiều sâu — đó là một cái bẫy do hai hệ làm cùng một việc.
+//   · ③ cho Linh Hồn lên thẳng +11, tức nó ĂN ĐỨT Phá Thiên Kiếp ở cả hai mốc cuối (không cần
+//     Hỗn Nguyên, không cần Hỗn Độn, không có rủi ro vỡ đồ). CLAUDE.md đã cảnh báo đúng câu này
+//     — *"Linh Hồn từng cho tới +11… Đừng nới lại trần đó mà không gỡ Phá Thiên Kiếp đi cùng"* —
+//     nhưng lần sửa trước chỉ hạ trần trong `NGOC_EP`, còn `useJewel` thì bỏ sót vì nó KHÔNG đi
+//     qua `ngocEpDuoc()`. Nay nó đi qua.
+//
+// ⇒ `forgeRule` chỉ còn phục vụ Phá Thiên Kiếp, nên nó chỉ nhận target 10/11/12.
+// ⇒ Tu La Tinh Thạch chết theo ②: đó là chỗ tiêu chính của nó, và phần còn lại đã dồn vào
+//    Hỗn Nguyên — xem GO_TULA.
 function forgeRule(target){
-  if (target <= 6)  return { rate:100, matBac: (1 + Math.floor((target-1)/3)) * GO_HUYENTHIET, tuLa:0, hon:0, fail:'none' };
-  // Luật xịt của Ngọc Linh Hồn, chủ dự án chốt:
-  //   · lên +7  (từ +6): xịt TỤT MỘT CẤP → còn +5
-  //   · lên +8/+9      : xịt VỀ +0 — đây là vách ngăn thật của cuối bảng rèn
-  // Trước đây cả ba mốc đều 'drop1', mà drop1 lại bị chặn sàn ở +6, nên xịt +7 vẫn nằm nguyên
-  // +6: người chơi bấm mãi không mất gì, mốc +7 hoá ra không có rủi ro nào cả.
-  if (target === 7) return { rate:75, matBac: GO_HUYENTHIET, tuLa:1, hon:0, fail:'drop1' };
-  if (target <= 9)  return { rate:{8:65, 9:50}[target], matBac: GO_HUYENTHIET, tuLa:1, hon:0, fail:'zero' };
-  // GDD Phá Thiên Kiếp: +10 = 50%, +11 = 45%, thất bại → HỦY DIỆT trang bị (Phù bảo hộ)
-  if (target === 10) return { rate:50, matBac: 2*GO_HUYENTHIET, tuLa:3, hon:1, fail:'break', bagua:true };
-  return { rate:45, matBac: 3*GO_HUYENTHIET, tuLa:5, hon:2, fail:'break', bagua:true };
+  // Phần `hon` dưới đây ĐÃ NUỐT phần Tu La cũ theo ĐÚNG GIÁ TIỆM (Tu La 1.800◈ · Hỗn Nguyên
+  // 2.600◈), phần lẻ không chia hết thì bù bằng Lumen để tổng chi phí không đổi một đồng nào:
+  //   +10 cũ = 3 Tu La + 1 Hỗn = 8.000◈  →  3 Hỗn = 7.800◈, thiếu   200 ⇒ matBac += 200
+  //   +11 cũ = 5 Tu La + 2 Hỗn = 14.200◈ →  5 Hỗn = 13.000◈, thiếu 1.200 ⇒ matBac += 1.200
+  // ⚠ NÉM LỖI với mọi target ngoài 10-12, đừng trả về một luật gần đúng. Nếu để nó lặng lẽ
+  // rơi vào nhánh cuối thì một công thức mới lỡ gọi forgeRule(5) sẽ nhận luật +12 (40%, vỡ
+  // vụn, 9 Hỗn Nguyên) mà không ai báo — tức dựng lại đường thứ hai lên +9 một cách vô tình,
+  // đúng cái vừa gỡ. `tests/test_renxit.js` §1 gác chỗ này.
+  if (!(target >= 10 && target <= 12))
+    throw new Error(`forgeRule: mốc +${target} không thuộc Lò — đoạn +1→+9 là việc của ép ngọc`);
+  if (target === 10) return { rate:50, matBac: 2*GO_HUYENTHIET + 200,  hon:3, fail:'break', bagua:true };
+  if (target === 11) return { rate:45, matBac: 3*GO_HUYENTHIET + 1200, hon:5, fail:'break', bagua:true };
+  // +12 là mốc MỚI. Tỉ lệ đi tiếp bậc thang 50 → 45 → 40. Giá theo đúng nhịp tăng của hai mốc
+  // trước (+11 đắt gấp 1,78 lần +10): 14.200 × 1,78 ≈ 25.300◈ ≈ 9 Hỗn Nguyên.
+  return { rate:40, matBac: 4*GO_HUYENTHIET, hon:9, fail:'break', bagua:true };
 }
 // ── Drop v2.0: KẾ THỪA (leo giai) · ĐỔI HỆ ──
 // TẤN PHẨM (leo phẩm) đã GỠ từ trước, và nay cả hệ phẩm cũng gỡ: đó là trục thứ hai song song với +N,
@@ -16153,7 +16203,7 @@ window.doDoiHe = function(uid){
 // thoả, chọn một cái rồi bấm KẾT HỢP. Luật nằm hết trong CHAOS_RECIPES; renderForge() chỉ vẽ.
 //
 // Quy ước: thứ RỜI RẠC (trang bị, ngọc) phải bỏ vào khay mới tính; thứ SỐ LƯỢNG LỚN (Lumen,
-// Huyền Thiết, Tu La, Mảnh…) trừ thẳng từ kho và chỉ hiện trong bảng nguyên liệu.
+// Huyền Thiết, Hỗn Nguyên, Mảnh…) trừ thẳng từ kho và chỉ hiện trong bảng nguyên liệu.
 let forgeTray = [];        // [{k:'item',uid} | {k:'jewel',j:'chucPhuc'|'linhHon'|'sinhMenh'|'honDon'}]
 let chaosPick = null;      // id công thức đang chọn
 let chaosGroup = 'ren';    // nhóm tab đang xem
@@ -16232,40 +16282,21 @@ const NGOC_LIFE_PCT = 4;        // mỗi bậc Sinh Mệnh cộng bấy nhiêu %
 
 const CHAOS_RECIPES = [
   // ── Nhóm RÈN ────────────────────────────────────────────────────────────
-  { id:'ren', group:'ren', name:'Rèn Thường', tray:'1 trang bị (+0 → +9)',
-    match(v){
-      if (v.items.length !== 1 || v.nJewel) return null;
-      const it = v.items[0];
-      if (it.noForge || it.plus >= 9) return null;
-      return { it, target: it.plus + 1 };
-    },
-    plan(v, m){
-      const r = forgeRule(m.target);
-      const silver = (20 + m.it.plus * 15) * (m.it.tier || 1) + r.matBac;
-      return {
-        title: `${m.it.name} +${m.it.plus} → +${m.target}`,
-        rate: Math.min(100, r.rate + (player.forgeBonus || 0)),
-        cost: [ chaosCost('Lumen', player.silver, silver, '◈'),
-                ...(r.tuLa ? [chaosCost('Tu La Tinh Thạch', player.gems.tuLa, r.tuLa, '◆')] : []) ],
-        warn: r.fail === 'drop1' ? 'Thất bại: trang bị TỤT 1 CẤP.'
-            : r.fail === 'zero'  ? 'Thất bại: trang bị VỀ +0.'
-            : r.fail === 'break' ? 'Thất bại: trang bị VỠ VỤN.'
-            : 'Thất bại: chỉ mất nguyên liệu, trang bị vẹn nguyên.',
-        charm: r.fail !== 'none', silver, rule: r,
-      };
-    },
-    run(v, m, p){
-      player.silver -= p.silver;
-      player.gems.tuLa -= p.rule.tuLa; player.gems.honNguyen -= p.rule.hon;
-      return chaosResolveEnhance(m.it, p.rate, p.rule);
-    } },
+  // ⚠ "Rèn Thường" (+0→+9 bằng Lumen + Tu La) ĐÃ GỠ — lý do đầy đủ ở khối chú thích trên
+  // `forgeRule`. Tóm tắt: nó là đường THỨ HAI đưa món đồ lên +9, và nó lệch luật xịt với đường
+  // ép ngọc, nên ai đọc ra bảng thì lách, ai không đọc ra thì mất đồ. Đoạn +1→+9 nay CHỈ có
+  // một đường duy nhất: ép ngọc (Chúc Phúc tới +6, Linh Hồn tới +9), ép thẳng trong túi.
+  // ĐỪNG DỰNG LẠI: thêm bất kỳ công thức nào ăn `it.plus < 9` là làm sống lại đúng cái bẫy đó.
+  // `tests/test_renxit.js` §1 gác — nó đòi `forgeRule` ném lỗi với mọi target ≤ 9.
 
-  { id:'phathien', group:'ren', name:'Phá Thiên Kiếp', royal:true, tray:'1 trang bị +9/+10 · ngọc',
+  { id:'phathien', group:'ren', name:'Phá Thiên Kiếp', royal:true, tray:'1 trang bị +9/+10/+11 · ngọc',
     match(v){
       if (v.items.length !== 1) return null;
       const it = v.items[0];
-      if (it.noForge || it.plus < 9 || it.plus >= 11) return null;
-      const n = it.plus === 9 ? 2 : 3;
+      // Trần nay là +12 (chủ dự án chốt: Lò lo +10 · +11 · +12). Món phải đã +9 — tức đã đi
+      // trọn đường ép ngọc — mới vào được đây.
+      if (it.noForge || it.plus < 9 || it.plus >= 12) return null;
+      const n = it.plus === 9 ? 2 : it.plus === 10 ? 3 : 4;
       return { it, target: it.plus + 1, need: { honDon:1, chucPhuc:n, linhHon:n } };
     },
     plan(v, m){
@@ -16278,7 +16309,6 @@ const CHAOS_RECIPES = [
                 jewelCost('chucPhuc', v, m.need.chucPhuc),
                 jewelCost('linhHon', v, m.need.linhHon),
                 chaosCost('Lumen', player.silver, silver, '◈'),
-                chaosCost('Tu La Tinh Thạch', player.gems.tuLa, r.tuLa, '◆'),
                 chaosCost('Hỗn Nguyên', player.gems.honNguyen, r.hon, '❖') ],
         warn: 'THẤT BẠI: TRANG BỊ VỠ VỤN — mất vĩnh viễn (trừ khi dùng Thiên Mệnh Phù).',
         charm: true, silver, rule: r,
@@ -16287,7 +16317,7 @@ const CHAOS_RECIPES = [
     run(v, m, p){
       spendJewels(m.need);
       player.silver -= p.silver;
-      player.gems.tuLa -= p.rule.tuLa; player.gems.honNguyen -= p.rule.hon;
+      player.gems.honNguyen -= p.rule.hon;
       return chaosResolveEnhance(m.it, p.rate, p.rule);
     } },
 
@@ -16557,9 +16587,9 @@ function chaosSay(t, c){
 }
 function chaosAwakenNote(it){
   if (it.plus === 10) addFloat(player.x, player.y-58, `☆ Thức tỉnh: ${it.awakened.name}`, '#f39c3d', 13);
-  if (it.plus === 11){
+  if (it.plus >= 11){
     player.forged11 = true;
-    addFloat(player.x, player.y-76, '☀ KHAI QUANG +11!', '#ffd76a', 16);
+    addFloat(player.x, player.y-76, `☀ KHAI QUANG +${it.plus}!`, '#ffd76a', 16);
     addEffect({ type:'ring', x:player.x, y:player.y, r:120, color:'#ffd76a', big:true });
     checkTitles();
   }
@@ -16765,7 +16795,6 @@ function renderForge(){
   // ── kho: tiền + nguyên liệu số lượng lớn ──
   h += `<div class="chaos-bank">
     <span title="Lumen">◈ ${player.silver.toLocaleString('vi-VN')}</span>
-    <span title="Tu La Tinh Thạch" style="color:#e84a6a">◆ ${player.gems.tuLa}</span>
     <span title="Hỗn Nguyên" style="color:#b08ae8">❖ ${player.gems.honNguyen}</span>
     <span title="Thiên Mệnh Phù" style="color:#7ecbff">☂ ${player.charms}
       <button class="mini-btn" style="padding:1px 6px;font-size:10px" onclick="buyCharm()" ${player.silver<500?'disabled':''}>Mua 500◈</button></span>
@@ -17576,7 +17605,7 @@ function applyTestBoost(){
   player.silver = 999999;
   player.shard = 999;                              // Shard — đủ mua trọn Quầy Shard
   player.khi = 999999;                             // Instinct — nạp đầy để thử
-  player.gems = { tuLa: 99, honNguyen: 99 };       // rèn +7 trở lên
+  player.gems = { honNguyen: 99 };                 // rèn +10 trở lên
   player.charms = 99;                              // bảo hiểm rèn +10/+11
   player.silver += 999999;
   // Cổ Vật: sở hữu hết, Cộng Hưởng tối đa, khoác sẵn + một nắm vé để thử quay
@@ -18579,6 +18608,10 @@ const GO_ANIMA = 2;        // 1 Anima cũ = 2 Lumen
 const GO_CONGHUAN = 2000;  // 1 Công Huân Lệnh cũ = 2000 Lumen — cũng là giá một lượt Sảnh Cầu May
 const GO_ANTHUANTHU = 1500; // 1 Ấn Thuần Thú cũ = 1500 Lumen — đúng giá bán ở Vũ Khí Phường
 const GO_TAMDAC = 4000;     // 1 Tâm Đắc cũ = 4000 Instinct — xem skMileMult
+const GO_TULA = 1800;       // 1 Tu La Tinh Thạch cũ = 1800 Lumen — ĐÚNG giá tiệm nó từng bán
+// ⚠ Cả năm hằng trên nằm ở dòng ~18580, nhưng mọi chỗ DÙNG chúng đều nằm trong thân hàm
+// (`loadGame`, `updateDungeon`…) nên chạy lúc gọi, không lúc nạp tệp — không rơi vùng chết của
+// const. Thêm hằng thứ sáu thì giữ đúng nếp đó: đừng dùng nó ở tầng ngoài cùng phía trên đây.
 function cheatLog(t, color){
   const lg = document.getElementById('cheat-log');
   if (!lg) return;
@@ -18732,7 +18765,7 @@ window.cheatExec = function(raw){
         // (Lệnh /nd của Lõi Nguyên Tố đã bỏ cùng hệ đó.)
         const v2 = Math.max(0, Math.round(num(1, 20)));
         if (cmd === 'jewel'){ for (const k in JEWEL_NAMES) player.jewels[k] = v2; cheatLog('Tứ Châu → ' + v2 + ' mỗi loại', '#7ecbff'); }
-        else if (cmd === 'gem'){ player.gems.tuLa = v2; player.gems.honNguyen = v2; cheatLog(`Tử La ${v2} · Hỗn Nguyên ${v2}`, '#e8552a'); }
+        else if (cmd === 'gem'){ player.gems.honNguyen = v2; cheatLog(`Hỗn Nguyên ${v2}`, '#b08ae8'); }
         else { for (let t = 1; t < BAOHAP_TIERS.length; t++) player.baohap[t] = v2; cheatLog(`Box Kundun → ${v2} mỗi tầng (I-${BAOHAP_TIERS.length - 1})`, '#ffd76a'); }
         break;
       }
@@ -19781,7 +19814,7 @@ function caOrb(g, M){
   g.beginPath(); g.arc(0, 0, 24, 0, 7); g.stroke();
   g.restore();
 }
-// Đá / tinh thạch — khối cắt mặt, dùng cho Tu La và Hỗn Nguyên.
+// Đá / tinh thạch — khối cắt mặt, dùng cho Hỗn Nguyên.
 function caStone(g, M){
   g.save();
   iFill(g, [[0,-28],[19,-9],[12,24],[-12,24],[-19,-9]], iGrad(g, 0, -28, 0, 24, M.hi, M.lo));
@@ -19815,8 +19848,6 @@ const CONSUM_DB = {
                have:()=>player.charms, info:()=>`Đang giữ ${player.charms||0} lá` },
   sach:      { art:'scroll',   col:'#ffb15c', name:'Sách Kỹ Năng',    use:'Nâng thẳng 1 cấp cho một chiêu của lớp mình (bảng K)',
                have:()=>player.bikipVH, info:()=>`Đang có ${player.bikipVH||0} quyển · rơi từ tinh anh/trùm & Vực Thẳm` },
-  tula:      { art:'stone',    col:'#e8552a', name:'Tu La Tinh Thạch', use:'Khảm trang bị · rèn +7 trở lên',
-               have:()=>player.gems.tuLa, info:()=>`Đang có ${player.gems.tuLa||0}` },
   honnguyen: { art:'stone',    col:'#b08ae8', name:'Hỗn Nguyên Thạch', use:'Rèn +10/+11',
                have:()=>player.gems.honNguyen, info:()=>`Đang có ${player.gems.honNguyen||0}` },
 };
@@ -20072,10 +20103,10 @@ function drawItemIcon(g, def, tier, _rarity, plus, ty){
   const bg = g.createRadialGradient(0, 0, 4, 0, 0, Math.max(50, _nua));
   bg.addColorStop(0, R.color + '38'); bg.addColorStop(1, R.color + '00');
   g.fillStyle = bg; g.fillRect(-50, -_nua, 100, _nua * 2);
-  // ── CƯỜNG HOÁ +0 → +11 ──────────────────────────────────────────────────────
+  // ── CƯỜNG HOÁ +0 → +12 ──────────────────────────────────────────────────────
   // Mốc NHẢY vẫn theo MU (+4 / +7 / +10) nhưng trong mỗi mốc phải LEO LIÊN TỤC. Bản đầu chỉ
-  // đổi ở đúng 3 mốc: rèn từ +7 lên +9 là cả một chặng dài, tốn Tu La và có thể tụt cấp, mà
-  // icon không đổi một điểm ảnh nào. Đo được: +5 +6 +8 +9 +11 đều ra 0px khác biệt.
+  // đổi ở đúng 3 mốc: rèn từ +7 lên +9 là cả một chặng dài, tốn ngọc Linh Hồn và có thể tụt
+  // cấp, mà icon không đổi một điểm ảnh nào. Đo được: +5 +6 +8 +9 +11 đều ra 0px khác biệt.
   const pl = plus || 0;
   const st = icStage(pl);
   const k = clamp((pl - 3) / 8, 0, 1);            // 0 tại +3 → 1 tại +11, chạy liên tục
@@ -20479,7 +20510,6 @@ window.onEquipSlotDrop = function(e, slotId){
 window.bagSel = -1;
 const MAT_ROWS = [
   { icon:'shard', name:'Shard', get:()=>(player&&player.shard)||0, color:'#b18cff', desc:'Quầy Shard — đổi vé quay · nới túi/kho' },
-  { icon:'tula', name:'Tu La Tinh Thạch', get:()=>player.gems.tuLa, color:'#e84a6a', desc:'rèn +7 trở lên' },
   { icon:'honnguyen', name:'Hỗn Nguyên Thạch', get:()=>player.gems.honNguyen, color:'#b08ae8', desc:'rèn +10/+11' },
   { icon:'phu', name:'Thiên Mệnh Phù', get:()=>player.charms, color:'#7ecbff', desc:'bảo hiểm rèn' },
   { icon:'tanquyen', name:'Mảnh Cổ Thư (Thượng/Trung/Hạ)', get:()=>player.bikip ? player.bikip.pieces.join('/') : '0/0/0', color:'#e84a6a', desc:'dung hợp Huyết Ma Thôn Phệ' },
@@ -20644,7 +20674,7 @@ function khoList(){ if (!player.kho) player.kho = []; return player.kho; }
 // Ngọc gửi vào kho thì KHÔNG tiêu được cho tới khi rút ra — giống ngân hàng ngọc của MU. Đó là
 // thứ làm ngăn này có nghĩa thật chứ không phải chuyển số qua lại: nó là chỗ CẤT, và cất thì
 // phải rút mới dùng. Lò Hỗn Độn / Rèn chỉ đọc player.jewels, không đọc kho.
-const KHO_NGOC_KEYS = ['chucPhuc','linhHon','sinhMenh','honDon','tuLa','honNguyen'];
+const KHO_NGOC_KEYS = ['chucPhuc','linhHon','sinhMenh','honDon','honNguyen'];
 function khoNgoc(){
   if (!player.khoNgoc) player.khoNgoc = { hap:{} };
   for (const k of KHO_NGOC_KEYS) if (player.khoNgoc[k] == null) player.khoNgoc[k] = 0;
@@ -20654,15 +20684,15 @@ function khoNgoc(){
 // Ngọc nằm ở hai nơi: player.jewels/gems (dùng được) và khoNgoc (đang cất). Hai hàm này là chỗ
 // DUY NHẤT đọc/ghi số trong túi, để không chỗ nào quên mất một trong hai kho.
 function ngocTui(k){
-  if (k === 'tuLa' || k === 'honNguyen') return (player.gems && player.gems[k]) || 0;
+  if (k === 'honNguyen') return (player.gems && player.gems[k]) || 0;
   return (player.jewels && player.jewels[k]) || 0;
 }
 function ngocTuiSet(k, v){
-  if (k === 'tuLa' || k === 'honNguyen'){ if (!player.gems) player.gems = { tuLa:0, honNguyen:0 }; player.gems[k] = v; }
+  if (k === 'honNguyen'){ if (!player.gems) player.gems = { honNguyen:0 }; player.gems[k] = v; }
   else { if (!player.jewels) player.jewels = { chucPhuc:0, linhHon:0, sinhMenh:0, honDon:0 }; player.jewels[k] = v; }
 }
 function ngocTen(k){
-  return k === 'tuLa' ? 'Tu La Tinh Thạch' : k === 'honNguyen' ? 'Hỗn Nguyên Thạch'
+  return k === 'honNguyen' ? 'Hỗn Nguyên Thạch'
        : (JEWEL_NAMES[k] || k).replace(/^[^ ]+ /, '');
 }
 window.khoNgocGui = function(k, n){
@@ -20790,7 +20820,7 @@ function bagSecKho(){
     <label><input type="checkbox" ${player.autoNgoc?'checked':''} onchange="window.toggleAutoNgoc(this.checked)"> Tự động gửi ngọc khi nhặt</label></div>`;
   h += `<div class="ngoc-grid">`;
   for (const k of KHO_NGOC_KEYS){
-    const la = k === 'tuLa' || k === 'honNguyen';
+    const la = k === 'honNguyen';
     const co = la ? '#e8552a' : JEWEL_COLORS[k];
     const cor = k === 'honNguyen' ? '#b08ae8' : co;
     const tui = ngocTui(k), kho = K[k];
@@ -20944,11 +20974,15 @@ window.xepGonTui = function(){
 // Thang bậc, bám đúng MU:
 //   +1 … +6   ◎ Chúc Phúc  — 100%, không bao giờ hỏng
 //   +7 … +9   ◉ Linh Hồn   — 50%, hỏng thì TỤT 1 CẤP
-//   +10, +11  Phá Thiên Kiếp tại Lò Rèn Hoàng Gia (khay + ngọc + Lumen, hỏng thì VỠ VỤN)
+//   +10 · +11 · +12  Phá Thiên Kiếp tại Lò Rèn Hoàng Gia (khay + ngọc + Hỗn Nguyên + Lumen,
+//                     hỏng thì VỠ VỤN) — đây là TOÀN BỘ phần việc của Lò, không hơn.
 // Trước đây Linh Hồn cho tới +11 với đúng 1 viên và cùng tỉ lệ 50% — tức là nó ĂN ĐỨT Phá
 // Thiên Kiếp ở cả hai mức đó (Phá Thiên đòi 1 Hỗn Độn + 3 Chúc Phúc + 3 Linh Hồn + Lumen +
-// Tu La + Hỗn Nguyên, phải đi tới lò, và hỏng thì mất trắng món đồ). Không ai có lý do bấm
-// Phá Thiên Kiếp. Chốt Linh Hồn ở +9 vừa trả lại chỗ đứng cho Phá Thiên, vừa đúng bậc thang MU.
+// Hỗn Nguyên, phải đi tới lò, và hỏng thì mất trắng món đồ). Không ai có lý do bấm Phá Thiên
+// Kiếp. Chốt Linh Hồn ở +9 vừa trả lại chỗ đứng cho Phá Thiên, vừa đúng bậc thang MU.
+// ⚠ Trần +9 này phải được MỌI đường ép ngọc tôn trọng. `epNgoc` đọc nó qua `ngocEpDuoc()`;
+// `useJewel()` ở NPC Thợ Rèn thì KHÔNG đi qua hàm đó nên từng chép cứng `>= 11` và bỏ lọt
+// suốt — nay nó đọc thẳng `NGOC_EP.linhHon.tran`. Thêm đường ép thứ tư thì nhớ cùng một nguồn.
 function ngocRate(k){ return Math.min(100, NGOC_EP[k].rate + (player.forgeBonus || 0)); }
 // Lý do KHÔNG ép được, dạng câu nói thẳng với người chơi. Trả null = ép được.
 function ngocEpDuoc(it, k){
@@ -21875,7 +21909,6 @@ function renderShop(n){
 
   // Vật Phẩm Quý — làm mới 2 giờ/lần, mỗi tiệm một món khác nhau
   const RARE_POOL = (window.RARE_POOL = window.RARE_POOL || [
-    { id:'r_tula',     item:'tula',       name:'Tu La Tinh Thạch',          price:1800, desc:'Khảm trang bị, rèn +7 trở lên — hiếm có' },
     { id:'r_hon',      item:'honnguyen',  name:'Hỗn Nguyên Thạch',          price:2600, desc:'Rèn +10/+11 — cực hiếm' },
   ]);
   const cycle = Math.floor(Date.now()/7200000);
@@ -21922,7 +21955,6 @@ function shopRowInfo(id){
                                blocked: P.hp >= P.maxHp && P.qi >= P.maxQi };
     case 'ruou':      return { stat:`+12% công lực trong 3 phút${(P.buffAtkT||0) > 0 ? ` · còn ${Math.ceil(P.buffAtkT)}s` : ''}` };
     case 'loidon':    return { stat:`−40% sát thương thiên lôi trong 5 phút${(P.loidonT||0) > 0 ? ` · còn ${Math.ceil(P.loidonT)}s` : ''}` };
-    case 'r_tula':    return { stat:`+1 Tu La Tinh Thạch · đang có ${P.gems.tuLa}` };
     case 'r_hon':     return { stat:`+1 Hỗn Nguyên Thạch · đang có ${P.gems.honNguyen}` };
     default:          return { stat:'' };
   }
@@ -21965,7 +21997,6 @@ window.buyFromShop = function(what){
     zoneBanner = { text:'⚡ BÙA CHẮN SÉT', sub:'5 phút giảm 40% sát thương thiên lôi — cứ yên tâm xông vào bão!', color:'#ffb15c', t:2.6 };
     AudioSys.sfx('quest', 0.5);
   }
-  else if (what==='r_tula'){ player.silver -= row.price; player.gems.tuLa++; }
   else if (what==='r_hon'){ player.silver -= row.price; player.gems.honNguyen++; }
   else if (what==='ruongvk' || what==='ruongpc'){
     // Món trong rương chưa sinh ra lúc này, nên đo bằng món TO NHẤT rương có thể nhả: vũ khí
@@ -24742,7 +24773,7 @@ function updateDungeon(dt){
       addFloat(player.x, player.y - 110, `◆ +${_cot.length} Cốt ${COT_DONG[_cot[0].dong].ten}${_co ? ` (${_co} Cổ!)` : ''}`,
                COT_DONG[_cot[0].dong].mau, 14);
     }
-    if (tl > 0) player.gems.tuLa += tl;
+    if (tl > 0) player.silver += tl * GO_TULA;   // Tu La đã gỡ — trả bằng Lumen đúng giá tiệm cũ
     if (hn > 0) player.gems.honNguyen += hn;
     zoneBanner = { text:'PHÓ BẢN THÔNG QUAN!',
       sub:`+${td} 📜 Sách Kỹ Năng · +${r.khi} Bản Năng · +${(sv + r.bacThem*2).toLocaleString('vi-VN')}◈ Lumen`,
@@ -25222,14 +25253,19 @@ window.useJewel = function(kind, uid){
     addFloat(player.x, player.y-40, `◎ +${it.plus} (Chúc Phúc)`, '#7ec850', 14);
     AudioSys.sfx('forge_ok', 0.9);
   } else if (kind === 'linhHon'){
-    if (J.linhHon < 1 || it.noForge || it.plus >= 11) return;
+    // ⚠ TRẦN ĐỌC TỪ `NGOC_EP`, KHÔNG CHÉP CỨNG. Đường này trước đây chép cứng `>= 11`, tức
+    // Linh Hồn một mình lên tới +11 — ăn đứt Phá Thiên Kiếp ở cả hai mốc cuối (không Hỗn
+    // Nguyên, không Hỗn Độn, không rủi ro vỡ đồ). Lần hạ trần trước chỉ sửa `NGOC_EP` nên chỗ
+    // này sót lại, vì nó KHÔNG đi qua `ngocEpDuoc()`. Đọc thẳng `NGOC_EP.linhHon.tran` thì
+    // lần sau đổi trần một chỗ là cả ba đường đi theo.
+    if (J.linhHon < 1 || it.noForge || it.plus >= NGOC_EP.linhHon.tran) return;
     J.linhHon--;
     if (Math.random() < 0.5){
       it.plus++;
       say(`◉ Linh Hồn — ${it.name} lên +${it.plus}!`, '#8fd18f');
       addFloat(player.x, player.y-40, `◉ +${it.plus} (Linh Hồn)`, '#b08ae8', 14);
-      if (it.plus === 10) addFloat(player.x, player.y-58, `☆ Thức tỉnh: ${it.awakened.name}`, '#f39c3d', 13);
-      if (it.plus === 11){ player.forged11 = true; addFloat(player.x, player.y-76, '☀ KHAI QUANG +11 — Sấm Thép Bừng Sáng!', '#ffd76a', 16); }
+      if (it.plus === NGOC_EP.linhHon.tran)
+        addFloat(player.x, player.y-58, '◉ Hết đường ngọc — lên +10 phải tới Lò Rèn Hoàng Gia', '#ffb15c', 13);
       AudioSys.sfx('forge_ok', 0.9);
     } else {
       it.plus = Math.max(0, it.plus - 1);
@@ -25979,7 +26015,7 @@ function renderVanDuyen(){
     <b style="color:#e84a6a">5%</b> — Cổ thư hiếm: Mảnh Cổ Thư · Huyết Ma Thôn Phệ (đã thành tựu → ● Hỗn Độn Châu)<br>
     <b style="color:#b08ae8">15%</b> — Tứ Châu ngẫu nhiên (Chúc Phúc / Linh Hồn / Sinh Mệnh / Hỗn Độn)<br>
     <b style="color:#5aa0e8">25%</b> — Trang bị theo cấp (phẩm Lam trở lên)<br>
-    <b style="color:#7ec850">30%</b> — Vật liệu rèn (Tu La / Hỗn Nguyên) hoặc Sách Kỹ Năng<br>
+    <b style="color:#7ec850">30%</b> — Vật liệu rèn (Hỗn Nguyên) hoặc Sách Kỹ Năng<br>
     <b style="color:#9aa8d4">25%</b> — Lumen</div>`;
   html += `<div class="forge-actions"><button class="mini-btn" style="font-size:13px;padding:8px 22px" ${player.silver >= GO_CONGHUAN ? '' : 'disabled'} onclick="rollVanDuyen()">◑ Quay Vận May — ${GO_CONGHUAN.toLocaleString('vi-VN')}◈</button></div>
     <div id="vd-result" style="min-height:20px;font-size:12.5px;line-height:1.8;margin-top:6px"></div>`;
@@ -26011,7 +26047,7 @@ window.rollVanDuyen = function(){
     else { player.silver += 600; out.push('Túi đầy — trang bị quy đổi 600◈'); }
   } else if (key === 'vatlieu'){
     const jr = Math.random()*100;
-    if (jr < 30){ const n2 = 2 + Math.floor(Math.random()*3); player.gems.tuLa += n2; out.push(`◆ Tu La Tinh Thạch ×${n2}`); }
+    if (jr < 30){ const n2 = 1 + Math.floor(Math.random()*2); player.gems.honNguyen += n2; out.push(`❖ Hỗn Nguyên Thạch ×${n2}`); }
     else if (jr < 50){ const n2 = 1 + Math.floor(Math.random()*2); player.gems.honNguyen += n2; out.push(`❖ Hỗn Nguyên Thạch ×${n2}`); }
     else if (jr < 75){ player.bikipVH = (player.bikipVH || 0) + 3; out.push('📜 Sách Kỹ Năng ×3'); }
     else { player.bikipVH = (player.bikipVH || 0) + 4; out.push('📜 Sách Kỹ Năng ×4'); }

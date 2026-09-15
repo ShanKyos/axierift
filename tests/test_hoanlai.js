@@ -21,7 +21,7 @@ const { chromium } = require('playwright');
   const seed = await page.evaluate(() => {
     startGame('thieulam', null);
     player.level = 60; player.silver = 0;
-    player.gems = { tuLa:0, honNguyen:0 };
+    player.gems = { honNguyen:0 };
     player.jewels = { chucPhuc:0, linhHon:0, sinhMenh:0, honDon:0 };
     player.baohap = {}; player.mats = { manh:0, tichMa:0 };
     saveGame();
@@ -34,7 +34,8 @@ const { chromium } = require('playwright');
                                               // 1 luống đang gieo ........................    100◈
     P.equip.pet = { slot:'pet', plus:4, uid:9001, name:'Pet', rarity:2, subs:[], level:1 };
                                               // bậc 1-3: 1500·6 = 9.000 · bậc 4: 16.000
-                                              // Huyền Thiết 12 + 20 = 32 × 150 = 4.800 ... 29.800◈ + 1 Tu La
+                                              // Huyền Thiết 12 + 20 = 32 × 150 = 4.800 ... 29.800◈
+                                              // + 1 Tu La → nay hoàn bằng Lumen ..........  1.800◈
     P.mats.manhCoThan = 130;                  // 2 Box Kundun + 10 lẻ × 150 ...............  1.500◈
     P.mats.anTranAi = 3;                      // 3 × GO_CONGHUAN .........................  6.000◈
     P.inv.push({ slot:'nhan1', plus:0, uid:9002, name:'Nhẫn', rarity:1, subs:[], level:1,
@@ -53,7 +54,7 @@ const { chromium } = require('playwright');
     if (pre.v !== 4) return { loi: 'bản seed bị ghi đè, v=' + pre.v };
     if (!loadGame(i)) return { loi: 'loadGame() trả false' };
     return {
-      silver: player.silver, conLoi: 'noidan' in player, tuLa: player.gems.tuLa,
+      silver: player.silver, conLoi: 'noidan' in player, conTuLa: 'tuLa' in player.gems,
       baohap: player.baohap[shopBaoHapTier()] || 0,
       conMat: 'mat' in player, conTb: 'thanbinh' in player, conAbode: 'abode' in player,
       conPet: !!(player.equip && player.equip.pet),
@@ -71,14 +72,15 @@ const { chromium } = require('playwright');
   // Hệ Lõi Nguyên Tố nay cũng gỡ rồi, nên khoản Thần Binh từng trả bằng 20 Lõi chuyển thành
   // Lumen theo đúng tỉ giá GO_HUYENTHIET (20 × 150 = 3.000◈). Hoàn bằng một thứ đã chết thì
   // chẳng khác gì không hoàn.
-  const BAC = 1500 + 22500 + 2850 + 100 + 29800 + 1500 + 6000 + 3000;   // 67.250◈
+  const BAC = 1500 + 22500 + 2850 + 100 + 29800 + 1500 + 6000 + 3000 + 1800;   // 69.050◈
+  // +1.800: Tu La Tinh Thạch đã gỡ (GO_TULA), nên viên hoàn từ pet nay trả thẳng bằng Lumen.
   const ok = [];
   const check = (ten, dat, mong) => { const p = dat === mong; ok.push(p);
     console.log(`${p ? 'OK  ' : 'FAIL'} ${ten}: ${dat}${p ? '' : ` (mong ${mong})`}`); };
 
   check('bạc hoàn lại',        S.silver, BAC);
   check('Lõi Nguyên Tố đã xoá', S.conLoi, false);
-  check('Tu La Tinh Thạch',    S.tuLa, 1);
+  check('Tu La đã xoá khỏi gems', S.conTuLa, false);
   check('Box Kundun',          S.baohap, 2);
   check('player.mat đã xoá',   S.conMat, false);
   check('thanbinh đã xoá',     S.conTb, false);

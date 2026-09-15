@@ -74,11 +74,11 @@ let bad = 0; const fail = m => { bad++; console.log('FAIL ' + m); };
   // 3) lệnh mới phải đổi ĐÚNG trạng thái, không chỉ in chữ
   const r3 = await p.evaluate(() => {
     player.jewels = { chucPhuc:0, linhHon:0, sinhMenh:0, honDon:0 };
-    player.gems = { tuLa:0, honNguyen:0 }; player.baohap = {}; player.skillEvo = {};
+    player.gems = { honNguyen:0 }; player.baohap = {}; player.skillEvo = {};
     cheatExec('/jewel 5'); cheatExec('/gem 4'); cheatExec('/hap 2');
     cheatExec('/slot 3 dk_ragefulblow');
     cheatExec('/evo dk_ragefulblow 2 spread');
-    return { chau: player.jewels.honDon, ngoc: player.gems.tuLa,
+    return { chau: player.jewels.honDon, ngoc: player.gems.honNguyen,
              hap: player.baohap[1], hapCuoi: player.baohap[BAOHAP_TIERS.length - 1],
              o3: player.skillBar[2],
              evo: (player.skillEvo.dk_ragefulblow || [])[1], evoLv: skLv('dk_ragefulblow') };
@@ -86,7 +86,8 @@ let bad = 0; const fail = m => { bad++; console.log('FAIL ' + m); };
   console.log('3) lệnh mới đổi trạng thái:', JSON.stringify(r3));
   // (/nd đã gỡ cùng hệ Lõi Nguyên Tố — xem migrateBoLoi.)
   if (r3.chau !== 5) fail(`/jewel 5 → Hỗn Độn Châu ${r3.chau}`);
-  if (r3.ngoc !== 4) fail(`/gem 4 → Tử La ${r3.ngoc}`);
+  // Tu La đã gỡ (xem GO_TULA) — `/gem` nay chỉ còn nạp Hỗn Nguyên.
+  if (r3.ngoc !== 4) fail(`/gem 4 → Hỗn Nguyên ${r3.ngoc}`);
   if (r3.hap !== 2 || r3.hapCuoi !== 2) fail(`/hap 2 không phủ hết tầng: ${r3.hap}..${r3.hapCuoi}`);
   if (r3.o3 !== 'dk_ragefulblow') fail(`/slot 3 → ô 3 là ${r3.o3}`);
   if (r3.evo !== 'spread') fail(`/evo bậc 2 → ${r3.evo}`);

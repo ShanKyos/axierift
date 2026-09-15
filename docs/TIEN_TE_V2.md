@@ -7,6 +7,75 @@
 >
 > **Vẫn CHƯA thi công.** §5 còn hai chỗ cần gật.
 
+## ✅ ĐỢT 1 ĐÃ LÀM — ép ngọc +1→+9 · Lò +10/+11/+12
+
+Chủ dự án chốt thêm: *"ép ngọc chỉ có thể từ 1-9 bằng ngọc thôi. Còn với lò rèn thì chỉ áp dụng
+cho đồ +10 +11 +12."* Đã thi công đúng phạm vi đó.
+
+| Việc | Chi tiết |
+|---|---|
+| Gỡ `Rèn Thường` | công thức +0→+9 ăn Lumen + Tu La ở Lò — **đường thứ hai lên +9** |
+| Vá `useJewel()` | **đường thứ ba**: Linh Hồn lên thẳng +11 ở NPC Thợ Rèn (xem §0.5) |
+| Mở trần +12 | Phá Thiên Kiếp nay nhận món +9 · +10 · +11 · tỉ lệ 50 → 45 → **40%** |
+| Gỡ Tu La Tinh Thạch | 24 chỗ · `GO_TULA` = 1.800◈ · di trú hoàn ở **túi VÀ Ngăn Ngọc** |
+
+**Chi phí giữ nguyên CHÍNH XÁC** — phần Tu La dồn vào Hỗn Nguyên theo giá tiệm, phần lẻ bù Lumen:
+
+| mốc | cũ | mới | chênh |
+|---|---|---|---|
+| +10 | 3×1.800 + 1×2.600 + 300 = **8.300◈** | 3×2.600 + 500 = **8.300◈** | **0** |
+| +11 | 5×1.800 + 2×2.600 + 450 = **14.650◈** | 5×2.600 + 1.650 = **14.650◈** | **0** |
+| +12 | *(mốc mới)* | 9×2.600 + 600 = **24.000◈** | — |
+
+Nhịp giá: +11 đắt gấp 1,77× +10 · +12 gấp 1,64× +11.
+
+### §0.5 — Đường thứ BA, chưa từng báo cáo
+
+`useJewel('linhHon')` ở NPC Thợ Rèn cho Linh Hồn lên **tới +11** với đúng 1 viên, 50%, xịt chỉ
+tụt 1 — tức **ăn đứt Phá Thiên Kiếp ở cả hai mốc cuối**: không Hỗn Nguyên, không Hỗn Độn, không
+rủi ro vỡ đồ.
+
+CLAUDE.md **đã cảnh báo đúng câu này** từ trước (*"Linh Hồn từng cho tới +11… đừng nới lại trần
+đó mà không gỡ Phá Thiên Kiếp đi cùng"*). Lần sửa ấy hạ trần trong `NGOC_EP` — nhưng `useJewel()`
+**không đi qua `ngocEpDuoc()`**, nên nó chép cứng `>= 11` và sống sót nguyên vẹn. Nay nó đọc
+thẳng `NGOC_EP.linhHon.tran`, và `test_renxit` §3 **chạy cả hai đường** thay vì đọc con số.
+
+### Ba cái bẫy đã dẫm trong chính đợt này
+
+1. **Xoá nhầm `const GO_HUYENTHIET`** — nó nằm ngay trên `forgeRule` trong khối bị thay. Hậu quả:
+   `loadGame()` ném ReferenceError và **trả false ⇒ mọi save cũ không mở được**, mà `node --check`
+   vẫn xanh vì đó là lỗi lúc chạy. Triệu chứng hiện ra ở tận `test_hoanlai` ("loadGame() trả
+   false"), cách xa chỗ hỏng. ⇒ **Thay một khối thì xem khối đó có nuốt hằng nào không.**
+2. **`forgeRule` lặng lẽ trả luật +12 cho mọi mốc lạ.** Bản đầu của tôi để `return` cuối hàm làm
+   nhánh mặc định, nên `forgeRule(5)` nhận luật +12 (40%, vỡ vụn, 9 Hỗn Nguyên) mà không ai báo —
+   tức dựng lại đường thứ hai lên +9 một cách vô tình. Nay nó **ném lỗi**.
+3. **Bịa một API không có thật** — viết `window._toast` trong đường di trú, trong khi cả tệp dùng
+   `zoneBanner`. `node --check` xanh, và nó chỉ hỏng khi đúng người chơi có Tu La tồn kho tải save.
+
+### Còn nợ trong đợt này
+
+### ⚠ ĐOẠN +6→+9 NAY **DỄ HƠN 35%** — đo được, và ngược với dự đoán
+
+Luật xịt của Lò (*"+8/+9 VỀ +0"*, có ghi "chủ dự án chốt") **đi theo `Rèn Thường`**. Luật duy
+nhất còn hiệu lực là luật của ngọc: 50% phẳng, xịt **tụt 1 cấp**.
+
+Tôi đã đoán rằng bỏ đường Lò (75/65/50%) làm +9 khó hơn. **Sai** — mô phỏng 20.000 lượt:
+
+| đường | tỉ lệ · luật xịt | lượt bấm TB (+6→+9) |
+|---|---|---|
+| CŨ · Lò (đã gỡ) | 75/65/50% · +8/+9 **về 0** | **22,7** |
+| NAY · ép ngọc | 50% phẳng · **tụt 1** | **14,8** |
+| *nếu port "về 0" sang ngọc* | 50% phẳng · +8/+9 về 0 | *35,9* |
+
+"Tụt 1" nhẹ hơn "về 0" nhiều hơn là 25% tỉ lệ nặng hơn — nên đường còn lại chỉ tốn **0,65×** số
+lượt. Ở nhịp rơi ~2 Linh Hồn/giờ: **~7 giờ** cho một món lên +9 (port "về 0" thì ~18 giờ, gấp
+2,4×). *Đúng bài học CLAUDE.md nhắc mãi: đo, đừng đoán — tỉ lệ nhìn thì nặng hơn, luật xịt mới là
+thứ quyết định.*
+
+⇒ **Cần chủ dự án quyết:** giữ "tụt 1" (dễ hơn 35% so với trước), hay đưa "về 0" sang `NGOC_EP`
+cho +8/+9 (khó hơn 2,4× so với bây giờ)? **Sửa đúng một dòng**, và bài kiểm đã có chỗ gác sẵn.
+- Hai câu ở §6 vẫn treo: Kế Thừa, và hướng đi của Hồn Thép.
+
 ## §0 — Quyết định này vừa gỡ một cái bẫy tôi chưa báo cáo
 
 Đào sâu vào chỗ rèn thì lộ ra: **game đang có HAI đường độc lập đưa món đồ từ +0 lên +9**, mỗi
