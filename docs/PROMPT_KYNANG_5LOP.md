@@ -136,6 +136,147 @@ Ba thứ đo được lúc cắm, mỗi thứ là một cái bẫy:
    (đo được 45,5 vs −46,5 px). Xoay quanh tâm ô cũng làm hình ĐỔI, nên chỉ phép đo ấy phân biệt
    được hai cách làm.
 
+### 0.5 ⚠ CHUẨN CHẤT LƯỢNG LÀ METEORITE — và ba tấm đầu KHÔNG đạt
+
+Chủ dự án xem ba tấm Gemini đã cắm rồi chốt: *"hình ảnh này cũng khá xấu. Mình muốn gen
+animation skill như DW (meteorite ấy) nhìn nó mới hấp dẫn."*
+
+Đo cả sáu atlas đang có, ba con số tách bạch ngay:
+
+| | khung | độ phủ ô | rìa mềm | dung lượng |
+|---|---|---|---|---|
+| `meteor_rain` · Meowa | 14 | **31,7%** | 8,9% | 1,9 MB |
+| `fire_pillar` · Meowa | 16 | 25,9% | 7,0% | 1,5 MB |
+| `dragon_spirit` · Meowa | 8 | 29,7% | 66,6% | 1,25 MB |
+| `sx_thieulam_a` · Gemini | 8 | **10,9%** | 55,4% | 0,36 MB |
+| `sx_bug_a` · Gemini | 6 | 17,0% | 53,8% | 0,41 MB |
+| `sx_toanchan_a` · Gemini | 5 | 21,6% | 41,2% | 0,36 MB |
+
+⚠ **Nhưng đừng đọc bảng này thành "thiếu khung".** `dragon_spirit` chỉ 8 khung mà vẫn đẹp.
+Chụp cả sáu ra cạnh nhau mới thấy thứ thật sự khác:
+
+> **Tấm Meowa là NĂM-SÁU LỚP chồng nhau. Tấm Gemini là MỘT NÉT.**
+
+Đếm được trên từng tấm:
+
+| `meteor_rain` | `fire_pillar` |
+|---|---|
+| ① ba viên đá có lõi trắng | ① vòng dung nham đỏ dưới chân |
+| ② đuôi tím dài, xoắn | ② mảnh đá đen vỡ quanh vành |
+| ③ tia sét trắng lúc chạm | ③ cột lửa **xoắn**, có thể tích |
+| ④ khối nổ tím-lam cuộn | ④ **hồn lửa XANH LÁ bay quanh** |
+| ⑤ khói xám bốc lên | ⑤ tia lửa bắn lên |
+| ⑥ vành sáng lan trên nền | |
+
+Ba tấm Gemini: một vòng cung xanh. Hết. Không khói, không mảnh vỡ, không lõi, không vành nền.
+
+**Và một chi tiết cụ thể, gọi tên được:** cả hai tấm Meowa đều có **một màu TƯƠNG PHẢN thứ hai**
+— cột lửa cam thì hồn bay màu xanh lá, thiên thạch tím thì tia sét màu xanh lam. Ba tấm Gemini
+đơn sắc từ đầu đến cuối. Đó là thứ làm mắt bám vào, và nó rẻ: chỉ là một dòng trong prompt.
+
+⇒ **Prompt ở §3–§6 của bản 1 tả MỘT HÌNH** ("a wide crescent of cold steel-blue light"). Đó là
+lý do gốc, không phải Gemini kém. Prompt tả một nét thì sinh ra một nét.
+
+### 0.6 CÔNG THỨC NĂM LỚP — dán vào MỌI prompt hiệu ứng
+
+Mọi prompt từ đây phải gọi tên đủ năm lớp. Thiếu lớp nào thì hiệu ứng mỏng đúng lớp đó.
+
+| lớp | là gì | ví dụ trong `fire_pillar` |
+|---|---|---|
+| **① NỀN** | dấu để lại trên mặt đất, vành sáng lan | vòng dung nham đỏ |
+| **② THÂN** | khối chính — phải có **thể tích và xoắn**, không phải nét | cột lửa xoắn |
+| **③ LÕI** | sợi trắng nóng bên trong thân, vẫn sắc khi thân đã nhoè | lõi trắng giữa cột |
+| **④ PHỤ KIỆN BAY** | mảnh vỡ · tia lửa · sinh vật nhỏ — **màu tương phản** | hồn lửa xanh lá |
+| **⑤ TÀN** | khói, bụi, hơi còn đọng ở khung cuối | khói đen cuộn |
+
+Kèm hai luật nhịp:
+- **Ba hồi rõ**: dồn → nổ → tan. Hồi giữa là khung sát thương áp xuống.
+- **14–16 khung** cho ô 3, **10–12** cho ô 1 và ô 2. Ít hơn thì ba hồi không đủ chỗ.
+
+**Khối dán vào cuối mọi prompt hiệu ứng** (thay cho khối ở §2.2 của bản 1):
+
+```
+Build it from five stacked layers rather than one shape: a mark left on the ground beneath it,
+a main body with real volume that twists along its length instead of reading as a drawn line,
+a hair-thin white-hot core inside that body which stays sharp even where the outer edges blur,
+loose debris and sparks flying around it in a clearly contrasting second colour, and a drift of
+smoke or vapour still hanging in the final frames. Play the whole thing in three clear beats:
+gathering, the loudest moment, then falling apart. Render it as a game visual effect with
+painted cel shading, saturated colour that reads over both bright grass and a dark swamp at
+night, and a crisp bright core fading to a soft coloured edge. Keep every frame the same canvas
+size with the effect centred the same way. Place it on a solid background of pure magenta
+#FF00FF, completely flat, with no gradient, no checkerboard pattern and no transparency grid.
+No character, no weapon, no text and no numbers anywhere in the image.
+```
+
+### 0.7 ⚠ VÀ CẢ BA TẤM ĐẸP ĐỀU TỪ MEOWA, KHÔNG PHẢI GEMINI
+
+`meteor_rain` · `fire_pillar` · `dragon_spirit` đều nhập bằng `tools/vfx_meowa.py` — cờ
+`--cat/--neo/--sat/--sang` chỉ tệp đó có, và chú thích của `dragon_spirit` ngay trong
+`VFX_ATLAS_DEFS` ghi rõ nó đã phải `--sang` lúc nhập gói Meowa.
+
+Công thức năm lớp ở §0.6 dùng được cho cả hai bộ sinh, và nó là phần cải thiện lớn nhất. Nhưng
+nếu muốn đúng chuẩn Meteorite thì **đặt qua `meowa-animation-run`** — cùng đường đã sinh ra ba
+tấm ấy. Gemini vẫn hợp cho **ảnh tĩnh** (nhà cửa, vật nhỏ, vũ khí, icon), đúng như
+`docs/PROMPT_ART_GEMINI.md` đã phân vai.
+
+### 0.8 Ba prompt ô 1 VIẾT LẠI theo công thức năm lớp
+
+Thay hẳn ba prompt tương ứng ở §3. Mỗi cái vẫn nối khối ở §0.6 vào cuối.
+
+---
+
+**Twisting Slash** · Dark Knight · `sx_thieulam_a` · thân #4c8dff · phụ kiện #ffe9a0
+
+```
+A two-handed greatsword sweep, seen from slightly above. Gouged into the ground along the path
+of the swing is a pale scar of light that spreads outward into a low ring. Above it the sweep
+is a thick ribbon of cold steel-blue energy with real volume, wrung and twisted along its
+length, heavy through the middle and tapering only at the very tips. A hair-thin white-hot
+line runs inside that ribbon and stays razor sharp even where the outer body smears with
+speed. Thrown forward around it, in warm gold against all that blue, are torn shards of light
+and a spray of sparks. The first frames wind the blade back while the ground scar starts to
+glow; the middle frames tear the sweep wide open and blow the gold sparks forward at the
+moment of impact; the last frames shred the ribbon and leave a low drift of pale blue vapour
+hanging where it passed.
+```
+
+---
+
+**Force Wave** · Dark Lord · `sx_bug_a` · thân #8a9a3a · phụ kiện #ffb15c
+
+```
+A blunt shockwave punched out of a commander's sceptre, seen from slightly above. Dust lifts
+off the ground in a flat ring beneath it. The wave itself is three or four nested crescent
+walls of olive-green force, each one a thick slab with visible thickness rather than a drawn
+band, the air between them warped like heat haze. A white-hot seam runs along the leading edge
+of the innermost wall. Tumbling in the gap between the walls, in warm amber against the green,
+are chips of broken stone and short crackling arcs lifted off the ground by the pressure. The
+first frames compress the walls almost into one line; the middle frames drive them apart and
+outward so the wave visibly travels and the amber debris is flung ahead of it; the last frames
+stretch the walls thin and leave a low roll of dust settling behind. Keep every edge blunt and
+rounded — this one is weight, not a cutting edge.
+```
+
+---
+
+**Triple Shot** · Sylvan Ranger · `sx_toanchan_a` · thân #3a9d8b · phụ kiện #ffd76a
+
+```
+Three arrows released at once from a longbow, seen from slightly above. A faint ring of
+disturbed grass and dust marks the ground under the release point. The three shafts are thick
+bolts of teal-green light with real body, each wrapped in a spiralling ribbon of mist that
+twists as it travels, fanning out at slightly different angles. Inside each bolt runs a
+hair-thin white core that stays sharp while the mist around it blurs. Scattered between them,
+in warm gold against the teal, are torn feather fragments and a spray of bright motes shaken
+loose by the shot. The first frames draw everything tight and inward as the string is pulled;
+the middle frames snap the three bolts outward at their brightest with the gold motes bursting
+from the release point; the last frames let the bolts thin away and leave a slow cloud of teal
+haze and drifting feathers behind.
+```
+
+---
+
 ## 1. BỐN Ô — bảng chốt
 
 Ba bộ chiếm ba ô đầu. Ô 4 là hào quang phù trợ: nó **không đánh trúng ai** nên không treo tâm
