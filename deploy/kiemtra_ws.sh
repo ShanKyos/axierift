@@ -21,7 +21,7 @@ oc(){ printf '\n\033[1;36m══ %s\033[0m\n' "$*"; }
 [ "$(id -u)" = 0 ] || { xx "Phải chạy bằng root."; exit 1; }
 
 # ── 1. Máy chủ Bóng Người có sống không (bỏ qua nginx) ────────────────────────────────
-oc "1/4  Máy chủ (thẳng, không qua nginx)"
+oc "1/6  Máy chủ (thẳng, không qua nginx)"
 if curl -sf --max-time 5 "http://127.0.0.1:$CONG/health" -o /tmp/.k1; then
   ok "cổng $CONG trả lời: $(cat /tmp/.k1)"
 else
@@ -36,7 +36,7 @@ fi
 #   BẢN CHÉP chứ không phải symlink (hoặc nginx.conf không include sites-enabled), thì sửa
 #   `sites-available` là VÔ HÌNH — `nginx -t` vẫn xanh, reload vẫn chạy, và /ws 404 ở MỌI Host.
 #   `nginx -T` in ra cấu hình ĐANG NẠP, nên nó là trọng tài duy nhất ở đây.
-oc "2/4  Tệp đã sửa có phải tệp nginx đọc không"
+oc "2/6  Tệp đã sửa có phải tệp nginx đọc không"
 grep -q 'location /ws' "$SB" && ok "$SB có 'location /ws'" || xx "$SB THIẾU 'location /ws'"
 SE=/etc/nginx/sites-enabled/axiewuxia
 if [ -L "$SE" ]; then ok "sites-enabled/axiewuxia là symlink → $(readlink -f "$SE")"
@@ -59,7 +59,7 @@ ok "server_name = ${TEN:-（không khai）}"
 # ── 3. Còn site nào khác giữ default_server không ─────────────────────────────────────
 # Đây là câu hỏi quyết định: nếu có, thì mọi request có Host LẠ (kể cả 127.0.0.1) đi vào
 # site đó, và phép kiểm bằng 127.0.0.1 sẽ đỏ dù trang hoàn toàn lành.
-oc "3/4  Ai là default_server"
+oc "3/6  Ai là default_server"
 DS=$(grep -rl 'default_server' /etc/nginx/sites-enabled/ /etc/nginx/conf.d/ 2>/dev/null)
 if [ -n "$DS" ]; then
   xx "có site khác giữ default_server:"; echo "$DS" | sed 's/^/     /'
@@ -69,9 +69,12 @@ else
 fi
 ls /etc/nginx/sites-enabled/ 2>/dev/null | sed 's/^/     site bật: /'
 
-# ── 4. Hỏi ĐÚNG câu: đi qua nginx với Host THẬT ───────────────────────────────────────
-oc "4/4  Qua nginx — đây mới là điều người chơi gặp"
-THU(){  # $1 = nhãn, $2 = Host
+# ── 4. /ws/health qua nginx — CHỈ chứng minh proxy tới được máy chủ ────────────────────
+# ⚠ ĐỪNG ĐỌC MỤC NÀY THÀNH "WEBSOCKET CHẠY". `location = /ws/health` là khối khớp CHÍNH XÁC và
+#   nó chỉ đặt mỗi header `Host`; bắt tay WebSocket đi qua khối `location /ws` (khớp tiền tố),
+#   nơi mới có `Upgrade`/`Connection`. Hai khối khác nhau. Mục 5 mới là mục trả lời câu thật.
+oc "4/6  /ws/health qua nginx (chỉ nói: proxy có tới máy chủ không)"
+THU(){
   M=$(curl -s -o /tmp/.k4 -w '%{http_code}' --max-time 5 -H "Host: $2" http://127.0.0.1/ws/health)
   if [ "$M" = 200 ]; then ok "Host: $2 → 200 · $(cat /tmp/.k4)"; TOT=1
   else xx "Host: $2 → HTTP $M"; fi
@@ -80,12 +83,43 @@ TOT=0
 [ -n "${TEN:-}" ] && THU ten "$TEN"
 THU lo 127.0.0.1
 
+# ── 5. BẮT TAY WEBSOCKET THẬT — đây mới là thứ trình duyệt làm ────────────────────────
+# Phải ra `101 Switching Protocols`. Ra 200/404/502 nghĩa là nginx KHÔNG chuyển tiếp nâng cấp:
+# gần như luôn là `proxy_set_header Upgrade/Connection` thiếu, hoặc `$connection_upgrade` rỗng
+# vì khối `map` không được nạp.
+oc "5/6  Bắt tay WebSocket qua nginx"
+BT=$(curl -i -s --max-time 5 --http1.1 -H "Host: ${TEN:-127.0.0.1}" \
+      -H "Upgrade: websocket" -H "Connection: Upgrade" \
+      -H "Sec-WebSocket-Key: dGhlIHNhbXBsZSBub25jZQ==" -H "Sec-WebSocket-Version: 13" \
+      http://127.0.0.1/ws 2>/dev/null | head -1)
+WS_OK=""
+case "$BT" in
+  *101*) ok "$BT"; WS_OK=1 ;;
+  "")    xx "không có hồi đáp nào (nginx không chạy? tường lửa?)" ;;
+  *)     xx "hồi đáp: $BT   ← cần 101 Switching Protocols"
+         echo "     Khối /ws mà nginx ĐANG NẠP:"
+         nginx -T 2>/dev/null | grep -A10 'location /ws {' | sed 's/^/     /' ;;
+esac
+
+# ── 6. Trang có thật sự nạp net.js không ──────────────────────────────────────────────
+# Máy chủ lành + nginx lành mà vẫn không thấy bóng người thì chỉ còn phía trang: thẻ script
+# thiếu, hoặc net.js 404, hoặc trình duyệt giữ bản index.html cũ.
+oc "6/6  Trang có nạp net.js không"
+curl -s --max-time 5 -H "Host: ${TEN:-127.0.0.1}" http://127.0.0.1/index.html > /tmp/.k6
+grep -q 'net\.js' /tmp/.k6 && ok "index.html có thẻ <script src=\"net.js\">" \
+  || xx "index.html KHÔNG nhắc net.js — VPS chưa kéo bản mới? (git -C /var/www/axiewuxia log -1)"
+M6=$(curl -s -o /dev/null -w '%{http_code}' --max-time 5 -H "Host: ${TEN:-127.0.0.1}" http://127.0.0.1/net.js)
+[ "$M6" = 200 ] && ok "net.js tải được (HTTP 200)" || xx "net.js → HTTP $M6"
+CC=$(curl -sI --max-time 5 -H "Host: ${TEN:-127.0.0.1}" http://127.0.0.1/index.html | grep -i '^cache-control' | tr -d '\r')
+ok "${CC:-（không có Cache-Control cho index.html）}"
+
 echo
-if [ "$TOT" = 1 ]; then
-  printf '\033[32m   ⇒ /ws CHẠY. Mở hai cửa sổ:  http://%s/?net=1\033[0m\n' "${TEN:-14.225.204.107}"
-  printf '     Vào cùng một map là thấy nhau chạy.\n'
+if [ -n "$WS_OK" ]; then
+  printf '\033[32m   ⇒ /ws BẮT TAY ĐƯỢC. Mở hai cửa sổ:  http://%s/?net=1\033[0m\n' "${TEN:-14.225.204.107}"
+  echo "     Vẫn không thấy nhau thì mở F12 → Console, gõ:   NET.tinhTrang"
+  echo "        'da-noi' = đã nối (xem hai người có ở CÙNG một map không)"
+  echo "        'roi' / 'dang-noi' = trình duyệt không nối được — chụp tab Network gửi tôi"
+  echo "        'tat' = trang không thấy ?net=1, hoặc đang chạy index.html CŨ (Ctrl+Shift+R)"
 else
-  printf '\033[31m   ⇒ /ws KHÔNG qua được nginx ở bất kỳ Host nào — đây là lỗi thật.\033[0m\n'
-  echo "     Xem khối /ws thực sự nginx đang nạp:"
-  nginx -T 2>/dev/null | grep -n -A6 'location /ws' | sed 's/^/     /'
+  printf '\033[31m   ⇒ Nâng cấp WebSocket KHÔNG qua được nginx — đây là lỗi thật, xem mục 5.\033[0m\n'
 fi
