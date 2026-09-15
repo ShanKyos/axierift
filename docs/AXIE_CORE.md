@@ -120,7 +120,36 @@ better-suited. That distinction is the whole design.
 | 1 | Axie class decides your defensive class | **shipped** |
 | 2 | Five-element wheel → nine-class Axie triangle | **shipped** |
 | 3 | Each region carries its tribe's class | **shipped** |
+| 3b | The defensive verdict is actually visible while you play | **shipped** |
 | 4 | Axie picker previews the matchup for where you are headed | planned |
+
+### Stage 3b — the mechanic was running and almost nobody could see it
+
+Stages 1-3 made the Axie matter. Measuring what a player could *perceive* of it turned up the
+gap that mattered most, and it had been there the whole time.
+
+The defensive direction — the one the Axie controls — had exactly **one** output: a line in the
+combat log, a 260px box in the bottom-left corner that scrolls past during a fight. And that line
+only printed on the *unfavourable* branch, because the flag driving it was never set on the ×0.90
+path. So the favourable half of the mechanic — the half that answers *"why own more than one
+Axie"* — had **never once appeared on screen** in any build.
+
+For contrast, the attack direction (which the weapon controls, not the Axie) had a floating label
+over the target with four distinct prefixes.
+
+Three channels now, deliberately answering different questions:
+
+| channel | answers | fires |
+|---|---|---|
+| floating label over your character | *what is happening right now* | on each hit taken, both directions, throttled to one every 2.6s |
+| a clause on the region banner | *which Axie should I bring here* | on entering a region |
+| the Map panel line | *where is each Axie good* | any time, for every region |
+
+The banner cannot replace the label — swap Axie mid-region and the banner is a stale sentence.
+The label cannot replace the banner — it can never tell you what to bring *before* you go.
+
+One gate, `heThuKet()`, produces the verdict **and** the two multipliers, so the damage formula
+and every place that describes it read the same source and cannot drift apart.
 
 The Map panel already names each region's class and the three classes that counter it — so the
 literacy half of stage 4 is in. What is still missing is the preview *on the Axie itself*.

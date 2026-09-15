@@ -251,6 +251,46 @@ Nằm sâu trong nhiễu của `tools/do_nhipcap.cjs` (chính nó có đỉnh 50
 nên `XP_TABLE` **không chỉnh**. ⚠ Phân bố hệ của quái **không** ảnh hưởng con số này: với một
 con quái bất kỳ, xác suất vũ khí bốc đúng hệ khắc luôn là 3/9.
 
+#### 📢 VẾ PHÒNG THỦ PHẢI NÓI RA — và nửa CÓ LỢI của nó từng câm tuyệt đối
+
+Chiều quái → người là thứ gánh tiêu chí Axie Core, nhưng nó chỉ có đúng **một** cửa hiện ra:
+một dòng `logCombat` trong hộp nhật ký 260px ở góc dưới-trái — trôi quá nhanh để đọc giữa lúc
+đánh nhau — **và chỉ in ở nhánh bất lợi**, vì cờ `mobCounter` không bao giờ bật ở nhánh ×0,90.
+Tức nửa có lợi, cũng là nửa trả lời cho *"vì sao phải có nhiều hơn một con Axie"*, chưa từng
+hiện ra một lần nào. Đối chiếu: chiều TẤN CÔNG thì có hẳn một số bay trên đầu quái với bốn tiền
+tố riêng (`HOÀN HẢO` · `KHẮC HỆ` · `bị khắc` · `(chống)`). *Cơ chế vô hình là cơ chế không tồn tại.*
+
+**`heThuKet(mobEl, axieEl)` là cửa DUY NHẤT** cho mọi chỗ nói ra vế đó, và nó mang luôn **hai hệ
+số** nên đường sát thương cũng đọc từ đấy — chép `1.12`/`0.9` ra thêm một chỗ là thêm một chỗ
+nói dối được.
+
+| kênh | trả lời câu gì | ở đâu |
+|---|---|---|
+| số bay trên đầu người chơi, mỗi đòn trúng | *đang xảy ra chuyện gì* | cạnh `logCombat` trong `hurtPlayer` |
+| một mệnh đề trên băng-rôn lúc vào map | *nên cầm con nào TỚI đây* | `travelTo`, suy từ `mapBanSac` |
+
+**⚠ HAI KÊNH, ĐỪNG GỘP.** Băng-rôn bắn một lần lúc vào map nên đổi Axie giữa map là nó thành
+một câu đã cũ; số bay thì không bao giờ nói được nên cầm con nào **trước khi đi**.
+
+**⚠ `heThuKet` TRẢ CẢ TRẠNG THÁI TRUNG TÍNH (`ket:0`), đừng trả `null` cho nó.** Im lặng ở nhánh
+trung tính thì người chơi không phân biệt được *"con này không khắc gì ở đây"* với *"cơ chế
+không chạy"* — đúng cái kiểu bỏ sót vừa phải sửa. Số bay thì cố ý bỏ qua nhánh 0 (trung tính là
+mặc định, bắn mỗi đòn là nhiễu), băng-rôn thì nói.
+
+**⚠ SỐ BAY PHẢI CÓ HỒI** (`HE_FLOAT_HOI` 2,6 giây, mốc để ngoài `player` cho khỏi chui vào save).
+Bắn một cái mỗi đòn thì một trận đông quái đẩy tràn mảng `floats` (trần 70) và nuốt mất mọi
+thông báo khác — chữa một chỗ mù bằng cách làm mù chỗ khác.
+
+**⚠ HAI LỖI CỦA CHÍNH BÀI KIỂM, ghi lại vì cả hai cho ra một bài xanh/đỏ vì lý do sai:**
+1. **Đọc `floats` SAU vòng lặp là đọc quá muộn.** 600 nhịp `update(1/60)` là **10 giây trong
+   game**, mà một số bay chỉ sống ~1 giây — đo được `soFloat: 0` trong khi `tongFloat: 11`, tức
+   bài báo "không hiện gì" trong lúc nó đã hiện đúng. Phải hứng **ngay trong vòng**, và gom theo
+   ĐỐI TƯỢNG chứ không theo chữ (gom theo chữ thì không đếm được số lần bắn).
+2. **Ghim hệ cho MỘT con quái là chấm một cảnh khác hẳn cảnh mình tưởng đã dựng.** Số bay bắn
+   theo con vừa đánh trúng, mà map có nhiều bãi — lượt đầu bắt được `⚠ Dusk khắc Aquatic` của
+   một con khác. Phải ghim cả map, và bài nay **tự kiểm cảnh dựng** (đòi chữ bắt được phải nhắc
+   đúng tên con quái đã ghim) trước khi chấm.
+
 Gác: **`tests/test_tamgiac.js`** (8 mệnh đề) — hình dạng tam giác · mọi quái/trùm ra lớp hợp lệ
 · **cùng một loài ở hai map phải ra hai lớp** (mệnh đề bắt đúng chuyện chặng 3 có tác dụng hay
 không) · chênh ≥15% mỗi vùng · lớp trội ≥50% · ba nhóm chia nhau 11 vùng · hệ số vẫn đúng
@@ -2342,6 +2382,23 @@ với luật `≤60% là kill` và với *"đúng 7 NPC có trang thoại"*.
 đó có mặt ở nhiều rule chẳng liên quan — phép đột biến rơi nhầm chỗ và bài vẫn xanh. **Mỏ neo của
 phép thử ngược phải DUY NHẤT**, và phải đếm số lần xuất hiện trước khi thay.
 
+
+## 🌐 `?lang=en` — HAI LỚP DỊCH PHẢI TỰ ĐỌC, KHÔNG LỚP NÀO ĐỌC KÉ LỚP NÀO
+
+`?lang=en` / `?lang=vi` thắng `localStorage`, rồi **ghi lại** vào đó — để đưa được một đường link
+chơi thử bằng tiếng Anh cho người chưa từng mở game (`?test=1&lang=en`), mà không bắt họ đi tìm
+nút đổi ngôn ngữ.
+
+**⚠ ĐOẠN ĐỌC URL LÀ BẢN SAO CỐ Ý, có ở CẢ `i18n.js` LẪN `lang.js`.** Hai lớp dùng chung khoá
+`vlcm_lang`, và `i18n.js` nạp trước rồi ghi vào đó — nên "lang.js đọc ké" *chạy đúng ở máy bình
+thường*, và **thử ngược bằng cách gỡ đoạn URL của lang.js vẫn XANH**. Sợi dây ngầm ấy đứt khi
+`localStorage` bị chặn (cửa sổ riêng tư, chặn dữ liệu trang): `setItem` ném, i18n.js giữ `'en'`
+trong bộ nhớ còn lang.js đọc ra rỗng ⇒ **màn hình lẫn hai thứ tiếng**, không một lỗi nào báo.
+
+⇒ `test_defaultlang §H` dựng đúng cảnh đó (`addInitScript` cho `Storage.prototype.setItem/getItem`
+ném) và là mục **duy nhất** trong D-H bắt được chuyện đó. *Bốn mục kia hỏi đúng thứ cần hỏi mà
+vẫn không gác được gì ở vế này — một bài kiểm chạy ở đúng một cấu hình môi trường thì nó chỉ gác
+được cấu hình ấy.*
 
 ## ⚠ QUY TẮC SỐ 3: KHÔNG DÙNG VECTOR. CHẤM HẾT.
 

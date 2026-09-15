@@ -12,7 +12,11 @@ Axie carries none of it, so any Axie can be any class.
 
 ## Play it
 
-**▶ Live build: http://14.225.204.107/?test=1** — nothing to install, nothing to sign up for.
+**▶ Live build: http://14.225.204.107/?test=1&lang=en** — nothing to install, nothing to sign up for.
+
+The game is Vietnamese-first; `&lang=en` puts it in English before the first frame, so you never
+have to find a settings toggle to read it. Drop the parameter (or use `&lang=vi`) for Vietnamese.
+Either way the choice is remembered.
 
 No wallet, no platform account, no token, nothing onchain — not as a fallback, but because none
 of it is in the build. Progress is saved to `localStorage` in your own browser.
@@ -72,7 +76,8 @@ and every one of those gates has a real quest guarding it rather than a tooltip 
 
 ## Controls
 
-Desktop keyboard and mouse. In game, `F6` shows this same table, and Settings has an English toggle.
+Desktop keyboard and mouse. In game, `F6` shows this same table, and Settings has a language
+toggle — or put `?lang=en` on the URL to start in English.
 
 | | |
 |---|---|
@@ -172,9 +177,20 @@ is a matchup, a profile, or a choice — because the moment an Axie grants +dama
 game where the best Axie wins. Three earlier versions of this codebase were dismantled for exactly
 that, and the removals are logged.
 
-**Near term — matchup literacy.** The Map panel already names each region's class and the three
-classes that counter it. The other half is the Axie picker: preview how each body performs where
-you are headed, so a player learns the triangle by playing rather than by reading.
+**Near term — matchup literacy.** Three of the four channels exist. Walking into a region prints
+the verdict for the Axie you are wearing (*"Aquatic takes 10% LESS here"*, or *"takes 12% MORE —
+Beast / Bug / Mech would take less"*); every hit you take floats the matchup over your head; and
+the Map panel names each region's class and the three that counter it.
+
+That third channel was the last thing added, and finding it was the point: the defensive side had
+been running for the whole project while printing **almost nothing**. It had one output — a line
+in the 260px combat log in the bottom-left corner — and that line only fired on the *unfavourable*
+branch. The favourable half, the half that answers "why own more than one Axie", had never once
+appeared on screen. The attack direction, by contrast, had a floating label with four prefixes.
+A mechanic nobody can read is a mechanic that does not exist.
+
+The channel still missing is the Axie picker: preview how each body performs where you are headed,
+so the choice is made before the trip rather than learned during it.
 
 **Mid term — parts, not just class.** An Axie is six body parts, each with its own class. Today
 only the overall class is read. Reading parts would let two Beast Axies differ from each other —
