@@ -36,7 +36,7 @@ let bad = 0; const fail = m => { bad++; console.log('FAIL ' + m); };
     }
     const mauTest = { lv:'60', map:'daohoa', go:'1000 1000', realm:'5', th:'amkhi 5', tier:'3',
       seal:'3', speed:'2', bikip:'9', time:'5', item:'4 9', silver:'5000', khi:'5000', mat:'99',
-      dan:'99', manh:'99', tich:'99', an:'99', cothan:'99', jewel:'9', gem:'9', hap:'9',
+      dan:'99', an:'99', cothan:'99', jewel:'9', gem:'9', hap:'9',   // /manh /tich gỡ cùng Kế Thừa
       gen:'1 +11', slot:'4 dk_ragefulblow', evo:'dk_ragefulblow 1 power', kill:'100' };
     const out = {};
     for (const t of ten){

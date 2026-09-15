@@ -112,11 +112,18 @@ const { chromium } = require('playwright');
       o.plus12Dung = !chaosMatches().some(x => x.rec.id === 'phathien'); }
     goRoyal(false);
     // (3e Tấn Phẩm đã gỡ cùng công thức.)
-    // 3f Kế Thừa
+    // 3f Kế Thừa ĐÃ GỠ — nó là trục THỨ HAI trên cùng món đồ, cùng đường với Tấn Phẩm và hệ
+    // Phẩm. Gác chiều ngược lại: món dưới giai đỉnh bỏ vào khay KHÔNG được ra công thức leo
+    // giai nào, và hai tên đã gỡ không được sống lại.
     reset();
     { const it = player.inv.find(x => !x.special && x.tier != null && x.tier < GIAI_MAX);
-      if (it){ const t0 = it.tier; chaosAddItem(it.uid); chaosPickRecipe('kethua'); doChaos(); await xong();
-        o.keThua = { tu: t0, den: it.tier }; } else o.keThua = '(không có đồ dưới giai X)'; }
+      chaosAddItem(it.uid);
+      o.keThua = {
+        khop: chaosMatches().map(x => x.rec.id),
+        conHam: typeof window.doKeThua,
+        conCongThuc: CHAOS_RECIPES.some(r => r.id === 'kethua'),
+        conMats: !!(player.mats && ('manh' in player.mats || 'tichMa' in player.mats)),
+      }; }
     // 3g Lò Hỗn Loạn: 3 món cùng phẩm phải BIẾN MẤT dù thành hay bại
     reset();
     { const three = [];
@@ -178,7 +185,12 @@ const { chromium } = require('playwright');
   if (r.renDaGo.forgeRule5 !== 'nem') fail('forgeRule(5) không ném lỗi — mốc ≤9 phải bị từ chối, không trả luật gần đúng');
   if (!r.plus11.co) fail('món +11 tại Lò Rèn Hoàng Gia không vào được Phá Thiên Kiếp — trần +12 chưa mở');
   if (!r.plus12Dung) fail('món +12 vẫn rèn tiếp được — trần phải dừng ở +12');
-  if (r.keThua.den !== r.keThua.tu + 1) fail(`Kế Thừa: giai ${r.keThua.tu} → ${r.keThua.den}`);
+  if (r.keThua.conCongThuc) fail("công thức 'kethua' sống lại — món đồ chỉ được có MỘT trục (+N bằng ngọc)");
+  if (r.keThua.conHam !== 'undefined') fail('window.doKeThua sống lại');
+  if (r.keThua.khop.includes('kethua')) fail(`món dưới giai đỉnh vẫn ra Kế Thừa: ${JSON.stringify(r.keThua.khop)}`);
+  if (r.keThua.conMats) fail('player.mats vẫn còn manh/tichMa — di trú chưa delete');
+  if (!r.keThua.conCongThuc && r.keThua.conHam === 'undefined' && !r.keThua.conMats)
+    pass_('Kế Thừa đã gỡ sạch (công thức · hàm · hai ô đếm)');
   if (!r.honLoan.co) fail('không nhận ra công thức Lò Hỗn Loạn');
   if (r.honLoan.conLai !== 0) fail(`Lò Hỗn Loạn còn sót ${r.honLoan.conLai} món hiến tế`);
   if (r.honLoan.khaySach !== 0) fail('Lò Hỗn Loạn không dọn khay');

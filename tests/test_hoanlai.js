@@ -23,7 +23,7 @@ const { chromium } = require('playwright');
     player.level = 60; player.silver = 0;
     player.gems = { honNguyen:0 };
     player.jewels = { chucPhuc:0, linhHon:0, sinhMenh:0, honDon:0 };
-    player.baohap = {}; player.mats = { manh:0, tichMa:0 };
+    player.baohap = {}; player.mats = {};
     saveGame();
     const doc = JSON.parse(localStorage.getItem('vlcm_save'));
     const P = doc.slots[doc.active].player;
@@ -37,6 +37,7 @@ const { chromium } = require('playwright');
                                               // Huyền Thiết 12 + 20 = 32 × 150 = 4.800 ... 29.800◈
                                               // + 1 Tu La → nay hoàn bằng Lumen ..........  1.800◈
     P.mats.manhCoThan = 130;                  // 2 Box Kundun + 10 lẻ × 150 ...............  1.500◈
+    P.mats.manh = 20; P.mats.tichMa = 4;      // Kế Thừa gỡ: 20×150 + 4×1500 ..............  9.000◈
     P.mats.anTranAi = 3;                      // 3 × GO_CONGHUAN .........................  6.000◈
     P.inv.push({ slot:'nhan1', plus:0, uid:9002, name:'Nhẫn', rarity:1, subs:[], level:1,
                  sigil:'abc', ancient:'def' });
@@ -63,6 +64,7 @@ const { chromium } = require('playwright');
       conAncient: player.inv.some(x => x && x.ancient) || Object.values(player.equip).some(x => x && x.ancient),
       conSigils: 'sigils' in player,
       conMct: 'manhCoThan' in player.mats, conAn: 'anTranAi' in player.mats,
+      conKeThua: ('manh' in player.mats) || ('tichMa' in player.mats),
       v: SAVE_VERSION,
     };
   }, seed);
@@ -72,7 +74,8 @@ const { chromium } = require('playwright');
   // Hệ Lõi Nguyên Tố nay cũng gỡ rồi, nên khoản Thần Binh từng trả bằng 20 Lõi chuyển thành
   // Lumen theo đúng tỉ giá GO_HUYENTHIET (20 × 150 = 3.000◈). Hoàn bằng một thứ đã chết thì
   // chẳng khác gì không hoàn.
-  const BAC = 1500 + 22500 + 2850 + 100 + 29800 + 1500 + 6000 + 3000 + 1800;   // 69.050◈
+  const BAC = 1500 + 22500 + 2850 + 100 + 29800 + 1500 + 6000 + 3000 + 1800 + 9000;   // 78.050◈
+  // +9.000: Kế Thừa đã gỡ — 20 Mảnh × 150 + 4 Đá Ấn Trụ × 1.500 (xem GO_MANH / GO_TICHMA).
   // +1.800: Tu La Tinh Thạch đã gỡ (GO_TULA), nên viên hoàn từ pet nay trả thẳng bằng Lumen.
   const ok = [];
   const check = (ten, dat, mong) => { const p = dat === mong; ok.push(p);
@@ -91,6 +94,7 @@ const { chromium } = require('playwright');
   check('Cổ Thần đã xoá',      S.conAncient, false);
   check('player.sigils đã xoá', S.conSigils, false);
   check('manhCoThan đã xoá',   S.conMct, false);
+  check('mats Kế Thừa đã xoá', S.conKeThua, false);
   check('anTranAi đã xoá',     S.conAn, false);
   check('SAVE_VERSION',        S.v, 5);
   check('không lỗi trang',     errors.length, 0);

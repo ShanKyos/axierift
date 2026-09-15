@@ -7372,7 +7372,7 @@ function newPlayer(sectKey){
     // hệ thêm ở bản GDD đời trước
     khi: 0,                                    // Instinct — tiền tệ nâng cấp bậc cao
     gems: { honNguyen: 0 },                    // Hỗn Nguyên Thạch (Tu La đã gỡ — xem GO_TULA)
-    mats: { manh:0, tichMa:0 },   // Vật liệu Kế Thừa (Drop v2.0)
+    mats: {},                     // còn đúng `datHon` (nuôi Cổ Vật) — xem GO_MANH
     bossPity: 0,                               // Pity đai: đếm Vệ Binh Trụ không ra Thần
     chinhPhat: { date:'', count:0 },           // Chinh Phạt Cổng Vực 1 lần/ngày
     bossKills: {},                             // { mapId: [bossId...] } — mở cổng ải
@@ -7676,7 +7676,7 @@ function loadGame(idx){
     if (player.auto == null) player.auto = false; // auto farm (treo máy)
     if (!player.autoCfg) player.autoCfg = { skill:true, potion:true, potionPct:40, range:430, boss:false }; // Auto Farm cfg backfill
     if (!player.gender) player.gender = 'nam';
-    if (!player.mats) player.mats = { manh:0, tichMa:0 };
+    if (!player.mats) player.mats = {};
     if (player.bossPity == null) player.bossPity = 0;
     if (!player.chinhPhat) player.chinhPhat = { date:'', count:0 };
     if (!player.bossKills) player.bossKills = {};
@@ -7813,6 +7813,19 @@ function loadGame(idx){
     if (player.khoPlus == null) player.khoPlus = 0;
     if (!player.khoNgoc || typeof player.khoNgoc !== 'object') player.khoNgoc = { hap:{} };
     if (player.autoNgoc == null) player.autoNgoc = false;
+    // ═══ GỠ KẾ THỪA — hoàn hai vật liệu của nó ════════════════════════════════════════
+    // Kế Thừa (leo giai) là trục THỨ HAI trên cùng món đồ, cùng đường với Tấn Phẩm và hệ Phẩm
+    // đã gỡ trước. `Mảnh Trang Bị` + `Đá Ấn Trụ` chết theo vì đó là chỗ tiêu DUY NHẤT của cả hai.
+    // Tỉ giá: xem GO_MANH / GO_TICHMA.
+    if (player.mats && ((player.mats.manh || 0) > 0 || (player.mats.tichMa || 0) > 0)){
+      const _mn = player.mats.manh || 0, _tm = player.mats.tichMa || 0;
+      const _bu = _mn * GO_MANH + _tm * GO_TICHMA;
+      player.silver += _bu;
+      setTimeout(() => { if (player) zoneBanner = { text:'⚒ KẾ THỪA ĐÃ GỠ',
+        sub:`${_mn} Mảnh + ${_tm} Đá Ấn Trụ → ${_bu.toLocaleString('vi-VN')}◈ Lumen · giai của món nay do thứ RƠI RA quyết định`,
+        color:'#9fd0ff', t:8 }; }, 2800);
+    }
+    if (player.mats){ delete player.mats.manh; delete player.mats.tichMa; }
     // ═══ GỘP TIỀN TỆ — bậc 5: Tu La Tinh Thạch ra khỏi game ════════════════════════════
     // Chủ dự án chốt: ép ngọc lo +1→+9, Lò lo +10/+11/+12. "Rèn Thường" — đường Lumen + Tu La
     // lên +9 — gỡ theo, và Tu La mất chỗ tiêu chính. Phần nó còn giữ ở Phá Thiên Kiếp đã dồn
@@ -9472,7 +9485,6 @@ function computeKillRewards(m, source, P, rng){
   const rw = {
     xp:0, xpMul:1, silver:0, khi:0, kills:1,
     gems:{ honNguyen:0 }, bikipVH:0,
-    mats:{ manh:0, tichMa:0 },
     wings:[], items:[], autoSold:[],
     bossPity:null, firstDrop:false, chinhPhat:false, dropSrc:null, gotThan:false,
   };
@@ -9549,8 +9561,6 @@ function computeKillRewards(m, source, P, rng){
     }
   }
   // Vật liệu
-  if (!d.boss && !d.bossKind && R() < (d.elite ? 1 : 0.08)) rw.mats.manh = 1;
-  if (d.bossKind === 'thuve') rw.mats.tichMa = 1 + (R() < 0.5 ? 1 : 0);
   if (d.bossKind === 'tranai'){
     const _today = new Date().toDateString();
     const cp = P.chinhPhat;
@@ -9593,8 +9603,6 @@ function applyRewards(rw, m){
   if (rw.bossPity !== null) player.bossPity = rw.bossPity;
   // Vật liệu vụn về NHẬT KÝ, không bay lên sân khấu: đo thật 300 con thì 229 chữ bay là vật liệu
   // còn 29 là tên trang bị — mà chữ trang bị lại nhỏ hơn và nhạt hơn. Sân khấu để cho đồ và ngọc.
-  if (rw.mats.manh){ player.mats.manh += rw.mats.manh; logCombat('+1 ❖ Mảnh Trang Bị', '#7ec8d8'); }
-  if (rw.mats.tichMa){ player.mats.tichMa += rw.mats.tichMa; addFloat(m.x, m.y-92, `+${rw.mats.tichMa} ◆ Đá Ấn Trụ`, '#e84a6a', 13); }
   if (rw.chinhPhat){
     const _today = new Date().toDateString();
     if (!player.chinhPhat || player.chinhPhat.date !== _today) player.chinhPhat = { date:_today, count:0 };
@@ -16159,32 +16167,31 @@ function forgeRule(target){
   // trước (+11 đắt gấp 1,78 lần +10): 14.200 × 1,78 ≈ 25.300◈ ≈ 9 Hỗn Nguyên.
   return { rate:40, matBac: 4*GO_HUYENTHIET, hon:9, fail:'break', bagua:true };
 }
-// ── Drop v2.0: KẾ THỪA (leo giai) · ĐỔI HỆ ──
-// TẤN PHẨM (leo phẩm) đã GỠ từ trước, và nay cả hệ phẩm cũng gỡ: đó là trục thứ hai song song với +N,
-// cùng ăn một túi nguyên liệu, cùng ở Lò Rèn, và người chơi phải học hai bảng giá cho hai thứ
-// nghe na ná nhau. MU chỉ có MỘT trục trên món đồ: +N bằng ngọc. Phẩm nay do món rơi ra quyết định.
-// Mảnh Trang Bị và Đá Ấn Trụ KHÔNG chết theo — Kế Thừa vẫn ăn đúng hai thứ đó.
+// ── ĐỔI HỆ ──
+// ⚠ MÓN ĐỒ NAY CHỈ CÓ **MỘT** TRỤC: +N bằng ngọc. Giai và Phẩm do thứ RƠI RA quyết định.
+//
+// Ba hệ từng là trục thứ hai trên cùng món đồ, cả ba đã gỡ, và cả ba vì cùng một lý do:
+//   · TẤN PHẨM (leo phẩm)  — gỡ sớm nhất
+//   · hệ PHẨM               — gỡ theo
+//   · KẾ THỪA (leo giai)    — gỡ ở đợt này
+// Lý do chép nguyên văn từ lần gỡ Tấn Phẩm: *"đó là trục thứ hai song song với +N, cùng ăn một
+// túi nguyên liệu, cùng ở Lò Rèn, và người chơi phải học hai bảng giá cho hai thứ nghe na ná
+// nhau. MU chỉ có MỘT trục trên món đồ."* Kế Thừa là **cùng một câu, khác tên** — nên nó phải
+// đi cùng đường, và `Mảnh Trang Bị` + `Đá Ấn Trụ` chết theo vì đó là chỗ tiêu DUY NHẤT của cả hai.
+//
+// ⇒ ĐỪNG DỰNG LẠI dưới một cái tên thứ tư. Muốn món đồ mạnh lên thì có đúng hai đường: rèn +N,
+//    hoặc đi kiếm món giai cao hơn.
+//
+// *Ghi lại hai con số CHẾT mà Kế Thừa mang theo tới lúc bị gỡ, phòng khi ai đó đọc git log rồi
+// tưởng nó còn chạy đúng:* trần của nó là `it.tier >= 10` trong khi `GIAI_MAX = 7` (tức nâng
+// được lên giai 8-9, `giaiName` kẹp về "Khai Thiên" và `GIAI_POW` kẹp sức mạnh về giai 7 ⇒ trả
+// tiền mà không nhận gì), và cấp yêu cầu tính `(tier-1)*10 + 10` trong khi `GIAI_SPAN = 16`.
+// Cả hai là di sản thời game còn 10 giai, và không bài kiểm nào gác.
 function findItemByUid(uid){
   for (const s in player.equip){ const it = player.equip[s]; if (it && it.uid === uid) return it; }
   for (let i = 0; i < player.inv.length; i++) if (player.inv[i].uid === uid) return player.inv[i];
   return null;
 }
-// Kế Thừa: tăng 1 giai — giữ Phẩm/+N/dòng phụ, chỉ số gốc = 90% bản gốc giai mới
-window.doKeThua = function(uid){
-  const it = findItemByUid(uid);
-  if (!it || it.special || it.tier >= 10) return;
-  const cost = { manh:40, tichMa:4, silver:5000*it.tier };
-  if (player.mats.manh < cost.manh || player.mats.tichMa < cost.tichMa || player.silver < cost.silver) return;
-  player.mats.manh -= cost.manh; player.mats.tichMa -= cost.tichMa; player.silver -= cost.silver;
-  it.tier++;
-  it.level = (it.tier-1)*10 + 10;
-  const slot = SLOTS.find(s => s.id === it.slot);
-  if (slot && it.main) it.main.v = Math.max(1, Math.round(slot.base(it.tier) * 0.9));
-  addFloat(player.x, player.y-52, `⚒ KẾ THỪA — lên giai[${giaiName(it.tier)}]!`, '#9fd0ff', 15);
-  addEffect({ type:'ring', x:player.x, y:player.y, r:80, color:'#9fd0ff', big:true });
-  AudioSys.sfx('levelup', 0.7);
-  calcDerived(); saveGame(); renderForge();
-};
 // Đổi Hệ: 1 Hỗn Độn Châu — re-roll nguyên tố trang bị
 window.doDoiHe = function(uid){
   const it = findItemByUid(uid);
@@ -16423,31 +16430,6 @@ const CHAOS_RECIPES = [
       return true; } },
 
   // ── Nhóm CHẾ TẠO ────────────────────────────────────────────────────────
-
-  { id:'kethua', group:'che', name:'Kế Thừa', tray:'1 trang bị (dưới giai X)',
-    match(v){
-      if (v.items.length !== 1 || v.nJewel) return null;
-      const it = v.items[0];
-      if (it.special || it.tier >= 10) return null;
-      return { it, cost:{ manh:40, tichMa:4, silver:5000*it.tier } };
-    },
-    plan(v, m){ return {
-      title: `[${giaiName(m.it.tier)}]→[${giaiName(m.it.tier+1)}]giữ Phẩm / +${m.it.plus} / dòng phụ`,
-      rate: 100,
-      cost: [ chaosCost('Mảnh Trang Bị', player.mats.manh, m.cost.manh, '❖'),
-              chaosCost('Đá Ấn Trụ', player.mats.tichMa, m.cost.tichMa, '◆'),
-              chaosCost('Lumen', player.silver, m.cost.silver, '◈') ],
-      warn: 'Chỉ số gốc của giai mới bằng 90% bản gốc — bù lại giữ trọn mọi dòng đã có.', charm:false }; },
-    run(v, m){
-      player.mats.manh -= m.cost.manh; player.mats.tichMa -= m.cost.tichMa; player.silver -= m.cost.silver;
-      m.it.tier++; m.it.level = (m.it.tier-1)*10 + 10;
-      const sl = SLOTS.find(s => s.id === m.it.slot);
-      if (sl && m.it.main) m.it.main.v = Math.max(1, Math.round(sl.base(m.it.tier) * 0.9));
-      chaosSay(`⚒ Kế Thừa — lên giai[${giaiName(m.it.tier)}]!`, '#9fd0ff');
-      addFloat(player.x, player.y-52, `⚒ KẾ THỪA —[${giaiName(m.it.tier)}]!`, '#9fd0ff', 15);
-      addEffect({ type:'ring', x:player.x, y:player.y, r:80, color:'#9fd0ff', big:true });
-      AudioSys.sfx('levelup', 0.7);
-      return true; } },
 
   // ── Ba bậc cánh. Cả ba đều royal:true — cánh là việc của Lò Rèn Hoàng Gia, đúng như
   // Chaos Machine của MU. Không còn quay xổ số giữa hai đôi: ra ĐÚNG đôi của lớp đang chơi.
@@ -17649,9 +17631,6 @@ function applyTestBoost(){
   player.baohap = {};
   for (let t = 1; t < BAOHAP_TIERS.length; t++) player.baohap[t] = 10;
   player.mats = player.mats || {};
-  // Đủ MỌI nguyên liệu Lò Hỗn Độn cần — thiếu manh/tichMa thì Kế Thừa
-  // vẫn khoá cứng ở max mode, tức là hai công thức không test được.
-  player.mats.manh = 300; player.mats.tichMa = 60;
   // Danh hiệu: mở hết, trang bị danh hiệu cuối cùng
   player.titles.unlocked = TITLES.map(t => t.id);
   player.titles.equipped = TITLES[TITLES.length - 1].id;
@@ -18621,6 +18600,13 @@ const GO_CONGHUAN = 2000;  // 1 Công Huân Lệnh cũ = 2000 Lumen — cũng l�
 const GO_ANTHUANTHU = 1500; // 1 Ấn Thuần Thú cũ = 1500 Lumen — đúng giá bán ở Vũ Khí Phường
 const GO_TAMDAC = 4000;     // 1 Tâm Đắc cũ = 4000 Instinct — xem skMileMult
 const GO_TULA = 1800;       // 1 Tu La Tinh Thạch cũ = 1800 Lumen — ĐÚNG giá tiệm nó từng bán
+// Hai vật liệu Kế Thừa. Không thứ nào từng bày bán nên KHÔNG có giá tiệm để lấy; tỉ giá suy từ
+// hai chỗ khác, cả hai đều có sẵn trong game chứ không bốc ra:
+//   · Mảnh = 150 — cùng đơn vị mà `loadGame` đã dùng cho mọi "mảnh" vụn khác (GO_HUYENTHIET,
+//     và Mảnh Cổ Thần lẻ cũng hoàn đúng 150 một mảnh)
+//   · Đá Ấn Trụ = 1500 — gấp MƯỜI lần Mảnh, đúng tỉ lệ 40 : 4 mà chính công thức Kế Thừa niêm yết
+const GO_MANH = 150;
+const GO_TICHMA = GO_MANH * 10;
 // ⚠ Cả năm hằng trên nằm ở dòng ~18580, nhưng mọi chỗ DÙNG chúng đều nằm trong thân hàm
 // (`loadGame`, `updateDungeon`…) nên chạy lúc gọi, không lúc nạp tệp — không rơi vùng chết của
 // const. Thêm hằng thứ sáu thì giữ đúng nếp đó: đừng dùng nó ở tầng ngoài cùng phía trên đây.
@@ -18682,7 +18668,7 @@ function cheatHelp(){
     '── tài nguyên ──',
     '/silver /shard /khi /bikip <n> — Lumen · Shard · Bản Năng · Sách (+n để cộng)',
     '/jewel <n> — cả bốn Tứ Châu · /gem <n> — Tử La + Hỗn Nguyên',
-    '/manh /tich <n> — mảnh ghép chế tác · /hap <n> — Box Kundun mọi tầng',
+    '/hap <n> — Box Kundun mọi tầng',
     '/item [phẩm 0-4] [giai 1-10] — tạo trang bị vào túi',
     `/gen <giai 1-${GIAI_MAX}> [+rèn 0-11] [cánh 0-3] — MẶC THẲNG cả bộ, ví dụ: /gen 1 +11`,
     '── Cổ Vật ──',
@@ -18807,7 +18793,7 @@ window.cheatExec = function(raw){
         calcDerived();
         cheatLog(`${skName(sid)} bậc ${bac} → ${EVO_PATHS[path].name} (cấp chiêu ${player.skillLv[sid]})`, '#ffd76a'); break;
       }
-      case 'silver': case 'khi': case 'shard': case 'manh': case 'tich': case 'dan': {
+      case 'silver': case 'khi': case 'shard': case 'dan': {
         const raw2 = parts[1] || '10000';
         const add = raw2.startsWith('+');
         const v = Math.abs(parseFloat(raw2)) || 0;
@@ -18815,8 +18801,6 @@ window.cheatExec = function(raw){
         if (cmd === 'silver') set(() => player.silver, x => player.silver = x);
         else if (cmd === 'shard') set(() => player.shard, x => player.shard = x);
         else if (cmd === 'khi') set(() => player.khi, x => player.khi = x);
-        else if (cmd === 'manh') set(() => player.mats.manh, x => player.mats.manh = x);
-        else if (cmd === 'tich') set(() => player.mats.tichMa, x => player.mats.tichMa = x);
         cheatLog('OK', '#8fd18f'); break;
       }
       case 'item': {
@@ -20525,8 +20509,6 @@ const MAT_ROWS = [
   { icon:'honnguyen', name:'Hỗn Nguyên Thạch', get:()=>player.gems.honNguyen, color:'#b08ae8', desc:'rèn +10/+11' },
   { icon:'phu', name:'Thiên Mệnh Phù', get:()=>player.charms, color:'#7ecbff', desc:'bảo hiểm rèn' },
   { icon:'tanquyen', name:'Mảnh Cổ Thư (Thượng/Trung/Hạ)', get:()=>player.bikip ? player.bikip.pieces.join('/') : '0/0/0', color:'#e84a6a', desc:'dung hợp Huyết Ma Thôn Phệ' },
-  { icon:'manhtrangbi', name:'Mảnh Trang Bị', get:()=>(player.mats&&player.mats.manh)||0, color:'#7ec8d8', desc:'Kế Thừa — rơi từ quái/tinh anh' },
-  { icon:'tichma', name:'Đá Ấn Trụ', get:()=>(player.mats&&player.mats.tichMa)||0, color:'#e84a6a', desc:'đá lõi ấn — Kế Thừa leo giai, rơi từ Vệ Binh Trụ' },
 ];
 function fmtCount(n){
   n = n || 0;
