@@ -55,13 +55,17 @@ square ground footprint renders as a diamond exactly twice as wide as tall),
 orthographic camera, no perspective convergence, viewed from the standard
 front-left isometric corner.
 
-REFERENCE TOWN — match the feeling of a dense lived-in walled town: the
-building looks like one unit pulled out of a street where houses stand
-shoulder to shoulder. Roofs at several different heights and angles, each
-roof plane a slightly different tone, cloth awnings and hanging banners
-breaking up the wall faces, crates and barrels crowding the base of the
-walls, warm lit windows. Worn-in and busy, NOT a clean isolated showroom
-model on a turntable.
+LIVED-IN FEELING — the building belongs to a dense busy walled town:
+roofs at several different heights and angles, each roof plane a slightly
+different tone, cloth awnings and hanging banners breaking up the wall
+faces, crates and barrels crowding the base of the walls, warm lit windows,
+worn and weathered. Busy and used, NOT a clean showroom model.
+
+FRAMING — EXACTLY ONE FREESTANDING BUILDING, complete and unclipped, alone
+on the magenta with clear empty margin on all four sides. Do NOT draw
+neighbouring buildings, adjoining walls, rooflines, or any part of another
+structure. Do NOT crop or zoom in: the whole building including the full
+roof ridge must fit inside the frame. Square 1:1 image.
 
 ARCHITECTURE — western storybook fantasy: timber frame, cream plaster,
 stone footings, shingle or terracotta tile, iron brackets. NO East Asian
@@ -87,7 +91,8 @@ shadow directly under the footprint only, no cast shadow reaching away.
 
 Hard rules: no characters, no text, no signage lettering, no numbers, no UI,
 no watermark, no ground beyond the contact shadow, no stone plinth or base
-platform under the building, no glow effects.
+platform under the building, no glow effects, no decorative sparkle or star
+anywhere in the image.
 ```
 
 ### 1.2 NĂM CÔNG TRÌNH ƯU TIÊN — đã có NPC đứng trước cửa, chỉ thiếu cái nhà
