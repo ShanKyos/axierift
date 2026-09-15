@@ -30,9 +30,26 @@ else
   exit 1
 fi
 
-# ── 2. Cấu hình nginx có khối /ws không ───────────────────────────────────────────────
-oc "2/4  Cấu hình nginx"
+# ── 2. TỆP TÔI SỬA có phải TỆP NGINX ĐỌC không ────────────────────────────────────────
+# ⚠ Đây là câu hỏi quan trọng nhất, và là cái bẫy đã ghi trong CLAUDE.md dưới tên `ISO_NEO`:
+#   ghi vào một tệp trong khi sản phẩm nạp một tệp khác. Nếu `sites-enabled/axiewuxia` là một
+#   BẢN CHÉP chứ không phải symlink (hoặc nginx.conf không include sites-enabled), thì sửa
+#   `sites-available` là VÔ HÌNH — `nginx -t` vẫn xanh, reload vẫn chạy, và /ws 404 ở MỌI Host.
+#   `nginx -T` in ra cấu hình ĐANG NẠP, nên nó là trọng tài duy nhất ở đây.
+oc "2/4  Tệp đã sửa có phải tệp nginx đọc không"
 grep -q 'location /ws' "$SB" && ok "$SB có 'location /ws'" || xx "$SB THIẾU 'location /ws'"
+SE=/etc/nginx/sites-enabled/axiewuxia
+if [ -L "$SE" ]; then ok "sites-enabled/axiewuxia là symlink → $(readlink -f "$SE")"
+elif [ -f "$SE" ]; then xx "sites-enabled/axiewuxia là BẢN CHÉP, không phải symlink"
+  echo "     ⇒ sửa sites-available KHÔNG tới được nginx. Sửa: rm $SE && ln -s $SB $SE && nginx -t && systemctl reload nginx"
+else xx "không có $SE"; fi
+N=$(nginx -T 2>/dev/null | grep -c 'location /ws')
+if [ "${N:-0}" -gt 0 ]; then ok "cấu hình ĐANG NẠP có $N khối 'location /ws'"
+else
+  xx "cấu hình ĐANG NẠP **KHÔNG CÓ** 'location /ws' — đây chính là lỗi."
+  echo "     Tệp nginx thật sự đọc server block ở đâu:"
+  nginx -T 2>/dev/null | grep -nE '^# configuration file|server_name' | sed 's/^/     /' | head -20
+fi
 [ -f /etc/nginx/conf.d/axiewuxia-ws.conf ] && ok "có conf.d/axiewuxia-ws.conf (khối map)" \
   || xx "THIẾU conf.d/axiewuxia-ws.conf ⇒ \$connection_upgrade không khai"
 nginx -t >/tmp/.k2 2>&1 && ok "nginx -t sạch" || { xx "nginx -t LỖI:"; sed 's/^/     /' /tmp/.k2; }
