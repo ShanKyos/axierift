@@ -1708,13 +1708,63 @@ thừa thì bỏ qua — cả hai đều không ném lỗi, nên điền dần t
 | `knDsKhac()` | tab **Khác** SUY RA, không điền tay — xem ngay dưới |
 
 **⚠ TAB KHÁC KHÔNG ĐIỀN TAY.** Nó suy từ `LEGACY_SECT_SKILLS` + `CLASS_PASSIVES` của lớp đang
-chơi qua `knDsKhac()`. Chép thành một bảng `KN_ROT_CHUNG.khac` thứ ba là bảo đảm nó lệch với hai
-bảng kia ngay lần đầu ai đó đổi Di Sản mà quên sửa — cùng lối với `mapBanSac()` suy từ `packs`.
+chơi qua `knKhacNhom()` (và `knDsKhac()` là bản dàn phẳng của nó). Chép thành một bảng
+`KN_ROT_CHUNG.khac` thứ ba là bảo đảm nó lệch với hai bảng kia ngay lần đầu ai đó đổi Di Sản mà
+quên sửa — cùng lối với `mapBanSac()` suy từ `packs`.
 
-**Cả BA tab nay dùng CHUNG một khung** (cây + khung chi tiết). Tab Khác từng là một cuộn chữ dài
+**Cả BA tab nay dùng CHUNG một khung** (ô + khung chi tiết). Tab Khác từng là một cuộn chữ dài
 xếp năm khối rời: cùng một bảng mà hai tab vẽ kiểu này, một tab vẽ kiểu kia, nên bấm sang tab là
 người chơi phải học lại cách đọc. `test_cayky` đã bỏ chỗ miễn trừ `!== 'khac'` — chính chỗ miễn
 trừ đó là thứ sẽ lặng lẽ cho phép nó lệch ra lần nữa.
+
+#### ▦ NHƯNG TAB KHÁC LÀ **LƯỚI CÓ NHÓM**, KHÔNG PHẢI CÂY NHÁNH
+
+Chủ dự án đưa ảnh mẫu: hai nhóm có tiêu đề ("Hành vi" · "Học tập"), mỗi nhóm một lưới biểu
+tượng, nhóm sau nối bằng mũi tên dọc. Đó là hình dạng ĐÚNG cho tab này — Di Sản là **bốn thứ
+độc lập**, không cái nào mở khoá cái nào, nên mượn cây nhánh của tab Lớp là bịa ra một quan hệ
+không có.
+
+| | |
+|---|---|
+| `knKhacNhom()` | khai hai nhóm (tên · số cột · có phải một mạch không) |
+| `knHinhKhac()` | dựng lưới TỪ CHÍNH nó ⇒ thêm/bớt một Di Sản là lưới tự giãn |
+| `knY(n)` | **cửa DUY NHẤT** tính toạ độ Y của một ô |
+
+- **⚠ SỐ Ô SUY TỪ DỮ LIỆU, đừng chép cứng 4×2 như ảnh mẫu.** Lớp nào cũng đúng 4 Di Sản, nhưng
+  bị động thì `thieulam` có 2 còn bốn lớp kia 1. Khoá cứng tám ô là bốn lớp mở ra thấy một dãy ô
+  trống mang nhãn "Học Tập" — bảng tự hứa có thứ nó không có.
+- **Mũi tên nhóm Học Tập nghĩa là MỞ SAU** (xếp theo `unlock`), không phải điều kiện tiên quyết:
+  cả hai bị động đều tự ngộ theo cấp. Tiêu đề nhóm nói thẳng ra vậy — *một mũi tên hứa điều kiện
+  không có thật thì tệ hơn không vẽ mũi tên nào.*
+- **Khối "HỆ TẤN CHỨC PHỤ" đã GỠ** — `danchi`/`tieuhon` nay là hai ô trong chính lưới. Giữ lại
+  là cùng một bảng in hai lần hai kiểu, cách nhau vài dòng.
+- Mô tả nhóm nằm trong `title`, **không in cạnh nhãn**: vùng cây chỉ rộng 218px nên một dòng mô
+  tả bị cắt cụt giữa chừng, mà một câu cụt còn tệ hơn không có câu nào.
+
+#### ⚠ `knNut()` CÓ BA ĐƯỜNG RA — chép phần hình học MỘT chỗ thôi
+
+Nó dựng một vật thể MỚI từ ô của hình. Bản cũ liệt kê tay `k/c/h/tu` ở **cả ba** nhánh `return`,
+nên thêm một trường vào hình (`gi`, `nhomTen`…) mà chỉ sửa một nhánh là trường đó **rụng mất ở
+hai nhánh kia — không lỗi, không dấu hiệu**. Đã dẫm đúng thế: thêm tiêu đề nhóm xong thì ô vẫn
+vẽ đủ, mũi tên vẫn đúng, mà hai cái nhãn KHÔNG BAO GIỜ hiện ra. Nay gom vào `hh` rồi `...hh`.
+
+#### ⚠ Ô CAO **58px**, KHÔNG PHẢI 44 — và mũi tên phải xuất phát từ 58
+
+`KN_O` là cạnh cái ẢNH; ô thật còn cõng dòng số cấp bên dưới (đo trong DOM: **58px**). Mũi tên
+bắn từ `y + KN_O` là bắn từ GIỮA dòng số cấp, mà badge vẽ SAU nên nó che mất thân mũi tên. Thứ
+còn lại trên màn là mấy **đầu mũi tên xanh trôi lơ lửng** — nhìn ra lỗi vẽ chứ không ra một cái
+cây, và nó đã sống như thế ở cả tab Lớp. Nay có `KN_O_CAO = 58`, và `KN_HANG` nới **60 → 76**
+(khe cũ chỉ còn 2px thì không mũi tên nào vẽ lọt).
+
+**Ba lần thử ngược, cả ba lộ ra lỗi của chính BÀI KIỂM** — ghi lại vì cùng một họ:
+1. mệnh đề mũi tên lọc ô cha bằng `day <= py`. Khi mũi tên bắt đầu BÊN TRONG ô cha thì ô ấy bị
+   loại, phép đo tụt xuống hàng trên và trả về một khe **DƯƠNG** to tướng — tức đúng cái lỗi cần
+   bắt lại làm bài xanh. Nay lấy ô có đáy GẦN NHẤT; thử ngược ra −13,5px.
+2. `getBoundingClientRect()` trên bảng `display:none` trả **TOÀN SỐ 0**, mà 0 thì thoả mọi bất
+   đẳng thức. Bài đã báo "khe 262px" trong lúc mọi ô ra `{x:0, day:0}`. Phải tự kiểm cảnh dựng.
+3. `test_skillpanel`/`test_uidot5` dò chuỗi `"HỆ TẤN CHỨC PHỤ"`. Dò tiêu đề thì đổi cách bày là
+   đỏ oan, mà **xoá thật hai chiêu rồi để lại cái tiêu đề thì lại xanh**. Nay hỏi thẳng
+   `knDsKhac()` có `danchi`/`tieuhon` không.
 
 Ba thứ ở tab Khác **không phải chiêu** nên không vào cây được, và ở lại thành một dải gọn bên
 dưới: Sách Kỹ Năng (vật phẩm), `PASSIVE_SKILLS` (đến từ Ascension/trang bị, **không** nằm trong
