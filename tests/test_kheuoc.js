@@ -58,10 +58,15 @@ const PORT = process.argv[2] || '8853';
   // ── 3. bảo đảm + pity sống qua reload ──
   const r3 = await p.evaluate(() => {
     startGame('thieulam', null); player.level = 60; player.lvPeak = 60;
-    const C = chiState(); C.ve.gk = 500;
-    // quay tới khi thua 50/50 → phải bật cờ bảo đảm
+    // ⚠ MẪU PHẢI ĐỦ DÀY — mệnh đề này từng ĐỎ THEO XÚC XẮC, không theo lỗi.
+    // Trần cũ 400 lượt: trung bình 62 lượt một con 5★ ⇒ chỉ ~6 lần tung 50/50, mà thắng sạch
+    // cả 6 là ~1,6% số lượt chạy. Tức bài đỏ ~1/60 lần vì gacha may, và kéo theo mệnh đề "lần
+    // 5★ kế tiếp là con lên kệ" đỏ luôn vì loop sau hết vé. Đã bắt được đúng ca đó trong một
+    // lượt hồi quy, và xác minh bằng cách để nguyên mã hỏng chạy lại: vẫn xanh.
+    // 5000 vé / 2000 lượt ⇒ ~32 lần 50/50 ⇒ xác suất trượt còn ~2e-10.
+    const C = chiState(); C.ve.gk = 5000;
     let bd = false, tries = 0;
-    while (!bd && tries < 400){ const x = gachaMotLuot('gk'); tries++; if (x.sao === 5) bd = C.bd; }
+    while (!bd && tries < 2000){ const x = gachaMotLuot('gk'); tries++; if (x.sao === 5) bd = C.bd; }
     const truoc = { p5:C.pity5, p4:C.pity4, bd:C.bd, gk:C.ve.gk, co:Object.keys(C.co).length };
     // lần 5★ kế tiếp có đúng là con đang lên kệ không
     let ke = null;
@@ -72,11 +77,15 @@ const PORT = process.argv[2] || '8853';
     saveGame();
     const ok = loadGame();
     const C2 = chiState();
-    return { truoc, dungKe, loadOk:ok,
+    return { truoc, dungKe, loadOk:ok, tries,
              sau: { p5:C2.pity5, p4:C2.pity4, bd:C2.bd, gk:C2.ve.gk } };
   });
   console.log('3) bảo đảm + reload:', JSON.stringify(r3));
-  if (!r3.truoc.bd) fail('thua 50/50 mà không bật cờ bảo đảm');
+  // Tự kiểm cảnh trước khi chấm: không thua nổi một lần 50/50 nghĩa là cảnh dựng chưa đủ dày,
+  // chứ không phải cờ bảo đảm hỏng — hai chuyện khác nhau, và nói nhầm thì người sau đi sửa
+  // đúng chỗ không hỏng.
+  if (!r3.truoc.bd && r3.tries >= 2000) fail(`quay ${r3.tries} lượt mà không thua nổi một lần 50/50 — cảnh dựng chưa đủ dày, không phải cờ bảo đảm hỏng`);
+  else if (!r3.truoc.bd) fail('thua 50/50 mà không bật cờ bảo đảm');
   if (!r3.dungKe) fail('đang được bảo đảm mà lần 5★ kế tiếp KHÔNG phải con đang lên kệ');
   else pass('thua 50/50 → lần 5★ kế tiếp chắc chắn là con đang lên kệ');
   const S = r3.sau;

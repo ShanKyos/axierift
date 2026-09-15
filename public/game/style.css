@@ -454,7 +454,22 @@ html,body { width:100%; height:100%; overflow:hidden; background:var(--bg-deep);
 /* Nhật ký chiến đấu — góc dưới trái, thay cho số sát thương/thông báo bay rối mắt lúc AUTO
    đánh nhiều quái cùng lúc; dòng mới nhất nằm trên cùng, cuộn được, tự bỏ dòng cũ khi đầy */
 #combat-log-wrap.an { display:none; }
-#combat-log-wrap { position:fixed; left:16px; bottom:64px; width:min(260px,40vw); z-index:11; pointer-events:auto; }
+/* ⚠ BÊN PHẢI, KHÔNG BÊN TRÁI — và sườn trái để TRỐNG CÓ CHỦ Ý. Chủ dự án chốt: chỗ đó dành
+   cho khung chat người-với-người khi có tầng realtime (Giai đoạn 1 mới có bóng người, chưa có
+   chat — xem docs/THIET_KE_ONLINE.md). Đừng "tận dụng" sườn trái cho thứ khác rồi tới lúc làm
+   chat lại phải dọn lần nữa.
+   Bề ngang bằng đúng `#cot-phai` (190px) để hai khối xếp thành MỘT cột: lệch bề ngang thì đọc
+   ra hai thứ dán cạnh nhau, đúng bài học của thanh EXP. */
+#combat-log-wrap { position:fixed; right:12px; bottom:96px; width:190px; z-index:11; pointer-events:auto; }
+#cl-dau { display:flex; align-items:center; justify-content:space-between; gap:6px; white-space:nowrap;
+  padding:3px 7px; border-radius:7px 7px 0 0; font-size:10.5px; font-weight:700;
+  color:var(--gold); letter-spacing:.3px;
+  background:linear-gradient(180deg, rgba(42,34,24,.92), rgba(20,16,11,.94));
+  border:1px solid rgba(198,158,74,.42); border-bottom:none; }
+#cl-dau button { background:none; border:none; color:var(--gold); cursor:pointer;
+  font-size:11px; padding:0 2px; line-height:1; }
+#cl-dau button:hover { color:#ffe9b0; }
+#cl-dau i { font-style:normal; }
 #btn-combatlog { pointer-events:auto; width:100%; display:flex; justify-content:space-between; align-items:center;
   background:rgba(var(--rgb-da),.88); color:var(--text-body); border:1px solid var(--border); border-radius:var(--r-sm);
   padding:5px 10px; margin-bottom:4px; font-family:inherit; font-size:var(--fs-md); font-weight:600; cursor:pointer; }
@@ -984,7 +999,7 @@ html,body { width:100%; height:100%; overflow:hidden; background:var(--bg-deep);
   #quest-tracker { font-size:var(--fs-sm); max-height:34vh; overflow-y:auto; }
   #quest-tracker .q-daily { display:none; }
   #minimap { width:150px; height:110px; }
-  #combat-log-wrap { bottom:104px; width:min(200px,44vw); }
+  #combat-log-wrap { bottom:104px; width:min(170px,44vw); right:8px; }
   #combat-log { font-size:10.5px; max-height:16vh; }
 }
 
@@ -1633,11 +1648,17 @@ html,body { width:100%; height:100%; overflow:hidden; background:var(--bg-deep);
 
 /* ═══ Thanh EXP dưới đáy màn hình — đúng chỗ MU đặt nó ═══
    Trước đây nó nằm góc trên trái, kẹp giữa dòng tên dài ba dòng và dòng Instinct. */
-#xp-strip { position:fixed; left:50%; transform:translateX(-50%); bottom:6px; z-index:12;
-  width:min(520px, 62vw); pointer-events:none; }
+/* ⚠ NEO VÀO #bottom-hud, KHÔNG neo vào khung nhìn. `left:0; right:0` trên một con của thanh
+   ⇒ bề ngang EXP **bằng đúng** bề ngang thanh, ở mọi khổ màn và với mọi số ô, mãi mãi.
+   Bản cũ `position:fixed` + `width:min(520px,62vw)` là một con số rời hẳn: ở màn 1600 nó ra
+   520px nằm cạnh một thanh 756px — hai vật cùng căn giữa mà khác bề ngang thì đọc ra hai thứ
+   chồng hờ lên nhau, chứ không ra một khối. Chủ dự án gọi đúng tên và nó chữa luôn cảm giác
+   "thanh dài quá": có một đường chân cùng bề ngang thì cái thanh mới có hình dạng.
+   `top: calc(100% + 3px)` — nằm DƯỚI thanh, không cắt ngang ô chiêu (test_thanhchien §3). */
+#xp-strip { position:absolute; left:0; right:0; top:calc(100% + 3px); z-index:1;
+  pointer-events:none; }
 #xp-strip .bar.xp { height:9px; }
 #xp-strip .bar.xp span { line-height:9px; font-size:8px; }
-@media (max-width:760px){ #xp-strip { width:74vw; bottom:4px; } }
 
 /* Dấu "còn điểm chưa cộng" cạnh tên — thứ duy nhất của bảng V cần liếc giữa trận */
 #hud-name .hud-free { color:#0d0a16; background:#ffd76a; border-radius:8px; padding:0 6px;
@@ -2219,6 +2240,16 @@ html,body { width:100%; height:100%; overflow:hidden; background:var(--bg-deep);
 .kn-wrap { display:flex; gap:8px; align-items:flex-start; }
 .kn-cay { position:relative; flex:0 0 auto; }
 .kn-day { position:absolute; left:0; top:0; pointer-events:none; }
+/* Tiêu đề nhóm của tab Khác — ảnh mẫu chủ dự án đưa có hai nhãn ("Hành vi" · "Học tập") đứng
+   trên hai lưới ô. Nó nằm tuyệt đối trong CÙNG hệ toạ độ với ô, chỗ đứng do knY() chừa ra.
+   ⚠ `right:0` + `min-width:0` cho vế mô tả co lại được: không có chúng thì dòng mô tả đẩy
+   nhãn rộng ra quá khung cây, và khung chi tiết bên phải bị bóp — cùng cái bẫy `min-width:auto`
+   đã dẫm ở dải bị động chung ngay dưới. */
+.kn-nhom { position:absolute; left:0; right:0; display:flex; align-items:baseline; gap:6px;
+  min-width:0; pointer-events:none; }
+.kn-nhom b { font-size:11px; color:var(--vang); letter-spacing:.3px; white-space:nowrap; }
+.kn-nhom::after { content:''; flex:1 1 auto; min-width:0; height:1px; align-self:center;
+  background:linear-gradient(90deg, rgba(var(--rgb-vang),.42), transparent); }
 .kn-o { position:absolute; width:44px; padding:0; border-radius:var(--r-sm); cursor:pointer;
   background:rgba(var(--rgb-da),.55); border:1px solid var(--border-faint);
   display:flex; flex-direction:column; align-items:center; font-family:inherit;
@@ -2275,6 +2306,14 @@ html,body { width:100%; height:100%; overflow:hidden; background:var(--bg-deep);
    Nhân Vật: hai chỗ nói về cùng một túi điểm thì phải cùng một màu. */
 .kn-tn { min-width:96px; border-color:#7ecbff; color:#7ecbff; font-weight:700; }
 .kn-tn.mo { opacity:.42; border-color:var(--border-faint); color:var(--text-dim); }
+/* Hai nút hàng dưới: dùng Sách Kỹ Năng (nâng thẳng 1 cấp) và gán phím Space. Chúng từng nằm
+   trong `upBtnHtml()` ở danh sách chiêu; danh sách đã thành cây nên chúng dọn về khung chi tiết.
+   Cùng bề rộng tối thiểu với hai nút trên để hai hàng xếp thành lưới 2×2, không so le. */
+.kn-sachnut { min-width:96px; border-color:var(--orange); color:var(--orange); font-weight:700; }
+.kn-sachnut.mo { opacity:.42; border-color:var(--border-faint); color:var(--text-dim); }
+.kn-space { min-width:96px; border-color:#b9a6ff; color:#b9a6ff; font-weight:700; }
+.kn-space.mo { opacity:.42; border-color:var(--border-faint); color:var(--text-dim); }
+.kn-space.dang { border-color:#7df9ff; color:#7df9ff; box-shadow:0 0 7px rgba(125,249,255,.34); }
 .kn-chan { font-size:9.5px; color:var(--text-dim); line-height:1.45; margin-top:7px;
   border-top:1px solid rgba(255,255,255,.07); padding-top:5px; }
 .kn-ghi { font-size:9.5px; color:var(--text-dim); line-height:1.5; margin-top:8px; }
@@ -2306,6 +2345,74 @@ html,body { width:100%; height:100%; overflow:hidden; background:var(--bg-deep);
   text-align:center; color:#ff9a6a; text-shadow:0 1px 0 #000; }
 /* Ô đang nhận thả — viền xanh lá, cùng màu dấu + "nâng được" của cây. */
 .kn-bo.sk-nhan, #skillbar .sk-slot.sk-nhan { outline:2px solid #5fc96e; outline-offset:1px; }
+
+
+/* ═══ MENU HỆ THỐNG (F6) — một cái SẢNH: ba ô đếm tiền + lưới nút ═══════════════════════
+   Khuôn lấy từ ảnh mẫu MU chủ dự án gửi (hàng WCoinC/WCoinP/GoblintP rồi tới lưới hai cột).
+   Nút to và thưa là CHỦ Ý: đây là cửa mở một lần rồi đi, không phải thanh bấm liên tục —
+   ngược hẳn với ô chiêu 40px trên thanh dưới. */
+#panel-help { width:min(470px,94vw); }
+.sys-vi { display:flex; flex-wrap:wrap; justify-content:space-between; gap:4px 10px;
+  padding:7px 10px; margin-bottom:10px; border-radius:7px; font-size:11.5px;
+  color:var(--text-dim); background:rgba(0,0,0,.28);
+  box-shadow:inset 0 0 0 1px rgba(198,158,74,.28); }
+.sys-vi i { font-style:normal; }
+.sys-luoi { display:grid; grid-template-columns:1fr 1fr; gap:8px; }
+.sys-nut { display:flex; align-items:center; gap:9px; padding:11px 12px; cursor:pointer;
+  border-radius:7px; font-family:inherit; font-size:12.5px; font-weight:600; text-align:left;
+  color:#e8dcc0; background:linear-gradient(180deg,rgba(38,32,22,.94),rgba(18,15,10,.96));
+  border:1px solid rgba(198,158,74,.42); }
+.sys-nut:hover { border-color:var(--gold); color:#fff3d6; }
+.sys-nut:active { transform:scale(.97); }
+.sys-nut i { font-style:normal; font-size:17px; color:var(--gold); line-height:1; }
+.sys-nut span { flex:1; white-space:nowrap; }
+.sys-nut kbd { font-family:inherit; font-size:9.5px; padding:1px 5px; border-radius:3px;
+  color:var(--text-dim); background:rgba(0,0,0,.45); box-shadow:inset 0 0 0 1px rgba(198,158,74,.3); }
+
+/* ═══ NGÂN HÀNG NGỌC (N) ═══════════════════════════════════════════════════════════════
+   Một HÀNG mỗi loại: tranh thật · tên + số trong túi · năm nút gửi · số đang cất · nút rút.
+   ⚠ Icon 34px chứ không 24: sáu viên xếp dọc thì hình là thứ phân biệt hàng, không phải chữ. */
+#panel-ngocbank { width:min(500px,94vw); }
+.nb-list { display:flex; flex-direction:column; gap:4px; }
+.nb-row { display:flex; align-items:center; gap:8px; padding:4px 6px; border-radius:6px;
+  background:rgba(0,0,0,.22); box-shadow:inset 0 0 0 1px rgba(198,158,74,.16); }
+.nb-ic { width:34px; height:34px; object-fit:contain; flex:0 0 34px;
+  filter:drop-shadow(0 2px 3px rgba(0,0,0,.65)); }
+.nb-ten { display:flex; flex-direction:column; gap:1px; flex:1 1 auto; min-width:0; }
+.nb-ten b { font-size:12px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+.nb-ten span { font-size:10px; color:var(--text-dim); }
+.nb-nut { display:flex; gap:3px; flex:0 0 auto; }
+.nb-b { font-family:inherit; font-size:10px; font-weight:700; padding:3px 6px; min-width:26px;
+  border-radius:4px; cursor:pointer; color:#e8dcc0;
+  background:linear-gradient(180deg,rgba(40,33,23,.95),rgba(19,16,11,.96));
+  border:1px solid rgba(198,158,74,.45); }
+.nb-b:hover:not(:disabled) { border-color:var(--gold); color:#fff3d6; }
+.nb-b:disabled { opacity:.3; cursor:not-allowed; }
+.nb-kho { flex:0 0 40px; text-align:right; font-size:13px; font-weight:700; }
+.nb-rut { flex:0 0 auto; }
+.nb-chan { display:flex; align-items:center; gap:12px; margin-top:10px; font-size:11.5px;
+  color:var(--text-dim); }
+.nb-note { margin-top:8px; font-size:10.5px; line-height:1.55; color:var(--text-dim); }
+#panel-nhat { width:min(440px,94vw); }
+/* ── Tab KHÁC: dải bị động chung dưới cây ─────────────────────────────────────
+   Bốn hiệu ứng này đến từ Ascension/trang bị/cổ thư nên không nằm trong VOHOC_DEFS,
+   tức không có ô cây nào để đứng. Giữ chúng ở đây thay vì xoá — chúng là thứ duy
+   nhất nói cho người chơi biết mấy hiệu ứng kia từ đâu ra. */
+.kn-phu { margin-top: 8px; border-top: 1px solid #2a3350; padding-top: 7px; }
+.kn-phu-t { font-size: 10.5px; color: #9aa8d4; margin-bottom: 5px; }
+.kn-phu-o { display: grid; grid-template-columns: 1fr 1fr; gap: 5px; }
+/* ⚠ `min-width: 0` là thứ BẮT BUỘC ở đây. Ô lưới/flex mặc định `min-width: auto` nên nó
+   KHÔNG co xuống dưới bề rộng nội dung — `text-overflow: ellipsis` vì thế vô hiệu và hai ô
+   cột phải tràn hẳn ra ngoài khung bảng. Chỉ nhìn ảnh chụp mới thấy. */
+.kn-phu-1 { display: flex; align-items: baseline; gap: 5px; font-size: 10.5px; min-width: 0;
+  background: #171d31; border: 1px solid #2a3350; border-radius: 5px; padding: 5px 7px; }
+.kn-phu-1 b { color: #a0ffe9; font-size: 11px; white-space: nowrap; }
+.kn-phu-1 > span:last-child { color: #8f9ec4; overflow: hidden; text-overflow: ellipsis;
+  white-space: nowrap; min-width: 0; flex: 1 1 auto; }
+.kn-phu-1.mo { opacity: .5; }
+.kn-phu-1.mo b { color: #8a8a8a; }
+.kn-phu-g { color: #5fc96e; }
+.kn-tt { font-size: 10.5px; color: #9aa8d4; padding: 0 2px 6px; }
 /* ═══════════ MÀN TẢI ═══════════
    Màn đầu tiên người chơi thấy. Trước bản này không có nó: cảnh Lunacia mười lớp lắp dần ngay
    trước mắt, trời trước núi sau nhân vật cuối — trên mạng chậm trông như trang hỏng.

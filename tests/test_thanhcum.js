@@ -122,6 +122,37 @@ const PORT = process.argv[2] || '8853';
     else fail(`§7② thanh rộng ${r7.tong}px, quá trần ${TRAN_PX}px — ${r7.pc}% màn ${r7.man}px`);
   }
 
+  // ── §8 THANH EXP PHẢI BẰNG NGANG THANH ICON ─────────────────────────────────
+  // Chủ dự án chốt: "kéo thanh EXP cho bằng ngang dải icon đi". Đây là thứ TRÔI được mà không
+  // ai thấy: bản cũ khai `width: min(520px,62vw)` — một con số rời hẳn khỏi thanh — nên ở màn
+  // 1600 nó ra 520px nằm cạnh một thanh 756px. Thêm hay bớt một ô là lệch thêm, im lặng.
+  // ⚠ Đo ở HAI khổ màn: một con số chép cứng vẫn có thể tình cờ đúng ở đúng một khổ.
+  const r8 = [];
+  for (const w of [1600, 1100]){
+    await p.setViewportSize({ width: w, height: 900 });
+    await p.waitForTimeout(250);
+    r8.push(await p.evaluate((vw) => {
+      const R = e => e.getBoundingClientRect();
+      const h = document.getElementById('bottom-hud'), x = document.getElementById('xp-strip');
+      if (!h || !x) return { thieu: true, vw };
+      const a = R(h), b2 = R(x);
+      return { vw, thanh: Math.round(a.width), exp: Math.round(b2.width),
+               lechTrai: Math.round(b2.left - a.left), lechPhai: Math.round(a.right - b2.right),
+               khe: Math.round(b2.top - a.bottom) };
+    }, w));
+  }
+  const VIEN = 3;   // #bottom-hud có viền 1px mỗi bên; con tuyệt đối neo vào hộp PADDING
+  for (const r of r8){
+    if (r.thieu){ fail(`§8 thiếu #bottom-hud hoặc #xp-strip ở khổ ${r.vw}`); continue; }
+    const lech = Math.abs(r.thanh - r.exp);
+    if (lech <= VIEN * 2 && Math.abs(r.lechTrai) <= VIEN && Math.abs(r.lechPhai) <= VIEN)
+      pass(`§8 màn ${r.vw}: EXP ${r.exp}px bằng ngang thanh ${r.thanh}px (mép lệch ${r.lechTrai}/${r.lechPhai}px)`);
+    else
+      fail(`§8 màn ${r.vw}: EXP ${r.exp}px KHÔNG bằng thanh ${r.thanh}px — mép trái lệch ${r.lechTrai}px, mép phải ${r.lechPhai}px`);
+    if (r.khe >= 0) pass(`§8 màn ${r.vw}: EXP nằm dưới thanh, cách ${r.khe}px`);
+    else fail(`§8 màn ${r.vw}: EXP cắt ngang thanh chiến đấu (chồng ${-r.khe}px)`);
+  }
+
   if (errs.length) fail('lỗi trang: ' + errs.slice(0,3).join(' | '));
   console.log(bad ? `\n${bad} FAIL` : '\nOK');
   await b.close();

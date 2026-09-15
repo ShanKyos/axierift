@@ -1641,19 +1641,64 @@ Test: `node <scratchpad>/test_itemcompare.js`.
 
 ## Hệ thống kỹ năng (đã tối giản)
 
-Taskbar cố định **4 ô**: chiêu chính (`a`) · chiêu phụ (`tp`) · ô 3 riêng từng lớp
-(`O3_SKILL_ID`) · tuyệt chiêu (`SIGNATURE_SKILL`). Không cho người chơi tự gán. Các chiêu cũ
-không còn bấm được đã quy thành **% Công Kích vĩnh viễn** (`LEGACY_SECT_SKILLS` /
-`legacyAtkPct` trong `calcDerived()`), hiện ở mục Di Sản trong panel K.
+Taskbar **4 ô**, nay người chơi tự gán được (xem mục 🎯 bên dưới). Thanh MẶC ĐỊNH do
+**`defaultSkillBar(sect)`** dựng, và nó đọc **`THANH_LOP`** trước — không còn là một công thức
+cố định `['a','tp',O3,SIGNATURE]`. Các chiêu không nằm trên thanh quy thành **% Công Kích vĩnh
+viễn** (`LEGACY_SECT_SKILLS` / `legacyAtkPct` trong `calcDerived()`), hiện ở tab Khác.
 
-Ô 3 **không nhất thiết là chiêu buff**. Bộ bốn nút phải là bộ bốn chiêu mà lớp ấy thực sự nổi
-tiếng vì nó. Dark Wizard là Poison · Meteorite · Inferno · Dragon Spirit, nên Soul Barrier
-nhường chỗ cho Inferno và chuyển sang Di Sản — y như chiêu buff của Dark Knight đã làm.
-`BUFF_SKILL_ID` nay **suy ra** từ `O3_SKILL_ID` (ô 3 nào có `type:'buff'`), không khai tay.
+Ô 3 **không nhất thiết là chiêu buff**; `BUFF_SKILL_ID` **suy ra** từ `O3_SKILL_ID` (ô 3 nào có
+`type:'buff'`), không khai tay.
 
-Một chiêu **không được vừa bấm được vừa cộng %ST vĩnh viễn**. Đưa chiêu nào lên taskbar thì
-đồng thời gỡ nó khỏi `LEGACY_SECT_SKILLS`, và đẩy một chiêu khác vào thế chỗ sao cho mỗi lớp
-vẫn đúng **4 chiêu Di Sản = +8,0% Công Kích** (`test_kynang5lop` bắt lỗi lệch giữa các lớp).
+### ⚠ DI SẢN = SÁU CHIÊU CỦA LỚP **TRỪ** NHỮNG Ô ĐANG TRÊN THANH
+
+Một chiêu **không được vừa bấm được vừa cộng %ST vĩnh viễn** — luật đó không đổi. Đổi là **cách
+giữ** nó. `calcDerived()` đã trừ động theo thanh từ đợt kéo thả, nên `LEGACY_SECT_SKILLS` nay
+khai **cả sáu** chiêu chủ động của mỗi lớp (ngoài `a` và `tp`) và để phép trừ tự lo.
+
+Bản cũ khai đúng bốn chiêu "không nằm trên thanh" — tức **chép tay KẾT QUẢ của phép trừ**. Mỗi
+lần đổi một ô taskbar là phải nhớ sửa bảng cho khớp, quên thì %Công Kích lệch **âm thầm**. Cùng
+họ với bước "rồi chép sang…" của `ISO_NEO`.
+
+Số liệu không đổi với bốn lớp kia (hai chiêu vừa thêm đang nằm trên thanh nên bị trừ ra):
+pool 12,0 − 4,0 · 13,0 − 5,0 · 12,0 − 4,0 · 12,5 − 4,5 ⇒ vẫn **+8,0%** như trước.
+
+### 🔮 DARK WIZARD: METEORITE XUỐNG Ô 3, Ô 2 VÀ Ô 4 ĐỂ TRỐNG
+
+Chủ dự án chốt (nguyên văn): *"Chuyển lại tuyệt chiêu meteriote sẽ là chiêu trấn phái 3 của DW.
+2 chiêu còn lại là inferno + evil spirit sẽ nằm ở chiêu khác"* — và về hai ô trống:
+*"cứ để trống mình sẽ fill sau"*.
+
+| | |
+|---|---|
+| thanh DW | `['a', null, 'tp', null]` trong **`THANH_LOP`** |
+| ô 3 | **Meteorite** — chính là `tp`, không phải một mã riêng |
+| Inferno · Evil Spirit | rời thanh, sang tab Khác thành Di Sản |
+| `O3_SKILL_ID.baidasan` · `SIGNATURE_SKILL.baidasan` | **`null`** = ô để trống CÓ CHỦ Ý |
+
+- **⚠ `defaultSkillBar` phải `.slice()`.** Bản công thức dựng mảng literal nên mảng mới là mặc
+  nhiên; đọc từ một bảng thì không — thiếu `.slice()` là mọi nhân vật cùng lớp dùng CHUNG một
+  mảng và cú kéo thả đầu tiên sửa luôn bảng gốc cho cả phiên.
+- **DW tạm ở +12,5%** thay vì 8,0%: không chiêu nào bị trừ vì thanh thiếu hai ô. Đó là cái giá
+  đúng của việc thiếu hai nút bấm, và nó **tự về 8%** ngay khi hai ô được điền (Inferno 2,5 +
+  Evil Spirit 2,0 = đúng 4,5 chênh lệch). Đừng "sửa" bằng cách hạ bậc chiêu.
+- **⚠ Ô TRỐNG PHẢI ĐƯỢC KHAI RA.** Ba bài kiểm (`test_kynang5lop` · `test_tuyetchieu` ·
+  `test_canbanglop`) đọc thẳng `THANH_LOP` để biết ô nào được phép trống. Miễn trừ bằng một danh
+  sách tên lớp NGAY TRONG BÀI KIỂM là mở cửa cho lớp thứ hai rơi vào cùng trạng thái mà lọt êm.
+
+#### Bốn mệnh đề đã mục vì chúng đoán VỊ TRÍ thay vì hỏi MÃ CHIÊU
+
+Cả bốn đỏ ngay khi `tp` rời ô 2 — và cả bốn đều đỏ vì cách hỏi, không vì cơ chế:
+
+1. `test_kynang5lop` §3 khoá cứng `0 → sx_<lớp>_a`, `1 → sx_<lớp>_c` ⇒ báo *"Meteorite không khai
+   hoạt ảnh riêng"* trong khi nó có nguyên một gói art. Tra theo **mã** (`id === 'tp'`), không
+   theo chỉ số ô.
+2. `test_tuyetchieu` §2 suy "cộng %ST hai lần" từ việc chiêu **có tên trong** `LEGACY_SECT_SKILLS`.
+   Danh sách nay khai cả sáu nên phép suy đó hỏng; **đo** %ST thật (gỡ khỏi thanh phải làm nó tăng).
+3. `test_kynang5lop` gộp `bar` + `diSan` để dò trùng tên — hai mảng nay GIAO NHAU nên một chiêu
+   tự trùng với chính nó, ra `"Bulwark (thieulam+thieulam)"`. Gộp trong cùng lớp trước, và bỏ `null`.
+4. `test_ganchieu` §3 lấy **chiêu Di Sản đầu danh sách** rồi kéo lên thanh — chiêu đó nay rất có
+   thể đang ở ô 3, kéo sang ô 2 thì vẫn trên thanh, %ST tụt 0. Cảnh phải tự bảo đảm tiền đề:
+   chọn chiêu **chưa nằm trên thanh**, và nói ra khi không tìm được cái nào.
 
 ### 💠 ĐIỂM TIỀM NĂNG NAY CÓ **HAI** CHỖ TIÊU — trần 5 điểm mỗi chiêu
 
@@ -1705,6 +1750,88 @@ thừa thì bỏ qua — cả hai đều không ném lỗi, nên điền dần t
 | `KN_HINH` | hình cây: 16 ô, `c` cột · `h` hàng · `tu` là ô cha (vẽ mũi tên tới) |
 | `KN_HINH_RIENG` | `<lớp>\|<tab>` → hình riêng; không khai thì dùng `KN_HINH` |
 | `KN_ROT` / `KN_ROT_CHUNG` | **mã chiêu rót vào ô** |
+| `knDsKhac()` | tab **Khác** SUY RA, không điền tay — xem ngay dưới |
+
+**⚠ TAB KHÁC KHÔNG ĐIỀN TAY.** Nó suy từ `LEGACY_SECT_SKILLS` + `CLASS_PASSIVES` của lớp đang
+chơi qua `knKhacNhom()` (và `knDsKhac()` là bản dàn phẳng của nó). Chép thành một bảng
+`KN_ROT_CHUNG.khac` thứ ba là bảo đảm nó lệch với hai bảng kia ngay lần đầu ai đó đổi Di Sản mà
+quên sửa — cùng lối với `mapBanSac()` suy từ `packs`.
+
+**Cả BA tab nay dùng CHUNG một khung** (ô + khung chi tiết). Tab Khác từng là một cuộn chữ dài
+xếp năm khối rời: cùng một bảng mà hai tab vẽ kiểu này, một tab vẽ kiểu kia, nên bấm sang tab là
+người chơi phải học lại cách đọc. `test_cayky` đã bỏ chỗ miễn trừ `!== 'khac'` — chính chỗ miễn
+trừ đó là thứ sẽ lặng lẽ cho phép nó lệch ra lần nữa.
+
+#### ▦ NHƯNG TAB KHÁC LÀ **LƯỚI CÓ NHÓM**, KHÔNG PHẢI CÂY NHÁNH
+
+Chủ dự án đưa ảnh mẫu: hai nhóm có tiêu đề ("Hành vi" · "Học tập"), mỗi nhóm một lưới biểu
+tượng, nhóm sau nối bằng mũi tên dọc. Đó là hình dạng ĐÚNG cho tab này — Di Sản là **bốn thứ
+độc lập**, không cái nào mở khoá cái nào, nên mượn cây nhánh của tab Lớp là bịa ra một quan hệ
+không có.
+
+| | |
+|---|---|
+| `knKhacNhom()` | khai hai nhóm (tên · số cột · có phải một mạch không) |
+| `knHinhKhac()` | dựng lưới TỪ CHÍNH nó ⇒ thêm/bớt một Di Sản là lưới tự giãn |
+| `knY(n)` | **cửa DUY NHẤT** tính toạ độ Y của một ô |
+
+- **⚠ SỐ Ô SUY TỪ DỮ LIỆU, đừng chép cứng 4×2 như ảnh mẫu.** Lớp nào cũng đúng 4 Di Sản, nhưng
+  bị động thì `thieulam` có 2 còn bốn lớp kia 1. Khoá cứng tám ô là bốn lớp mở ra thấy một dãy ô
+  trống mang nhãn "Học Tập" — bảng tự hứa có thứ nó không có.
+- **Mũi tên nhóm Học Tập nghĩa là MỞ SAU** (xếp theo `unlock`), không phải điều kiện tiên quyết:
+  cả hai bị động đều tự ngộ theo cấp. Tiêu đề nhóm nói thẳng ra vậy — *một mũi tên hứa điều kiện
+  không có thật thì tệ hơn không vẽ mũi tên nào.*
+- **Khối "HỆ TẤN CHỨC PHỤ" đã GỠ** — `danchi`/`tieuhon` nay là hai ô trong chính lưới. Giữ lại
+  là cùng một bảng in hai lần hai kiểu, cách nhau vài dòng.
+- Mô tả nhóm nằm trong `title`, **không in cạnh nhãn**: vùng cây chỉ rộng 218px nên một dòng mô
+  tả bị cắt cụt giữa chừng, mà một câu cụt còn tệ hơn không có câu nào.
+
+#### ⚠ `knNut()` CÓ BA ĐƯỜNG RA — chép phần hình học MỘT chỗ thôi
+
+Nó dựng một vật thể MỚI từ ô của hình. Bản cũ liệt kê tay `k/c/h/tu` ở **cả ba** nhánh `return`,
+nên thêm một trường vào hình (`gi`, `nhomTen`…) mà chỉ sửa một nhánh là trường đó **rụng mất ở
+hai nhánh kia — không lỗi, không dấu hiệu**. Đã dẫm đúng thế: thêm tiêu đề nhóm xong thì ô vẫn
+vẽ đủ, mũi tên vẫn đúng, mà hai cái nhãn KHÔNG BAO GIỜ hiện ra. Nay gom vào `hh` rồi `...hh`.
+
+#### ⚠ Ô CAO **58px**, KHÔNG PHẢI 44 — và mũi tên phải xuất phát từ 58
+
+`KN_O` là cạnh cái ẢNH; ô thật còn cõng dòng số cấp bên dưới (đo trong DOM: **58px**). Mũi tên
+bắn từ `y + KN_O` là bắn từ GIỮA dòng số cấp, mà badge vẽ SAU nên nó che mất thân mũi tên. Thứ
+còn lại trên màn là mấy **đầu mũi tên xanh trôi lơ lửng** — nhìn ra lỗi vẽ chứ không ra một cái
+cây, và nó đã sống như thế ở cả tab Lớp. Nay có `KN_O_CAO = 58`, và `KN_HANG` nới **60 → 76**
+(khe cũ chỉ còn 2px thì không mũi tên nào vẽ lọt).
+
+**Ba lần thử ngược, cả ba lộ ra lỗi của chính BÀI KIỂM** — ghi lại vì cùng một họ:
+1. mệnh đề mũi tên lọc ô cha bằng `day <= py`. Khi mũi tên bắt đầu BÊN TRONG ô cha thì ô ấy bị
+   loại, phép đo tụt xuống hàng trên và trả về một khe **DƯƠNG** to tướng — tức đúng cái lỗi cần
+   bắt lại làm bài xanh. Nay lấy ô có đáy GẦN NHẤT; thử ngược ra −13,5px.
+2. `getBoundingClientRect()` trên bảng `display:none` trả **TOÀN SỐ 0**, mà 0 thì thoả mọi bất
+   đẳng thức. Bài đã báo "khe 262px" trong lúc mọi ô ra `{x:0, day:0}`. Phải tự kiểm cảnh dựng.
+3. `test_skillpanel`/`test_uidot5` dò chuỗi `"HỆ TẤN CHỨC PHỤ"`. Dò tiêu đề thì đổi cách bày là
+   đỏ oan, mà **xoá thật hai chiêu rồi để lại cái tiêu đề thì lại xanh**. Nay hỏi thẳng
+   `knDsKhac()` có `danchi`/`tieuhon` không.
+
+Ba thứ ở tab Khác **không phải chiêu** nên không vào cây được, và ở lại thành một dải gọn bên
+dưới: Sách Kỹ Năng (vật phẩm), `PASSIVE_SKILLS` (đến từ Ascension/trang bị, **không** nằm trong
+`VOHOC_DEFS` nên không có ô cây), và hệ tấn chức phụ.
+
+#### ⚠ ĐỔI CÁCH VẼ MỘT BẢNG ⇒ ĐẾM LẠI MỌI NÚT NÓ TỪNG TREO
+
+Khi danh sách chiêu thành cây, `upBtnHtml()` mất sạch chỗ gọi. Nó là chỗ **DUY NHẤT** treo nút
+📜 (dùng Sách Kỹ Năng — nâng thẳng 1 cấp) và nút ⌨ (gán phím Space). Hai cơ chế vẫn sống nguyên
+trong mã (`useSkillBookUI` · `assignSpaceUI`), `node --check` xanh, không lỗi nào in ra — mà
+người chơi thì **không còn cửa nào bấm**, trong khi bảng vẫn ngồi đó in dòng *"📜 Sách Kỹ Năng
+nâng thẳng 1 cấp"* MỜI dùng. Cùng họ với bẫy "nút chết" ở mục trên, chỉ khác là lần này không
+có nút để mà chết — chỉ còn lời mời suông, thứ mà không bài kiểm nào hỏi tới.
+
+⇒ `test_cayky §⑤` **BẤM** hai nút rồi đo trạng thái người chơi (cấp +1 · sách −1 · Space gán rồi
+gỡ được), và đo cả chiều NGƯỢC LẠI (hết sách thì nút phải mờ). Hỏi "có nút không" là chưa đủ:
+một nút trỏ vào hàm không tồn tại vẫn có mặt trong DOM.
+
+**⚠ `skThongSoGon()` in hồi chiêu qua `effCd()`, đừng in `i.cd`.** `skillInfo()` trả cd **GỐC**;
+mọi mốc / tiến hoá / `vhCdMult` nhân vào sau. In số gốc thì bảng hứa *"−0,25% hồi chiêu mỗi cấp"*
+ngay bên dưới một con số đứng im suốt 120 cấp. Đây nay là chỗ **duy nhất** in năm thông số —
+lưới 3 cột `skThongSo()` đã gỡ cùng đợt này.
 
 **⚠ Ảnh mẫu là game kiếm hiệp, ba chữ trong đó Quy tắc số 1 cấm.** Đã đổi, và đây là bảng quy đổi
 để đừng ai "sửa ngược" tưởng là sót: `Phái` → **Lớp** · `Giang Hồ` → **Vaeldra** (đúng cái thế
@@ -1924,6 +2051,105 @@ mặc định và mệnh đề xanh kể cả khi `loadGame` ép lại thanh).
 
 ⚠ Dòng chân khung chi tiết phải nói đúng: nó từng viết *"Không nằm trên thanh chiêu (4 ô cố
 định)"*. Câu đó nay là lời nói dối ngay ở ô mà người chơi vừa tự kéo vào.
+
+## ≡ THANH DƯỚI CHIA BA CỤM · F6 LÀ **SẢNH**, KHÔNG PHẢI BẢNG PHÍM TẮT
+
+Chủ dự án đưa ảnh mẫu MU và chốt bố cục. Hai đợt việc, ghi chung vì chúng dùng chung một luật.
+
+### Thanh dưới: trái — giữa — phải, và thanh EXP neo VÀO thanh
+
+| cụm | id | có gì |
+|---|---|---|
+| trái | `#mc-trai` | Nhân Vật · Túi Đồ · Kỹ Năng · Nhiệm Vụ |
+| giữa | `#skillbar` | bốn ô chiêu + mấy nút chiến đấu |
+| phải | `#menu-cot` | Tổ Đội · Hảo Hữu · Bản Đồ · Cài Đặt · `≡` |
+
+- ⚠ **Nút hai bên NHỎ HƠN ô chiêu** (30px vs 40px). Tôi từng cho cả 22 ô cùng 40px, viết hẳn
+  một chú thích CSS bênh vực nó, rồi **khoá luôn bằng một khẳng định trong `test_huongdan`** —
+  tức là nướng cái sai vào bộ kiểm. Chủ dự án nhìn ảnh mẫu và gọi ngay: *"sao nó dài quá vậy"*.
+  Thanh đo được **865 → 756px**. Khẳng định cũ đã gỡ; `test_thanhcum §7` nay chốt HAI vế —
+  nút menu phải nhỏ hơn ô chiêu **và** ≥26px (đừng chữa quá tay thành một dải chấm bấm không trúng).
+- ⚠ **Trần bề rộng chốt bằng PX TUYỆT ĐỐI (800), không bằng % khung nhìn.** Bản đầu tôi chốt
+  "≤52% khung nhìn" đo ở 1600px; bộ kiểm chạy ở 1440 nên **đúng cái thanh 756px ấy thành 52,5%**
+  và bài đỏ vì một lý do chẳng liên quan gì tới thứ nó định gác.
+- ⚠ **`#xp-strip` là CON của `#bottom-hud`** (`position:absolute; left:0; right:0`), không neo
+  vào khung nhìn. Đó là cách DUY NHẤT giữ nó bằng ngang dải icon khi thanh co giãn —
+  `left:50%; transform:translateX(-50%)` cho ra một thanh rộng cố định, lệch ngay khi đổi cỡ màn.
+  `test_thanhcum §8` đo ở **hai** bề rộng khung nhìn, vì ở đúng một bề rộng thì mọi cách neo đều xanh.
+- ⚑ và ♥ vẫn là **ký tự**, không phải tranh: `ic_*.png` chưa có art cho Tổ Đội / Hảo Hữu.
+- ⚠ **Nút menu là `≡`, KHÔNG phải `☰`.** `☰` là quẻ Càn của bát quái — Quy tắc số 1 cấm.
+
+### F6 = Menu Hệ Thống (sảnh bốn nút). Bảng phím tắt thành **tab của Cài Đặt**
+
+`SYS_NUT` khai bốn nút (Cài Đặt · Sự Kiện · Ngân Hàng Ngọc · Lệnh Nhặt) + hàng ba loại tiền
+(đúng khuôn WCoinC/WCoinP/GoblintP trong ảnh — ba loại tiền ở đây **đã có sẵn**, không bịa thêm).
+**Bảng xếp hạng trong ảnh thì BỎ**: chưa có máy chủ xếp hạng, mà một nút bấm vào không ra gì thì
+tệ hơn hẳn không có nút — cùng bài học `openEvoPanel` của `test_cayky`.
+
+- **Giữ id `panel-help`.** `BANG_NHOM`, `MC_BANG`, danh sách ESC và mấy bài kiểm cũ đều gọi tên
+  đó; đổi tên là sửa năm chỗ để được đúng một cái tên đẹp hơn.
+- **Nội dung cũ KHÔNG mất** — `hdNoiDung()` tách ra khỏi `renderHelpPanel()` và thành tab
+  **Phím Tắt** của Cài Đặt (`SET_TABS`, `window.setSetTab`), đúng chỗ ảnh mẫu đặt nó.
+- ⚠ **KHÔNG cướp phím J như ảnh mẫu MU** (*"Ngân hàng ngọc (J)"*). J ở game này là **NHẶT ĐỒ**,
+  và đó là đường DUY NHẤT nhặt đồ bằng bàn phím. Dùng **N**. `test_hethong §3` gác cả hai chiều.
+
+### ⚠ HÀM VẼ KHÔNG ĐƯỢC TỰ CHẶN THEO `.hidden` — `togglePanel` vẽ TRƯỚC khi gỡ cờ
+
+Đã ghi ở mục panel, nhưng nó suýt tái diễn ở đúng hai bảng mới: `renderNgocBank()` và
+`renderLenhNhat()` mà tự `return` khi bảng còn `.hidden` thì mở ra một **cái khung TRỐNG**.
+Cửa hỏi `.hidden` là `ngocVeLai()` / `nhatVeLai()` — hàm vẽ thì vẽ vô điều kiện.
+
+Và hai bảng ấy là lý do hai hàm kia tồn tại. ⚠ **Ngăn ngọc VẼ ở đúng MỘT nơi** — bảng phím N.
+Tab Kho của Túi Đồ chỉ còn **một con số "đang cất" + một nút chỉ đường**; dựng lại khối ngọc ở
+đó là hai cửa cùng vẽ một thứ, tức hai chỗ phải nhớ sửa. Nhưng con số kia thì vẫn phải VẼ LẠI
+khi gửi/rút, và bốn công tắc nhặt thì **thật sự có ở hai nơi** (Lệnh Nhặt *và* cụm "⚙ Tự động"
+của Túi Đồ). Mọi hàm gửi/rút/bật-tắt phải vẽ lại cả hai — sáu chỗ từng chỉ gọi `renderBag()`.
+Bấm ở cửa này mà số ở cửa kia đứng im thì người chơi đọc ra là *"bấm không ăn"*, và **không lỗi
+nào báo**.
+
+⚠ **Nút `♪` đã gỡ theo `#mc-drop`**, và đó là chủ ý: thanh trượt 🎵 trong Cài Đặt là cửa đầy đủ
+hơn một cái nút bật/tắt. `test_nhacnen` **không xoá mệnh đề cho xanh** — nó đi theo sang cửa mới
+và mạnh lên: mệnh đề cũ chỉ hỏi nút có `.hidden` không (nút chết vẫn xanh), mệnh đề mới **kéo
+thanh trượt thật** rồi đòi `SETTINGS.bgm` phải đổi.
+
+### Ngân Hàng Ngọc: sáu ICON TRANH THẬT, không phải một hình vẽ đổi màu
+
+`NGOC_ANH` → `assets/ui/ngoc_*.webp`, nướng bằng `tools/ui/nuong_ngoc.py` từ kit Axie chính chủ
+(96px, **fit-square** chứ không kéo giãn; cả sáu chỉ **16,3 KB**). Trước đó sáu loại dùng chung
+một hình canvas đổi màu — che màu đi thì không ai phân biệt được loại nào, đúng bài học đã ghi ở
+mục chibi (*"tô đặc một màu rồi nhìn"*).
+Màu nhãn lấy từ `JEWEL_COLORS` đang chạy (`ngocMau()`), nên **icon và chữ không thể nói hai đằng**.
+
+### Lệnh Nhặt: gom công tắc, **KHÔNG đẻ cờ mới**
+
+Bốn công tắc (`autoNgoc` · `autoSell` · `autoEquip` · `donMuc`) đều **đang chạy sẵn**, chỉ là
+chúng nằm rải ở ba chỗ. Bảng này là MỘT nơi đọc/ghi đúng mấy cờ cũ, không phải bản sao thứ hai.
+Dòng tầm hút **chỉ ĐỌC** kèm nút sang Cài Đặt — dựng thanh trượt thứ hai ở đây là hai cửa cùng
+sửa một cờ, đúng kiểu thừa đã phải dọn ở bảng Nhân Vật.
+
+### Nhật Ký Chiến Đấu sang nửa PHẢI — sườn trái để dành cho CHAT
+
+Chưa có chat người-với-người; ghi nhận chỗ trước để khi làm không phải dời một lần nữa.
+`test_hethong §8` gác: `#combat-log-wrap` phải nằm ở nửa phải màn.
+
+⚠ **Gỡ một khối HTML thì soát mọi `getElementById` trỏ vào nó.** Gỡ `#mc-drop` để lại
+`document.getElementById('btn-music').addEventListener(...)` không chốt null — nó ném **ngay lúc
+nạp trang** và giết mọi lượt đăng ký phía sau. Cùng cái bẫy đã ghi cho `btn-inv`.
+
+Gác: `tests/test_thanhcum.js` (8 mệnh đề) · `tests/test_hethong.js` (18 khẳng định, **chín** phép
+thử ngược đều đỏ). Ba bài CŨ phải theo nội dung sang nhà mới — `test_huongdan §2` (bảng phím nay
+ở tab Cài Đặt) · `test_kho B4` (tab Kho nay chỉ đường) · `test_nhacnen` (thanh trượt thay nút ♪);
+cả ba **mạnh lên chứ không nhẹ đi**, và cả năm phép thử ngược của chúng đều đỏ. *Một bài kiểm đỏ
+vì nội dung DỜI CHỖ thì sửa bằng cách đi theo nó, không phải bằng cách xoá mệnh đề.*
+⚠ `test_hethong §7` bản đầu chốt *"nhãn khớp `BẬT|TẮT`"* — xanh ở **cả hai** trạng thái, tức không
+gác gì. Đổi thành *"nhãn phải ĐỔI"*, và đúng phép thử ngược đó mới bắt được `toggleAutoNgoc` quên
+gọi `nhatVeLai()`. *Một cái chốt đúng ở mọi trạng thái là một cái chốt không chốt gì* — cùng bệnh
+với luật `≤60% là kill` và với *"đúng 7 NPC có trang thoại"*.
+
+⚠ **Một phép thử ngược IM LẶNG là bằng chứng cái QUE DÒ hỏng, không phải bằng chứng mệnh đề yếu.**
+Đã suýt kết luận ngược: que dò của tôi thay chuỗi `"left:0; right:0;"` trong `style.css`, mà chuỗi
+đó có mặt ở nhiều rule chẳng liên quan — phép đột biến rơi nhầm chỗ và bài vẫn xanh. **Mỏ neo của
+phép thử ngược phải DUY NHẤT**, và phải đếm số lần xuất hiện trước khi thay.
 
 
 ## ⚠ QUY TẮC SỐ 3: KHÔNG DÙNG VECTOR. CHẤM HẾT.
