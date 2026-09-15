@@ -25792,6 +25792,50 @@ function tgHuong(a, b){
   return Math.abs(dx) >= Math.abs(dy) ? (dx > 0 ? 'Đông' : 'Tây') : (dy > 0 ? 'Nam' : 'Bắc');
 }
 let _tgNen = null;
+// ═══════════ CHẤT LIỆU MẶT ĐẤT CHO BẢN ĐỒ THẾ GIỚI ═══════════
+// Chín mảng 384px cắt từ art CHÍNH CHỦ Axie (`PvE/UI/Chapter/map_chapter_1|2.png` — hai dải
+// 1770×578 vẽ tay nhìn từ trên xuống). Xem `tools/bando/nuong_nen_tg.py`.
+//
+// ⚠ VẼ 1:1, KHÔNG CO CHO VỪA VÙNG. Vùng trên bản đồ chỉ rộng 80-160px; co một mảng 384px xuống
+// cho vừa thì rặng thông trong tranh thành mấy chấm xanh. Vẽ đúng cỡ rồi KẸP theo đa giác của
+// vùng ⇒ cây cối giữ nguyên cỡ trên khắp tấm, đúng cách một tấm bản đồ vẽ tay hoạt động.
+//
+// ⚠ VÀ ĐÂY LÀ CHỖ RANH GIỚI PHẢI GIỮ: tranh chỉ là MẶT ĐẤT. Hình của vùng vẫn là `md.diTrong`,
+// đường nối vẫn từ `GATES`, khoá/mở vẫn qua `mapGate()`. Vẽ hẳn một tấm bản đồ rồi dán tên lên
+// thì nó đẹp đúng một hôm và sai từ lần đầu ai đó thêm một cổng — cùng bệnh mà `mapBanSac()`
+// sinh ra để chữa.
+const TG_DAT = {};
+const TG_THU = 0.52;      // tỉ lệ thu chất liệu mặt đất — xem ghi chú ở drawImage trong veTheGioi
+const TG_DAT_MO = 0.55;   // đất lùi về làm NỀN, huy hiệu mới là thứ để đọc
+const TG_HUY = 21;        // bán kính huy hiệu
+function tgDat(ten){
+  let im = TG_DAT[ten];
+  if (!im){
+    im = TG_DAT[ten] = new Image();
+    // Tấm nền có ĐỆM (`_tgNen`); art về sau khi đệm đã dựng thì phải bỏ đệm, nếu không tấm
+    // giấy trơn nằm lại suốt phiên và không ai hiểu vì sao art không hiện.
+    im.onload = () => { _tgNen = null; };
+    im.src = 'assets/bando/tg_' + ten + '.webp';
+  }
+  return (im.complete && im.naturalWidth) ? im : null;
+}
+// Sinh cảnh suy từ CHÍNH bộ viên nền map đang dùng (`isoCo`), không từ một bảng thứ hai — đổi
+// viên nền của một map là bản đồ đổi theo.
+// ⚠ Bốn map không khai `isoCo` (corran · ngoai · loimon · trungnut) rơi về đồng cỏ. Đó là lùi
+// về mặc định chứ không phải một lựa chọn thẩm mỹ: khai `isoCo` cho chúng là bản đồ tự đúng.
+const TG_SINH = { tuyet:'tuyet', rung:'rung', vuon:'dongco', to:'dahoang',
+                  tro:'tro', reu:'dam', da:'thanh', duong:'nuoc' };
+// ⚠ `bdNen` KHAI THẲNG, và chỉ cho bốn map KHÔNG suy được. corran · ngoai · loimon · trungnut
+// không khai `isoCo` nên chúng rơi hết về đồng cỏ — cộng với ardhaven và daohoa là SÁU vùng
+// dùng chung một mảng, tức sáu cái huy hiệu giống hệt nhau. Huy hiệu mà không phân biệt được
+// thì nó thôi làm huy hiệu.
+// Đây là khai tay, nên nó là thứ có thể nói dối — dòng duy nhất như vậy trong cả tấm bản đồ.
+// Khi bốn map ấy khai `isoCo` thật thì gỡ `bdNen` đi, đừng để hai nguồn cùng sống.
+function tgChatLieu(md){
+  if (md.bdNen) return md.bdNen;
+  const m = /^nen_([a-z]+?)\d*$/.exec((md.isoCo && md.isoCo[0]) || '');
+  return (m && TG_SINH[m[1]]) || 'dongco';
+}
 function tgNen(){
   if (_tgNen) return _tgNen;
   const c = document.createElement('canvas'); c.width = TG_KHUNG.w; c.height = TG_KHUNG.h;
@@ -25799,6 +25843,17 @@ function tgNen(){
   const gr = g.createLinearGradient(0, 0, TG_KHUNG.w, TG_KHUNG.h);
   gr.addColorStop(0, '#2a2418'); gr.addColorStop(0.5, '#332b1c'); gr.addColorStop(1, '#241f16');
   g.fillStyle = gr; g.fillRect(0, 0, TG_KHUNG.w, TG_KHUNG.h);
+  // MẶT BIỂN lát kín phần ngoài mọi vùng. Vẽ trước lớp vân giấy để giấy còn nhuốm được lên nó —
+  // đảo thứ tự thì biển nằm trên và cả tấm mất hẳn chất "bản đồ cũ", chỉ còn một hồ nước.
+  // ⚠ KÉO GIÃN PHỦ KHUNG, ĐỪNG LÁT. Mảng 384px lát vào khung 660×500 chỉ ra 2×2 ô, và mối nối
+  // hiện thành một HÌNH CHỮ THẬP chạy giữa tấm — thấy rõ mồn một vì mặt nước trơn không có gì
+  // che. Kéo một bản phủ kín thì không còn mối nào; nước không có chi tiết nên giãn không lộ.
+  const bien = tgDat('bien');
+  if (bien){
+    g.globalAlpha = 0.88;
+    g.drawImage(bien, 0, 0, TG_KHUNG.w, TG_KHUNG.h);
+    g.globalAlpha = 1;
+  }
   // vân giấy: nhiễu thưa, hạt CỐ ĐỊNH nên tấm nền không nhấp nháy giữa hai lần mở bảng
   const ra = _hatRng(_bamChuoi('bandothegioi'));
   for (let i = 0; i < 2600; i++){
@@ -25869,13 +25924,65 @@ function veTheGioi(g){
     } else { g.beginPath(); g.arc(0, 0, o.r, 0, 7); }
     // bóng đổ nhẹ cho vùng đất nổi lên khỏi mặt giấy
     g.save(); g.translate(2.5, 3.5); g.fillStyle = 'rgba(10,7,3,.45)'; g.fill(); g.restore();
-    g.fillStyle = mo ? tgMauVung(md) : '#241f18';
-    g.globalAlpha = mo ? (hv ? 1 : 0.92) : 0.5;
-    g.fill();
-    g.globalAlpha = 1;
+    const dat = tgDat(tgChatLieu(md));
+    if (dat){
+      g.save(); g.clip();
+      g.globalAlpha = TG_DAT_MO;   // đất chỉ còn là NỀN — huy hiệu mới là thứ để đọc
+      // Lệch gốc theo hạt của TÊN VÙNG: hai vùng cạnh nhau cùng sinh cảnh mà vẽ cùng một góc
+      // tranh thì đọc ra hai bản sao dán cạnh nhau, chứ không ra hai nơi khác nhau.
+      // ⚠ THU CHẤT LIỆU LẠI. Lý lẽ "vẽ 1:1 cho cây giữ đúng cỡ" nghe hợp lý và SAI ở đây, vì
+      // nó giả định vùng rộng ~160px — đo ra chỉ ~100px. Ở cỡ ấy một mảng 384px vẽ nguyên cỡ
+      // chỉ lọt được một góc cỏ trống, nên mười hai vùng đọc ra mười hai MẢNG MÀU chứ không ra
+      // tranh. Thu còn 0,52 thì mỗi vùng chứa được vài rặng cây — đó mới là thứ mắt đọc thành
+      // "bản đồ vẽ tay". Sửa TG_THU thì chụp lại mà nhìn, đừng chỉnh mò.
+      const h = _bamChuoi('tgdat:' + id), K = TG_THU;
+      g.drawImage(dat, -60 - (h % 150), -60 - ((h >> 9) % 150), dat.width * K, dat.height * K);
+      g.globalAlpha = 1;
+      g.restore();
+      // ⚠ Vùng khoá phải đọc ra SƯƠNG PHỦ, không ra một vệt đen. Lượt đầu để .62 màu gần đen
+      // và bảy vùng khoá thành bảy cái bóng không hình dạng — người chơi mất luôn thông tin
+      // "chỗ đó trông thế nào", mà đó là nửa lý do tấm bản đồ này tồn tại.
+      if (!mo){ g.fillStyle = 'rgba(30,38,52,.52)'; g.fill(); }
+      else if (!hv){ g.fillStyle = 'rgba(28,22,10,.16)'; g.fill(); } // hoà vào tông giấy
+    } else {
+      g.fillStyle = mo ? tgMauVung(md) : '#241f18';
+      g.globalAlpha = mo ? (hv ? 1 : 0.92) : 0.5;
+      g.fill();
+      g.globalAlpha = 1;
+    }
     g.lineWidth = cur ? 2.6 : hv ? 2 : 1.2;
     g.strokeStyle = cur ? '#8ef0a0' : hv ? '#ffe9a8' : mo ? 'rgba(226,196,128,.55)' : 'rgba(120,106,78,.35)';
     g.stroke();
+    // ── HUY HIỆU: một mảnh tranh CẮT TRÒN của chính sinh cảnh vùng đó ──
+    // ⚠ Không tốn thêm một tệp art nào — nó cắt từ đúng mảng chất liệu đang dùng làm mặt đất.
+    // Vì sao cần: ở cỡ thật, một vùng chỉ rộng ~100px và hình đa giác của nó gần như không mang
+    // thông tin gì (mắt không đọc được "bờ này lõm hơn bờ kia"). Một huy hiệu thì nói ngay đây
+    // là tuyết hay đầm hay đá — tức đổi từ "vẽ đúng hình" sang "nói đúng chỗ này là gì".
+    if (dat){
+      const R = TG_HUY;
+      g.save();
+      g.beginPath(); g.arc(0, 0, R + 2.5, 0, 7);
+      g.fillStyle = 'rgba(12,9,5,.55)'; g.fill();              // bệ tối cho huy hiệu nổi khỏi đất
+      g.beginPath(); g.arc(0, 0, R, 0, 7); g.clip();
+      // Cắt ở GIỮA mảng, không lệch theo hạt: huy hiệu là thứ để nhận ra sinh cảnh, nên nó phải
+      // ổn định. Phần lệch ngẫu nhiên đã dùng ở lớp đất bên dưới rồi.
+      // ⚠ HAI LƯỢT SAI TRƯỚC KHI RA ĐƯỢC CÁI HUY HIỆU PHÂN BIỆT ĐƯỢC:
+      //   1. ép nguyên mảng 384px vào vòng 42px ⇒ mười hai đốm mờ giống hệt nhau;
+      //   2. cắt đúng TÂM mảng ở cỡ đọc được ⇒ SÁU vùng ra cùng một cái cây, vì tâm của mảng cỏ,
+      //      mảng vườn và mảng rừng đều rơi vào một khoảng cỏ có một cây.
+      // Nay bộ nướng dò bằng PHƯƠNG SAI và xuất tệp riêng: ô lệch sáng nhiều nhất là ô có vật
+      // thể (rặng cây, vách đá, lá súng), chứ không phải một khoảng nền trơn.
+      // Huy hiệu dùng TỆP RIÊNG (`tg_ic_*`) — ô đặc sắc nhất của mảng, do bộ nướng dò bằng phương
+      // sai. Chưa tải xong thì lùi về cắt giữa mảng gốc, chứ không để trống một cái vòng.
+      const ic = tgDat('ic_' + tgChatLieu(md)) || dat;
+      g.drawImage(ic, -R, -R, R * 2, R * 2);
+      if (!mo){ g.fillStyle = 'rgba(30,38,52,.55)'; g.fillRect(-R, -R, R*2, R*2); }
+      g.restore();
+      g.beginPath(); g.arc(0, 0, R, 0, 7);
+      g.lineWidth = cur ? 2.6 : 1.8;
+      g.strokeStyle = cur ? '#8ef0a0' : mo ? 'rgba(240,226,189,.82)' : 'rgba(150,134,104,.55)';
+      g.stroke();
+    }
     g.restore();
     // nhãn: tên + dải cấp, đặt DƯỚI vùng
     const ten = mo ? md.name : md.name;

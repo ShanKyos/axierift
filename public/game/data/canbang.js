@@ -972,7 +972,7 @@ window.MAPS = {
     //   #4 (280,2340) #5 (940,2340) #6 (1600,2340)   hàng nam, đầu tây
     //   #13 (4340,2340) #14 (5000,2340) #15 (5660,2340)  hàng nam, đầu đông
     packs: [], duhiep: null },
-  ngoai: { name:'Beast Herd Camp', min:10, range:'14 - 24', type:'safe', ground:'#2d3526', patch:'#6a7a52',
+  ngoai: { name:'Beast Herd Camp', bdNen:'dongco', min:10, range:'14 - 24', type:'safe', ground:'#2d3526', patch:'#6a7a52',
     // ⚠ MAP NÀY DỰNG LẠI TỪ TRANH NHÌN NGANG — xem docs/DUNG_LAI_BON_MAP.md.
     // Tấm nền cũ là tranh SÂN KHẤU: đáy có một dải sàn mỏng, phần trên là trời/núi/tường cây. Mà
     // game.js kéo tranh nền phủ kín thế giới rồi cho đi khắp mặt tranh, nên TRANH NỀN CHÍNH LÀ
@@ -1130,7 +1130,7 @@ window.MAPS = {
   //
   // Thang cap anh xa vao QUANG DUONG: C38 dau lan -> C42 giua -> C48 cuoi, roi trum o tan cung.
   // Di xa hon = quai nang hon, khong can mot dong chu nao giai thich.
-  loimon: { name:'Lối Mòn Corran', min:40, range:'42 - 48', type:'pk', hinh:'hanhlang',
+  loimon: { name:'Lối Mòn Corran', bdNen:'duong', min:40, range:'42 - 48', type:'pk', hinh:'hanhlang',
     w:6400, h:1400, ground:'#2f3324', patch:'#6a7a52',
     // SAN LAT VIEN: nen ghep tu hinh thoi 2:1 nuong bang tools/iso/nuong_tile.py, thay cho
     // tam tranh nen bg_loimon.jpg. Xem khoi "SAN LAT VIEN" trong game.js. Vung di duoc van la
@@ -1237,7 +1237,7 @@ window.MAPS = {
   // Xem ghi chú "HOÁN DẢI CẤP" ở Plant Tribe Glade phía trên: map này nhận dải 1-12, bộ quái
   // nhập môn và bốn cờ làng; tên và lore giữ nguyên. Địa hình (5200x3800, sàn lát viên,
   // `diTrong`/`isoCum`/`isoDuong`) KHÔNG đổi — chúng sinh bằng máy cho chính tấm nền này.
-  corran: { name:'Rẻo Rừng Corran', min:1, range:'1 - 12', type:'safe', ground:'#2f3324', patch:'#6a7a52',
+  corran: { name:'Rẻo Rừng Corran', bdNen:'rung', min:1, range:'1 - 12', type:'safe', ground:'#2f3324', patch:'#6a7a52',
     // `ground` la mau to KIN canvas truoc khi ve bat cu thu gi -- tuc la mau cua phan NGOAI da
     // giac `diTrong`, cho vien nen khong lat toi. O map lat vien, cho ay phai doc ra BONG RUNG
     // SAU. Ban cu de '#cfd2ae' (cat nhat, hop voi tam tranh nen mot mieng ngay xua) va anh chup
@@ -1354,7 +1354,7 @@ window.MAPS = {
   // ⚠ `boss:'drue'` — trùm NHIỆM VỤ chương VIII. Map này min 44 nhưng trùm chỉ hiện khi
   // `questIdx >= questBossIdx('trungnut')`, tức từ nhiệm vụ cấp 120 — y khuôn con ở Rẻo Rừng
   // Corran (map min 1, trùm hiện ở nhiệm vụ cấp 12). Người cấp 50 đi ngang không gặp hắn.
-  trungnut: { boss:'drue', name:'Trũng Nứt Corran', min:44, range:'44 - 50', type:'freepk',
+  trungnut: { boss:'drue', name:'Trũng Nứt Corran', bdNen:'dahoang', min:44, range:'44 - 50', type:'freepk',
     w:4200, h:3200, ground:'#2f3324', patch:'#6a7a52', sanIso:true,
     spawnFrom:{ daohoa:{ x:706, y:2845 }, comoc:{ x:3805, y:770 } },
     // ⚠ `HERB_SPOTS` (game.js) ĐÃ có toạ độ chấm bằng máy cho map này từ lâu, chỉ thiếu đúng
