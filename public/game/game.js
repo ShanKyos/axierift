@@ -863,6 +863,10 @@ function veKhoa(p){ return (p && p._netId != null) ? 'n' + p._netId : 'ta'; }
 // cả sáu chỗ đều chép cứng, nên sửa độ dài đòn ở một chỗ là tư thế vung tính theo một độ dài
 // khác — không lỗi nào báo, chỉ là cú chém kết thúc giữa chừng hoặc đứng hình ở khung cuối.
 const NV_DANH_GIAY = 0.22, NV_CHU_GIAY = 0.38;
+// Độ dài khối GIẬT lúc trúng đòn. ⚠ Chỗ GHI `hurtT` cố ý khác nhau (0,30 cho đòn đủ, 0,25 cho
+// đòn nhẹ) — hằng này là thước của phần VẼ, tức "một cú giật đầy đủ dài bao nhiêu". Trước bản
+// này số 0,3 ấy chép cứng ở hai chỗ trong `drawPlayer`, nay có thêm chỗ thứ ba ở `veAvatar`.
+const NV_GIAT_GIAY = 0.30;
 window.NV_HD_GIAY = { a: NV_DANH_GIAY, c: NV_CHU_GIAY };
 // Bậc của một đôi cánh, đọc từ chính món đồ. Món đời cũ mang id 'thienthan'/'tieuquy'
 // (bậc 1) hoặc 'phuongduc'/'hacma' (bậc 2) — loadGame() đổi chúng sang đôi của lớp.
@@ -5562,6 +5566,38 @@ function chiChayImg(id){
   if (!im){ im = new Image(); im.src = 'assets/chimera/' + id + '_r.webp'; CHI_CHAY_IMGS[id] = im; }
   return im;
 }
+/* ═══ HAI KHỐI PHẢN ỨNG — Axie KHÔNG đánh, nó PHẢN ỨNG ═════════════════════════════════════
+ * `<id>_b.webp` gồng (battle/get-buff) · `<id>_h.webp` giật (defense/hit-by-normal),
+ * do tools/spine/nuong_chi_phanung.py nướng, dùng CHUNG ô với bảng nhỏ và bảng chạy.
+ *
+ * ⚠ VÌ SAO KHÔNG NƯỚNG ĐÒN ĐÁNH CHO AXIE, dù kit có sẵn 8 đòn gần + 5 đòn xa: luật Đổi Vai
+ * chốt *"Axie chỉ đơn thuần là avatar thôi, khi tấn công thì ví dụ Dark Wizard sẽ xuất hiện và
+ * tung chiêu"*. Cho con Axie tự húc trong lúc Dark Wizard niệm chú bên cạnh là dựng lại đúng
+ * cái "hai kẻ cùng đánh" mà cả đợt Đổi Vai gỡ đi. Chủ dự án đã chốt lại hướng này (2026-09-15).
+ *
+ * ⚠ TRƯỚC BẢN NÀY Axie ĐỨNG YÊN suốt trận: `veAvatar` chỉ biết hai khối (thở · chạy), nên lúc
+ * ra đòn người chơi thấy lớp nhân vật vung còn cái thân của mình thì bất động — và lúc ăn đòn
+ * thì cũng thế. Món nợ `defense/hit-by-normal` đã ghi trong CLAUDE.md từ đợt Đổi Vai.            */
+const CHI_GONG = { n: 12, cot: 6 };
+const CHI_GIAT = { n:  8, cot: 4 };
+const CHI_GONG_IMGS = {}, CHI_GIAT_IMGS = {};
+function _chiPhuImg(id, kho, duoi){
+  if (!CHI_MAP[id]) return null;
+  let im = kho[id];
+  if (!im){ im = new Image(); im.src = 'assets/chimera/' + id + duoi + '.webp'; kho[id] = im; }
+  return im;
+}
+function chiGongImg(id){ return _chiPhuImg(id, CHI_GONG_IMGS, '_b'); }
+function chiGiatImg(id){ return _chiPhuImg(id, CHI_GIAT_IMGS, '_h'); }
+// `i` là CHỈ SỐ KHUNG đã tính sẵn; hàm này không biết gì về đồng hồ của trò chơi.
+function _chiVeKhoi(g, id, im, K, i, x, y, thanPx){
+  const A = CHI_ANH.o[id];
+  if (!A || !chiSan(im)) return false;
+  _chiVe(g, im, A, K.cot, A.nhoRong, A.nhoCao, clamp(i | 0, 0, K.n - 1), x, y, thanPx);
+  return true;
+}
+function chiVeGong(g, id, i, x, y, thanPx){ return _chiVeKhoi(g, id, chiGongImg(id), CHI_GONG, i, x, y, thanPx); }
+function chiVeGiat(g, id, i, x, y, thanPx){ return _chiVeKhoi(g, id, chiGiatImg(id), CHI_GIAT, i, x, y, thanPx); }
 // Avatar MẶC ĐỊNH theo lớp — chủ dự án chốt: bản này người chơi vào là thấy Axie luôn,
 // không phải gõ lệnh mới có. Mỗi lớp một con khác nhau cho dễ phân biệt ngoài đường.
 const AVA_MAC_DINH = {
@@ -5602,10 +5638,45 @@ function veAvatar(g, p, dangDiChuyen, now){
   g.save();
   g.translate(p.x, p.y + 12 - than * 0.38);
   if (Math.cos(p.face) < 0) g.scale(-1, 1);
-  const ok = dangDiChuyen
-    ? chiVeChay(g, id, Math.floor(((p.walkPh || 0) / (Math.PI * 2)) * CHI_CHAY.n), 0, 0, than)
-    : false;
-  if (!ok) chiVeNho(g, id, Math.floor(now / 1000 * CHI_THO_FPS), 0, 0, than);
+  // ── CHỌN KHỐI: giật > gồng > chạy > thở ────────────────────────────────────────────────
+  // Cùng thứ tự ưu tiên với `_kind` của khối thân người (chết > trúng đòn > niệm chú > đánh),
+  // trừ khối CHẾT: luật Đổi Vai chốt "trúng đòn và chết vẫn giữ Axie" nên nằm xuống là việc
+  // của lớp nhân vật, không phải của cái thân nhìn thấy.
+  //
+  // ⚠ BA ĐỒNG HỒ NÀY ĐẾM NGƯỢC. `hurtT` · `atkAnim` · `castT` đều đặt bằng độ dài rồi trừ dần
+  // về 0, nên TIẾN ĐỘ là `1 − t/dài`, không phải `t/dài`. Dùng thẳng là con vật gồng NGƯỢC:
+  // buông ra trước rồi mới lấy đà. Cùng cái bẫy đã ghi cho `atkK` ở drawPlayer.
+  const gt = Math.max((p.atkAnim || 0) / NV_DANH_GIAY, (p.castT || 0) / NV_CHU_GIAY);
+  const ht = (p.hurtT || 0) / NV_GIAT_GIAY;
+  // ⚠ NẠP TRƯỚC HAI BẢNG PHẢN ỨNG ngay từ lúc con Axie hiện ra lần đầu, đừng đợi tới lúc cần.
+  // Nạp lười thì lượt tải BẮT ĐẦU đúng vào cú đánh đầu tiên, nên cú đánh đầu tiên của mỗi phiên
+  // rơi vào nhánh lui-về-khối-thở — tức đúng cái lỗi "Axie đứng yên" mà cả đợt này sinh ra để
+  // sửa, chỉ khác là nó chỉ xảy ra một lần rồi tự hết, nên rất dễ nghiệm thu nhầm là đã xong.
+  // Hai bảng cộng lại ~140 KB mỗi con, và chỉ tải con đang thật sự có mặt trên màn.
+  // ⚠ BẢNG CHẠY CŨNG NẰM Ở ĐÂY, và nó là lỗi CÓ SẴN chứ không phải lỗi của đợt này: nó cũng
+  // nạp lười, nên BƯỚC ĐI ĐẦU TIÊN của mỗi phiên cũng rơi vào nhánh lui-về-thở. Chỉ lộ ra khi
+  // bài kiểm mới đặt `moving = true` trên một nhân vật chưa từng đi và nhận về khối 'tho'.
+  chiChayImg(id); chiGongImg(id); chiGiatImg(id);
+  let ok = false, khoi = 'tho', khung = 0;
+  if (ht > 0){
+    khung = (1 - Math.min(1, ht)) * CHI_GIAT.n;
+    ok = chiVeGiat(g, id, khung, 0, 0, than); if (ok) khoi = 'giat';
+  } else if (gt > 0){
+    khung = (1 - Math.min(1, gt)) * CHI_GONG.n;
+    ok = chiVeGong(g, id, khung, 0, 0, than); if (ok) khoi = 'gong';
+  } else if (dangDiChuyen){
+    khung = Math.floor(((p.walkPh || 0) / (Math.PI * 2)) * CHI_CHAY.n);
+    ok = chiVeChay(g, id, khung, 0, 0, than); if (ok) khoi = 'chay';
+  }
+  // Bảng chưa tải xong thì lui về khối thở — hơi trượt một nhịp, nhưng không bao giờ để trống
+  // chỗ đứng của nhân vật. (Cùng lý do và cùng cách với khối chạy từ trước.)
+  if (!ok){ khoi = 'tho'; khung = Math.floor(now / 1000 * CHI_THO_FPS); chiVeNho(g, id, khung, 0, 0, than); }
+  // Phơi quyết định ra cho bài kiểm, khoá theo từng thân người — cùng lối với `__veChet` và
+  // `__neoVe`. Ở đây bắt buộc phải thế: thứ cần gác là CHỈ SỐ KHUNG (một con số), mà đo nó bằng
+  // điểm ảnh thì vấp đúng sàn nhiễu đã ghi ở mục Giai đoạn 2 — con Axie thở ~8 FPS nên hai lượt
+  // vẽ kế nhau đã lệch vài nghìn điểm ảnh mà chẳng cần ai đổi gì.
+  if (window.TEST_MODE)
+    (window.__avaKhoi || (window.__avaKhoi = {}))[veKhoa(p)] = { khoi, khung: Math.floor(khung), id };
   g.restore();
   return true;
 }
@@ -17174,7 +17245,7 @@ function drawPlayer(p){
   _ps.back = Math.sin(p.face) < -0.42;
   // Trúng đòn: nhân vật giật ngửa ra sau, đầu hất lên, tay bung — trước đây chỉ
   // có viền đỏ nhấp trên màn hình, còn thân người thì đứng im như không hề gì.
-  const _hurt = Math.min(1, (p.hurtT || 0) / 0.3);
+  const _hurt = Math.min(1, (p.hurtT || 0) / NV_GIAT_GIAY);
   if (_hurt > 0){
     _ps.lean -= 0.24 * _hurt;
     _ps.head += 0.26 * _hurt;
@@ -17273,7 +17344,7 @@ function drawPlayer(p){
     const _TAU = Math.PI * 2;
     const _idx = _kind === 'c' ? clamp((Math.min(1, castK) * _n) | 0, 0, _n - 1)
                : _kind === 'a' ? clamp((atkK * _n) | 0, 0, _n - 1)
-               : _kind === 'h' ? clamp((((0.3 - (p.hurtT || 0)) / 0.3) * _n) | 0, 0, _n - 1)
+               : _kind === 'h' ? clamp((((NV_GIAT_GIAY - (p.hurtT || 0)) / NV_GIAT_GIAY) * _n) | 0, 0, _n - 1)
                : _kind === 'd' ? clamp((((p.deadT || 0) / 1.2) * _n) | 0, 0, _n - 1)
                : _kind === 'j' ? clamp((bayK / 0.5 * _n) | 0, 0, _n - 1)
                : (_kind === 'w' || _kind === 'r')

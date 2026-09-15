@@ -206,7 +206,58 @@ Chỉ `'a'` (đánh) và `'c'` (niệm chú) mới gọi lớp nhân vật ra. N
 ăn đòn thì trong một trận đông quái người chơi gần như không còn thấy avatar của mình — mà
 avatar mới là thứ họ chọn hoặc mua.
 
-**Nợ:** rig có sẵn `defense/hit-by-normal` và chưa nướng. Nướng rồi thì Axie giật được khi trúng.
+### ✅ AXIE NAY PHẢN ỨNG — GỒNG lúc ra đòn, GIẬT lúc trúng đòn (và **KHÔNG ĐÁNH**)
+
+> ⚠ Mục này trước đây ghi *"Nợ: rig có sẵn `defense/hit-by-normal` và chưa nướng"*. Đã trả.
+
+Trước bản này `veAvatar` chỉ biết hai khối (thở · chạy), nên cái thân NHÌN THẤY của người chơi
+**đứng bất động suốt trận**: ra đòn thì lớp nhân vật vung bên cạnh còn con Axie không nhúc nhích,
+ăn đòn cũng thế.
+
+| khối | hoạt cảnh nguồn | tệp | khung |
+|---|---|---|---|
+| gồng | `battle/get-buff` (1,000s) | `<id>_b.webp` | 12, 6 cột |
+| giật | `defense/hit-by-normal` (0,417s) | `<id>_h.webp` | 8, 4 cột |
+
+Nướng: `tools/spine/nuong_chi_phanung.py` · **2,17 MB cho cả 16 con**, nạp theo con đang có mặt.
+Gác: `tests/test_avaphanung.js` (7 mục, ba cơ chế đã thử ngược và đều đỏ).
+
+**⚠ AXIE KHÔNG ĐÁNH — chủ dự án chốt lại (2026-09-15).** Kit có sẵn **8 đòn gần + 5 đòn xa** và
+rất dễ "tiện tay" nướng thêm. Đừng. Luật Đổi Vai nói *"Axie chỉ đơn thuần là avatar thôi, khi tấn
+công thì ví dụ Dark Wizard sẽ xuất hiện và tung chiêu"* — cho con Axie tự húc trong lúc Dark
+Wizard niệm chú bên cạnh là dựng lại đúng cái **hai kẻ cùng đánh** mà cả đợt Đổi Vai gỡ đi.
+`get-buff` đọc ra *"sức mạnh đang được gọi tới"*, tức đúng thứ đang xảy ra trên màn.
+`test_avaphanung §6` là chỗ DUY NHẤT nói ra rằng KHÔNG nướng là một QUYẾT ĐỊNH, không phải một
+thiếu sót ai đó quên làm.
+
+**⚠ THỨ TỰ ƯU TIÊN: giật > gồng > chạy > thở** — cùng thứ tự với `_kind` của khối thân người
+(chết > trúng đòn > niệm chú > đánh), TRỪ khối chết: luật *"trúng đòn và chết vẫn giữ Axie"*
+nghĩa là nằm xuống là việc của lớp nhân vật, không phải của cái thân nhìn thấy.
+
+**⚠ BA ĐỒNG HỒ ẤY ĐẾM NGƯỢC.** `hurtT` · `atkAnim` · `castT` đặt bằng ĐỘ DÀI rồi trừ dần về 0, nên
+tiến độ là `1 − t/dài`. Dùng thẳng là con vật gồng NGƯỢC — buông ra trước rồi mới lấy đà. Cùng cái
+bẫy đã ghi cho `atkK`; thử ngược ra khung đầu = 12 thay vì 0.
+
+**⚠ NẠP TRƯỚC, ĐỪNG NẠP LƯỜI — và đây là lỗi CÓ SẴN mà bài kiểm mới mới lôi ra.** Bảng CHẠY cũng
+nạp lười từ trước, nên **bước đi đầu tiên của mỗi phiên rơi vào nhánh lui-về-thở**. Nó chỉ xảy ra
+một lần rồi tự hết nên cực dễ nghiệm thu nhầm là đã xong. Nay `veAvatar` xin cả ba bảng ngay lúc
+con Axie hiện ra lần đầu.
+
+**⚠ Ô CẮT PHẢI TRÙNG KHÍT bảng nhỏ** (đo được: cả 16 con, ba bảng, cùng một ô). Lệch một pixel là
+con vật NHẢY một cái mỗi lần đổi khối. Công cụ dựng lại đúng phép tính hộp của `nuong_chi.py`
+(bb trên appear+idle) rồi mới đem đi cắt — cùng cách `nuong_chi_chay.py` làm.
+
+**⚠ ĐO CHỈ SỐ KHUNG, ĐỪNG ĐO ĐIỂM ẢNH cho phần lôgic.** `veAvatar` phơi khối đang vẽ ra
+`window.__avaKhoi` (chỉ khi `TEST_MODE`), khoá theo từng thân người — cùng lối `__veChet`/`__neoVe`.
+Lý do đã trả giá ở `test_dongbodo`: con Axie thở ~8 FPS nên hai lượt vẽ liên tiếp cùng điều kiện
+lệch tới 5.200/16.500 điểm ảnh.
+
+⚠ **Kit không còn trên đĩa sau mỗi phiên mới** (2,2 GB). Lấy lại:
+`GIT_LFS_SKIP_SMUDGE=1 git clone --depth 1 https://github.com/axieinfinity/axie-origins-asset-kit /home/user/axieinfinity/axie-origins-asset-kit`
+và `pip install pillow numpy` — cả hai đều mất theo container.
+
+**Nợ còn lại:** thân người từ xa chưa đồng bộ `hurtT`, nên Axie của NGƯỜI KHÁC gồng được (đã đồng
+bộ cú ra đòn) nhưng chưa giật được khi họ ăn đòn.
 
 ### 🔑 KIT AXIE CÓ 41 HOẠT CẢNH, GAME MỚI DÙNG 2
 
