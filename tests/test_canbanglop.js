@@ -85,6 +85,10 @@ const TRAN_CHENH = 3.6;
     const out = [];
     for (const sect in SIGNATURE_SKILL){
       const id = SIGNATURE_SKILL[sect], v = VOHOC_DEFS[id];
+      // `null` = lớp CỐ Ý bỏ trống ô 4 (xem THANH_LOP trong game.js) — khác hẳn "trỏ vào một mã
+      // chiêu không tồn tại", vốn là thứ mệnh đề dưới gác. Gộp hai ca vào một là bài đỏ với một
+      // lý do sai, và người sửa sẽ đi tìm một chiêu không hề bị mất.
+      if (id === null){ out.push({ sect, id, deTrong:true }); continue; }
       if (!v){ out.push({ sect, id, thieu:true }); continue; }
       const fx = v.fx || {};
       // Diện tích chiêu phủ được — thứ quyết định "một lần tung trúng mấy con".
@@ -100,10 +104,11 @@ const TRAN_CHENH = 3.6;
     return out;
   });
   console.log('  ô-4 từng lớp:');
-  for (const c of cau) console.log(`    ${String(c.sect).padEnd(10)} ${String(c.name).padEnd(16)} ${String(c.type).padEnd(4)} tier ${String(c.tier).padEnd(5)} mult ${String(c.mult).padStart(4)} cd ${String(c.cd).padStart(2)} · phủ ${c.dien === 999999 ? 'xuyên hàng' : c.dien + ' px²'} · ${c.soFx} hiệu ứng`);
+  for (const c of cau.filter(x => x.deTrong)) console.log(`    ${String(c.sect).padEnd(10)} (ô 4 cố ý để trống — chờ chủ dự án điền)`);
+  for (const c of cau.filter(x => !x.deTrong)) console.log(`    ${String(c.sect).padEnd(10)} ${String(c.name).padEnd(16)} ${String(c.type).padEnd(4)} tier ${String(c.tier).padEnd(5)} mult ${String(c.mult).padStart(4)} cd ${String(c.cd).padStart(2)} · phủ ${c.dien === 999999 ? 'xuyên hàng' : c.dien + ' px²'} · ${c.soFx} hiệu ứng`);
 
   if (cau.some(c => c.thieu)) fail('SIGNATURE_SKILL trỏ tới chiêu không tồn tại: ' + cau.filter(c => c.thieu).map(c => c.id).join(', '));
-  const rong = cau.filter(c => c.soFx === 0);
+  const rong = cau.filter(c => !c.deTrong && !c.thieu && c.soFx === 0);
   if (rong.length) fail(`ô-4 có fx RỖNG: ${rong.map(c => c.sect + '/' + c.id).join(', ')} — bốn chiêu ô-4 kia đều có ít nhất một hiệu ứng, chiêu tuyệt chiêu mà không mang gì cả là dấu hiệu bị bỏ quên`);
   else pass('cả 5 chiêu ô-4 đều mang ít nhất một hiệu ứng');
 

@@ -937,21 +937,35 @@ window.MAPS = {
     { img:'ct_loren', x:4992, y:368,  w:473, h:472 },  // Lò Rèn Hoàng Gia — khối #10 (5000,520) · Phố Lò
     { img:'ct_duoc',  x:1600, y:436,  w:460, h:424 },  // Tiệm Thuốc       — khối #2  (1600,520) · Phố Chợ
     { img:'ct_vukhi', x:5686, y:526,  w:409, h:334 },  // Vũ Khí Phường    — khối #11 (5660,520) · Phố Lò
-  ],
-    // ── MƯỜI BA KHỐI CÒN TRỐNG · ĐANG CHỜ ART ────────────────────────────────
-    // 16 khối, mới 3 có ảnh (ct_cong dùng hết cho bốn cuống cổng). Khuôn đặt cho mọi khối
-    // 460×340:  x = khoi.x − (w − 460)/2   ·   y = khoi.y + 340 − h   (chân trùng mép dưới khối)
+
+    // ── BỐN CÔNG TRÌNH ĐỢT HAI ────────────────────────────────────────────────
+    // Chọn bốn khối này vì mỗi khối ĐÃ CÓ NPC đứng sẵn — chức năng người chơi dùng
+    // được từ lâu mà không nhìn ra trong thế giới. Khuôn đặt của khối 460×340:
+    // x = khoi.x − (w−460)/2 · y = khoi.y + 340 − h (chân trùng mép dưới khối).
     //
-    // ĐÃ CÓ NPC ĐỨNG TRƯỚC CỬA, CHỈ THIẾU NHÀ — năm cái này ưu tiên, vì mỗi cái là một
-    // chức năng người chơi đã dùng được mà chưa nhìn ra:
-    //   #9  (4340, 520) hàng BẮC · ct_caumay    — Sảnh Cầu May   (NPC `thantoan` ở 4570,990)
-    //   #8  (3680, 520) hàng BẮC · ct_quantro   — Quán Trọ       (NPC `trachu`   ở 4150,1010)
-    //   #3  (2260, 520) hàng BẮC · ct_thapvach  — chòi trông vách (NPC `ah_vachgio` ở 2160,380)
-    //   #12 (3680,2340) hàng NAM · ct_saanhlenh — Sảnh Lệnh      (NPC `bodau`     ở 4150,2100)
-    //   #7  (2260,2340) hàng NAM · ct_chuong    — dãy chuồng     (NPC `ah_mucdong` ở 2160,2450)
-    // ⚠ HAI CÁI HÀNG NAM: mặt tiền sprite isometric luôn quay XUỐNG DƯỚI, nên nhà ở hàng nam
-    //   quay mặt ra tường thành. Khi có art thì hoặc xin bản quay ngược, hoặc dời NPC xuống
-    //   phía nam khối (y ≥ 2700).
+    // ⚠ HAI CÁI HÀNG NAM (#12, #7) QUAY MẶT RA TƯỜNG THÀNH. Mặt tiền sprite isometric
+    // luôn nằm ở hai mặt +X/−Y, tức hướng xuống-phải và xuống-trái, còn người chơi tới
+    // từ phố lớn phía BẮC. Vẫn đặt ở đây vì cặp NHÀ–NPC quan trọng hơn mặt nào quay ra:
+    // `bodau` giao Truy Nã Lệnh phải đứng cạnh Sảnh Lệnh, `ah_mucdong` phải đứng cạnh
+    // chuồng. Hai con này cũng CỐ Ý đặt hàng kiểu KHÔNG CÓ MẶT TIỀN MẠNH — chuồng hở
+    // bốn bề, sảnh nhận diện bằng cái tháp và mấy lá cờ.
+    //
+    // ⚠ ĐÃ QUÉT MÁY: không một NPC nào trong 24 con của ardhaven rơi vào bốn hình chữ
+    // nhật dưới đây, kể cả với lề 30px. `bodau` (4150,2100) nằm trên mép trên Sảnh Lệnh
+    // 193px, `ah_mucdong` (2160,2450) nằm bên trái chuồng 100px — cả hai đứng NGOÀI khối
+    // nên không phải dời ai. Đừng dịch tay bốn số này mà không quét lại: `vatTo` vào
+    // `ents` theo y = v.y + v.h, nên NPC nào lọt trong hình là bị nhà vẽ đè lên.
+    { img:'ct_quantro',   x:3654, y:350,  w:512, h:510 },  // Quán Trọ        — khối #8  (3680, 520) · hàng BẮC
+    { img:'ct_thapvach',  x:2234, y:388,  w:511, h:472 },  // Chòi Trông Vách — khối #3  (2260, 520) · hàng BẮC
+    { img:'ct_saanhlenh', x:3654, y:2293, w:512, h:387 },  // Sảnh Lệnh       — khối #12 (3680,2340) · hàng NAM
+    { img:'ct_chuong',    x:2260, y:2286, w:460, h:394 },  // Dãy Chuồng      — khối #7  (2260,2340) · hàng NAM
+  ],
+    // ── CHÍN KHỐI CÒN TRỐNG · ĐANG CHỜ ART ───────────────────────────────────
+    // 16 khối, nay 7 có ảnh (ct_cong dùng hết cho bốn cuống cổng). Khuôn đặt cho mọi khối
+    // 460×340:  x = khoi.x − (w − 460)/2   ·   y = khoi.y + 340 − h (chân trùng mép dưới khối)
+    //
+    // CÒN ĐÚNG MỘT KHỐI CÓ NPC ĐỨNG SẴN MÀ THIẾU NHÀ:
+    //   #9  (4340, 520) hàng BẮC · ct_caumay — Sảnh Cầu May (NPC `thantoan` ở 4570,990)
     //
     // CHƯA GÁN VAI — nhà dân nền, một hai kiểu lặp lại là đủ:
     //   #0 (280,520)  #1 (940,520)              hàng bắc, đầu tây

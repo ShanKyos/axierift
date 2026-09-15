@@ -1172,6 +1172,10 @@ const MAP_VAT_SRC = {
   ct_loren: 'assets/iso/ct_loren.png',   // Lò Rèn Hoàng Gia
   ct_duoc:  'assets/iso/ct_duoc.png',    // Tiệm Thuốc
   ct_vukhi: 'assets/iso/ct_vukhi.png',   // Vũ Khí Phường
+  ct_quantro:   'assets/iso/ct_quantro.png',     // Quán Trọ        — NPC `trachu`
+  ct_thapvach:  'assets/iso/ct_thapvach.png',    // Chòi Trông Vách — NPC `ah_vachgio`
+  ct_saanhlenh: 'assets/iso/ct_saanhlenh.png',   // Sảnh Lệnh       — NPC `bodau`
+  ct_chuong:    'assets/iso/ct_chuong.png',      // Dãy Chuồng      — NPC `ah_mucdong`
 };
 const _vatIm = {};
 function vatTai(ten){
@@ -2566,10 +2570,33 @@ function decorUnblock(){
   decorObsCum = decorObsCum.filter(o => !phaBo.has(idx(o.x, o.y)));
   if (decor.length !== truoc || decorObsCum.length !== truocCum) rebuildDecorObs();
 }
+// VẬT CẢN CỦA CÔNG TRÌNH `vatTo` — bám theo chính hình vẽ, sinh bởi tools/iso/can_vatto.py.
+//
+// ⚠ VÌ SAO KHÔNG DÙNG KHỐI 460×340 CÓ SẴN: 460×340 là cỡ Ô ĐẤT của khối nhà, không phải cỡ
+// HÌNH nhà. Sprite cao hơn hẳn (quán trọ 512×510), nên cả thân trên và mái nằm NGOÀI hộp chặn.
+// Đo được: nửa dưới mỗi căn chặn 95-100%, nhưng tính cả hình thì 12-35% diện tích vẫn đi được,
+// và toàn bộ chỗ đó nằm ở dải phía BẮC — đúng hướng người chơi đi tới. Ảnh chụp tại (3900,430)
+// cho thấy nhân vật BIẾN MẤT hoàn toàn sau mái Quán Trọ. Với người chơi đó là "xuyên qua nhà".
+//
+// ⚠ NHỚ LẠI THEO MAP. `inObstacle` gọi `obstaclesOf` cho MỌI điểm thử, và `simulateMovePath`
+// thử tới 200×8 điểm một lượt bấm chuột — bung bảng dải mỗi lần gọi là dựng lại vài chục hộp
+// mấy nghìn lần một cú click.
+const _vatCanNho = {};
+function vatToObs(mapId){
+  if (_vatCanNho[mapId]) return _vatCanNho[mapId];
+  const md = MAPS[mapId], B = window.VAT_CAN || {};
+  const ra = [];
+  for (const v of (md && md.vatTo) || []){
+    for (const b of B[v.img] || [])
+      ra.push({ x: v.x + b[0], y: v.y + b[1], wd: b[2], ht: b[3] });
+  }
+  return (_vatCanNho[mapId] = ra);
+}
 function obstaclesOf(mapId){
   const md = MAPS[mapId];
   if (md && md.dungeon) return DGN_OBSTACLES.concat(dgnWallObs());
-  const base = MAP_OBSTACLES[mapId] || [];
+  const _vt = vatToObs(mapId);
+  const base = _vt.length ? (MAP_OBSTACLES[mapId] || []).concat(_vt) : (MAP_OBSTACLES[mapId] || []);
   // decor chỉ tồn tại cho map đang đứng — map khác thì chỉ có vật cản tĩnh
   return mapId === curMap && decorObs.length ? base.concat(decorObs) : base;
 }
@@ -3239,11 +3266,17 @@ const VOHOC_DEFS = window.VOHOC_DEFS;
 // thì lớp mất bị động riêng và bài kiểm bị động (+15% Sinh Lực) mất chỗ bám. Thay vào đó thêm
 // HẲN một chiêu thứ sáu — Bulwark — vì Dark Knight là lớp duy nhất chỉ có 5 chiêu chủ động trong
 // khi bốn lớp kia có 6. Xem chú thích tại dk_bulwark trong data/canbang.js.
-// Ô 3 của từng lớp. KHÔNG nhất thiết là chiêu phù trợ: bộ bốn nút của Dark Wizard trong MU là
-// Poison · Meteorite · Inferno · Dragon Spirit, nên ô 3 của lớp này là Inferno chứ không phải Soul
-// Barrier. Soul Barrier chuyển sang Di Sản (+%Công Kích vĩnh viễn) đúng như chiêu buff của Dark
-// Knight đã làm — một chiêu không thể vừa bấm được vừa cộng %ST vĩnh viễn.
-const O3_SKILL_ID = { thieulam:'dk_bulwark', toanchan:'elf_greaterdmg', baidasan:'dw_inferno', minhgiao:'mg_battlefury', bug:'dl_commandaura' };
+// Ô 3 của từng lớp. KHÔNG nhất thiết là chiêu phù trợ.
+//
+// ⚠ Dark Wizard là `null` — chủ dự án chốt dời **Meteorite** (chính là `tp`) xuống ô 3, còn
+// Inferno và Evil Spirit (Dragon Spirit) rời thanh sang Di Sản. Chú thích cũ ở đây ghi "ô 3 của
+// lớp này là Inferno"; giữ nguyên câu đó sau khi ô 3 đổi chủ là để lại một lời nói dối ngay
+// cạnh dòng dữ liệu nói ngược lại.
+// ⚠ `null` = Ô ĐỂ TRỐNG CÓ CHỦ Ý, chờ chủ dự án điền — không phải "quên khai". Dark Wizard dời
+// Meteorite (chính là `tp`) xuống ô 3, nên ô 2 và ô 4 bỏ trống; Inferno và Evil Spirit rời thanh
+// sang tab Khác thành Di Sản. `tests/test_tuyetchieu.js` đọc `THANH_LOP` để biết ô nào được phép
+// trống — nên bỏ trống thêm một ô ở lớp khác vẫn là bài ĐỎ, đúng như nó vốn gác.
+const O3_SKILL_ID = { thieulam:'dk_bulwark', toanchan:'elf_greaterdmg', baidasan:null, minhgiao:'mg_battlefury', bug:'dl_commandaura' };
 // Lớp nào có chiêu PHÙ TRỢ thật ở ô 3 — suy ra từ chính kiểu chiêu, không khai tay hai lần.
 const BUFF_SKILL_ID = {};
 for (const _sk in O3_SKILL_ID){
@@ -3259,7 +3292,7 @@ for (const _sk in O3_SKILL_ID){
 const SIGNATURE_SKILL = {
   thieulam: 'dk_cyclone',        // Flame Cyclone — vũ khí rời tay xoay quanh thân trong vòng lửa
   toanchan: 'elf_penetration',   // Penetration — mũi tên xuyên cả hàng
-  baidasan: 'dw_dragonspirit',   // Dragon Spirit — bầy long hồn giăng vòng quanh người
+  baidasan: null,                // ĐỂ TRỐNG — xem THANH_LOP. Evil Spirit (Dragon Spirit) rời thanh sang Di Sản.
   minhgiao: 'mg_powerslash',     // Power Slash — sóng ánh sáng từ nhát chém
   bug:      'dl_chaoticdiseier', // Earthquake — giậm đất, nền nứt thành vòng (id cũ, xem VOHOC_DEFS)
 };
@@ -3476,7 +3509,17 @@ function knRaSoat(){
   }
   player.skillBar = thay;
 }
-function defaultSkillBar(sect){ return ['a', 'tp', O3_SKILL_ID[sect] || null, SIGNATURE_SKILL[sect] || null]; }
+// Thanh chiêu mặc định. Trước đây là một CÔNG THỨC cố định `['a','tp',O3,SIGNATURE]` — nó giả
+// định ô 2 LUÔN là chiêu trấn phái, mà Dark Wizard nay đặt Meteorite (`tp`) xuống ô 3.
+//
+// ⚠ PHẢI TRẢ VỀ MẢNG MỚI MỖI LẦN GỌI. Bản công thức dựng mảng literal nên chuyện đó là mặc
+// nhiên; đọc từ một bảng thì không — thiếu `.slice()` là mọi người chơi cùng lớp dùng CHUNG
+// một mảng, và cú kéo thả đầu tiên sửa luôn cái bảng gốc cho cả phiên.
+const THANH_LOP = { baidasan: ['a', null, 'tp', null] };
+function defaultSkillBar(sect){
+  const t = THANH_LOP[sect];
+  return t ? t.slice() : ['a', 'tp', O3_SKILL_ID[sect] || null, SIGNATURE_SKILL[sect] || null];
+}
 // Phím Space gán sẵn TUYỆT CHIÊU của lớp — trước đây Space mặc định là đòn đánh thường, nên ô
 // 4 nằm đó mà phần lớn người chơi không bao giờ bấm tới: nó chỉ hiện trên thanh, muốn dùng
 // phải rê chuột xuống bấm giữa lúc đang đánh nhau.
@@ -3498,12 +3541,24 @@ const LEGACY_TIER_PCT = { so:1.5, trung:2, cao:2.5, than:3.5 };
 // Mỗi lớp ĐÚNG bốn chiêu di sản, cùng bậc sơ/trung/trung/cao = +8,0% Công Kích. Bản cũ chia
 // không đều: Dark Knight được 4,0% còn Dark Wizard 9,5% — cùng một hệ thống mà chênh nhau 5,5%
 // Công Kích vĩnh viễn chỉ vì lớp này tình cờ khai nhiều chiêu hơn lớp kia.
+// ⚠ ĐÂY LÀ CẢ SÁU CHIÊU CHỦ ĐỘNG CỦA LỚP (ngoài `a` và `tp`), KHÔNG PHẢI BỐN.
+//
+// Luật thật là **Di Sản = chiêu của lớp TRỪ những ô đang nằm trên thanh**, và `legacyAtkPct`
+// trong `calcDerived` đã trừ động theo thanh từ đợt kéo thả. Bản cũ khai đúng bốn chiêu "không
+// nằm trên thanh" — tức chép tay KẾT QUẢ của phép trừ ấy, nên mỗi lần đổi một ô taskbar là phải
+// nhớ sửa bảng này cho khớp, mà quên thì không lỗi nào báo, chỉ là %Công Kích lệch âm thầm.
+// Khai đủ sáu thì phép trừ tự lo, và bảng này thôi phải theo dõi thanh chiêu.
+//
+// Số liệu không đổi với bốn lớp kia: hai chiêu vừa thêm vào đều đang nằm trên thanh nên bị trừ
+// ra ⇒ vẫn đúng +8,0% như trước (đo lại: 12,0−4,0 · 13,0−5,0 · 12,0−4,0 · 12,5−4,5).
+// Dark Wizard đang bỏ trống ô 2 và ô 4 nên KHÔNG chiêu nào bị trừ ⇒ +12,5%. Đó là cái giá đúng
+// của việc thiếu hai nút bấm, và nó TỰ về 8% ngay khi chủ dự án điền hai ô ấy.
 const LEGACY_SECT_SKILLS = [
-  'dk_ragefulblow','dk_lunge','dk_impale','dk_fallingslash',
-  'elf_poisonarrow','elf_greaterdef','elf_holybolt','elf_fiveshot',
-  'dw_lightning','dw_ice','dw_twister','dw_shield',   // Inferno rời khỏi đây: nay là ô 3 bấm được
-  'mg_fireball','mg_powerwave','mg_twistingslash','mg_giganticstorm',
-  'dl_force','dl_electricspark','dl_fireburst','dl_darkhorse'];
+  'dk_bulwark','dk_cyclone','dk_ragefulblow','dk_lunge','dk_impale','dk_fallingslash',
+  'elf_greaterdmg','elf_penetration','elf_poisonarrow','elf_greaterdef','elf_holybolt','elf_fiveshot',
+  'dw_inferno','dw_dragonspirit','dw_lightning','dw_ice','dw_twister','dw_shield',
+  'mg_battlefury','mg_powerslash','mg_fireball','mg_powerwave','mg_twistingslash','mg_giganticstorm',
+  'dl_commandaura','dl_chaoticdiseier','dl_force','dl_electricspark','dl_fireburst','dl_darkhorse'];
 // Bị động CÓ TÁC DỤNG THẬT (xem calcDerived / regen / hurtMob) — không quy đổi thành %ST, vì
 // bản cũ ghi "+15% HP, +10% giảm sát thương" mà không nối vào đâu cả: người chơi đọc xong tưởng
 // mình có, thực tế chỉ được +2,5% Công Kích.
@@ -9608,6 +9663,9 @@ function phimXuong(e){
   // tinh tung đồ rồi tự chọn lúc bấm. Bắt phím chỉ khi bảng lò đang mở, nên không giẫm lên
   // ô gõ nào khác (ô nhập đã thoát ở dòng đầu hàm).
   if (e.key === 'Enter' && typeof loMo === 'function' && loMo()){ e.preventDefault(); window.doChaos(); return; }
+  // ENTER MỞ Ô CHAT — đặt SAU chốt Lò Hỗn Độn ở trên, vì lò đang mở thì Enter thuộc về lò.
+  // Khi ô chat đang có tiêu điểm thì hàm này đã `return` ở dòng đầu (target là INPUT).
+  if (e.key === 'Enter' && window.NET && window.NET.on && player){ e.preventDefault(); chatTieuDiem(); return; }
   if (e.key >= '1' && e.key <= '4' && player){ // taskbar 4 ô kỹ năng (chính/phụ/buff/tuyệt chiêu)
     const id = player.skillBar[+e.key - 1];
     // Ô cắm BỊ ĐỘNG không tung được — nói ra thay vì im lặng, nếu không người chơi bấm mãi và
@@ -16668,6 +16726,110 @@ function netDonBayCao(){
   for (const k of _bayCao.keys()) if (!con.has(k)) _bayCao.delete(k);
 }
 
+/* ═══ CHAT (Giai đoạn 2 online) ═════════════════════════════════════════════════════════
+ * net.js là sợi dây, chỗ này là giao diện. Hai kênh: `the-gioi` (mọi người đang online) và
+ * `vung` (chỉ ai đứng cùng bản đồ).
+ *
+ * ⚠⚠ LỜI NGƯỜI KHÁC GÕ LÀ DỮ LIỆU, KHÔNG PHẢI HTML. Mọi dòng dựng bằng `createElement` +
+ * `textContent`. Nối chuỗi vào `innerHTML` ở đây là mở cửa cho bất kỳ ai gõ một thẻ `<img
+ * onerror=…>` vào ô chat rồi nó chạy trên máy MỌI người trong kênh. Máy chủ đã cắt ký tự điều
+ * khiển và giới hạn độ dài, nhưng nó KHÔNG thoát HTML — và nó không nên làm thế: thoát HTML là
+ * việc của chỗ hiển thị, vì chỉ chỗ đó mới biết nó đang dựng cái gì.                            */
+const CHAT_MAU = { 'the-gioi': '#ffd98a', 'vung': '#9fe0ff', 'he': '#8e97bb' };
+let chatKenh = 'the-gioi';
+
+function chatEl(id){ return el(id); }
+
+// Hiện khối chat CHỈ khi có nối mạng. Bày một ô chat mà không ai nhận được là đúng cái lỗi
+// "một cái vỏ giả vờ là máy chạy" đã ghi ở mục Tổ Đội.
+function chatDung(){
+  const w = chatEl('chat-wrap'); if (!w) return;
+  const on = !!(window.NET && window.NET.on);
+  w.classList.toggle('hidden', !on);
+  if (!on) return;
+  const tt = window.NET.tinhTrang;
+  const s = chatEl('chat-trangthai'), inp = chatEl('chat-input');
+  if (s) s.textContent = tt === 'da-noi' ? '● đang nối' : tt === 'dang-noi' ? '○ đang kết nối…' : '○ mất kết nối';
+  if (inp){
+    inp.disabled = tt !== 'da-noi';
+    inp.placeholder = tt === 'da-noi' ? 'Enter để nói…' : 'chưa nối được máy chủ';
+  }
+}
+
+function chatThem(kenh, ten, loi, tuMinh){
+  const log = chatEl('chat-log'); if (!log) return;
+  const row = document.createElement('div');
+  row.className = 'ch-row';
+  if (kenh === 'he'){
+    row.style.color = CHAT_MAU.he; row.textContent = loi;
+  } else {
+    const nhan = document.createElement('span');
+    nhan.className = 'ch-ten';
+    nhan.style.color = CHAT_MAU[kenh] || '#e8ecff';
+    // Nhãn kênh đứng trước TÊN, nên đọc một dòng là biết nó tới từ đâu — người chơi hay
+    // trả lời nhầm kênh khi hai kênh trộn vào một khung mà không có dấu.
+    nhan.textContent = (kenh === 'vung' ? '[Vùng] ' : '[TG] ') + (ten || '?') + ': ';
+    row.appendChild(nhan);
+    const than = document.createElement('span');
+    than.textContent = loi;                    // ⇐ textContent, KHÔNG innerHTML
+    if (tuMinh) than.style.color = '#ffffff';
+    row.appendChild(than);
+  }
+  log.appendChild(row);
+  while (log.children.length > 120) log.removeChild(log.firstChild);
+  log.scrollTop = log.scrollHeight;            // chat cuộn XUỐNG, ngược với nhật ký
+}
+
+window.netChatNhan = function(tin){
+  chatThem(tin.kenh, tin.ten, tin.loi, window.NET && tin.tu === window.NET.id);
+};
+// ⚠ Máy chủ chặn thì phải NÓI RA. Nuốt im thì người chơi gõ lại, rồi gõ lại nữa — tức chính
+// cái chống spam lại sinh ra spam.
+window.netChatChan = function(ly){
+  chatThem('he', null, ly === 'nhanh' ? 'Nói chậm lại một chút.'
+                     : ly === 'nhieu' ? 'Nói hơi nhiều — chờ vài giây rồi nói tiếp.'
+                     : ly === 'chua-vao' ? 'Kênh Vùng cần bạn đang đứng trong một bản đồ.'
+                     : 'Câu vừa rồi không gửi được.');
+};
+
+function chatDoiKenh(k){
+  chatKenh = (k === 'vung') ? 'vung' : 'the-gioi';
+  document.querySelectorAll('.chat-tab').forEach(b => b.classList.toggle('on', b.dataset.kenh === chatKenh));
+  const inp = chatEl('chat-input'); if (inp) inp.focus();
+}
+function chatTieuDiem(){ const i = chatEl('chat-input'); if (i && !i.disabled) i.focus(); }
+function chatGuiUI(){
+  const inp = chatEl('chat-input'); if (!inp) return;
+  const loi = inp.value.trim(); if (!loi){ inp.blur(); return; }
+  // ⚠ Chỉ XOÁ Ô khi gửi được. Gửi hỏng mà vẫn xoá là lấy mất câu người ta vừa gõ.
+  if (typeof window.netChatGui === 'function' && window.netChatGui(chatKenh, loi)) inp.value = '';
+  else chatThem('he', null, 'Chưa nối được máy chủ — câu chưa gửi đi.');
+}
+
+function chatNoi(){
+  const inp = chatEl('chat-input');
+  if (inp){
+    inp.addEventListener('keydown', e => {
+      if (e.key === 'Enter'){ e.preventDefault(); chatGuiUI(); }
+      else if (e.key === 'Escape'){ e.preventDefault(); inp.blur(); }
+      e.stopPropagation();          // đừng để phím gõ rơi xuống phím tắt của game
+    });
+  }
+  document.querySelectorAll('.chat-tab').forEach(b =>
+    b.addEventListener('click', () => chatDoiKenh(b.dataset.kenh)));
+  const thu = chatEl('chat-thu');
+  if (thu) thu.addEventListener('click', () => {
+    const l = chatEl('chat-log'), i = chatEl('chat-input');
+    const dong = !l.classList.contains('cl-closed');
+    l.classList.toggle('cl-closed', dong); i.classList.toggle('cl-closed', dong);
+    thu.firstChild.textContent = dong ? '▸' : '▾';
+  });
+  chatDung();
+  // Nhãn trạng thái đổi theo kết nối, mà kết nối thì không báo ra ngoài. 1 Hz là đủ cho một
+  // dòng chữ và rẻ hơn hẳn việc móc vào vòng vẽ 60 Hz.
+  if (window.NET && window.NET.on) setInterval(chatDung, 1000);
+}
+
 // ⚠ `p` là THÂN NGƯỜI phải vẽ, không nhất thiết là `player`. Trước bản nối mạng hàm này không
 // nhận tham số nào và dòng thứ ba là `const p = player` — tức cả tầng vẽ khẳng định thế giới chỉ
 // có một người chơi. Nay người chơi khác đi qua cùng một cửa này, nên hai luật:
@@ -19488,6 +19650,10 @@ window.doTayTuy = function(confirmed){
 // ---------- Sect select / boot ----------
 function startGame(sectKey, quze){
   taiTroDong();   // màn tải (nếu còn) — cửa duy nhất vào thế giới là chỗ đúng để đóng nó
+  // Chat nối ở đây vì đây là cửa duy nhất vào thế giới — cùng lý do với taiTroDong() ở trên.
+  // ⚠ Cờ chặn gọi hai lần: `startGame` chạy lại được (đổi nhân vật, bài kiểm), mà gắn listener
+  // hai lần là một câu chat gửi đi hai lần.
+  if (!window._chatDaNoi){ window._chatDaNoi = true; try { chatNoi(); } catch (e) { console.error('[chat]', e); } }
   // ⚠ DỪNG cảnh màn chờ NGAY Ở ĐÂY, đừng trông vào chỗ gọi. titleAlive() tắt vòng lặp khi CẢ
   // HAI màn (#sect-select, #intro-story) đã ẩn — mà đường vào game nào cũng chỉ ẩn đúng một
   // cái rồi gọi startGame, nên chỉ cần một đường quên ẩn cái kia là cảnh Lunacia mười lớp
@@ -22883,17 +23049,6 @@ function heroCastAct(id, d){
 // vĩnh viễn (xem LEGACY_SECT_SKILLS). Hai hàm dựng hàng danh sách cho nó — equippedSkillRowHtml,
 // legacySkillRowHtml — đã gỡ cùng đợt tab Khác chuyển sang khung cây: cây + khung chi tiết nay
 // dựng mọi ô, nên giữ đường vẽ thứ hai là bảo đảm hai bên nói khác nhau sau vài đợt sửa.
-// 4 hệ Tấn Chức phụ (Ám Khí/Đạn Chỉ/Linh Tiễn/Tiêu Hồn) — vẫn giữ nguyên điều kiện đầu tư cũ, chỉ đổi
-// từ "chiêu bấm được" thành "% Công Kích vĩnh viễn" khi đủ điều kiện.
-function legacyUniversalRowHtml(id){
-  const info = skillInfo(id), pct = LEGACY_UNIVERSAL_PCT[id] || 0;
-  const right = info.unlocked ? `<span style="font-size:11px;color:#a0ffe9">+${pct}% Sát Thương ✓</span>` : `<span style="font-size:10.5px;opacity:.5">🔒 ${info.lockTxt}</span>`;
-  return `<div class="skill-row${info.unlocked?'':' locked'}">
-    <img src="${info.icon}" onerror="this.outerHTML='<span class=\\'sk-glyph\\'>${id==='danchi'?'●':'✦'}</span>'" alt="">
-    <span class="sk-info"><b style="color:${info.unlocked?'#7ecbff':'#8a8a8a'}">${info.name}</b>
-      <div class="sk-desc">${info.desc}</div></span>
-    ${right}</div>`;
-}
 // ═══════════ BẢNG KỸ NĂNG KIỂU CÂY — cây bên trái, khung chi tiết bên phải ═══════════
 // Bố cục dựng theo ảnh mẫu chủ dự án đưa: hàng tab trên cùng, một CÂY biểu tượng nối bằng mũi
 // tên ở nửa trái, và một khung đọc chi tiết + nút Nâng Cấp ở nửa phải.
@@ -22936,14 +23091,24 @@ const KN_HINH = [
   { k:'g7', c:2, h:6, tu:['g6'] },
 ];
 const KN_HINH_RIENG = {};      // <lớp>|<tab> → hình riêng, để trống thì dùng KN_HINH
-const KN_COT = 58, KN_HANG = 60, KN_O = 44;   // bước cột · bước hàng · cạnh ô biểu tượng
+// ⚠ `KN_O` là cạnh cái ẢNH, `KN_O_CAO` là chiều cao THẬT của ô — ảnh 44 + dòng số cấp ~14.
+// Mũi tên phải xuất phát từ `KN_O_CAO`, không phải `KN_O`: đo được ô cao đúng 58px, nên bản cũ
+// bắn mũi tên từ y+44 tức là từ GIỮA dòng số cấp, và cái badge vẽ sau nên nó che mất thân mũi
+// tên. Thứ còn lại trên màn hình là mấy đầu mũi tên xanh trôi lơ lửng — nhìn ra là lỗi vẽ chứ
+// không ra một cái cây. Và `KN_HANG` phải đủ để CHỪA khe: 60 thì khe chỉ còn 2px.
+const KN_COT = 58, KN_HANG = 76, KN_O = 44, KN_O_CAO = 58;
+const KN_NHOM_CAO = 26;                      // chỗ chừa cho một dòng tiêu đề nhóm
+// ⚠ TOẠ ĐỘ Y CỦA MỘT Ô CHỈ ĐƯỢC TÍNH Ở ĐÂY. Ba chỗ đọc nó — ô, mũi tên, và phép đo khổ — nên
+// chép công thức ra ba nơi là dựng ba bản sao của một luật đang sống: sửa một chỗ thì mũi tên
+// trỏ hụt ô, mà kiểu lệch đó chỉ lộ ra khi nhìn ảnh chụp.
+function knY(n){ return n.h * KN_HANG + (n.gi || 0) * KN_NHOM_CAO; }
 // Bề rộng/cao vùng cây SUY TỪ CHÍNH HÌNH, không chép cứng số cột. Chép cứng "4 cột" rồi dời
 // chuỗi thẳng sang cột 2 là thừa ra một cột rỗng đúng 58px — cây dãn ra, khung chi tiết bị bóp,
 // và không có gì báo lỗi cả.
 function knKho(hinh){
-  let c = 0, h = 0;
-  for (const n of hinh){ if (n.c > c) c = n.c; if (n.h > h) h = n.h; }
-  return { w: c * KN_COT + KN_O, h: h * KN_HANG + KN_O + 14 };   // +14 chừa chỗ dòng số cấp
+  let c = 0, y = 0;
+  for (const n of hinh){ if (n.c > c) c = n.c; if (knY(n) > y) y = knY(n); }
+  return { w: c * KN_COT + KN_O, h: y + KN_O_CAO };
 }
 // ⚠ ĐÂY LÀ CHỖ CHỦ DỰ ÁN ĐIỀN KỸ NĂNG. Mỗi khoá là `<lớp>|<tab>`, giá trị là danh sách mã chiêu
 // rót vào các ô của KN_HINH THEO THỨ TỰ khai ở trên (a1 · b1 · b2 · c1 · d1 · d2 · e1 · f1 · f2
@@ -22978,17 +23143,59 @@ for (const _lop in KN_ROT) KN_ROT[_lop] = KN_ROT[_lop].concat(KN_XUONG_SONG);
 // chơi ăn đòn trước rồi mới học được cách đỡ, đúng nhịp mà ảnh mẫu của chủ dự án bày ra.
 const KN_ROT_CHUNG = { vaeldra: ['danchi','tieuhon',
   'tp_crush','tp_para','tp_stead','tp_venom','tp_unbound','tp_anti'] };   // tab Vaeldra dùng chung cho mọi lớp
-function knHinh(tab){ return KN_HINH_RIENG[(player && player.sect) + '|' + tab] || KN_HINH; }
+function knHinh(tab){
+  const rieng = KN_HINH_RIENG[(player && player.sect) + '|' + tab];
+  if (rieng) return rieng;
+  return tab === 'khac' ? knHinhKhac() : KN_HINH;
+}
 // Tab KHÁC rót ĐỘNG theo lớp — Di Sản và bị động riêng đều là chiêu của chính lớp đang chơi,
 // nên không khai được thành một danh sách phẳng như `KN_ROT_CHUNG`. Suy thẳng từ hai bảng đang
 // sống (`LEGACY_SECT_SKILLS` · `CLASS_PASSIVES`) chứ không chép sang bảng thứ ba: chép là lần
 // sau ai đó đổi một bảng thì tab này nói dối, mà kiểu nói dối đó không ai phát hiện được.
-function knDsKhac(){
+// Tab Khác bày theo LƯỚI CÓ NHÓM, đúng ảnh mẫu chủ dự án đưa: mỗi nhóm một tiêu đề, các ô xếp
+// thành hàng ngang, và nhóm nào là một MẠCH thì nối bằng mũi tên dọc. Hai tab kia vẫn là cây
+// nhánh — chúng có hình dạng thật sự rẽ nhánh, tab này thì không: Di Sản là bốn thứ độc lập,
+// không cái nào mở khoá cái nào, nên vẽ chúng thành cây là bịa ra một quan hệ không có.
+//
+// ⚠ SỐ Ô SUY TỪ DỮ LIỆU, không chép cứng 4×2 như ảnh mẫu. Lớp nào cũng đúng 4 Di Sản, nhưng bị
+// động thì thieulam có 2 còn bốn lớp kia 1 — khoá cứng tám ô là bốn lớp mở ra thấy một dãy ô
+// trống mang nhãn "Học Tập", tức bảng tự hứa có thứ nó không có.
+function knKhacNhom(){
   if (!player) return [];
   const lop = player.sect;
-  const ds = LEGACY_SECT_SKILLS.filter(x => VOHOC_DEFS[x] && VOHOC_DEFS[x].phai === lop);
-  const bd = CLASS_PASSIVES.filter(x => VOHOC_DEFS[x] && VOHOC_DEFS[x].phai === lop);
-  return ds.concat(bd);
+  return [
+    { ten:'Hành Vi', dong:'để ngoài thanh chiêu thì cộng %Công Kích vĩnh viễn', cot:4,
+      ds: LEGACY_SECT_SKILLS.filter(x => VOHOC_DEFS[x] && VOHOC_DEFS[x].phai === lop)
+            .concat(Object.keys(LEGACY_UNIVERSAL_PCT).filter(x => SKILL_DEFS[x])) },
+    // Mũi tên ở đây nghĩa là MỞ SAU, không phải "phải học cái trước mới học được cái sau" — cả
+    // hai đều tự ngộ theo cấp. Nên nhóm xếp theo `unlock` và tiêu đề nói thẳng ra như vậy: một
+    // mũi tên hứa điều kiện tiên quyết không có thật thì tệ hơn là không vẽ mũi tên nào.
+    { ten:'Học Tập', dong:'bị động của lớp — xếp theo thứ tự mở khoá', cot:1, chuoi:true,
+      ds: CLASS_PASSIVES.filter(x => VOHOC_DEFS[x] && VOHOC_DEFS[x].phai === lop)
+            .sort((a, b) => (VOHOC_DEFS[a].unlock || 0) - (VOHOC_DEFS[b].unlock || 0)) },
+  ].filter(g => g.ds.length);
+}
+function knDsKhac(){ return knKhacNhom().reduce((t, g) => t.concat(g.ds), []); }
+// Hình của tab Khác dựng TỪ CHÍNH các nhóm ở trên, nên thêm/bớt một Di Sản là lưới tự giãn —
+// không có bảng hình thứ hai để quên sửa.
+function knHinhKhac(){
+  const out = []; let h = 0, gi = 0;
+  for (const g of knKhacNhom()){
+    const dau = h;
+    g.ds.forEach((id, j) => {
+      const c = j % g.cot, hang = h + Math.floor(j / g.cot);
+      // ⚠ `gi` cộng 1: nhóm ĐẦU cũng phải chừa chỗ cho tiêu đề của chính nó. Để 0 thì tiêu đề
+      // nhóm đầu rơi lên toạ độ ÂM, tức nằm ngoài khung cây và bị cắt mất — mà mất một cái nhãn
+      // thì không lỗi nào báo, chỉ là hai lưới dính vào nhau không ai hiểu vì sao.
+      const o = { k:'x' + gi + '_' + j, c, h:hang, gi: gi + 1, tu:[] };
+      if (g.chuoi && j > 0) o.tu = ['x' + gi + '_' + (j - 1)];
+      if (j === 0){ o.nhomTen = g.ten; o.nhomDong = g.dong; }
+      out.push(o);
+    });
+    h = dau + Math.ceil(g.ds.length / g.cot);
+    gi++;
+  }
+  return out;
 }
 function knMa(tab, i){
   const ds = tab === 'lop'  ? (KN_ROT[player && player.sect] || [])
@@ -23000,7 +23207,13 @@ function knMa(tab, i){
 // không trả null: ô trống phải vẽ ra được, nếu không thì cây thủng lỗ và mũi tên trỏ vào hư không.
 function knNut(tab, n, i){
   const id = knMa(tab, i);
-  if (!id) return { k:n.k, c:n.c, h:n.h, tu:n.tu, trong:true, ten:'Ô Trống' };
+  // ⚠ CHÉP TRỌN PHẦN HÌNH HỌC SANG MỘT CHỖ, đừng liệt kê lại ở từng nhánh `return`. Hàm này có
+  // BA đường ra, nên mỗi lần thêm một trường vào hình (`gi`, `nhomTen`…) mà chỉ sửa một nhánh
+  // là trường đó rụng mất ở hai nhánh kia — không lỗi, không dấu hiệu. Đã dẫm đúng thế: thêm
+  // tiêu đề nhóm cho tab Khác xong thì ô vẫn vẽ đủ, mũi tên vẫn đúng, mà hai cái nhãn thì
+  // KHÔNG BAO GIỜ hiện ra, vì `knNut` dựng vật thể mới và bỏ quên chúng.
+  const hh = { k:n.k, c:n.c, h:n.h, gi:n.gi, tu:n.tu, nhomTen:n.nhomTen, nhomDong:n.nhomDong };
+  if (!id) return { ...hh, trong:true, ten:'Ô Trống' };
   const v = VOHOC_DEFS[id] || null;
   // ⚠ CHIÊU BỊ ĐỘNG KHÔNG NẰM TRONG `SKILL_DEFS` — vòng đăng ký ở trên `continue` qua
   // `type === 'passive'` vì chúng không bấm được, nên `skillInfo()` trả null cho cả năm cái.
@@ -23011,15 +23224,15 @@ function knNut(tab, n, i){
     // Bị động CHỈ SỐ nâng cấp được nên phải hiện SỐ CẤP như chiêu chủ động; bị động hiệu ứng
     // thì không có cấp, hiện dấu ✚. Hai họ, hai cách đọc — xem `laBiDongChiSo`.
     const cs = laBiDongChiSo(id), tp = laTamPhap(id);
-    return { k:n.k, c:n.c, h:n.h, tu:n.tu, trong:false, id, v, biDong:true, chiSo:cs || tp, tamPhap:tp,
+    return { ...hh, trong:false, id, v, biDong:true, chiSo:cs || tp, tamPhap:tp,
       inf:{ id, name:v.name, icon:v.icon, desc:v.desc },
       ten:v.name, lv: (cs || tp) ? skLv(id) : 0, mo: vhLearned(id),
       loai: tp ? 'Tâm pháp' : cs ? 'Bị động — chỉ số' : 'Bị động' };
   }
   const inf = skillInfo(id);
-  if (!inf) return { k:n.k, c:n.c, h:n.h, tu:n.tu, trong:true, ten:'Ô Trống', loi:id };
+  if (!inf) return { ...hh, trong:true, ten:'Ô Trống', loi:id };
   const d = SKILL_DEFS[id] || {};
-  return { k:n.k, c:n.c, h:n.h, tu:n.tu, trong:false, id, inf, d, v, biDong:false,
+  return { ...hh, trong:false, id, inf, d, v, biDong:false,
     ten: inf.name, lv: skLv(id), mo: inf.unlocked,
     loai: v && v.type === 'buff' ? 'Phù trợ' : 'Chủ động' };
 }
@@ -23028,11 +23241,11 @@ window.knChon = function(k){ window._knChon = k; renderSkillPanel(); };
 // Mũi tên cha → con. Vẽ bằng SVG chứ không bằng viền CSS: đường nối phải đi từ đáy ô cha sang
 // đỉnh ô con qua một khuỷu, mà khuỷu thì border không dựng được.
 function knMuiTen(ds){
-  const cx = (n) => n.c * KN_COT + KN_O / 2, cy = (n) => n.h * KN_HANG;
+  const cx = (n) => n.c * KN_COT + KN_O / 2, cy = (n) => knY(n);
   let p = '';
   for (const n of ds) for (const tk of (n.tu || [])){
     const cha = ds.find(x => x.k === tk); if (!cha) continue;
-    const x1 = cx(cha), y1 = cy(cha) + KN_O, x2 = cx(n), y2 = cy(n) - 4;
+    const x1 = cx(cha), y1 = cy(cha) + KN_O_CAO, x2 = cx(n), y2 = cy(n) - 4;
     const my = (y1 + y2) / 2;
     p += `<path d="M${x1} ${y1} V${my} H${x2} V${y2}" fill="none" stroke="#5fc96e" stroke-width="2"
             marker-end="url(#knMui)" opacity=".85"/>`;
@@ -23113,7 +23326,16 @@ function renderSkillPanelCay(tab){
   const K = knKho(ds);
   let h = `<div class="kn-cay" style="width:${K.w}px;height:${K.h}px">` + knMuiTen(ds);
   for (const n of ds){
-    const st = `left:${n.c*KN_COT}px;top:${n.h*KN_HANG}px`;
+    const st = `left:${n.c*KN_COT}px;top:${knY(n)}px`;
+    // Tiêu đề nhóm nằm NGAY TRÊN ô đầu nhóm, trong cùng hệ toạ độ tuyệt đối của khung cây —
+    // `KN_NHOM_CAO` trong `knY()` đã chừa sẵn đúng chỗ cho nó, nên không có cách nào nó đè
+    // lên hàng ô phía trên.
+    // ⚠ Mô tả nhóm để trong `title`, KHÔNG in cạnh nhãn. Vùng cây chỉ rộng 218px nên một dòng
+    // mô tả in ra bị cắt cụt giữa chừng ("…thì cộng %C") — một câu cụt còn tệ hơn không có câu
+    // nào. Ảnh mẫu cũng chỉ có đúng cái nhãn.
+    if (n.nhomTen)
+      h += `<div class="kn-nhom" style="top:${knY(n) - KN_NHOM_CAO + 4}px" title="${mstEsc(n.nhomDong || '')}">
+              <b>${n.nhomTen}</b></div>`;
     if (n.trong){
       h += `<div class="kn-o kn-trong" style="${st}" title="Ô trống — điền mã chiêu vào KN_ROT">
               <span>+</span></div>`;
@@ -23347,8 +23569,9 @@ function renderSkillPanel(){
           <span class="sr-desc">Bấm nút sách ở khung chi tiết của một chiêu để nâng thẳng 1 cấp — khỏi tốn Lumen lẫn Bản Năng</span>
           <span class="sr-stat">${CONSUM_DB.sach.info()}</span></span>
         <b style="color:#ffb15c;font-size:15px">${player.bikipVH || 0}</b></div>`;
-    html += `<div class="stat-sec">HỆ TẤN CHỨC PHỤ</div>`;
-    for (const id of ['danchi','tieuhon']) html += legacyUniversalRowHtml(id);
+    // ⚠ KHỐI "HỆ TẤN CHỨC PHỤ" ĐÃ GỠ — `danchi` · `tieuhon` nay là hai Ô trong nhóm Hành Vi của
+    // chính cây này (xem `knKhacNhom`). Giữ lại khối cũ là cùng một bảng in hai lần hai kiểu,
+    // cách nhau vài dòng, và người chơi phải tự đoán hai chỗ có nói về cùng một thứ không.
     html += `<div class="kn-phu"><div class="kn-phu-t">Bị động chung — từ Ascension · trang bị · cổ thư</div><div class="kn-phu-o">`;
     for (const ps of PASSIVE_SKILLS){
       const on = ps.req();
@@ -29290,26 +29513,50 @@ function fmtCountdown(ms){
   return h > 0 ? `${h}g${String(m % 60).padStart(2,'0')}` : (m > 0 ? `${m} phút` : 'sắp diễn ra!');
 }
 function fmtClock(t){ const d = new Date(t); return String(d.getHours()).padStart(2,'0') + ':' + String(d.getMinutes()).padStart(2,'0'); }
+// ⚠ LỊCH TRÌNH SUY TỪ CHÍNH HÀM MỐC GIỜ — đừng bao giờ chép tay dãy giờ vào một chuỗi.
+//
+// Dòng tiêu đề cũ của bảng này in cứng *"Hung Thần 0h·4h·8h… · Xâm Lăng Vàng 2h·6h·10h…"*, và
+// nó là một LỜI NÓI DỐI với gần như toàn bộ người chơi: mốc neo theo **UTC** (xem khối
+// `matonNextBoundary`), còn `fmtClock` in theo giờ **MÁY NGƯỜI CHƠI**. Đo được ở
+// `Asia/Ho_Chi_Minh`: Hung Thần thật sự rơi vào **03:00 · 07:00 · 11:00 · 15:00 · 19:00 ·
+// 23:00**, Xâm Lăng Vàng **01:00 · 05:00 · 09:00…**, Vực Nứt **01:00 · 07:00 · 13:00 · 19:00**.
+// Người Việt đọc "0h" rồi thức tới nửa đêm là lệch đúng 3 tiếng, mà **không có gì báo sai**.
+//
+// Nên hàm này đi BỘ qua đúng cái hàm mốc mà game dùng để kích hoạt sự kiện, suốt một ngày của
+// người chơi, rồi in ra bằng `fmtClock`. Đổi `MATON_CHU_KY` hay `GOLDEN_LECH` là cột lịch tự
+// theo — không có bảng thứ hai để mà lệch. Cùng lối với `mapBanSac()` suy từ `packs`.
+function lichGio(mocKe, now){
+  const d = new Date(now); d.setHours(0, 0, 0, 0);
+  const dau = d.getTime(), cuoi = dau + 86400000;
+  const ra = [];
+  // `mocKe(sau)` trả mốc ĐẦU TIÊN LỚN HƠN `sau`, nên lùi 1ms để không bỏ sót mốc đúng 00:00.
+  for (let t = mocKe(dau - 1); t < cuoi && ra.length < 24; t = mocKe(t)) ra.push(fmtClock(t));
+  return ra.join(', ');
+}
 function eventList(now){
   const list = [];
   if (typeof MATON !== 'undefined'){
+    const _mtLich = lichGio(matonNextBoundary, now);
     list.push(MATON.active
       ? { icon:'☠', name:'Hung Thần Giáng Thế', map: MATON.map, at: MATON.endsAt, active:true, color:'#e84a6a',
-          sub:`ĐANG DIỄN RA tại ${MAPS[MATON.map].name} — còn ${fmtCountdown(MATON.endsAt - now)}` }
+          lich:_mtLich, sub:`ĐANG DIỄN RA tại ${MAPS[MATON.map].name} — còn ${fmtCountdown(MATON.endsAt - now)}` }
       : { icon:'☠', name:'Hung Thần Giáng Thế', map: matonMapFor(MATON.next || matonNextBoundary(now)),
-          at: MATON.next || matonNextBoundary(now), active:false, color:'#c07fe0',
+          at: MATON.next || matonNextBoundary(now), active:false, color:'#c07fe0', lich:_mtLich,
           sub:`${fmtClock(MATON.next || matonNextBoundary(now))} · ${MAPS[matonMapFor(MATON.next || matonNextBoundary(now))].name} — hạ trùm nhận Box Kundun lớn` });
+    const _rfLich = lichGio(riftNextBoundary, now);
     list.push(RIFT.active
       ? { icon:'✹', name:'Chúa Tể Vực Nứt', map: null, at: RIFT.endsAt, active:true, color:'#a06aff',
+          lich:_rfLich, noi:'Mọi bãi săn',
           sub:`ĐANG DIỄN RA ở MỌI bãi săn — còn ${fmtCountdown(RIFT.endsAt - now)} · đã hạ ${RIFT.kills}/${RIFT_MAX_KILLS}` }
-      : { icon:'✹', name:'Chúa Tể Vực Nứt', map: null,
-          at: RIFT.next || riftNextBoundary(now), active:false, color:'#a06aff',
-          sub:`${fmtClock(RIFT.next || riftNextBoundary(now))} · 6 tiếng/lần (0h·6h·12h·18h) — nứt ở mọi bãi săn (cấp ${RIFT_MIN_LV}+), trùm luôn trên tầm bạn 6 cấp` });
+      : { icon:'✹', name:'Chúa Tể Vực Nứt', map: null, noi:'Mọi bãi săn',
+          at: RIFT.next || riftNextBoundary(now), active:false, color:'#a06aff', lich:_rfLich,
+          sub:`${fmtClock(RIFT.next || riftNextBoundary(now))} · nứt ở mọi bãi săn (cấp ${RIFT_MIN_LV}+), trùm luôn trên tầm bạn 6 cấp` });
+    const _gdLich = lichGio(goldenNextBoundary, now);
     list.push(GOLDEN.active
       ? { icon:'✹', name:'Xâm Lăng Vàng', map: GOLDEN.map, at: GOLDEN.endsAt, active:true, color:'#ffd76a',
-          sub:`ĐANG DIỄN RA tại ${MAPS[GOLDEN.map].name} — còn ${fmtCountdown(GOLDEN.endsAt - now)} · còn ${GOLDEN.left || '?'} quái vàng` }
+          lich:_gdLich, sub:`ĐANG DIỄN RA tại ${MAPS[GOLDEN.map].name} — còn ${fmtCountdown(GOLDEN.endsAt - now)} · còn ${GOLDEN.left || '?'} quái vàng` }
       : { icon:'✹', name:'Xâm Lăng Vàng', map: goldenMapFor(GOLDEN.next || goldenNextBoundary(now)),
-          at: GOLDEN.next || goldenNextBoundary(now), active:false, color:'#ffd76a',
+          at: GOLDEN.next || goldenNextBoundary(now), active:false, color:'#ffd76a', lich:_gdLich,
           sub:`${fmtClock(GOLDEN.next || goldenNextBoundary(now))} · ${MAPS[goldenMapFor(GOLDEN.next || goldenNextBoundary(now))].name} — mỗi quái vàng rơi 1 Box Kundun (I-V theo map)` });
   }
   // Vỉa Cốt — sự kiện duy nhất trong danh sách này KHÔNG chạy theo đồng hồ mà theo NGÀY, và là
@@ -29319,7 +29566,7 @@ function eventList(now){
     for (const v of viaHomNay()){
       const D = COT_DONG[v.dong], het = viaDaLay(v.map);
       list.push({ icon:'◆', name:`Vỉa Cốt ${D.ten}`, map: v.map, at: _mai.getTime(), active: !het,
-        color: het ? '#8a8a8a' : D.mau,
+        color: het ? '#8a8a8a' : D.mau, lich:'Mỗi ngày · đổi chỗ lúc 00:00', xong: het,
         sub: het
           ? `Đã khai hôm nay tại ${MAPS[v.map].name} — mai vỉa mọc chỗ khác`
           : `${MAPS[v.map].name} — mỗi ngày MỘT lần, 3 mảnh Cốt ${D.ten} (28% ra Cổ). Xem chấm kim cương trên bản đồ nhỏ.` });
@@ -29327,6 +29574,7 @@ function eventList(now){
   }
   const mid = new Date(now); mid.setHours(24, 0, 0, 0);
   list.push({ icon:'⚔', name:'Truy Nã Lệnh & Mục Tiêu Ngày', at: mid.getTime(), active:false, color:'#7ecbff',
+              lich:'Mỗi ngày · làm mới 00:00', noi:'Sapidae Chiefdom',
               sub:`Làm mới lúc 00:00 — còn ${fmtCountdown(mid.getTime() - now)}` });
   return list;
 }
@@ -29344,24 +29592,70 @@ window.goEventMap = function(id){
   }
   travelTo(id);
 };
+// ═══ BẢNG SỰ KIỆN LÀ MỘT LƯỚI CÓ CỘT, KHÔNG PHẢI MỘT CHỒNG THẺ ═══════════════════════════
+//
+// Chủ dự án đưa ảnh mẫu MU và chốt: *"Đừng thiết kế kiểu kéo thẳng xuống nhìn khó lắm. Như vậy
+// khi chơi online người chơi mới biết đang là sự kiện gì."* Bản cũ là bảy cái thẻ xếp dọc, mỗi
+// thẻ một câu văn xuôi — muốn so "cái nào sắp tới trước" thì phải ĐỌC bảy câu rồi tự nhớ. Lưới
+// thì mắt quét được một cột: mọi con số đếm ngược nằm thẳng hàng nhau.
+//
+// ⚠ TÊN MAP TRONG ẢNH MẪU LÀ TÊN RIÊNG CỦA MU (Lorencia · Noria · Devias · Blood Castle ·
+// Devil Square) — Quy tắc số 2 cấm tuyệt đối. Lấy HÌNH DẠNG bảng, không lấy nội dung: cột Map
+// đọc thẳng `MAPS[...].name` của game này.
+//
+// ⚠ KHÔNG dựng phân trang. Ảnh mẫu có "1/1" vì nó phân trang sẵn cho danh sách dài; ở đây
+// `eventList()` ra 7 dòng và nút lật trang sẽ vĩnh viễn hiện 1/1 — tức một nút bấm không ra gì,
+// đúng cái đã phải gỡ ở sảnh F6 (bảng xếp hạng) và ở `openEvoPanel` của test_cayky.
+const SK_COT = [
+  { t:'TT',         k:'tt'   },
+  { t:'Tên Sự Kiện', k:'ten' },
+  { t:'Nơi Diễn Ra', k:'noi' },
+  { t:'Lịch Trình',  k:'lich' },
+  { t:'Thời Gian',   k:'tg'  },
+  { t:'Tham Gia',    k:'di'  },
+];
 window.openEventBoard = function(){
   if (!player) return;
   const now = Date.now();
+  const ds = eventList(now);
   let rows = '';
-  for (const e of eventList(now)){
-    rows += `<div style="display:flex;align-items:center;gap:10px;text-align:left;background:rgba(255,255,255,.04);
-        border:1px solid ${e.active ? e.color : 'rgba(255,255,255,.10)'};border-radius:10px;padding:9px 12px;margin:7px 0">
-      <span style="font-size:20px;color:${e.color}">${e.icon}</span>
-      <span style="flex:1"><b style="color:${e.color}">${e.name}</b>${e.active ? ' <b style="color:#ffd76a">● LIVE</b>' : ''}<br>
-        <span style="font-size:12px;opacity:.8">${e.sub}</span></span>
-      ${e.map ? `<button class="mini-btn" onclick="goEventMap('${e.map}')">${e.active ? 'Tới Ngay' : 'Xem Map'}</button>` : ''}</div>`;
-  }
+  ds.forEach((e, i) => {
+    // Cột Nơi Diễn Ra: `map` là một khoá map thật ⇒ tra tên; `noi` là chữ cho sự kiện không
+    // thuộc map nào (Vực Nứt nứt ở MỌI bãi). Thiếu cả hai thì để gạch ngang, đừng in "null".
+    const noi = e.map ? (MAPS[e.map] ? MAPS[e.map].name : e.map) : (e.noi || '—');
+    // ⚠ "ĐANG DIỄN RA" CHỈ DÀNH CHO SỰ KIỆN THEO GIỜ. Vỉa Cốt khai `active = !đã khai`, tức nó
+    // bật SUỐT NGÀY — ảnh chụp bản đầu ra bốn hàng xanh lè cùng lúc (ba Vỉa + Xâm Lăng Vàng),
+    // và lúc đó màu xanh hết nghĩa. Mà "biết đang là sự kiện gì" mới là cả lý do cái bảng này
+    // tồn tại. Nên Vỉa đi nhãn riêng — vẫn xanh, nhưng xanh nhạt và KHÔNG tô sáng cả hàng.
+    // (Không đụng vào `e.active`: chip đồng hồ HUD đọc chung trường đó.)
+    const ngay = !!e.lich && /Mỗi ngày/.test(e.lich);       // sự kiện theo NGÀY, không theo giờ
+    const live = e.active && !e.xong && !ngay;              // sự kiện theo GIỜ đang mở cửa
+    const tg = e.xong ? `<i style="color:#8a8a8a">đã khai hôm nay</i>`
+      : live ? `<b style="color:#7fe08a">Đang diễn ra</b>`
+      : e.active && ngay ? `<b style="color:#a8d8ae">Sẵn hôm nay</b>`
+      : `<b style="color:#ffd76a">${fmtCountdown(e.at - now)}</b>`;
+    const di = e.map
+      ? `<button class="sk-di${live ? ' sk-di-live' : ''}" onclick="goEventMap('${e.map}')">${e.active && !e.xong ? 'Tới Ngay' : 'Xem'}</button>`
+      : '';
+    rows += `<div class="sk-hang${live ? ' sk-live' : ''}" title="${e.sub.replace(/"/g,'&quot;')}">`
+      + `<span class="sk-tt">${i + 1}</span>`
+      + `<span class="sk-ten"><i style="color:${e.color}">${e.icon}</i> ${e.name}</span>`
+      + `<span class="sk-noi">${noi}</span>`
+      + `<span class="sk-lich">${e.lich || '—'}</span>`
+      + `<span class="sk-tg">${tg}</span>`
+      + `<span class="sk-di-o">${di}</span></div>`;
+  });
   const inner = lopPhuMo();   // lopPhuMo tự closePanels rồi mới hiện — xem ghi chú ở tầng nổi
   if (!inner) return;
   inner.innerHTML = `
-    <h2 style="color:#ffd76a">⏱ BẢNG SỰ KIỆN</h2>
-    <div style="font-size:12.5px;opacity:.75;margin-bottom:4px">Chạy theo giờ thật: Hung Thần 0h·4h·8h… · Xâm Lăng Vàng 2h·6h·10h… · <b style="color:#a06aff">Chúa Tể Vực Nứt 0h·6h·12h·18h</b> (4 lượt/ngày, nứt ở mọi bãi săn)</div>
-    ${rows}
+    <h2 style="color:#ffd76a">⏱ HỆ THỐNG SỰ KIỆN</h2>
+    <div class="sk-bang">
+      <div class="sk-dau">${SK_COT.map(c => `<span class="sk-${c.k}">${c.t}</span>`).join('')}</div>
+      ${rows}
+    </div>
+    <div class="sk-ghi">Giờ trong bảng là <b>giờ trên máy bạn</b> — mốc sự kiện chung cho mọi
+      người chơi nên hai múi giờ khác nhau sẽ đọc ra hai dãy giờ khác nhau, nhưng vẫn là cùng
+      một khoảnh khắc.</div>
     <button class="big-btn" style="margin-top:10px" onclick="lopPhuDong()">Đóng</button>`;
 };
 

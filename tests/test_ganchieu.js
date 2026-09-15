@@ -38,13 +38,19 @@ const PORT = process.argv[2] || '8853';
       player.level = 90; player.lvPeak = 90; player.silver = 9e6; player.khi = 9e5;
       vhAutoLearn(); calcDerived();
       const d = { bar: player.skillBar.slice(), legacy0: +player.legacyAtkPct.toFixed(2) };
-      const diSan = LEGACY_SECT_SKILLS.find(x => VOHOC_DEFS[x] && VOHOC_DEFS[x].phai === sc && vhLearned(x));
+      // ⚠ PHẢI CHỌN CHIÊU DI SẢN CHƯA NẰM TRÊN THANH. `LEGACY_SECT_SKILLS` nay khai CẢ SÁU chiêu
+      // chủ động của lớp (Di Sản = sáu chiêu TRỪ những ô đang trên thanh), nên chiêu đầu danh
+      // sách rất có thể đang ở ô 3 — kéo nó sang ô 2 thì nó vẫn trên thanh, %ST tụt 0, và mệnh
+      // đề đỏ vì cảnh dựng chứ không vì cơ chế. Cảnh phải tự bảo đảm tiền đề của mình.
+      const diSan = LEGACY_SECT_SKILLS.find(x => VOHOC_DEFS[x] && VOHOC_DEFS[x].phai === sc
+        && vhLearned(x) && !player.skillBar.includes(x));
       const bd = Object.keys(VOHOC_DEFS).find(x => VOHOC_DEFS[x].phai === sc && VOHOC_DEFS[x].type === 'passive');
       d.coDiSan = !!diSan; d.coBiDong = !!bd;
 
       // ③ kéo chiêu Di Sản lên thanh → %ST phải TỤT đúng bằng bậc của nó
       if (diSan){
         const mong = LEGACY_TIER_PCT[VOHOC_DEFS[diSan].tier] || 0;
+        d.diSanTen = VOHOC_DEFS[diSan].name;
         window.knGan(1, diSan);
         d.legacy1 = +player.legacyAtkPct.toFixed(2);
         d.tut = +(d.legacy0 - d.legacy1).toFixed(2); d.tutMong = mong;
@@ -114,6 +120,7 @@ const PORT = process.argv[2] || '8853';
   for (const [sc, d] of Object.entries(r.lop)){
     if (d.coBiDong && d.o1NhanBiDong !== false) { fail(`${sc}: ô 1 NHẬN bị động`); e1++; }
     if (d.goO1 !== false || !d.o1SauKhiThu) { fail(`${sc}: ô 1 gỡ được / bị để trống`); e1++; }
+    if (!d.coDiSan) fail(`${sc}: không tìm được chiêu Di Sản nào NGOÀI thanh — cảnh dựng chưa đủ, mệnh đề ③ xanh giả`);
     if (d.coDiSan){
       if (d.tut !== d.tutMong){ fail(`${sc}: kéo Di Sản lên thanh mà %ST tụt ${d.tut}, mong ${d.tutMong}`); e3++; }
       if (d.legacy2 !== d.legacy0){ fail(`${sc}: gỡ khỏi thanh mà %ST không trả lại (${d.legacy0}→${d.legacy2})`); e3++; }

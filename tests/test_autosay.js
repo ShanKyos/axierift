@@ -84,15 +84,31 @@ let bad = 0; const fail = m => { bad++; console.log('FAIL ' + m); };
   await p3.close();
 
   // 4. Đang cày bình thường thì KHÔNG được spam
+  //
+  // ⚠ PHẢI GHIM MÁU QUÁI. Cảnh này bật `applyTestBoost()` (full BiS) rồi thả nhân vật vào giữa
+  // bãi tân thủ — trong 13,5 giây lấy mẫu nó DỌN SẠCH bãi, và lúc bãi sạch thì AUTO nhắc
+  // "Bãi đã khoá đã sạch quái — đang chờ hồi sinh" một cách hoàn toàn ĐÚNG. Tức cảnh dựng tự
+  // phá mất tiền đề của chính mệnh đề: nó tên là "đang cày bình thường" nhưng lại dựng ra ca
+  // "vừa cày xong". Máy rảnh thì cú dọn sạch rơi ra ngoài cửa sổ lấy mẫu và bài xanh; máy bận
+  // (đang chạy hồi quy 200 bài) thì nó rơi vào trong và bài đỏ — đỏ theo XÚC XẮC, không theo
+  // lỗi. Đo được: chạy riêng 4/4 xanh, trong hồi quy thì đỏ.
   const p4 = await boot();
   await p4.evaluate(() => { applyTestBoost && applyTestBoost(); travelTo('corran');   // bãi tân thủ nay là Rẻo Rừng Corran
     const k = MAPS.corran.packs[0]; player.x=k.x; player.y=k.y;
     player.auto = true; player._autoAX=null; player._autoAY=null;
-    player._autoZoneLocked=false; player._autoPack=null; });
+    player._autoZoneLocked=false; player._autoPack=null;
+    // Ghim máu để bãi KHÔNG BAO GIỜ sạch trong cửa sổ đo — "đang cày" nghĩa là còn quái để đánh.
+    window.__ghim = setInterval(() => { for (const m of mobs){ m.maxHp = 1e9; m.hp = 1e9; } }, 100);
+  });
   await p4.waitForTimeout(1500);
   const say4 = await noiGi(p4, 12);
-  console.log('4) đang cày bình thường →', JSON.stringify(say4));
-  if (say4.length > 1) fail(`đang cày mà vẫn nhắc ${say4.length} lần — phiền người chơi`);
+  // Tự kiểm cảnh dựng TRƯỚC khi chấm: nếu bãi vẫn sạch thì mệnh đề này không đo được thứ nó
+  // định đo, và phải nói ra chuyện đó chứ đừng đổ cho phần nhắc nhở.
+  const con4 = await p4.evaluate(() => { clearInterval(window.__ghim);
+    return mobs.filter(m => !m.dead).length; });
+  console.log('4) đang cày bình thường →', JSON.stringify(say4), '· quái còn sống:', con4);
+  if (!con4) fail('cảnh dựng hỏng: bãi đã sạch quái nên đây không còn là ca "đang cày"');
+  else if (say4.length > 1) fail(`đang cày mà vẫn nhắc ${say4.length} lần — phiền người chơi`);
   await p4.close();
 
   console.log('errors:', JSON.stringify(errs));

@@ -210,6 +210,22 @@
   <div id="combat-log"></div>
 </div>
 
+<!-- CHAT (Giai đoạn 2 online). Góc dưới-TRÁI, đúng khuôn MU — và CỐ Ý tách khỏi Nhật Ký ở
+     góc phải: nhật ký là thanh chạy `nowrap` cho đòn của chính mình, chat là hội thoại phải
+     xuống dòng và có ô nhập. Gộp hai thứ vào một hộp 190px thì hỏng cả hai.
+     ⚠ Khối này chỉ hiện khi có nối mạng (`NET.on`) — xem `chatDung()` trong game.js. Bày một ô
+     chat gõ được mà không ai nhận là đúng cái lỗi "một cái vỏ giả vờ là máy chạy". -->
+<div id="chat-wrap" class="hidden">
+  <div id="chat-tabs">
+    <button class="chat-tab on" data-kenh="the-gioi">Thế Giới</button>
+    <button class="chat-tab"    data-kenh="vung">Vùng</button>
+    <span id="chat-trangthai"></span>
+    <button id="chat-thu" title="Thu / mở khung chat"><i>▾</i></button>
+  </div>
+  <div id="chat-log"></div>
+  <input id="chat-input" maxlength="200" autocomplete="off" placeholder="Enter để nói…">
+</div>
+
 <!-- Panels -->
 <div id="panel-char" class="panel hidden"></div>
 <div id="panel-inv" class="panel hidden"></div>
@@ -312,6 +328,7 @@
 <script src="data/taitro.js"></script>
 <script src="data/lop_cho.js"></script>
 <script src="data/iso.js"></script>
+<script src="data/vatcan.js"></script>
 <script src="game.js"></script>
 <!-- Bóng Người (Giai đoạn 1 online). Nạp SAU game.js và TỰ TẮT khi không khai máy chủ, nên bản
      chơi một mình — thứ đang sống trên production — chạy y nguyên. Bật: ?net=ws://localhost:8877/ws
