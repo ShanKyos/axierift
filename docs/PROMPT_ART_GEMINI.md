@@ -55,6 +55,19 @@ square ground footprint renders as a diamond exactly twice as wide as tall),
 orthographic camera, no perspective convergence, viewed from the standard
 front-left isometric corner.
 
+REFERENCE TOWN — match the feeling of a dense lived-in walled town: the
+building looks like one unit pulled out of a street where houses stand
+shoulder to shoulder. Roofs at several different heights and angles, each
+roof plane a slightly different tone, cloth awnings and hanging banners
+breaking up the wall faces, crates and barrels crowding the base of the
+walls, warm lit windows. Worn-in and busy, NOT a clean isolated showroom
+model on a turntable.
+
+ARCHITECTURE — western storybook fantasy: timber frame, cream plaster,
+stone footings, shingle or terracotta tile, iron brackets. NO East Asian
+architecture: no upturned curved eaves, no pagoda roofs, no paper lanterns,
+no calligraphy, no East Asian ornament of any kind.
+
 THE BUILDING: <<<ĐỔI DÒNG NÀY>>>
 
 Output 1024x1024, the building centered, its ground footprint a diamond about
