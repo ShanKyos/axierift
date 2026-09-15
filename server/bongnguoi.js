@@ -76,7 +76,45 @@ function capNhat(st, tin) {
   st.speed = so(tin.speed, 0, 2000, st.speed);
   st.sect  = chu(tin.sect, 24) || st.sect;
   st.name  = chu(tin.name, TEN_MAX) || st.name;
+  // ── Hành động ra đòn ──────────────────────────────────────────────────────────────────
+  // Bộ đếm chứ không phải thời gian còn lại: một hoạt cảnh 0,22 s lọt gọn giữa hai ảnh 10 Hz,
+  // nên gửi "còn bao lâu" là thỉnh thoảng mất hẳn một cú đánh. Một con số chỉ tăng thì không.
+  st.atkSeq  = Math.round(so(tin.as, 0, 1e9, st.atkSeq));
+  st.castSeq = Math.round(so(tin.cs, 0, 1e9, st.castSeq));
+  st.atkAct  = chu(tin.ak, 16) || st.atkAct;
+  st.castAct = chu(tin.ck, 16) || st.castAct;
+  // ── Trang bị ──────────────────────────────────────────────────────────────────────────
+  // Client chỉ gửi khi ĐỔI. Máy chủ giữ bản mới nhất và tăng số hiệu; vòng phát dưới kia dùng
+  // số hiệu ấy để biết từng kết nối đã nhận bản nào rồi — xem `ws.__gearV`.
+  if (tin.g && typeof tin.g === 'object' && !Array.isArray(tin.g)){
+    st.gear = locTrangBi(tin.g);
+    st.gearV++;
+  }
   st.nghe  = Date.now();
+}
+
+/* ⚠ VỆ SINH CẢ MÔ TẢ TRANG BỊ, ĐỪNG CHUYỂN TIẾP THÔ. Gói này đi thẳng vào tầng vẽ của MỌI người
+ * khác: một `def` dài 2 MB hay một mảng 10.000 phần tử là một client làm treo cả phòng. Đây vẫn
+ * là chống RÁC, không phải chống gian lận — ai sửa `tier` trong devtools thì bóng của họ lấp
+ * lánh hơn, và ở giai đoạn này đó là chuyện chấp nhận được (xem chú thích đầu tệp).             */
+const O_DO = ['non', 'ao', 'tay', 'chan', 'vukhi'];
+// ⚠ MÔ TẢ RỖNG LÀ MỘT CÂU TRẢ LỜI, KHÔNG PHẢI MỘT CÂU HỎI HỎNG. Bản đầu trả `null` khi không
+// nhận ra ô nào rồi bên trên bỏ qua — nên THÁO HẾT ĐỒ RA là máy chủ giữ nguyên bộ cũ và mọi
+// người vẫn thấy ta mặc đủ giáp. Không lỗi nào báo, và chính người tháo đồ là người duy nhất
+// không nhìn thấy nó. Nay luôn trả một đối tượng: rỗng nghĩa là "người này đang cởi trần".
+function locTrangBi(g){
+  const ra = {};
+  for (const k of O_DO){
+    const a = g[k];
+    if (!Array.isArray(a)) continue;
+    ra[k] = [chu(a[0], 40), Math.round(so(a[1], 1, 20, 1)),
+             Math.round(so(a[2], 0, 15, 0)), Math.round(so(a[3], 0, 2, 0))];
+  }
+  if (Array.isArray(g.canh)) ra.canh = [chu(g.canh[0], 40), Math.round(so(g.canh[1], 1, 3, 1))];
+  // `av` phân biệt BA trạng thái nên phải giữ cả `null` lẫn chuyện KHÔNG CÓ KHOÁ — xem
+  // `avatarId()` trong game.js. `'av' in g` chứ không phải `g.av != null`.
+  if ('av' in g) ra.av = g.av === null ? null : chu(g.av, 40);
+  return ra;
 }
 
 /* ── HTTP: chỉ để /health ────────────────────────────────────────────────────────────────
@@ -110,9 +148,14 @@ wss.khiNoi((ws) => {
     hp: 1, maxHp: 1, level: 1, speed: 190, sect: 'thieulam',
     name: 'Khach' + id, nghe: Date.now(),
     chatLuc: 0, chatCua: [],     // chống spam, xem CHAT_* ở trên
+    atkSeq: 0, castSeq: 0, atkAct: '', castAct: '',
+    gear: null, gearV: 0,        // số hiệu tăng mỗi lần trang bị đổi
   };
   nguoi.set(id, st);
   ws.__id = id;
+  // Kết nối này đã nhận mô tả trang bị bản nào của ai. WebSocket chạy trên TCP nên đã gửi là
+  // chắc tới và đúng thứ tự — không cần gửi lại phòng hờ, không cần cửa sổ thời gian.
+  ws.__gearV = new Map();
   ws.gui(JSON.stringify({ t: 'chao', id }));
   console.log(`[+] ${id} vao — dang co ${nguoi.size}`);
 
@@ -189,11 +232,29 @@ setInterval(() => {
     const ds = [];
     for (const st of cung) {
       if (st.id === ta.id) continue;
-      ds.push({ i: st.id, x: Math.round(st.x), y: Math.round(st.y),
-                f: +st.face.toFixed(2), mv: st.moving ? 1 : 0,
-                hp: Math.round(st.hp), mhp: Math.round(st.maxHp),
-                lv: st.level, sp: Math.round(st.speed), s: st.sect, n: st.name });
+      const e = { i: st.id, x: Math.round(st.x), y: Math.round(st.y),
+                  f: +st.face.toFixed(2), mv: st.moving ? 1 : 0,
+                  hp: Math.round(st.hp), mhp: Math.round(st.maxHp),
+                  lv: st.level, sp: Math.round(st.speed), s: st.sect, n: st.name,
+                  as: st.atkSeq, cs: st.castSeq };
+      if (st.atkAct)  e.ak = st.atkAct;
+      if (st.castAct) e.ck = st.castAct;
+      // ⚠ TRANG BỊ CHỈ GỬI KHI KẾT NỐI NÀY CHƯA CÓ BẢN ẤY. Nhét nó vào mọi ảnh chụp là ~180
+      // byte × 9 người × 10 Hz = 16 KB/s mỗi client cho một thứ đổi vài phút một lần — gấp ba
+      // cả gói tin hiện tại. Và nó KHÔNG cần gửi lại phòng hờ: WebSocket chạy trên TCP nên đã
+      // gửi là chắc tới và đúng thứ tự; người mới nhìn thấy nhau thì `__gearV` chưa có khoá đó
+      // nên tự động nhận đủ ngay ảnh đầu tiên.
+      if (st.gear && ws.__gearV.get(st.id) !== st.gearV) {
+        e.g = st.gear;
+        ws.__gearV.set(st.id, st.gearV);
+      }
+      ds.push(e);
     }
+    // Quên người đã rời đi, nếu không bảng này phình theo số lượt vào/ra của cả phiên. Chỉ dọn
+    // khi nó đã to hơn số người đang có — dọn mỗi nhịp là O(kết nối × đã gặp) ở 10 Hz cho một
+    // bảng vài chục phần tử.
+    if (ws.__gearV.size > nguoi.size + 8)
+      for (const id of ws.__gearV.keys()) if (!nguoi.has(id)) ws.__gearV.delete(id);
     // Gửi kèm `map` dù client cũng biết map của chính nó: ảnh chụp phải TỰ NÓI nó thuộc bản đồ
     // nào. Không thì client suy ngầm "ảnh này chắc là map mình đang đứng", và đúng lúc người
     // chơi vừa qua cổng thì một ảnh của map cũ tới sau sẽ thả vài cái bóng vào map mới.

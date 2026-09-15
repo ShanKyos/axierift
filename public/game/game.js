@@ -855,14 +855,28 @@ function veKhoa(p){ return (p && p._netId != null) ? 'n' + p._netId : 'ta'; }
 // ⚠ Kiểm `!= null`, KHÔNG dùng `||`: id 0 là giá trị giả nên `||` sẽ trả 'ta' và thân người
 // từ xa số 0 dùng chung ô nhớ với người chơi của mình. Máy chủ hiện cấp id từ 1 nên chưa nổ —
 // tức là đúng kiểu lỗi ngủ yên cho tới khi ai đó sửa `idKe` ở một tệp khác.
+// ═══ ĐỘ DÀI HAI HOẠT CẢNH RA ĐÒN (giây) — khai MỘT chỗ vì nay có HAI nơi đếm ngược ═══
+// `update()` đếm ngược cho người chơi của mình. `net.js` đếm ngược cho thân người từ xa, vì
+// ảnh chụp 10 Hz chỉ chở được "vừa bắt đầu một đòn" chứ không chở được thời gian còn lại —
+// gửi thời gian còn lại thì một đòn dài 0,22 s lọt qua khe giữa hai ảnh là chuyện thường.
+// ⚠ Bốn chỗ trong `drawPlayer` CHIA cho đúng hai số này để ra `atkK`/`castK`. Trước bản này
+// cả sáu chỗ đều chép cứng, nên sửa độ dài đòn ở một chỗ là tư thế vung tính theo một độ dài
+// khác — không lỗi nào báo, chỉ là cú chém kết thúc giữa chừng hoặc đứng hình ở khung cuối.
+const NV_DANH_GIAY = 0.22, NV_CHU_GIAY = 0.38;
+window.NV_HD_GIAY = { a: NV_DANH_GIAY, c: NV_CHU_GIAY };
 // Bậc của một đôi cánh, đọc từ chính món đồ. Món đời cũ mang id 'thienthan'/'tieuquy'
 // (bậc 1) hoặc 'phuongduc'/'hacma' (bậc 2) — loadGame() đổi chúng sang đôi của lớp.
 function wingBac(it){ return (it && it.wingBac) || 1; }
-function wingDef(it){
+// ⚠ `sectDp` LÀ LỚP CỦA CHỦ ĐÔI CÁNH, không phải lớp của người đang ngồi trước màn hình.
+// Nhánh cuối chỉ chạy khi `it.wing` tra không ra (save đời khác, hoặc gói tin từ một bản game
+// mới hơn). Trước bản này nó lui về `player.sect` — vô hại hồi chỉ có một người trên màn, nhưng
+// từ lúc đồng bộ trang bị thì một Dark Wizard đứng cạnh sẽ mọc đôi cánh của LỚP MÌNH, và nó
+// không ném lỗi nào cả: đôi cánh vẫn vẽ ra, chỉ là sai người.
+function wingDef(it, sectDp){
   if (!it) return null;
   const b = WING_BANG[clamp(wingBac(it) - 1, 0, 2)];
   for (const sk in b) if (b[sk].id === it.wing) return b[sk];
-  return b[(player && player.sect)] || b.thieulam;
+  return b[sectDp || (player && player.sect)] || b.thieulam;
 }
 // Lớp nào dùng được đôi này. Cánh khoá theo lớp y hệt kiếm/gậy/cung — xem itemUsable().
 function wingSect(it){
@@ -10842,7 +10856,11 @@ function doBasic(){
     return;
   }
   if (t) player.face = Math.atan2(t.y-player.y, t.x-player.x);
-  player.cd.basic = player.aspd; player.atkAnim = 0.22;
+  player.cd.basic = player.aspd; player.atkAnim = NV_DANH_GIAY;
+  // Bộ đếm cú đánh — `net.js` gửi số này thay vì gửi thời gian còn lại. Ảnh chụp 10 Hz
+  // không bắt kịp một hoạt cảnh 0,22 s: lấy mẫu trúng lúc nó vừa gần tàn là bên kia bỏ luôn
+  // cú đánh ấy. Một con số chỉ tăng thì không có khe nào để lọt.
+  player._atkSeq = (player._atkSeq || 0) + 1;
   player.nhat2 = !player.nhat2;   // đổi nhát: Dark Knight/Spellblade có hai dáng chém
   player.atkAct = heroActOf(player.sect, 'basic'); // tư thế vung khớp vũ khí của lớp
   const _basicCls = SECT_SFX[player.sect];
@@ -15870,8 +15888,8 @@ function canhLongVu(g, B, M, rong){
   g.quadraticCurveTo(cx - nx * rong * 0.5, cy - ny * rong * 0.5, B.x, B.y);
   g.closePath();
 }
-function veCanh(g, it, px, py, sway, swayDir, co, bay){
-  const d = wingDef(it); if (!d) return;
+function veCanh(g, it, px, py, sway, swayDir, co, bay, sectDp){
+  const d = wingDef(it, sectDp); if (!d) return;
   const bac = clamp(wingBac(it), 1, 3);
   const T = WING_TIERS[bac - 1];
   const now = performance.now();
@@ -16437,6 +16455,58 @@ window.netTaoThan = netTaoThan;
 // Ai đọc tới đây và định thêm trường: sửa ở ĐÂY, đừng cho net.js với tay vào phạm vi của game.
 window.netDoc = function(){ return { p: player, map: curMap }; };
 
+/* ═══ GIAI ĐOẠN 2 · TRANG BỊ NHÌN THẤY ĐƯỢC ══════════════════════════════════════════════
+ * Người bên kia mặc gì thì phải NHÌN RA. Trước bản này mọi thân người từ xa đều dựng bằng
+ * `equip: {}` — tức ai cũng cởi trần, cùng một bậc giáp, không cánh, dù họ đang full +11.
+ *
+ * ⚠ GỬI CHỮ KÝ, KHÔNG GỬI `player.equip`. Một món thật nặng 474 byte (dòng chính, 15 dòng phụ,
+ * Thức Tỉnh, lịch sử ép ngọc…) — 11 ô là ~5 KB MỖI NGƯỜI MỖI ẢNH CHỤP, tức 50× cả gói tin
+ * hiện tại, để chở những trường mà tầng vẽ không hề đọc. Tầng vẽ chỉ đọc đúng bốn thứ trên mỗi
+ * ô: `def` (ra bộ art và lớp), `tier`, `plus`, và mức quý. Đo được: mô tả gọn này ~180 byte.
+ *
+ * ⚠ VÀ NÓ DỰNG LẠI MỘT `equip` GIẢ chứ không tự vẽ lấy. `gearVisual()` · `nvLopCuaEquip()` ·
+ * `heroSprite()` · `veCanh()` chạy y nguyên trên thân người từ xa, nên người bên kia đi qua
+ * ĐÚNG đường vẽ mà người chơi của mình đi qua. Viết một đường vẽ thứ hai "cho gọn" là dựng bản
+ * sao của một luật đang sống — bộ giáp mới nướng sẽ hiện trên mình mà không hiện trên họ.
+ *
+ * ⚠ Cánh gửi kèm LỚP của chủ nó (`s` trong ảnh chụp) — xem `wingDef(it, sectDp)`.            */
+const NET_O_DO = ['non', 'ao', 'tay', 'chan', 'vukhi'];
+
+window.netTrangBi = function(){
+  const p = player;
+  if (!p || !p.equip) return null;
+  const g = {};
+  for (const k of NET_O_DO){
+    const it = p.equip[k];
+    if (!it) continue;
+    // mức quý gộp về MỘT số: 0 trơn · 1 có Vận · 2 Hoàn Hảo. `gearVisual` chỉ phân biệt ngần ấy.
+    g[k] = [it.def || '', it.tier || 1, it.plus || 0, it.perfect ? 2 : it.luck ? 1 : 0];
+  }
+  const w = p.equip.canh;
+  if (w) g.canh = [w.wing || '', wingBac(w)];
+  // ⚠ BA TRẠNG THÁI, KHÔNG PHẢI HAI (xem `avatarId`). `JSON.stringify` bỏ hẳn khoá mang giá trị
+  // `undefined` nhưng GIỮ `null`, nên phép gán thẳng này chở đúng cả ba qua dây: thiếu khoá =
+  // chưa từng chọn ⇒ con mặc định của lớp · `null` = đã tắt · chuỗi = con đang cắm.
+  if (p.avatar !== undefined) g.av = p.avatar;
+  return g;
+};
+
+// Dựng lại `equip` GIẢ trên một thân người từ xa. Chỉ đủ cho tầng vẽ — không dòng chỉ số nào,
+// vì thân người từ xa không đánh nhau trên máy này và sẽ không bao giờ đánh: máy chủ giai đoạn
+// này chỉ chuyển tiếp. Cắm chỉ số thật vào đây là mời người ta sửa `def` trong devtools.
+window.netApTrangBi = function(t, g){
+  t.equip = {};
+  if (!g){ delete t.avatar; return; }
+  for (const k of NET_O_DO){
+    const a = g[k];
+    if (!Array.isArray(a)) continue;
+    t.equip[k] = { def: a[0], tier: (a[1] | 0) || 1, plus: a[2] | 0,
+                   luck: (a[3] | 0) >= 1, perfect: (a[3] | 0) >= 2 };
+  }
+  if (Array.isArray(g.canh)) t.equip.canh = { wing: g.canh[0], wingBac: (g.canh[1] | 0) || 1 };
+  if ('av' in g) t.avatar = g.av; else delete t.avatar;
+};
+
 // Nhãn tên + thanh máu. ⚠ Đo bề rộng chữ MỘT LẦN rồi nhớ — cùng bài học đã ghi ở nhãn NPC:
 // ctx.measureText dựng lại hộp chữ mỗi lần gọi, đặt trong vòng vẽ là mỗi người mỗi khung một
 // lần đo.
@@ -16588,6 +16658,11 @@ function chatNoi(){
 function drawPlayer(p){
   p = p || player;
   const sect = SECTS[p.sect];
+  // ⚠ `dead` LÀ BIẾN TOÀN CỤC CỦA NGƯỜI CHƠI NÀY. Hàm này nay vẽ cả thân người từ xa, nên đọc
+  // thẳng nó là ba chỗ bên dưới hỏi "TA có chết không" trong khi đang vẽ NGƯỜI KHÁC: mình nằm
+  // xuống là cả map ai cũng đổ ra nằm, và ngược lại người khác chết vẫn đứng vung kiếm.
+  // Người từ xa thì hỏi máu — đó là thứ ảnh chụp có chở theo.
+  const _chet = (p === player) ? dead : ((p.hp || 0) <= 0);
   // ═══ LAYERING: đất → sau lưng → người → vũ khí → aura quỹ đạo → danh hiệu ═══
   const riding = false; // không còn cơ chế cưỡi; giữ cờ vì vài phép tính bóng đổ đọc nó
   const now = performance.now();
@@ -16630,7 +16705,7 @@ function drawPlayer(p){
   // nên nó nổi trên bóng, và vẫn nằm dưới thân người. Co + nhạt theo `bayK` y như bóng: đang
   // lơ lửng mà vòng vẫn nguyên cỡ thì nó dính xuống đất trong khi người đã bay lên.
   // Màu lấy theo LỚP, nên nó vừa chỉ chỗ vừa nhắc mình đang chơi lớp nào.
-  if (!dead){
+  if (!_chet){
     const _neoK = 1 - bayK * 0.55;
     ctx.save();
     ctx.globalAlpha = 0.52 * _neoK * _shAl;
@@ -16686,12 +16761,12 @@ function drawPlayer(p){
   // Bay theo thì gỡ cả ba: một tấm 9 KB, đặt ở toạ độ thế giới, chuyển động do mã quyết định.
   // Và bỏ vũ khí ra khỏi khung hình KHÔNG để lại bàn tay hụt — bộ xương nắm đấm rồi vung theo
   // cung, đọc thành "ra hiệu điều khiển" chứ không phải "quên cầm đồ". Đã chụp lại đối chiếu.
-  const _tk = thanKhiTuThe(p, (p.atkAnim || 0) / 0.22, (p.castT || 0) / 0.38, p.walkPh || 0, now);
+  const _tk = thanKhiTuThe(p, (p.atkAnim || 0) / NV_DANH_GIAY, (p.castT || 0) / NV_CHU_GIAY, p.walkPh || 0, now);
   // ⚠ CHỖ VẼ cũng dời xuống, cùng lý do với cánh: nó bám neo người chơi nên bật avatar lên là
   // cây vũ khí lơ lửng trên đầu con Axie.
 
-  const castK = (p.castT || 0) / 0.38;
-  const atkK = (p.atkAnim || 0) / 0.22;
+  const castK = (p.castT || 0) / NV_CHU_GIAY;
+  const atkK = (p.atkAnim || 0) / NV_DANH_GIAY;
   // `atkAnim` ĐẾM NGƯỢC nên atkK = 1 ở khung ĐẦU và 0 ở khung cuối: thân người dồn tới xa nhất
   // ngay lúc LẤY ĐÀ rồi lùi dần trong lúc lưỡi bổ xuống. Trọng tâm đi ngược chiều đòn đánh —
   // đúng thứ làm cú chém "nhẹ hều". hSwing(1-atkK) cho thân dồn tới đúng lúc lưỡi chạm.
@@ -16716,8 +16791,16 @@ function drawPlayer(p){
   // chỗ tính `_kind`. Điều kiện dưới đây là đúng chuỗi ưu tiên của `_kind` (chết > trúng đòn
   // > niệm chú > đánh), và `_veAva` bên dưới đọc lại chính nó — một nguồn sự thật, không
   // phải hai điều kiện song song rồi lệch nhau lúc ai đó sửa một bên.
-  const _lopHien = !dead && !((p.hurtT || 0) > 0) && (castK > 0 || atkK > 0);
+  const _lopHien = !_chet && !((p.hurtT || 0) > 0) && (castK > 0 || atkK > 0);
   const _coAva = !!avatarId(p);
+  // Phơi hai quyết định này ra cho bài kiểm, KHOÁ THEO TỪNG THÂN NGƯỜI — cùng lối với
+  // `__neoVe`/`__veThan`: đưa chính biến đang điều khiển vòng vẽ ra ngoài, thay vì để bài kiểm
+  // dựng lại luật một lần nữa. Ở đây bắt buộc phải thế: đo bằng điểm ảnh KHÔNG dùng được, vì một
+  // thân người đang vung kiếm đổi 6.545/102.000 điểm ảnh giữa HAI LƯỢT VẼ LIÊN TIẾP cùng điều
+  // kiện (cánh vỗ, hào quang đập, vũ khí bay — tất cả chạy theo performance.now()). Sàn nhiễu ấy
+  // lớn hơn thứ cần đo, nên mọi ngưỡng đặt trên nó đều là ngưỡng đặt trên nhiễu.
+  if (window.TEST_MODE)
+    (window.__veChet || (window.__veChet = {}))[_bayK0] = { chet: _chet, lopHien: _lopHien };
   // Trục sâu nén 0,55 — cùng lối với bóng đổ: game nhìn chếch từ trên nên dời dọc phải ngắn
   // hơn dời ngang, không thì nhân vật nhảy lên cao hẳn khi Axie quay mặt lên.
   // RA TRƯỚC khi tung chiêu · ĐI THEO SAU lúc thường. Một phép nội suy thì mượt hơn, nhưng chủ
@@ -16770,7 +16853,7 @@ function drawPlayer(p){
     ctx.scale(_lopCo, _lopCo);
     ctx.translate(-p.x, -_lopNeoY);
     if (wingIt) veCanh(ctx, wingIt, p.x, p.y + CANH_CHAN_MAN, p.sway || 0, p.swayDir || 0,
-                       CANH_CO_MAN, bayK);
+                       CANH_CO_MAN, bayK, p.sect);
     if (window.TEST_MODE) _doNeo('canh', ctx, p.x, p.y + CANH_CHAN_MAN + CANH_CO_MAN * CANH_GOC_Y);
     if (_tk && !_tk.truoc && _tkHien) veThanKhi(ctx, _tk, p);   // nằm sau lưng: vẽ TRƯỚC thân
     ctx.restore();
@@ -16867,7 +16950,7 @@ function drawPlayer(p){
     const _tt   = !p.moving && ((p.poisonT || 0) > 0 || (p.buffAtkT || 0) > 0);
     // THỨ TỰ QUAN TRỌNG. Chết đè lên tất cả; trúng đòn đè lên đánh, vì phản hồi ăn đòn phải
     // thấy ngay cả khi đang giữa cú vung; ba dáng đứng yên xếp cuối.
-    const _kind = dead ? 'd'
+    const _kind = _chet ? 'd'
                 : (p.hurtT || 0) > 0 ? 'h'
                 : castK > 0 ? 'c'
                 : atkK > 0 ? 'a'
@@ -17026,7 +17109,7 @@ function drawPlayer(p){
   }
   // weapon arc while attacking
   if (p.atkAnim > 0){
-    const k = p.atkAnim/0.22;
+    const k = p.atkAnim/NV_DANH_GIAY;
     ctx.strokeStyle = sect.glow; ctx.globalAlpha = k; ctx.lineWidth = 3;
     ctx.beginPath(); ctx.arc(p.x, p.y-18, 26, p.face-1.1+(1-k)*1.6, p.face-0.2+(1-k)*1.6); ctx.stroke();
     ctx.globalAlpha = 1;
@@ -23360,7 +23443,8 @@ function castSkill(id){
   player.cd[id] = info.cd * (player.vhCdMult || 1) * _sm.cd * _se.cd * skCdScale(id); // mốc 40 −10% · Tẩy Tủy −30% · cấp chiêu −0,25%/cấp (tối đa −30%) · nhánh Tốc Chiến
   const _atk0 = player.atk; player.atk = Math.round(player.atk * skLvMult(id) * skTnMult(id) * _sm.dmg * _se.dmg); // GDD Đợt 2 B6: mốc ST nhân dồn · nhánh Bá Đạo // cấp kỹ năng 1-120: +2.5% ST mỗi cấp
   player.comboT = 3; // mở/duy trì chuỗi combo — ám khí trúng trong lúc này sẽ kích Liên Trảm
-  player.castT = 0.38; // animation tung tuyệt chiêu
+  player.castT = NV_CHU_GIAY; // animation tung tuyệt chiêu
+  player._castSeq = (player._castSeq || 0) + 1;   // xem ghi chú ở `_atkSeq`
   player.castAct = heroCastAct(id, d);           // tư thế phải khớp VFX của chiêu
   const sect = SECTS[player.sect];
   let sfxTag = 'skill'; // per-class override set in the sectTP/sectA branches below
