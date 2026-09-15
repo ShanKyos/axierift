@@ -30,17 +30,24 @@ const ok = m => console.log('  ok  ' + m);
   if (con) fail('§1 #hint-bar vẫn còn trên DOM — ẩn đi không phải gỡ, nó vẫn chiếm chỗ và vẫn được cập nhật');
   else ok('§1 #hint-bar đã gỡ khỏi DOM');
 
-  // ── 2. F6 mở bảng, và bảng có đủ mọi dòng đã khai ──────────────────────────────────────
+  // ── 2. BẢNG PHÍM CÓ ĐỦ MỌI DÒNG ĐÃ KHAI — nay ở tab "Phím Tắt" của Cài Đặt ────────────
+  // ⚠ NỘI DUNG ĐÃ DỜI, MỆNH ĐỀ THÌ KHÔNG. F6 nay là Menu Hệ Thống (sảnh bốn nút) theo ảnh mẫu
+  // MU chủ dự án chốt, và bảng phím thành một TAB của Cài Đặt — đúng chỗ ảnh mẫu đặt nó. Thứ
+  // bài này sinh ra để gác vẫn nguyên giá trị: *phần vẽ không được bỏ sót dòng nào của
+  // `HD_BANG`, và không khoá i18n nào được lọt ra mặt bảng*. Nên nó đi THEO nội dung sang nhà
+  // mới, chứ không bị xoá đi cho xanh. `test_hethong §1` gác chiều còn lại: bảng phím phải RỜI
+  // KHỎI F6, không được nằm cả hai nơi.
   await p.keyboard.press('F6');
   await p.waitForTimeout(250);
   const bang = await p.evaluate(() => {
-    const e = document.getElementById('panel-help');
+    closePanels(); togglePanel('settings'); window.setSetTab('phim');
+    const e = document.getElementById('panel-settings');
     if (!e || e.classList.contains('hidden')) return { mo:false };
     const phim = [...e.querySelectorAll('.hd-phim')].map(x => x.textContent.trim());
     return { mo:true, phim, chu: e.textContent,
              khai: window.HD_BANG.reduce((n, g) => n + g.hang.length, 0) };
   });
-  if (!bang.mo) fail('§2 bấm F6 không mở bảng Hướng Dẫn');
+  if (!bang.mo) fail('§2 không mở được tab Phím Tắt của Cài Đặt');
   else {
     ok(`§2 F6 mở bảng — ${bang.phim.length} dòng phím`);
     if (bang.phim.length !== bang.khai)
@@ -52,6 +59,9 @@ const ok = m => console.log('  ok  ' + m);
     else ok('§2 không có khoá i18n nào lọt ra màn hình');
   }
   // Bấm lần nữa là đóng — bảng mở được mà không đóng được bằng cùng phím thì không ai tìm ra lối ra.
+  await p.evaluate(() => closePanels());
+  await p.keyboard.press('F6');
+  await p.waitForTimeout(200);
   await p.keyboard.press('F6');
   await p.waitForTimeout(250);
   const dong = await p.evaluate(() => document.getElementById('panel-help').classList.contains('hidden'));
@@ -173,10 +183,11 @@ const ok = m => console.log('  ok  ' + m);
     const truoc = q.classList.contains('ql-thu');
     const b = document.getElementById('btn-qlog');
     if (b) b.click();
-    const oMenu = m.querySelector('.mc-btn'), oChieu = document.getElementById('sk-0');
+    // ⚠ Khẳng định "ô menu CÙNG CỠ ô chiêu" đã GỠ khỏi đây. Nó đúng ở bản trước và SAI từ lúc
+    // chủ dự án đối chiếu với ảnh mẫu: trong ảnh MU, icon hai bên nhỏ hơn ô chiêu, và đó là thứ
+    // giữ thanh gọn. Hợp đồng cỡ nay nằm ở MỘT chỗ — `tests/test_thanhcum.js §7` — gác chiều
+    // đúng: nhỏ hơn ô chiêu, nhưng không nhỏ quá sàn đọc được.
     return { trongThanh: h.contains(m),
-             cungCo: !!(oMenu && oChieu) &&
-               Math.abs(oMenu.getBoundingClientRect().height - oChieu.getBoundingClientRect().height) <= 1,
              coThu: !!document.getElementById('mc-thu'),
              doiTrangThai: !!b && q.classList.contains('ql-thu') !== truoc };
   });
@@ -184,8 +195,6 @@ const ok = m => console.log('  ok  ' + m);
   else {
     if (!mc.trongThanh) fail('§7 menu hệ thống nằm ngoài thanh chiến đấu — lại thành một khối rời phải nhớ chỗ');
     else ok('§7 menu hệ thống nằm trên thanh chiến đấu');
-    if (!mc.cungCo) fail('§7 ô menu KHÁC cỡ ô chiêu — hai cụm cạnh nhau lệch cỡ thì đọc ra hai thanh dán vào nhau, không ra một thanh chia cụm');
-    else ok('§7 ô menu cùng cỡ ô chiêu');
     // Nút thu gọn cũ để trên thanh là một cái chốt lạc cỡ, và thu một lần là mất đường mở lại.
     if (mc.coThu) fail('§7 nút thu gọn #mc-thu sống lại — trên thanh chiến đấu nó không có đường mở lại bằng chuột');
     else ok('§7 không còn nút thu gọn lạc cỡ');

@@ -60,7 +60,12 @@ const pass = m => console.log('PASS ' + m);
         // Cả hai nửa của bảng cũ phải cùng có mặt trên MỘT trang
         coBonO: /1 chính · 1 phụ/.test(t),
         coDiSan: /DI SẢN LỚP/.test(t),
-        coTanChuc: /HỆ TẤN CHỨC PHỤ/.test(t),
+        // ⚠ HỎI "hai hệ tấn chức phụ CÓ ĐƯỜNG VÀO KHÔNG", đừng dò cái TIÊU ĐỀ. Khối
+        // "HỆ TẤN CHỨC PHỤ" đã gỡ khi `danchi`/`tieuhon` dọn vào lưới tab Khác thành hai Ô —
+        // nội dung còn nguyên, chỉ đổi cách bày. Dò chuỗi thì đổi cách bày là đỏ oan, mà xoá
+        // thật hai chiêu đi rồi để lại cái tiêu đề thì lại XANH. Hỏi đúng thứ cần biết.
+        coTanChuc: (() => { try { return ['danchi','tieuhon'].every(x => knDsKhac().includes(x)); }
+                            catch { return false; } })(),
         // Tên lớp của CHÍNH mình phải xuất hiện. Tên lớp KHÁC chỉ được phép ở dòng ghi rõ
         // "Kế Thừa" — Spellblade là lớp lai, nó thừa hưởng chiêu của Dark Knight và Dark Wizard
         // (Fireball, Twisting Slash…) nên hiện tên hai lớp đó là ĐÚNG, không phải rò rỉ.
@@ -91,7 +96,7 @@ const pass = m => console.log('PASS ' + m);
     if (!r.oCay)            fail(`${r.lop}: không tab nào vẽ ra cây kỹ năng`);
     if (!r.coBonO)          fail(`${r.lop}: thiếu mục bốn ô chiêu`);
     if (!r.coDiSan)         fail(`${r.lop}: thiếu mục DI SẢN LỚP`);
-    if (!r.coTanChuc)       fail(`${r.lop}: thiếu mục HỆ TẤN CHỨC PHỤ`);
+    if (!r.coTanChuc)       fail(`${r.lop}: hai hệ tấn chức phụ (danchi · tieuhon) không còn đường vào bảng`);
     if (!r.tenMinh)         fail(`${r.lop}: bảng không nhắc tên lớp của chính mình`);
     if (r.tenLopKhac.length) fail(`${r.lop}: hiện chiêu lớp khác mà KHÔNG ghi "Kế Thừa" — ${r.tenLopKhac.join(', ')}`);
   }

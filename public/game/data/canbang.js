@@ -937,21 +937,35 @@ window.MAPS = {
     { img:'ct_loren', x:4992, y:368,  w:473, h:472 },  // Lò Rèn Hoàng Gia — khối #10 (5000,520) · Phố Lò
     { img:'ct_duoc',  x:1600, y:436,  w:460, h:424 },  // Tiệm Thuốc       — khối #2  (1600,520) · Phố Chợ
     { img:'ct_vukhi', x:5686, y:526,  w:409, h:334 },  // Vũ Khí Phường    — khối #11 (5660,520) · Phố Lò
-  ],
-    // ── MƯỜI BA KHỐI CÒN TRỐNG · ĐANG CHỜ ART ────────────────────────────────
-    // 16 khối, mới 3 có ảnh (ct_cong dùng hết cho bốn cuống cổng). Khuôn đặt cho mọi khối
-    // 460×340:  x = khoi.x − (w − 460)/2   ·   y = khoi.y + 340 − h   (chân trùng mép dưới khối)
+
+    // ── BỐN CÔNG TRÌNH ĐỢT HAI ────────────────────────────────────────────────
+    // Chọn bốn khối này vì mỗi khối ĐÃ CÓ NPC đứng sẵn — chức năng người chơi dùng
+    // được từ lâu mà không nhìn ra trong thế giới. Khuôn đặt của khối 460×340:
+    // x = khoi.x − (w−460)/2 · y = khoi.y + 340 − h (chân trùng mép dưới khối).
     //
-    // ĐÃ CÓ NPC ĐỨNG TRƯỚC CỬA, CHỈ THIẾU NHÀ — năm cái này ưu tiên, vì mỗi cái là một
-    // chức năng người chơi đã dùng được mà chưa nhìn ra:
-    //   #9  (4340, 520) hàng BẮC · ct_caumay    — Sảnh Cầu May   (NPC `thantoan` ở 4570,990)
-    //   #8  (3680, 520) hàng BẮC · ct_quantro   — Quán Trọ       (NPC `trachu`   ở 4150,1010)
-    //   #3  (2260, 520) hàng BẮC · ct_thapvach  — chòi trông vách (NPC `ah_vachgio` ở 2160,380)
-    //   #12 (3680,2340) hàng NAM · ct_saanhlenh — Sảnh Lệnh      (NPC `bodau`     ở 4150,2100)
-    //   #7  (2260,2340) hàng NAM · ct_chuong    — dãy chuồng     (NPC `ah_mucdong` ở 2160,2450)
-    // ⚠ HAI CÁI HÀNG NAM: mặt tiền sprite isometric luôn quay XUỐNG DƯỚI, nên nhà ở hàng nam
-    //   quay mặt ra tường thành. Khi có art thì hoặc xin bản quay ngược, hoặc dời NPC xuống
-    //   phía nam khối (y ≥ 2700).
+    // ⚠ HAI CÁI HÀNG NAM (#12, #7) QUAY MẶT RA TƯỜNG THÀNH. Mặt tiền sprite isometric
+    // luôn nằm ở hai mặt +X/−Y, tức hướng xuống-phải và xuống-trái, còn người chơi tới
+    // từ phố lớn phía BẮC. Vẫn đặt ở đây vì cặp NHÀ–NPC quan trọng hơn mặt nào quay ra:
+    // `bodau` giao Truy Nã Lệnh phải đứng cạnh Sảnh Lệnh, `ah_mucdong` phải đứng cạnh
+    // chuồng. Hai con này cũng CỐ Ý đặt hàng kiểu KHÔNG CÓ MẶT TIỀN MẠNH — chuồng hở
+    // bốn bề, sảnh nhận diện bằng cái tháp và mấy lá cờ.
+    //
+    // ⚠ ĐÃ QUÉT MÁY: không một NPC nào trong 24 con của ardhaven rơi vào bốn hình chữ
+    // nhật dưới đây, kể cả với lề 30px. `bodau` (4150,2100) nằm trên mép trên Sảnh Lệnh
+    // 193px, `ah_mucdong` (2160,2450) nằm bên trái chuồng 100px — cả hai đứng NGOÀI khối
+    // nên không phải dời ai. Đừng dịch tay bốn số này mà không quét lại: `vatTo` vào
+    // `ents` theo y = v.y + v.h, nên NPC nào lọt trong hình là bị nhà vẽ đè lên.
+    { img:'ct_quantro',   x:3654, y:350,  w:512, h:510 },  // Quán Trọ        — khối #8  (3680, 520) · hàng BẮC
+    { img:'ct_thapvach',  x:2234, y:388,  w:511, h:472 },  // Chòi Trông Vách — khối #3  (2260, 520) · hàng BẮC
+    { img:'ct_saanhlenh', x:3654, y:2293, w:512, h:387 },  // Sảnh Lệnh       — khối #12 (3680,2340) · hàng NAM
+    { img:'ct_chuong',    x:2260, y:2286, w:460, h:394 },  // Dãy Chuồng      — khối #7  (2260,2340) · hàng NAM
+  ],
+    // ── CHÍN KHỐI CÒN TRỐNG · ĐANG CHỜ ART ───────────────────────────────────
+    // 16 khối, nay 7 có ảnh (ct_cong dùng hết cho bốn cuống cổng). Khuôn đặt cho mọi khối
+    // 460×340:  x = khoi.x − (w − 460)/2   ·   y = khoi.y + 340 − h (chân trùng mép dưới khối)
+    //
+    // CÒN ĐÚNG MỘT KHỐI CÓ NPC ĐỨNG SẴN MÀ THIẾU NHÀ:
+    //   #9  (4340, 520) hàng BẮC · ct_caumay — Sảnh Cầu May (NPC `thantoan` ở 4570,990)
     //
     // CHƯA GÁN VAI — nhà dân nền, một hai kiểu lặp lại là đủ:
     //   #0 (280,520)  #1 (940,520)              hàng bắc, đầu tây
@@ -2125,6 +2139,74 @@ window.VOHOC_DEFS = {
   // đổi lại có một cửa sổ bạo kích tuyệt đối.
   dl_commandaura: { name:'Increase Critical Damage', school:'Dark Lord', phai:'bug', tier:'trung', cat:'Chỉ Huy', type:'buff', unlock:15, cd:14, qi:30, color:'#ff6a5a', glyph:'★', fx:{ crit:true, dmgPct:15, t:4 }, desc:'Hô hào toàn quân: mọi đòn đều bạo kích trong 4s, kèm +15% sát thương.' },
   dl_darkraven:   { name:'Dark Raven', school:'Dark Lord', phai:'bug', tier:'than', cat:'Bị Động', type:'passive', unlock:55, color:'#6a4a8a', glyph:'☾', desc:'Bị động: bầy quạ đen bám theo đánh hôi — +12% sát thương của MỌI chiêu thức.' },
+
+  // ═══ BỊ ĐỘNG CHỈ SỐ — xương sống CHUNG của cây kỹ năng cả 5 lớp ═════════════════════
+  // `phai: null` ⇒ khai MỘT lần, rót vào tab Lớp của cả năm lớp. Chép 7 dòng × 5 lớp thì
+  // không có cách nào giữ năm bản khỏi lệch nhau, và `test_kynang5lop` (cấm hai lớp trùng
+  // tên chiêu) sẽ đỏ — đúng ra nó nên đỏ, vì nó đang gác bản sắc lớp.
+  //
+  // ⚠ HAI HỌ BỊ ĐỘNG, LUẬT KHÁC NHAU — khoá phân biệt là trường `chiSo`:
+  //   • CÓ `chiSo` (7 cái dưới đây) = bị động CHỈ SỐ → luôn chạy, KHÔNG chiếm ô, nâng cấp được.
+  //   • KHÔNG `chiSo` (Swell Life · Iron Will · Dark Raven · Heal · Song Thủ · Bản Nguyên Công)
+  //     = bị động HIỆU ỨNG → phải cắm vào ô 2-4 mới chạy (`biDongBat`).
+  // Vì sao phải tách: ô 1 khoá chủ động nên chỉ còn BA ô trống. Bảy bị động chỉ số mà tranh ba
+  // ô thì người chơi vĩnh viễn chỉ bật được 3/7, trong khi cả bảy rõ ràng sinh ra để luôn bật.
+  //
+  // ⚠ ĐƠN VỊ LÀ PHẦN TRĂM, KHÔNG PHẢI ĐIỂM PHẲNG — và đây là chỗ cố ý KHÔNG dịch sát bản gốc.
+  // Ảnh mẫu ghi số phẳng ("+12 sinh lực mỗi cấp"), nhưng thang chỉ số hai game khác hẳn: đo được
+  // ở đây trang bị kéo máu trần 2.288 → 28.672 và Công Kích 89 → 2.118 khi mặc full. Số phẳng
+  // vì thế vừa vỡ đầu game vừa thành số 0 làm tròn ở cuối game. `pt` = phần trăm mỗi cấp.
+  // Riêng bạo kích và né tránh là TỈ LỆ CÓ TRẦN (0,65 / 0,45) nên chúng cộng theo ĐIỂM PHẦN
+  // TRĂM (`pp`) — nhân phần trăm lên một tỉ lệ đã có trần là vô nghĩa.
+  //
+  // ⚠ `ps_stamina` CỐ Ý nhỏ hơn hẳn sáu cái kia (0,10 chứ không phải 0,25-0,30). Thể Lực cộng
+  // vào `s.vit` RẤT SỚM nên nó đi qua toàn bộ dây chuyền nhân của `calcDerived` — đo được ở
+  // mức 0,25/cấp nó cho **+42% máu** ở cấp chiêu 100 (trần), tức ĂN ĐỨT chính `ps_life` (+30%)
+  // và biến nút Life thành thừa. Hai nút mà một cái trội hẳn thì không còn là lựa chọn nào cả.
+  ps_life:     { name:'Increase Life',         school:'Vaeldra', phai:null, tier:'so', cat:'Bị Động', type:'passive', chiSo:{ k:'hpPct',   pt:0.30 }, unlock:15, color:'#ff7a7a', glyph:'✚', desc:'Bị động: nới Sinh Lực tối đa — mỗi cấp +0,30%. Nền tảng của mọi lớp, không riêng lớp chịu đòn.' },
+  ps_mana:     { name:'Increase Mana',         school:'Vaeldra', phai:null, tier:'so', cat:'Bị Động', type:'passive', chiSo:{ k:'qiPct',   pt:0.30 }, unlock:10, color:'#5ab8e8', glyph:'♦', desc:'Bị động: nới Mana tối đa — mỗi cấp +0,30%. Càng nhiều Mana càng tung được nhiều chiêu trước khi phải lùi.' },
+  ps_stamina:  { name:'Increase Stamina',      school:'Vaeldra', phai:null, tier:'so', cat:'Bị Động', type:'passive', chiSo:{ k:'vit',     pt:0.10 }, unlock:10, color:'#e8c87a', glyph:'▲', desc:'Bị động: rèn Thể Lực — mỗi cấp +0,10 điểm. Thể Lực nuôi Sinh Lực, nên nó cộng dồn với Increase Life.' },
+  ps_atk:      { name:'Increase Attack Power', school:'Vaeldra', phai:null, tier:'so', cat:'Bị Động', type:'passive', chiSo:{ k:'atkPct',  pt:0.25 }, unlock:10, color:'#ffcf7a', glyph:'⚔', desc:'Bị động: nâng Công Kích tối đa — mỗi cấp +0,25%. Dark Wizard đọc dòng này thành Sức Mạnh Phép Thuật.' },
+  ps_def:      { name:'Increase Defense',      school:'Vaeldra', phai:null, tier:'so', cat:'Bị Động', type:'passive', chiSo:{ k:'defPct',  pt:0.30 }, unlock:29, color:'#a0d8ff', glyph:'◆', desc:'Bị động: dày Phòng Thủ — mỗi cấp +0,30%. Mở muộn nhất trong bảy cái: nó là thứ giữ người ở map cấp cao.' },
+  ps_defrate:  { name:'Increase Defense Rate', school:'Vaeldra', phai:null, tier:'so', cat:'Bị Động', type:'passive', chiSo:{ k:'evaPP',   pt:0.05 }, unlock:10, color:'#a0ffe9', glyph:'✧', desc:'Bị động: tăng Né Tránh — mỗi cấp +0,05%. Đòn trượt hẳn thì không có giáp nào phải chịu.' },
+  ps_crit:     { name:'Increase Critical Rate',school:'Vaeldra', phai:null, tier:'so', cat:'Bị Động', type:'passive', chiSo:{ k:'critPP',  pt:0.05 }, unlock:10, color:'#ff9a4d', glyph:'★', desc:'Bị động: tăng tỉ lệ Bạo Kích — mỗi cấp +0,05%. Khác Increase Critical Damage của Dark Lord: cái kia là SÁT THƯƠNG bạo kích, cái này là TỈ LỆ.' },
+
+  // ═══ TÂM PHÁP — BA CẶP KHẮC CHẾ NHAU ═══════════════════════════════════════════════
+  // Chung cho cả 5 lớp (`phai: null`), mỗi cặp treo trên MỘT bộ võ công môn phái:
+  //   bộ 1 (đơn · gần)  Crushing Force  ↔ Steadfast
+  //   bộ 2 (đơn · xa)   Paralyze        ↔ Unbound
+  //   bộ 3 (AoE quanh)  Venom           ↔ Antidote
+  //
+  // ⚠ HỌ THỨ BA CỦA BỊ ĐỘNG — đừng gộp vào hai họ kia. Khoá phân biệt là trường `tp`:
+  //   • `chiSo`  → cộng chỉ số, luôn chạy, tự ngộ theo cấp   (7 cái Increase X ở trên)
+  //   • không có → bị động HIỆU ỨNG, phải cắm vào ô 2-4      (Swell Life · Iron Will…)
+  //   • `tp`     → tâm pháp, luôn chạy, KHÔNG chiếm ô, và **chỉ mở bằng vật phẩm**
+  //
+  // ⚠ `matTich: true` ⇒ `vhAutoLearn()` KHÔNG tự ngộ chúng dù đủ cấp. Mốc `unlock` ở đây là
+  // cấp TỐI THIỂU để dùng cuốn, không phải cấp tự có. Bỏ cờ này là cả hệ Orb thành trang trí:
+  // người chơi lên cấp là có sẵn, chẳng ai đi gom mảnh nữa.
+  //
+  // ⚠ VẾ KHÁNG CÓ TRẦN `TP_KHANG_TRAN` (75%). Chủ dự án chốt sau khi tôi nêu: ảnh gốc ghi
+  // "có thể đạt đến hiệu quả miễn dịch", mà miễn dịch cứng biến cả cơ chế khắc chế thành nhị
+  // phân — ai max kháng thì tâm pháp đối phương vô dụng tuyệt đối, không còn gì để mà cân.
+  tp_crush:   { name:'Crushing Force', school:'Vaeldra', phai:null, tier:'trung', cat:'Tâm Pháp', type:'passive', matTich:true,
+                tp:{ bo:1, kieu:'gay', hieu:'day' }, unlock:11, color:'#ff8a5a', glyph:'✹',
+                desc:'Tâm pháp: đòn của võ công bộ 1 đẩy lùi mục tiêu và nện thêm sát thương bạo kích. Bị Steadfast của đối phương kháng lại.' },
+  tp_stead:   { name:'Steadfast',      school:'Vaeldra', phai:null, tier:'trung', cat:'Tâm Pháp', type:'passive', matTich:true,
+                tp:{ bo:1, kieu:'khang', hieu:'day' }, unlock:21, color:'#a0d8ff', glyph:'◆',
+                desc:'Tâm pháp: đứng vững trước đòn nện — kháng đẩy lùi và kháng sát thương bạo kích giáng xuống mình.' },
+  tp_para:    { name:'Paralyze',       school:'Vaeldra', phai:null, tier:'trung', cat:'Tâm Pháp', type:'passive', matTich:true,
+                tp:{ bo:2, kieu:'gay', hieu:'dinh' }, unlock:17, color:'#ffe08a', glyph:'⚡',
+                desc:'Tâm pháp: đòn của võ công bộ 2 khoá cứng mục tiêu — không đi được, không ra chiêu. Bị Unbound của đối phương kháng lại.' },
+  tp_unbound: { name:'Unbound',        school:'Vaeldra', phai:null, tier:'trung', cat:'Tâm Pháp', type:'passive', matTich:true,
+                tp:{ bo:2, kieu:'khang', hieu:'dinh' }, unlock:27, color:'#a0ffe9', glyph:'✧',
+                desc:'Tâm pháp: không gì khoá được chân mình — kháng mọi đòn định thân giáng xuống mình.' },
+  tp_venom:   { name:'Venom',          school:'Vaeldra', phai:null, tier:'trung', cat:'Tâm Pháp', type:'passive', matTich:true,
+                tp:{ bo:3, kieu:'gay', hieu:'doc' }, unlock:24, color:'#7ec850', glyph:'☠',
+                desc:'Tâm pháp: đòn của võ công bộ 3 rải độc — mục tiêu mất máu dần theo tỉ lệ. Bị Antidote của đối phương kháng lại.' },
+  tp_anti:    { name:'Antidote',       school:'Vaeldra', phai:null, tier:'trung', cat:'Tâm Pháp', type:'passive', matTich:true,
+                tp:{ bo:3, kieu:'khang', hieu:'doc' }, unlock:34, color:'#c8e87a', glyph:'✚',
+                desc:'Tâm pháp: máu tự lọc lấy chất độc — kháng mọi loại độc giáng xuống mình.' },
 };
 
 window.HERO_METAL = [
