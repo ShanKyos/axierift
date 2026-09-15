@@ -74,14 +74,18 @@ const pass = m => console.log('PASS ' + m);
     return { tab: el.querySelectorAll('.bang-tab').length,
              muc: [...el.querySelectorAll('.stat-sec')].map(x => x.textContent.trim()),
              coDiSan: /DI SẢN LỚP/.test(t), coBonO: /1 chính · 1 phụ/.test(t),
-             coTanChuc: /HỆ TẤN CHỨC PHỤ/.test(t),
+             // ⚠ Hỏi ĐƯỜNG VÀO, không dò tiêu đề — xem ghi chú cùng chỗ trong test_skillpanel.
+             // `danchi`/`tieuhon` nay là hai Ô trong lưới tab Khác, khối tiêu đề cũ đã gỡ vì nó
+             // in lại đúng hai chiêu ấy lần thứ hai ngay dưới lưới.
+             coTanChuc: (() => { try { return ['danchi','tieuhon'].every(x => knDsKhac().includes(x)); }
+                                 catch { return false; } })(),
              conHam: typeof window.switchSkillTab };
   });
   console.log('kỹ năng:', JSON.stringify(kn));
   if (kn.tab !== 3) fail(`bảng Kỹ Năng có ${kn.tab} tab — phải đúng 3 (Lớp · Vaeldra · Khác)`);
   else pass('bảng Kỹ Năng có đủ 3 tab');
   if (!kn.coBonO || !kn.coDiSan || !kn.coTanChuc)
-    fail('chia tab mà MẤT MỤC: 4 ô=' + kn.coBonO + ' di sản=' + kn.coDiSan + ' tấn chức=' + kn.coTanChuc);
+    fail('chia tab mà MẤT MỤC: 4 ô=' + kn.coBonO + ' di sản=' + kn.coDiSan + ' hệ phụ vào được lưới=' + kn.coTanChuc);
   else pass('cả ba mục cùng nằm trên một trang');
   // Hai mục BỊ ĐỘNG nay cạnh nhau — tiêu đề phải phân biệt được, không thì đọc thành trùng lặp
   const bd = kn.muc.filter(x => /^BỊ ĐỘNG/.test(x));

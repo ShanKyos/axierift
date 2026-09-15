@@ -61,8 +61,11 @@ const PORT = process.argv[2] || '8853';
       togglePanel('skill');
       for (const t of o.tab){
         try { window.knTab(t); } catch (e){ o.renderLoi.push(`${sc}/${t}: ${e.message}`); continue; }
-        const n = el().querySelectorAll('.kn-o').length;
-        o.soO[sc + '/' + t] = n;
+        // ⚠ SO VỚI HÌNH CỦA CHÍNH TAB ĐÓ. Bản cũ đòi cả ba tab ra đúng `KN_HINH.length` (16) —
+        // đúng khi ba tab dùng chung một hình, nhưng tab Khác nay dựng lưới TỪ DỮ LIỆU (4 Di
+        // Sản + 2 hệ phụ + 1-2 bị động, khác nhau theo lớp). Chốt vào 16 thì hoặc bài đỏ oan,
+        // hoặc phải miễn trừ tab Khác — mà chỗ miễn trừ chính là thứ đã để nó lệch ra lần trước.
+        o.soO[sc + '/' + t] = { ve: el().querySelectorAll('.kn-o').length, hinh: knHinh(t).length };
       }
     }
 
@@ -112,10 +115,53 @@ const PORT = process.argv[2] || '8853';
     o.soKhop = { bac: txt.includes(skUpCost(id0).toLocaleString('vi-VN')),
                  khi: txt.includes(skUpKhi(id0).toLocaleString('vi-VN')) };
 
-    // ── 8. tab Khác phải giữ nội dung cũ (Di Sản, bị động, hệ phụ) ──
+    // ── 8. tab Khác: lưới có NHÓM, và không mất thứ nào của bản danh sách cũ ──
+    // ⚠ Bản cũ đếm `.skill-row,.shop-row` rồi chỉ hỏi "> 0". Sau khi `danchi`/`tieuhon` dọn từ
+    // khối "HỆ TẤN CHỨC PHỤ" vào lưới, con số ấy tụt từ 3 xuống 1 mà mệnh đề vẫn XANH — tức nó
+    // xanh kể cả khi hai chiêu đó biến mất hẳn. Nay hỏi đích danh từng thứ phải có mặt.
     window.knTab('khac');
-    o.khacRows = el().querySelectorAll('.skill-row,.shop-row').length;
-    o.khacDiSan = el().textContent.includes('DI SẢN');
+    const dsKhac = knDsKhac();
+    o.khac = {
+      nhom: [...el().querySelectorAll('.kn-nhom b')].map(x => x.textContent.trim()),
+      o: el().querySelectorAll('.kn-o').length,
+      trung: dsKhac.length !== new Set(dsKhac).size,
+      // hai hệ tấn chức phụ phải còn đường vào — nay là Ô, không còn là hàng danh sách
+      hePhu: ['danchi','tieuhon'].filter(x => dsKhac.includes(x)).length,
+      // và không được in LẠI ở dạng cũ: hai chỗ cùng nói một thứ là bảng tự mâu thuẫn
+      khoiCu: /HỆ TẤN CHỨC PHỤ/.test(el().innerHTML),
+      diSan: el().textContent.includes('DI SẢN'),
+      theSach: !!([...el().querySelectorAll('.shop-row')].find(d => /Sách Kỹ Năng/.test(d.textContent))),
+      phu: el().querySelectorAll('.kn-phu-1').length,
+    };
+    // ⚠ MŨI TÊN PHẢI BẮT ĐẦU DƯỚI ĐÁY Ô CHA, không phải dưới đáy cái ẢNH. Ô cao 58px (ảnh 44 +
+    // dòng số cấp), mà bản cũ bắn từ y+44 — tức từ giữa dòng số cấp, và badge vẽ SAU nên nó che
+    // mất thân mũi tên. Thứ còn lại là mấy đầu mũi tên xanh trôi lơ lửng. Không mệnh đề nào bắt
+    // được: số ô đúng, số path đúng, `d` đúng cú pháp. Nên đo bằng HÌNH HỌC THẬT trong DOM.
+    // ⚠ TỰ KIỂM CẢNH DỰNG TRƯỚC KHI CHẤM. `getBoundingClientRect()` trên một bảng đang
+    // `display:none` trả về TOÀN SỐ 0 — và số 0 thì thoả mọi bất đẳng thức ở dưới, nên mệnh đề
+    // này XANH trong khi nó không đo được gì cả. Đã dẫm đúng thế: bài báo "khe 262px" trong lúc
+    // mọi ô đều ra `{x:0, day:0}`. Cùng họ với vết sẹo đã ghi trong CLAUDE.md — đừng hỏi cờ
+    // `hidden`, hãy hỏi HÌNH HỌC THẬT, rồi chứng minh hình học đó khác 0.
+    if (el().classList.contains('hide') || el().offsetParent === null) togglePanel('skill');
+    window.knTab('khac');
+    const cay = el().querySelector('.kn-cay');
+    const rc = cay.getBoundingClientRect();
+    o.canhDung = cay.getBoundingClientRect().height > 0
+      && [...cay.querySelectorAll('.kn-o')].every(x => x.getBoundingClientRect().height > 0);
+    const oDay = [...cay.querySelectorAll('.kn-o')]
+      .map(x => { const r = x.getBoundingClientRect(); return { x: r.left - rc.left, day: r.bottom - rc.top }; });
+    o.mui = [...cay.querySelectorAll('.kn-day path[marker-end]')].map(pa => {
+      const m = /^M([\d.]+) ([\d.]+)/.exec(pa.getAttribute('d') || '');
+      if (!m) return null;
+      const px = +m[1], py = +m[2];
+      // ô cha = ô có tâm ngang trùng điểm xuất phát và đáy GẦN NHẤT, kể cả nằm dưới py.
+      // ⚠ ĐỪNG lọc `day <= py`: bản đầu làm thế, và khi mũi tên bắt đầu BÊN TRONG ô cha thì ô
+      // ấy bị loại, phép đo tụt xuống ô ở hàng trên và trả về một khe DƯƠNG to tướng — tức
+      // đúng cái lỗi cần bắt lại làm bài XANH. Đã thử ngược mới lộ ra.
+      const cha = oDay.filter(v => Math.abs(v.x + 22 - px) < 3)
+                      .sort((a, b) => Math.abs(py - a.day) - Math.abs(py - b.day))[0];
+      return cha ? +(py - cha.day).toFixed(1) : null;
+    });
 
     // ── 9. Quy tắc số 1: tên tab không được mang từ vựng đã cấm ──
     const CAM = ['giang hồ','môn phái','cảnh giới','chân khí','đan điền','kinh mạch'];
@@ -139,9 +185,9 @@ const PORT = process.argv[2] || '8853';
   // cuộn chữ dài thay vì cây — nên ba tab của cùng một bảng bắt người chơi học ba cách đọc.
   // Chủ dự án chốt cho đồng nhất, và chỗ miễn trừ này chính là thứ sẽ lặng lẽ cho phép nó
   // lệch ra lần nữa.
-  const thieu = Object.entries(r.soO).filter(([, v]) => v !== r.soOHinh);
-  if (thieu.length) fail(`số ô lệch hình: ${thieu.map(([k,v])=>k+'='+v).join(' ')} (mong ${r.soOHinh})`);
-  else pass(`CẢ BA tab vẽ cùng một khung, đủ ${r.soOHinh} ô`);
+  const thieu = Object.entries(r.soO).filter(([, v]) => v.ve !== v.hinh || !v.hinh);
+  if (thieu.length) fail(`số ô lệch hình: ${thieu.map(([k,v])=>`${k} vẽ ${v.ve}/hình ${v.hinh}`).join(' · ')}`);
+  else pass(`cả ba tab vẽ đủ ô của hình mình (${Object.values(r.soO).map(v=>v.ve).join('/')})`);
 
   if (r.giau.cong !== r.giau.that || r.ngheo.cong !== r.ngheo.that)
     fail(`dấu + nói dối: đủ tiền ${r.giau.cong} dấu/${r.giau.that} nâng được · hết tiền ${r.ngheo.cong}/${r.ngheo.that}`);
@@ -163,8 +209,20 @@ const PORT = process.argv[2] || '8853';
     fail(`khung chi tiết không in đúng số từ skUpCost/skUpKhi (Lumen ${r.soKhop.bac} · Bản Năng ${r.soKhop.khi})`);
   else pass('hai dòng tiêu hao đọc thẳng skUpCost() / skUpKhi()');
 
-  if (!r.khacRows || !r.khacDiSan) fail(`tab Khác mất nội dung cũ (${r.khacRows} dòng, Di Sản ${r.khacDiSan})`);
-  else pass(`tab Khác giữ nguyên nội dung cũ (${r.khacRows} dòng)`);
+  const kh = r.khac;
+  if (kh.nhom.length < 2) fail(`tab Khác phải có ≥2 tiêu đề nhóm, đang có ${JSON.stringify(kh.nhom)}`);
+  else if (kh.hePhu !== 2) fail(`hai hệ tấn chức phụ mất đường vào lưới (còn ${kh.hePhu}/2)`);
+  else if (kh.trung) fail('một chiêu lọt vào lưới tab Khác hai lần');
+  else if (kh.khoiCu) fail('khối "HỆ TẤN CHỨC PHỤ" cũ vẫn in — hai chỗ cùng nói một thứ');
+  else if (!kh.diSan || !kh.theSach || !kh.phu)
+    fail(`tab Khác mất nội dung dưới lưới (Di Sản ${kh.diSan} · thẻ Sách ${kh.theSach} · bị động chung ${kh.phu})`);
+  else pass(`tab Khác là lưới có nhóm [${kh.nhom.join(' · ')}], ${kh.o} ô, giữ đủ phần dưới`);
+
+  const muiXau = (r.mui || []).filter(v => v === null || v < 0);
+  if (!r.canhDung) fail('bảng kỹ năng đang ẩn lúc đo — mọi hình chữ nhật ra 0 và mệnh đề mũi tên xanh giả');
+  else if (!r.mui || !r.mui.length) fail('không có mũi tên nào trên tab Khác — mệnh đề hình học sẽ xanh giả');
+  else if (muiXau.length) fail(`mũi tên bắt đầu BÊN TRONG ô cha (lệch ${JSON.stringify(r.mui)}) — badge sẽ che mất thân`);
+  else pass(`mũi tên xuất phát dưới đáy ô cha (khe ${r.mui.join('/')}px)`);
 
   // ⑤ HAI NÚT CỦA KHUNG CHI TIẾT PHẢI LÀM THẬT — 📜 dùng Sách Kỹ Năng và ⌨ gán phím Space.
   // Cả hai cơ chế vẫn sống trong mã (`useSkillBookUI` · `assignSpaceUI`) nhưng chỗ DUY NHẤT

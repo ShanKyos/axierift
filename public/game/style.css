@@ -2219,6 +2219,16 @@ html,body { width:100%; height:100%; overflow:hidden; background:var(--bg-deep);
 .kn-wrap { display:flex; gap:8px; align-items:flex-start; }
 .kn-cay { position:relative; flex:0 0 auto; }
 .kn-day { position:absolute; left:0; top:0; pointer-events:none; }
+/* Tiêu đề nhóm của tab Khác — ảnh mẫu chủ dự án đưa có hai nhãn ("Hành vi" · "Học tập") đứng
+   trên hai lưới ô. Nó nằm tuyệt đối trong CÙNG hệ toạ độ với ô, chỗ đứng do knY() chừa ra.
+   ⚠ `right:0` + `min-width:0` cho vế mô tả co lại được: không có chúng thì dòng mô tả đẩy
+   nhãn rộng ra quá khung cây, và khung chi tiết bên phải bị bóp — cùng cái bẫy `min-width:auto`
+   đã dẫm ở dải bị động chung ngay dưới. */
+.kn-nhom { position:absolute; left:0; right:0; display:flex; align-items:baseline; gap:6px;
+  min-width:0; pointer-events:none; }
+.kn-nhom b { font-size:11px; color:var(--vang); letter-spacing:.3px; white-space:nowrap; }
+.kn-nhom::after { content:''; flex:1 1 auto; min-width:0; height:1px; align-self:center;
+  background:linear-gradient(90deg, rgba(var(--rgb-vang),.42), transparent); }
 .kn-o { position:absolute; width:44px; padding:0; border-radius:var(--r-sm); cursor:pointer;
   background:rgba(var(--rgb-da),.55); border:1px solid var(--border-faint);
   display:flex; flex-direction:column; align-items:center; font-family:inherit;

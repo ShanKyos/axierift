@@ -22564,17 +22564,6 @@ function heroCastAct(id, d){
 // vĩnh viễn (xem LEGACY_SECT_SKILLS). Hai hàm dựng hàng danh sách cho nó — equippedSkillRowHtml,
 // legacySkillRowHtml — đã gỡ cùng đợt tab Khác chuyển sang khung cây: cây + khung chi tiết nay
 // dựng mọi ô, nên giữ đường vẽ thứ hai là bảo đảm hai bên nói khác nhau sau vài đợt sửa.
-// 4 hệ Tấn Chức phụ (Ám Khí/Đạn Chỉ/Linh Tiễn/Tiêu Hồn) — vẫn giữ nguyên điều kiện đầu tư cũ, chỉ đổi
-// từ "chiêu bấm được" thành "% Công Kích vĩnh viễn" khi đủ điều kiện.
-function legacyUniversalRowHtml(id){
-  const info = skillInfo(id), pct = LEGACY_UNIVERSAL_PCT[id] || 0;
-  const right = info.unlocked ? `<span style="font-size:11px;color:#a0ffe9">+${pct}% Sát Thương ✓</span>` : `<span style="font-size:10.5px;opacity:.5">🔒 ${info.lockTxt}</span>`;
-  return `<div class="skill-row${info.unlocked?'':' locked'}">
-    <img src="${info.icon}" onerror="this.outerHTML='<span class=\\'sk-glyph\\'>${id==='danchi'?'●':'✦'}</span>'" alt="">
-    <span class="sk-info"><b style="color:${info.unlocked?'#7ecbff':'#8a8a8a'}">${info.name}</b>
-      <div class="sk-desc">${info.desc}</div></span>
-    ${right}</div>`;
-}
 // ═══════════ BẢNG KỸ NĂNG KIỂU CÂY — cây bên trái, khung chi tiết bên phải ═══════════
 // Bố cục dựng theo ảnh mẫu chủ dự án đưa: hàng tab trên cùng, một CÂY biểu tượng nối bằng mũi
 // tên ở nửa trái, và một khung đọc chi tiết + nút Nâng Cấp ở nửa phải.
@@ -22617,14 +22606,24 @@ const KN_HINH = [
   { k:'g7', c:2, h:6, tu:['g6'] },
 ];
 const KN_HINH_RIENG = {};      // <lớp>|<tab> → hình riêng, để trống thì dùng KN_HINH
-const KN_COT = 58, KN_HANG = 60, KN_O = 44;   // bước cột · bước hàng · cạnh ô biểu tượng
+// ⚠ `KN_O` là cạnh cái ẢNH, `KN_O_CAO` là chiều cao THẬT của ô — ảnh 44 + dòng số cấp ~14.
+// Mũi tên phải xuất phát từ `KN_O_CAO`, không phải `KN_O`: đo được ô cao đúng 58px, nên bản cũ
+// bắn mũi tên từ y+44 tức là từ GIỮA dòng số cấp, và cái badge vẽ sau nên nó che mất thân mũi
+// tên. Thứ còn lại trên màn hình là mấy đầu mũi tên xanh trôi lơ lửng — nhìn ra là lỗi vẽ chứ
+// không ra một cái cây. Và `KN_HANG` phải đủ để CHỪA khe: 60 thì khe chỉ còn 2px.
+const KN_COT = 58, KN_HANG = 76, KN_O = 44, KN_O_CAO = 58;
+const KN_NHOM_CAO = 26;                      // chỗ chừa cho một dòng tiêu đề nhóm
+// ⚠ TOẠ ĐỘ Y CỦA MỘT Ô CHỈ ĐƯỢC TÍNH Ở ĐÂY. Ba chỗ đọc nó — ô, mũi tên, và phép đo khổ — nên
+// chép công thức ra ba nơi là dựng ba bản sao của một luật đang sống: sửa một chỗ thì mũi tên
+// trỏ hụt ô, mà kiểu lệch đó chỉ lộ ra khi nhìn ảnh chụp.
+function knY(n){ return n.h * KN_HANG + (n.gi || 0) * KN_NHOM_CAO; }
 // Bề rộng/cao vùng cây SUY TỪ CHÍNH HÌNH, không chép cứng số cột. Chép cứng "4 cột" rồi dời
 // chuỗi thẳng sang cột 2 là thừa ra một cột rỗng đúng 58px — cây dãn ra, khung chi tiết bị bóp,
 // và không có gì báo lỗi cả.
 function knKho(hinh){
-  let c = 0, h = 0;
-  for (const n of hinh){ if (n.c > c) c = n.c; if (n.h > h) h = n.h; }
-  return { w: c * KN_COT + KN_O, h: h * KN_HANG + KN_O + 14 };   // +14 chừa chỗ dòng số cấp
+  let c = 0, y = 0;
+  for (const n of hinh){ if (n.c > c) c = n.c; if (knY(n) > y) y = knY(n); }
+  return { w: c * KN_COT + KN_O, h: y + KN_O_CAO };
 }
 // ⚠ ĐÂY LÀ CHỖ CHỦ DỰ ÁN ĐIỀN KỸ NĂNG. Mỗi khoá là `<lớp>|<tab>`, giá trị là danh sách mã chiêu
 // rót vào các ô của KN_HINH THEO THỨ TỰ khai ở trên (a1 · b1 · b2 · c1 · d1 · d2 · e1 · f1 · f2
@@ -22659,17 +22658,59 @@ for (const _lop in KN_ROT) KN_ROT[_lop] = KN_ROT[_lop].concat(KN_XUONG_SONG);
 // chơi ăn đòn trước rồi mới học được cách đỡ, đúng nhịp mà ảnh mẫu của chủ dự án bày ra.
 const KN_ROT_CHUNG = { vaeldra: ['danchi','tieuhon',
   'tp_crush','tp_para','tp_stead','tp_venom','tp_unbound','tp_anti'] };   // tab Vaeldra dùng chung cho mọi lớp
-function knHinh(tab){ return KN_HINH_RIENG[(player && player.sect) + '|' + tab] || KN_HINH; }
+function knHinh(tab){
+  const rieng = KN_HINH_RIENG[(player && player.sect) + '|' + tab];
+  if (rieng) return rieng;
+  return tab === 'khac' ? knHinhKhac() : KN_HINH;
+}
 // Tab KHÁC rót ĐỘNG theo lớp — Di Sản và bị động riêng đều là chiêu của chính lớp đang chơi,
 // nên không khai được thành một danh sách phẳng như `KN_ROT_CHUNG`. Suy thẳng từ hai bảng đang
 // sống (`LEGACY_SECT_SKILLS` · `CLASS_PASSIVES`) chứ không chép sang bảng thứ ba: chép là lần
 // sau ai đó đổi một bảng thì tab này nói dối, mà kiểu nói dối đó không ai phát hiện được.
-function knDsKhac(){
+// Tab Khác bày theo LƯỚI CÓ NHÓM, đúng ảnh mẫu chủ dự án đưa: mỗi nhóm một tiêu đề, các ô xếp
+// thành hàng ngang, và nhóm nào là một MẠCH thì nối bằng mũi tên dọc. Hai tab kia vẫn là cây
+// nhánh — chúng có hình dạng thật sự rẽ nhánh, tab này thì không: Di Sản là bốn thứ độc lập,
+// không cái nào mở khoá cái nào, nên vẽ chúng thành cây là bịa ra một quan hệ không có.
+//
+// ⚠ SỐ Ô SUY TỪ DỮ LIỆU, không chép cứng 4×2 như ảnh mẫu. Lớp nào cũng đúng 4 Di Sản, nhưng bị
+// động thì thieulam có 2 còn bốn lớp kia 1 — khoá cứng tám ô là bốn lớp mở ra thấy một dãy ô
+// trống mang nhãn "Học Tập", tức bảng tự hứa có thứ nó không có.
+function knKhacNhom(){
   if (!player) return [];
   const lop = player.sect;
-  const ds = LEGACY_SECT_SKILLS.filter(x => VOHOC_DEFS[x] && VOHOC_DEFS[x].phai === lop);
-  const bd = CLASS_PASSIVES.filter(x => VOHOC_DEFS[x] && VOHOC_DEFS[x].phai === lop);
-  return ds.concat(bd);
+  return [
+    { ten:'Hành Vi', dong:'để ngoài thanh chiêu thì cộng %Công Kích vĩnh viễn', cot:4,
+      ds: LEGACY_SECT_SKILLS.filter(x => VOHOC_DEFS[x] && VOHOC_DEFS[x].phai === lop)
+            .concat(Object.keys(LEGACY_UNIVERSAL_PCT).filter(x => SKILL_DEFS[x])) },
+    // Mũi tên ở đây nghĩa là MỞ SAU, không phải "phải học cái trước mới học được cái sau" — cả
+    // hai đều tự ngộ theo cấp. Nên nhóm xếp theo `unlock` và tiêu đề nói thẳng ra như vậy: một
+    // mũi tên hứa điều kiện tiên quyết không có thật thì tệ hơn là không vẽ mũi tên nào.
+    { ten:'Học Tập', dong:'bị động của lớp — xếp theo thứ tự mở khoá', cot:1, chuoi:true,
+      ds: CLASS_PASSIVES.filter(x => VOHOC_DEFS[x] && VOHOC_DEFS[x].phai === lop)
+            .sort((a, b) => (VOHOC_DEFS[a].unlock || 0) - (VOHOC_DEFS[b].unlock || 0)) },
+  ].filter(g => g.ds.length);
+}
+function knDsKhac(){ return knKhacNhom().reduce((t, g) => t.concat(g.ds), []); }
+// Hình của tab Khác dựng TỪ CHÍNH các nhóm ở trên, nên thêm/bớt một Di Sản là lưới tự giãn —
+// không có bảng hình thứ hai để quên sửa.
+function knHinhKhac(){
+  const out = []; let h = 0, gi = 0;
+  for (const g of knKhacNhom()){
+    const dau = h;
+    g.ds.forEach((id, j) => {
+      const c = j % g.cot, hang = h + Math.floor(j / g.cot);
+      // ⚠ `gi` cộng 1: nhóm ĐẦU cũng phải chừa chỗ cho tiêu đề của chính nó. Để 0 thì tiêu đề
+      // nhóm đầu rơi lên toạ độ ÂM, tức nằm ngoài khung cây và bị cắt mất — mà mất một cái nhãn
+      // thì không lỗi nào báo, chỉ là hai lưới dính vào nhau không ai hiểu vì sao.
+      const o = { k:'x' + gi + '_' + j, c, h:hang, gi: gi + 1, tu:[] };
+      if (g.chuoi && j > 0) o.tu = ['x' + gi + '_' + (j - 1)];
+      if (j === 0){ o.nhomTen = g.ten; o.nhomDong = g.dong; }
+      out.push(o);
+    });
+    h = dau + Math.ceil(g.ds.length / g.cot);
+    gi++;
+  }
+  return out;
 }
 function knMa(tab, i){
   const ds = tab === 'lop'  ? (KN_ROT[player && player.sect] || [])
@@ -22681,7 +22722,13 @@ function knMa(tab, i){
 // không trả null: ô trống phải vẽ ra được, nếu không thì cây thủng lỗ và mũi tên trỏ vào hư không.
 function knNut(tab, n, i){
   const id = knMa(tab, i);
-  if (!id) return { k:n.k, c:n.c, h:n.h, tu:n.tu, trong:true, ten:'Ô Trống' };
+  // ⚠ CHÉP TRỌN PHẦN HÌNH HỌC SANG MỘT CHỖ, đừng liệt kê lại ở từng nhánh `return`. Hàm này có
+  // BA đường ra, nên mỗi lần thêm một trường vào hình (`gi`, `nhomTen`…) mà chỉ sửa một nhánh
+  // là trường đó rụng mất ở hai nhánh kia — không lỗi, không dấu hiệu. Đã dẫm đúng thế: thêm
+  // tiêu đề nhóm cho tab Khác xong thì ô vẫn vẽ đủ, mũi tên vẫn đúng, mà hai cái nhãn thì
+  // KHÔNG BAO GIỜ hiện ra, vì `knNut` dựng vật thể mới và bỏ quên chúng.
+  const hh = { k:n.k, c:n.c, h:n.h, gi:n.gi, tu:n.tu, nhomTen:n.nhomTen, nhomDong:n.nhomDong };
+  if (!id) return { ...hh, trong:true, ten:'Ô Trống' };
   const v = VOHOC_DEFS[id] || null;
   // ⚠ CHIÊU BỊ ĐỘNG KHÔNG NẰM TRONG `SKILL_DEFS` — vòng đăng ký ở trên `continue` qua
   // `type === 'passive'` vì chúng không bấm được, nên `skillInfo()` trả null cho cả năm cái.
@@ -22692,15 +22739,15 @@ function knNut(tab, n, i){
     // Bị động CHỈ SỐ nâng cấp được nên phải hiện SỐ CẤP như chiêu chủ động; bị động hiệu ứng
     // thì không có cấp, hiện dấu ✚. Hai họ, hai cách đọc — xem `laBiDongChiSo`.
     const cs = laBiDongChiSo(id), tp = laTamPhap(id);
-    return { k:n.k, c:n.c, h:n.h, tu:n.tu, trong:false, id, v, biDong:true, chiSo:cs || tp, tamPhap:tp,
+    return { ...hh, trong:false, id, v, biDong:true, chiSo:cs || tp, tamPhap:tp,
       inf:{ id, name:v.name, icon:v.icon, desc:v.desc },
       ten:v.name, lv: (cs || tp) ? skLv(id) : 0, mo: vhLearned(id),
       loai: tp ? 'Tâm pháp' : cs ? 'Bị động — chỉ số' : 'Bị động' };
   }
   const inf = skillInfo(id);
-  if (!inf) return { k:n.k, c:n.c, h:n.h, tu:n.tu, trong:true, ten:'Ô Trống', loi:id };
+  if (!inf) return { ...hh, trong:true, ten:'Ô Trống', loi:id };
   const d = SKILL_DEFS[id] || {};
-  return { k:n.k, c:n.c, h:n.h, tu:n.tu, trong:false, id, inf, d, v, biDong:false,
+  return { ...hh, trong:false, id, inf, d, v, biDong:false,
     ten: inf.name, lv: skLv(id), mo: inf.unlocked,
     loai: v && v.type === 'buff' ? 'Phù trợ' : 'Chủ động' };
 }
@@ -22709,11 +22756,11 @@ window.knChon = function(k){ window._knChon = k; renderSkillPanel(); };
 // Mũi tên cha → con. Vẽ bằng SVG chứ không bằng viền CSS: đường nối phải đi từ đáy ô cha sang
 // đỉnh ô con qua một khuỷu, mà khuỷu thì border không dựng được.
 function knMuiTen(ds){
-  const cx = (n) => n.c * KN_COT + KN_O / 2, cy = (n) => n.h * KN_HANG;
+  const cx = (n) => n.c * KN_COT + KN_O / 2, cy = (n) => knY(n);
   let p = '';
   for (const n of ds) for (const tk of (n.tu || [])){
     const cha = ds.find(x => x.k === tk); if (!cha) continue;
-    const x1 = cx(cha), y1 = cy(cha) + KN_O, x2 = cx(n), y2 = cy(n) - 4;
+    const x1 = cx(cha), y1 = cy(cha) + KN_O_CAO, x2 = cx(n), y2 = cy(n) - 4;
     const my = (y1 + y2) / 2;
     p += `<path d="M${x1} ${y1} V${my} H${x2} V${y2}" fill="none" stroke="#5fc96e" stroke-width="2"
             marker-end="url(#knMui)" opacity=".85"/>`;
@@ -22794,7 +22841,16 @@ function renderSkillPanelCay(tab){
   const K = knKho(ds);
   let h = `<div class="kn-cay" style="width:${K.w}px;height:${K.h}px">` + knMuiTen(ds);
   for (const n of ds){
-    const st = `left:${n.c*KN_COT}px;top:${n.h*KN_HANG}px`;
+    const st = `left:${n.c*KN_COT}px;top:${knY(n)}px`;
+    // Tiêu đề nhóm nằm NGAY TRÊN ô đầu nhóm, trong cùng hệ toạ độ tuyệt đối của khung cây —
+    // `KN_NHOM_CAO` trong `knY()` đã chừa sẵn đúng chỗ cho nó, nên không có cách nào nó đè
+    // lên hàng ô phía trên.
+    // ⚠ Mô tả nhóm để trong `title`, KHÔNG in cạnh nhãn. Vùng cây chỉ rộng 218px nên một dòng
+    // mô tả in ra bị cắt cụt giữa chừng ("…thì cộng %C") — một câu cụt còn tệ hơn không có câu
+    // nào. Ảnh mẫu cũng chỉ có đúng cái nhãn.
+    if (n.nhomTen)
+      h += `<div class="kn-nhom" style="top:${knY(n) - KN_NHOM_CAO + 4}px" title="${mstEsc(n.nhomDong || '')}">
+              <b>${n.nhomTen}</b></div>`;
     if (n.trong){
       h += `<div class="kn-o kn-trong" style="${st}" title="Ô trống — điền mã chiêu vào KN_ROT">
               <span>+</span></div>`;
@@ -23028,8 +23084,9 @@ function renderSkillPanel(){
           <span class="sr-desc">Bấm nút sách ở khung chi tiết của một chiêu để nâng thẳng 1 cấp — khỏi tốn Lumen lẫn Bản Năng</span>
           <span class="sr-stat">${CONSUM_DB.sach.info()}</span></span>
         <b style="color:#ffb15c;font-size:15px">${player.bikipVH || 0}</b></div>`;
-    html += `<div class="stat-sec">HỆ TẤN CHỨC PHỤ</div>`;
-    for (const id of ['danchi','tieuhon']) html += legacyUniversalRowHtml(id);
+    // ⚠ KHỐI "HỆ TẤN CHỨC PHỤ" ĐÃ GỠ — `danchi` · `tieuhon` nay là hai Ô trong nhóm Hành Vi của
+    // chính cây này (xem `knKhacNhom`). Giữ lại khối cũ là cùng một bảng in hai lần hai kiểu,
+    // cách nhau vài dòng, và người chơi phải tự đoán hai chỗ có nói về cùng một thứ không.
     html += `<div class="kn-phu"><div class="kn-phu-t">Bị động chung — từ Ascension · trang bị · cổ thư</div><div class="kn-phu-o">`;
     for (const ps of PASSIVE_SKILLS){
       const on = ps.req();
