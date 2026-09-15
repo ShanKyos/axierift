@@ -216,7 +216,7 @@ No character, no weapon, no text and no numbers anywhere in the image.
 `VFX_ATLAS_DEFS` ghi rõ nó đã phải `--sang` lúc nhập gói Meowa.
 
 Công thức năm lớp ở §0.6 dùng được cho cả hai bộ sinh, và nó là phần cải thiện lớn nhất. Nhưng
-nếu muốn đúng chuẩn Meteorite thì **đặt qua `meowa-animation-run`** — cùng đường đã sinh ra ba
+nếu muốn đúng chuẩn Meteorite thì **đặt qua Meowa** (lệnh cụ thể ở §0.11) — cùng đường đã sinh ra ba
 tấm ấy. Gemini vẫn hợp cho **ảnh tĩnh** (nhà cửa, vật nhỏ, vũ khí, icon), đúng như
 `docs/PROMPT_ART_GEMINI.md` đã phân vai.
 
@@ -333,7 +333,7 @@ dựng ra tấm nào trong số đó.
 | 1 | gen **thì đầu** | Gemini, prompt ① | 1 ảnh 512², nền magenta |
 | 2 | gen **thì sau** | Gemini, prompt ② | 1 ảnh 512², nền magenta |
 | 3 | **bóc nền magenta** khỏi hai ảnh | `tools/vfx_gemini.py --nen "#ff00ff"` | 2 PNG trong suốt thật |
-| 4 | **gen chuyển động từ hai thì** | **Meowa** (`meowa-animation-run`) | gói 14-16 khung |
+| 4 | **gen chuyển động từ hai thì** | **Meowa** (`keyframes-run`, xem §0.11) | gói **16** khung |
 | 5 | gói → atlas + đo neo | `tools/vfx_meowa.py` | `atlas.png` + dòng dán vào `VFX_ATLAS_DEFS` |
 
 **Vì sao bước 3 không bỏ được:** Gemini trả nền đặc (đo: `alpha = 0` chiếm **0,0%** ở cả ba
@@ -468,6 +468,168 @@ dark fantasy MMORPG aesthetic like MU Online,
 clean vector-like game asset, centered composition,
 512x512 pixels, high quality, PNG
 ```
+
+---
+
+### 0.11 PROMPT MEOWA — bước 4, và nó viết **NGƯỢC HẲN** với bước 1-2
+
+Chủ dự án hỏi đúng chỗ còn thiếu: §0.9 mới cho prompt của **Gemini** (bước 1-2), chưa cho prompt
+của **Meowa** (bước 4). Và hai thứ đó không dùng chung một lối viết.
+
+⚠ **Đây là chỗ dễ chép nhầm nhất của cả tài liệu này.** Bản năng là dán luôn cái khuôn mười một
+dòng của §0.9 sang Meowa cho đồng bộ. Làm thế là hỏng: `.claude/skills/game-assets/SKILL.md`
+cấm thẳng lối đó cho mọi lệnh Meowa — *"Do not use legacy diffusion-style prompt engineering: no
+long keyword stacks, separate positive and negative prompt blocks, repeated quality terms, token
+weights, sampler syntax… These additions can interfere with the model's own interpretation and
+reduce consistency."*
+
+| | Gemini (bước 1-2) | Meowa (bước 4) |
+|---|---|---|
+| lối viết | chuỗi mệnh đề ngăn phẩy, 11 dòng | **một câu tiếng Anh thường**, ngắn |
+| tả cái gì | **HÌNH** — năm lớp, màu, chất liệu | **CHUYỂN ĐỘNG** — một hành động + một hướng |
+| dòng phủ định | bắt buộc (`no …`) | **bỏ hẳn** |
+| câu phong cách | bắt buộc | **bỏ hẳn** — hình đã nằm trong ảnh nguồn rồi |
+| độ dài | ~11 dòng | **1 câu, ≤ 20 chữ** |
+
+Lý do vật lý, không phải quy ước: ở bước 4 **hình đã xong**. Ảnh nguồn CHÍNH LÀ khung đầu, nên
+mọi chữ tả màu/lớp/phong cách ở đây chỉ đi cãi nhau với thứ Meowa đang nhìn thấy. Việc duy nhất
+còn lại là nói cho nó biết **thứ đó động như thế nào**.
+
+Và Meowa **bật sẵn `--optimize-prompt`**: backend đọc ảnh nguồn + câu của mình, dịch sang tiếng
+Anh, rồi tự viết lại thành câu mà mô hình hoạt ảnh hiểu chắc hơn. Viết dài là tự tay đá vào bước
+đó. Cứ viết câu ngắn nhất đủ nghĩa, xem kết quả, rồi **mới** thêm đúng một ràng buộc nếu kết quả
+chứng minh là cần.
+
+#### ⚠ Bốn con số đọc ra từ chính ảnh chụp bảng Meowa của chủ dự án
+
+Ảnh chụp cho biết chủ dự án đang đứng ở giao diện web của `meowa-animation-run`. Bốn thứ trong
+đó phải đổi, và mỗi thứ có một lý do đo được từ chính kho này:
+
+| ô trong bảng | ảnh chụp đang để | **phải để** | vì sao |
+|---|---|---|---|
+| Loop playback | ☐ tắt | **giữ TẮT** ✅ | đúng rồi. Chiêu là nổ rồi tắt, không phải vòng lặp. `--animation-mode non_loop` |
+| Preserve translucent areas | ☑ bật | **giữ BẬT** ✅ | đúng rồi, và đây là cái nút đã ghi ở §0.9. Tắt là gói Meowa về mang đúng lưới caro vừa phải bóc khỏi Gemini |
+| Length | **24 frames (3s)** | **16 frames** | xem ngay dưới |
+| Padding | ☑ bật, nhưng **bị chặn** | **TẮT** | xem ngay dưới |
+
+**① Length 16, không phải 24 — neo vào ba gói đang chạy, không đoán:**
+
+| gói đang chạy | khung | ô atlas | fps | dài thật |
+|---|---|---|---|---|
+| `meteor_rain` (tấm chủ dự án chỉ vào) | **14** | 7×2 | 22 | 0,64 s |
+| `fire_pillar` | **16** | 8×2 | 20 | 0,80 s |
+| `dragon_spirit` | 8 | 8×1 | 14 | 0,57 s |
+
+24 khung phát ở 22 fps là **1,09 giây** — dài gấp rưỡi tấm mẫu, mà ô 1 là đòn CẬN CHIẾN: người
+chơi bấm xong phải thấy nó ăn ngay. 16 khung rơi đúng vào `fire_pillar` (8 cột × 2 hàng), tức
+`tools/vfx_meowa.py` cắt ra là vừa khít một khuôn đã có người gác.
+
+⚠ Và tài liệu Meowa cảnh báo sẵn cho mốc 16: *"A 16-frame run has twice the temporal budget of an
+8-frame run, so the model may invent an extra motion beat instead of simply improving the same
+action."* ⇒ câu prompt phải **nói rõ là một nhát, chậm rãi** (`one single …`, `slowly`), nếu
+không nó tự chèn thêm một nhịp thứ hai và chiêu hoá ra đánh hai lần.
+
+**② Padding TẮT — và cái thông báo đỏ trong ảnh chụp không phải lỗi phải sửa:**
+
+Ảnh chụp báo *"The source image has reached the size limit. Reduce its dimensions before adding
+padding."* với `Source 2048 x 2048`. **Đừng đi thu nhỏ ảnh để mở khoá ô Padding** — với dự án
+này padding là thứ phải tắt:
+
+`VFX_ATLAS_DEFS` neo mỗi gói bằng **một điểm cố định trong ô** (`anchorX` / `anchorY`), và
+`tools/vfx_meowa.py` đo điểm đó từ chính khung hình. Chèn padding lệch (`--padding-alignment` có
+9 hướng) là **dời tâm hình so với tâm ô** ⇒ mọi số neo đã đo thành sai, và triệu chứng là chiêu
+nổ lệch chỗ con trỏ — đúng lỗi §2 của `docs/PROMPT_KYNANG_5LOP.md` đang cố tránh.
+
+⇒ **Chỗ chừa khoảng trống cho chuyển động là ở bước 1-2, trong chính bố cục của Gemini.** Khuôn
+§0.9 đã có sẵn câu `centered composition`; giữ nó, và khi duyệt ảnh Gemini thì đuổi theo đúng một
+câu hỏi: *cú quét này khi mở hết ra có còn nằm trong khung không.* Meowa không tự đẻ ra chỗ mà
+ảnh nguồn không có — tài liệu của nó nói thẳng: *"The model cannot reliably move into space that
+does not exist… Prompt enhancement cannot compensate for missing canvas space."*
+
+**③ Resolution 480P là TRẦN, và nó vừa đủ — nhưng chỉ vừa đủ.** Tài liệu Meowa:
+*"the general frame mode outputs at no more than 480p even when the source image is much larger."*
+Ô atlas của game là **384**. 384 < 480 nên lọt, còn dư 96 px. ⇒ Gen ảnh Gemini ở 2048 **không
+mua thêm được gì ở đầu ra** (nó vẫn về 480), nhưng cũng không hại — thu 2048 → 480 thì mép sạch
+hơn. Điều phải nhớ là chiều ngược lại: **đừng bao giờ nới ô atlas quá 480**, vì không có nguồn
+nào nuôi nổi.
+
+**④ Quality "Detailed"** — giữ như ảnh chụp. (Bản CLI có ba nấc `standard` / `medium` /
+`advanced`; theo thứ tự thì `medium` ứng với Detailed. ⚠ **Đây là suy từ thứ tự, chưa đo** — ai
+chạy bằng CLI thì đối chiếu lại `python3 meowart_api.py meowa-animation-run --help` trước khi tin.)
+
+#### ⚠ VÀ MỘT CHỖ ĐỔI ĐƯỜNG: hai thì ⇒ dùng `keyframes-run`, KHÔNG phải `meowa-animation-run`
+
+`meowa-animation-run` nhận **một** ảnh (`--image-file`). Nhưng cả §0.9 và §0.10 dựng ra **hai**
+ảnh mỗi chiêu — thì đầu và thì sau — và làm thế chính là để *ràng buộc* chuyển động chứ không
+phải để chọn lấy một tấm. Đường đúng cho hai tấm là `keyframes-run`, và tài liệu Meowa gọi tên
+đúng ca này: *"For an ordinary but complex action, create two or more important poses and use
+`keyframes-run`… making this preferable to video for attacks."*
+
+| | dùng khi | khung cho phép | hai thì |
+|---|---|---|---|
+| `meowa-animation-run` | chỉ có **một** ảnh | 8 · 16 · 24 · 32 | ✗ |
+| **`keyframes-run`** | có **cả hai** thì | 6 · 8 · 10 · 12 · **16** · 20 | ✓ |
+
+Cả hai đều cho 16 khung, nên khuôn atlas không đổi. Cứ gen hai thì như §0.10 rồi đi đường
+`keyframes-run`; tấm thì-sau là thứ giữ cho Meowa không bịa ra một cái kết khác.
+
+```bash
+python3 .claude/skills/game-assets/meowart_api.py keyframes-run \
+  --keyframe 0=twisting_slash_thi_dau.png \
+  --keyframe 15=twisting_slash_thi_sau.png \
+  --prompt "<câu ngắn bên dưới>" \
+  --total-frames 16 \
+  --animation-type attack \
+  --output-format spritesheet \
+  --remove-bg-method standard \
+  --output-dir <thư mục mới>
+```
+
+⚠ **Hai tấm phải CÙNG khổ, cùng tâm, cùng lề** — `keyframes-run` đòi thế. Hai ảnh Gemini đều
+512² và đều `centered composition` nên đã thoả, nhưng **bóc nền (bước 3) xong phải đo lại**:
+`tools/vfx_gemini.py` không cắt khung nên khổ giữ nguyên, đừng ai tự tay crop một tấm.
+
+#### Ba prompt Meowa — bước 4
+
+Ngắn, một hành động, một hướng, một hiệu ứng. Không màu, không phong cách, không dòng phủ định.
+
+**① TWISTING SLASH · Dark Knight**
+
+```
+The crescent blade trail sweeps once slowly from left to right and bursts at the end.
+```
+
+**② FORCE WAVE · Dark Lord**
+
+```
+The three force walls push forward to the right together in one slow wave, lifting dust.
+```
+
+**③ TRIPLE SHOT · Sylvan Ranger**
+
+```
+The three bolts of light fan out to the right in one slow volley, trailing mist.
+```
+
+**Vì sao ba câu này đều có `once` / `together` / `one` và đều có `slowly` / `slow`:** đó là hai
+ràng buộc duy nhất mà mốc 16 khung bắt buộc phải nói ra (bẫy "bịa thêm một nhịp" ở trên). Mọi
+chữ khác đã nằm trong ảnh rồi.
+
+**Và cả ba đều nói hướng `to the right`** vì gói atlas được vẽ theo một hướng rồi game tự xoay —
+`CHIEU_TRANH` khai `xoay:true`, `spawnAtlasVfx` quay quanh chính điểm neo (xem `tests/test_xoayvfx.js`).
+⚠ Gen mỗi chiêu một hướng khác nhau là vứt đi cái đó: neo đo được một kiểu, hình quay một kiểu.
+
+#### Bước 5 — gói về thì làm gì
+
+Không đổi so với §0.9: `tools/vfx_meowa.py` nhận gói, cắt ô, **đo** `anchorX`/`anchorY`/`neoR`
+rồi in ra dòng dán thẳng vào `VFX_ATLAS_DEFS`. Với 16 khung thì dòng ấy ra dạng
+`cols:8, rows:2, frames:16` — trùng khuôn `fire_pillar`.
+
+⚠ **`neoR` là TẦM VỚI TÍNH TỪ NEO, không phải nửa ô.** Đã trả giá một lần: khai nhầm thành nửa ô
+thì chiêu đặc tả 125 px vẽ ra **211 px**. Công thức đúng nằm sẵn trong công cụ, đừng chép tay.
+
+⚠ **`cong:false` cho mọi gói này.** Art của ta sáng và có viền chàm đậm; cộng sáng (`lighter`) là
+cháy trắng mất viền. Cộng sáng chỉ dành cho gói **tối hơn nền** — xem mục art tối trong `CLAUDE.md`.
 
 ---
 
