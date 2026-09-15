@@ -1589,8 +1589,12 @@ function veVongKiem(g, e, nua){
 // Gom thông tin vẽ vũ khí MỘT LẦN lúc tung chiêu, không phải mỗi khung.
 // Chỉ vẽ được cây nào CÓ TRANH trong VK_ANH. Dòng chưa có tranh thì vòng kiếm quay không —
 // vẫn là một vòng lửa đầy đủ, chỉ thiếu mấy lưỡi kiếm bay quanh.
-function vongKiemVuKhi(){
-  const it = player.equip && player.equip.vukhi;
+// ⚠ `p` mặc định là người chơi này. Thiếu tham số ấy thì vòng kiếm của NGƯỜI KHÁC vẽ bằng
+// vũ khí CỦA MÌNH — đôi cánh sai lớp ở `wingDef` là đúng họ lỗi đó, và nó không ném lỗi nào:
+// hình vẫn vẽ ra, chỉ là vẽ nhầm người.
+function vongKiemVuKhi(p){
+  const _p = p || player;
+  const it = _p.equip && _p.equip.vukhi;
   const d = it && itemDef(it);
   const A = d && vkAnh(d);
   if (!A) return null;
@@ -4742,16 +4746,33 @@ function diemGiang(tam){
 // Là hàm chứ không phải hằng vì HERO_H/HERO_GOT khai ở dưới xa — hằng ở đây sẽ đọc trúng vùng
 // chết của `const` ngay lúc nạp trang.
 function chanDy(){ return (HERO_GOT - HERO_H / 2) * (NV_CAO / HERO_H) - NV_LECH_Y; }
-function spawnSkillVfx(id, v, phase, ang, R, x0, y0){
+/* ⚠ `nguoi` LÀ THAM SỐ CUỐI VÀ MẶC ĐỊNH LÀ NGƯỜI CHƠI NÀY — mọi lời gọi 7 tham số cũ chạy y
+ * nguyên (cùng quy ước đã dùng cho `heroPose(..., sway, swayDir)`).
+ *
+ * ⚠⚠ VÀ ĐÂY LÀ CỬA DUY NHẤT GỬI VFX CHIÊU SANG NGƯỜI KHÁC. Có CHÍN chỗ gọi hàm này; móc tay
+ * từng chỗ là chỗ thứ mười thêm sau sẽ lặng lẽ không đồng bộ — đúng cái bẫy đã ghi cho
+ * `dailyTrack()` và `mobDoBuoc()`. Gửi từ BÊN TRONG thì chiêu mới thêm tự có mặt.
+ *
+ * ⚠ VFX KHÔNG BAO GIỜ GÂY SÁT THƯƠNG, và đó là thứ làm đồng bộ này an toàn. Vòng cập nhật
+ * `effects` chỉ cộng `e.t`, dời hạt và quay — không một lời gọi `hurtMob` nào. Sát thương nằm
+ * ở `castVohoc`/`castSkill`, tách hẳn. Nên vẽ chiêu của người khác lên máy mình là vẽ, không
+ * phải đánh. Đừng "tiện tay" nối sát thương vào đây: PvP cố ý mới chỉ có đòn thường. */
+function spawnSkillVfx(id, v, phase, ang, R, x0, y0, nguoi){
+  const _p = nguoi || player;
+  if (!_p) return;
+  // Người chơi NÀY niệm ⇒ bắn sang những người cùng bản đồ. `nguoi` có giá trị nghĩa là đang
+  // dựng lại chiêu của người khác — không gửi tiếp, nếu không là một vòng dội vô tận.
+  if (!nguoi && typeof window.netChieuGui === 'function')
+    window.netChieuGui(id, v && v.color, v && v.glyph, phase, ang, R, x0, y0);
   // Chiêu đã có tranh thì DỪNG Ở ĐÂY. Hình vector chung bên dưới sẽ chồng thêm một vòng sáng
   // nữa lên đúng chỗ tranh đang toả ra, thành hai lớp lệch nhau — một lớp vẽ tay, một lớp hình
   // học. Đó chính là thứ phải bỏ, không phải thứ để làm nền dự phòng.
   const _tr = CHIEU_TRANH[id];
   if (_tr){
     if (_tr.ve === 'vongKiem')
-      addEffect({ type:'vongKiem', x:player.x, y:player.y, dur:1.0, scale:1, wpn: vongKiemVuKhi() });
+      addEffect({ type:'vongKiem', x:_p.x, y:_p.y, dur:1.0, scale:1, wpn: vongKiemVuKhi(_p) });
     else {
-      const _cx = x0 == null ? player.x : x0, _cy = (y0 == null ? player.y : y0) + chanDy();
+      const _cx = x0 == null ? _p.x : x0, _cy = (y0 == null ? _p.y : y0) + chanDy();
       // ⚠ Góc lấy từ tham số `ang` của chính lời gọi, KHÔNG đọc thẳng `player.face`. Hai thứ đó
       // thường bằng nhau nhưng không phải luôn: nhánh `proj` đặt `player.face = ang` TRƯỚC khi
       // gọi, còn nhánh Trấn Phái thì chỉ đổi face khi điểm giáng lệch chỗ đứng. Đọc `player.face`
@@ -4769,18 +4790,18 @@ function spawnSkillVfx(id, v, phase, ang, R, x0, y0){
   // trước khi nổ. Chiêu nào có hoạt ảnh nhiều nhịp thì khai `dur` riêng trong bảng VFX.
   const _d = (t) => (c && c.dur) || t;
   if (phase === 'cone'){
-    addEffect({ type:'vfx', style, x:player.x, y:player.y, face:ang, r:R, c1:col, c2, glyph, dur:_d(0.55), spin:(c && c.spin) || 0 });
-    for (let i = 0; i < 5; i++) addEffect({ type:'ink', x:player.x + Math.cos(ang)*rnd(30,90), y:player.y + Math.sin(ang)*rnd(30,90), vx:rnd(-30,30), vy:rnd(-60,-10), color:c2 });
+    addEffect({ type:'vfx', style, x:_p.x, y:_p.y, face:ang, r:R, c1:col, c2, glyph, dur:_d(0.55), spin:(c && c.spin) || 0 });
+    for (let i = 0; i < 5; i++) addEffect({ type:'ink', x:_p.x + Math.cos(ang)*rnd(30,90), y:_p.y + Math.sin(ang)*rnd(30,90), vx:rnd(-30,30), vy:rnd(-60,-10), color:c2 });
   } else if (phase === 'cast'){
-    addEffect({ type:'vfx', style, x:player.x, y:player.y, face:ang, r:R, c1:col, c2, glyph, dur:_d(0.4) });
+    addEffect({ type:'vfx', style, x:_p.x, y:_p.y, face:ang, r:R, c1:col, c2, glyph, dur:_d(0.4) });
   } else if (phase === 'aoe'){
-    addEffect({ type:'vfx', style, x:player.x, y:player.y, face:ang, r:R, c1:col, c2, glyph, dur:_d(0.7), big:true, spin:(c && c.spin) || 0 });
-    addEffect({ type:'vfx', style:'shock', x:player.x, y:player.y, face:0, r:R, c1:col, c2, glyph, dur:0.5 });
+    addEffect({ type:'vfx', style, x:_p.x, y:_p.y, face:ang, r:R, c1:col, c2, glyph, dur:_d(0.7), big:true, spin:(c && c.spin) || 0 });
+    addEffect({ type:'vfx', style:'shock', x:_p.x, y:_p.y, face:0, r:R, c1:col, c2, glyph, dur:0.5 });
   } else if (phase === 'dash'){
-    addEffect({ type:'vfx', style, x:player.x, y:player.y, face:ang, r:R, c1:col, c2, glyph, dur:_d(0.6), x0, y0 });
-    addEffect({ type:'vfx', style:'shock', x:player.x, y:player.y, face:0, r:80, c1:col, c2, glyph, dur:0.45 });
+    addEffect({ type:'vfx', style, x:_p.x, y:_p.y, face:ang, r:R, c1:col, c2, glyph, dur:_d(0.6), x0, y0 });
+    addEffect({ type:'vfx', style:'shock', x:_p.x, y:_p.y, face:0, r:80, c1:col, c2, glyph, dur:0.45 });
   } else if (phase === 'buff'){
-    addEffect({ type:'vfx', style, x:player.x, y:player.y, face:0, r:R, c1:col, c2, glyph, dur:_d(1.0), big:true, spin:(c && c.spin) || 0 });
+    addEffect({ type:'vfx', style, x:_p.x, y:_p.y, face:0, r:R, c1:col, c2, glyph, dur:_d(1.0), big:true, spin:(c && c.spin) || 0 });
   }
 }
 
@@ -17162,6 +17183,47 @@ function veNhanNet(np){
   ctx.fillText(np.name || '?', x, y);
   ctx.restore();
 }
+
+/* ═══ ✦ VFX CHIÊU CỦA NGƯỜI BÊN KIA ═══════════════════════════════════════════════════════
+ * Trước bản này `castT` đã đồng bộ nên người bên kia thấy TƯ THẾ niệm — giơ trượng, xoay người —
+ * mà không thấy một tia lửa nào. Đứng cạnh một Dark Wizard đang thả Meteorite thì trên màn chỉ
+ * có một người vung tay trong khoảng không.
+ *
+ * ⚠ ĐÂY LÀ HÌNH, KHÔNG PHẢI ĐÒN. Vòng cập nhật `effects` chỉ cộng `e.t`, dời hạt và quay — không
+ * một lời gọi `hurtMob` nào (đã đếm: 22 chỗ gọi `hurtMob`, không chỗ nào trong vòng ấy). Nên
+ * chiêu của người khác nổ trên máy mình thì quái của mình KHÔNG mất máu, và người mình đang đấu
+ * cũng không. Đó là chủ ý: sát thương PvP cố ý mới chỉ có đòn thường.
+ *
+ * ⚠ GỬI TỪ TRONG `spawnSkillVfx`, ĐỪNG MÓC TỪNG CHỖ GỌI. Có chín chỗ gọi nó; móc tay từng chỗ
+ * là chỗ thứ mười thêm sau sẽ lặng lẽ không đồng bộ, và kiểu thiếu đó không ném lỗi.             */
+
+// Bắn một chiêu vừa niệm sang những người cùng bản đồ. Gọi từ `spawnSkillVfx` — đừng gọi thẳng.
+window.netChieuGui = function(id, mau, gly, phase, ang, R, x0, y0){
+  if (typeof window.netChieu !== 'function') return false;   // chưa nối mạng
+  return window.netChieu({
+    id: String(id || ''), mau: mau || '', gly: gly || '', ph: String(phase || ''),
+    ang: +(ang || 0).toFixed(2), R: Math.round(R || 0),
+    // ⚠ `x0/y0` là TOẠ ĐỘ THẾ GIỚI TUYỆT ĐỐI (điểm ngắm của chiêu giáng), không phải độ lệch so
+    // với người niệm — `diemGiang()` trả toạ độ tuyệt đối. Quy nó về tương đối rồi cộng lại ở
+    // bên kia là thêm một phép biến hình để sai, mà cả hai bên vốn đã dùng chung một hệ toạ độ.
+    x0: x0 == null ? null : Math.round(x0), y0: y0 == null ? null : Math.round(y0),
+  });
+};
+
+// Máy chủ báo có người niệm chiêu. `d` là gói trên, kèm `tu` = id người niệm.
+window.netChieuNhan = function(d){
+  if (!d || !player) return;
+  // ⚠ DỰNG LẠI BẰNG CHÍNH `spawnSkillVfx`, và truyền THÂN NGƯỜI TỪ XA vào tham số cuối. Viết
+  // một đường vẽ thứ hai "cho gọn" là chiêu mới thêm sẽ hiện trên mình mà không hiện trên họ —
+  // đúng lý do mà trang bị cũng dựng lại một `equip` giả thay vì tự vẽ lấy.
+  const np = window.NETPLAYERS.find(n => n._netId === d.tu);
+  if (!np || np.map !== curMap) return;
+  try {
+    spawnSkillVfx(d.id, { color: d.mau || undefined, glyph: d.gly || undefined },
+                  d.ph, d.ang || 0, d.R || 0,
+                  d.x0 == null ? undefined : d.x0, d.y0 == null ? undefined : d.y0, np);
+  } catch (e) { console.error('[net] vfx chiêu', e); }
+};
 
 /* ═══ ⚔ SÀN ĐẤU — ĐẤU TAY ĐÔI (Giai đoạn 2b online) ══════════════════════════════════════
  * Chủ dự án chốt: *"Dựng 1 map pvp và làm thử xem. Chỉ cần 2 người đánh nhau là được."*

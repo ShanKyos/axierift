@@ -1796,10 +1796,21 @@ window.MAPS = {
   // là nhìn thấy nhau ngay, không phải đi tìm. Sàn là một đa giác 16 đỉnh xấp xỉ hình bầu dục
   // nên không có góc chết để đứng nấp.
   pvp: { name:'Sàn Đấu Ardhaven', min:1, range:'—', type:'freepk', pvp:true,
-    w:1800, h:1400, ground:'#2a2119', patch:'#7a6a4a',
-    sanIso:true, isoCo:['nen_da1','nen_da2','nen_da3','nen_da4'],
-    isoDat:['nen_soi1','nen_soi2','nen_soi3','nen_soi4'],
-    isoVet:['vet_soi1','vet_soi2'],
+    // Hai màu rìa đi theo bộ viên MỚI (đá phiến lạnh), không còn là nâu ấm mượn của phố Ardhaven.
+    w:1800, h:1400, ground:'#1c2026', patch:'#7e8184',
+    // ⚠ BỘ VIÊN RIÊNG, nướng bằng `tools/iso/nuong_sandau.py`. Trước đây map này mượn `nen_da`
+    // + `nen_soi` của Ardhaven nên đứng trong sàn đấu nhìn ra y hệt một góc phố — mà cả cái map
+    // sinh ra để đọc thành MỘT NƠI KHÁC. Đo được sau khi đổi: lệch sáng 49,9 và lệch màu 83,3
+    // so với `nen_da`, tông đảo hẳn từ ấm (B−R −48) sang lạnh (B−R +20).
+    //
+    // ⚠ `isoDat` ở đây SÁNG HƠN `isoCo`, ngược mọi map khác. Ở map hoang dã lối mòn sẫm hơn vì
+    // đất lộ ra dưới cỏ; ở đây là đá bị đế giày mài nhẵn suốt bảy trăm buổi sáng nên nó BÓNG
+    // lên. Đảo chiều ấy là thứ làm vòng giữa sàn đọc ra một VÒNG MÀI chứ không ra một vũng bùn.
+    // Khoảng cách sáng nền↔mài đo được 39,6 — rộng hơn Ardhaven (28,8) vì nền sàn đấu sẫm, mà
+    // trên nền sẫm mắt phân biệt kém hơn hẳn (bài học Bird Tribe Heights, đảo đầu).
+    sanIso:true, isoCo:['nen_sanda1','nen_sanda2','nen_sanda3','nen_sanda4'],
+    isoDat:['nen_sanmai1','nen_sanmai2','nen_sanmai3','nen_sanmai4'],
+    isoVet:['vet_sanmai1','vet_sanmai2'],
     // ⚠ `isoNho` KHÔNG ĐƯỢC ĐỂ 0, và `tests/test_isoneo.js §3` bắt đúng chỗ đó — bản đầu của
     // tôi để `isoNho:0` rồi bài đỏ ngay: *"map lát viên mà trơ mặt đất"*. Bài ấy có lý: một mặt
     // phẳng không mốc nào thì mắt không bám được, đọc ra khoảng không chứ không ra một cái sân
@@ -1811,7 +1822,13 @@ window.MAPS = {
     // ở dưới sinh ra để KHÔNG có góc chết. Đá vụn cho mắt cái mốc cần thiết mà không cho ai
     // chỗ nấp. (`raiIso` đẩy `type:'iso'` nên không sinh vật cản; vật cản chỉ tới từ `isoCum`,
     // mà map này không khai.)
-    isoCay:0, isoNho:70, isoNhoBo:['da1','da1','da2','da2','da3'],
+    // ⚠ MẢNH SỨT RIÊNG, KHÔNG PHẢI `da1-3` SẴN CÓ — và chỉ ẢNH CHỤP mới nói ra được điều đó.
+    // Lượt đầu tôi rải 70 hòn `da1-3` cho đủ ngưỡng của `test_isoneo`. Số thì đạt, mà chụp ra
+    // thì mặt sàn đọc thành một BÃI ĐÁ VỤN BỎ HOANG: đá sẵn có vừa to vừa trùng tông với vòng
+    // mài nên nó là thứ mắt bắt trước tiên, trong khi map kể chuyện một sân còn được quét dọn.
+    // `nho_san*` nhỏ hơn hẳn và SẪM hơn nền ⇒ đọc ra vết sứt trên đá phiến, và làm luôn cái mốc
+    // tương phản sẫm mà bài học Bird Tribe Heights đòi. Hạ 70 → 46 cho thưa bớt.
+    isoCay:0, isoNho:46, isoNhoBo:['nho_san1','nho_san1','nho_san2','nho_san3'],
     trees:0, rocks:0, herbs:false,
     desc:'Bảy người lính Vaeldra qua Nhát Gọi mang theo một cái lò và một thói quen: sáng nào cũng có hai người xuống sân mà thử nhau. Sân ấy còn đây. Không có gì để đào, không có gì để giết — chỉ có người đứng đối diện.',
     spawn:{ x:900, y:1140 }, spawnFrom:{ ardhaven:{ x:900, y:1140 } },

@@ -21,7 +21,12 @@ RA = sys.argv[1] if len(sys.argv) > 1 else 'public/game/assets/iso'
 # Nạp nuong_tile mà KHÔNG chạy main() của nó — dùng lại nguyên hình học, ánh sáng và bộ tự kiểm.
 _src = open(os.path.join(os.path.dirname(os.path.abspath(__file__)), 'nuong_tile.py'),
             encoding='utf-8').read().replace("if __name__ == '__main__':", 'if False:')
-NT = {'__name__': 'nuong_tile'}
+NT = {'__name__': 'nuong_tile',
+      # ⚠ PHẢI ĐƯA `__file__` VÀO, nếu không `ghi_neo()` NỔ `NameError` ở dòng cuối — sau khi đã
+      # nướng xong hết. Tức ảnh ra đủ, mà BẢNG NEO thì không được ghi: đúng cái dạng hỏng đã
+      # xoá sạch cây của sáu map một lần rồi (xem CLAUDE.md, mục ISO_NEO). Ở đây nó còn kín hơn
+      # vì lỗi nằm ở dòng CUỐI, nên mọi dòng "NUONG XONG" phía trên đều đã in ra.
+      '__file__': os.path.join(os.path.dirname(os.path.abspath(__file__)), 'nuong_tile.py')}
 sys.argv = [sys.argv[0], RA]
 exec(compile(_src, 'nuong_tile.py', 'exec'), NT)
 nuong_nen, nuong_vet, nuong_vat = NT['nuong_nen'], NT['nuong_vet'], NT['nuong_vat']

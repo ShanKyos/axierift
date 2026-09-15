@@ -70,6 +70,8 @@
       if (tin.t === 'pvp-mau' && typeof window.netPvpMau === 'function') { window.netPvpMau(tin); return; }
       if (tin.t === 'pvp-ket' && typeof window.netPvpKet === 'function') { window.netPvpKet(tin); return; }
       if (tin.t === 'pvp-hoi' && typeof window.netPvpHoi === 'function') { window.netPvpHoi(tin); return; }
+      // ✦ VFX chiêu. Cùng lối chat và sàn đấu: net.js là sợi dây, game.js quyết vẽ gì.
+      if (tin.t === 'chieu' && typeof window.netChieuNhan === 'function') { window.netChieuNhan(tin); return; }
     };
 
     ws.onclose = () => {
@@ -232,6 +234,16 @@
     }
     ws.send(JSON.stringify(goi));
   }
+
+  /* ── Gửi một chiêu vừa niệm ───────────────────────────────────────────────────────────
+   * Trả `false` khi chưa nối. Gói nhỏ và THƯA — chiêu có hồi chiêu nên nó không bao giờ gần
+   * nhịp 10 Hz của `pos`; đừng gộp vào ảnh chụp, đó là một sự kiện chứ không phải trạng thái. */
+  window.netChieu = function (g) {
+    const ws = NET.ws;
+    if (!ws || ws.readyState !== 1 || !g || !g.id) return false;
+    ws.send(JSON.stringify({ t: 'chieu', ...g }));
+    return true;
+  };
 
   /* ── Gửi một cú đánh trong sàn đấu ───────────────────────────────────────────────────
    * Trả `false` khi chưa nối — bên gọi nói ra, đừng nuốt. Máy chủ mới là nơi quyết cú này có
