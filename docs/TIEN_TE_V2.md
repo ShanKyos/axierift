@@ -74,7 +74,10 @@ thứ quyết định.*
 
 ⇒ **Cần chủ dự án quyết:** giữ "tụt 1" (dễ hơn 35% so với trước), hay đưa "về 0" sang `NGOC_EP`
 cho +8/+9 (khó hơn 2,4× so với bây giờ)? **Sửa đúng một dòng**, và bài kiểm đã có chỗ gác sẵn.
-- Hai câu ở §6 vẫn treo: Kế Thừa, và hướng đi của Hồn Thép.
+- ~~Kế Thừa~~ — chủ dự án chốt **gỡ hẳn** (*"Bỏ luôn và remove code phần kế thừa đi"*). Đã làm:
+  công thức · `doKeThua` · `Mảnh Trang Bị` · `Đá Ấn Trụ` · đường rơi · lệnh `/manh` `/tich`.
+  Hoàn `GO_MANH` = 150 · `GO_TICHMA` = 1.500. Chi tiết ở CLAUDE.md mục "MÓN ĐỒ CHỈ CÓ MỘT TRỤC".
+- Còn treo đúng **một** câu: hướng đi của **Hồn Thép** (§3 — ba đường A/B/C).
 
 ## §0 — Quyết định này vừa gỡ một cái bẫy tôi chưa báo cáo
 

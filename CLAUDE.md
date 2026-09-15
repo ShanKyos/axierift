@@ -1525,6 +1525,38 @@ dù tỉ lệ nhìn thì tệ hơn hẳn. Đo, đừng đoán.*
 **Bài kiểm:** `tests/test_renxit.js` (4 mục — nó **chạy cả hai đường ép ngọc** chứ không đọc con
 số) · `test_chaos` §3d gác chiều ngược lại: `'Rèn Thường'` sống lại là bài đỏ.
 
+### 🗑 MÓN ĐỒ CHỈ CÓ **MỘT** TRỤC — Kế Thừa đã gỡ
+
+Ba hệ từng là **trục thứ hai trên cùng một món đồ**. Cả ba đã gỡ, và cả ba vì cùng một lý do:
+
+| | |
+|---|---|
+| **Tấn Phẩm** (leo phẩm) | gỡ sớm nhất |
+| hệ **Phẩm** | gỡ theo |
+| **Kế Thừa** (leo giai) | gỡ ở đợt tiền tệ |
+
+Lý do, chép nguyên văn từ lần gỡ Tấn Phẩm: *"đó là trục thứ hai song song với +N, cùng ăn một
+túi nguyên liệu, cùng ở Lò Rèn, và người chơi phải học hai bảng giá cho hai thứ nghe na ná nhau.
+**MU chỉ có MỘT trục trên món đồ: +N bằng ngọc.**"* Kế Thừa là **cùng một câu, khác tên**.
+
+⇒ Muốn món đồ mạnh lên thì có đúng **hai** đường: **rèn +N**, hoặc **đi kiếm món giai cao hơn**.
+Giai và Phẩm do thứ **rơi ra** quyết định. **Đừng dựng lại dưới một cái tên thứ tư.**
+
+**Chết theo:** `Mảnh Trang Bị` + `Đá Ấn Trụ` — Kế Thừa là chỗ tiêu **duy nhất** của cả hai
+(`GO_MANH` = 150 · `GO_TICHMA` = 1.500; tỉ giá lấy từ chính tỉ lệ 40 : 4 mà công thức niêm yết,
+và từ đơn vị 150 mà `loadGame` đã dùng cho mọi "mảnh" vụn khác). Lệnh `/manh` `/tich` gỡ theo.
+
+**⚠ Hai con số CHẾT mà Kế Thừa mang theo tới lúc bị gỡ** — ghi lại phòng khi ai đọc git log rồi
+tưởng nó từng chạy đúng:
+- trần là `it.tier >= 10` trong khi `GIAI_MAX = 7` ⇒ nâng được lên **giai 8-9**, mà `giaiName`
+  kẹp về "Khai Thiên" và `GIAI_POW` kẹp sức mạnh về giai 7: **trả tiền mà không nhận gì**, không
+  một dòng báo
+- cấp yêu cầu tính `(tier-1)*10 + 10` trong khi `GIAI_SPAN = 16` (giai 7 phải là cấp 112, nó ghi 70)
+
+Cả hai là di sản thời game còn **10 giai**, và **không bài kiểm nào gác**. Đó là lý do mục này
+tồn tại: một hệ bị bỏ quên vẫn chạy, vẫn ăn nguyên liệu, và vẫn nói dối trên bảng chỉ số.
+`test_chaos` §3f nay gác chiều ngược lại — công thức, hàm, và hai ô đếm đều phải **biến mất**.
+
 ### Cánh — 3 bậc × 6 lớp, khoá theo lớp
 
 `WING_BANG = [WING_DEFS, WING2_DEFS, WING3_DEFS]`, tra theo `player.sect`. Bậc đọc từ
