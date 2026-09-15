@@ -449,7 +449,7 @@ window.BOSS_DEFS = {
       { id:'co1', name:'Rễ Cổ Thức Giấc',    lv:6,  el:'Mộc',  img:'mocnhan', x:0.1231, y:0.8842, moves:['vong','vach','cuong'] },
       { id:'co2', name:'Kẻ Canh Vòng Cổng',  lv:9,  el:'Thổ',  img:'thinu',   x:0.4923, y:0.5053, moves:['vach','xung','goi'] },
       { id:'co3', name:'Axie Sa Ngã Đầu Đàn',lv:12, el:'Thủy', img:'bandao',  x:0.7538, y:0.1263, moves:['xung','vong','cuong'] } ],
-    tranai: { id:'co4', name:'Người Giữ Rẻo Corran', lv:14, el:'Mộc', img:'boss_mochu', x:0.7538, y:0.8842, moves:['vong','vach','goi','cuong'] } },
+    tranai: { id:'co4', name:'Người Giữ Rẻo Corran', lv:14, el:'Mộc', img:'boss_mochu', anh:'tq_corran', x:0.7538, y:0.8842, moves:['vong','vach','goi','cuong'] } },
   // Trum Trung Nut dat GIUA trung, khong dat canh cong: bo sinh tu kiem >=700px tinh tu moi
   // diem toi (test_bossplace). Luot dau hai trum roi cach cong 466px va 401px -- bo kiem bat.
   trungnut: { thuve:[

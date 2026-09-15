@@ -1206,6 +1206,118 @@ function mapBgDon(k){
 // `im.src = '' ` KHÔNG phải là "không nạp gì": trình duyệt coi chuỗi rỗng là đường dẫn tương đối
 // và đi tải lại chính trang hiện tại. Quái dựng bằng khớp xương thì không có ảnh — bỏ hẳn.
 for (const k in MOBS){ if (!MOBS[k].img) continue; const im = new Image(); im.src = MOBS[k].img; MOB_IMGS[k] = im; }
+
+// ═══════════ BẢNG KHUNG HÌNH QUÁI & TRÙM ═══════════
+// Mặc định mỗi loài là MỘT tấm tĩnh: cả chuyển động lẫn cú đánh hiện ra bằng nhịp nhấp nhô
+// `bob` và một vòng cung màu nguyên tố. Khai một khoá ở bảng dưới là loài đó có hoạt ảnh thật;
+// không khai thì vẽ y hệt như trước, không lệch một pixel. Máy chạy theo dữ liệu — art về chỉ
+// cần thêm một dòng, không sửa hàm nào.
+//
+// ⚠ KHOÁ LÀ **TÊN TỆP** TRONG assets/mobs/, KHÔNG PHẢI KHOÁ MOB. Cố ý: `assassin.png` đang phục
+// vụ 3 loài và `duhiep.png` phục vụ 3 loài nữa, nên nướng một bảng khung là cả ba cùng có hoạt
+// ảnh. Khoá theo mob thì phải chép cùng một dòng ba lần rồi quên đồng bộ.
+//
+// Tấm khung hình nằm ở `assets/mobs/kh/<tên>.png`, TÁCH khỏi tấm tĩnh `assets/mobs/<tên>.png`.
+// Tách hai chỗ để tấm tĩnh còn nguyên làm lối lùi: bảng khung tải hỏng hay chưa tải xong thì
+// quái vẫn hiện, chỉ là chưa cử động.
+//
+// `nhip` — các đoạn trong cùng một tấm, mỗi đoạn `[khung đầu, số khung, fps]`:
+//   dung  đứng thở   ·  di  di chuyển  ·  danh  ra đòn  ·  chet  gục
+// Chỉ `dung` là bắt buộc; nhịp nào thiếu thì rơi về `dung`.
+//
+// `neoY` — BÀN CHÂN nằm ở đâu trong ô, theo tỉ lệ chiều cao ô (0 = mép trên, 1 = mép dưới).
+// Không khai thì lấy 0.94. Đây là thứ giữ con quái đứng trên đất thay vì lún hoặc lơ lửng, và
+// nó phải do người NƯỚNG tấm đo ra chứ không phải người viết bảng đoán.
+//
+// `sai` — quãng đường (px thế giới) cho TRỌN một vòng nhịp `di`. Không khai thì lấy bề rộng vẽ
+// ra × 1,15.
+//
+// Khuôn một mục — bỏ dấu chú thích là chạy:
+//   'boar': { cot:6, hang:4, oRong:256, oCao:256, neoY:0.94, sai:74,
+//             nhip:{ dung:[0,6,8], di:[6,6,12], danh:[12,6,16], chet:[18,6,10] } },
+const MOB_KHUNG = {
+  // Người Giữ Rẻo Corran — Tướng Quân đầu game. Gói Meowa xuất kiểu Godot 4 (8 khung 640px,
+  // một nhịp lơ lửng), thu về ô 256 vì trùm chỉ vẽ ra 132px trên màn.
+  // ⚠ `neoY` ĐO Ở ĐẾ GIÀY (hàng 549/640), KHÔNG ở đáy ảnh: art có vệt khói kéo xuống dưới
+  // chân, neo theo đáy là con ma treo lơ lửng cao hơn mặt đất 14% chiều cao ô.
+  // fps 10 = đúng nhịp gói gốc khai (Godot: speed 8,0 × duration 0,8 ⇒ 0,1 s mỗi khung).
+  'tq_corran': { cot:8, hang:1, oRong:256, oCao:256, neoY:0.8578,
+                 nhip:{ dung:[0,8,10] } },
+};
+const MOB_KH_IMGS = {};
+function mobKhAnh(ten){
+  let im = MOB_KH_IMGS[ten];
+  if (!im){ im = new Image(); im.src = 'assets/mobs/kh/' + ten + '.png'; MOB_KH_IMGS[ten] = im; }
+  return (im.complete && im.naturalWidth) ? im : null;
+}
+// Tên tệp art của một con quái — cũng là khoá tra MOB_KHUNG.
+// `anh` là art RIÊNG của chính con đó và THẮNG cả khung xương (xem drawMob); không có `anh` thì
+// suy từ đường dẫn `img`. Nhớ lại theo đường dẫn chứ không gắn vào `def`: `def` của quái thường
+// là chính đối tượng trong MOBS, mà MOBS thì tuyệt đối không được mutate (Xâm Lăng Vàng clone
+// def trước khi sửa cũng vì lý do đó).
+const _mobTenAnh = {};
+function mobTenAnh(d){
+  if (!d) return null;
+  if (d.anh) return d.anh;
+  if (!d.img) return null;
+  return _mobTenAnh[d.img] || (_mobTenAnh[d.img] = d.img.replace(/^.*\//, '').replace(/\.[a-z0-9]+$/i, ''));
+}
+// Tấm TĨNH tra theo tên tệp — lối vào cho art riêng của trùm (`anh`). MOB_IMGS tra theo khoá
+// mob nên không dùng lại được: hai con trùm khác nhau có thể cùng mượn một tấm.
+// ⚠ Khai bảng TRƯỚC hàm: `const` có vùng chết, và tệp này đã một lần trắng trang vì đúng lỗi đó.
+const MOB_ANH_TEN = {};
+function mobAnhTen(ten){
+  let im = MOB_ANH_TEN[ten];
+  if (!im){ im = new Image(); im.src = 'assets/mobs/' + ten + '.png'; MOB_ANH_TEN[ten] = im; }
+  return (im.complete && im.naturalWidth) ? im : null;
+}
+// ĐI HAY ĐỨNG: đo từ chuyển động THẬT, không đọc một lá cờ do AI đặt.
+// Quái tự dời chỗ ở NĂM chỗ khác nhau trong update() (chạy trốn, đuổi, lảng vảng, kéo về lãnh
+// địa, đòn lao tới). Đặt cờ ở từng chỗ thì chỗ thứ sáu thêm sau sẽ lặng lẽ không có hoạt ảnh —
+// và cái hỏng đó nhìn ra là "hình như con này hơi đơ", rất khó lần. Đo thì không bao giờ lệch.
+//
+// ⚠ Nhịp bước tính theo QUÃNG ĐƯỜNG ĐÃ ĐI, không theo thời gian. Chia theo thời gian là bàn
+// chân trượt đất — đúng bài học đã trả giá ở sải chân nhân vật (SAI_CHAN), và ở quái thì còn
+// dễ dính hơn vì `slowT` đổi tốc độ giữa chừng.
+function mobDoBuoc(m, now){
+  const t0 = m._buocT || 0, dt = Math.min(0.12, (now - t0) / 1000);
+  if (t0 && dt > 0){
+    const dd = Math.hypot(m.x - m._buocX, m.y - m._buocY);
+    m.mvPh = (m.mvPh || 0) + dd;
+    const k = Math.min(1, (dd / dt) / Math.max(20, (m.def.speed || 60) * 0.5));
+    m.mvK = (m.mvK || 0) + (k - (m.mvK || 0)) * Math.min(1, dt * 12);
+  }
+  m._buocT = now; m._buocX = m.x; m._buocY = m.y;
+}
+// Nhịp nào đang chạy. Thứ tự ưu tiên là thứ tự người chơi CẦN đọc ra trước: gục > ra đòn > đi.
+function mobNhip(m){
+  if (m.dead) return 'chet';
+  if ((m.lungeT || 0) > 0) return 'danh';
+  return (m.mvK || 0) > 0.3 ? 'di' : 'dung';
+}
+// Ô khung đang phải vẽ. Trả null khi loài này chưa có bảng khung hoặc tấm chưa tải xong —
+// người gọi vẽ tấm tĩnh như cũ.
+//
+// Ba nhịp KHÔNG chạy tự do theo đồng hồ, vì cả ba đều phải khớp với một thứ có thật trong máy:
+//   danh — chạy theo `lungeT`, nên lưỡi vung đúng lúc sát thương rơi;
+//   chet — chạy theo `deadT` và DỪNG ở khung cuối, không lặp lại cú gục;
+//   di   — chạy theo quãng đường, nên chân không trượt.
+// Chỉ `dung` chạy theo đồng hồ, vì nó không khớp với gì cả.
+function mobKhungO(ten, m, now){
+  const K = ten && MOB_KHUNG[ten]; if (!K) return null;
+  const im = mobKhAnh(ten); if (!im) return null;
+  const nh = mobNhip(m);
+  const n = K.nhip[nh] || K.nhip.dung; if (!n) return null;
+  const [dau, so, fps] = n;
+  let i;
+  if (nh === 'danh')      i = Math.min(so - 1, Math.floor((1 - (m.lungeT || 0) / 0.22) * so));
+  else if (nh === 'chet') i = Math.min(so - 1, Math.floor((1 - Math.max(0, (m.deadT || 0)) / 0.45) * so));
+  else if (nh === 'di')   i = Math.floor((m.mvPh || 0) / (K.sai || Math.max(24, m.def.size * 3.3 * 1.15)) * so) % so;
+  else                    i = Math.floor(now / 1000 * fps + (m.wob || 0)) % so;
+  const k = dau + Math.max(0, i), cot = K.cot || 1;
+  return { im, sx: (k % cot) * K.oRong, sy: Math.floor(k / cot) * K.oCao,
+           sw: K.oRong, sh: K.oCao, neoY: K.neoY == null ? 0.94 : K.neoY };
+}
 // Sourced status-effect overlay clips (axieinfinity/axie-origins-asset-kit web-vfx) — generic (not
 // per-class), played once at the moment a status effect actually lands (see playStatusFx below).
 // Grid metadata copied from each clip's clip.json (cols/rows/frameW/frameH/frames/fps/anchor).
@@ -9089,6 +9201,11 @@ function spawnZoneBoss(bd, kind){
   // (file PNG của nhóm này đã xoá; không kế thừa thì boss rơi về hình mực dự phòng)
   const _src = MOBS[bd.img];
   if (_src && _src.skel){ def.skel = _src.skel; def.skelPal = _src.skelPal; def.img = ''; }
+  // `anh` — TRANH CỦA CHÍNH CON TRÙM NÀY, và nó thắng tất cả. Phải đứng SAU khối kế thừa ở
+  // trên, nếu không dòng `def.img = ''` sẽ xoá luôn thứ vừa khai.
+  // Trước khoá này, 40 con trùm chia nhau 23 tạo hình và `mocnhan` một mình gánh 5 con.
+  // Khai `anh:'<tên tệp>'` trong BOSS_DEFS là con đó tách ra khỏi đàn — không đụng dòng máy nào.
+  if (bd.anh){ def.anh = bd.anh; def.skel = null; def.skelPal = null; def.img = ''; }
   // role:'can' cho có, không phải để dùng: boss vùng dựng thẳng ở đây chứ không qua spawnMob nên
   // trước giờ `m.role` là undefined. Không ai đọc nên không vỡ, nhưng đếm vai trò trong một map
   // thì hiện ra một khoá "undefined" — số liệu bẩn là số liệu không tin được.
@@ -12517,11 +12634,16 @@ function render(){
       case 'iso': veVatIso(e.d); break;
       case 'mob': drawMob(e.m); break;
       case 'deadmob': {
+        // Xác quái KHÔNG đi qua drawMob — nó có nhánh vẽ riêng ở đây. Nên nhịp `chet` cũng
+        // phải cắm vào đây; cắm vào drawMob là con quái gục xong mới biến mất mà không ai
+        // thấy cú gục. Loài chưa có nhịp `chet` thì vẫn tan thành vệt mực như cũ.
         const m = e.m, k = Math.max(0, m.deadT/0.45);
-        ctx.save(); ctx.globalAlpha = k*0.45;
-        ctx.fillStyle = '#241f18';
-        ctx.beginPath(); ctx.ellipse(m.x, m.y+4, m.def.size*(1+(1-k)*0.8), m.def.size*0.5*(1+(1-k)*0.4), 0, 0, 7); ctx.fill();
-        ctx.restore();
+        if (!veXacKhung(m, k)){
+          ctx.save(); ctx.globalAlpha = k*0.45;
+          ctx.fillStyle = '#241f18';
+          ctx.beginPath(); ctx.ellipse(m.x, m.y+4, m.def.size*(1+(1-k)*0.8), m.def.size*0.5*(1+(1-k)*0.4), 0, 0, 7); ctx.fill();
+          ctx.restore();
+        }
         break;
       }
       case 'netplayer': drawPlayer(e.np); veNhanNet(e.np); break;
@@ -13294,6 +13416,22 @@ function drawMobFigure(m, d, dx, dy, now, g){
   return true;
 }
 
+// Cú gục, khi loài đó có nhịp `chet` trong bảng khung. Trả false để người gọi vẽ vệt mực cũ.
+// Mờ dần theo `deadT` y như vệt mực, nhưng nhạt hơn nhiều: xác có hình thì không cần mờ tới
+// 45% mới đọc ra là đã chết, mà mờ sớm quá thì mất luôn cú gục vừa vẽ.
+function veXacKhung(m, k){
+  const o = mobKhungO(mobTenAnh(m.def), m, performance.now());
+  if (!o || !MOB_KHUNG[mobTenAnh(m.def)].nhip.chet) return false;
+  const d = m.def;
+  const mw = d.size * (d.boss ? 4.4 : 3.3), mh = mw * (o.sh / o.sw);
+  ctx.save();
+  ctx.globalAlpha = Math.min(1, 0.25 + k * 0.75);
+  ctx.translate(m.x, m.y - (o.neoY - 0.5) * mh);
+  if (Math.cos(m.face || 0) < 0) ctx.scale(-1, 1);
+  ctx.drawImage(o.im, o.sx, o.sy, o.sw, o.sh, -mw/2, -mh/2, mw, mh);
+  ctx.restore();
+  return true;
+}
 function drawMob(m){
   const d = m.def;
   const bob = Math.sin(m.wob)*2;
@@ -13349,24 +13487,43 @@ function drawMob(m){
     ctx.strokeStyle = 'rgba(192,127,224,.7)'; ctx.lineWidth = 2.5;
     ctx.beginPath(); ctx.arc(dx, dy-6+bob*0.4, d.size+8, 0, 7); ctx.stroke();
   }
-  // body — sprite art with ink-blob fallback
+  // ── THÂN ──────────────────────────────────────────────────────────────────────────────
+  // Thứ tự: art RIÊNG của chính con này (`anh`, có thể kèm bảng khung) > khung xương > sprite
+  // mượn > vệt mực. `anh` đứng TRƯỚC `skel` là chủ ý: một con trùm có tranh của riêng nó thì
+  // không bao giờ được rơi về hình dựng bằng đường, kể cả khi def của nó kế thừa `skel` từ con
+  // quái mà nó mượn chỉ số.
+  //
+  // ⚠ Năm loài đang khai CẢ `skel` LẪN `img` (trannhan · chimera_bo · kybinh · kylan ·
+  // boss_sontac) và đang hiện ra bằng khung xương. Đừng "dọn dẹp" bằng cách đảo thứ tự
+  // skel/img — làm thế là âm thầm đổi tạo hình của năm loài mà không ai yêu cầu. Muốn con nào
+  // dùng tranh thì khai `anh` cho đúng con đó.
   let topY = dy - d.size;
-  const img = MOB_IMGS[m.type];
-  if (d.skel && drawMobFigure(m, d, dx, dy + bob, performance.now())){
+  const _ten = mobTenAnh(d);
+  mobDoBuoc(m, performance.now());
+  const _o  = mobKhungO(_ten, m, performance.now());   // null = loài này chưa có bảng khung
+  const img = _o ? _o.im : (d.anh ? mobAnhTen(d.anh) : MOB_IMGS[m.type]);
+  if (!d.anh && !_o && d.skel && drawMobFigure(m, d, dx, dy + bob, performance.now())){
     topY = dy + bob - d.size * (d.boss ? 5.0 : 3.6) * 0.94;   // thanh máu nằm trên đỉnh đầu
   } else if (img && img.complete && img.naturalWidth){
+    const sw = _o ? _o.sw : img.naturalWidth, sh = _o ? _o.sh : img.naturalHeight;
     const mw = d.size * (d.boss ? 4.4 : 3.3); // vừa tầm nhìn — không chồng lấn khi đứng cụm
-    const mh = mw * (img.naturalHeight / img.naturalWidth);
-    topY = dy - mh*0.28 - mh/2 + bob;
+    const mh = mw * (sh / sw);
+    // Một biểu thức cho cả hai đường. Tấm tĩnh giữ nguyên quy ước cũ (tâm ảnh cao hơn m.y một
+    // khoảng 0,28 lần chiều cao); tấm khung thì neo BÀN CHÂN đúng vào m.y theo `neoY` đo được
+    // lúc nướng. Gộp lại để đường cũ không lệch một pixel nào, mà đường mới vẫn đứng trên đất.
+    const _cy = dy + bob - (_o ? (_o.neoY - 0.5) * mh : 0.28 * mh);
+    topY = _cy - mh/2;
     const flip = Math.cos(m.face || 0) < 0;
-    ctx.save(); ctx.translate(dx, dy - mh*0.28 + bob);
+    ctx.save(); ctx.translate(dx, _cy);
     if (flip) ctx.scale(-1, 1);
     // Bản nhuộm sẵn có cache thay cho ctx.filter mỗi khung (xem tintedImg). Quái vàng đứng
-    // suốt 12 phút nên chỗ này là chỗ tiết kiệm lớn nhất.
+    // suốt 12 phút nên chỗ này là chỗ tiết kiệm lớn nhất. Nhuộm CẢ TẤM một lần rồi mới cắt ô —
+    // nhuộm từng ô là mỗi nhịp một bản cache mới.
     let _src = img;
     if (m.hitT > 0) _src = tintedImg(img, img.src + '|hit', 'brightness(1.7) saturate(2) hue-rotate(-45deg)');
     else if (d.golden) _src = tintedImg(img, img.src + '|gold', 'sepia(0.85) saturate(2.6) hue-rotate(-14deg) brightness(1.25)');
-    ctx.drawImage(_src, -mw/2, -mh/2, mw, mh);
+    if (_o) ctx.drawImage(_src, _o.sx, _o.sy, sw, sh, -mw/2, -mh/2, mw, mh);
+    else    ctx.drawImage(_src, -mw/2, -mh/2, mw, mh);
     ctx.restore();
   } else {
     ctx.fillStyle = m.hitT > 0 ? '#8a2020' : d.color;

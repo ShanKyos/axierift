@@ -485,6 +485,55 @@ Sau đợt gán: vai/map từ `3,3,3,4,2,4,2` lên `4,4,6,6,6,6,6` — **tăng d
 - Từ cấp 24 trở đi mỗi map phải có **≥1 bãi Pháp Sư và ≥1 Kẻ Tiếp Sức** — hai thứ AUTO xử lý
   dở nhất, cũng là lý do người chơi phải tự cầm chuột. `tests/test_bansac.js` gác.
 
+### 🎞 BẢNG KHUNG QUÁI (`MOB_KHUNG`) + TRANH RIÊNG CHO TRÙM (`anh:`)
+
+Quái và trùm mặc định là MỘT tấm tĩnh. Khai một khoá là loài/con đó có hoạt ảnh; không khai thì
+vẽ y như trước, không lệch một pixel. Máy chạy theo dữ liệu — art về chỉ thêm một dòng.
+
+| Muốn gì | Khai ở đâu |
+|---|---|
+| quái/trùm có hoạt ảnh | `MOB_KHUNG` trong `game.js` |
+| trùm có tranh riêng (thắng cả sprite mượn lẫn khung xương) | `anh:'<tên tệp>'` trong `BOSS_DEFS` |
+
+- **Khoá `MOB_KHUNG` là TÊN TỆP, không phải khoá mob** — `assassin.png` phục vụ 3 loài,
+  `duhiep.png` 3 loài nữa, nên một bảng khung là cả ba cùng có hoạt ảnh.
+- Tấm khung ở `assets/mobs/kh/<tên>.png`, tấm tĩnh lùi ở `assets/mobs/<tên>.png`. **Cả hai đều
+  bắt buộc**: bảng khung nạp lười, thiếu tấm lùi là mấy trăm mili giây đầu xin một tệp không tồn
+  tại (404) rồi con trùm chớp thành đốm mực. `nuong_khungquai.py` xuất cả hai.
+- ⚠ **Nhịp `di` chạy theo QUÃNG ĐƯỜNG ĐÃ ĐI**, `danh` theo `lungeT`, `chet` theo `deadT` rồi
+  **dừng** ở khung cuối. Chỉ `dung` chạy theo đồng hồ. Chia nhịp đi theo thời gian là bàn chân
+  trượt đất — bài học đã trả giá ở `SAI_CHAN`.
+- ⚠ **`mobDoBuoc()` ĐO chuyển động thật, không đọc cờ do AI đặt** — quái dời chỗ ở NĂM nhánh
+  trong `update()`; đặt cờ từng chỗ thì chỗ thứ sáu thêm sau sẽ lặng lẽ không có hoạt ảnh.
+- ⚠ **Nhịp `chet` cắm ở nhánh `'deadmob'`, KHÔNG ở `drawMob`** — xác quái có đường vẽ riêng.
+- ⚠ **Năm loài khai CẢ `skel` LẪN `img`** (`trannhan · chimera_bo · kybinh · kylan ·
+  boss_sontac`) và đang hiện bằng khung xương. **Đừng đảo thứ tự skel/img để "dọn"** — làm thế
+  là âm thầm đổi tạo hình năm loài mà không ai yêu cầu. Muốn con nào dùng tranh thì khai `anh`.
+
+#### ⚠ `neoY` LÀ BÀN CHÂN, KHÔNG PHẢI ĐÁY ẢNH
+
+Công cụ mặc định đo đáy nhịp `dung` rồi coi đó là bàn chân. **Sai ngay khi art có khói, hào
+quang, vũng nước hay bóng vẽ sẵn dưới đế.** Đo trên gói trùm bóng ma đầu tiên: đế giày ở hàng
+549, đáy khói ở 640 — lệch **91px trên ô 640 (14%)**, tức con trùm treo lơ lửng đúng ngần ấy.
+Khai `--chan <hàng>` để đè. Và khi cả bộ chỉ có MỘT nhịp thì phép đo suy biến: đáy `dung` ==
+đáy chung ⇒ `neoY` luôn ra đúng 1.0, một con số vô nghĩa mà công cụ trả về trong im lặng.
+
+#### ⚠ ART TỐI: đọc được hay không là chuyện CỦA TỪNG MAP, phải đo
+
+Gói bóng ma (Tướng Quân `corran`) đo ra **sáng 0,129 · bão hoà 0,308**, trong khi 24 tấm quái
+hiện có trung bình **0,658 / 0,591** và viên cỏ Corran là **0,722**. Tức nó **tối hơn 80%** mọi
+thứ quanh nó. Trên nền sáng thì đó là bóng dáng đọc được ngay; trên nền tối thì nó biến mất.
+Quét cả tám map: chỉ **Werebear Woods (nền 0,363) là CHÌM**, Dusk Marsh (0,412) sát ngưỡng.
+⇒ Art tối dùng được, nhưng **không phải khuôn chung cho cả 11 Tướng Quân** — và phải đo nền map
+đích trước khi cắm, đừng suy từ map khác.
+
+Cỡ đo được để khỏi đoán: trùm vẽ ra **113px thân** (hộp 132px) · avatar người chơi **74px** ·
+quái thường **53px** · lớp nhân vật `NV_THAN_PX` **95px**.
+
+Công cụ: `tools/nuong_khungquai.py` (nhận khung đã render — dải, thư mục, hay xuất từ Godot/Spine
+— rồi **đo** hộp ô và `neoY`, in ra mục dán thẳng). Bài kiểm: `tests/test_khungquai.js` (28 mục).
+Đặc tả đặt hàng: `docs/DAT_HANG_ART_3_4_5.md` · prompt: `docs/PROMPT_QUAI_VA_TUONGQUAN.md`.
+
 ### 🗺 BẢN SẮC MAP SUY RA TỪ DỮ LIỆU, KHÔNG CHÉP CỨNG
 
 `mapBanSac(id)` tính **loài chủ đạo · hệ trội · Dòng Cốt độc quyền** từ chính `packs`, và
