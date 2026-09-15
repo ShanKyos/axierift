@@ -3113,6 +3113,20 @@ khởi động**. Triệu chứng: thoát **144**, `$OUT` không tồn tại, kh
 nhầm thành "bộ kiểm hỏng". Tắt server thì tìm pid **theo CỔNG** (`ss -lptn "sport = :8853"`), đừng
 tìm theo chuỗi lệnh.
 
+⚠ **HAI BÀI ĐANG CÒN ĐỎ THEO XÚC XẮC — đã đo, chưa sửa tận gốc.** Ghi ra để người sau đừng mất
+một buổi truy lại từ đầu, và đừng vội đổ cho commit của mình:
+
+| bài | dấu hiệu | đã đo được |
+|---|---|---|
+| `test_ngamchuot §4` | *"con quái cạnh chân cũng mất máu"*, `ganMat` = **đúng 1** | xanh 3/3 khi chạy riêng · mục này **đã** `player.reflect = 0` rồi, nên 1 máu ấy tới từ nguồn KHÁC, chưa truy ra. Ngưỡng là `ganMat > 0` nên đúng một điểm máu của một cơ chế khác cũng đủ làm đỏ |
+| `test_tamphap §3` | *"số lần bị khoá chân không giảm hẳn (47 → 28)"* | xanh 3/3 khi chạy riêng · đây là phép đo THỐNG KÊ, mẫu mỏng |
+
+**Cách phân biệt "đỏ do mình" với "đỏ do xúc xắc", làm theo thứ tự này:** chạy riêng bài đó
+**3 lượt** trên cây của mình → rồi chạy trên cây **trước commit của mình** (`git worktree add`).
+Xanh 3/3 ở vế đầu và xanh ở vế sau thì nó không phải của mình. *Đừng kết luận chỉ bằng "trông
+giống một bài hay đỏ" — tôi suýt làm thế, và cái giá của đoán sai là đẩy một commit hỏng lên
+production.*
+
 ⚠ **Bài kiểm mỏng mẫu thì đỏ theo xúc xắc, không phải theo lỗi.** Hai chỗ đã phải sửa:
 - `test_bayquai` đo vị trí Kẻ Tiếp Sức trên **6 bãi của một map** rồi đòi "không quá 25% lọt vào
   giữa" — một con lọt là qua, hai con là đỏ. Nay quét mọi map ⇒ **63 mẫu**.
