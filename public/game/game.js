@@ -9896,6 +9896,13 @@ const BGM_TRACKS = {
   mongco:     'bgm_mongco',      // lunar_battle — thảo nguyên tro
   nhanmon:    'bgm_nhanmon',     // pvp — ải cuối, căng nhất
   deep: 'bgm_dungeon',         // Tầng Sâu
+  // ⚠ SÀN ĐẤU PHẢI CÓ NHẠC — `test_nhacnen` bắt được chỗ này và nó đúng: một map không khai
+  // nhạc thì `nhacMap()` gọi `stopBgm()`, tức bước qua cổng là IM BẶT. Không lỗi nào báo.
+  //
+  // Dùng lại `bgm_nhanmon` chứ không thêm tệp mới, và không phải để tiết kiệm: tên gốc của
+  // chính bản nhạc ấy trong kho là **`pvp`** (xem chú thích ở `nhanmon` ngay trên). Đúng bản
+  // nhạc, đúng chỗ. Dùng chung là nếp sẵn có ở đây — corran/loimon/trungnut chung một bản.
+  pvp: 'bgm_nhanmon',
 };
 const BGM_INTRO = 'bgm_intro';   // màn mở đầu & chọn nhân vật
 // boss.wav trong kho, chuyển sang mp3. Chỗ gọi playBgm(BGM_BOSS) lúc vào trận trùm đã có sẵn
