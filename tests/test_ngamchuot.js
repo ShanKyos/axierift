@@ -157,6 +157,14 @@ const pass = m => console.log('PASS ' + m);
       return window.knGan(trong, 'dw_inferno') ? trong + 1 : 0;
     });
     if (!phimInf) fail('không cắm được Inferno vào ô nào — mục 4 mất chỗ bám');
+    // ⚠ TẮT PHẢN ĐÒN LẠI — `knGan` ở trên vừa BẬT NÓ LẠI. knGan → knSauDoi() → calcDerived(),
+    // và calcDerived đặt `player.reflect = LP.reflect` từ trang bị, tức xoá sạch cái `reflect = 0`
+    // đặt ở khối dựng cảnh phía trên. Trước đợt "Di Sản thôi chép tay" thì đổi thanh chiêu không
+    // gọi calcDerived nên thứ tự này vô hại; nay nó làm mục 4 đỏ ĐÚNG 1 máu (`ganMat: 1` — chữ
+    // ký của `Math.max(1, …)` trong phản đòn) mỗi khi con cạnh chân kịp ra đòn, tức đỏ theo TẢI
+    // MÁY: xanh khi chạy riêng, đỏ trong lượt hồi quy 204 bài.
+    // Đặt lại NGAY TRƯỚC cú bấm là chỗ duy nhất không ai chen vào giữa được.
+    await page.evaluate(() => { player.reflect = 0; });
     await page.mouse.move(...mh(r.xa.x, r.xa.y, p.cx, p.cy));
     await page.keyboard.press(String(phimInf || 3));
     await page.waitForTimeout(120);
