@@ -21,6 +21,9 @@ the game underneath is the normal one.
 If you would rather see the end of the game than play up to it, `?max=1` gives you level 120 with
 every system unlocked and maxed: end-game gear at +11, wings, jewels, Box Kundun.
 
+**▶ With other people: http://14.225.204.107/?net=1** — open it in two browsers and you are in the
+same world. Details in [Playing together](#playing-together) below.
+
 Or run it locally. `public/game/` is a self-contained static app — canvas 2D + vanilla JS, no build
 step, no backend, no `.env`, no database:
 
@@ -38,6 +41,38 @@ server; the game degrades to local-only play, which is enough to see everything 
 *Level 40 in Werebear Woods. The orange Axie is the player; the armoured figure beside it is the
 Dark Knight layer, summoned for the swing. It fades after the hit — the Axie never leaves.*
 
+## Playing together
+
+`?net=1` connects you to a live relay server running beside the game. There is no account, no
+login, nothing to install — open the link in two browsers and the second one is another player.
+
+You see each other move and run, with names and health bars; you see each other **fight** — the
+class layer materialises beside the other player's Axie on every swing and every cast, then
+dissolves; and you can talk in two channels, **World** and **Region**, the second reaching only
+people standing in the same map.
+
+*Two browsers means two different sessions. Chrome shares one incognito session across all its
+incognito windows, so "two incognito windows" is still one character — use one normal window plus
+one incognito, or two different browsers.*
+
+**What it deliberately does not do yet.** The server is a 445-line relay with **zero dependencies**
+— `node server/bongnguoi.js`, no `npm install`, no database. It forwards positions and chat lines
+and nothing else. No accounts, no authority, no anti-cheat, no PvP, no shared monsters, no shared
+loot. That is the design, not an oversight: anything with lasting value — spawning an item,
+crediting currency, a shared boss health bar — has to wait for real accounts and a server-side
+inventory, or you are building an economy on a server that believes whatever the client says. The
+reasoning is written out in [`docs/THIET_KE_ONLINE.md`](docs/THIET_KE_ONLINE.md).
+
+**Offline is the default and stays first-class.** With no server in the URL, `net.js` returns on its
+first line and the single-player build runs byte-identically. All 207 regressions run on that path,
+and one of them asserts the reverse direction: no server in the URL must mean no connection.
+
+The two guards worth reading are [`tests/test_wsnho.js`](tests/test_wsnho.js), which drives the
+hand-written WebSocket framing from a raw TCP socket — a browser is too polite a client to exercise
+masking rules, split frames, or the 2-byte length branch — and
+[`tests/test_bongnguoi.js`](tests/test_bongnguoi.js), which launches the real server, opens two real
+Chromium pages, and counts pixels rather than checking that a function exists.
+
 ## What's in it
 
 All numbers below are read out of the running game, not counted by hand.
@@ -52,6 +87,7 @@ All numbers below are read out of the running game, not counted by hand.
 | Quests | 50-quest main chain across 9 chapters + 32 side quests across 10 maps |
 | Gear | 11 slots, per-class armour lines, +0…+11 forging, socketing, Chaos Machine, 3 wing tiers |
 | Story | Seven Ancient Runes, one per region — the Nhát Gọi canon ([`docs/LORE_RUNE.md`](docs/LORE_RUNE.md)) |
+| Multiplayer | shared world at `?net=1` — see other players move, fight and chat, on a dependency-free relay |
 | Tests | 207 Playwright regressions against real Chromium + 7 vitest units, all gated in CI |
 
 ## Why it is an Axie game and not a reskin
@@ -102,6 +138,7 @@ The part worth reviewing is the discipline around it:
 |---|---|
 | `public/game/` | the game — engine, data, assets. Self-contained, no build |
 | `tests/` | 207 Playwright regressions |
+| `server/` | the multiplayer relay — two files, no dependencies, `node server/bongnguoi.js` |
 | `tools/` | asset bakers (Spine → sprite sheets, isometric tiles), measurement scripts, `reg.sh` |
 | `docs/` | decision journal. **Historical by design** — entries are not rewritten when things change, so read dates and cross-check against code. Current canon is `CLAUDE.md` + `docs/LORE_RUNE.md` |
 | `src/`, `api/`, `db/` | the Vite + Hono + tRPC + MySQL shell around the game (auth, cloud save). Not needed to play |

@@ -3099,7 +3099,8 @@ khi chưa vào.
 | | |
 |---|---|
 | `wingDef(it)` lui về `player.sect` khi không tra được `it.wing` | thân người từ xa sẽ mượn cánh theo lớp của NGƯỜI CHƠI. Chưa nổ vì giai đoạn 1 không đồng bộ trang bị; phải sửa trước Giai đoạn 2 |
-| Trang bị / hành động ra đòn / cánh | chưa đồng bộ — Giai đoạn 2. Gửi **chữ ký** `gearVisual`, KHÔNG gửi `player.equip` (một món 474 byte × 11 ô = ~5 KB mỗi người mỗi ảnh chụp) |
+| ~~Hành động ra đòn~~ | **ĐÃ ĐỒNG BỘ.** `atk`/`cast` trên dây = `atkAnim`/`castT`. Nhận thì lấy `Math.max` (không gán đè: bộ đếm 0,22s/0,38s dài hơn nhịp ảnh 100 ms), và `noiSuy` đếm nốt vì thân người từ xa không đi qua `update()`. `atkAct` **cố ý không lên dây** — phần vẽ đã có đường lui `p.atkAct \|\| heroActOf(p.sect,'basic')` mà `sect` thì vốn đã đồng bộ |
+| Trang bị / cánh | chưa đồng bộ — Giai đoạn 2. Gửi **chữ ký** `gearVisual`, KHÔNG gửi `player.equip` (một món 474 byte × 11 ô = ~5 KB mỗi người mỗi ảnh chụp) |
 | `cheatExec` vẫn ship | Giai đoạn 0 chưa làm. Vô hại ở bản offline; phải gỡ trước khi có bất cứ thứ gì chung |
 | Sandbox không SSH được vào VPS | mọi bước cài Node/nginx/systemd phải do chủ dự án chạy tay |
 
