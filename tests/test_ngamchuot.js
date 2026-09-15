@@ -135,7 +135,15 @@ const pass = m => console.log('PASS ' + m);
       // hurtMob. Bài này đo "vùng sát thương có đi theo con trỏ không", mà ngưỡng lại là
       // `ganMat > 0`, nên một điểm máu của một cơ chế khác hẳn cũng làm nó đỏ — đo được 1/3 lượt,
       // và có sẵn từ trước đợt vai trò (thử lại trên bản cũ: y hệt). Cô lập đúng thứ đang đo.
-      player.reflect = 0;
+      // ⚠ GÁN MỘT LẦN LÀ KHÔNG ĐỦ — `calcDerived()` ĐẶT LẠI nó (`player.reflect = LP.reflect`
+      // rồi `+= P.reflectPct/100`). Chỉ cần một lượt tính lại chỉ số chen vào giữa lúc dựng
+      // cảnh và lúc đo là phản đòn sống lại, và mục này đỏ vì ĐÚNG MỘT điểm máu của một cơ chế
+      // khác hẳn. Đó là lý do bài xanh khi chạy riêng mà đỏ khi chạy trong bộ: chạy trong bộ thì
+      // máy tải nặng hơn, nhiều khung hơn lọt vào cùng khoảng chờ, nên cửa sổ ấy mở ra.
+      // ⚠ KHOÁ BẰNG SETTER RỖNG, KHÔNG PHẢI `writable:false`. game.js chạy `"use strict"`, nên
+      // gán vào một thuộc tính không ghi được sẽ NÉM TypeError — tức bài kiểm tự tay làm chết
+      // `calcDerived()`, một hàm chạy khắp nơi. Setter nuốt giá trị thì không ném gì cả.
+      Object.defineProperty(player, 'reflect', { get: () => 0, set: () => {}, configurable: true });
       return { gan: { x: Math.round(gan.x), y: Math.round(gan.y), hp: gan.hp },
                xa:  { x: Math.round(xa.x),  y: Math.round(xa.y),  hp: xa.hp } };
     });

@@ -178,6 +178,25 @@ const cho = ms => new Promise(r => setTimeout(r, ms));
   if (bay.khoaHo.includes('ta')) fail('thân người từ xa dùng chung khoá vẽ với người chơi của mình');
   if (new Set(bay.khoaHo).size !== bay.khoaHo.length) fail('hai thân người từ xa trùng khoá vẽ');
 
+  // ── 3b. THÂN NGƯỜI TỪ XA PHẢI NHÚC NHÍCH ─────────────────────────────────────────────
+  // ⚠ ĐÂY LÀ MỆNH ĐỀ BẮT ĐÚNG LỖI ĐÃ SHIP. Bốn mục trên đặt toạ độ MỘT LẦN rồi đo một ảnh
+  // TĨNH, nên chúng gác "có vẽ ra không" — không gác "có đi được không". Bản đầu của `noiSuy`
+  // đặt `t.at` và `t.bt` BẰNG NHAU (span = 1 ms) trong khi vẽ ở mốc `now − TRE_MS`, tức luôn
+  // trước `at` ⇒ `k` kẹp về 0 mọi khung ⇒ thân người từ xa đứng chết ở vị trí ĐẦU TIÊN, vĩnh
+  // viễn. Cả năm mệnh đề cũ vẫn xanh trong lúc mục tiêu của Giai đoạn 1 — "nhìn thấy nhau
+  // CHẠY" — hỏng hoàn toàn. Không một lỗi nào in ra.
+  {
+    await B.p.evaluate(() => { player.x += 300; });
+    await cho(1400);                       // vài nhịp ảnh chụp + trọn một lượt trượt
+    const r = await B.p.evaluate(() => Math.round(player.x));
+    const t = await A.p.evaluate(() => window.NETPLAYERS.map(n => Math.round(n.x)));
+    console.log('3b · B đứng x =', r, '· A thấy x =', JSON.stringify(t));
+    if (t.length !== 1) fail(`A phải thấy đúng 1 thân người, thấy ${t.length}`);
+    // Ngưỡng 40px, không đòi khớp tuyệt đối: nội suy vốn trễ một nhịp, và đòi bằng chằn chặn là
+    // bài đỏ theo xúc xắc chứ không theo lỗi.
+    else if (Math.abs(t[0] - r) > 40) fail(`B đã dời tới x=${r} mà A vẫn vẽ ở x=${t[0]} — thân người từ xa đứng chết`);
+  }
+
   // ── 4. Rời map thì bóng biến mất ngay, không lạc sang map mới ─────────────────────────
   await B.p.evaluate(() => travelTo('ngoai'));
   await cho(900);
