@@ -181,9 +181,13 @@ const { chromium } = require('playwright');
   await page.waitForTimeout(1000);
   check('lớp phủ tự dọn sạch', await page.evaluate(() => document.getElementById('ngoc-fx').children.length), 0);
 
-  // xịt thì kêu tiếng khác và tụt cấp
-  const xit = await page.evaluate(async () => {
-    const it = player.inv[0]; it.plus = 8; player.jewels.linhHon = 5;
+  // Xịt thì kêu tiếng khác, và tụt về đâu thì TUỲ MỐC — xem NGOC_EP.linhHon.xit:
+  //   · lên +7 mà xịt ⇒ TỤT 1 CẤP (còn +5)
+  //   · lên +8/+9 mà xịt ⇒ VỀ +0 — vách ngăn cuối bảng ngọc
+  // Luật này từng sống ở `forgeRule` (đường "Rèn Thường" ở Lò, nay đã gỡ), nên bài này gác chỗ
+  // nó đã dọn về: chính viên ngọc. Đo bằng cách CHẠY đường ép thật, không đọc bảng.
+  const xitLam = async (truoc) => page.evaluate(async (tr) => {
+    const it = player.inv[0]; it.plus = tr; player.jewels.linhHon = 5;
     const _r = Math.random; Math.random = () => 0.999;    // ép cho hỏng
     window._sfx = []; window.camNgoc('linhHon'); renderBag();
     window.epNgocVaoTui(0);
@@ -191,9 +195,13 @@ const { chromium } = require('playwright');
     await new Promise(r => setTimeout(r, 340));
     return { am: window._sfx.slice(), plus: it.plus,
              no: document.querySelectorAll('#ngoc-fx .ngoc-no.xit').length };
-  });
-  console.log('xịt:', JSON.stringify(xit));
-  check('xịt thì TỤT 1 CẤP', xit.plus, 7);
+  }, truoc);
+  const xit6 = await xitLam(6);
+  const xit = await xitLam(8);
+  console.log('xịt +6→+7:', JSON.stringify(xit6));
+  console.log('xịt +8→+9:', JSON.stringify(xit));
+  check('lên +7 mà xịt ⇒ TỤT 1 CẤP', xit6.plus, 5);
+  check('lên +9 mà xịt ⇒ VỀ +0',     xit.plus, 0);
   check('xịt thì KHÔNG kêu ting ting', xit.am.includes('jewel'), false);
   check('xịt kêu tiếng hỏng', xit.am.includes('forge_fail'), true);
 
