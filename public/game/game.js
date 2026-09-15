@@ -1249,6 +1249,14 @@ const MOB_KHUNG = {
   // gamma 0,8754 dò ra để độ sáng ĐO ĐƯỢC tăng đúng 25% (0,128 → 0,160); viền rìa lạnh cộng
   // thêm nên tổng ra 0,217. Vẫn tối hơn quái thường 67% — nó giữ nguyên bản sắc "bóng tối",
   // chỉ là nay đọc được nếp áo. Lệch chuẩn (độ tách nét) 0,092 → 0,149.
+  // Thủ Lĩnh Đoàn Gloam — kỵ sĩ xương cưỡi ngựa xương, lửa hồn xanh ở vó và ở kiếm.
+  // ⚠ `neoY` đo ở VÓ NGỰA (hàng 394/417), không ở đáy lửa: lửa hồn liếm xuống dưới vó 23px,
+  // neo theo nó là con ngựa treo lơ lửng. Cùng bẫy với vệt khói của tq_corran.
+  // KHÔNG nâng sáng: art này đo ra sáng 0,237 · lệch chuẩn 0,209 — gấp 1,85× và 2,3× con bóng
+  // ma, tức nó vốn đã đọc được nét. Áp cùng liều xử lý cho mọi gói là chữa bệnh không có bệnh.
+  //   python3 tools/nuong_khungquai.py tq_daohoa --dung <8 khung>/*.png --chan 394
+  'tq_daohoa': { cot:8, hang:1, oRong:207, oCao:195, neoY:0.8821,
+                 nhip:{ dung:[0,8,10] } },
   'tq_corran': { cot:8, hang:1, oRong:256, oCao:256, neoY:0.8578,
                  nhip:{ dung:[0,8,10] } },
 };

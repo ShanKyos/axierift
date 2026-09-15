@@ -429,7 +429,7 @@ window.BOSS_DEFS = {
       { id:'dh1', name:'Chúa Heo Rừng',       lv:40, el:'Thổ',  img:'boar',     x:0.3617, y:0.32, moves:['vach','xung','cuong'] },
       { id:'dh2', name:'Chúa Bầy Gai Tím',        lv:43, el:'Mộc',  img:'wolf',     x:0.4313, y:0.6212, moves:['xung','goi','vach'] },
       { id:'dh3', name:'Chấp Sự Gloam',  lv:46, el:'Thủy', img:'assassin', x:0.7096, y:0.3953, moves:['vach','vong','cuong'] } ],
-    tranai: { id:'dh4', name:'Thủ Lĩnh Đoàn Gloam', lv:50, el:'Hỏa', img:'boss_hacphong', x:0.7235, y:0.8094, moves:['vong','vach','goi','cuong'] } },
+    tranai: { id:'dh4', name:'Thủ Lĩnh Đoàn Gloam', lv:50, el:'Hỏa', img:'boss_hacphong', anh:'tq_daohoa', x:0.7235, y:0.8094, moves:['vong','vach','goi','cuong'] } },
   ngoai: { thuve:[
       { id:'ng1', name:'Đầu Mục Gloam',    lv:13, el:'Kim',  img:'bandit',   x:0.6691, y:0.5042, moves:['vach','xung','cuong'] },
       { id:'ng2', name:'Gai Tím Độc Nhãn',lv:16, el:'Mộc',  img:'wolf',     x:0.2618, y:0.1939, moves:['xung','vong','goi'] },

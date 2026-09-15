@@ -518,7 +518,27 @@ quang, vũng nước hay bóng vẽ sẵn dưới đế.** Đo trên gói trùm 
 Khai `--chan <hàng>` để đè. Và khi cả bộ chỉ có MỘT nhịp thì phép đo suy biến: đáy `dung` ==
 đáy chung ⇒ `neoY` luôn ra đúng 1.0, một con số vô nghĩa mà công cụ trả về trong im lặng.
 
-#### ⚠ ART TỐI: đọc được hay không là chuyện CỦA TỪNG MAP, phải đo
+#### ⚠ ART TỐI: ĐỘ SÁNG TRUNG BÌNH KHÔNG DỰ ĐOÁN ĐƯỢC "đọc ra hay không"
+
+Ngưỡng đầu tiên tôi đặt — *"chênh độ sáng với nền phải > 0,28"* — **sai, và con trùm thứ hai
+chứng minh ngay**. Kỵ sĩ bóng đêm (`tq_daohoa`) chênh **0,273**, tức TRƯỢT ngưỡng, nhưng chụp ra
+thì đọc rõ từng chi tiết và không cần xử lý một bước nào.
+
+| | sáng | **lệch chuẩn** | bão hoà |
+|---|---|---|---|
+| bóng ma (`tq_corran`) gốc | 0,128 | **0,092** | 0,320 |
+| kỵ sĩ (`tq_daohoa`) | 0,237 | **0,209** | 0,498 |
+
+Thứ quyết định là **LỆCH CHUẨN — độ tách giữa các mảng sáng tối BÊN TRONG con vật**, không phải
+độ sáng trung bình. Con bóng ma là một khối gần như một sắc nên ở 113px nó thành cái bóng đen;
+con kỵ sĩ có xương trắng ngà, lửa xanh và áo choàng đỏ nằm cạnh nhau nên mắt bám được ngay, dù
+trung bình còn tối hơn cả nền.
+
+⇒ **Đo lệch chuẩn trước khi quyết xử lý.** Dưới ~0,12 thì mới cần nâng sáng + viền rìa; trên đó
+thì để nguyên. Áp cùng một liều cho mọi gói là chữa bệnh không có bệnh, và nó làm mất chính cái
+tương phản gốc mà art đã có.
+
+#### ⚠ VÀ độ sáng NỀN vẫn phải đo — nhưng để chọn MAP, không để chọn liều
 
 Gói bóng ma (Tướng Quân `corran`) đo ra **sáng 0,129 · bão hoà 0,308**, trong khi 24 tấm quái
 hiện có trung bình **0,658 / 0,591** và viên cỏ Corran là **0,722**. Tức nó **tối hơn 80%** mọi
