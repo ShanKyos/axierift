@@ -52,7 +52,7 @@ All numbers below are read out of the running game, not counted by hand.
 | Quests | 50-quest main chain across 9 chapters + 32 side quests across 10 maps |
 | Gear | 11 slots, per-class armour lines, +0…+11 forging, socketing, Chaos Machine, 3 wing tiers |
 | Story | Seven Ancient Runes, one per region — the Nhát Gọi canon ([`docs/LORE_RUNE.md`](docs/LORE_RUNE.md)) |
-| Tests | 197 Playwright regressions against real Chromium + 7 vitest units, all gated in CI |
+| Tests | 206 Playwright regressions against real Chromium + 7 vitest units, all gated in CI |
 
 ## Why it is an Axie game and not a reskin
 
@@ -82,7 +82,7 @@ The part worth reviewing is the discipline around it:
 
 - **CI gates every push to `main`** — typecheck, lint, unit tests, and a syntax check of the engine
   ([`.github/workflows/ci.yml`](.github/workflows/ci.yml)).
-- **197 Playwright regressions** drive the real game in a real browser — they call `startGame()`,
+- **206 Playwright regressions** drive the real game in a real browser — they call `startGame()`,
   `castSkill()`, `turnInQuest()` and tick `update()`, rather than asserting against fixtures.
   `bash tools/reg.sh <outdir>`.
 - **Design decisions are measured, then written down with the measurement.** Level pacing was fitted
@@ -96,7 +96,7 @@ The part worth reviewing is the discipline around it:
 | Path | |
 |---|---|
 | `public/game/` | the game — engine, data, assets. Self-contained, no build |
-| `tests/` | 197 Playwright regressions |
+| `tests/` | 206 Playwright regressions |
 | `tools/` | asset bakers (Spine → sprite sheets, isometric tiles), measurement scripts, `reg.sh` |
 | `docs/` | decision journal. **Historical by design** — entries are not rewritten when things change, so read dates and cross-check against code. Current canon is `CLAUDE.md` + `docs/LORE_RUNE.md` |
 | `src/`, `api/`, `db/` | the Vite + Hono + tRPC + MySQL shell around the game (auth, cloud save). Not needed to play |
