@@ -277,6 +277,200 @@ haze and drifting feathers behind.
 
 ---
 
+### 0.9 ⚠ ĐỔI HẲN LỐI VIẾT — chủ dự án đưa prompt mẫu, và nó thắng
+
+Chủ dự án đưa cặp prompt đã sinh ra đúng thứ muốn (Meteorite, hai lần gen ra hai hình).
+Nó **không phải văn xuôi** — nó là chuỗi mệnh đề ngăn bằng dấu phẩy, mỗi dòng một việc.
+
+⚠ **Điều này lệch `docs/npc-prompts.md §2.2`, vốn cấm thẳng "xếp chồng từ khoá".** Tôi đổi theo
+prompt mẫu, cố ý, và ghi ra đây để người sau đừng "sửa ngược" về văn xuôi: luật kia viết cho
+prompt **sinh vật và NPC** — ở đó văn xuôi giữ được nhận dạng một con vật. Hiệu ứng thì không có
+nhận dạng nào để giữ; nó là một danh sách lớp, và danh sách thì viết thành danh sách.
+Ba tấm Gemini "khá xấu" là viết bằng văn xuôi. Tấm chủ dự án chỉ vào thì viết kiểu này.
+
+#### Khuôn — mười một dòng, mỗi dòng một việc
+
+```
+A 2D game VFX sprite, <TÊN CHIÊU> spell <beginning|impact> phase,      ← ① chiêu gì, thì nào
+top-down slightly angled view, solid flat magenta background,          ← ② góc nhìn + NỀN
+<lớp ① nền / bối cảnh>,
+<lớp ② thân — nhấn "thick", "twisted", "with real depth">,
+<lớp ③ lõi trắng bên trong>,
+<lớp ④ phụ kiện bay, MÀU TƯƠNG PHẢN>,
+no <thứ của thì KIA>, no character, no weapon,                          ← ③ phủ định
+cel-shaded art style, bold black outlines, flat colors,
+dark fantasy MMORPG aesthetic like MU Online,
+clean vector-like game asset, centered composition,
+512x512 pixels, high quality, PNG
+```
+
+**Ba chỗ tôi sửa so với prompt mẫu, mỗi chỗ một lý do đo được:**
+
+1. ⚠ **`transparent background` → `solid flat magenta background`.** Dòng đó trong prompt mẫu
+   **không chạy**: đo cả ba tấm Gemini nhận được thì `alpha = 0` chiếm **0,0%** — nó vẽ lưới ô
+   caro thành điểm ảnh thật. Thêm luôn `no checkerboard pattern, no transparency grid` vào dòng
+   phủ định, vì với Gemini lưới caro CHÍNH LÀ cách nó vẽ "nền trong suốt".
+   Đây cũng là convention `docs/PROMPT_ART_GEMINI.md` đã chốt cho mọi art Gemini của dự án.
+2. **Dòng phủ định phải nêu thứ của THÌ KIA.** Prompt mẫu làm rất đúng chỗ này —
+   `no explosion yet` ở thì đầu, `no meteors in sky anymore` ở thì sau. Thiếu nó thì hai hình
+   giống nhau và không ghép được thành chuyển động.
+3. **Giữ `512x512`** dù ô atlas của game là 384 — nguồn to hơn thì thu xuống đẹp hơn, và công cụ
+   nhập tự thu.
+
+*(`like MU Online` trong prompt thì được: Quy tắc số 2 cấm tên riêng trong **text người chơi
+thấy**, prompt không phải nội dung ship.)*
+
+#### ⚠ HAI HÌNH CHƯA PHẢI HOẠT ẢNH — Gemini dựng THÌ, Meowa dựng CHUYỂN ĐỘNG
+
+Chủ dự án chốt đường đi: *"Sau đó mới bỏ vào Meowa để gen full animation."*
+
+Và nó khớp đúng bằng chứng đo được: **cả ba tấm đẹp** (`meteor_rain` · `fire_pillar` ·
+`dragon_spirit`) đều nhập bằng `tools/vfx_meowa.py`, tức đều là gói Meowa. Gemini chưa bao giờ
+dựng ra tấm nào trong số đó.
+
+| bước | làm gì | công cụ | ra cái gì |
+|---|---|---|---|
+| 1 | gen **thì đầu** | Gemini, prompt ① | 1 ảnh 512², nền magenta |
+| 2 | gen **thì sau** | Gemini, prompt ② | 1 ảnh 512², nền magenta |
+| 3 | **bóc nền magenta** khỏi hai ảnh | `tools/vfx_gemini.py --nen "#ff00ff"` | 2 PNG trong suốt thật |
+| 4 | **gen chuyển động từ hai thì** | **Meowa** (`meowa-animation-run`) | gói 14-16 khung |
+| 5 | gói → atlas + đo neo | `tools/vfx_meowa.py` | `atlas.png` + dòng dán vào `VFX_ATLAS_DEFS` |
+
+**Vì sao bước 3 không bỏ được:** Gemini trả nền đặc (đo: `alpha = 0` chiếm **0,0%** ở cả ba
+tấm). Đưa thẳng một ảnh có nền vào Meowa là bảo nó animate luôn cái nền.
+
+**⚠ VÀ MỘT CÁI BẪY Ở BƯỚC 4, đã có người trả giá — xuất từ Meowa PHẢI bật "preserve translucent
+areas".** Không bật thì lưới ô caro của chính trình vẽ bị nướng thẳng vào tranh, và gói Meowa
+mắc đúng cái bệnh vừa phải gỡ ở Gemini. `tools/vfx_meowa.py` có cờ `--caro` để vá, nhưng vá thì
+bao giờ cũng tệ hơn xuất đúng ngay từ đầu. Hai dạng hỏng khác của gói Meowa cũng đã ghi sẵn ở
+đầu tệp ấy (`--suong` cho lưới rung ở vùng sương, `--sang` cho gói tối hơn nền).
+
+**Nhánh phụ — video:** chủ dự án cũng đã thử `Animate this image` của Gemini và gửi sang một
+video. Đo được: **video tách nền SẠCH HƠN ảnh tĩnh** (viền sắc, không sót mảng caro nào; xem
+§0.3). Nên đó là đường lui dùng được nếu Meowa tắc — `ffmpeg -i <video> -vsync 0 khung_%04d.png`
+rồi vẫn `tools/vfx_gemini.py`. Nhưng nó là đường LUI: một video Gemini là showreel nhiều hiệu
+ứng nối bằng chuyển cảnh mờ, phải tự chỉ đoạn, và nó không cho `neoY`/`neoR` như đường Meowa.
+
+⚠ Dấu chìm của Gemini nằm ở khối **48×48 góc dưới-phải** và **đứng yên qua mọi khung** ⇒ cắt bỏ
+được ở cả hai nhánh.
+
+---
+
+### 0.10 SÁU PROMPT — ba chiêu ô 1, mỗi chiêu hai thì
+
+Ba chiêu này là ba tấm "khá xấu" đang chạy trên production, cần gen lại trước.
+
+---
+
+**① TWISTING SLASH · Dark Knight · thì ĐẦU**
+
+```
+A 2D game VFX sprite, greatsword whirlwind slash spell beginning phase,
+top-down slightly angled view, solid flat magenta background,
+a wide crescent blade trail of cold steel-blue energy sweeping from left to right,
+the trail is a thick twisted ribbon with real depth and weight, not a thin drawn line,
+a hair-thin white-hot core running inside the ribbon along its whole length,
+pale blue wind streaks and small ice-bright flecks curling off the trailing edge,
+no impact burst yet, no ground crack, no debris, no character, no sword,
+no checkerboard pattern, no transparency grid,
+cel-shaded art style, bold black outlines, flat colors,
+dark fantasy MMORPG aesthetic like MU Online,
+clean vector-like game asset, centered composition,
+512x512 pixels, high quality, PNG
+```
+
+**② TWISTING SLASH · Dark Knight · thì SAU**
+
+```
+A 2D game VFX sprite, greatsword whirlwind slash spell impact phase,
+top-down slightly angled view, solid flat magenta background,
+the steel-blue crescent trail fully opened and tearing apart into torn ribbons,
+a bright warm gold impact burst exploding at the right end of the arc,
+a pale scar of light gouged into the ground along the swing path, spreading into a low ring,
+golden shards and sparks flying outward in all directions against the blue,
+thin blue vapour rising off the shredded ribbon,
+no intact blade trail, no character, no sword, no meteors,
+no checkerboard pattern, no transparency grid,
+cel-shaded art style, bold black outlines, flat colors,
+dark fantasy MMORPG aesthetic like MU Online,
+clean vector-like game asset, centered composition,
+512x512 pixels, high quality, PNG
+```
+
+---
+
+**③ FORCE WAVE · Dark Lord · thì ĐẦU**
+
+```
+A 2D game VFX sprite, sceptre shockwave spell beginning phase,
+top-down slightly angled view, solid flat magenta background,
+three nested crescent walls of olive-green force compressed close together on the left side,
+each wall is a thick slab with visible depth and blunt rounded ends, not a drawn band,
+a white-hot seam running along the leading edge of the innermost wall,
+the air between the walls warped like green heat haze,
+no scattered debris yet, no dust cloud, no character, no sceptre, no fire,
+no checkerboard pattern, no transparency grid,
+cel-shaded art style, bold black outlines, flat colors,
+dark fantasy MMORPG aesthetic like MU Online,
+clean vector-like game asset, centered composition,
+512x512 pixels, high quality, PNG
+```
+
+**④ FORCE WAVE · Dark Lord · thì SAU**
+
+```
+A 2D game VFX sprite, sceptre shockwave spell impact phase,
+top-down slightly angled view, solid flat magenta background,
+the three olive-green force walls driven far apart and travelling to the right,
+warm amber stone chips and short crackling arcs flung ahead of the front wall,
+a flat ring of lifted dust spreading across the ground beneath the walls,
+the outermost wall stretched thin and breaking up at its ends,
+no compressed walls, no character, no sceptre, no fire, no meteors,
+no checkerboard pattern, no transparency grid,
+cel-shaded art style, bold black outlines, flat colors,
+dark fantasy MMORPG aesthetic like MU Online,
+clean vector-like game asset, centered composition,
+512x512 pixels, high quality, PNG
+```
+
+---
+
+**⑤ TRIPLE SHOT · Sylvan Ranger · thì ĐẦU**
+
+```
+A 2D game VFX sprite, triple arrow volley spell beginning phase,
+top-down slightly angled view, solid flat magenta background,
+a tight dense knot of teal-green light gathered at the release point on the left,
+three thick bolts of teal light just beginning to fan out toward the right,
+each bolt wrapped in a spiralling ribbon of mist with a hair-thin white core inside it,
+a faint ring of disturbed dust on the ground directly under the release point,
+no arrows, no bow, no impact burst, no character,
+no checkerboard pattern, no transparency grid,
+cel-shaded art style, bold black outlines, flat colors,
+dark fantasy MMORPG aesthetic like MU Online,
+clean vector-like game asset, centered composition,
+512x512 pixels, high quality, PNG
+```
+
+**⑥ TRIPLE SHOT · Sylvan Ranger · thì SAU**
+
+```
+A 2D game VFX sprite, triple arrow volley spell impact phase,
+top-down slightly angled view, solid flat magenta background,
+three teal-green light bolts fully extended and fanned wide across the right side,
+warm golden motes and torn feather fragments bursting outward from the release point,
+a slow drifting cloud of teal haze trailing behind the bolts,
+the mist ribbons around each bolt unwinding and thinning into wisps,
+no gathered knot of light, no arrows, no bow, no character, no explosion,
+no checkerboard pattern, no transparency grid,
+cel-shaded art style, bold black outlines, flat colors,
+dark fantasy MMORPG aesthetic like MU Online,
+clean vector-like game asset, centered composition,
+512x512 pixels, high quality, PNG
+```
+
+---
+
 ## 1. BỐN Ô — bảng chốt
 
 Ba bộ chiếm ba ô đầu. Ô 4 là hào quang phù trợ: nó **không đánh trúng ai** nên không treo tâm
