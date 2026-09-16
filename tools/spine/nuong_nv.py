@@ -70,6 +70,11 @@ LOP = [('h',  ('背后头发',),          'non'),    # tóc sau — rỗng ở b
        ('t1', ('左手',),              'tay'),    # tay XA, nằm sau thân
        ('c',  ('左腿', '右腿'),        'chan'),
        ('a',  ('躯干_带短裤',),        'ao'),
+       # VŨ KHÍ nằm ĐÚNG GIỮA thân và tay gần — xem thứ tự vẽ ghi ở trên. Đặt sau `t2` là
+       # cây kiếm chui ra sau bàn tay; đặt trước `a` là nó nằm sau lưng áo.
+       # Nướng thẳng ba khe của rig (không phải chiếu một tấm phẳng như nuong_vk.py) nên vũ khí
+       # có BIẾN DẠNG LƯỚI đúng như hoạ sĩ vẽ — vung kiếm thì lưỡi cong theo, không cứng đơ.
+       ('vk', KHE_VK,                'vukhi'),
        ('t2', ('右手', '右手前伸'),     'tay'),   # tay GẦN, nằm trước thân
        ('n',  ('头',),                'non')]
 O_W, O_H, COT = 240, 300, 16

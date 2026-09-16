@@ -100,8 +100,13 @@ const { chromium } = require('playwright');
     else pass(`${goi.length}/${goi.length} lời gọi vẽ cánh + thần khí đều bám neo lớp nhân vật`);
   }
   // Vũ khí phải TẮT lúc đi theo sau — nửa còn lại của "xuất hiện đằng trước kèm vũ khí".
-  if (!/const _tkHien = !_coAva \|\| _lopHien;/.test(src))
+  const _tk = src.match(/const _tkHien = ([^;]+);/);
+  if (!_tk)
     fail('không thấy cửa `_tkHien` — thần khí sẽ hiện cả lúc đang đi theo sau');
+  else if (!/_lopHien/.test(_tk[1]) || !/_coAva/.test(_tk[1]))
+    fail('cửa `_tkHien` không còn hỏi `_coAva`/`_lopHien` — thần khí sẽ hiện lúc đi theo sau');
+  else if (!/_coVkLop/.test(_tk[1]))
+    fail('cửa `_tkHien` không hỏi lớp vũ khí — bộ có kiếm nướng sẵn trong tay sẽ hiện HAI cây');
   else if (!/_tk && !_tk\.truoc && _tkHien/.test(src) || !/_tk && _tk\.truoc && _tkHien/.test(src))
     fail('một trong hai lớp thần khí (trước/sau thân) chưa đi qua cửa `_tkHien`');
   else pass('thần khí chỉ hiện khi lớp nhân vật ra trước — cả hai lớp vẽ đều qua cửa');

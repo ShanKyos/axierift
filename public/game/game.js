@@ -13261,6 +13261,25 @@ const NV_MOC2  = { h:0, p:8, s:20, d:36, j:46, q:56, n:62, t:68, e:74 };
 // khối lúc vẽ nữa: Sylvan Ranger bắn nỏ, Dark Wizard và Dark Lord niệm chú, ngay trong khối 'a'.
 // Lớp nào có nhát thứ hai thì đòn thường luân phiên 'a' ↔ 's'.
 const DANH_HAI_NHAT = { thieulam: 1, minhgiao: 1 };
+// ── CHIÊU NÀO DÙNG HOẠT CẢNH NÀO ──────────────────────────────────────────────────────────
+// Rig có tới bốn hoạt cảnh ra đòn đã nướng sẵn, mà trước bản này mọi chiêu đều dùng đúng MỘT
+// khối 'c' (05_MagicAttack) — tức Dark Knight bổ đại kiếm bằng tư thế niệm chú.
+//
+// Ánh xạ từ `player.castAct` chứ KHÔNG khai theo id chiêu: `heroCastAct()` đã suy ra kiểu ra
+// đòn cho từng chiêu và đã chọn sao cho KHỚP VFX (Meteor rơi từ trên ⇒ 'raise', quạt lửa ⇒
+// 'spin'). Khai lại theo id chiêu là dựng bản sao thứ hai của một luật đang sống — thêm chiêu
+// mới là hai bên lệch ngay. Ở đây chỉ dịch kiểu ra đòn sang khối art.
+//
+//   slash  chém ngang      → 'a'  08_SwordAttack   (nhát chính)
+//   spin   quét vòng       → 's'  08_SwordAttack2  (nhát hai, biên độ rộng hơn)
+//   thrust đâm             → 's'  — chủ dự án chốt: "đâm gió thì sẽ là attack 2"
+//   guard  thủ thế / buff  → 't'  07_StatusEffect  (đúng dáng đứng khi dính buff)
+//   raise · point · shoot  → 'c'  05_MagicAttack   (giơ tay niệm — hành vi cũ, giữ nguyên)
+//
+// ⚠ 's' · 't' · 'p' nằm ở BẢNG HAI (nạp khi cần). Chưa về thì heroSprite lui về dáng đứng chứ
+// không rơi về hình vẽ — và nvBoTruoc() đã kéo sẵn cả hai bảng của bộ đang mặc, nên cú tung
+// chiêu đầu tiên không bị hụt.
+const KHOI_THEO_ACT = { slash: 'a', spin: 's', thrust: 's', guard: 't' };
 // SẢI CHÂN mỗi VÒNG hoạt cảnh — quãng đường thế giới mà MỘT vòng bảng khung chở được.
 // Đo bằng máy: `tools/do_dang.js`. ĐỪNG chép tay lại, và đừng ước lượng.
 //
@@ -13459,7 +13478,12 @@ const NV_ICON_O = { non: 0, ao: 1, tay: 2, chan: 3 };
 // tự ô trang bị. Spine vẽ: tóc-sau · tay-XA · hai chân · thân · tay-GẦN · đầu — tức ô `tay`
 // nằm HAI BÊN ô `ao`. Gộp `tay` làm một lớp là tay xa nhảy ra trước ngực.
 // Phải trùng khít bảng LOP trong tools/spine/nuong_nv.py.
-const NV_LOP = [['h', 'non'], ['t1', 'tay'], ['c', 'chan'], ['a', 'ao'], ['t2', 'tay'], ['n', 'non']];
+// ⚠ VŨ KHÍ nằm GIỮA thân (`a`) và tay gần (`t2`) — đúng thứ tự vẽ của bộ xương Spine:
+//     背后头发 · 左手 · 左腿 · 右腿 · 躯干 · (vũ khí) · 右手 · 右手前伸 · 头
+// Đặt sau `t2` là lưỡi kiếm chui ra sau bàn tay; đặt trước `a` là nó nằm sau lưng áo.
+// Bảng này phải TRÙNG KHÍT `LOP` trong tools/spine/nuong_nv.py — tests/test_lopdo.js §1 gác.
+const NV_LOP = [['h', 'non'], ['t1', 'tay'], ['c', 'chan'], ['a', 'ao'],
+                ['vk', 'vukhi'], ['t2', 'tay'], ['n', 'non']];
 // Hộp CẮT của từng lớp: [x1,y1,w1,h1, x2,y2,w2,h2] — bảng một rồi bảng hai, trong hệ ô 240x300.
 // Do chính `nuong_nv.py --lop` in ra sau khi nướng; sai một số là lớp dán lệch người.
 //
@@ -13496,9 +13520,9 @@ const NV_LOP_HOP = {
   // ── BỘ GIÁP ──────────────────────────────────────────────────────────────────────────
   // Phoenix — bộ giai 7 của Dark Knight. Lớp `h` (tóc sau) RỖNG ở bộ này nên không khai,
   // y như dkcw1/sbhd1/dlcm1: mũ giáp trùm kín gáy thì không còn tóc nào thò ra sau.
-  'dkph1':  { t1:[62,131,133,104,36,106,182,134], c:[67,156,142,107,65,139,135,131],
-              a:[63,119,130,140,20,110,173,156], t2:[56,115,148,100,30,106,167,163],
-              n:[86,86,103,77,0,78,178,173] },
+  'dkph1':  { t1:[61,133,135,105,43,102,175,131], c:[62,161,152,105,70,139,136,124],
+              a:[63,124,126,138,26,114,167,147], vk:[37,185,166,87,96,169,144,103],
+              t2:[57,110,145,103,35,111,163,139], n:[84,87,105,75,0,79,179,169] },
   'dwvt1':  { t1:[61,137,136,82,44,105,174,128], c:[64,154,135,114,67,136,141,125],
               a:[65,121,129,122,28,111,163,142], t2:[68,125,130,81,31,116,163,139],
               n:[87,88,80,55,0,79,187,172] },
@@ -13506,9 +13530,25 @@ const NV_LOP_HOP = {
 // Ô nào đang đeo món của bộ CÓ LỚP RỜI? Tra theo `lớp|giai` của CHÍNH MÓN ĐỒ, không phải của
 // người chơi: trong túi có thể nằm cái nón giai 3 của lớp khác, và nó phải hiện đúng nón đó.
 // Trả null khi không ô nào có — người gọi khỏi phải tạo rác mỗi khung hình.
+// Món vũ khí nào có LỚP CẦM TAY. Khoá giống hệt VK_ANH (`dòng|giai`, lùi về `dòng`), vì đây
+// là cùng một câu hỏi — "cây này trông ra sao" — chỉ khác đầu ra: VK_ANH cho THẦN KHÍ một tấm
+// phẳng bay theo người, còn bảng này cho một BẢNG KHUNG đã nướng trong tay theo từng hoạt cảnh.
+// Có mặt ở đây thì thần khí tự tắt (xem `_tkHien`), nếu không là hiện HAI cây.
+const NV_VK_LOP = {
+  'kiem|7': 'dkph1',        // Phượng Kiếm — nướng từ chính gói Spine của bộ Phoenix
+};
+function nvVkLop(p){
+  const it = p && p.equip && p.equip.vukhi;
+  const d = it && itemDef(it);
+  if (!d || !d.line) return null;
+  const ten = NV_VK_LOP[d.line + '|' + (it.tier || 1)] || NV_VK_LOP[d.line];
+  return (ten && NV_LOP_HOP[ten] && NV_LOP_HOP[ten].vk) ? ten : null;
+}
 function nvLopCuaEquip(p){
   if (!p || !p.equip) return null;
   let ra = null;
+  const vk = nvVkLop(p);
+  if (vk) (ra || (ra = {})).vukhi = vk;
   for (const k of HERO_ARMOR_SLOTS){
     const it = p.equip[k];
     if (!it || NV_ICON_O[k] == null) continue;
@@ -15622,7 +15662,10 @@ function drawPlayer(){
   //
   // Thần khí thì còn phải TẮT lúc đi theo sau: vũ khí XUẤT HIỆN cùng cú ra đòn, đó là nửa còn
   // lại của "xuất hiện đằng trước tung chiêu kèm vũ khí".
-  const _tkHien = !_coAva || _lopHien;
+  // Bộ nào có LỚP VŨ KHÍ nướng sẵn thì cây kiếm đã nằm trong tay rồi — tắt thần khí, không
+  // thì trên màn có HAI cây: một cây trong tay và một cây bay lượn cạnh người.
+  const _coVkLop = !!nvVkLop(p);
+  const _tkHien = (!_coAva || _lopHien) && !_coVkLop;
   {
     ctx.save();
     // Cùng cả phép LẤY ĐÀ của khối thân: cánh cắm vào lưng, thân lùi lại lấy đà rồi bổ tới mà
@@ -15762,7 +15805,10 @@ function drawPlayer(){
     //   tay không          → 'p' (đấm)  — nhân vật mới tạo không có vũ khí nào
     //   Dark Knight/Spellblade → luân phiên 'a' ↔ 's' cho hai nhát khác nhau
     // Spellblade sau này mang hai kiếm thì 's' chính là nhát của tay phụ.
-    const _blk = _kind !== 'a' ? _kind
+    // Niệm chú: đổi khối theo KIỂU RA ĐÒN của chiêu (xem KHOI_THEO_ACT). `_kind` vẫn là 'c'
+    // nên ràng buộc `_lopHien === (_kind==='a'||'c')` ở khối trên không đổi — chỉ khối VẼ đổi.
+    const _blk = _kind === 'c' ? (KHOI_THEO_ACT[p.castAct] || 'c')
+               : _kind !== 'a' ? _kind
                : !(p.equip && p.equip.vukhi) ? 'p'
                : (DANH_HAI_NHAT[p.sect] && p.nhat2) ? 's' : 'a';
     // Số khung lấy theo KHỐI VẼ, không theo _kind: khối đấm có 12 khung còn khối chém 16,
