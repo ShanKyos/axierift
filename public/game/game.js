@@ -1676,6 +1676,20 @@ const VK_ANH = {
   // Khai rõ ràng chứ không để rơi vào nhánh lùi: nhánh lùi là "chưa có art", còn đây là
   // "art của đúng món này". Hai ý khác nhau, và chỉ khai rõ mới đọc ra được ý thứ hai.
   'gay|7': { tep:'tk_dwstaff', x:65, y:33 },           // Gậy Hư Vô — cây gốc của bộ Grand Soul
+  // Đại kiếm đi kèm gói Spine của bộ Phoenix (Dark Knight giai 7). Cùng lối với 'gay|7':
+  // ghim thành món ĐỨNG RIÊNG ở đúng giai của bộ giáp, không đè lên tấm 'kiem' chung.
+  // ⚠ Tranh nằm ở gói CẦM VŨ KHÍ, không phải gói giáp — gói giáp để TRỐNG cả bốn vùng
+  // vũ khí trong atlas (đo được 0 điểm đặc). Cần nướng lại thì phải xin đúng gói ấy.
+  'kiem|7': { tep:'vk_phoenix', x:65, y:16 },          // Phượng Kiếm — cây gốc của bộ Phoenix
+  // Quyền trượng vàng-đỏ nạm hồng ngọc, cắt từ gói Spine của Dark Lord.
+  // ⚠ Dark Lord CỐ Ý không có lớp vũ khí cầm tay (không khai trong NV_VK_LOP): chủ dự án
+  // chốt lớp này cầm trượng BAY theo người như Dark Wizard. Nên cây này chỉ cần MỘT tấm
+  // phẳng ở đây, không cần nướng bảng khung — và gói gốc cũng chỉ có mỗi vũ khí.
+  'lenhtruong|7': { tep:'vk_dltruong', x:65, y:26 },   // Vương Trượng Hồng Ngọc
+  // Cung Thiên Mệnh. Cây này CÓ lớp cầm tay (NV_VK_LOP) nên trong màn không dùng tấm này —
+  // nhưng ICON TRONG TÚI thì vẫn vẽ từ đây, nên thiếu dòng này là túi hiện cây cung cũ.
+  'truongcung|7': { tep:'vk_elfcung', x:65, y:38 },    // Cung Thiên Mệnh
+  'makiem|7':     { tep:'vk_sbkiem',  x:65, y:28 },    // Kiếm Sinh Mệnh
 };
 // Tra art của một món vũ khí: tranh riêng của giai trước, tranh chung của dòng sau.
 function vkAnh(d){
@@ -14777,6 +14791,25 @@ const NV_MOC2  = { h:0, p:8, s:20, d:36, j:46, q:56, n:62, t:68, e:74 };
 // khối lúc vẽ nữa: Sylvan Ranger bắn nỏ, Dark Wizard và Dark Lord niệm chú, ngay trong khối 'a'.
 // Lớp nào có nhát thứ hai thì đòn thường luân phiên 'a' ↔ 's'.
 const DANH_HAI_NHAT = { thieulam: 1, minhgiao: 1 };
+// ── CHIÊU NÀO DÙNG HOẠT CẢNH NÀO ──────────────────────────────────────────────────────────
+// Rig có tới bốn hoạt cảnh ra đòn đã nướng sẵn, mà trước bản này mọi chiêu đều dùng đúng MỘT
+// khối 'c' (05_MagicAttack) — tức Dark Knight bổ đại kiếm bằng tư thế niệm chú.
+//
+// Ánh xạ từ `player.castAct` chứ KHÔNG khai theo id chiêu: `heroCastAct()` đã suy ra kiểu ra
+// đòn cho từng chiêu và đã chọn sao cho KHỚP VFX (Meteor rơi từ trên ⇒ 'raise', quạt lửa ⇒
+// 'spin'). Khai lại theo id chiêu là dựng bản sao thứ hai của một luật đang sống — thêm chiêu
+// mới là hai bên lệch ngay. Ở đây chỉ dịch kiểu ra đòn sang khối art.
+//
+//   slash  chém ngang      → 'a'  08_SwordAttack   (nhát chính)
+//   spin   quét vòng       → 's'  08_SwordAttack2  (nhát hai, biên độ rộng hơn)
+//   thrust đâm             → 's'  — chủ dự án chốt: "đâm gió thì sẽ là attack 2"
+//   guard  thủ thế / buff  → 't'  07_StatusEffect  (đúng dáng đứng khi dính buff)
+//   raise · point · shoot  → 'c'  05_MagicAttack   (giơ tay niệm — hành vi cũ, giữ nguyên)
+//
+// ⚠ 's' · 't' · 'p' nằm ở BẢNG HAI (nạp khi cần). Chưa về thì heroSprite lui về dáng đứng chứ
+// không rơi về hình vẽ — và nvBoTruoc() đã kéo sẵn cả hai bảng của bộ đang mặc, nên cú tung
+// chiêu đầu tiên không bị hụt.
+const KHOI_THEO_ACT = { slash: 'a', spin: 's', thrust: 's', guard: 't' };
 // SẢI CHÂN mỗi VÒNG hoạt cảnh — quãng đường thế giới mà MỘT vòng bảng khung chở được.
 // Đo bằng máy: `tools/do_dang.js`. ĐỪNG chép tay lại, và đừng ước lượng.
 //
@@ -14956,6 +14989,11 @@ const NV_GIAP = {
   'thieulam|1': 'dkgs1',
   // Bộ ĐẦU TIÊN đi đường LỚP RỜI (xem NV_LOP_HOP): bốn ô vẽ tách nhau, không cần đủ bộ.
   'baidasan|1': 'dwvt1',
+  // Phoenix — bộ ĐỈNH của Dark Knight, nên giai 7 chứ không phải giai 1 (cùng lý do dwsm1).
+  'thieulam|7': 'dkph1',
+  'bug|7': 'dlbc1',        // Dark Lord — trượng bay, không có lớp vũ khí cầm tay
+  'toanchan|7': 'elnb1',   // Sylvan Ranger — bộ Ngọc Bích, cung CẦM TAY
+  'minhgiao|7': 'sbsm1',   // Spellblade — bộ Sinh Mệnh, kiếm CẦM TAY, KHÔNG mũ
 };
 // Lớp này có art giáp ở giai nào? Lấy giai CAO NHẤT có art. Có hàm này thì ?test=1 và bài kiểm
 // không ai phải thuộc lòng "Dark Wizard thì giai 7, Dark Knight thì giai 1", và thêm bộ mới
@@ -15001,7 +15039,12 @@ const NV_ICON_O = { non: 0, ao: 1, tay: 2, chan: 3 };
 // tự ô trang bị. Spine vẽ: tóc-sau · tay-XA · hai chân · thân · tay-GẦN · đầu — tức ô `tay`
 // nằm HAI BÊN ô `ao`. Gộp `tay` làm một lớp là tay xa nhảy ra trước ngực.
 // Phải trùng khít bảng LOP trong tools/spine/nuong_nv.py.
-const NV_LOP = [['h', 'non'], ['t1', 'tay'], ['c', 'chan'], ['a', 'ao'], ['t2', 'tay'], ['n', 'non']];
+// ⚠ VŨ KHÍ nằm GIỮA thân (`a`) và tay gần (`t2`) — đúng thứ tự vẽ của bộ xương Spine:
+//     背后头发 · 左手 · 左腿 · 右腿 · 躯干 · (vũ khí) · 右手 · 右手前伸 · 头
+// Đặt sau `t2` là lưỡi kiếm chui ra sau bàn tay; đặt trước `a` là nó nằm sau lưng áo.
+// Bảng này phải TRÙNG KHÍT `LOP` trong tools/spine/nuong_nv.py — tests/test_lopdo.js §1 gác.
+const NV_LOP = [['h', 'non'], ['t1', 'tay'], ['c', 'chan'], ['a', 'ao'],
+                ['vk', 'vukhi'], ['t2', 'tay'], ['n', 'non']];
 // Hộp CẮT của từng lớp: [x1,y1,w1,h1, x2,y2,w2,h2] — bảng một rồi bảng hai, trong hệ ô 240x300.
 // Do chính `nuong_nv.py --lop` in ra sau khi nướng; sai một số là lớp dán lệch người.
 //
@@ -15036,6 +15079,28 @@ const NV_LOP_HOP = {
               a:[93,123,57,72,32,113,137,140], t2:[63,123,139,86,35,114,160,141],
               n:[84,87,76,56,0,79,180,173] },
   // ── BỘ GIÁP ──────────────────────────────────────────────────────────────────────────
+  // Phoenix — bộ giai 7 của Dark Knight. Lớp `h` (tóc sau) RỖNG ở bộ này nên không khai,
+  // y như dkcw1/sbhd1/dlcm1: mũ giáp trùm kín gáy thì không còn tóc nào thò ra sau.
+  'dkph1':  { t1:[61,133,135,105,43,102,175,131], c:[62,161,152,105,70,139,136,124],
+              a:[63,124,126,138,26,114,167,147], vk:[37,185,166,87,96,169,144,103],
+              t2:[57,110,145,103,35,111,163,139], n:[84,87,105,75,0,79,179,169] },
+  // Dark Lord — bộ vàng-đỏ nạm hồng ngọc. KHÔNG có lớp `vk`: lớp này cầm trượng BAY
+  // (thần khí), nên nướng bằng cờ --khongvk. Xem NV_VK_LOP — cố ý không khai.
+  // Sylvan Ranger — bộ Ngọc Bích. Bộ ĐẦU TIÊN có lớp `h` (tóc sau): elf tóc dài nên khe
+  // 背后头发 có nét vẽ thật, khác bốn bộ trước đều rỗng lớp này.
+  // Spellblade — bộ Sinh Mệnh. Lớp `n` (đầu) là TÓC TRẦN, không mũ: chủ dự án chốt lớp này
+  // không đội mũ, và art của gói vốn đã vẽ vậy nên không phải xử gì thêm ở mã.
+  'sbsm1':  { h:[80,94,109,89,6,86,174,182], t1:[70,128,113,91,38,111,167,118],
+              c:[63,149,141,108,66,141,130,123], a:[89,119,95,96,26,111,148,143],
+              vk:[16,184,208,91,96,160,144,115], t2:[62,116,130,84,31,107,155,152],
+              n:[81,86,110,73,0,79,181,176] },
+  'elnb1':  { h:[85,96,70,79,5,88,170,177], t1:[71,132,116,75,39,115,165,118],
+              c:[70,159,121,101,71,142,127,119], a:[92,125,59,75,33,115,137,139],
+              vk:[42,129,145,144,96,170,144,113], t2:[63,126,132,80,36,119,156,136],
+              n:[82,86,76,62,0,79,178,173] },
+  'dlbc1':  { t1:[68,132,126,91,44,112,175,131], c:[65,157,130,108,69,141,134,120],
+              a:[74,121,98,89,28,111,154,161], t2:[65,127,137,85,36,114,161,139],
+              n:[86,88,80,55,0,80,186,168] },
   'dwvt1':  { t1:[61,137,136,82,44,105,174,128], c:[64,154,135,114,67,136,141,125],
               a:[65,121,129,122,28,111,163,142], t2:[68,125,130,81,31,116,163,139],
               n:[87,88,80,55,0,79,187,172] },
@@ -15043,9 +15108,28 @@ const NV_LOP_HOP = {
 // Ô nào đang đeo món của bộ CÓ LỚP RỜI? Tra theo `lớp|giai` của CHÍNH MÓN ĐỒ, không phải của
 // người chơi: trong túi có thể nằm cái nón giai 3 của lớp khác, và nó phải hiện đúng nón đó.
 // Trả null khi không ô nào có — người gọi khỏi phải tạo rác mỗi khung hình.
+// Món vũ khí nào có LỚP CẦM TAY. Khoá giống hệt VK_ANH (`dòng|giai`, lùi về `dòng`), vì đây
+// là cùng một câu hỏi — "cây này trông ra sao" — chỉ khác đầu ra: VK_ANH cho THẦN KHÍ một tấm
+// phẳng bay theo người, còn bảng này cho một BẢNG KHUNG đã nướng trong tay theo từng hoạt cảnh.
+// Có mặt ở đây thì thần khí tự tắt (xem `_tkHien`), nếu không là hiện HAI cây.
+const NV_VK_LOP = {
+  'kiem|7': 'dkph1',        // Phượng Kiếm — nướng từ chính gói Spine của bộ Phoenix
+  'makiem|7': 'sbsm1',      // Kiếm Sinh Mệnh — Spellblade cầm kiếm, combo hai nhát a↔s
+  'truongcung|7': 'elnb1',  // Cung Thiên Mệnh — cung thì PHẢI cầm tay, bắn bằng cung bay
+                            // lơ lửng thì không đọc ra động tác giương cung nào cả.
+};
+function nvVkLop(p){
+  const it = p && p.equip && p.equip.vukhi;
+  const d = it && itemDef(it);
+  if (!d || !d.line) return null;
+  const ten = NV_VK_LOP[d.line + '|' + (it.tier || 1)] || NV_VK_LOP[d.line];
+  return (ten && NV_LOP_HOP[ten] && NV_LOP_HOP[ten].vk) ? ten : null;
+}
 function nvLopCuaEquip(p){
   if (!p || !p.equip) return null;
   let ra = null;
+  const vk = nvVkLop(p);
+  if (vk) (ra || (ra = {})).vukhi = vk;
   for (const k of HERO_ARMOR_SLOTS){
     const it = p.equip[k];
     if (!it || NV_ICON_O[k] == null) continue;
@@ -15127,7 +15211,22 @@ function nvChonHuong(base, face){
   }
   return tot;
 }
-function nvTen(sectKey, tier, hw){ const t = NV_BO[sectKey + '|' + tier]; return t ? t + (hw || '') : t; }
+// Thân trần LÀ CỦA LỚP, không của giai. `NV_BO` khai theo `lớp|giai` cho ngày nào có nhiều
+// bản thân khác nhau, nhưng hiện mỗi lớp đúng MỘT bản (khai ở `|1`) — nên tra hụt giai thì
+// lui về bản của chính lớp đó, đừng trả `undefined`.
+//
+// ⚠ ĐÂY LÀ MỘT LỖ THỦNG CỦA QUY TẮC SỐ 3, không phải chuyện nhỏ. Trước bản này
+// `nvTen('thieulam', 7)` trả `undefined` ⇒ `nvKhungGop()` thoát sớm ⇒ **cả nhân vật** rơi về
+// hình dựng bằng đường (hiệp sĩ xám, áo choàng đỏ), dù art có đủ. Mọi lớp ở giai ≥2 đều dính,
+// và nó im lặng tuyệt đối: không lỗi, không 404, chỉ là một nhân vật khác hẳn.
+// Lui về thân trần đúng nguyên tắc đã chốt ở màn chờ: *thà thân trần còn hơn một nhân vật
+// khác hẳn* (xem `ccArtSan`).
+const NV_BO_NEN = {};                              // lớp -> bản thân trần đầu tiên khai được
+for (const k in NV_BO){ const [sk] = k.split('|'); if (!NV_BO_NEN[sk]) NV_BO_NEN[sk] = NV_BO[k]; }
+function nvTen(sectKey, tier, hw){
+  const t = NV_BO[sectKey + '|' + tier] || NV_BO_NEN[sectKey];
+  return t ? t + (hw || '') : t;
+}
 // Tên bộ art đang mặc: bộ giáp nếu có, không thì thân trần của lớp. Mọi thứ vẽ theo bộ này —
 // thân, vũ khí, viền sáng — nên không có cách nào thân một bộ mà tay áo một bộ khác.
 // `hw` là MÃ BẢN VẼ (xem NV_HUONG); bỏ trống = bản nghiêng, tức mọi lời gọi cũ vẫn đúng.
@@ -15167,7 +15266,30 @@ function nvMoc(kind){ return NV_BANG2[kind] ? NV_MOC2[kind] : NV_MOC[kind]; }
 // Mốc bắt đầu (NV_MOC.r = 80) GIỮ NGUYÊN cho cả hai đời, nên chỉ khác SỐ khung chứ không lệch
 // mốc. Chỗ chồng lớp thì quy về PHA 0..1 rồi mới nhân với số khung của chính lớp đó — xem
 // nvKhungGop(), đó là chỗ duy nhất một khung hình đọc nhiều bộ khác số khung cùng lúc.
-const NV_KHUNG_R = { dkcw1: 32, dwsc1: 32, elfar1: 32, dlcm1: 32 };
+// ⚠ Bộ nào nướng ra 112 ô (16 cột × 7 hàng) thì khối CHẠY là 32 khung, không phải 16 như
+// HS_FRAMES.r mặc định. Kiểm bằng phép chia: bềRộngBảng/bềRộngÔ = 16 và bềCao/caoÔ = 7.
+// Quên khai là lớp đó chỉ đọc NỬA ĐẦU vòng chạy — chân lệch nhịp so với lớp khai đủ.
+const NV_KHUNG_R = { dkcw1: 32, dwsc1: 32, elfar1: 32, dlcm1: 32,
+                     dkph1: 32, dlbc1: 32, elnb1: 32, sbsm1: 32 };
+// Số khung của một khối, tính trên MỌI bộ đang góp lớp — không chỉ thân nền.
+//
+// ⚠ `nvBoTen()` trả THÂN NỀN cho bộ đã cắt lớp (vì `nvBoGiap()` cố ý trả null), nên hỏi nó số
+// khung là hỏi nhầm người: Spellblade mặc `sbsm1` (32 khung chạy) mà thân nền `sbhd1` chỉ có
+// 16 ⇒ vòng chạy đọc nửa đầu rồi lặp lại, nửa sau trùng khít nửa trước. Nhìn ra chỉ thấy
+// "chạy hơi lạ"; `tests/test_khungchay.js` bắt được bằng cách so từng khung.
+//
+// Lấy MAX chứ không lấy của thân: `nvKhungGop()` đã quy mỗi lớp về PHA 0..1 rồi mới nhân với
+// số khung của CHÍNH nó, nên lớp ít khung vẫn chạy đúng nhịp, chỉ thô hơn. Lấy min thì bộ
+// nướng mới bị bộ cũ kéo xuống.
+function nvSoKhungBo(sectKey, tier, gv, kind, hw){
+  let n = nvSoKhung(nvBoTen(sectKey, tier, gv, hw), kind);
+  const o = gv && gv.oLop;
+  if (o) for (const k in o){
+    const t = o[k] ? o[k] + (hw || '') : null;
+    if (t) n = Math.max(n, nvSoKhung(t, kind));
+  }
+  return n;
+}
 function nvSoKhung(ten, kind){
   if (kind === 'r' && ten && NV_KHUNG_R[ten]) return NV_KHUNG_R[ten];
   return HS_FRAMES[kind] || 1;
@@ -15263,7 +15385,7 @@ function nvKhungGop(sectKey, tier, gv, kind, idx, hw){
   // mỗi lớp tự nhân với số khung của CHÍNH nó: thân 32 khung và giáp 16 khung vẫn dừng ở
   // cùng một thời điểm trong vòng chạy, chỉ khác độ mịn. Lấy chung một `k` như bản trước thì
   // lớp 16 khung nhận chỉ số tới 31, chia dư ra thành đi ngược nửa vòng — tay rời khỏi thân.
-  const nRef = nvSoKhung(than, kind);
+  const nRef = nvSoKhungBo(sectKey, tier, gv, kind, hw);
   const pha  = (((idx % nRef) + nRef) % nRef) / nRef;
   const oL = (gv && gv.oLop) || {};
   // Gom nguồn TRƯỚC. Thiếu một tấm thì bỏ cả lượt chứ đừng vẽ nửa người: bảng hai nạp khi
@@ -15407,7 +15529,7 @@ function heroSprite(sectKey, tier, gv, kind, idx, act, back, sw, blk, hw){
   g.scale(HS_SCALE, HS_SCALE);
   g.translate(HS_PAD, HS_PAD);
   // Số khung của KHỐI ĐANG ĐỌC, theo chính bộ art này (khối chạy khai riêng — xem NV_KHUNG_R).
-  const _nk = nvSoKhung(nvBoTen(sectKey, tier, gv, hw), blk);
+  const _nk = nvSoKhungBo(sectKey, tier, gv, blk, hw);
   const ps = heroFramePose(kind, idx, act, sw, _nk);
   ps.back = !!back;
   // Cánh KHÔNG nướng vào sprite: drawPlayer đã vẽ nó riêng bằng veCanh(). Nướng vào đây là vẽ
@@ -17654,7 +17776,10 @@ function drawPlayer(p){
   //
   // Thần khí thì còn phải TẮT lúc đi theo sau: vũ khí XUẤT HIỆN cùng cú ra đòn, đó là nửa còn
   // lại của "xuất hiện đằng trước tung chiêu kèm vũ khí".
-  const _tkHien = !_coAva || _lopHien;
+  // Bộ nào có LỚP VŨ KHÍ nướng sẵn thì cây kiếm đã nằm trong tay rồi — tắt thần khí, không
+  // thì trên màn có HAI cây: một cây trong tay và một cây bay lượn cạnh người.
+  const _coVkLop = !!nvVkLop(p);
+  const _tkHien = (!_coAva || _lopHien) && !_coVkLop;
   {
     ctx.save();
     // Cùng cả phép LẤY ĐÀ của khối thân: cánh cắm vào lưng, thân lùi lại lấy đà rồi bổ tới mà
@@ -17794,14 +17919,17 @@ function drawPlayer(p){
     //   tay không          → 'p' (đấm)  — nhân vật mới tạo không có vũ khí nào
     //   Dark Knight/Spellblade → luân phiên 'a' ↔ 's' cho hai nhát khác nhau
     // Spellblade sau này mang hai kiếm thì 's' chính là nhát của tay phụ.
-    const _blk = _kind !== 'a' ? _kind
+    // Niệm chú: đổi khối theo KIỂU RA ĐÒN của chiêu (xem KHOI_THEO_ACT). `_kind` vẫn là 'c'
+    // nên ràng buộc `_lopHien === (_kind==='a'||'c')` ở khối trên không đổi — chỉ khối VẼ đổi.
+    const _blk = _kind === 'c' ? (KHOI_THEO_ACT[p.castAct] || 'c')
+               : _kind !== 'a' ? _kind
                : !(p.equip && p.equip.vukhi) ? 'p'
                : (DANH_HAI_NHAT[p.sect] && p.nhat2) ? 's' : 'a';
     // Số khung lấy theo KHỐI VẼ, không theo _kind: khối đấm có 12 khung còn khối chém 16,
     // tính chỉ số bằng 16 rồi chia dư cho 12 là thứ tự khung đảo lộn giữa cú đấm.
     // Số khung phải hỏi CHÍNH bộ art đang mặc: khối chạy của bộ nướng lại có 32 khung, bộ cũ
     // 16. Đọc thẳng HS_FRAMES là bộ 32 khung chỉ chạy được nửa vòng rồi lặp.
-    const _n = nvSoKhung(nvBoTen(p.sect, _tier, _gv, p._hw), _blk) || HS_FRAMES[_kind];
+    const _n = nvSoKhungBo(p.sect, _tier, _gv, _blk, p._hw) || HS_FRAMES[_kind];
     const _TAU = Math.PI * 2;
     const _idx = _kind === 'c' ? clamp((Math.min(1, castK) * _n) | 0, 0, _n - 1)
                : _kind === 'a' ? clamp((atkK * _n) | 0, 0, _n - 1)
@@ -19647,13 +19775,43 @@ function tangDoThuNghiem(){
 // là vừa thổi cân bằng vừa làm hỏng khoảnh khắc nhặt được món Hoàn Hảo THẬT về sau.
 // Dùng genItem() — đúng đường đồ rơi từ quái — ép perfect:0 và plus9:0, cấp 1. Đây là bộ đồ vải
 // tầm thường: đủ để nhân vật hiện ra có mặc gì đó, không đủ để ai thấy mình mạnh sẵn.
+// ═══ BẢN CHƠI THỬ — phát thẳng bộ giai 7 ═══
+// Chủ dự án chốt cho bản demo này: người thử phải thấy ngay năm bộ giáp giai 7 (Phoenix ·
+// Grand Soul · Ngọc Bích · Sinh Mệnh · bộ vàng Dark Lord) chứ không phải đồ vải cấp 1.
+//
+// ⚠ ĐÂY LÀ QUYẾT ĐỊNH CỦA BẢN THỬ, KHÔNG PHẢI CÂN BẰNG. Tách thành hằng riêng để gỡ về nhịp
+// chơi thật chỉ phải sửa MỘT dòng (`= 1`), và để ai đọc code biết ngay đoạn này không mô tả
+// trải nghiệm thật của người chơi mới.
+const DEMO_DO_GIAI = 7;
+// Dòng vũ khí có ART của từng lớp. Phát bừa một dòng khác thì bộ giáp giai 7 hiện đúng mà
+// trên tay lại là cây vũ khí chưa có tranh — mà vũ khí là thứ to nhất trên bóng dáng.
+// Ba lớp có lớp vũ khí CẦM TAY (xem NV_VK_LOP) nên chọn sai dòng là mất luôn cây trong tay.
+const DEMO_VK_DONG = { thieulam:'kiem', minhgiao:'makiem', toanchan:'truongcung',
+                       baidasan:'gay',  bug:'lenhtruong' };
 function phatDoKhoiDau(){
+  const giai = clamp(DEMO_DO_GIAI, 1, GIAI_MAX);
+  const cap  = clamp(capDauGiai(giai), 1, MAX_LV);
+  const dong = DEMO_VK_DONG[player.sect];
   for (const _id of ['vukhi', 'non', 'ao', 'tay', 'chan']){
     const sl = SLOTS.find(s2 => s2.id === _id);
     if (!sl || sl.special) continue;
-    const it = genItem(1, null, null, { slots: [_id], perfect: 0, plus9: 0 });
+    let it = null;
+    // Vũ khí: quay cho tới khi ra ĐÚNG dòng có art. genItem bốc ngẫu nhiên trong các dòng lớp
+    // này dùng được, nên không ép được bằng tham số — mà đây là lúc tạo nhân vật, quay vài
+    // chục lượt không ai thấy.
+    for (let i = 0; i < (_id === 'vukhi' && dong ? 300 : 1); i++){
+      const t = genItem(cap, null, null, { slots: [_id], perfect: 0, plus9: 0 });
+      if (!t) continue;
+      it = t;
+      if (_id !== 'vukhi' || !dong) break;
+      const d = itemDef(t);
+      if (d && d.line === dong) break;
+    }
     if (!it) continue;
-    it.plus = 0;
+    // Ép GIAI để art khớp: nvLopCuaEquip() và nvVkLop() đều tra theo `it.tier`, nên món đúng
+    // cấp mà sai giai thì vẫn rơi về bộ cũ.
+    it.tier = giai; it.level = cap; it.plus = 0;
+    if (it.main && sl.base) it.main.v = sl.base(giai);
     player.equip[_id] = it;
   }
   calcDerived();
@@ -20348,7 +20506,8 @@ function startGame(sectKey, quze){
       tangDoThuNghiem();
       addFloat(player.x, player.y-72, 'Chế độ test — mặc sẵn nguyên bộ giai 1 và vũ khí của lớp', '#a0ffe9', 13);
     } else if (!window.TEST_MODE){
-      // Người chơi THẬT: phát bộ khởi đầu hai ô (xem phatDoKhoiDau). Loại trừ TEST_MODE vì hơn
+      // Người chơi THẬT: phát bộ khởi đầu (xem phatDoKhoiDau — bản chơi thử phát NGUYÊN BỘ
+      // GIAI 7 cộng đúng dòng vũ khí có art, xem DEMO_DO_GIAI). Loại trừ TEST_MODE vì hơn
       // trăm bài kiểm tự đặt cờ đó rồi gọi startGame để mở cổng dịch chuyển — bài cân bằng nào
       // cũng đo trên nhân vật TRẦN, treo đồ vào đây là cả bộ đo đổi mốc trong im lặng.
       phatDoKhoiDau();

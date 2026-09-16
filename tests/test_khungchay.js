@@ -52,7 +52,12 @@ const pass = m => console.log('PASS ' + m);
     await new Promise(r => setTimeout(r, 500));
     const ra = [];
     for (let i = 0; i < n; i++){
-      const s = heroSprite(player.sect, 1, gearVisual(player), blk, i, 'a', false, 0, blk);
+      // ⚠ ÉP `t:1`, đừng tin đồ mặc định. Bài này đo THÂN 32 khung; nếu người chơi mới đang
+      // mặc sẵn bộ giai 7 (xem DEMO_DO_GIAI) thì với Dark Wizard đó là `dwsm1` — bộ GỘP nướng
+      // từ đời cũ, chỉ 96 ô = 16 khung chạy — và nvKhungGop() cố ý trả null cho bộ gộp. Bài
+      // sẽ đo nhầm 16 khung rồi báo "luật 16 khung còn sót" trong khi mã hoàn toàn đúng.
+      const _gv = Object.assign({}, gearVisual(player), { t: 1, plus: 0 });
+      const s = heroSprite(player.sect, 1, _gv, blk, i, 'a', false, 0, blk);
       if (!s) { ra.push('null'); continue; }
       const c = document.createElement('canvas');
       c.width = s.width; c.height = s.height;
@@ -102,7 +107,9 @@ const pass = m => console.log('PASS ' + m);
     startGame('baidasan', null);
     await new Promise(r => setTimeout(r, 500));
     // ép ô `ao` lấy từ dwvt1 (bộ 16 khung) còn thân vẫn dwsc1 (32 khung)
-    const gv = gearVisual(player);
+    // `t:1` vì lý do y hệt mục ②: giai 7 của Dark Wizard là bộ GỘP dwsm1, mà nvKhungGop()
+    // thoát ngay ở dòng đầu khi gặp bộ gộp — ca trộn hai đời sẽ không bao giờ dựng được.
+    const gv = Object.assign({}, gearVisual(player), { t: 1, plus: 0 });
     gv.oLop = Object.assign({}, gv.oLop, { ao: 'dwvt1' });
     // nvTai() là bộ nạp LƯỜI: gọi lần đầu chỉ khởi động tải rồi trả null. Gọi một lượt cho
     // nó bắt đầu tải, đợi ảnh về, rồi mới đo — không thì bài kiểm đo đúng lúc chưa có gì.
