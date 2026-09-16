@@ -1171,6 +1171,107 @@ RULES.unshift(
   [/^(.+) — cấp (\d+)$/, (m, ten, lv) => `${tr(ten)} — Lv ${lv}`],
 );
 
+/* Đợt 6 — LÒ KHẮC, mini-game roguelite chọn thẻ (docs/DAC_TA_LO_KHAC.md).
+   Ba đường chữ khác nhau, và bỏ sót đường nào thì đường ấy ra tiếng Việt giữa một bản English:
+     · nút/khung HTML của bảng chọn thẻ  → EXACT + RULES qua MutationObserver;
+     · chữ nổi & banner & HUD vẽ trên CANVAS → cùng RULES, đi qua bản vá fillText;
+     · tên map và tên cổng                → EXACT (chúng là dữ liệu, không ghép động).
+   ⚠ Tên 18 lá thẻ phải nằm trong EXACT chứ KHÔNG dựng bằng quy tắc: quy tắc `(.+)` sẽ nuốt cả
+   những chuỗi không phải tên thẻ, và tên thẻ còn được `tr()` gọi lại từ trong HUD lẫn chữ nổi. */
+Object.assign(EXACT, {
+  /* map · cổng */
+  'Lò Khắc': 'The Carving Forge',
+  'Rời Lò': 'Leave Forge',
+  'Cửa Lò Khắc — 15 đợt, mỗi đợt khắc một nếp (cấp 15+)':
+    'Carving Forge Door — 15 waves, one carving each (Lv 15+)',
+  'Rời Lò Khắc → Sapidae Chiefdom': 'Leave the Carving Forge → Sapidae Chiefdom',
+  'Một cái lò bỏ hoang trong lòng đá, dưới nền Sapidae Chiefdom. Thợ khắc đời trước tập nghề ở đây: khắc luật lên chính mình rồi để nó tan trước khi nguội. Nếp Khắc Vừa, đúng như giáo lý dạy.':
+    'A forge abandoned in the rock beneath Sapidae Chiefdom. The carvers of old trained here: they cut a law into themselves, then let it fade before the iron cooled. The Measured Cut, exactly as the doctrine teaches.',
+  /* bậc thẻ */
+  'Thường': 'Common', 'Hiếm': 'Rare', 'Cổ Vật': 'Relic',
+  /* 18 lá — tên */
+  'Mài Lưỡi': 'Whetted Edge', 'Gân Thép': 'Steel Sinew', 'Bước Nhẹ': 'Light Step',
+  'Nhịp Gấp': 'Quickened Beat', 'Mạch Rộng': 'Broad Channel', 'Mắt Sắc': 'Keen Eye',
+  'Da Dày': 'Thick Hide', 'Tay Nhanh': 'Swift Hands',
+  'Nổ Xác': 'Bursting Corpse', 'Hút Máu': 'Bloodletting', 'Giáp Gai': 'Barbed Plate',
+  'Sương Băng': 'Rimefrost', 'Thu Hồn': 'Soul Draw',
+  'Khắc Vào Mình': 'Carved Into Flesh', 'Nếp Vừa': 'The Measured Cut',
+  'Hai Lưỡi': 'Twin Edge', 'Lò Chưa Nguội': 'The Forge Still Hot', 'Chồng Chất': 'Compounding',
+  /* 18 lá — mô tả */
+  '+16% Công Kích': '+16% Attack',
+  '+14% Sinh Lực tối đa': '+14% max Health',
+  '+10% tốc độ di chuyển': '+10% movement speed',
+  '-10% thời gian hồi chiêu': '-10% skill cooldown',
+  '+18% Mana tối đa': '+18% max Mana',
+  '+5 điểm % Bạo Kích': '+5 percentage points of Critical',
+  '+12% Phòng Thủ': '+12% Defence',
+  '+8% tốc độ đánh': '+8% attack speed',
+  'Quái chết thì nổ — 25% máu tối đa của nó lên mọi con trong 120px':
+    'Slain foes burst — 25% of their max health to everything within 120px',
+  'Hồi 4% sát thương gây ra': 'Heal for 4% of damage dealt',
+  'Phản 30% sát thương nhận vào': 'Reflect 30% of damage taken',
+  'Quái trúng đòn bị chậm 25% trong 2 giây': 'Struck foes are slowed 25% for 2 seconds',
+  'Quái chết hồi 3% Mana': 'Slain foes restore 3% Mana',
+  '+50% Công Kích, NHƯNG -30% Sinh Lực tối đa': '+50% Attack, BUT -30% max Health',
+  'Dọn sạch mỗi đợt thì hồi ĐẦY Sinh Lực và Mana': 'Clearing a wave restores Health and Mana to FULL',
+  'Đòn thường đánh thêm một nhát nữa, 55% sát thương': 'Basic attacks strike a second time for 55% damage',
+  'Sát thương tăng 3%/giây trong đợt (trần +60%), về 0 khi sang đợt mới':
+    'Damage climbs 3%/second within a wave (caps at +60%), resets each wave',
+  'Mỗi đợt dọn sạch thì +6% sát thương, cộng dồn tới hết lượt':
+    'Each wave cleared grants +6% damage, compounding for the whole run',
+  /* bảng chọn thẻ · chữ nổi cố định */
+  '◆ KHẮC MỘT NẾP': '◆ CUT ONE CARVING',
+  /* ⚠ MỘT CÂU = MỘT NÚT VĂN BẢN. Bản đầu của bảng này xé câu ra làm bảy mảnh bằng ba thẻ <b>
+     nằm GIỮA câu, và `trCompute` thì `.trim()` mảnh trước khi thử quy tắc — nên mảnh "Đợt "
+     trở thành "Đợt", mọi quy tắc neo ^…$ trượt, và thứ hiện ra là nửa Anh nửa Việt trong cùng
+     một dòng. Nay thẻ <b> chỉ bọc TRỌN một cụm, phần còn lại là một câu liền. */
+  'đã sạch.': 'cleared.',
+  'Chọn một lá Nếp Khắc — nếp chồng lên nhau và tan khi rời lò.':
+    'Draw one Carving card — carvings stack, and they fade when you leave the forge.',
+  '◆ Nếp Vừa — hồi đầy': '◆ The Measured Cut — fully restored',
+  'Đợt trùm cần tự tay chiến — TỰ ĐÁNH đã tắt!': 'Boss waves must be fought by hand — AUTO turned off!',
+  'ĐỢT CUỐI. Hạ nó là trọn lượt.': 'FINAL WAVE. Fell it and the run is complete.',
+  'Đợt trùm — hạ nó để được chọn HAI lá': 'Boss wave — fell it to draw TWO cards',
+  '◆ TRỌN LÒ KHẮC': '◆ CARVING FORGE COMPLETE',
+});
+
+RULES.unshift(
+  /* Bảng chọn thẻ — hai câu HTML, đoạn thứ hai chỉ hiện ở đợt trùm. Thẻ `<b>` nằm giữa câu nên
+     nút văn bản bị cắt làm ba: chuỗi tới đây KHÔNG có thẻ, chỉ có phần chữ giữa hai thẻ. */
+  [/^Đợt (\d+)\/(\d+)$/, 'Wave $1/$2'],
+  [/^Đợt trùm — còn (\d+) lượt chọn\.$/, 'Boss wave — $1 draw(s) remaining.'],
+  [/^chồng tối đa (\d+)$/, 'stacks up to $1'],
+  /* Cổng · chặn cửa */
+  [/^Cần cấp (\d+) để vào Lò Khắc$/, 'Requires Lv $1 to enter the Carving Forge'],
+  [/^Hết lượt Lò Khắc hôm nay \((\d+)\/ngày\)$/, 'No Carving Forge runs left today ($1/day)'],
+  /* Banner đợt */
+  [/^ĐỢT (\d+)\/(\d+)$/, 'WAVE $1/$2'],
+  [/^ĐỢT (\d+) — (.+)$/, (m, a, b) => `WAVE ${a} — ${tr(b)}`],
+  [/^(\d+) quái · máu ×([\d.,]+) — dọn sạch để khắc một nếp mới$/,
+    '$1 foes · health ×$2 — clear it to cut a new carving'],
+  [/^Đợt (\d+) sạch — \+([\d.,]+)◈ · \+(\d+) Bản Năng$/,
+    'Wave $1 cleared — +$2◈ · +$3 Instinct'],
+  [/^◆ Nếp Khắc — (.+)!$/, (m, a) => `◆ Carving — ${tr(a)}!`],
+  /* Kết lượt · gục */
+  [/^◆ RỜI LÒ Ở ĐỢT (\d+)$/, '◆ LEFT THE FORGE AT WAVE $1'],
+  [/^☠ GỤC Ở ĐỢT (\d+)$/, '☠ FELL AT WAVE $1'],
+  [/^\+([\d.,]+)◈ Lumen · \+(\d+) Bản Năng(.*)$/, (m, a, b, c) => `+${a}◈ Lumen · +${b} Instinct${trFrag(c)}`],
+  [/^Nếp Khắc tan hết, nhưng phần thưởng đã ăn thì giữ: \+([\d.,]+)◈ · \+(\d+) Bản Năng\.$/,
+    'Every carving fades, but what you already banked is yours: +$1◈ · +$2 Instinct.'],
+  /* HUD */
+  [/^LÒ KHẮC · Đợt (\d+)\/(\d+) · còn (\d+) quái · (\d+) nếp$/,
+    'CARVING FORGE · Wave $1/$2 · $3 foes left · $4 carvings'],
+  [/^Kho: ([\d.,]+)◈ · (\d+) Bản Năng — chết vẫn giữ$/,
+    'Banked: $1◈ · $2 Instinct — kept even if you fall'],
+  /* Danh sách nếp đang cầm: một chuỗi tên nối bằng ` · `, mỗi tên có thể kèm `×N`. Phải có
+     tiền tố `Nếp: ` mới bắt được — không có nó thì quy tắc phải là `(.+) · (.+)` và nó sẽ
+     nuốt hàng trăm chuỗi khác trong game. */
+  [/^Nếp: (.+)$/, (m, ds) => 'Carvings: ' + ds.split(' · ').map(x => {
+    const mm = x.match(/^(.+?)(×\d+)?$/);
+    return tr(mm[1]) + (mm[2] || '');
+  }).join(' · ')],
+);
+
 const _trCache = new Map();
 function tr(s) {
   if (lang !== 'en' || !s || typeof s !== 'string') return s;

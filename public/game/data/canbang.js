@@ -731,6 +731,63 @@ window.WEAPON_LINES = [
 //              rewards:{ sach:[lo,hi], tuLa:[lo,hi], hon:[lo,hi], khi, bacThem, silver:[lo,hi] } }
 window.DUNGEONS = {};
 
+// ═══════════ NẾP KHẮC — bộ thẻ của mini-game LÒ KHẮC ═══════════
+// Đặc tả: docs/DAC_TA_LO_KHAC.md. Máy nằm trong game.js (LK · lkCong · lkBayThe).
+//
+// Mỗi lá chỉ là DỮ LIỆU: khoá hiệu ứng + con số. Máy đọc mọi khoá qua ĐÚNG MỘT hàm cộng
+// `lkCong(khoa)`, nên thêm một lá chỉ-đổi-con-số là thêm một phần tử vào bảng này, không sửa
+// một dòng máy nào. Lá đổi HÀNH VI (bậc 2-3) thì có thêm một chỗ đọc riêng — chỗ đó ghi trong
+// cột `ở đâu` của §7 đặc tả.
+//
+// `bac`  1 = Thường (đổi con số) · 2 = Hiếm (đổi cách đánh) · 3 = Cổ Vật (đổi luật)
+// `lap`  trần số lá cùng loại được cầm. Bậc 3 luôn là 1.
+//
+// ⚠ Bậc 1 CỐ Ý chỉ đổi con số. Nếu MỌI lá đều đổi luật thì không lá nào đọc ra là đặc biệt —
+// bậc 1 là cái nền để lá Cổ Vật còn là một khoảnh khắc. Xem §6 đặc tả.
+window.NEP_KHAC = [
+  // ── Bậc 1 · Thường ──────────────────────────────────────────────────────
+  { id:'mai_luoi',  ten:'Mài Lưỡi',   bac:1, lap:5, atkPct:16,
+    mo:'+16% Công Kích' },
+  { id:'gan_thep',  ten:'Gân Thép',   bac:1, lap:5, hpPct:14,
+    mo:'+14% Sinh Lực tối đa' },
+  { id:'buoc_nhe',  ten:'Bước Nhẹ',   bac:1, lap:3, spdPct:10,
+    mo:'+10% tốc độ di chuyển' },
+  { id:'nhip_gap',  ten:'Nhịp Gấp',   bac:1, lap:4, cdPct:10,
+    mo:'-10% thời gian hồi chiêu' },
+  { id:'mach_rong', ten:'Mạch Rộng',  bac:1, lap:4, qiPct:18,
+    mo:'+18% Mana tối đa' },
+  { id:'mat_sac',   ten:'Mắt Sắc',    bac:1, lap:5, critPP:5,
+    mo:'+5 điểm % Bạo Kích' },
+  { id:'da_day',    ten:'Da Dày',     bac:1, lap:4, defPct:12,
+    mo:'+12% Phòng Thủ' },
+  { id:'tay_nhanh', ten:'Tay Nhanh',  bac:1, lap:4, aspdPct:8,
+    mo:'+8% tốc độ đánh' },
+  // ── Bậc 2 · Hiếm — đổi CÁCH ĐÁNH ────────────────────────────────────────
+  { id:'no_xac',    ten:'Nổ Xác',     bac:2, lap:3, noXac:25,
+    mo:'Quái chết thì nổ — 25% máu tối đa của nó lên mọi con trong 120px' },
+  { id:'hut_mau',   ten:'Hút Máu',    bac:2, lap:3, leech:4,
+    mo:'Hồi 4% sát thương gây ra' },
+  { id:'giap_gai',  ten:'Giáp Gai',   bac:2, lap:2, phan:30,
+    mo:'Phản 30% sát thương nhận vào' },
+  { id:'suong_bang',ten:'Sương Băng', bac:2, lap:2, cham:25,
+    mo:'Quái trúng đòn bị chậm 25% trong 2 giây' },
+  { id:'thu_hon',   ten:'Thu Hồn',    bac:2, lap:3, honQi:3,
+    mo:'Quái chết hồi 3% Mana' },
+  // ── Bậc 3 · Cổ Vật — đổi LUẬT ───────────────────────────────────────────
+  // `khac_vao_minh` là lá của DRUE: hắn khắc vào chính mình và giữ luôn. Đây là lá DUY NHẤT
+  // lấy đi một thứ để đổi — xem §3 đặc tả.
+  { id:'khac_vao_minh', ten:'Khắc Vào Mình', bac:3, lap:1, atkPct:50, hpPct:-30,
+    mo:'+50% Công Kích, NHƯNG -30% Sinh Lực tối đa' },
+  { id:'nep_vua',   ten:'Nếp Vừa',    bac:3, lap:1, hoiDot:1,
+    mo:'Dọn sạch mỗi đợt thì hồi ĐẦY Sinh Lực và Mana' },
+  { id:'hai_luoi',  ten:'Hai Lưỡi',   bac:3, lap:1, haiLuoi:55,
+    mo:'Đòn thường đánh thêm một nhát nữa, 55% sát thương' },
+  { id:'lo_chua_nguoi', ten:'Lò Chưa Nguội', bac:3, lap:1, nongLo:3,
+    mo:'Sát thương tăng 3%/giây trong đợt (trần +60%), về 0 khi sang đợt mới' },
+  { id:'chong_chat',ten:'Chồng Chất', bac:3, lap:1, chongChat:6,
+    mo:'Mỗi đợt dọn sạch thì +6% sát thương, cộng dồn tới hết lượt' },
+];
+
 // Internal object keys are stable identifiers (referenced throughout combat/save logic) and are
 // intentionally left unchanged by the Axie reskin — only player-facing fields below (name,
 // role, desc, glyph, skill names) were rewritten. See docs/NAMING_MAP.md for the full class
@@ -1785,6 +1842,15 @@ window.MAPS = {
   deep: { name:'Tầng Sâu', min:1, range:'—', type:'dungeon', ground:'#6a6458', patch:'#241f1a',
     spawn:{ x:1300, y:1560 }, dungeon:true, dark:true, trees:10, rocks:40,
     desc:'Đường nứt ăn thẳng xuống dưới lớp đá nền, mọc ra từ hôm Nhát Gọi khắc lên trời. Càng xuống sâu càng xa mọi phiến Rune, nên không tầng nào giống tầng nào — và không tầng nào có luật.',
+    packs: [], duhiep: null },
+
+  // ── LÒ KHẮC — sảnh mini-game roguelite chọn thẻ (docs/DAC_TA_LO_KHAC.md) ──
+  // ⚠ `dungeon:true` ⇒ khổ map BỊ ÉP 2600x1900: obstaclesOf() trả thẳng DGN_OBSTACLES, một
+  // khung tường chép cứng cho đúng khổ đó. Khai w/h khác là nhân vật đi ra ngoài tường.
+  // Nền phẳng như `deep` — mini-game này cố ý không tốn một tệp art nào.
+  lokhac: { name:'Lò Khắc', min:15, range:'—', type:'dungeon', ground:'#4a3a34', patch:'#2a1d18',
+    spawn:{ x:1300, y:1560 }, dungeon:true, dark:true, trees:4, rocks:30,
+    desc:'Một cái lò bỏ hoang trong lòng đá, dưới nền Sapidae Chiefdom. Thợ khắc đời trước tập nghề ở đây: khắc luật lên chính mình rồi để nó tan trước khi nguội. Nếp Khắc Vừa, đúng như giáo lý dạy.',
     packs: [], duhiep: null },
 };
 
