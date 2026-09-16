@@ -51,23 +51,48 @@ const { chromium } = require('playwright');
     fail(`avatar tắt mà lớp nhân vật đã bị dời/thu: ${JSON.stringify(tat)}`);
   else pass('avatar tắt ⇒ dx=dy=0, cỡ=1 — hành vi cũ nguyên vẹn');
 
-  // ── ② avatar BẬT: đi sau (nhỏ) ⇄ ra trước (cỡ thật) ───────────────────────────────────
-  const sau = await khung({ avatar: 'aurelion', atkAnim: 0, castT: 0, face: 0 });
-  const truoc = await khung({ avatar: 'aurelion', atkAnim: 0.16, castT: 0, face: 0 });
-  // face = 0 ⇒ hướng mặt là +x, nên dấu của dx CHÍNH LÀ trước/sau.
-  if (!(sau.dx < 0)) fail(`lúc thường lớp nhân vật phải ở SAU (dx<0), đo được dx=${sau.dx.toFixed(1)}`);
-  else pass(`lúc thường đứng sau: dx=${sau.dx.toFixed(1)}`);
-  if (!(sau.co > 0.3 && sau.co < 0.9))
-    fail(`lúc thường phải NHỎ LẠI (0,3–0,9 lần), đo được ${sau.co}`);
-  else pass(`lúc thường nhỏ lại còn ${(sau.co*100).toFixed(0)}%`);
-  if (!(truoc.dx > 0)) fail(`lúc đánh lớp nhân vật phải ra TRƯỚC (dx>0), đo được dx=${truoc.dx.toFixed(1)}`);
-  else pass(`lúc đánh ra trước: dx=${truoc.dx.toFixed(1)}`);
-  if (!(truoc.co > sau.co)) fail(`lúc đánh phải LỚN HƠN lúc đi theo (${sau.co}), đo được ${truoc.co}`);
-  else if (!(truoc.co < 1))
-    fail(`lúc đánh vẫn phải nhỏ hơn cỡ thật — cỡ 1,00 đọc ra "hai nhân vật ngang hàng", ` +
-         `đo được ${truoc.co}`);
-  else pass(`lúc đánh lớn lên ${(sau.co*100).toFixed(0)}% → ${(truoc.co*100).toFixed(0)}%, vẫn dưới cỡ thật`);
-  if (!truoc.truoc || sau.truoc) fail('cờ `truoc` không khớp trạng thái đánh');
+  // ── ② avatar BẬT ───────────────────────────────────────────────────────────────────────
+  // ⚠ MỤC NÀY ĐÃ ĐỔI NỘI DUNG (2026-09-16), KHÔNG PHẢI BỊ NỚI. Bản cũ gác vũ điệu "đi theo SAU
+  // và nhỏ lại ⇄ ra TRƯỚC và to lên". Vũ điệu ấy không còn: nay lớp nhân vật NHẬP VÀO con Axie
+  // khi ra khỏi thành, nên ngoài thành nó không có mặt để mà đứng trước hay sau, còn trong
+  // thành nó đứng NGANG HÀNG ở một cỡ cố định (chỗ duy nhất khoe giáp).
+  //
+  // ⚠ Vì thế mục này nay gác đúng hai điều mà hình dạng mới hứa, và gác CẢ HAI CHIỀU — bỏ một
+  // vế là cái còn lại tự đúng: "không bao giờ hiện" và "luôn hiện" đều thoả một vế.
+  const vaoThanh = () => p.evaluate(() => { travelTo('ardhaven'); player.x = 3200; player.y = 1900; });
+  const raNgoai  = () => p.evaluate(() => { travelTo('daohoa');  player.x = 1300; player.y = 1500; });
+
+  await vaoThanh();
+  const tThuong = await khung({ avatar: 'aurelion', atkAnim: 0, castT: 0, face: 0 });
+  const tDanh   = await khung({ avatar: 'aurelion', atkAnim: 0.16, castT: 0, face: 0 });
+  // Trong thành: đứng SANG BÊN chứ không nấp sau lưng Axie. Hộp vẽ Axie rộng ~112px (nửa 56)
+  // cộng nửa bề ngang người ~19 ⇒ phải vượt ~75px mới thật sự đứng rời. Kéo to cỡ KHÔNG chữa
+  // được chuyện bị che — đã chụp thử ở 0,72 · 1,00 · 1,20 và cả ba đều bị che.
+  // ⚠ CHẤM TRÊN `ben` (THÔ), ĐỪNG CHẤM TRÊN hypot(dx,dy). `dy` đã bị nén trục sâu 0,55 nên
+  // cùng một cấu hình cho ra 51,6px khi quay sang đông và 88px khi quay sang nam — chấm vào đó
+  // là chấm vào HƯỚNG NHÌN chứ không vào cái hằng số cần gác. (Và 51,6px ấy KHÔNG phải lỗi:
+  // xếp lớp theo chiều sâu đưa người ra TRƯỚC con Axie, chụp lại thì bộ giáp đọc rõ hơn hẳn.)
+  if (!(Math.abs(tThuong.ben) > 75))
+    fail(`trong thành độ lệch BÊN chỉ ${tThuong.ben}px — phải vượt ~75px (nửa hộp Axie 56 + nửa `
+       + `bề ngang người 19), không thì bộ giáp nấp sau lưng Axie`);
+  else pass(`trong thành lệch bên ${tThuong.ben}px — đứng rời hẳn con Axie`);
+  if (!(tThuong.co > 0.95))
+    fail(`trong thành phải ở cỡ khoe giáp (~1,00), đo được ${tThuong.co}`);
+  else pass(`trong thành cỡ ${tThuong.co}`);
+  // …và KHÔNG giật cỡ khi ra đòn: trong thành cỡ là hằng số, vì cú đổi chỗ sau→trước đã bỏ.
+  if (tDanh.co !== tThuong.co)
+    fail(`trong thành cỡ phải KHÔNG đổi lúc ra đòn: thường ${tThuong.co} · đánh ${tDanh.co}`);
+  else pass('trong thành cỡ không giật lúc ra đòn');
+
+  await raNgoai();
+  const nThuong = await khung({ avatar: 'aurelion', atkAnim: 0, castT: 0, face: 0 });
+  if (nThuong.nhap !== true)
+    fail('ngoài thành lớp nhân vật phải ĐÃ NHẬP vào Axie, __lopVe.nhap = ' + nThuong.nhap);
+  else pass('ngoài thành đã nhập vào Axie');
+  await vaoThanh();
+  // Cờ `truoc` vẫn phải khớp trạng thái đánh — nó là `_lopHien`, thứ cả khối `_kind` bên dưới
+  // dựa vào, và ràng buộc `_lopHien === (_kind==='a'||'c')` KHÔNG đổi theo đợt nhập-vào-Axie.
+  if (!tDanh.truoc || tThuong.truoc) fail('cờ `truoc` không khớp trạng thái đánh');
   else pass('cờ `truoc` khớp trạng thái');
 
   // ── ③ CÁNH và VŨ KHÍ không còn vẽ ở neo người chơi ────────────────────────────────────

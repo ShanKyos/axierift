@@ -5875,6 +5875,10 @@ const CHI_DANH = {
   bug:      { duoi: '_cl', n: 12, cot: 6 },  // cast-low     — quét thấp, ra lệnh
 };
 const CHI_DANH_IMGS = {};
+// ⚠ `const` ở tầng cao nhất KHÔNG gắn vào `window` — bẫy đã ghi ở mục ONLINE (`player`/`curMap`
+// khai bằng `let` nên `net.js` đọc `window.player` ra undefined, im lặng). Bày ra để bài kiểm
+// đối chiếu được bảng này với `LOP` trong `nuong_chi_danh.py`.
+window.CHI_DANH = CHI_DANH;
 // Khoá đệm phải gồm CẢ LỚP: cùng một con Axie phục vụ năm lớp với năm bảng khác nhau, khoá
 // theo mỗi `id` là người chơi lớp này thấy đòn của lớp kia.
 function chiDanhImg(id, sect){
@@ -17870,6 +17874,14 @@ function drawPlayer(p){
   // > niệm chú > đánh), và `_veAva` bên dưới đọc lại chính nó — một nguồn sự thật, không
   // phải hai điều kiện song song rồi lệch nhau lúc ai đó sửa một bên.
   const _lopHien = !_chet && !((p.hurtT || 0) > 0) && (castK > 0 || atkK > 0);
+  // ⚠ `_nhap` TÍNH Ở ĐÂY, cạnh `_lopHien` — nó chỉ phụ thuộc `_coAva` (đã khai trên) và map.
+  // Phải sớm vì `__veChet` bên dưới phơi nó ra cho bài kiểm, và vì khối cánh/thần khí đọc nó.
+  // ⚠ ĐỪNG GỘP VỚI `_lopHien`. Hai thứ trả lời hai câu khác hẳn nhau:
+  //   `_lopHien` — lớp nhân vật đang ở tư thế RA ĐÒN hay ĐI THEO (chỗ đứng + cỡ)
+  //   `_nhap`    — lớp nhân vật CÓ MẶT TRÊN MÀN HAY KHÔNG (đã nhập vào Axie chưa)
+  // Ngoài thành `_lopHien` vẫn bật lúc ra đòn dù chẳng còn ai để hiện — đó là chủ ý, nó giữ
+  // nguyên ràng buộc `_lopHien === (_kind==='a'||'c')` mà cả khối `_kind` bên dưới dựa vào.
+  const _nhap = _coAva && avaNhap();
   // Phơi hai quyết định này ra cho bài kiểm, KHOÁ THEO TỪNG THÂN NGƯỜI — cùng lối với
   // `__neoVe`/`__veThan`: đưa chính biến đang điều khiển vòng vẽ ra ngoài, thay vì để bài kiểm
   // dựng lại luật một lần nữa. Ở đây bắt buộc phải thế: đo bằng điểm ảnh KHÔNG dùng được, vì một
@@ -17877,7 +17889,7 @@ function drawPlayer(p){
   // kiện (cánh vỗ, hào quang đập, vũ khí bay — tất cả chạy theo performance.now()). Sàn nhiễu ấy
   // lớn hơn thứ cần đo, nên mọi ngưỡng đặt trên nó đều là ngưỡng đặt trên nhiễu.
   if (window.TEST_MODE)
-    (window.__veChet || (window.__veChet = {}))[_bayK0] = { chet: _chet, lopHien: _lopHien };
+    (window.__veChet || (window.__veChet = {}))[_bayK0] = { chet: _chet, lopHien: _lopHien, nhap: _nhap };
   // Trục sâu nén 0,55 — cùng lối với bóng đổ: game nhìn chếch từ trên nên dời dọc phải ngắn
   // hơn dời ngang, không thì nhân vật nhảy lên cao hẳn khi Axie quay mặt lên.
   // RA TRƯỚC khi tung chiêu · ĐI THEO SAU lúc thường. Một phép nội suy thì mượt hơn, nhưng chủ
@@ -17908,7 +17920,6 @@ function drawPlayer(p){
   // là KHÔNG CÓ. `_hienLop = 0` tắt cả thân người lẫn mọi thứ đọc nó; ba chỗ KHÔNG đọc nó
   // (vòng triệu hồi · cánh/thần khí · hào quang Thần Hiệp) phải gác riêng bằng `_nhap`, nếu
   // không thì trên màn còn một đôi cánh và một vòng sáng bay lơ lửng không có ai đeo.
-  const _nhap = _coAva && avaNhap();
   let _hienLop = 1;
   if (_nhap) _hienLop = 0;
   else if (_coAva && _lopHien)
@@ -18162,7 +18173,12 @@ function drawPlayer(p){
   // Đây là hình học mà mắt không đo được: "ra trước hay ra sau" là dấu của tích vô hướng với
   // hướng mặt, không phải cảm giác nhìn ảnh. Ghi ba số mỗi khung, rẻ hơn nhiều so với để cú
   // đổi chỗ sau→trước lặng lẽ hỏng.
-  window.__lopVe = { dx: _avaDx, dy: _avaDy, co: _lopCo, truoc: !!(_coAva && _lopHien) };
+  // ⚠ Phơi CẢ độ lệch THÔ (`ben`/`sau`, đơn vị thế giới, TRƯỚC khi nén trục sâu 0,55) lẫn
+  // `dx`/`dy` đã nén. Bài kiểm phải chấm trên `ben`: `dy` đã nén nên cùng một cấu hình cho ra
+  // hai con số khác nhau tuỳ hướng mặt (88 → 48,4 khi quay sang đông), và chấm trên đó là chấm
+  // vào hướng nhìn chứ không vào cái hằng số mình muốn gác.
+  window.__lopVe = { dx: _avaDx, dy: _avaDy, co: _lopCo, truoc: !!(_coAva && _lopHien),
+                     nhap: _nhap, ben: _lopB, sau: _lopT };
   // Thân người LUÔN vẽ — kể cả khi có avatar. Bản trước bỏ hẳn nhánh này lúc không đánh, vì
   // lớp nhân vật chỉ được gọi ra trong cú đòn. Nay nó đi theo sau suốt, nên không còn chỗ nào
   // được phép bỏ vẽ; chỗ đứng và cỡ đã do `_avaDx/_avaDy/_lopCo` lo.

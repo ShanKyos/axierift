@@ -98,8 +98,11 @@ const GOC = 'http://localhost:' + CONG + '/index.html';
   else {
     if (tho.khoi !== 'tho')   fail(`đứng yên mà khối là "${tho.khoi}"`);
     if (chay.khoi !== 'chay') fail(`đang chạy mà khối là "${chay.khoi}"`);
-    if (danh.khoi !== 'gong') fail(`ĐANG RA ĐÒN mà khối là "${danh.khoi}" — con Axie vẫn đứng yên`);
-    if (chu.khoi  !== 'gong') fail(`đang niệm chú mà khối là "${chu.khoi}"`);
+    // ⚠ NGOÀI THÀNH nay là khối 'danh', KHÔNG phải 'gong' — luật "Axie không đánh" đã bị lật
+    // (chủ dự án chốt 2026-09-16). Bài này chạy ở `daohoa`, tức ngoài thành. Nhánh TRONG THÀNH
+    // (vẫn 'gong') do `test_axiedanh ②` gác, và §6 dưới đây gác cả hai chiều.
+    if (danh.khoi !== 'danh') fail(`ĐANG RA ĐÒN mà khối là "${danh.khoi}" — ngoài thành Axie phải ra đòn`);
+    if (chu.khoi  !== 'danh') fail(`đang niệm chú mà khối là "${chu.khoi}"`);
     if (giat.khoi !== 'giat') fail(`ĐANG TRÚNG ĐÒN mà khối là "${giat.khoi}" — đúng món nợ hit-by-normal`);
     if (caHai.khoi !== 'giat') fail(`vừa đánh vừa trúng đòn thì phải ưu tiên GIẬT, đang ra "${caHai.khoi}"`);
   }
@@ -175,23 +178,55 @@ const GOC = 'http://localhost:' + CONG + '/index.html';
   // Sàn tuyệt đối: bảng hỏng ⇒ `chiVeGong` trả false ⇒ lui về khối thở ⇒ ĐÚNG 0. Đo thật được
   // ~4.000-7.000, nên sàn 400 rất rộng tay mà vẫn chặn sạch ca lui-về-thở.
   const SAN = 400;
-  if (ve.gong < SAN) fail(`khối GỒNG chỉ đổi ${ve.gong} điểm ảnh (sàn ${SAN}) — chọn đúng khối nhưng không vẽ ra được gì khác khối thở`);
+  // (Ngoài thành thì `atk` cho ra khối RA ĐÒN, không phải gồng — tên biến giữ nguyên cho gọn,
+  //  thứ mệnh đề này gác vẫn y nguyên: khối được chọn phải VẼ RA khác khối thở.)
+  if (ve.gong < SAN) fail(`khối RA ĐÒN chỉ đổi ${ve.gong} điểm ảnh (sàn ${SAN}) — chọn đúng khối nhưng không vẽ ra được gì khác khối thở`);
   if (ve.giat < SAN) fail(`khối GIẬT chỉ đổi ${ve.giat} điểm ảnh (sàn ${SAN})`);
 
-  // ── 6. AXIE KHÔNG CÓ KHỐI ĐÁNH — luật Đổi Vai ─────────────────────────────────────────
-  // Kit có 8 đòn gần + 5 đòn xa và rất dễ "tiện tay" nướng thêm. Chốt này là chỗ duy nhất nói
-  // ra rằng KHÔNG nướng là một quyết định, không phải một thiếu sót ai đó quên làm.
-  // Đo bằng hệ quả: lúc ra đòn, lớp NHÂN VẬT phải là thứ vật chất hoá — không phải con Axie.
+  // ── 6. ~~AXIE KHÔNG CÓ KHỐI ĐÁNH~~ → NAY: AXIE RA ĐÒN, NGƯỜI NHẬP VÀO ────────────────
+  // ⚠ MỆNH ĐỀ NÀY ĐÃ ĐẢO CHIỀU (2026-09-16), KHÔNG PHẢI BỊ GỠ. Bản cũ khẳng định *"lúc ra đòn
+  // Axie phải GỒNG"* + *"chưa có bảng/hàm vẽ đòn đánh"*, và nó là chỗ duy nhất nói ra rằng
+  // KHÔNG nướng đòn đánh là một QUYẾT ĐỊNH. Quyết định ấy đã bị chủ dự án lật, nên mệnh đề đi
+  // theo: nay nó nói ra rằng CÓ nướng, và nói ra cái RÀNG BUỘC đi kèm.
+  //
+  // ⚠ GÁC CẢ HAI CHIỀU. Chỉ khẳng định "ngoài thành Axie ra đòn" thì gỡ sạch nhánh trong-thành
+  // đi bài vẫn xanh — mà nhánh ấy là chỗ duy nhất người chơi còn thấy bộ giáp mình mua, tức cả
+  // cái giá phải trả cho đợt này. Và hai vế phải NGƯỢC nhau ở CẢ HAI cột (khối Axie *và* lớp
+  // nhân vật có mặt hay không), nếu không thì "nhập vào" chỉ là đổi bảng khung chứ không phải
+  // đổi số thân người trên màn.
   const doiVai = await p.evaluate(() => {
-    player.atkAnim = NV_DANH_GIAY * 0.6; player.castT = 0; player.hurtT = 0;
-    window.__veChet = {}; window.__avaKhoi = {}; render();
-    return { lopHien: (window.__veChet.ta || {}).lopHien, avaKhoi: (window.__avaKhoi.ta || {}).khoi,
-             coBangDanh: !!(window.CHI_DANH || window.chiVeDanh) };
+    const doc = () => {
+      player.atkAnim = NV_DANH_GIAY * 0.6; player.castT = 0; player.hurtT = 0;
+      window.__veChet = {}; window.__avaKhoi = {}; render();
+      const v = window.__veChet.ta || {};
+      // ⚠ HỎI `nhap`, KHÔNG HỎI `lopHien`. `lopHien` chỉ nói lớp nhân vật đang ở TƯ THẾ ra đòn
+      // — ngoài thành nó vẫn bật dù chẳng còn ai trên màn (xem ghi chú tại chỗ trong game.js).
+      // Hỏi nhầm nó là mệnh đề này xanh trong lúc "nhập vào" hỏng hoàn toàn.
+      return { nhap: v.nhap, lopHien: v.lopHien, khoi: (window.__avaKhoi.ta || {}).khoi };
+    };
+    const giuX = player.x, giuY = player.y;
+    travelTo('ardhaven'); player.x = 3200; player.y = 1900;
+    const thanh = doc();
+    travelTo('daohoa'); player.x = giuX; player.y = giuY;
+    const ngoai = doc();
+    return { thanh, ngoai, coBangDanh: !!(window.CHI_DANH && typeof chiVeDanh === 'function') };
   });
-  console.log('6 · lúc ra đòn:', JSON.stringify(doiVai));
-  if (doiVai.lopHien !== true) fail('lúc ra đòn lớp nhân vật KHÔNG vật chất hoá — luật Đổi Vai hỏng');
-  if (doiVai.avaKhoi !== 'gong') fail(`lúc ra đòn Axie phải GỒNG, đang ra "${doiVai.avaKhoi}"`);
-  if (doiVai.coBangDanh) fail('đã có bảng/hàm vẽ ĐÒN ĐÁNH cho Axie — chủ dự án chốt Axie phản ứng, KHÔNG đánh');
+  console.log('6 · trong thành', JSON.stringify(doiVai.thanh),
+              '· ngoài thành', JSON.stringify(doiVai.ngoai));
+  if (!doiVai.coBangDanh)
+    fail('KHÔNG có bảng/hàm vẽ đòn đánh cho Axie — luật đã lật, Axie phải ra đòn được');
+  // ngoài thành: Axie đánh, lớp nhân vật ĐÃ NHẬP nên không có mặt
+  if (doiVai.ngoai.khoi !== 'danh')
+    fail(`ngoài thành lúc ra đòn Axie phải RA ĐÒN, đang ra "${doiVai.ngoai.khoi}"`);
+  if (doiVai.ngoai.nhap !== true)
+    fail('ngoài thành lớp nhân vật CHƯA nhập vào Axie — thành ra hai kẻ cùng đánh');
+  // trong thành: ngược lại hoàn toàn
+  if (doiVai.thanh.khoi === 'danh')
+    fail('TRONG THÀNH Axie không được ra đòn — lớp nhân vật còn đứng đó và tự vung');
+  if (doiVai.thanh.nhap !== false)
+    fail('TRONG THÀNH lớp nhân vật phải CÓ MẶT (chưa nhập) — đó là chỗ duy nhất khoe giáp');
+  if (doiVai.thanh.lopHien !== true)
+    fail('trong thành lúc ra đòn lớp nhân vật phải vật chất hoá');
 
   // ── 7. NẠP TRƯỚC: cú đánh ĐẦU TIÊN không được rơi vào nhánh lui-về-thở ─────────────────
   const truoc = await p.evaluate(async () => {
