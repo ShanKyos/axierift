@@ -15125,12 +15125,60 @@ const NV_COT = 16, NV_OW = 240, NV_OH = 300;
 const NV_MOC = { i: 0, w: 16, a: 48, c: 64, r: 80 };   // trong BẢNG MỘT
 // Thân dùng WEBP (bảng 3840x1500, nén còn ~36%), vũ khí dùng PNG — lớp vũ khí gần như trong
 // suốt hoàn toàn, mà PNG nén khoảng trong suốt giỏi hơn WEBP: đo được 69 KB PNG so với 124 KB.
+// ⚠ VẼ TỪ `ImageBitmap`, KHÔNG VẼ THẲNG TỪ `Image`. `im.complete` bật ngay khi BYTE về, còn
+// phép GIẢI MÃ webp thì trình duyệt để dành tới lần `drawImage` đầu tiên — tức nó rơi thẳng vào
+// vòng vẽ, và nó đắt hơn mọi thứ khác trong khung đó cộng lại.
+//
+// SỐ ĐO (headless, không GPU · `assets/nv/dkph1_n.webp` 1680×525):
+//   Image + drawImage lần đầu            210 ms   ← nằm TRONG vòng vẽ
+//   Image + await decode() rồi mới vẽ    283 ms   ← vẫn chặn luồng chính, KHÔNG cứu được gì
+//   createImageBitmap() rồi vẽ            24 ms   ← giải mã NGOÀI luồng chính, vẽ 0 ms
+//
+// ⚠ ĐÃ THỬ `decode()` VÀ NÓ KHÔNG ĂN THUA — đừng thử lại. Khung tệ nhất chỉ hạ 272 → 254 ms,
+// và mọi tấm đều báo đã giải mã xong trong khi `drawImage` vẫn tốn 210 ms: `decode()` chuẩn bị
+// ảnh cho việc HIỂN THỊ, không chuẩn bị cho việc vẽ vào canvas 2D.
+//
+// VÌ SAO NÓ THÀNH VẤN ĐỀ ĐÚNG LÚC NÀY: một nhân vật mặc bộ giáp có lớp rời phải nạp HAI bộ —
+// thân nền (`dkcw1`, 1,10 MB) cộng bộ đang mặc (`dkph1`, 1,85 MB). Trước khi có năm bộ giáp giai
+// 7 thì chỉ có một bộ, khung tệ nhất 76 ms; sau đó là 272 ms.
+//
+// VÀ CÁI KHỰNG ẤY ĂN VÀO LỐI CHƠI, không chỉ gây khó chịu: `dt` kẹp 0,05 s mỗi khung, nên một
+// khung 272 ms chỉ nhích đồng hồ trò chơi 0,05 s. Bộ gộp số sát thương đếm 0,22 s ⇒ cần đủ 5
+// khung; mất một khung vào giải mã là nửa giây thật không đủ 5 khung và SỐ SÁT THƯƠNG KHÔNG BAY
+// RA. `test_dmgnum` bắt được đúng chuyện đó (đỏ 3/5 lượt) với một triệu chứng trông chẳng liên
+// quan gì tới art.
+//
+// ⚠ TRẢ `null` TRONG LÚC CHỜ NƯỚNG BITMAP, ĐỪNG TRẢ TẠM `Image`. Trả tạm là trả lại đúng cú
+// 210 ms mình vừa gỡ. Trạng thái "chưa có art" ĐÃ CÓ đường xử lý sẵn: `nvKhungGop()` trả null,
+// `heroSprite()` giữ `_choArt` nên khung dựng dở không bị nhớ lại.
+//
+// ⚠ PHẢI GẮN `naturalWidth`/`naturalHeight`/`complete` LÊN BITMAP. Mấy chỗ gọi (vòng kiếm, vũ
+// khí cầm tay) đọc đúng ba thuộc tính đó; `ImageBitmap` chỉ có `width`/`height`. Thiếu bước này
+// là mấy hàm ấy lặng lẽ trả null và vũ khí biến mất — không lỗi nào báo.
+//
+// ⚠ NHÁNH HỎNG PHẢI LUI VỀ `Image`. `createImageBitmap` ném khi ảnh 404/hỏng, và trình duyệt cũ
+// có thể không có nó; không bắt lỗi là lớp đó treo `null` vĩnh viễn và nhân vật rơi về hình dựng
+// bằng đường — im lặng, không lỗi nào báo.
+// Thân dùng WEBP (bảng 3840x1500, nén còn ~36%), vũ khí dùng PNG — lớp vũ khí gần như trong
+// suốt hoàn toàn, mà PNG nén khoảng trong suốt giỏi hơn WEBP: đo được 69 KB PNG so với 124 KB.
 function nvTai(ten, duoi){
   if (!ten) return null;
   const k = ten + '.' + duoi;
   let im = NV_ANH[k];
   if (!im){ im = new Image(); im.src = 'assets/nv/' + k; NV_ANH[k] = im; }
-  return (im.complete && im.naturalWidth) ? im : null;
+  if (!(im.complete && im.naturalWidth)) return null;
+  if (im._bm) return im._bm;
+  if (im._bmLoi) return im;                 // nướng bitmap hỏng — về đúng hành vi cũ
+  if (!im._bmCho){
+    im._bmCho = true;
+    if (typeof createImageBitmap === 'function'){
+      createImageBitmap(im).then(bm => {
+        bm.naturalWidth = bm.width; bm.naturalHeight = bm.height; bm.complete = true;
+        im._bm = bm;
+      }, () => { im._bmLoi = true; });
+    } else im._bmLoi = true;
+  }
+  return im._bm || null;
 }
 // ── TÁM HƯỚNG NHÌN — TÊN BỘ MANG LUÔN HƯỚNG ───────────────────────────────────────────────
 // Thế giới nhìn từ trên xuống, còn art thì CHỈ CÓ MỘT hướng nghiêng. Đo được trước bản này:
