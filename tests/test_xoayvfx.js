@@ -96,10 +96,17 @@ const THU = { k: 1, cols: 2, rows: 1, frameW: 64, frameH: 64, frames: 2, fps: 10
     // ── §1 ĐỐI CHỨNG — vẽ hai lượt Y HỆT phải ra gần như y hệt ──────────────────────
     // Không có mệnh đề này thì mọi con số dưới đây vô nghĩa: nền vẫn trôi chút ít giữa hai
     // lượt, và nếu nó trôi nhiều thì "khác nhau" không chứng minh được điều gì.
-    const c1 = veLuot(0), c2 = veLuot(0);
-    const nenTroi = khac(c1, c2);
+    // ⚠ PHẢI LẤY TRUNG VỊ, KHÔNG LẤY MỘT CẶP. Con Axie thở ~8 fps nên sàn nhiễu LƯỠNG CỰC: phần
+    // lớn cặp ra vài trăm điểm ảnh, nhưng cứ chừng mười lượt render lại có đúng một lượt rơi
+    // trúng nhịp lật khung và vọt lên hàng nghìn. Bản đầu của bài này lấy MỘT cặp và vì thế đỏ
+    // 2/3 lượt — đo được: nenTroi 2115 trong khi tín hiệu xoay chỉ 480, tức nhiễu nuốt tín hiệu.
+    // Cùng bài học đã ghi ở mục "GIAI ĐOẠN 2" của CLAUDE.md, mà chính tôi viết rồi không dùng.
+    const trungVi = (xs) => xs.slice().sort((a, b) => a - b)[Math.floor(xs.length / 2)];
+    const nenMau = [];
+    for (let i = 0; i < 7; i++) nenMau.push(khac(veLuot(0), veLuot(0)));
+    const nenTroi = trungVi(nenMau);
     ok('đối chứng: hai lượt vẽ y hệt nhau thì gần như không đổi',
-       nenTroi < 400, nenTroi + '/' + (hop[2]*hop[3]) + ' điểm ảnh trôi');
+       nenTroi < 400, nenTroi + '/' + (hop[2]*hop[3]) + ' điểm ảnh trôi · mẫu ' + nenMau.join(','));
 
     // ── §2 KHÔNG KHAI `xoay` ⇒ GÓC BỊ BỎ QUA ────────────────────────────────────────
     // Đây là vế "không đổi gì cả". Chỗ gọi thật (`spawnSkillVfx`) truyền `0` khi tranh không
@@ -109,10 +116,15 @@ const THU = { k: 1, cols: 2, rows: 1, frameW: 64, frameH: 64, frames: 2, fps: 10
     ok('không truyền góc ⇒ goc = 0', effects[0].goc === 0, String(effects[0].goc));
 
     // ── §3 CÓ GÓC ⇒ HÌNH ĐỔI THẬT ──────────────────────────────────────────────────
-    const g0   = veLuot(0);
-    const g90  = veLuot(Math.PI / 2);
-    const g180 = veLuot(Math.PI);
-    const d90  = khac(g0, g90), d180 = khac(g0, g180);
+    // Tín hiệu cũng phải lấy TRUNG VỊ, không chỉ sàn nhiễu: một lượt đo đơn lẻ rơi trúng nhịp
+    // lật khung sẽ được độn thêm cả nghìn điểm ảnh ⇒ XANH kể cả khi phép xoay không chạy.
+    const d90m = [], d180m = [];
+    for (let i = 0; i < 5; i++){
+      const g0 = veLuot(0);
+      d90m.push(khac(g0, veLuot(Math.PI / 2)));
+      d180m.push(khac(g0, veLuot(Math.PI)));
+    }
+    const d90 = trungVi(d90m), d180 = trungVi(d180m);
     ok('xoay 90° đổi hình nhiều hơn hẳn nền trôi',  d90  > nenTroi * 8 && d90  > 200, d90 + ' vs nền ' + nenTroi);
     ok('xoay 180° đổi hình nhiều hơn hẳn nền trôi', d180 > nenTroi * 8 && d180 > 200, d180 + ' vs nền ' + nenTroi);
 
