@@ -5771,6 +5771,14 @@ const AVA_DANH_CO  = 0.90;
 // nghĩa khi hai hình cùng đứng trong một cảnh ĐÁNH NHAU. Trong thành thì cả cảnh là để khoe đồ.
 // 0,72 → 1,00 là +39% chiều, tức gần GẤP ĐÔI số điểm ảnh đọc được của bộ giáp.
 const AVA_THANH_CO = 1.00;
+// …và CHỖ ĐỨNG TRONG THÀNH. ⚠ ĐO RỒI MỚI BIẾT: KÉO CỠ TO RA KHÔNG CHỮA ĐƯỢC GÌ. Chụp thử ở ba
+// cỡ 0,72 · 1,00 · 1,20 thì cả ba đều cho ra một bộ giáp bị CON AXIE CHE — vì lúc thường lớp
+// nhân vật đứng LÙI SAU 70px và chỉ lệch sang bên 34px, trong khi hộp vẽ của Axie rộng tới
+// ~112px (nửa hộp 56) cộng nửa bề ngang người ~19 ⇒ phải vượt 75px mới thật sự đứng rời.
+// Tức vấn đề là CHE KHUẤT, không phải KÍCH CỠ — kéo to lên chỉ làm cái phần bị che to theo.
+// Trong thành vì thế đứng gần như NGANG HÀNG (lùi ít) và lệch hẳn sang bên.
+const AVA_THANH_SAU = 18;
+const AVA_THANH_BEN = 88;
 const AVA_TY  = 0.95;   // thân Axie cao mấy phần thân người…
 const AVA_TRAN = 1.18;  // …và hộp vẽ ra, chiều nào cũng vậy, không quá ngần này lần
 function avaCo(id){
@@ -17875,11 +17883,12 @@ function drawPlayer(p){
   // RA TRƯỚC khi tung chiêu · ĐI THEO SAU lúc thường. Một phép nội suy thì mượt hơn, nhưng chủ
   // dự án nói rõ "biến mất rồi xuất hiện" — nên đổi chỗ TỨC THÌ, và cú hiện ra do `_hienLop` +
   // vòng triệu hồi lo. Trượt từ sau ra trước đọc thành "chạy vòng lên", không ra "hộ pháp".
-  const _lopT  = _lopHien ? AVA_CHAN_TRUOC : -AVA_THEO_SAU;
-  const _lopB  = _lopHien ? AVA_CHAN_BEN   :  AVA_THEO_BEN;
+  const _oThanh = _coAva && avaTrongThanh();
+  const _lopT  = _oThanh ? -AVA_THANH_SAU : _lopHien ? AVA_CHAN_TRUOC : -AVA_THEO_SAU;
+  const _lopB  = _oThanh ?  AVA_THANH_BEN : _lopHien ? AVA_CHAN_BEN   :  AVA_THEO_BEN;
   // Trong thành thì cỡ riêng (khoe giáp); ngoài thành lớp nhân vật đã nhập nên `_lopCo` chỉ
   // còn ý nghĩa với nhánh không-avatar.
-  const _lopCo = _coAva ? (avaTrongThanh() ? AVA_THANH_CO
+  const _lopCo = _coAva ? (_oThanh ? AVA_THANH_CO
                          : _lopHien ? AVA_DANH_CO : AVA_THEO_CO) : 1;
   const _avaDx = _coAva ? Math.cos(p.face)*_lopT - Math.sin(p.face)*_lopB : 0;
   const _avaDy = _coAva ? (Math.sin(p.face)*_lopT + Math.cos(p.face)*_lopB)*0.55 : 0;
