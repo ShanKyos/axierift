@@ -781,7 +781,13 @@ window.SECTS = {
     hpMult:1.12, defMult:1.10, dmgMult:0.92, atkSrc:{str:1.8, agi:0.3},
     desc:'Vương miện năm chấu, giáp đen ánh lam, quyền trượng chỉ huy. Dark Lord không bao giờ ra trận một mình — hắn hiệu triệu, và chiến trường tự sạch. Tiềm năng: chủ lực Lực Lượng, dặm thêm Mẫn Tiệp.',
     skillA:{ name:'Force Wave', type:'cone', cd:4, qi:20, mult:1.5 },
-    tp:{ name:'Fire Scream', mult:3.0 } },
+    // Trấn Phái: BÃO QUẠ. `tam:320` — chủ dự án chốt "xa hơn skill trấn phái 1". Ô 1 của lớp này
+    // là `skillA` kiểu `cone` không khai `tam` ⇒ lấy mặc định cone = **130**. 320 nằm đúng dải
+    // đánh xa đã có của game (quái `phap` 320 · `xa` 300) và vẫn ngắn hơn Meteorite 420 — một bầy
+    // chim tuôn ra từ tay thì không nên với xa hơn một khối thiên thạch gọi từ trên trời xuống.
+    // ⚠ Bốn lớp kia để `tam` trống ⇒ `skillInfo` quy ra 0 (nổ ngay dưới chân). Đây là lớp thứ hai
+    // sau Dark Wizard khai tầm thật cho Trấn Phái.
+    tp:{ name:'Raven Storm', mult:3.0, tam:320 } },
 };
 
 // packs: quái đứng thành cụm 5-7 con, đánh 1 con cả cụm lao vào (GDD Mob Mechanics)

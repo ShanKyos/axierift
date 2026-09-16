@@ -1448,6 +1448,12 @@ const VFX_ATLAS_DEFS = {
   // Hoả Xích Diệm (Hành Vi ô 2 của Dark Lord) — ba ngọn lửa toả ra từ một điểm, lõi trắng chạy dọc.
   // Gói Meowa 8 khung / lưới 3×3; ô thứ 9 rỗng nên bỏ bằng `--bo 8`.
   fire_scream:    { k:1, cols:8, rows:1,  frameW:384, frameH:384, frames:8,  fps:16, anchorX:46.1, anchorY:192.0, neoR:337.9, cong:false },
+  // Bão Quạ (Trấn Phái của Dark Lord) — bầy quạ tuôn ra từ một xoáy tối, vệt khói tím kéo theo.
+  // ⚠ ART TỐI: sáng 0,136 · lệch chuẩn 0,094 — DƯỚI ngưỡng 0,12 mà CỐ Ý không nâng sáng. Chụp
+  // trên map tối nhì (`chungnam` 0,376; tối nhất là `deep` 0,361) thì bản gốc đọc rõ, còn liều
+  // nâng nhẹ nhất đã làm quạ ngả xám và mất luôn chất "chim đen". Ngưỡng 0,12 rút ra từ art TRÙM
+  // vẽ ở 113px; tấm này vẽ ~230px nên chi tiết sống sót, cộng viền tím và vệt khói cho tương phản.
+  raven_storm:    { k:1, cols:8, rows:1,  frameW:384, frameH:384, frames:8,  fps:16, anchorX:46.1, anchorY:192.0, neoR:337.9, cong:false },
 };
 const VFX_ATLAS_IMGS = {};
 const VFX_ATLAS_DUNG = {};   // id → lúc dùng gần nhất (ms)
@@ -4084,7 +4090,8 @@ const SECT_VFX = {
   // QA: Dark Lord (sect id 'bug') chưa từng có entry nào ở đây — cả chiêu chính lẫn Trấn Phái đều rơi
   // về style mặc định chung chung, là lớp DUY NHẤT không có hình ảnh nhận diện riêng khi tung chiêu.
   // sx_bug_a đã GỠ khỏi bảng này — nay có tranh thật trong CHIEU_TRANH.
-  sx_bug_c:      { style:'firepillar',   c2:'#ffb15c', dur:1.15 },            // Fire Scream (Dark Lord) — ba vệt lửa chạy ra rồi dựng cột lửa
+  // sx_bug_c — ĐÃ CÓ ART THẬT (`raven_storm` trong CHIEU_TRANH). Style tạm `firepillar` gỡ theo
+  // luật: có mặt trong CHIEU_TRANH mà còn khai style là chồng hai lớp lệch tâm lên nhau.
                       // Hatchling Strike (Unclassed) — cú đấm trần, chưa có binh khí
                       // Wanderer's Resolve (Unclassed) — dồn hết sức vào một đòn
 };
@@ -4702,6 +4709,7 @@ const CHIEU_TRANH = {
   sx_bug_a:      { atlas:'sx_bug_a',      xoay:true },  // Force Wave — sóng chấn quyền trượng Dark Lord
   sx_toanchan_a: { atlas:'sx_toanchan_a', xoay:true },  // Triple Shot — loé cung Sylvan Ranger
   dl_chaoticdiseier: { atlas:'fire_scream', xoay:true },  // Hoả Xích Diệm — ba ngọn lửa toả ra, Dark Lord
+  sx_bug_c:      { atlas:'raven_storm',   xoay:true },  // Bão Quạ — Trấn Phái Dark Lord
 };
 // Chỗ chiêu giáng xuống: CHUỘT CHỈ ĐÂU, CHIÊU GIÁNG ĐÓ.
 //
