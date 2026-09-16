@@ -27,38 +27,10 @@ const pass = m => console.log('PASS ' + m);
     player.hp = player.maxHp; player.qi = player.maxQi;
     mobs.length = 0; effects.length = 0;
     for (const k in player.cd) player.cd[k] = 0;
-    // ⚠ CHỖ ĐỨNG PHẢI ĐO, ĐỪNG CHÉP CỨNG — và bài này đã trả giá đúng một lần.
-    // Bản cũ ghi thẳng `player.x = 1300; player.y = 1250` kèm chú thích "đứng giữa map". Đúng
-    // vào ngày thị trấn khởi đầu được dựng lại, chỗ ấy thành BÊN TRONG MỘT NGÔI NHÀ — và cả
-    // năm mệnh đề đỏ cùng lúc với những triệu chứng trông chẳng liên quan gì nhau: thiên thạch
-    // lệch 34px, chiêu không bám quái, cột lửa đốt cả con đứng cạnh chân. Không có gì trong đó
-    // gợi ra "nhân vật đang đứng trong tường".
-    //
-    // Nay: sang vùng hoang dã trống nhất rồi QUÉT tìm một chỗ thật sự thoáng. Bài kiểm chiêu
-    // thức không có lý do gì phải chạy trong phố, mà phố thì mỗi đợt việc lại đổi.
-    travelTo('mongco');
-    mobs.length = 0; effects.length = 0;
-    const md = MAPS[curMap];
-    const thoang = (x, y, r) => {
-      if (inObstacle(curMap, x, y, 14)) return false;
-      for (let a = 0; a < 16; a++){
-        const t = a * Math.PI / 8;
-        for (let d = 60; d <= r; d += 70)
-          if (inObstacle(curMap, x + Math.cos(t) * d, y + Math.sin(t) * d, 14)) return false;
-      }
-      return true;
-    };
-    // Lề 950px mỗi phía: gần mép thì camera bị kẹp, nhân vật lệch hẳn sang một bên màn hình và
-    // chỗ còn lại không đủ để ngắm ra ngoài tầm chiêu.
-    let px = null, py = null;
-    for (let gy = 950; gy < md.h - 950 && px === null; gy += 70)
-      for (let gx = 950; gx < md.w - 950; gx += 70)
-        if (thoang(gx, gy, 700)) { px = gx; py = gy; break; }
-    player.x = px === null ? md.spawn.x : px;
-    player.y = py === null ? md.spawn.y : py;
-    snapCamera();
-    return { x: player.x, y: player.y, cx: camera.x, cy: camera.y, chan: chanDy(),
-             map: curMap, doTim: px !== null };
+    // Đứng GIỮA MAP: đứng gần mép thì camera bị kẹp, nhân vật lệch hẳn sang một bên màn hình và
+    // lề trái còn lại không đủ để ngắm ra ngoài tầm chiêu.
+    player.x = 1300; player.y = 1250; snapCamera();
+    return { x: player.x, y: player.y, cx: camera.x, cy: camera.y, chan: chanDy() };
   });
 
   // ĐỔI TOẠ ĐỘ THẾ GIỚI → ĐIỂM ẢNH MÀN HÌNH. Camera CÓ zoom (ZOOM_MUC), nên screen =
@@ -66,6 +38,16 @@ const pass = m => console.log('PASS ' + m);
   // định zoom = 1; thêm zoom vào là cả bốn phép ngắm lệch đúng một hệ số và bài bắt vạ oan.
   const ZOOM = await page.evaluate(() => zoomNow());
   const mh = (wx, wy, cx, cy) => [(wx - cx) * ZOOM, (wy - cy) * ZOOM];
+
+  // ⚠ PHÍM SUY TỪ THANH CHIÊU, ĐỪNG CHÉP CỨNG SỐ Ô. Bản cũ gõ thẳng '2' cho Meteorite và '3'
+  // cho Inferno — đúng hồi thanh là công thức cố định ['a','tp',O3,SIGNATURE]. Dark Wizard nay
+  // dời Meteorite (`tp`) xuống ô 3 và bỏ trống ô 2, nên cả bốn mục dùng phím '2' bắn vào một ô
+  // RỖNG, và bài đỏ ở chỗ chẳng liên quan gì tới việc ngắm theo con trỏ.
+  const phimCua = async (id) => {
+    const o = await page.evaluate(i => player.skillBar.indexOf(i), id);
+    if (o < 0) throw new Error(`cảnh dựng hỏng: '${id}' không nằm trên thanh chiêu`);
+    return String(o + 1);
+  };
 
   // Chỗ tấm dán rơi xuống = tâm hiệu ứng atlasVfx vừa sinh ra.
   const noNo = () => page.evaluate(() => {
@@ -79,7 +61,7 @@ const pass = m => console.log('PASS ' + m);
     // đặt con trỏ lệch hẳn sang một bên, trong tầm 420 của Meteorite
     const [mx, my] = mh(p.x + 260, p.y - 120, p.cx, p.cy);
     await page.mouse.move(mx, my);
-    await page.keyboard.press('2');
+    await page.keyboard.press(await phimCua('tp'));
     await page.waitForTimeout(60);
     const o = await noNo();
     const muon = { x: p.x + 260, y: p.y - 120 };
@@ -104,7 +86,7 @@ const pass = m => console.log('PASS ' + m);
     const dLe = Math.floor(((p.x - p.cx) * ZOOM - 40) / ZOOM);
     const d = Math.min(dLe, 600);
     await page.mouse.move(...mh(p.x - d, p.y, p.cx, p.cy));
-    await page.keyboard.press('2');
+    await page.keyboard.press(await phimCua('tp'));
     await page.waitForTimeout(60);
     const o = await noNo();
     const xa = o ? Math.hypot(o.x - p.x, o.y - (p.y + p.chan)) : -1;
@@ -126,7 +108,7 @@ const pass = m => console.log('PASS ' + m);
       return { x: Math.round(m.x), y: Math.round(m.y) };
     });
     await page.mouse.move(...mh(q.x + 55, q.y + 40, p.cx, p.cy));   // lệch ~68px, trong BAN_HUT 90
-    await page.keyboard.press('2');
+    await page.keyboard.press(await phimCua('tp'));
     await page.waitForTimeout(60);
     const o = await noNo();
     // Lấy chanDy() TỪ GAME. Bản đầu chép cứng 13 — đúng hồi NV_CAO còn 118; nay là 132 nên
@@ -153,20 +135,47 @@ const pass = m => console.log('PASS ' + m);
       // hurtMob. Bài này đo "vùng sát thương có đi theo con trỏ không", mà ngưỡng lại là
       // `ganMat > 0`, nên một điểm máu của một cơ chế khác hẳn cũng làm nó đỏ — đo được 1/3 lượt,
       // và có sẵn từ trước đợt vai trò (thử lại trên bản cũ: y hệt). Cô lập đúng thứ đang đo.
-      player.reflect = 0;
+      // ⚠ GÁN MỘT LẦN LÀ KHÔNG ĐỦ — `calcDerived()` ĐẶT LẠI nó (`player.reflect = LP.reflect`
+      // rồi `+= P.reflectPct/100`). Chỉ cần một lượt tính lại chỉ số chen vào giữa lúc dựng
+      // cảnh và lúc đo là phản đòn sống lại, và mục này đỏ vì ĐÚNG MỘT điểm máu của một cơ chế
+      // khác hẳn. Đó là lý do bài xanh khi chạy riêng mà đỏ khi chạy trong bộ: chạy trong bộ thì
+      // máy tải nặng hơn, nhiều khung hơn lọt vào cùng khoảng chờ, nên cửa sổ ấy mở ra.
+      // ⚠ KHOÁ BẰNG SETTER RỖNG, KHÔNG PHẢI `writable:false`. game.js chạy `"use strict"`, nên
+      // gán vào một thuộc tính không ghi được sẽ NÉM TypeError — tức bài kiểm tự tay làm chết
+      // `calcDerived()`, một hàm chạy khắp nơi. Setter nuốt giá trị thì không ném gì cả.
+      Object.defineProperty(player, 'reflect', { get: () => 0, set: () => {}, configurable: true });
       return { gan: { x: Math.round(gan.x), y: Math.round(gan.y), hp: gan.hp },
                xa:  { x: Math.round(xa.x),  y: Math.round(xa.y),  hp: xa.hp } };
     });
+    // ⚠ ĐỪNG hỏi `.pop()` của danh sách hiệu ứng. `effects` là danh sách CHUNG và nó còn nhận
+    // thêm hiệu ứng SAU cú bấm này: tâm pháp bộ 3 (Venom) nổ trong `hurtMob` khi cột lửa chạm
+    // quái, và nó bắn `poison_apply` NẰM SAU `fire_pillar`. Tỉ lệ nổ là ~nửa ăn nửa thua ở cấp
+    // chiêu cao ⇒ bài này đỏ theo XÚC XẮC, trong khi hai con số ngay bên cạnh (xaMat 169 ·
+    // ganMat 0) chứng minh cơ chế đang chạy đúng. Chụp danh sách TRƯỚC rồi tìm cái MỚI: hỏi
+    // đúng "cú bấm này sinh ra gì", không hỏi "cái gì còn sót lại cuối mảng".
+    await page.evaluate(() => { window.__vfxTruoc = new Set(effects.filter(e => e.type === 'atlasVfx')); });
+    // ⚠ Inferno đã rời thanh mặc định của Dark Wizard (sang Di Sản, xem THANH_LOP). Mục này
+    // vẫn phải LÁI BẰNG PHÍM THẬT — chỗ dễ hỏng là sợi dây con trỏ → điểm giáng, không phải
+    // phép tính — nên tự cắm nó vào một ô còn trống bằng chính `knGan` rồi gõ đúng phím đó.
+    const phimInf = await page.evaluate(() => {
+      const o = player.skillBar.indexOf('dw_inferno');
+      if (o >= 0) return o + 1;
+      const trong = player.skillBar.findIndex((x, i) => i > 0 && !x);
+      if (trong < 0) return 0;
+      return window.knGan(trong, 'dw_inferno') ? trong + 1 : 0;
+    });
+    if (!phimInf) fail('không cắm được Inferno vào ô nào — mục 4 mất chỗ bám');
     await page.mouse.move(...mh(r.xa.x, r.xa.y, p.cx, p.cy));
-    await page.keyboard.press('3');
+    await page.keyboard.press(String(phimInf || 3));
     await page.waitForTimeout(120);
     const sau = await page.evaluate(() => {
       const [gan, xa] = mobs.slice(-2);
+      const moi = effects.filter(e => e.type === 'atlasVfx' && !window.__vfxTruoc.has(e)).map(e => e.id);
       return { ganMat: 1e9 - gan.hp, xaMat: 1e9 - xa.hp,
-               no: (effects.filter(e => e.type === 'atlasVfx').pop() || {}).id };
+               moi, no: moi.includes('fire_pillar') ? 'fire_pillar' : (moi[0] || null) };
     });
     console.log('4) Inferno:', JSON.stringify(sau));
-    if (sau.no !== 'fire_pillar') fail(`bấm phím 3 sinh ra ${sau.no}, phải là fire_pillar`);
+    if (sau.no !== 'fire_pillar') fail(`bấm phím 3 không sinh ra fire_pillar (hiệu ứng mới: ${JSON.stringify(sau.moi)})`);
     else if (!(sau.xaMat > 0)) fail('cột lửa nổ chỗ con trỏ mà con quái ở đó không mất máu — hình một đằng, sát thương một nẻo');
     else if (sau.ganMat > 0) fail('con quái cạnh chân cũng mất máu — vùng sát thương vẫn neo ở người niệm');
     else pass(`cột lửa chỉ đốt con quái ở chỗ con trỏ (−${Math.round(sau.xaMat)}), con cạnh chân không hề hấn`);
@@ -179,7 +188,7 @@ const pass = m => console.log('PASS ' + m);
     await page.mouse.click(mx, my, { button: 'right' });
     await page.waitForTimeout(50);
     const diTo = await page.evaluate(() => moveTarget && { x: Math.round(moveTarget.x), y: Math.round(moveTarget.y) });
-    await page.keyboard.press('2');
+    await page.keyboard.press(await phimCua('tp'));
     await page.waitForTimeout(60);
     const o = await noNo();
     const lech = o ? Math.hypot(o.x - (p.x - 200), o.y - (p.y + 150 + p.chan)) : 1e9;

@@ -8,6 +8,8 @@ Ví dụ:
 
 Xuất ra public/game/assets/nv/<tên>.png (thân) và <tên>_vk.png (vũ khí).
 
+Thêm `--khongvk` thì BỎ lớp vũ khí — dùng cho lớp nhân vật cầm vũ khí bay (thần khí).
+
 Thêm `--lop` thì nướng NĂM LỚP RỜI (<tên>_h/_t1/_c/_a/_t2/_n .png) thay cho tấm thân liền,
 để bốn ô trang bị mặc lẫn bộ được — xem bảng LOP ở dưới.
 
@@ -70,6 +72,11 @@ LOP = [('h',  ('背后头发',),          'non'),    # tóc sau — rỗng ở b
        ('t1', ('左手',),              'tay'),    # tay XA, nằm sau thân
        ('c',  ('左腿', '右腿'),        'chan'),
        ('a',  ('躯干_带短裤',),        'ao'),
+       # VŨ KHÍ nằm ĐÚNG GIỮA thân và tay gần — xem thứ tự vẽ ghi ở trên. Đặt sau `t2` là
+       # cây kiếm chui ra sau bàn tay; đặt trước `a` là nó nằm sau lưng áo.
+       # Nướng thẳng ba khe của rig (không phải chiếu một tấm phẳng như nuong_vk.py) nên vũ khí
+       # có BIẾN DẠNG LƯỚI đúng như hoạ sĩ vẽ — vung kiếm thì lưỡi cong theo, không cứng đơ.
+       ('vk', KHE_VK,                'vukhi'),
        ('t2', ('右手', '右手前伸'),     'tay'),   # tay GẦN, nằm trước thân
        ('n',  ('头',),                'non')]
 O_W, O_H, COT = 240, 300, 16
@@ -159,7 +166,7 @@ def _do_khung(d, im, R, tt, skin, phong, oy, bo, danh):
     return k1, k2
 
 
-def nuong_lop(goi, skin, danh='08_SwordAttack'):
+def nuong_lop(goi, skin, danh='08_SwordAttack', bo_vk=False):
     """Nướng NĂM LỚP RỜI thay cho một tấm thân liền — xem bảng LOP ở đầu tệp.
 
     Mỗi lớp CẮT SÁT hộp bao của chính nó, tính trên CẢ HAI bảng cùng lúc để hai bảng dùng
@@ -178,6 +185,10 @@ def nuong_lop(goi, skin, danh='08_SwordAttack'):
     oy = (252 - ((bb2[3] - 40) - GOT_Y)) / O_H
     ra = []
     for ten, giu, o in LOP:
+        # Lớp nào cầm vũ khí BAY (thần khí, vẽ từ món đang trang bị) thì cây vũ khí KHÔNG được
+        # dính vào thân — nướng vào là trên màn có hai cây. Bỏ ngay ở khâu nướng chứ đừng nướng
+        # rồi không khai: mỗi bộ thừa ~170 KB tệp chết mà không ai biết vì sao chúng ở đó.
+        if bo_vk and ten == 'vk': continue
         bo = tuple(k for k in moiKhe if k not in giu)
         k1, k2 = _do_khung(d, im, R, tt, skin, phong, oy, bo, danh)
         # ⚠ HAI BẢNG CẮT HAI HỘP KHÁC NHAU. Bảng một là đứng/đi/chạy/đánh — dáng gọn.
@@ -237,10 +248,10 @@ def bang(ks, duong):
     sh.save(duong, optimize=True)
     return os.path.getsize(duong)
 
-def main_lop(goi, skin, ten, danh, thu):
+def main_lop(goi, skin, ten, danh, thu, bo_vk=False):
     """--lop: năm tấm LỚP RỜI thay cho một tấm thân liền."""
     t0 = time.time()
-    lop, phong = nuong_lop(goi, skin, danh)
+    lop, phong = nuong_lop(goi, skin, danh, bo_vk)
     js = []
     tong = 0
     tong2 = 0
@@ -274,7 +285,9 @@ def main():
     goc = os.path.join(os.path.dirname(os.path.abspath(__file__)), '..', '..')
     thu = os.path.normpath(os.path.join(goc, 'public/game/assets/nv'))
     os.makedirs(thu, exist_ok=True)
-    if '--lop' in sys.argv: return main_lop(goi, skin, ten, danh, thu)
+    # --khongvk: bỏ lớp vũ khí (lớp cầm vũ khí BAY — xem chú thích trong nuong_lop).
+    bo_vk = '--khongvk' in sys.argv
+    if '--lop' in sys.argv: return main_lop(goi, skin, ten, danh, thu, bo_vk)
     t0 = time.time()
     lop, phong = nuong(goi, skin, danh)
     for hau, k in (('', 'than'), ('2', 'than2'), ('_vk', 'vukhi')):

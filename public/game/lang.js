@@ -61,6 +61,10 @@ const EXACT = {
   // ── NPC trong thành ──
   'Trưởng Làng': 'Village Elder',
   'Thợ Rèn · Lò Rèn Hoàng Gia': 'Blacksmith · Royal Forge',
+  // ⚠ KHÔNG dịch là 'Chaos Goblin' — đó là tên riêng con NPC của MU (Quy tắc số 2). Chữ
+  // 'Chaos' thì giữ: game đã ship '● Hỗn Độn Châu' → '● Chaos Pearl' từ lâu.
+  'Yêu Tinh Hỗn Độn · Lò Hỗn Độn': 'Goblin Smith · Chaos Forge',
+  'Pháp Sư Rune · Quán Sách': 'Rune Scholar · Bookshop',
   'Nhà Giả Kim · Tiệm Thuốc': 'Alchemist · Apothecary',
   'Binh Khí Chủ · Vũ Khí Phường': 'Weaponmaster · Armoury',
   'Người Giữ Chuồng': 'Stablekeeper',
@@ -77,7 +81,7 @@ const EXACT = {
   'Lũ Trẻ Chạy Quanh': 'Children at Play',
   'Lính Tuần Phố': 'Street Patrol',
   'Người Quét Phố': 'Street Sweeper',
-  'Chủ Quán Trọ · Trà Quán': 'Innkeeper · Teahouse',
+  'Cô Hầu Bàn · Quán Trọ': 'Serving Girl · Inn',
   'Người Đưa Tin': 'Courier',
   'Bà Bán Hoa': 'Flower Seller',
   'Ông Lão Ngồi Ghế Đá': 'Old Man on the Stone Bench',
@@ -1022,6 +1026,13 @@ Object.assign(EXACT, {
     'class skills + 7 shared stat passives — all learned automatically by level',
   // ── Bị động: hai họ, hai luật (xem CLAUDE.md) ──
   'Bị động': 'Passive', 'Bị động — chỉ số': 'Passive — stat', 'Bị động hiệu ứng': 'Passive — effect',
+  // Tâm pháp — ba cặp khắc chế
+  'Tâm pháp': 'Discipline', 'Tỉ lệ thi triển:': 'Proc chance:', 'Mức kháng:': 'Resistance:',
+  'Bị khắc chế bởi:': 'Countered by:', 'Mở khoá:': 'Unlock:',
+  'không tự ngộ theo cấp': 'never learned by level',
+  'tâm pháp luôn chạy — không cần cắm vào ô': 'disciplines are always active — no slot needed',
+  'kỹ năng chung + 6 tâm pháp — mở bằng cuốn ghép từ 3 Orb':
+    'shared skills + 6 disciplines — unlocked by a tome forged from 3 Orbs',
   'Bị động — luôn có hiệu lực': 'Passive — always active',
   'Bị động hiệu ứng — cần một ô trên thanh': 'Effect passive — needs a bar slot',
   'Đang cộng:': 'Currently giving:',

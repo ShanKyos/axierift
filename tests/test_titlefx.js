@@ -217,19 +217,29 @@ let bad = 0; const fail = m => { bad++; console.log('FAIL ' + m); };
       ccVeNguoiBo(g, { k:sect, cx:210, fy:300, than:150, pl }, 0);
       const d = g.getImageData(0, 0, 420, 340).data;
       let n = 0; for (let i = 3; i < d.length; i += 4) if (d[i] > 24) n++;
+      // `coArt` suy từ DỮ LIỆU, không chép cứng tên lớp: bộ giáp mới nhập vào NV_GIAP là kỳ
+      // vọng tự đổi theo. Bộ đã cắt lớp thì nvBoGiap() cố ý trả null, nên phải hỏi cả NV_GIAP.
+      const _bo = NV_GIAP[sect + '|' + tier];
       return { px:n, artSan: ccArtSan(sect, tier, gv), giap: nvBoGiap(sect, gv) || null,
+               coArt: !!_bo, boTen: _bo || null, lopRoi: !!(_bo && NV_LOP_HOP[_bo]),
                canh: !!(gv && gv.canh), plus: gv ? Math.round(gv.plus) : 0 };
     };
     return { dwTran: await dem('baidasan', false), dwDo: await dem('baidasan', true),
              sbTran: await dem('minhgiao', false), sbDo: await dem('minhgiao', true) };
   });
   console.log('8) trang bị:', JSON.stringify(r8));
-  // Dark Wizard giai 7 CÓ art giáp (NV_GIAP['baidasan|7']) — đường dựng sống phải chạy.
-  if (!r8.dwDo.artSan || r8.dwDo.giap !== 'dwsm1')
-    fail(`Dark Wizard full đồ phải dựng sống bằng bộ giáp dwsm1, nhận: ${JSON.stringify(r8.dwDo)}`);
-  // Spellblade CHƯA có art giáp ⇒ cái van phải đóng, nếu không là rơi về hình dựng bằng đường.
-  if (r8.sbDo.artSan)
-    fail('Spellblade chưa có art giáp mà ccArtSan() vẫn mở — sân khấu sẽ rơi về hình vẽ đường');
+  // ⚠ ĐỪNG chép cứng "lớp X chưa có art". Bản trước khẳng định thẳng "Spellblade chưa có art
+  // giáp", và khi bộ sbsm1 được nhập vào thì bài đỏ ở một chỗ KHÔNG hỏng gì cả — nó chỉ mô tả
+  // một sự thật đã hết hạn. Thứ bài này gác là CÁI VAN mở/đóng ĐÚNG LÚC, nên hỏi dữ liệu.
+  for (const [ten, r] of [['Dark Wizard', r8.dwDo], ['Spellblade', r8.sbDo]]){
+    if (r.coArt && !r.artSan)
+      fail(`${ten} CÓ art giáp (${r.boTen}) mà ccArtSan() đóng — sân khấu bỏ phí art thật`);
+    if (!r.coArt && r.artSan)
+      fail(`${ten} CHƯA có art giáp mà ccArtSan() vẫn mở — sân khấu sẽ rơi về hình vẽ đường`);
+    // Bộ đổi CẢ TẤM thì nvBoGiap() phải trả tên; bộ cắt lớp thì cố ý trả null (xem nvBoGiap).
+    if (r.coArt && !r.lopRoi && r.giap !== r.boTen)
+      fail(`${ten}: bộ đổi cả tấm phải dựng sống bằng ${r.boTen}, nhận ${JSON.stringify(r)}`);
+  }
   // Cả hai lớp, có đồ phải KHÁC HẲN trần: cánh + hào quang +N là art/hiệu ứng thật cho mọi lớp.
   for (const [ten, a, b2] of [['Dark Wizard', r8.dwTran, r8.dwDo], ['Spellblade', r8.sbTran, r8.sbDo]]){
     if (!b2.canh || b2.plus < 7) fail(`${ten}: applyTestBoost lẽ ra cho cánh và +11, nhận ${JSON.stringify(b2)}`);
