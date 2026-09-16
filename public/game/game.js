@@ -11535,7 +11535,10 @@ function questTarget(q){
     if (n) return { map:n.map, x:n.x, y:n.y, label:'Gặp ' + n.name, npcId:n.id };
   }
   if (q.type === 'meditate' && typeof SPRING !== 'undefined') return { map:'corran', x:SPRING.x, y:SPRING.y, label:'Suối Ký Ức' };
-  if (q.type === 'enhance'){ const n = NPCS.find(x => x.talk === 'forge'); if (n) return { map:n.map, x:n.x, y:n.y, label:'Lò Rèn Hoàng Gia', npcId:n.id }; }
+  // ⚠ NHÃN ĐỌC TỪ `n.name`, ĐỪNG CHÉP CỨNG 'Lò Rèn Hoàng Gia'. Từ lúc Ardhaven có HAI con
+  // talk:'forge' (Thợ Rèn · Yêu Tinh Hỗn Độn) thì `find` trả về con nào là chuyện của thứ tự
+  // mảng — chép cứng nhãn là mũi tên chỉ tới một con mà lại gọi tên con kia.
+  if (q.type === 'enhance'){ const n = NPCS.find(x => x.talk === 'forge'); if (n) return { map:n.map, x:n.x, y:n.y, label:n.name, npcId:n.id }; }
   if (q.type === 'collect' && typeof HERB_SPOTS !== 'undefined'){
     // herbMap riêng, không dùng q.map — q.map trên vài NV chính (VD #12) là nơi trả NV (NPC ở
     // Sapidae Chiefdom), khác với nơi thật sự hái Thảo Dược.
@@ -18427,7 +18430,20 @@ function spendJewels(need){
 // Đang đứng tại Lò Rèn Hoàng Gia? Công thức royal:true đòi có mặt ở đó (giữ nguyên thiết kế cũ:
 // +9 trở lên và Linh Dực chỉ luyện được tại chỗ Tông Sư Thợ Rèn).
 // Lò rèn nào trên map ĐANG ĐỨNG (có hơn một Thợ Rèn — xem NPC thoren_dao).
-function forgeNpcHere(){ return NPCS.find(x => x.talk === 'forge' && x.map === curMap) || null; }
+// ⚠ GẦN NHẤT, KHÔNG PHẢI CON ĐẦU MẢNG. Ardhaven có HAI con talk:'forge' — Thợ Rèn và Yêu
+// Tinh Hỗn Độn đứng cách nhau 190px, đúng lối MU đặt máy hỗn độn cạnh lò rèn. Với `find` thì
+// mọi phép đo đều chạy về con đứng trước trong `NPCS`, nên đứng sát con kia vẫn bị báo "chưa
+// tới Lò Rèn Hoàng Gia" và nút KẾT HỢP mờ đi — không lỗi nào ném ra, chỉ một cái nút chết.
+function forgeNpcHere(){
+  let g = null, d0 = Infinity;
+  for (const x of NPCS){
+    if (x.talk !== 'forge' || x.map !== curMap) continue;
+    if (!player){ return x; }
+    const d2 = dist(player.x, player.y, x.x, x.y);
+    if (d2 < d0){ d0 = d2; g = x; }
+  }
+  return g;
+}
 function atRoyalForge(){
   const n = forgeNpcHere();
   if (!n || !player) return false;
@@ -24727,6 +24743,13 @@ const SHOPS = {
       { id:'ruongvk', col:'#c8d4e8', name:'Rương Binh Khí',  price:800, desc:'Vũ khí ngẫu nhiên theo cấp của bạn — có thể ra hàng hiếm' },
       { id:'ruongpc', col:'#5aa0e8', name:'Rương Phòng Cụ', price:700, desc:'Giáp trụ ngẫu nhiên theo cấp — có thể ra trang bị Hoàn Hảo' },
     ]},
+  // Sách Kỹ Năng trước đó CHỈ tới từ tinh anh/trùm và Tầng Sâu, nên muốn nâng đúng một chiêu
+  // thì không có cửa nào ngoài cày may rủi. Giá neo vào chỗ tiêu của nó: một bậc chiêu tốn
+  // `30 × cấp^1,1` Bản Năng + Lumen, còn sách thì bỏ qua cả hai — nên nó phải đắt hơn hẳn mọi
+  // món trong ba tiệm kia (đắt nhất trước nay: Rương Binh Khí 800◈).
+  ah_phapsu: { quote:'"Chép tay cả, không có bản thứ hai. Cầm nhẹ tay cho."', rows:[
+    { id:'sach', icon:'📜', name:'Sách Kỹ Năng', price:4000, desc:'Nâng thẳng 1 cấp cho một chiêu của lớp mình — bảng K, khỏi tốn Lumen lẫn Bản Năng' },
+  ]},
   trachu: { quote:'"Vào đây uống chén trà nóng đã — chuyện Lunacia để sau hẵng hay."', rows:[
     { id:'nghitro', icon:'🛏', name:'Nghỉ Trọ',    price:120, desc:'Nghỉ ngơi dưỡng thần' },
     { id:'ruou',    icon:'🍶', name:'Rượu Hổ Cốt', price:200, desc:'Men say bừng bừng sát khí' },
@@ -24970,6 +24993,7 @@ window.buyFromShop = function(what){
     player.silver -= row.price; player.potions++;
   }
   else if (what==='phu'){ player.silver -= row.price; player.charms++; }
+  else if (what==='sach'){ player.silver -= row.price; player.bikipVH = (player.bikipVH || 0) + 1; }
   else if (what==='trithuong'){
     if (player.hp >= player.maxHp){ addFloat(player.x, player.y-34, 'Vẫn khỏe mạnh — không cần thuốc!', '#8a8a8a', 12); return; }
     player.silver -= row.price; player.hp = player.maxHp;

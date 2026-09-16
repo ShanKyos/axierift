@@ -25,7 +25,7 @@ Khảo sát đọc thẳng từ `public/game/game.js` (bảng `NPCS`, `MAPS`, `S
 | 11 | `thoren_dao` | Thợ Rèn Lưu Vong | Rèn / nâng cấp (lò dự phòng cấp 5) | `daohoa` · Petalshade Isle | `thoren.png` *(dùng chung)* |
 | 12 | `duoclao` | Nhà Giả Kim · Tiệm Thuốc | Bán đồ — bình thuốc, mana, đá thăng cấp | `tuongduong` · Lunaris City | `duoclao.png` |
 | 13 | `binhkhi` | Binh Khí Chủ · Vũ Khí Phường | Bán đồ — tiệm duy nhất bày hàng thật | `tuongduong` · Lunaris City | `binhkhi.png` |
-| 14 | `trachu` | Trà Quán Chủ | Bán đồ — nghỉ trọ, hồi phục | `tuongduong` · Lunaris City | `trachu.png` |
+| 14 | `trachu` | Cô Hầu Bàn · Quán Trọ | Bán đồ — nghỉ trọ, hồi phục | `ardhaven` · Sapidae Chiefdom | `hauban_yt.png` |
 | 15 | `bodau` | Bổ Đầu · Truy Nã Lệnh | Dịch vụ — phát lệnh truy nã mỗi ngày | `tuongduong` · Lunaris City | `bodau.png` |
 | 16 | `thantoan` | Thương Nhân Vận May · Sảnh Cầu May | Dịch vụ — quay thưởng, tỉ lệ dán công khai | `tuongduong` · Lunaris City | `thantoan.png` |
 | 17 | `traichu` | Trại Chủ Mục Đồng | Dịch vụ — bắt & thăng giai thú cưỡi | `ngoai` · Petalshade Outskirts | `traichu.png` |
@@ -607,3 +607,120 @@ thịt" và "Gió ở đây cắt được da"; mép vực lở trong bảng mà
    cho chúng trừ khi có NPC mới dùng đến.
 5. Ảnh về phải đọc được ở **64 px chiều cao** (cỡ trên bản đồ, xem `drawNpc()`) — chi tiết nhỏ hơn
    vài pixel sẽ biến mất hoàn toàn ở cỡ đó, nên bóng dáng và mảng màu lớn quan trọng hơn hoa văn.
+
+---
+
+## THỦ KHỐ — cửa duy nhất vào `player.kho`, và nó đang KHÔNG CÓ AI đứng
+
+`player.kho` đã chạy từ lâu: có mảng, có `khoCap()`, có hàng "Nới kho +N ô" bán bằng Shard, có
+hẳn một tab trong Túi Đồ. Nhưng **không một NPC nào mở nó** — `talk:` hiện có đúng sáu loại
+(`quest` · `shop` · `forge` · `stable` · `trunya` · `vanduyen`), không có `kho`. Tức cái kho là
+một cơ chế **chỉ vào được bằng giao diện**, không có chỗ nào trong thế giới.
+
+Đây là lý do Thủ Khố đáng thêm, và cũng là lý do đừng thêm y như một NPC trang trí: y là **cửa**.
+Thêm y thì thêm `talk:'kho'` và trỏ vào đúng `renderBag()` tab Kho đang chạy — đừng dựng bảng
+kho thứ hai (cùng bài học "Ngăn ngọc VẼ ở đúng MỘT nơi").
+
+**Canon:** NPC chức năng = **người Ardhaven sống sót**, tức người Vaeldra rơi qua Nhát Gọi cùng
+khu phố — không phải dân Lunacia bản địa, nên là người, không phải Axie. Và luật Rune nói *"trả
+bằng thứ nó dịch chuyển"*: **mất ký ức chứ không mất NGHỀ**. Thủ Khố là hiện thân gọn nhất của
+câu đó — y không nhớ nổi tên mình, nhưng nhớ chính xác ai gửi cái gì, số mấy, ngăn nào.
+
+```
+A meticulous Ardhaven warehouse keeper in his fifties, a survivor of the
+transplanted western quarter, standing squarely with a heavy ledger held flat
+against his chest in the crook of one arm. He wears a plain slate-grey wool
+coat buttoned to the throat over a dark work tunic, with a long canvas apron
+covered in rows of small stitched pockets, and a thick iron ring of numbered
+brass keys hanging at his hip. His hands are clean and careful, one finger
+marking his place in the ledger. His face is narrow and composed with tired
+patient eyes and a close-trimmed grey beard, the look of a man who has counted
+the same shelves every day for years and would notice a single missing item.
+The palette leans to slate grey, oiled leather brown, tarnished brass and the
+pale quarried stone of the transplanted city quarter. Keep the whole figure
+inside a plain front-facing standing pose: hair lies flat against the skull
+with no brim, no hood, no horns, no crest and no tall spikes, the shoulders
+stay level and unflared, the ledger and keys stay tight against the body, and
+the feet stand close together with nothing jutting past them. Render it as
+clean stylised 2D game art with soft cel shading, on a transparent background.
+```
+
+*Chi tiết bám lore:* chùm chìa khoá **đánh số** và cuốn sổ kê là nghề còn lại sau khi ký ức bị
+Rune lấy đi; áo dạ xám và đá xám của khu phố cấy sang đến từ chính Ardhaven; vẻ mặt "đếm cùng
+một dãy kệ mỗi ngày" là cách nói rằng y giữ đồ cho người khác, không giữ đồ của mình.
+
+**Tên tệp:** `assets/npcs/thukho.png` — ⚠ tên MỚI, đừng ghi đè tệp nào đang có. Ảnh cache 7 ngày
+(`deploy/nginx-axiewuxia.conf`), nên thay nội dung dưới một tên cũ là người chơi giữ tấm cũ cả
+tuần — đã dẫm đúng bẫy đó với `thoren.png`.
+
+**Khai một dòng** trong `window.NPCS` (`data/canbang.js`), map `ardhaven`:
+
+```js
+{ id:'thukho', name:'Thủ Khố · Kho Ardhaven', map:'ardhaven', x:?, y:?,
+  img:'assets/npcs/thukho.png', talk:'kho', nhan:'Kho', ... }
+```
+
+⚠ `nhan:'Kho'` là bắt buộc — thiếu nó thì bản đồ thành lấy nhãn nền theo `talk`, mà `THANH_TALK`
+chưa có khoá `kho` nên y hiện ra thành **một chấm không tên**.
+
+
+---
+
+## VIDEO → HOẠT ẢNH NPC — đo được, và chỉ MỘT trong hai đoạn dùng được
+
+Câu hỏi của chủ dự án (2026-09-16): *"có bỏ được video này vào thành hoạt ảnh như 1 NPC
+được không"*. Trả lời: **được, nhưng chỉ khi video xuất ra đúng một kiểu.** Công cụ đo:
+
+```
+python3 tools/nuong_video.py <video.mp4> --do          # chỉ đo, không cắt
+python3 tools/nuong_video.py <video.mp4> ra.webp --khung 12 --cot 4 --cao 190
+```
+
+Số đo trên hai đoạn chủ dự án gửi (cả hai 1280×720 · 24 fps · 10 s · 240 khung):
+
+| đoạn | nền± | trôi | vụn | kết luận |
+|---|---|---|---|---|
+| chiến binh có cánh, nền magenta phẳng | **53** | 15 px | 95% | ✅ cắt được — đã nướng thử ra bảng 4×3, ô 277×190, 219 KB |
+| yêu tinh bên máy hỗn độn, nền XƯỞNG VẼ | **−3** | **238 px** | 58% | ⛔ máy không cắt được |
+
+Ba con số ấy là ba cửa, và đoạn yêu tinh trượt cả ba:
+
+1. **`nền±` — độ magenta của vành mép.** −3 nghĩa là **không có chroma nào cả**: đoạn đó
+   quay trong một cái xưởng vẽ sẵn (bánh răng, đe, lọ). Tách nhân vật khỏi một nền có
+   TRANH là rotoscope từng khung, không phải chroma key — mà khói với tia lửa lại vắt
+   ngang người nên còn chẳng có mép nào để tách.
+2. **`trôi` — tâm khối đặc xê dịch bao nhiêu qua cả đoạn.** 238 px = máy quay ĐỘNG. Kể cả
+   tách được thì bảng khung sẽ trượt đi thay vì đứng yên tại chỗ.
+3. **`vụn` — khối lớn nhất chiếm bao nhiêu phần tổng điểm đặc.** 58% nghĩa là phép cắt đã
+   ăn vào chính nhân vật.
+
+⚠ **MỘT KHUNG TĨNH của đoạn yêu tinh thì cắt SẠCH** (`tools/cat_nen.py` ra 272×240, liền
+khối 78%) — nhưng nó là ảnh BÁN THÂN: khuôn hình cắt ngang hông, không có chân, và lôi
+theo cả bánh răng với mảnh máy phía sau. NPC trong game vẽ toàn thân và neo ở BÀN CHÂN
+(`npcHop()`), nên tấm đó dùng làm chân dung thì được, làm NPC đứng thì không.
+
+⇒ **Muốn con yêu tinh đó thành NPC có hoạt ảnh thì dựng lại đoạn video theo đúng đơn dưới
+đây** — rồi cùng một lượt chạy cho ra CẢ tấm đứng lẫn bảng khung, không phải đặt art hai lần.
+
+### Đơn đặt video nhân vật (dán thẳng cho lò sinh video)
+
+> Nền **magenta phẳng `#FF00FF`**, tuyệt đối không có hậu cảnh, không sàn, không bóng đổ
+> xuống nền, không hạt sáng bay lung tung. Máy quay **đứng yên tuyệt đối** — không zoom,
+> không pan, không rung. Nhân vật **toàn thân, thấy rõ bàn chân**, đứng giữa khung, chân
+> cách mép dưới ít nhất 10% chiều cao khung. Vòng lặp **liền mạch**: khung cuối phải khớp
+> khung đầu. Chỉ một động tác lặp lại (gõ búa · thở · khuấy nồi), **bàn chân không dời
+> chỗ**. 2-4 giây là đủ; dài hơn chỉ tốn khung trùng nhau.
+
+Hai chốt dễ quên, và cả hai làm hỏng bảng khung mà nhìn video thì không thấy:
+- **bóng đổ xuống nền** đi theo nhân vật khi key nền ⇒ con vật kéo theo một vũng đen;
+- **hạt sáng rời thân** bị bước giữ-mảng-lớn-nhất bỏ đi ở khung này mà giữ lại ở khung kia
+  ⇒ chớp tắt ngẫu nhiên. Muốn có tia lửa thì để game vẽ, đừng nướng vào tranh — cùng luật
+  đã ghi cho `veTraiLua()`.
+
+### Còn thiếu ở phía GAME: `drawNpc()` chưa có tầng hoạt ảnh
+
+`drawNpc()` vẽ **đúng một tấm PNG** (`NPC_IMGS[n.id]`), đo hộp alpha một lần bằng
+`npcCoTrongMan()`. Quái thì đã có `MOB_KHUNG`; NPC thì chưa có bảng tương đương. Khi có
+video đúng đơn trên thì việc còn lại là dựng `NPC_KHUNG` theo **đúng khuôn `MOB_KHUNG`**
+(khai một khoá là NPC đó có hoạt ảnh, không khai thì vẽ y như cũ) — **đừng dựng khuôn thứ
+hai**, hai bảng cùng ý nghĩa là bảo đảm chúng lệch nhau sau vài đợt sửa.
