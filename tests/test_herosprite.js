@@ -18,6 +18,13 @@ const pass = m => console.log('PASS ' + m);
   // 1. sprite khớp bản vẽ thẳng
   const r1 = await p.evaluate(() => {
     const gv = gearVisual(player), tier = heroTier(player), N = 4;
+    // CÓ ART hay KHÔNG quyết định kỳ vọng, và phải hỏi chứ đừng chép cứng:
+    //  · chưa có art  ⇒ heroSprite rơi về chính drawHeroLit ⇒ hai bên phải TRÙNG KHÍT;
+    //  · có art       ⇒ hai bên phải KHÁC HẲN, vì đó mới là điểm của Quy tắc số 3.
+    // Bản trước chỉ khẳng định vế đầu. Khi bộ thân được nối vào cho mọi giai (nvTen lui theo
+    // LỚP thay vì theo giai) thì bài đỏ ở một chỗ không hỏng gì — nó đang đòi art thật phải
+    // giống hệt hình vẽ bằng đường.
+    const coArt = !!(nvBoTen('thieulam', tier, gv) || (gv && gv.oLop && gv.oLop.ao));
     const out = [];
     for (const [k,i] of [['i',0],['w',3],['a',4],['c',4]]){
       const spr = heroSprite('thieulam', tier, gv, k, i, 'slash', false);
@@ -44,12 +51,22 @@ const pass = m => console.log('PASS ' + m);
         if (Math.abs(da[o]-db[o]) + Math.abs(da[o+1]-db[o+1]) + Math.abs(da[o+2]-db[o+2]) + Math.abs(da[o+3]-db[o+3]) > 40) diff++; }
       out.push({ f: k+i, pct: +(diff/Math.max(1,tot)*100).toFixed(2) });
     }
-    void N; return out;
+    // ⚠ Bọc trong ĐỐI TƯỢNG: p.evaluate tuần tự hoá mảng là ra mảng thuần, mọi thuộc tính
+    // gắn thêm (out.coArt) rơi mất im lặng — bài kiểm rẽ nhầm nhánh mà không báo gì.
+    void N; return { khung: out, coArt };
   });
-  console.log('1. lệch so với vẽ thẳng:', JSON.stringify(r1));
-  const xau = r1.filter(x => x.pct > 2);
-  if (xau.length) fail('sprite lệch khỏi bản vẽ thẳng: ' + JSON.stringify(xau));
-  else pass('4 khung sprite khớp bản vẽ thẳng (lệch ≤ ' + Math.max(...r1.map(x=>x.pct)) + '%)');
+  console.log('1. lệch so với vẽ thẳng:', JSON.stringify(r1.khung), 'coArt=' + r1.coArt);
+  if (r1.coArt){
+    // Có art thì sprite PHẢI khác hình vẽ đường — giống nhau nghĩa là art không được dùng.
+    const giong = r1.khung.filter(x => x.pct < 20);
+    if (giong.length)
+      fail('lớp CÓ art mà sprite vẫn giống hình vẽ bằng đường — art không được dùng: ' + JSON.stringify(giong));
+    else pass(`có art ⇒ sprite khác hẳn hình vẽ đường (${r1.khung.map(x => x.pct + '%').join(' · ')})`);
+  } else {
+    const xau = r1.khung.filter(x => x.pct > 2);
+    if (xau.length) fail('chưa có art mà sprite vẫn lệch khỏi bản vẽ thẳng: ' + JSON.stringify(xau));
+    else pass('chưa có art ⇒ sprite trùng khít bản vẽ thẳng');
+  }
 
   // 2. không cắt hào quang — mép sprite phải trong suốt
   const r2 = await p.evaluate(() => {
@@ -76,14 +93,24 @@ const pass = m => console.log('PASS ' + m);
     const b2 = key({ sect:'baidasan', tier:t, gv });
     const gv2 = Object.assign({}, gv, { plus: 0, t: 1 });
     const d2 = key({ sect:'thieulam', tier:t, gv:gv2 });
-    // Bậc: so với gv=null. Khi ĐANG mặc một bộ giáp, tint của bộ ghi đè trọn bảng màu bậc (xem
-    // hSetMetal) nên tham số tier không đổi được gì — đó là thiết kế, không phải rò bộ nhớ đệm.
+    // ⚠ BẬC KHÔNG CÒN ĐỔI HÌNH KHI CHƯA MẶC GÌ, và đó là ĐÚNG. Với gv=null thì không có món
+    // nào, nên mọi giai đều là THÂN TRẦN của lớp — cùng một bộ art, cùng một hình. Bản trước
+    // đòi hai giai phải khác nhau; điều đó chỉ đúng hồi giai ≥2 rơi về hình vẽ bằng đường và
+    // bảng màu bậc tô khác đi. Giữ khẳng định cũ là bắt game quay lại đường vector.
     const e1 = key({ sect:'thieulam', tier:1,  gv:null });
     const e2 = key({ sect:'thieulam', tier:7, gv:null });
-    return { lopKhac: a !== b2, bacKhac: e1 !== e2, doKhac: a !== d2 };
+    // Thứ CÒN phải gác: hai BỘ GIÁP khác nhau không được dùng chung một ô đệm.
+    const gvA = Object.assign({}, gv, { oLop: { non:'dkph1', ao:'dkph1', tay:'dkph1', chan:'dkph1' } });
+    const gvB = Object.assign({}, gv, { oLop: { non:'dwvt1', ao:'dwvt1', tay:'dwvt1', chan:'dwvt1' } });
+    const boKhac = key({ sect:'thieulam', tier:t, gv:gvA }) !== key({ sect:'thieulam', tier:t, gv:gvB });
+    return { lopKhac: a !== b2, doKhac: a !== d2, boKhac, bacTranGiongNhau: e1 === e2 };
   });
   console.log('3.', JSON.stringify(r3));
-  if (!r3.lopKhac || !r3.bacKhac || !r3.doKhac) fail('bộ nhớ đệm rò giữa lớp/bậc/bộ đồ: ' + JSON.stringify(r3));
+  if (!r3.lopKhac || !r3.doKhac || !r3.boKhac)
+    fail('bộ nhớ đệm rò giữa lớp / bộ đồ / bộ giáp: ' + JSON.stringify(r3));
+  else pass('đổi lớp · đổi đồ · đổi bộ giáp đều ra sprite khác — không rò ô đệm');
+  if (!r3.bacTranGiongNhau)
+    fail('thân TRẦN mà đổi giai lại ra hình khác — nghi rơi về đường vẽ vector ở một giai nào đó');
   else pass('khoá bộ nhớ đệm tách đúng theo lớp · bậc · chữ ký trang bị');
 
   // 4. TRÚNG ĐÒN CŨNG PHẢI LẤY SPRITE — luật này đã ĐẢO CÓ CHỦ Ý.

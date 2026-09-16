@@ -15245,6 +15245,25 @@ function nvMoc(kind){ return NV_BANG2[kind] ? NV_MOC2[kind] : NV_MOC[kind]; }
 // Quên khai là lớp đó chỉ đọc NỬA ĐẦU vòng chạy — chân lệch nhịp so với lớp khai đủ.
 const NV_KHUNG_R = { dkcw1: 32, dwsc1: 32, elfar1: 32, dlcm1: 32,
                      dkph1: 32, dlbc1: 32, elnb1: 32, sbsm1: 32 };
+// Số khung của một khối, tính trên MỌI bộ đang góp lớp — không chỉ thân nền.
+//
+// ⚠ `nvBoTen()` trả THÂN NỀN cho bộ đã cắt lớp (vì `nvBoGiap()` cố ý trả null), nên hỏi nó số
+// khung là hỏi nhầm người: Spellblade mặc `sbsm1` (32 khung chạy) mà thân nền `sbhd1` chỉ có
+// 16 ⇒ vòng chạy đọc nửa đầu rồi lặp lại, nửa sau trùng khít nửa trước. Nhìn ra chỉ thấy
+// "chạy hơi lạ"; `tests/test_khungchay.js` bắt được bằng cách so từng khung.
+//
+// Lấy MAX chứ không lấy của thân: `nvKhungGop()` đã quy mỗi lớp về PHA 0..1 rồi mới nhân với
+// số khung của CHÍNH nó, nên lớp ít khung vẫn chạy đúng nhịp, chỉ thô hơn. Lấy min thì bộ
+// nướng mới bị bộ cũ kéo xuống.
+function nvSoKhungBo(sectKey, tier, gv, kind, hw){
+  let n = nvSoKhung(nvBoTen(sectKey, tier, gv, hw), kind);
+  const o = gv && gv.oLop;
+  if (o) for (const k in o){
+    const t = o[k] ? o[k] + (hw || '') : null;
+    if (t) n = Math.max(n, nvSoKhung(t, kind));
+  }
+  return n;
+}
 function nvSoKhung(ten, kind){
   if (kind === 'r' && ten && NV_KHUNG_R[ten]) return NV_KHUNG_R[ten];
   return HS_FRAMES[kind] || 1;
@@ -15340,7 +15359,7 @@ function nvKhungGop(sectKey, tier, gv, kind, idx, hw){
   // mỗi lớp tự nhân với số khung của CHÍNH nó: thân 32 khung và giáp 16 khung vẫn dừng ở
   // cùng một thời điểm trong vòng chạy, chỉ khác độ mịn. Lấy chung một `k` như bản trước thì
   // lớp 16 khung nhận chỉ số tới 31, chia dư ra thành đi ngược nửa vòng — tay rời khỏi thân.
-  const nRef = nvSoKhung(than, kind);
+  const nRef = nvSoKhungBo(sectKey, tier, gv, kind, hw);
   const pha  = (((idx % nRef) + nRef) % nRef) / nRef;
   const oL = (gv && gv.oLop) || {};
   // Gom nguồn TRƯỚC. Thiếu một tấm thì bỏ cả lượt chứ đừng vẽ nửa người: bảng hai nạp khi
@@ -15484,7 +15503,7 @@ function heroSprite(sectKey, tier, gv, kind, idx, act, back, sw, blk, hw){
   g.scale(HS_SCALE, HS_SCALE);
   g.translate(HS_PAD, HS_PAD);
   // Số khung của KHỐI ĐANG ĐỌC, theo chính bộ art này (khối chạy khai riêng — xem NV_KHUNG_R).
-  const _nk = nvSoKhung(nvBoTen(sectKey, tier, gv, hw), blk);
+  const _nk = nvSoKhungBo(sectKey, tier, gv, blk, hw);
   const ps = heroFramePose(kind, idx, act, sw, _nk);
   ps.back = !!back;
   // Cánh KHÔNG nướng vào sprite: drawPlayer đã vẽ nó riêng bằng veCanh(). Nướng vào đây là vẽ
@@ -17884,7 +17903,7 @@ function drawPlayer(p){
     // tính chỉ số bằng 16 rồi chia dư cho 12 là thứ tự khung đảo lộn giữa cú đấm.
     // Số khung phải hỏi CHÍNH bộ art đang mặc: khối chạy của bộ nướng lại có 32 khung, bộ cũ
     // 16. Đọc thẳng HS_FRAMES là bộ 32 khung chỉ chạy được nửa vòng rồi lặp.
-    const _n = nvSoKhung(nvBoTen(p.sect, _tier, _gv, p._hw), _blk) || HS_FRAMES[_kind];
+    const _n = nvSoKhungBo(p.sect, _tier, _gv, _blk, p._hw) || HS_FRAMES[_kind];
     const _TAU = Math.PI * 2;
     const _idx = _kind === 'c' ? clamp((Math.min(1, castK) * _n) | 0, 0, _n - 1)
                : _kind === 'a' ? clamp((atkK * _n) | 0, 0, _n - 1)
