@@ -3523,6 +3523,61 @@ nhìn" có mặt trong tài liệu này.*
 in, mà **bảng neo thì không được ghi** — đúng cái dạng hỏng đã xoá sạch cây của sáu map một lần
 rồi. Đã vá cả hai tệp (thêm `'__file__'` vào `NT`). Đo lại: `ISO_NEO` 60 → **63** sprite.
 
+### 🧪 `/net` — CÔNG CỤ THỬ TẦNG ONLINE, và **BÓNG GIẢ** thay cho cửa sổ thứ hai
+
+| | |
+|---|---|
+| Cửa mở | console cũ, phím `` ` ``, vẫn khoá sau **`?test=1`** — chạy `?test=1&net=1` để có cả hai |
+| Lệnh | `/net` · `/net ds` · `/net toi [id\|tên]` · `/net ma [n]` · `/net ma danh\|chieu\|nga` · `/net xoa` · `/net hud` · `/net pvp` |
+| Máy | `window.NET_MA` · `netMaTao()` · `netMaXoa()` · `netMaDong()` · `netMaNhip()` · `drawNetHUD()` |
+| Gác | `tests/test_netma.js` (5 mệnh đề, **bốn cơ chế đã thử ngược và đều đỏ**) |
+
+**⚠ CONSOLE KHÔNG MỞ THEO `?net=1`, và đừng "tiện tay" nối vào.** Hai cờ đọc hai tham số khác
+nhau (`TEST_MODE` đọc `test|max`, `net.js` đọc `net`), nên `?test=1&net=1` bật cả hai — đó là
+đường thử. Cho `?net=1` tự mở console là phát lệnh gỡ rối cho **mọi người đang chơi thật trên
+cùng máy chủ**, mà `cheatExec` thì CLAUDE.md đã ghi là phải gỡ trước khi có bất cứ thứ gì chung.
+
+**⚠ `/net toi` LÀ LỆNH ĐÁNG GIÁ NHẤT, vì nó bác bỏ một cái bẫy đã ăn nguyên một vòng chẩn đoán.**
+Mọi nhân vật mới hiện ra ở ĐÚNG một điểm, nên hai cửa sổ vừa vào game là hai thân **chồng khít
+lên nhau lệch 0,0px** — kết nối chạy hoàn hảo mà nhìn ra "không thấy ai". `/net ds` in khoảng
+cách, `/net toi` dời mình sang **đứng CẠNH** (lệch 110px, cố ý không đứng đè: đứng đè đúng là
+cái đang muốn gỡ).
+
+**⚠ BÓNG GIẢ CHỈ SỐNG TRÊN MÁY NÀY.** Không gói tin nào mang chúng đi — `gui()` chỉ gửi
+`netDoc()`, tức người chơi của mình. Đừng nối chúng vào đường gửi: đó là dựng đúng cái cửa cho
+một client sửa đổi bơm người giả vào màn của người khác. Chúng cũng **không** có máu thật, không
+bị nhắm, không đánh được — cùng lý do đàn thú hoang vô dụng: *giá trị của một vật thử nằm ở chỗ
+nó không phải nội dung.*
+
+**⚠ HAI ĐƯỜNG PHẢI NỐI RIÊNG, và chúng hỏng theo hai kiểu khác nhau:**
+
+| | ai dựng lại `NETPLAYERS` | thiếu chỗ nối thì |
+|---|---|---|
+| **không** mạng | không ai — `net.js` `return` ngay đầu tệp | `/net ma` im lặng không vẽ gì, ở đúng đường chơi một mình mà người ta thử TRƯỚC |
+| **có** mạng | `capNhatMang()`, mỗi ảnh chụp (10 Hz) | bóng giả vẽ được đúng một nhịp rồi biến — đọc ra "tầng vẽ hỏng" |
+
+Nên `netMaDong()` (game.js) tự đổ vào cho đường đầu, và `capNhatMang()` nối `NET_MA` vào đuôi
+cho đường sau. Thử ngược từng chỗ đều đỏ đúng mệnh đề của nó.
+
+**⚠ `netThanNhip()` LÀ MỘT LUẬT, HAI CHỖ GỌI.** `noiSuy()` gọi nó cho thân người THẬT, `netMaNhip()`
+gọi nó cho bóng giả. Trước bản này phép đếm ngược ba đồng hồ hoạt cảnh + `deadT` nằm thẳng trong
+`noiSuy`; giữ nguyên rồi chép sang cho bóng giả là bóng giả diễn một kiểu còn người thật diễn một
+kiểu — mà bóng giả sinh ra **chính để thử đường vẽ của người thật**, nên hai bên lệch nhau là công
+cụ thử nói dối. Cùng lý do `thanNhip` tồn tại.
+
+**⚠ Ba đồng hồ ấy vẫn đếm ngược trong `netThanNhip`, KHÔNG được dời vào `thanNhip`** — `thanNhip`
+thì cả người chơi của mình lẫn thân người từ xa cùng gọi, nên đặt vào đó là mình bị trừ hai lần.
+
+**Hai lỗi của chính QUE DÒ, cả hai cho ra một phép đo vô nghĩa** — ghi lại vì cùng họ với những
+cái đã ghi ở mục `test_dongbodo`:
+1. **Quên tỉ lệ bộ đệm/CSS.** Canvas 2560×1500 trên khung nhìn 1280×800 ⇒ `tl` = 2. Công thức
+   đúng là `screen = (thế giới − camera) × zoom`, **rồi mới** nhân `tl`. Thiếu bước hai là đo
+   vào một ô lệch hẳn chỗ: ra 190 điểm ảnh, trông y như "vẽ được một tí".
+2. **Ô đo và ô đối chứng ra BẰNG NHAU TUYỆT ĐỐI (224 = 224).** Cả hai toạ độ âm nên
+   `getImageData` kẹp về góc trên-trái ⇒ hai ô là **cùng một vùng**. Đó là bằng chứng cảnh dựng
+   hỏng, không phải bằng chứng cơ chế hỏng. `test_netma` nay tự kiểm `trongKhung` trước khi chấm.
+   Sau khi sửa: **6.869 điểm ảnh đổi ở ô có bóng, 121 ở ô đối chứng.**
+
 ### Còn nợ, biết rõ
 
 | | |

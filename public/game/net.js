@@ -156,6 +156,10 @@
     const a = window.NETPLAYERS;
     a.length = 0;
     for (const t of NET.than.values()) a.push(t);
+    // Bóng GIẢ của lệnh `/net ma` đi sau cùng. Chúng không tới từ máy chủ nên vòng dựng lại ở
+    // trên sẽ xoá sạch chúng mỗi ảnh chụp — tức `/net ma` chỉ vẽ được đúng một nhịp rồi biến,
+    // mà biến kiểu đó đọc ra "tầng vẽ hỏng" chứ không ra "công cụ thử chưa nối".
+    if (window.NET_MA) for (const m of window.NET_MA) a.push(m);
   }
 
   /* ── Nội suy ─────────────────────────────────────────────────────────────────────────
@@ -181,23 +185,13 @@
       const y = t.ay + (t.by - t.ay) * k;
       // Nhịp bước + quán tính phụ: gọi ĐÚNG hàm mà update() gọi cho người chơi của mình. Chép
       // công thức sang đây là bàn chân trượt đất, và kiểu lệch đó chỉ hiện ra khi nhìn ảnh chụp.
-      const dx = x - t.x, dy = y - t.y, dl = Math.hypot(dx, dy);
+      const dx = x - t.x, dy = y - t.y;
       t.x = x; t.y = y;
-      if (typeof window.thanNhip === 'function') window.thanNhip(t, dt, dx, dy, dl > 0.01 ? 1 : 0);
-      // ⚠ ĐẾM NGƯỢC HOẠT CẢNH RA ĐÒN Ở ĐÂY, KHÔNG NHÉT VÀO `thanNhip`. `update()` đã đếm ngược
-      // hai đồng hồ này cho người chơi của mình; `thanNhip` thì CẢ HAI bên cùng gọi, nên đặt
-      // vào đó là người chơi của mình bị trừ hai lần và mọi cú đánh ngắn đi một nửa.
-      if (t.atkAnim > 0) t.atkAnim = Math.max(0, t.atkAnim - dt);
-      if (t.castT   > 0) t.castT   = Math.max(0, t.castT   - dt);
-      if (t.hurtT   > 0) t.hurtT   = Math.max(0, t.hurtT   - dt);
-      // ── NẰM XUỐNG ──────────────────────────────────────────────────────────────────────
-      // `drawPlayer` suy "người này chết chưa" từ MÁU (`p.hp <= 0`), nên chuyện chết đã qua được
-      // dây từ trước — nhưng khung hình của khối chết đọc `deadT`, mà `netTaoThan` để nó bằng 0
-      // và không ai cộng. Hệ quả: thân người từ xa chết thì ĐỨNG HÌNH ở khung ĐẦU của cú ngã,
-      // vĩnh viễn. Không lỗi nào báo, và nhìn ra là "hình như lag" chứ không ra "chưa làm".
-      // Ở người chơi của mình thì `update()` cộng nó; thân người từ xa không chạy `update()`.
-      if (t.chet) t.deadT = (t.deadT || 0) + dt;
-      else if (t.deadT) t.deadT = 0;     // hồi sinh thì đứng dậy, đừng giữ khung cuối của cú ngã
+      // MỘT luật cho mọi thân người từ xa — xem `netThanNhip` trong game.js. Nó gói cả nhịp bước
+      // (`thanNhip`, cùng hàm mà `update()` gọi cho người chơi của mình) lẫn phép đếm ngược ba
+      // đồng hồ hoạt cảnh và `deadT`. Giữ bản sao ở đây thì bóng giả của `/net ma` và thân người
+      // thật sẽ diễn khác nhau ngay lần ai đó sửa một bên.
+      if (typeof window.netThanNhip === 'function') window.netThanNhip(t, dt, dx, dy);
     }
   }
 
