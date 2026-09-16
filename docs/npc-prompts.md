@@ -717,10 +717,43 @@ Hai chốt dễ quên, và cả hai làm hỏng bảng khung mà nhìn video th�
   ⇒ chớp tắt ngẫu nhiên. Muốn có tia lửa thì để game vẽ, đừng nướng vào tranh — cùng luật
   đã ghi cho `veTraiLua()`.
 
-### Còn thiếu ở phía GAME: `drawNpc()` chưa có tầng hoạt ảnh
+### ✅ PHÍA GAME ĐÃ XONG: `NPC_KHUNG`
 
-`drawNpc()` vẽ **đúng một tấm PNG** (`NPC_IMGS[n.id]`), đo hộp alpha một lần bằng
-`npcCoTrongMan()`. Quái thì đã có `MOB_KHUNG`; NPC thì chưa có bảng tương đương. Khi có
-video đúng đơn trên thì việc còn lại là dựng `NPC_KHUNG` theo **đúng khuôn `MOB_KHUNG`**
-(khai một khoá là NPC đó có hoạt ảnh, không khai thì vẽ y như cũ) — **đừng dựng khuôn thứ
-hai**, hai bảng cùng ý nghĩa là bảo đảm chúng lệch nhau sau vài đợt sửa.
+> ⚠ Mục này trước đây ghi *"`drawNpc()` chưa có tầng hoạt ảnh"*. Đã dựng. Giữ đúng cái tiêu đề
+> này để thấy ranh giới đã dời tới đâu, đừng đọc câu cũ rồi tưởng còn phải làm.
+
+`NPC_KHUNG` trong `game.js`, dựng theo **đúng khuôn `MOB_KHUNG`** (không dựng khuôn thứ hai —
+hai bảng cùng ý nghĩa là bảo đảm chúng lệch nhau sau vài đợt sửa). Khai một khoá là NPC đó
+sống; không khai thì vẽ y như cũ, không lệch một điểm ảnh.
+
+```
+python3 tools/nuong_video.py <video.mp4> public/game/assets/npcs/kh/<tên>.webp
+# → in ra sẵn dòng dán vào NPC_KHUNG, kèm neoY đo được
+```
+
+Rồi trỏ `img:'assets/npcs/<tên>.png'` của NPC vào tấm lùi. **Hết** — không sửa một dòng máy nào.
+
+Bốn chỗ dễ sai, cả bốn đã có mệnh đề gác trong `tests/test_npckhung.js` (năm mệnh đề, cả năm
+đã thử ngược và đều đỏ):
+
+- **Khoá là TÊN TỆP, không phải id NPC.** `laotuong.png` phục vụ bốn lính gác, nên khai theo
+  tệp là cả bốn cùng sống bằng một dòng.
+- **Tấm lùi `assets/npcs/<tên>.png` là BẮT BUỘC.** Bảng khung nạp lười; thiếu tấm lùi là mấy
+  trăm mili giây đầu xin một tệp không tồn tại (404) rồi NPC chớp thành đốm mực.
+  `nuong_video.py` xuất cả hai trong một lượt.
+- **`neoY` là BÀN CHÂN trong ô, không phải đáy ô** — lấy TRUNG VỊ hàng đáy từng khung. Một
+  khung có mẩu hiệu ứng rơi thấp hơn chân là kéo neo của cả bảng xuống và NPC treo lơ lửng
+  suốt (đúng cái bẫy đã ghi cho `tq_corran` và `tq_daohoa`).
+- **Lệch pha theo TOẠ ĐỘ.** Hai NPC cùng tấm mà vỗ cánh khớp nhau đọc ra hai bản sao, không
+  ra hai người — cùng lý do `_nb` đã lệch pha từ trước.
+
+⚠ **Và bài kiểm KHÔNG hỏi "bảng có khoá không".** Một cái bảng thì không bao giờ hỏng; thứ
+hỏng là sợi dây từ bảng tới cái NPC đang đứng trên màn. Cả năm mệnh đề lái `npcKhungCua()`
+thật rồi hỏi cái Ô nó chọn — và đo Ô chứ không đo ĐIỂM ẢNH, vì hai lượt vẽ liên tiếp của một
+cảnh đang trôi lệch nhau hàng nghìn điểm ảnh (bài học đã trả giá ở `test_dongbodo`).
+
+⚠ **Cỡ vẽ ra bị `NPC_TRAN` bó theo CHIỀU RỘNG Ô.** Con Kỵ Sĩ Ronin có cánh xoè nên ô ra
+219×150 (tỉ lệ 1,46) ⇒ trần bề ngang cắn trước, thân vẽ ra 85px thay vì 95px như NPC thường.
+Đó là luật cũ đang làm đúng việc của nó (nó sinh ra để chặn năm NPC thú Axie rộng hơn cao),
+không phải lỗi — nhưng biết trước thì đừng ngạc nhiên khi một tấm nhiều hiệu ứng ra nhỏ hơn
+tấm thân trần.
