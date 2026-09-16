@@ -1445,6 +1445,9 @@ const VFX_ATLAS_DEFS = {
   // art trắng-bạc hà rơi đúng dải sáng ấy và phép tách không phân biệt nổi. Không chữa được ở
   // khâu nhập; phải sinh lại gói trên NỀN MỘT MÀU PHẲNG (tools/vfx_gemini.py --nen '#ff00ff').
   sx_toanchan_a:  { k:1, cols:5, rows:1,  frameW:384, frameH:384, frames:5,  fps:18, anchorX:46.1, anchorY:192.0, neoR:337.9, cong:false },
+  // Hoả Xích Diệm (Hành Vi ô 2 của Dark Lord) — ba ngọn lửa toả ra từ một điểm, lõi trắng chạy dọc.
+  // Gói Meowa 8 khung / lưới 3×3; ô thứ 9 rỗng nên bỏ bằng `--bo 8`.
+  fire_scream:    { k:1, cols:8, rows:1,  frameW:384, frameH:384, frames:8,  fps:16, anchorX:46.1, anchorY:192.0, neoR:337.9, cong:false },
 };
 const VFX_ATLAS_IMGS = {};
 const VFX_ATLAS_DUNG = {};   // id → lúc dùng gần nhất (ms)
@@ -4103,7 +4106,8 @@ const VH_VFX = {
   mg_flamestrike:   { style:'flamewall',   c2:'#ff9a5a', dur:1.15 }, // hàng cột lửa phía trước
   dk_ragefulblow:   { style:'groundburst', c2:'#cfe8ff', dur:0.9 },  // nền toác thành tia từ điểm giáng
   mg_powerslash:    { style:'lightwave',   c2:'#ffe9b0', dur:0.85 }, // sóng sáng rời kiếm bay đi
-  dl_chaoticdiseier:{ style:'quakeburst',  c2:'#e8c88a', dur:1.0 },  // Earthquake — nền nứt thành vòng, đá bắn lên
+  // dl_chaoticdiseier — ĐÃ CÓ ART THẬT (`fire_scream` trong CHIEU_TRANH). Style tạm `quakeburst`
+  // gỡ theo luật: có mặt trong CHIEU_TRANH mà còn khai style là chồng hai lớp lệch tâm lên nhau.
   elf_penetration:  { style:'flash',       c2:'#dfffff', proj:'lance' }, // mũi tên xuyên — xem drawProjStyled
 };
 function _vxLine(x1, y1, x2, y2){ ctx.beginPath(); ctx.moveTo(x1, y1); ctx.lineTo(x2, y2); ctx.stroke(); }
@@ -4697,6 +4701,7 @@ const CHIEU_TRANH = {
   sx_thieulam_a: { atlas:'sx_thieulam_a', xoay:true },  // Twisting Slash — quạt chém Dark Knight
   sx_bug_a:      { atlas:'sx_bug_a',      xoay:true },  // Force Wave — sóng chấn quyền trượng Dark Lord
   sx_toanchan_a: { atlas:'sx_toanchan_a', xoay:true },  // Triple Shot — loé cung Sylvan Ranger
+  dl_chaoticdiseier: { atlas:'fire_scream', xoay:true },  // Hoả Xích Diệm — ba ngọn lửa toả ra, Dark Lord
 };
 // Chỗ chiêu giáng xuống: CHUỘT CHỈ ĐÂU, CHIÊU GIÁNG ĐÓ.
 //

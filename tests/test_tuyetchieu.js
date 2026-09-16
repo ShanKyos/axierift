@@ -136,8 +136,16 @@ const pass = m => console.log('PASS ' + m);
     const dac = { dk_ragefulblow:'groundburst',
                   mg_powerslash:'lightwave', dl_chaoticdiseier:'quakeburst' };
     const sai = [];
-    for (const id in dac) if (!VH_VFX[id] || VH_VFX[id].style !== dac[id])
-      sai.push(id + '=' + ((VH_VFX[id] && VH_VFX[id].style) || 'không có'));
+    // ⚠ BỎ QUA chiêu đã có TRANH THẬT — suy từ `CHIEU_TRANH`, đừng gỡ tay khỏi `dac`.
+    // Luật của kho: có mặt trong CHIEU_TRANH thì KHÔNG được khai style nữa. Nên với chiêu ấy,
+    // "không có style" là ĐÚNG, và mệnh đề này đòi ngược lại. Bản cũ chép cứng rồi gỡ tay từng
+    // mã mỗi lần art về (Dark Wizard đã phải gỡ một lần) — tức bảng sẽ mục lại ở chiêu kế tiếp.
+    // Vòng kiểm CHIEU_TRANH ngay dưới mới là chỗ gác mấy chiêu đó.
+    for (const id in dac){
+      if (CHIEU_TRANH[id]) continue;
+      if (!VH_VFX[id] || VH_VFX[id].style !== dac[id])
+        sai.push(id + '=' + ((VH_VFX[id] && VH_VFX[id].style) || 'không có'));
+    }
     // Chiêu đã có TRANH THẬT thì không khai style vector nữa (giữ cả hai là chồng hai lớp lên
     // nhau) — chữ ký hình ảnh của nó nằm ở CHIEU_TRANH.
     //
