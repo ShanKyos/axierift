@@ -28282,6 +28282,50 @@ function tickBark(n){
 const NV_THAN_PX = CAO_THAN_NUONG * (NV_CAO / HERO_H);   // thân nhân vật VẼ RA ≈ 95px
 const NPC_CAO = 1.00;   // NPC cao bằng ngần này lần THÂN nhân vật…
 const NPC_TRAN = 1.30;  // …và hộp vẽ ra, chiều nào cũng vậy, không quá ngần này lần
+// ═══ NPC CÓ HOẠT ẢNH — khai MỘT khoá là NPC đó sống, không khai thì vẽ y như cũ ═══
+//
+// Trước bản này `drawNpc()` vẽ đúng MỘT tấm PNG, nên 26 con trong thành đứng bất động tuyệt đối
+// (chỉ nhấp nhô 2,2px theo `_nb`). Quái thì đã có `MOB_KHUNG` từ lâu; NPC thì chưa.
+//
+// ⚠ DÙNG LẠI ĐÚNG KHUÔN `MOB_KHUNG`, ĐỪNG DỰNG KHUÔN THỨ HAI. Hai bảng cùng ý nghĩa là bảo đảm
+// chúng lệch nhau sau vài đợt sửa — cùng lý do `knDsKhac()` suy ra thay vì chép thành bảng thứ ba.
+//
+// ⚠ KHOÁ LÀ TÊN TỆP, KHÔNG PHẢI ID NPC — y như `MOB_KHUNG`. Nhiều NPC dùng chung một tấm
+// (`laotuong.png` phục vụ bốn lính gác), nên khai theo tệp là cả bốn cùng sống bằng một dòng.
+//
+// ⚠ TẤM LÙI Ở `assets/npcs/<tên>.png` LÀ BẮT BUỘC. Bảng khung nạp lười; thiếu tấm lùi thì mấy
+// trăm mili giây đầu `NPC_IMGS` xin một tệp không tồn tại (404) rồi NPC chớp thành đốm mực.
+// `tools/nuong_video.py` xuất CẢ HAI trong một lượt chạy, đừng xuất tay một cái.
+//
+// ⚠ `neoY` LÀ BÀN CHÂN TRONG Ô, không phải đáy ô. Bảng do máy nướng lấy TRUNG VỊ hàng đáy từng
+// khung, nên một khung có mẩu hiệu ứng rơi thấp hơn chân không kéo neo của cả bảng xuống.
+const NPC_KHUNG = {
+  // Kỵ Sĩ Ronin — nướng từ video nền magenta phẳng (máy quay đứng yên, chân lệch ĐÚNG 0px qua
+  // cả 12 khung). Đôi cánh lửa lạnh là thứ động; thân đứng im, đúng vai một kẻ đang ĐỢI.
+  //   python3 tools/nuong_video.py <video.mp4> public/game/assets/npcs/kh/ronin_canh.webp
+  'ronin_canh': { cot:4, hang:3, khung:12, oRong:219, oCao:150, neoY:1.0000, fps:8 },
+};
+const NPC_KH_IMGS = {};
+// Tên tệp của một NPC, bỏ thư mục và đuôi — `assets/npcs/ronin_canh.png` → `ronin_canh`.
+function npcTen(n){ return (n.img || '').replace(/^.*\//, '').replace(/\.[a-z0-9]+$/i, ''); }
+function npcKhAnh(ten){
+  let im = NPC_KH_IMGS[ten];
+  if (!im){ im = new Image(); im.src = 'assets/npcs/kh/' + ten + '.webp'; NPC_KH_IMGS[ten] = im; }
+  return (im.complete && im.naturalWidth) ? im : null;
+}
+// Ô đang vẽ của một NPC. Trả null khi NPC không khai hoạt ảnh HOẶC bảng chưa tải xong — chỗ gọi
+// lùi về tấm tĩnh, nên art về trễ một nhịp chứ không bao giờ thành ô trống.
+function npcKhungCua(n){
+  const ten = npcTen(n);
+  const K = NPC_KHUNG[ten]; if (!K) return null;
+  const im = npcKhAnh(ten); if (!im) return null;
+  const tong = K.khung || (K.cot * K.hang);
+  // ⚠ Lệch pha theo TOẠ ĐỘ, không để chung một nhịp: hai NPC cùng tấm mà vỗ cánh khớp nhau
+  // đọc ra hai bản sao, không ra hai người. Cùng lý do `_nb` lệch pha bên dưới.
+  const i = Math.floor(performance.now() / 1000 * (K.fps || 8) + n.x * 0.013 + n.y * 0.007) % tong;
+  return { im, K, H:{ sx:(i % K.cot) * K.oRong, sy:((i / K.cot) | 0) * K.oCao,
+                      sw:K.oRong, sh:K.oCao } };
+}
 const _npcHop = {};
 function npcHop(id, im){
   const cu = _npcHop[id];
@@ -28302,8 +28346,10 @@ function npcHop(id, im){
   }
   return (_npcHop[id] = x2 < 0 ? tron : { sx:x1, sy:y1, sw:x2 - x1 + 1, sh:y2 - y1 + 1 });
 }
-function npcCoTrongMan(id, im){
-  const H = npcHop(id, im);
+// `hop` truyền vào để đường HOẠT ẢNH dùng ô của bảng khung thay vì hộp alpha của cả tấm —
+// đo alpha trên một bảng 4×3 là ra hộp bao của MỌI khung gộp lại, tức sai cỡ lẫn sai neo.
+function npcCoTrongMan(id, im, hop){
+  const H = hop || npcHop(id, im);
   let cao = NV_THAN_PX * NPC_CAO;
   let rong = cao * (H.sw / H.sh);
   const tran = NV_THAN_PX * NPC_TRAN;
@@ -28324,16 +28370,26 @@ function drawNpc(){
     // đổi nằm quanh nhân vật — chín NPC trong thành đứng bất động tuyệt đối. Lệch pha theo toạ
     // độ để cả thành không thở cùng một nhịp.
     const _nb = SETTINGS.lowFx ? 0 : Math.sin(performance.now()/640 + n.x*0.031 + n.y*0.017) * 2.2;
-    const _co = (im && im.complete && im.naturalWidth) ? npcCoTrongMan(n.id, im) : null;
+    // Hoạt ảnh thắng tranh tĩnh khi NPC có khai `NPC_KHUNG` VÀ bảng đã tải xong; chưa xong thì
+    // rơi về tấm lùi, nên art về trễ một nhịp chứ không bao giờ hiện ra ô trống.
+    const _kh = npcKhungCua(n);
+    const _anh = _kh ? _kh.im : im;
+    const _co = _kh ? npcCoTrongMan(n.id, _kh.im, _kh.H)
+              : (im && im.complete && im.naturalWidth) ? npcCoTrongMan(n.id, im) : null;
     const _cao = _co ? _co.cao : NV_THAN_PX, _rong = _co ? _co.rong : NV_THAN_PX * 0.48;
-    n._cao = _cao;   // nhãn tên & dấu nhiệm vụ đo theo đây, xem dưới
+    // ⚠ BÀN CHÂN, không phải đáy hộp. Tranh tĩnh cắt sát nội dung nên hai chỗ đó trùng nhau
+    // (neo 1,0); bảng khung thì ô phải chừa chỗ cho hiệu ứng trùm ra ngoài chân, nên phải lùi
+    // theo `neoY` đo được. Dùng 1,0 cho cả hai là NPC nào có hiệu ứng dưới chân sẽ treo lơ lửng.
+    const _neo = _kh ? (_kh.K.neoY == null ? 1 : _kh.K.neoY) : 1;
+    n._cao = _cao * _neo;   // nhãn tên & dấu nhiệm vụ đo theo đây, xem dưới
     ctx.fillStyle = 'rgba(0,0,0,.18)';
     ctx.beginPath(); ctx.ellipse(n.x, n.y+4, _rong*0.34 - _nb*0.5, _rong*0.12, 0, 0, 7); ctx.fill();
     if (_co){
       const H = _co.H;
       // Neo ĐÁY hộp nội dung vào chân NPC — không neo đáy KHUNG, vì lề dưới mỗi tranh một khác
       // (2px tới 49px) và neo theo khung thì nửa số NPC lơ lửng trên không.
-      ctx.drawImage(im, H.sx, H.sy, H.sw, H.sh, n.x - _rong/2, n.y - _cao + 4 + _nb, _rong, _cao);
+      ctx.drawImage(_anh, H.sx, H.sy, H.sw, H.sh,
+                    n.x - _rong/2, n.y - _cao*_neo + 4 + _nb, _rong, _cao);
     } else {
       ctx.fillStyle = '#5a4a30';
       ctx.beginPath(); ctx.ellipse(n.x, n.y - _cao*0.34, _rong*0.30, _cao*0.34, 0, 0, 7); ctx.fill();

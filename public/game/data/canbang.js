@@ -2028,7 +2028,7 @@ window.NPCS = [
   // Kẻ lang thang đứng lẻ phía đông, cách đường ra Cổng Đông một quãng. Cố ý KHÔNG đặt trong
   // quảng trường: cả bố cục của y là "một người không thuộc về đám đông nào", để giữa chợ thì
   // mất sạch ý đó.
-  { id:'ah_ronin', name:'Kỵ Sĩ Ronin', map:'ardhaven', x:4900, y:1900, img:'assets/npcs/ronin.png', talk:'quest',
+  { id:'ah_ronin', name:'Kỵ Sĩ Ronin', map:'ardhaven', x:4900, y:1900, img:'assets/npcs/ronin_canh.png', talk:'quest',
     lore:'"Ta vượt vết nứt cùng ba mươi người. Về tới đây còn một. Đừng hỏi tên đội — không còn ai gọi tên đội đó nữa."',
     barks:['"Đứng xa lưỡi thép ra."','"Ta không nhận việc. Ta đợi."',
            '"Mưa bên này lạ lắm. Nó không rửa được thứ gì cả."','"Đi một mình thì sống lâu hơn."'] },
