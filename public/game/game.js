@@ -1407,6 +1407,11 @@ const VK_ANH = {
   // Khai rõ ràng chứ không để rơi vào nhánh lùi: nhánh lùi là "chưa có art", còn đây là
   // "art của đúng món này". Hai ý khác nhau, và chỉ khai rõ mới đọc ra được ý thứ hai.
   'gay|7': { tep:'tk_dwstaff', x:65, y:33 },           // Gậy Hư Vô — cây gốc của bộ Grand Soul
+  // Đại kiếm đi kèm gói Spine của bộ Phoenix (Dark Knight giai 7). Cùng lối với 'gay|7':
+  // ghim thành món ĐỨNG RIÊNG ở đúng giai của bộ giáp, không đè lên tấm 'kiem' chung.
+  // ⚠ Tranh nằm ở gói CẦM VŨ KHÍ, không phải gói giáp — gói giáp để TRỐNG cả bốn vùng
+  // vũ khí trong atlas (đo được 0 điểm đặc). Cần nướng lại thì phải xin đúng gói ấy.
+  'kiem|7': { tep:'vk_phoenix', x:65, y:16 },          // Phượng Kiếm — cây gốc của bộ Phoenix
 };
 // Tra art của một món vũ khí: tranh riêng của giai trước, tranh chung của dòng sau.
 function vkAnh(d){
@@ -13407,6 +13412,8 @@ const NV_GIAP = {
   'thieulam|1': 'dkgs1',
   // Bộ ĐẦU TIÊN đi đường LỚP RỜI (xem NV_LOP_HOP): bốn ô vẽ tách nhau, không cần đủ bộ.
   'baidasan|1': 'dwvt1',
+  // Phoenix — bộ ĐỈNH của Dark Knight, nên giai 7 chứ không phải giai 1 (cùng lý do dwsm1).
+  'thieulam|7': 'dkph1',
 };
 // Lớp này có art giáp ở giai nào? Lấy giai CAO NHẤT có art. Có hàm này thì ?test=1 và bài kiểm
 // không ai phải thuộc lòng "Dark Wizard thì giai 7, Dark Knight thì giai 1", và thêm bộ mới
@@ -13487,6 +13494,11 @@ const NV_LOP_HOP = {
               a:[93,123,57,72,32,113,137,140], t2:[63,123,139,86,35,114,160,141],
               n:[84,87,76,56,0,79,180,173] },
   // ── BỘ GIÁP ──────────────────────────────────────────────────────────────────────────
+  // Phoenix — bộ giai 7 của Dark Knight. Lớp `h` (tóc sau) RỖNG ở bộ này nên không khai,
+  // y như dkcw1/sbhd1/dlcm1: mũ giáp trùm kín gáy thì không còn tóc nào thò ra sau.
+  'dkph1':  { t1:[62,131,133,104,36,106,182,134], c:[67,156,142,107,65,139,135,131],
+              a:[63,119,130,140,20,110,173,156], t2:[56,115,148,100,30,106,167,163],
+              n:[86,86,103,77,0,78,178,173] },
   'dwvt1':  { t1:[61,137,136,82,44,105,174,128], c:[64,154,135,114,67,136,141,125],
               a:[65,121,129,122,28,111,163,142], t2:[68,125,130,81,31,116,163,139],
               n:[87,88,80,55,0,79,187,172] },
@@ -13578,7 +13590,22 @@ function nvChonHuong(base, face){
   }
   return tot;
 }
-function nvTen(sectKey, tier, hw){ const t = NV_BO[sectKey + '|' + tier]; return t ? t + (hw || '') : t; }
+// Thân trần LÀ CỦA LỚP, không của giai. `NV_BO` khai theo `lớp|giai` cho ngày nào có nhiều
+// bản thân khác nhau, nhưng hiện mỗi lớp đúng MỘT bản (khai ở `|1`) — nên tra hụt giai thì
+// lui về bản của chính lớp đó, đừng trả `undefined`.
+//
+// ⚠ ĐÂY LÀ MỘT LỖ THỦNG CỦA QUY TẮC SỐ 3, không phải chuyện nhỏ. Trước bản này
+// `nvTen('thieulam', 7)` trả `undefined` ⇒ `nvKhungGop()` thoát sớm ⇒ **cả nhân vật** rơi về
+// hình dựng bằng đường (hiệp sĩ xám, áo choàng đỏ), dù art có đủ. Mọi lớp ở giai ≥2 đều dính,
+// và nó im lặng tuyệt đối: không lỗi, không 404, chỉ là một nhân vật khác hẳn.
+// Lui về thân trần đúng nguyên tắc đã chốt ở màn chờ: *thà thân trần còn hơn một nhân vật
+// khác hẳn* (xem `ccArtSan`).
+const NV_BO_NEN = {};                              // lớp -> bản thân trần đầu tiên khai được
+for (const k in NV_BO){ const [sk] = k.split('|'); if (!NV_BO_NEN[sk]) NV_BO_NEN[sk] = NV_BO[k]; }
+function nvTen(sectKey, tier, hw){
+  const t = NV_BO[sectKey + '|' + tier] || NV_BO_NEN[sectKey];
+  return t ? t + (hw || '') : t;
+}
 // Tên bộ art đang mặc: bộ giáp nếu có, không thì thân trần của lớp. Mọi thứ vẽ theo bộ này —
 // thân, vũ khí, viền sáng — nên không có cách nào thân một bộ mà tay áo một bộ khác.
 // `hw` là MÃ BẢN VẼ (xem NV_HUONG); bỏ trống = bản nghiêng, tức mọi lời gọi cũ vẫn đúng.
@@ -13618,7 +13645,10 @@ function nvMoc(kind){ return NV_BANG2[kind] ? NV_MOC2[kind] : NV_MOC[kind]; }
 // Mốc bắt đầu (NV_MOC.r = 80) GIỮ NGUYÊN cho cả hai đời, nên chỉ khác SỐ khung chứ không lệch
 // mốc. Chỗ chồng lớp thì quy về PHA 0..1 rồi mới nhân với số khung của chính lớp đó — xem
 // nvKhungGop(), đó là chỗ duy nhất một khung hình đọc nhiều bộ khác số khung cùng lúc.
-const NV_KHUNG_R = { dkcw1: 32, dwsc1: 32, elfar1: 32, dlcm1: 32 };
+// ⚠ Bộ nào nướng ra 112 ô (16 cột × 7 hàng) thì khối CHẠY là 32 khung, không phải 16 như
+// HS_FRAMES.r mặc định. Kiểm bằng phép chia: bềRộngBảng/bềRộngÔ = 16 và bềCao/caoÔ = 7.
+// Quên khai là lớp đó chỉ đọc NỬA ĐẦU vòng chạy — chân lệch nhịp so với lớp khai đủ.
+const NV_KHUNG_R = { dkcw1: 32, dwsc1: 32, elfar1: 32, dlcm1: 32, dkph1: 32 };
 function nvSoKhung(ten, kind){
   if (kind === 'r' && ten && NV_KHUNG_R[ten]) return NV_KHUNG_R[ten];
   return HS_FRAMES[kind] || 1;
