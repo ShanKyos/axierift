@@ -242,6 +242,46 @@ const pass = m => console.log('PASS ' + m);
   else if (!/⚠/.test(f1.chu)) fail(`⑦a số bay không đọc ra là bất lợi: "${f1.chu}"`);
   else pass(`vế bất lợi hiện lên đầu người chơi: "${f1.chu}"`);
 
+  // (d) ⚠ ĐÒN ĐẦU TIÊN SAU KHI NẠP TRANG PHẢI NÓI RA — mục này tìm ra một lỗi THẬT.
+  //     Hồi của số bay so `performance.now()` với một mốc, mà mốc đó từng khởi tạo bằng **0**.
+  //     `performance.now()` đếm từ lúc nạp trang, nên `now − 0 > 2600` SAI trong suốt 2,6 giây
+  //     đầu đời của trang: ai vừa vào game mà ăn đòn ngay thì không thấy gì, và cái không-thấy
+  //     đó đọc ra y hệt "cơ chế không chạy". Nó cũng làm ⑦a phụ thuộc vào trang nạp nhanh hay
+  //     chậm — đỏ 3/3 lượt trong khi `heThuKet` trả về hoàn toàn đúng.
+  //     Đo trên một TRANG MỚI TINH và đánh NGAY, vì đó là cảnh duy nhất dựng lại được lỗi.
+  {
+    const p2 = await browser.newPage({ viewport: { width: 1000, height: 700 } });
+    await p2.goto('http://localhost:8853/index.html', { waitUntil: 'networkidle' });
+    await p2.waitForFunction(() => window.__gameReady).catch(()=>{});
+    const rd = await p2.evaluate(() => {
+      window.TEST_MODE = true; startGame('thieulam', null);
+      player.level = 40; player.free = 0; player.reflect = 0; calcDerived();
+      travelTo('chungnam');
+      chiNhan('netherfang'); player.avatar = 'netherfang'; calcDerived();
+      const m = mobs.find(x => x && x.hp > 0);
+      if (!m) return { loi:'không có quái' };
+      m.def = Object.assign({}, m.def, { lv:40, atk:400, atkCd:0.01, range:200 });
+      for (const x of mobs) if (x) x.he = 'Beast';
+      floats.length = 0;
+      const thay = new Set();
+      // 240 nhịp = 4 giây TRONG GAME nhưng chỉ vài trăm mili giây thật — cố ý đo trong lúc
+      // `performance.now()` còn nhỏ, tức đúng cửa sổ mà lỗi cũ sống.
+      for (let i = 0; i < 240; i++){
+        m.x = player.x + 26; m.y = player.y;
+        m.hp = m.maxHp = 9e8; m.dead = false; m.aggro = 9999; m.target = player;
+        player.hp = player.maxHp; player.dead = false;
+        update(1/60);
+        for (const f of floats) if (f.text && f.text.includes('Dusk')) thay.add(f.text);
+      }
+      return { so: thay.size, chu: [...thay][0] || null, gio: Math.round(performance.now()) };
+    });
+    console.log('  ⑦d trang mới tinh:', JSON.stringify(rd));
+    await p2.close();
+    if (rd.loi) fail('⑦d không dựng được cảnh đo: ' + rd.loi);
+    else if (!rd.so) fail(`⑦d đánh ngay sau khi nạp trang (t=${rd.gio}ms) mà không số bay nào hiện — mốc hồi đang khởi tạo sai, 2,6 giây đầu của mọi phiên bị câm`);
+    else pass(`đòn đầu tiên sau khi nạp trang đã nói ra ngay (t=${rd.gio}ms): "${rd.chu}"`);
+  }
+
   // ⚠ Chờ qua hồi của số bay. Không chờ thì lượt (b) bị chính bộ chống tràn nuốt mất và bài
   // báo "vế có lợi vẫn im lặng" — đúng cái lỗi nó định bắt, nhưng vì một lý do sai.
   await page.waitForTimeout(2800);

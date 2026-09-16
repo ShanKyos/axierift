@@ -192,9 +192,23 @@ A mechanic nobody can read is a mechanic that does not exist.
 The channel still missing is the Axie picker: preview how each body performs where you are headed,
 so the choice is made before the trip rather than learned during it.
 
-**Mid term — parts, not just class.** An Axie is six body parts, each with its own class. Today
-only the overall class is read. Reading parts would let two Beast Axies differ from each other —
-again laterally: a resistance profile, not a stat line.
+Building that third channel turned up a real bug that had been shipping: the floating label was
+throttled against a timestamp initialised to zero, and `performance.now()` counts from page load
+— so the **first 2.6 seconds of every session showed nothing**, which to a player reading a new
+mechanic is indistinguishable from the mechanic not existing. A test that opens a fresh page and
+attacks immediately now guards it.
+
+**Shipped since — parts, not just class.** An Axie is six body parts, each with its own class,
+and the game now reads all six. Count how many share the Axie's own triangle group and you get
+its purity: a pure Axie is a specialist (much safer where it is favoured, much more exposed
+where it is not), a mixed one is a generalist. Two Beast Axies can now play differently.
+
+It is laterally, not upward, and that is provable rather than asserted. The three multipliers
+are interpolated toward their own mean, so across a uniform spread of all nine mob classes every
+one of the 16 Axies has the **same** expected defensive multiplier — measured spread `2.2e-16`,
+which is floating-point noise. Changing your Axie changes the shape of your risk and cannot
+change the total. Against real regional populations the shape is large: the purest Axies swing
+39% between their kindest and harshest region, the most mixed one swings 10%.
 
 **Long term — the Rune economy.** Weapons carry class Runes today as a rolled property. The canon
 supports making Runes something you *carve*: transfer one between weapons, or inscribe one you
@@ -267,7 +281,7 @@ Not a self-assessment — just the shortest path to the evidence for each one.
 
 | Criterion | Where it lives | What to check |
 |---|---|---|
-| **Axie Core** | [`docs/AXIE_CORE.md`](docs/AXIE_CORE.md) · [`tests/test_tamgiac.js`](tests/test_tamgiac.js) | The nine-class triangle decides matchups and never stats. Opens with the measurement that showed the first version had failed — all 16 Axies changed exactly zero stats — and shows what each later stage moved, including a before/after taken by removing a stage and re-measuring |
+| **Axie Core** | [`docs/AXIE_CORE.md`](docs/AXIE_CORE.md) · [`tests/test_tamgiac.js`](tests/test_tamgiac.js) · [`tests/test_bophan.js`](tests/test_bophan.js) | Two axes, neither of them a stat. The nine-class triangle decides matchups; the six body parts decide how sharp that matchup is. Opens with the measurement that showed the first version had failed — all 16 Axies changed exactly zero stats — and shows what each later stage moved, including a before/after taken by removing a stage and re-measuring. The body-part test carries the strongest claim in the project: expected defensive multiplier is **identical across all 16 Axies** to within floating-point noise, so the mechanic provably reshapes risk without selling any |
 | **Gameplay** | [What you actually do](#what-you-actually-do) · the live build | Roles are set per camp, not per species. Loot lands on the ground. Chests open once per character. Seams move daily. Events run on the real clock |
 | **Product vision** | [Where this goes next](#where-this-goes-next) · [`docs/AXIE_CORE.md`](docs/AXIE_CORE.md) §7 | Three layers that deepen Axie identity without selling power, and a multiplayer roadmap with a stated stopping point |
 | **Feasibility** | this repo | It is already built and already running. No build step, no runtime dependencies, no database; the multiplayer server is two files and needs only `node` |

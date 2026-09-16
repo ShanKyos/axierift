@@ -37,55 +37,98 @@
 // thứ to hơn mình. Nghĩa là 16 con dưới đây KHÔNG phải 16 loài — chúng là MỘT loài đang mượn 16
 // hình dạng. Bộ art Axie sẵn có vì thế đúng nguyên si, và cơ chế Hoá (gộp để lên bậc) hoá ra
 // chính là câu trong deck.
+// ▲ SÁU BỘ PHẬN (`bp`) — trục THỨ HAI mà con Axie ăn vào lối chơi, và nó KHÔNG bán sức mạnh.
+//
+// Skill `axie-hinh-hoa §1` chốt: một con Axie luôn dựng từ ĐÚNG sáu bộ phận — Mắt · Tai · Sừng ·
+// Miệng · Lưng · Đuôi. Trước bản này game không đọc một bộ phận nào; con Axie chỉ có MỘT trục là
+// `lop` (hệ phòng thủ). 16 con dưới đây là tên riêng của dự án, không phải NFT thật, nên dữ liệu
+// bộ phận là thứ TỰ KHAI — và nó khai theo đúng câu `moTa` đã có, không bịa thêm một con nào.
+//
+// **Đếm `cung` = mấy bộ phận thuộc CÙNG NHÓM tam giác với `lop` của chính nó** (0..6). Nó điều
+// khiển ĐỘ SẮC của hệ số phòng thủ, không điều khiển sức mạnh:
+//
+//   cung 6 → thuần → chuyên gia: cực nhẹ đòn ở vùng hợp, cực nặng ở vùng khắc
+//   cung 0 → tạp   → thợ đụng:   không bao giờ tệ, không bao giờ xuất sắc
+//
+// ⚠⚠ KỲ VỌNG TRÊN CẢ CHÍN LỚP QUÁI LÀ BẰNG NHAU CHO CẢ 16 CON — bằng nhau CHÍNH XÁC, không phải
+// xấp xỉ. `heThuKet` nội suy vector ba hệ số về chính TRUNG BÌNH của nó, nên trung bình là bất
+// biến theo phép dựng chứ không theo may mắn chọn số. Đó là câu trả lời đo được cho *"đổi Axie
+// có bán sức mạnh không"*: nó đổi HÌNH DẠNG rủi ro, không đổi TỔNG. `tests/test_bophan.js` gác.
+//
+// ⚠ ĐỪNG CHO NGƯỜI CHƠI TỰ CHỌN BỘ PHẬN. Bộ phận thuộc về con Axie và cố định. Cho chọn là dựng
+// lại đúng cái nấc thang đã bị tháo BA lần (bị động `thu` · cấp Chimera · bốn ô Cốt), chỉ khác tên.
+//
+// ⚠ ĐỘ THUẦN CỐ Ý KHÔNG ĐI THEO SỐ SAO. Con thuần nhất là `hexmite` — một con **4★**. Nếu 5★ nào
+// cũng thuần hơn thì người chơi đọc ra "5★ = mạnh hơn", mà đó đúng là thứ gacha không được bán.
+//
+// Số đo hiện tại: tổng `cung` = 52 trên 16 con ⇒ trung bình **3,25** ⇒ độ sắc trung bình **1,019**,
+// tức gần khít mốc 1,00 của bản trước bộ phận. Thêm/sửa con nào thì phải đo lại — `test_bophan`
+// kẹp trung bình trong [0,95 – 1,05] để không ai lặng lẽ thổi cả bảng lên.
 window.CHIMERA = [
   // ── 5★ ──────────────────────────────────────────────────────────────────────
   { id:'aurelion',  ten:'Aurelion',  sao:5, lop:'Dawn',    mau:'#e0a63c',
+    bp:{ mat:'Dawn', tai:'Dawn', sung:'Dawn', mieng:'Dawn', lung:'Bird', duoi:'Plant' },   // cùng nhóm 5/6
     thu:{ k:'skillPct', v:12 }, thuTxt:'+12% sát thương chiêu thức',
     chieu:{ ten:'Rạng Đông', cd:14, r:150, mult:2.6, fx:'sun' }, moTa:'Bình minh đọng lại thành hình — nơi nó đứng, bóng tối không tới được.' },
   { id:'netherfang',ten:'Netherfang',sao:5, lop:'Dusk',    mau:'#8a5ad8',
+    bp:{ mat:'Dusk', tai:'Mech', sung:'Mech', mieng:'Dusk', lung:'Dusk', duoi:'Mech' },   // cùng nhóm 3/6
     thu:{ k:'hpLeech', v:6 }, thuTxt:'hút 6% sát thương gây ra thành Sinh Lực',
     chieu:{ ten:'Màn Đêm', cd:16, r:170, mult:2.2, fx:'dark', slow:0.4 }, moTa:'Sinh ra từ khe nứt. Nó không săn mồi — nó chờ mồi kiệt sức.' },
   { id:'tidewarden',ten:'Tidewarden',sao:5, lop:'Aquatic', mau:'#3ac8c8',
+    bp:{ mat:'Aquatic', tai:'Aquatic', sung:'Aquatic', mieng:'Aquatic', lung:'Reptile', duoi:'Plant' },   // cùng nhóm 4/6
     thu:{ k:'hpPct', v:15 }, thuTxt:'+15% Sinh Lực tối đa',
     chieu:{ ten:'Triều Chắn', cd:18, r:0, mult:0, fx:'shield', shieldPct:30 }, moTa:'Càng nước dựng lên một bức tường, và bức tường đó biết bơi.' },
   { id:'emberjaw',  ten:'Emberjaw',  sao:5, lop:'Beast',   mau:'#f0932a',
+    bp:{ mat:'Beast', tai:'Beast', sung:'Beast', mieng:'Beast', lung:'Mech', duoi:'Bird' },   // cùng nhóm 5/6
     thu:{ k:'aspdPct', v:10 }, thuTxt:'+10% tốc độ đánh',
     chieu:{ ten:'Lao Húc', cd:12, r:190, mult:2.8, fx:'charge', kb:60 }, moTa:'Chạy trước, nghĩ sau, và chưa bao giờ thấy cần nghĩ.' },
   { id:'voltcrest', ten:'Voltcrest', sao:5, lop:'Bird',    mau:'#4fc9d9',
+    bp:{ mat:'Mech', tai:'Bird', sung:'Mech', mieng:'Mech', lung:'Bird', duoi:'Mech' },   // cùng nhóm 2/6
     thu:{ k:'evaPct', v:8 }, thuTxt:'+8% né đòn',
     chieu:{ ten:'Mào Sét', cd:15, r:320, mult:2.0, fx:'bolt', multi:5 }, moTa:'Cái mào trên đầu tích điện cả ngày. Đập cánh một cái là năm chỗ cùng nổ.' },
   { id:'ironshell', ten:'Ironshell', sao:5, lop:'Reptile', mau:'#7bbf3a',
+    bp:{ mat:'Reptile', tai:'Reptile', sung:'Reptile', mieng:'Reptile', lung:'Reptile', duoi:'Plant' },   // cùng nhóm 6/6
     thu:{ k:'dmgred', v:10 }, thuTxt:'−10% sát thương gánh chịu',
     chieu:{ ten:'Khiêu Chiến', cd:17, r:220, mult:1.4, fx:'taunt', taunt:8 }, moTa:'Vác nguyên tảng đá trên lưng. Nó đứng chắn trước mặt bạn và không hiểu vì sao bạn lại lo.' },
   // ── 4★ ──────────────────────────────────────────────────────────────────────
   { id:'petalkin',  ten:'Petalkin',  sao:4, lop:'Plant',   mau:'#e87ab0',
+    bp:{ mat:'Plant', tai:'Plant', sung:'Bird', mieng:'Plant', lung:'Bird', duoi:'Aquatic' },   // cùng nhóm 3/6
     thu:{ k:'hpPct', v:6 }, thuTxt:'+6% Sinh Lực tối đa',
     chieu:{ ten:'Bung Cánh', cd:16, r:130, mult:1.6, fx:'sun' }, moTa:'Con Chimera đầu tiên chịu đi theo người lạ.' },
   { id:'crimsonmaw',ten:'Crimsonmaw',sao:4, lop:'Beast',   mau:'#c0304a',
+    bp:{ mat:'Beast', tai:'Beast', sung:'Reptile', mieng:'Beast', lung:'Reptile', duoi:'Reptile' },   // cùng nhóm 3/6
     thu:{ k:'atkPct', v:5 }, thuTxt:'+5% Công Kích',
     chieu:{ ten:'Ngoạm', cd:14, r:120, mult:1.9, fx:'charge', kb:30 }, moTa:'Vết cắn của nó không lành lại — chỉ đóng vảy.' },
   { id:'thornpaw',  ten:'Thornpaw',  sao:4, lop:'Plant',   mau:'#cf5a52',
+    bp:{ mat:'Plant', tai:'Beast', sung:'Plant', mieng:'Beast', lung:'Plant', duoi:'Beast' },   // cùng nhóm 3/6
     thu:{ k:'crit', v:4 }, thuTxt:'+4% Bạo Kích',
     chieu:{ ten:'Vuốt Gai', cd:15, r:130, mult:1.7, fx:'charge' }, moTa:'Quả mọng đỏ mọc kín người, và mỗi quả giấu một cái gai.' },
   { id:'inkmane',   ten:'Inkmane',   sao:4, lop:'Dusk',    mau:'#c2c6d2',
+    bp:{ mat:'Aquatic', tai:'Aquatic', sung:'Aquatic', mieng:'Aquatic', lung:'Dusk', duoi:'Aquatic' },   // cùng nhóm 1/6
     thu:{ k:'hpPct', v:5 }, thuTxt:'+5% Sinh Lực tối đa',
     chieu:{ ten:'Vằn Mực', cd:16, r:150, mult:1.6, fx:'shield', shieldPct:14 }, moTa:'Vằn đen trên lưng nó đổi chỗ mỗi lần bạn quay đi.' },
   { id:'cinderbeak',ten:'Cinderbeak',sao:4, lop:'Bird',    mau:'#f0b45a',
+    bp:{ mat:'Bird', tai:'Bird', sung:'Beast', mieng:'Bird', lung:'Beast', duoi:'Beast' },   // cùng nhóm 3/6
     thu:{ k:'aspdPct', v:4 }, thuTxt:'+4% tốc độ đánh',
     chieu:{ ten:'Mỏ Than', cd:14, r:280, mult:1.6, fx:'bolt', multi:3 }, moTa:'Rỉa than nóng như rỉa hạt.' },
   { id:'mossback',  ten:'Mossback',  sao:4, lop:'Plant',   mau:'#e7dcc2',
+    bp:{ mat:'Beast', tai:'Beast', sung:'Plant', mieng:'Plant', lung:'Plant', duoi:'Plant' },   // cùng nhóm 4/6
     thu:{ k:'dmgred', v:4 }, thuTxt:'−4% sát thương gánh chịu',
     chieu:{ ten:'Vỏ Rêu', cd:18, r:0, mult:0, fx:'shield', shieldPct:16 }, moTa:'Ngủ đủ lâu thì hoa mọc trên lưng. Nó vẫn chưa dậy.' },
   { id:'hexmite',   ten:'Hexmite',   sao:4, lop:'Bug',     mau:'#d8443c',
+    bp:{ mat:'Bug', tai:'Bug', sung:'Bug', mieng:'Bug', lung:'Bug', duoi:'Bug' },   // cùng nhóm 6/6
     thu:{ k:'atkPct', v:4 }, thuTxt:'+4% Công Kích',
     chieu:{ ten:'Bầy Nhỏ', cd:15, r:160, mult:1.5, fx:'dark' }, moTa:'Một con thì không sao. Nó không bao giờ có một con.' },
   { id:'ridgehorn', ten:'Ridgehorn', sao:4, lop:'Reptile', mau:'#b45ad0',
+    bp:{ mat:'Beast', tai:'Beast', sung:'Reptile', mieng:'Beast', lung:'Reptile', duoi:'Beast' },   // cùng nhóm 2/6
     thu:{ k:'dmgred', v:4 }, thuTxt:'−4% sát thương gánh chịu',
     chieu:{ ten:'Húc Sừng', cd:15, r:150, mult:1.8, fx:'charge', kb:36 }, moTa:'Ba cái sừng, và nó chưa bao giờ dùng quá một cái.' },
   { id:'coghound',  ten:'Coghound',  sao:4, lop:'Mech',    mau:'#e8e0d0',
+    bp:{ mat:'Aquatic', tai:'Plant', sung:'Reptile', mieng:'Bird', lung:'Dusk', duoi:'Dawn' },   // cùng nhóm 0/6
     thu:{ k:'crit', v:4 }, thuTxt:'+4% Bạo Kích',
     chieu:{ ten:'Bánh Răng', cd:14, r:140, mult:1.7, fx:'bolt', multi:2 }, moTa:'Ai đó lắp nó lại từ mảnh vỡ, và nó nhớ ơn.' },
   { id:'sunspur',   ten:'Sunspur',   sao:4, lop:'Dawn',    mau:'#efdcb4',
+    bp:{ mat:'Dawn', tai:'Beast', sung:'Beast', mieng:'Beast', lung:'Dawn', duoi:'Beast' },   // cùng nhóm 2/6
     thu:{ k:'atkPct', v:4 }, thuTxt:'+4% Công Kích',
     chieu:{ ten:'Cựa Nắng', cd:15, r:140, mult:1.7, fx:'sun' }, moTa:'Bộ lông nó giữ nắng của ngày hôm trước, ấm tới tận sáng.' },
 ];

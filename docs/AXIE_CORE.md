@@ -121,7 +121,69 @@ better-suited. That distinction is the whole design.
 | 2 | Five-element wheel → nine-class Axie triangle | **shipped** |
 | 3 | Each region carries its tribe's class | **shipped** |
 | 3b | The defensive verdict is actually visible while you play | **shipped** |
-| 4 | Axie picker previews the matchup for where you are headed | planned |
+| 4 | Six body parts — the Axie's own anatomy — decide how sharp the matchup is | **shipped** |
+| 5 | Axie picker previews the matchup for where you are headed | planned |
+
+### Stage 4 — the second axis, and the invariant that proves it sells nothing
+
+Stages 1-3 gave the Axie one axis: its class decides which regions are kind to it. One axis is
+a thin reading of "the Axie affects the game", and it left the most Axie-specific thing on the
+table: **an Axie is six body parts**, each with its own class. The game read none of them.
+
+Every one of the 16 Axies now declares all six — Eyes, Ears, Horn, Mouth, Back, Tail — and the
+data is derived from the description each Axie already carried, not invented beside it.
+`coghound` ("someone rebuilt it from wreckage") has **zero** parts of its own class; `inkmane`
+("the black stripes on its back move when you look away") has exactly one, and it is the back.
+
+Count how many parts share the Axie's own triangle group and you get its **purity**, 0 to 6.
+Purity sets how *sharp* the matchup is, never how strong:
+
+| | |
+|---|---|
+| 6/6 — **pure** | a specialist: takes much less where it is favoured, much more where it is not |
+| 0/6 — **mixed** | a generalist: never bad, never excellent |
+
+#### The invariant
+
+This is the part that matters, and it holds **by construction, not by tuning**. The three
+multipliers are interpolated toward their own mean:
+
+```
+mul(sharpness) = MEAN + (base_mul − MEAN) × sharpness
+```
+
+so the sum of the three branches does not move with sharpness — the derivative is exactly zero.
+Across a uniform distribution of all nine mob classes (three per group, three branches, equal
+weight) **every one of the 16 Axies has the same expected defensive multiplier**. Measured
+spread across all 16: `2.2e-16` — floating-point noise, not a tolerance.
+
+Changing your Axie changes the **shape** of your risk. It cannot change the total.
+
+The obvious simplification — `mul = 1 + (base − 1) × sharpness` — quietly breaks this, because
+the two deviations are not symmetric about 1 (+0.12 against −0.10). Under it, purer Axies take
+0.67% more damage on average per unit of sharpness. That is still a ladder, just one that
+points down. Reverse-testing that exact change turns the invariant assertion red.
+
+#### And it still has to do something
+
+An invariant alone is satisfied by a mechanic that does nothing at all, so the same test
+measures the other direction — against each region's **real mob population**, not a uniform
+nine:
+
+| | spread between kindest and harshest region |
+|---|--:|
+| `ironshell`, `hexmite` — pure 6/6 | **39.0%** |
+| pure group (≥5/6), mean | 36.3% |
+| mixed group (≤2/6), mean | 16.5% |
+| `coghound` — mixed 0/6 | **10.3%** |
+
+A third assertion drives real hits through the game loop in both directions, because the place
+this usually breaks is not the function but the wire into the damage path: removing the
+sharpness argument from the hit path leaves the second assertion green and turns the third red.
+
+Purity deliberately does not track rarity — one of the two purest Axies is a 4★. If every 5★
+were purer, players would correctly read "5★ is stronger", which is the one thing this gacha
+must not sell.
 
 ### Stage 3b — the mechanic was running and almost nobody could see it
 

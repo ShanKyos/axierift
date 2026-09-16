@@ -291,7 +291,91 @@ thông báo khác — chữa một chỗ mù bằng cách làm mù chỗ khác.
    một con khác. Phải ghim cả map, và bài nay **tự kiểm cảnh dựng** (đòi chữ bắt được phải nhắc
    đúng tên con quái đã ghim) trước khi chấm.
 
-Gác: **`tests/test_tamgiac.js`** (8 mệnh đề) — hình dạng tam giác · mọi quái/trùm ra lớp hợp lệ
+### ▲▲ SÁU BỘ PHẬN AXIE — trục THỨ HAI, và nó chứng minh được là KHÔNG bán sức mạnh
+
+`axie-hinh-hoa §1` chốt: một con Axie luôn dựng từ **đúng sáu bộ phận** — Mắt · Tai · Sừng ·
+Miệng · Lưng · Đuôi. Trước đợt này game **không đọc một bộ phận nào**: con Axie chỉ có MỘT trục
+là `lop` (hệ phòng thủ). Đó là hai khoản trừ còn lại của tiêu chí Axie Core, và một cơ chế đóng
+cả hai.
+
+**Đếm `cung`** = mấy bộ phận thuộc **cùng nhóm tam giác** với `lop` của chính con đó (0..6). Nó
+điều khiển **ĐỘ SẮC**, không điều khiển sức mạnh:
+
+| | |
+|---|---|
+| `cung` 6 → **thuần** | chuyên gia: rất nhẹ đòn ở vùng hợp, rất nặng ở vùng khắc |
+| `cung` 0 → **tạp** | thợ đụng: không bao giờ tệ, không bao giờ xuất sắc |
+
+| ở đâu | việc |
+|---|---|
+| `bp:{ mat, tai, sung, mieng, lung, duoi }` trong `data/canbang.js` | 16 × 6 = 96 ô, **tự khai theo chính `moTa` đã có** |
+| `bpCung(c)` | đếm — `null` khi chưa khai, và `null` ≠ 0 (0 là *tạp nhất có thể*, một phán quyết hẳn hoi) |
+| `bpSac(cung)` → `BP_SAC_MIN` 0,45 … `BP_SAC_MAX` 1,50 | độ sắc |
+| **`axieSac(p)`** | cửa DUY NHẤT hỏi "người này sắc tới đâu"; lui về 1 khi thiếu dữ liệu ⇒ save cũ không phải di trú |
+| `heThuKet(mobEl, axieEl, sac)` | tham số thứ ba, mặc định 1 ⇒ mọi lời gọi hai tham số cũ ra đúng số cũ |
+
+**⚠⚠ BẤT BIẾN LÀ THỨ GIỮ LỜI HỨA, và nó giữ bằng PHÉP DỰNG chứ không bằng một con số chọn khéo.**
+Ba hệ số được nội suy về chính **trung bình** của chúng: `mul(sac) = HE_TB + (mul_gốc − HE_TB)·sac`.
+Tổng ba nhánh vì thế không đổi theo `sac` — đạo hàm đúng bằng 0. Trên phân bố đều chín lớp quái
+(mỗi nhóm 3 lớp ⇒ 3 nhánh đều nhau) thì **kỳ vọng hệ số phòng thủ của cả 16 con bằng nhau CHÍNH
+XÁC** — đo được lệch `2,2e-16`, tức đúng nhiễu dấu phẩy động. Đổi Axie đổi **hình dạng** rủi ro,
+không đổi **tổng**.
+
+**⚠ ĐỪNG "sửa gọn" thành `mul = 1 + (mul_gốc − 1)·sac`.** Nhìn sạch hơn, nhưng `HE_THIET` (+0,12)
+và `HE_LOI` (−0,10) **không đối xứng quanh 1**, nên cách đó cho trung bình `1 + 0,00667·sac`:
+con càng thuần càng ăn đòn nặng hơn trên tổng thể. Đó vẫn là một nấc thang, chỉ là nấc đi xuống.
+Thử ngược đúng phép ấy ⇒ `test_bophan §2` đỏ với lệch `7,0e-3`.
+
+**⚠ ĐỪNG CHO NGƯỜI CHƠI TỰ CHỌN BỘ PHẬN.** Bộ phận thuộc về con Axie và cố định. Cho chọn là dựng
+lại đúng cái trục đã bị tháo BA lần, chỉ khác tên.
+
+**⚠ ĐỘ THUẦN CỐ Ý KHÔNG ĐI THEO SỐ SAO.** Một trong hai con thuần nhất là `hexmite` — **4★**. Nếu
+5★ nào cũng thuần hơn thì người chơi đọc ra "5★ mạnh hơn", mà đó đúng là thứ gacha không được bán.
+`test_bophan §1` gác.
+
+**Số đo sau khi làm** (chênh giữa vùng dễ thở nhất và ngặt nhất, trên **đàn quái thật** của 11
+vùng — không phải trên chín lớp đều tay):
+
+| | chênh vùng dễ / vùng ngặt |
+|---|--:|
+| `ironshell` · `hexmite` — thuần 6/6 | **39,0%** |
+| trung bình nhóm thuần (≥5/6) | 36,3% |
+| trung bình nhóm tạp (≤2/6) | 16,5% |
+| `coghound` — tạp 0/6 | **10,3%** |
+
+Tổng `cung` = 52/16 con ⇒ trung bình **3,25** ⇒ sắc trung bình **1,019**, tức gần khít mốc 1,00
+của bản trước bộ phận. `test_bophan §1` kẹp trong [0,95 – 1,05] để không ai lặng lẽ thổi cả bảng.
+
+**⚠ HAI MỆNH ĐỀ KẸP HAI ĐẦU, thiếu một là bỏ lọt một nửa.** §2 (bất biến) **xanh y hệt khi cơ chế
+tắt hẳn** — mọi hệ số bằng 1 thì trung bình cũng bằng nhau. §3 là vế kia: con thuần phải dao động
+mạnh hơn hẳn con tạp. Và §4 là vế thứ ba — **sợi dây**: thử ngược bằng cách gỡ `axieSac(player)`
+khỏi `hurtPlayer` thì §3 **vẫn xanh** (nó hỏi thẳng `heThuKet`) còn §4 đỏ.
+
+**⚠ BA LỖI CỦA CHÍNH BÀI KIỂM, ghi lại vì cả ba đều cho một kết quả SAI mà trông rất thuyết phục:**
+1. **Dựng nhánh BẤT LỢI rồi chấm như nhánh có lợi.** `heKhacLai(heThu(player))[0]` là lớp **khắc**
+   người chơi, không phải lớp người chơi khắc. Bài báo *"đường sát thương không đọc cấu tạo"*
+   trong khi nó đọc hoàn hảo. Nay đo **cả hai chiều** — một lỗi DẤU thì đúng một vế đỏ.
+2. **Chọn cặp Axie quá gần nhau.** netherfang 3/6 vs inkmane 1/6 chênh lý thuyết ~4%, trong khi
+   mỗi đòn mang `rnd(0.85,1.15)` ⇒ **đỏ 1/3 lượt**. Nay dùng cặp xa nhất cùng lớp: `ironshell`
+   6/6 vs `ridgehorn` 2/6 ⇒ ~8%, và **giữ đúng MỘT nguồn sát thương** (`mobs.length = 1` mỗi
+   nhịp) vì cả bãi quái đứng chỗ bốc lại mỗi lần `travelTo` là một nguồn nhiễu không kiểm soát được.
+3. **`renderMount` khoá dưới cấp 6.** Nhân vật vừa tạo là cấp 1 nên mục ⑥ đo trên đúng cái câu
+   *"Khế Ước mở khóa ở cấp 6"* rồi báo "danh sách không nói cấu tạo". Nay tự kiểm cảnh dựng trước.
+
+#### ⚠ VÀ BÀI KIỂM TÌM RA MỘT LỖI THẬT: **2,6 GIÂY ĐẦU CỦA MỌI PHIÊN BỊ CÂM**
+
+Mốc hồi của số bay khắc hệ so `performance.now()` với `_heFloatMs`, và nó từng khởi tạo bằng **0**.
+`performance.now()` đếm từ lúc **nạp trang**, nên `now − 0 > 2600` **sai suốt 2,6 giây đầu đời của
+trang**: ai vừa vào game mà ăn đòn ngay thì không thấy gì — và cái không-thấy đó đọc ra y hệt
+*"cơ chế không chạy"*. Nó cũng làm `test_hethu §7a` phụ thuộc vào trang nạp nhanh hay chậm, và khi
+đợt bộ phận làm trang nặng thêm một chút thì mục đó **đỏ 3/3 lượt** trong khi `heThuKet` trả về
+hoàn toàn đúng. Nay `-Infinity` ⇒ đòn ĐẦU TIÊN luôn nói ra rồi mới vào nhịp hồi; `test_hethu §7d`
+đo trên một **trang mới tinh** vì đó là cảnh duy nhất dựng lại được lỗi.
+
+*Luật chung: một mốc so với `performance.now()` mà khởi tạo bằng 0 thì nó không phải "chưa từng
+xảy ra" — nó là "vừa xảy ra lúc trang mở".*
+
+Gác: **`tests/test_bophan.js`** (7 mệnh đề, ba phép thử ngược đều đỏ) · **`tests/test_tamgiac.js`** (8 mệnh đề) — hình dạng tam giác · mọi quái/trùm ra lớp hợp lệ
 · **cùng một loài ở hai map phải ra hai lớp** (mệnh đề bắt đúng chuyện chặng 3 có tác dụng hay
 không) · chênh ≥15% mỗi vùng · lớp trội ≥50% · ba nhóm chia nhau 11 vùng · hệ số vẫn đúng
 ×1,20/×0,88 · bảng Bản Đồ có nói ra. Thử ngược (gỡ `pk.he`) làm đỏ 4 trong 8.
@@ -536,6 +620,7 @@ max(1, cấp/20)` để theo kịp giá nâng chiêu.
 | Lớp gacha Cổ Vật | `docs/CO_VAT_15.md` mới là ĐỀ XUẤT, chưa chốt. Trần 16% chỉ quản lớp đó — **chỉ số từ 5 lớp KHÔNG có trần**. |
 | Chibi 5 class Axie ở màn tạo nhân vật | chưa thiết kế. `CHIBI_CFG` hiện phân biệt bằng bóng dáng NGƯỜI. |
 | Mốc thay "Giày +6 mở dáng chạy" | avatar bay/chạy thì mốc cũ mất ý nghĩa |
+| ~~Axie chỉ có MỘT trục~~ | **XONG.** Trục hai là **sáu bộ phận** — xem mục ▲▲ ở trên. 96 ô dữ liệu, `calcDerived` không đụng một dòng. |
 | ~~Ngũ Hành → tam giác Axie~~ | **XONG.** 94 nhãn `el:` (54 trong `game.js` · 40 trong `data/canbang.js`) nay là chín lớp Axie; `hurtMob` không đổi một hệ số nào. Xem mục **▲ TAM GIÁC CHÍN LỚP AXIE** ở trên. |
 
 ---

@@ -8511,25 +8511,122 @@ function heKhacLai(he){ return ELEMENTS.filter(k => heKhac(k, he)); }
 // ⚠ TRẢ CẢ TRẠNG THÁI TRUNG TÍNH (`ket:0`), đừng trả `null` cho nó. Im lặng ở nhánh trung tính
 // thì người chơi không phân biệt được "con Axie này không khắc gì ở đây" với "cơ chế không
 // chạy" — mà chính vế CÓ LỢI (×0,90) đã im lặng suốt từ đầu vì đúng kiểu bỏ sót ấy.
-function heThuKet(mobEl, axieEl){
+//
+// ⚠ THAM SỐ THỨ BA `sac` LÀ ĐỘ SẮC TỪ SÁU BỘ PHẬN — xem `bpCung`/`bpSac` ngay dưới. Mặc định 1
+// = đúng hệ số của bản trước bộ phận, nên mọi lời gọi hai tham số cũ vẫn ra đúng số cũ.
+const HE_THIET = 1.12;   // quái khắc hệ mình  ⇒ ăn đòn nặng hơn
+const HE_LOI   = 0.90;   // mình khắc lại quái ⇒ chịu đòn nhẹ hơn
+const HE_TRUNG = 1.00;
+// ⚠⚠ ĐÂY LÀ CHỖ GIỮ LỜI HỨA "AXIE KHÔNG BÁN SỨC MẠNH", và nó giữ bằng PHÉP DỰNG chứ không bằng
+// một con số chọn khéo. Ba hệ số được nội suy về chính TRUNG BÌNH của chúng:
+//
+//     mul(sac) = HE_TB + (mul_gốc − HE_TB) × sac
+//
+// nên trung bình của ba nhánh **bằng `HE_TB` với MỌI `sac`** — đạo hàm theo `sac` của tổng ba
+// nhánh là đúng 0. Trên phân bố đều chín lớp quái (mỗi nhóm 3 lớp ⇒ 3 nhánh đều nhau) thì kỳ
+// vọng hệ số phòng thủ của **mọi** con Axie bằng nhau CHÍNH XÁC.
+//
+// ⚠ ĐỪNG "sửa gọn" thành `mul = 1 + (mul_gốc − 1) × sac`. Nhìn thì sạch hơn, nhưng `HE_THIET` và
+// `HE_LOI` KHÔNG đối xứng quanh 1 (+0,12 so với −0,10), nên cách đó cho trung bình
+// `1 + 0,00667 × sac` — tức con càng thuần càng ăn đòn nặng hơn trên tổng thể. Đó đúng là một
+// nấc thang, chỉ là một nấc đi xuống, và nó vẫn phá lời hứa.
+const HE_TB = (HE_THIET + HE_LOI + HE_TRUNG) / 3;
+function heThuKet(mobEl, axieEl, sac){
   if (!mobEl || !axieEl || !ELEM[mobEl] || !ELEM[axieEl]) return null;
+  const k = (typeof sac === 'number' && isFinite(sac)) ? sac : 1;
+  const pha = g => HE_TB + (g - HE_TB) * k;
   const gA = ELEM[axieEl].glyph, gM = ELEM[mobEl].glyph;
-  if (heKhac(mobEl, axieEl))
-    return { ket:-1, mul:1.12, mau:'#ff9a3a',
-             txt:`⚠ ${gM} ${mobEl} khắc ${gA} ${axieEl}`,
-             dai:`⚠ Axie ${gA} ${axieEl} ăn đòn NẶNG hơn 12% ở đất ${mobEl} — đổi sang ${heKhacLai(mobEl).join(' / ')} thì chịu đòn nhẹ hơn` };
-  if (heKhac(axieEl, mobEl))
-    return { ket:1, mul:0.9, mau:'#7ec850',
-             txt:`✦ ${gA} ${axieEl} khắc lại ${gM} ${mobEl}`,
-             dai:`✦ Axie ${gA} ${axieEl} khắc lại đất ${mobEl} — chịu đòn NHẸ hơn 10% ở đây` };
-  return { ket:0, mul:1, mau:'#c9b889',
+  const pct = m => Math.round(Math.abs(m - 1) * 100);
+  if (heKhac(mobEl, axieEl)){
+    const mul = pha(HE_THIET);
+    return { ket:-1, mul, sac:k, mau:'#ff9a3a',
+             txt:`⚠ ${gM} ${mobEl} khắc ${gA} ${axieEl} +${pct(mul)}%`,
+             dai:`⚠ Axie ${gA} ${axieEl} ăn đòn NẶNG hơn ${pct(mul)}% ở đất ${mobEl} — đổi sang ${heKhacLai(mobEl).join(' / ')} thì chịu đòn nhẹ hơn` };
+  }
+  if (heKhac(axieEl, mobEl)){
+    const mul = pha(HE_LOI);
+    return { ket:1, mul, sac:k, mau:'#7ec850',
+             txt:`✦ ${gA} ${axieEl} khắc lại ${gM} ${mobEl} −${pct(mul)}%`,
+             dai:`✦ Axie ${gA} ${axieEl} khắc lại đất ${mobEl} — chịu đòn NHẸ hơn ${pct(mul)}% ở đây` };
+  }
+  const mul = pha(HE_TRUNG);
+  return { ket:0, mul, sac:k, mau:'#c9b889',
            txt:`${gA} ${axieEl} trung tính`,
-           dai:`${gA} Axie ${axieEl} trung tính với đất ${mobEl} — đổi sang ${heKhacLai(mobEl).join(' / ')} thì chịu đòn nhẹ hơn 10%` };
+           dai:`${gA} Axie ${axieEl} trung tính với đất ${mobEl} — đổi sang ${heKhacLai(mobEl).join(' / ')} thì chịu đòn nhẹ hơn` };
 }
+
+// ═══════════ SÁU BỘ PHẬN AXIE ═══════════
+// Trục THỨ HAI của con Axie. Trục một là `lop` (hệ phòng thủ — khắc ai, bị ai khắc); trục hai là
+// CẤU TẠO: sáu bộ phận theo `axie-hinh-hoa §1`, và mấy cái cùng nhóm tam giác với chính nó.
+//
+// Nó trả lời đúng hai khoản còn thiếu của tiêu chí Axie Core: *"con Axie mới có MỘT trục"* và
+// *"sáu bộ phận — thứ định nghĩa một con Axie thật — chưa đọc một lần nào"*.
+//
+// ⚠ ĐÂY KHÔNG PHẢI CHỈ SỐ. Nó không đi qua `calcDerived`, không cộng một điểm nào, và kỳ vọng
+// trên cả chín lớp quái bằng nhau cho mọi con — xem khối `HE_TB` ở trên. Luật *"Axie 0 chỉ số"*
+// còn nguyên, và `tests/test_hethu §4` vẫn gác nó.
+const BP_TEN  = ['mat', 'tai', 'sung', 'mieng', 'lung', 'duoi'];
+const BP_NHAN = { mat:'Mắt', tai:'Tai', sung:'Sừng', mieng:'Miệng', lung:'Lưng', duoi:'Đuôi' };
+// Độ sắc chạy từ TẠP tới THUẦN. Sàn CỐ Ý không phải 0: một con tạp hoàn toàn mà hệ số phẳng lì
+// ×1,00 là con Axie đó **tắt hẳn** cơ chế cho người đang đeo nó, tức trở lại đúng cái skin mà cả
+// đợt này sinh ra để gỡ. 0,45 thì nó vẫn còn nói được điều gì đó, chỉ là nói khẽ.
+const BP_SAC_MIN = 0.45, BP_SAC_MAX = 1.50;
+// Mấy bộ phận thuộc CÙNG NHÓM tam giác với `lop` của chính con Axie. `null` khi con đó chưa khai
+// bộ phận — và `null` phải đọc ra "không biết", không đọc ra 0: 0 là *tạp nhất có thể*, một phán
+// quyết hẳn hoi, còn thiếu dữ liệu thì phải lui về hành vi cũ (sắc = 1).
+function bpCung(c){
+  if (!c || !c.bp || !ELEM[c.lop]) return null;
+  const g = ELEM[c.lop].nhom;
+  let n = 0;
+  for (const k of BP_TEN){ const e = ELEM[c.bp[k]]; if (e && e.nhom === g) n++; }
+  return n;
+}
+function bpSac(cung){
+  if (typeof cung !== 'number') return 1;
+  return BP_SAC_MIN + (BP_SAC_MAX - BP_SAC_MIN) * (cung / BP_TEN.length);
+}
+// Cửa DUY NHẤT hỏi "người chơi này đang sắc tới đâu". Lui về 1 khi chưa có avatar hoặc con đó
+// chưa khai bộ phận ⇒ hệ số y hệt bản trước đợt này, và save cũ không phải di trú gì.
+function axieSac(p){
+  const pl = p || (typeof player !== 'undefined' ? player : null);
+  if (!pl) return 1;
+  const id = avatarId(pl);
+  const cung = id ? bpCung(CHI_MAP[id]) : null;
+  return cung === null ? 1 : bpSac(cung);
+}
+// Đọc ra cho người chơi: "Thuần 5/6" / "Tạp 1/6", kèm một chữ nói nó NGHĨA LÀ GÌ. Con số trần
+// trụi không nói được gì — 5/6 là tốt hay xấu thì người chơi không có cách nào đoán.
+function bpHang(cung){
+  if (cung === null || cung === undefined) return null;
+  if (cung >= 5) return { ten:'Thuần',     mau:'#ffd76a', y:'chuyên gia — cực nhẹ đòn ở vùng hợp, cực nặng ở vùng khắc' };
+  if (cung >= 3) return { ten:'Pha',       mau:'#9fd0ff', y:'cân — mạnh yếu vừa phải ở cả hai phía' };
+  return           { ten:'Tạp',       mau:'#c9b889', y:'thợ đụng — không bao giờ tệ, không bao giờ xuất sắc' };
+}
+// Một dòng đọc được cho DANH SÁCH Axie: hạng + sáu bộ phận, mỗi bộ phận tô theo lớp của nó.
+// Đây là chỗ DUY NHẤT người chơi nhìn thấy cả sáu — bảng Nhân Vật chỉ in được cái hạng.
+function bpDongMoTa(c){
+  const cung = bpCung(c), h = bpHang(cung);
+  if (!h) return '';
+  const o = BP_TEN.map(k => {
+    const e = ELEM[c.bp[k]];
+    return `<span style="color:${e ? e.color : '#c9b889'}" title="${BP_NHAN[k]}: ${c.bp[k]}">${e ? e.glyph : '?'}</span>`;
+  }).join('');
+  return `<br><b style="color:${h.mau}">${h.ten} ${cung}/6</b> <span style="letter-spacing:2px">${o}</span>`
+       + ` <span style="opacity:.7">${h.y}</span>`;
+}
+window.bpCung = bpCung; window.bpSac = bpSac; window.axieSac = axieSac; window.bpHang = bpHang;
+window.bpDongMoTa = bpDongMoTa;
 // Hồi cho số bay khắc hệ. Nó bắn theo TỪNG ĐÒN TRÚNG, mà một trận đông quái có hàng chục đòn
 // mỗi giây — không có hồi thì nó vừa phủ kín màn vừa đẩy tràn mảng `floats` (trần 70) và nuốt
 // mất mọi thông báo khác. Để ngoài `player` để nó không chui vào save.
-let _heFloatMs = 0;
+//
+// ⚠ MỐC KHỞI TẠO LÀ `-Infinity`, KHÔNG PHẢI 0 — và 0 là một lỗi THẬT, bài kiểm tìm ra.
+// `performance.now()` đếm từ lúc NẠP TRANG, nên với mốc 0 thì điều kiện `now - 0 > 2600` sai
+// trong suốt **2,6 giây đầu đời của trang**: ai vừa vào game mà ăn đòn ngay thì không thấy gì,
+// và cái không-thấy đó đọc ra y hệt "cơ chế không chạy". Nó cũng làm bài kiểm phụ thuộc vào
+// trang nạp nhanh hay chậm — `test_hethu §7a` đỏ 3/3 vì đúng chuyện đó, trong khi `heThuKet`
+// trả về hoàn toàn đúng. `-Infinity` thì đòn ĐẦU TIÊN luôn nói ra, rồi mới vào nhịp hồi.
+let _heFloatMs = -Infinity;
 const HE_FLOAT_HOI = 2600;
 // Một dòng, kiểu Ragnarok: đất của ai · lớp Axie nào · mang gì tới · nơi duy nhất rơi cái gì.
 function banSacHtml(id){
@@ -12092,7 +12189,7 @@ function update(dt){
         // khắc hệ chiều quái → người: hệ quái khắc hệ NGƯỜI +12%, bị người khắc -10%.
         // Hệ người nay do CON AXIE đang đeo quyết định — xem heThu(). Trước đây là
         // `SECTS[player.sect].element`, tức một hằng số người chơi không tác động được.
-        const _hek = heThuKet(mobHe(m), heThu(player));
+        const _hek = heThuKet(mobHe(m), heThu(player), axieSac(player));
         if (_hek) dmg *= _hek.mul;
         const mobCounter = !!_hek && _hek.ket === -1;
         dmg = Math.max(1, Math.round(dmg));
@@ -17431,6 +17528,15 @@ function renderChar(){
   const _heRow = [];
   if (_ae) _heRow.push(['Hệ đòn đánh <span style="opacity:.6;font-size:10px">(vũ khí)</span>', `<span style="color:${elColor(_ae)}">${ELEM[_ae].glyph} ${elName(_ae)}</span>`]);
   if (_he) _heRow.push(['Hệ phòng thủ <span style="opacity:.6;font-size:10px">(Axie)</span>', `<span style="color:${elColor(_he)}">${ELEM[_he].glyph} ${elName(_he)}</span>`]);
+  // Dòng thứ BA: cấu tạo sáu bộ phận. Nó đứng cạnh hai dòng kia vì nó là trục thứ hai của cùng
+  // một thứ — con Axie — và vì nếu không in ra thì `bpCung` chạy suốt mà không ai biết nó tồn
+  // tại. Cùng bài học với vế phòng thủ từng chỉ có một dòng nhật ký.
+  //
+  // ⚠ In cả HẠNG lẫn con số, đừng in mỗi con số: "5/6" không nói được là tốt hay xấu, mà ở đây
+  // thì **không** có tốt/xấu — có chuyên gia và có thợ đụng. Chữ phải nói ra điều đó.
+  const _bpAva = avatarId(player), _bpC = _bpAva ? bpCung(CHI_MAP[_bpAva]) : null, _bpH = bpHang(_bpC);
+  if (_bpH) _heRow.push([`Cấu tạo Axie <span style="opacity:.6;font-size:10px">(sáu bộ phận)</span>`,
+    `<span style="color:${_bpH.mau}" title="${_bpH.y}">${_bpH.ten} ${_bpC}/6</span>`]);
   stats.splice(2, 0, ..._heRow);
   for (const [n,v] of stats) html += `<div class="stat-row"><span>${n}</span><b>${v}</b></div>`;
   // Khối CHIÊU THỨC đã gỡ: bảng Kỹ Năng (phím K) vốn đã in đủ năm thông số của từng chiêu,
@@ -19045,7 +19151,14 @@ function renderMount(){
   // Huyết Thống CN · <bị động> · Chiêu <tên> (Ns)" — bốn thứ đó nay đều không tồn tại. In lại
   // bất kỳ cái nào là hứa với người chơi một sức mạnh mà con Axie không còn cho.
   html += `<div class="stat-sec">ĐANG CÓ — ${dsCo.length}/${CHIMERA.length}</div>`;
-  html += `<div style="font-size:11px;color:#9aa8d4;margin-bottom:6px;line-height:1.5">Con Axie là <b>thân nhìn thấy</b> của bạn — nó <b>không cộng chỉ số</b> và không tự đánh. Toàn bộ sức mạnh nằm ở lớp nhân vật; lúc ra đòn lớp ấy hiện ra rồi tan.<br>Nhưng <b style="color:#ffd76a">lớp Axie quyết định hệ PHÒNG THỦ</b> của bạn: quái khắc hệ bạn đánh đau hơn 12%, bạn khắc lại thì nhẹ đi 10%. Đổi thân là đổi vùng đất nào dễ thở. Hệ đòn đánh vẫn theo <b>vũ khí</b>.</div>`;
+  // ⚠ HAI CON SỐ NÀY TỪNG CHÉP CỨNG "12%" / "10%", và từ đợt sáu bộ phận thì đó là lời nói dối:
+  // hệ số phụ thuộc độ sắc của con đang đeo (×0,45 tới ×1,50). Suy thẳng từ `heThuKet` — một
+  // bảng hứa một đằng còn đòn đánh ra một nẻo thì không lỗi nào báo, và người chơi thì đọc ra
+  // là game nói dối. Lấy hai đầu dải để nói đúng cái RANGE, không nói một điểm.
+  const _dTap = heThuKet('Beast', 'Plant', BP_SAC_MIN), _dThuan = heThuKet('Beast', 'Plant', BP_SAC_MAX);
+  const _dLoiTap = heThuKet('Plant', 'Beast', BP_SAC_MIN), _dLoiThuan = heThuKet('Plant', 'Beast', BP_SAC_MAX);
+  const _pc = m => Math.round(Math.abs(m - 1) * 100);
+  html += `<div style="font-size:11px;color:#9aa8d4;margin-bottom:6px;line-height:1.5">Con Axie là <b>thân nhìn thấy</b> của bạn — nó <b>không cộng chỉ số</b> và không tự đánh. Toàn bộ sức mạnh nằm ở lớp nhân vật; lúc ra đòn lớp ấy hiện ra rồi tan.<br>Nhưng <b style="color:#ffd76a">lớp Axie quyết định hệ PHÒNG THỦ</b> của bạn: quái khắc hệ bạn đánh đau hơn <b>${_pc(_dTap.mul)}–${_pc(_dThuan.mul)}%</b>, bạn khắc lại thì nhẹ đi <b>${_pc(_dLoiTap.mul)}–${_pc(_dLoiThuan.mul)}%</b> — rộng hay hẹp là do <b style="color:#ffd76a">cấu tạo sáu bộ phận</b> của chính con đó. Đổi thân là đổi vùng đất nào dễ thở. Hệ đòn đánh vẫn theo <b>vũ khí</b>.<br><span style="opacity:.75">Con <b>thuần</b> là chuyên gia (ăn đòn rất nhẹ ở vùng hợp, rất nặng ở vùng khắc); con <b>tạp</b> là thợ đụng. Trung bình trên cả chín lớp quái thì <b>mọi con bằng nhau</b> — cấu tạo đổi hình dạng rủi ro, không đổi tổng.</span></div>`;
   for (const c of dsCo){
     const o = C.co[c.id], con = (o && o.con) || 0, dung = player.avatar === c.id;
     html += `<div class="skill-row${dung ? '' : ' locked'}" style="align-items:center">
@@ -19053,7 +19166,7 @@ function renderMount(){
       <span class="sk-info"><b style="color:${c.mau}">${c.ten}</b>
         <span style="font-size:10.5px;color:${CHI_SAO_MAU[c.sao]}"> · ${'★'.repeat(c.sao)} · </span>${lopHuyHieu(c.lop)}<span style="font-size:10.5px;color:${CHI_SAO_MAU[c.sao]}">${c.lop}</span>
         ${con ? `<span style="font-size:10.5px;color:#ffd76a"> · trùng ×${con}</span>` : ''}
-        <div class="sk-desc">Thân ${c.lop} — ${c.ten} · phòng thủ lớp <b style="color:${elColor(c.lop)}">${(ELEM[c.lop]||{}).glyph||''} ${elName(c.lop)}</b></div></span>
+        <div class="sk-desc">Thân ${c.lop} — ${c.ten} · phòng thủ lớp <b style="color:${elColor(c.lop)}">${(ELEM[c.lop]||{}).glyph||''} ${elName(c.lop)}</b>${bpDongMoTa(c)}</div></span>
       ${dung ? '<span style="font-size:11px;color:#8fd18f">ĐANG LÀM THÂN</span>'
            : `<button class="mini-btn" onclick="window.chiChon('${c.id}')">Đổi thân</button>`}</div>`;
   }
@@ -25792,7 +25905,7 @@ window.travelTo = function(mapId, from){
   // người chơi đổi Axie giữa map là nó thành một câu đã cũ; còn số bay thì không bao giờ nói
   // được "nên cầm con nào TỚI đây". Hai kênh cho hai câu hỏi khác nhau.
   const _bsHe = (mapBanSac(mapId) || {}).he;
-  const _kqHe = _bsHe ? heThuKet(_bsHe, heThu(player)) : null;
+  const _kqHe = _bsHe ? heThuKet(_bsHe, heThu(player), axieSac(player)) : null;
   const _subHe = _kqHe ? ' · ' + _kqHe.dai : '';
   zoneBanner = _rlore ? { text:'🗺 ' + md.name, sub:_rlore.sub + _subHe, color:'#ffd76a', t:5.5 }
                        : { text: md.name, sub: `${zt.name} — ${md.desc}${_subHe}`, color: zt.color, t: 3.2 };
