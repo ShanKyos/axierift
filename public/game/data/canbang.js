@@ -781,7 +781,15 @@ window.SECTS = {
     hpMult:1.12, defMult:1.10, dmgMult:0.92, atkSrc:{str:1.8, agi:0.3},
     desc:'Vương miện năm chấu, giáp đen ánh lam, quyền trượng chỉ huy. Dark Lord không bao giờ ra trận một mình — hắn hiệu triệu, và chiến trường tự sạch. Tiềm năng: chủ lực Lực Lượng, dặm thêm Mẫn Tiệp.',
     skillA:{ name:'Force Wave', type:'cone', cd:4, qi:20, mult:1.5 },
-    tp:{ name:'Fire Scream', mult:3.0 } },
+    // Trấn Phái: BÃO QUẠ. `tam:320` — chủ dự án chốt "xa hơn skill trấn phái 1". Ô 1 của lớp này
+    // là `skillA` kiểu `cone` không khai `tam` ⇒ lấy mặc định cone = **130**. 320 nằm đúng dải
+    // đánh xa đã có của game (quái `phap` 320 · `xa` 300) và vẫn ngắn hơn Meteorite 420 — một bầy
+    // chim tuôn ra từ tay thì không nên với xa hơn một khối thiên thạch gọi từ trên trời xuống.
+    // ⚠ Bốn lớp kia để `tam` trống ⇒ `skillInfo` quy ra 0 (nổ ngay dưới chân). Đây là lớp thứ hai
+    // sau Dark Wizard khai tầm thật cho Trấn Phái.
+    // ⚠ Tên TIẾNG VIỆT là CHỦ Ý, chủ dự án chốt — bốn tuyệt chiêu kia để tiếng Anh (Death Stab ·
+    // Ice Arrow · Meteorite · Flame Strike). Đừng "dọn cho đồng bộ" bằng cách dịch ngược.
+    tp:{ name:'Bão Quạ', mult:3.0, tam:320 } },
 };
 
 // packs: quái đứng thành cụm 5-7 con, đánh 1 con cả cụm lao vào (GDD Mob Mechanics)
@@ -852,15 +860,6 @@ window.MAPS = {
       [4160,3168], [3648,3168], [3584,3104], [3456,3104],
     ],
     isoCum: [[320,1920], [384,2752], [2176,1024], [2816,2624], [3968,3008], [960,3008], [2688,1088], [960,2496], [3776,1408], [576,448], [1408,2624], [1664,3008], [2112,2752], [2304,2304], [4224,2176], [384,1408], [3008,192], [3392,1664], [1920,640], [3200,3072], [3456,2432]],
-    // ⚠ MÁY LÁT TƯỜNG THÀNH — ART CÒN CHỜ. Bảy tên trong `anh:` đều đang nằm trong
-    // `MAP_VAT_CHO` (game.js) nên `vatTai()` trả null và máy vẽ số không viên: khối này
-    // là ĐƯỜNG THẢ SẴN, bỏ 7 tệp PNG vào `assets/iso/` rồi xoá tên khỏi MAP_VAT_CHO là
-    // tường hiện ra, không phải sửa một dòng mã. Khổ ảnh + hợp đồng neo (mép DƯỚI ảnh =
-    // đường chân tường, tâm ngang = tim tường): docs/DE_XUAT_TUONG_CONG.md §5 và §5c.
-    tuong: { cao:300, nhip:256, day:160, congRong:2.77, congCao:700, congDay:400,
-             anh:{ ngang:'tuong_ngang_trong', ngangSau:'tuong_ngang_ngoai',
-                   doc:'tuong_doc', goc:'tuong_goc',
-                   congNgang:'cong_bac', congNgangSau:'cong_nam', congDoc:'cong_doc' } },
     isoDuong: [
       [[256,896], [521,1102], [840,1182], [1152,1280], [1331,1485], [1536,1664], [1869,1691], [2163,1875], [2478,1978], [2816,1984], [3128,1932], [3412,2077], [3712,2112], [4037,1897], [4288,1600], [4293,1245], [4224,896], [3953,783], [3685,661], [3406,579], [3112,548], [2814,531], [2526,479], [2252,376], [1984,256], [1665,349], [1393,541], [1136,763], [826,876], [506,966]],
       [[1152,1280], [909,1513], [783,1818], [640,2112]],
@@ -905,6 +904,15 @@ window.MAPS = {
     // LƯỚI PHỐ. Map rộng thì luật "đường mòn = dải xa mép nhất" biến cả thành một bãi sỏi
     // mênh mông, nên phải khai đường thật. Hai đại lộ nối thẳng bốn cổng, bốn ngõ dọc rơi
     // đúng khe 200px giữa các khối nhà, hai phố vòng chạy men dãy nhà bắc và nam.
+    // ⚠ MÁY LÁT TƯỜNG THÀNH — ART CÒN CHỜ. Bảy tên trong `anh:` đều đang nằm trong
+    // `MAP_VAT_CHO` (game.js) nên `vatTai()` trả null và máy vẽ số không viên: khối này
+    // là ĐƯỜNG THẢ SẴN, bỏ 7 tệp PNG vào `assets/iso/` rồi xoá tên khỏi MAP_VAT_CHO là
+    // tường hiện ra, không phải sửa một dòng mã. Khổ ảnh + hợp đồng neo (mép DƯỚI ảnh =
+    // đường chân tường, tâm ngang = tim tường): docs/DE_XUAT_TUONG_CONG.md §5 và §5c.
+    tuong: { cao:300, nhip:256, day:160, congRong:2.77, congCao:700, congDay:400,
+             anh:{ ngang:'tuong_ngang_trong', ngangSau:'tuong_ngang_ngoai',
+                   doc:'tuong_doc', goc:'tuong_goc',
+                   congNgang:'cong_bac', congNgangSau:'cong_nam', congDoc:'cong_doc' } },
     isoDuong: [
       [[230,1600],[6170,1600]], [[3200,210],[3200,2990]],
       [[1500,370],[1500,2830]], [[2160,370],[2160,2830]],
@@ -1949,12 +1957,31 @@ window.NPCS = [
   // đứng ở thành. Lore của bốn người dưới đây viết cho ra chuyện đó: mỗi cái cửa
   // phải nói được vì sao nó tồn tại, không chỉ là một cái nút bấm.
 
-  { id:'thoren', name:'Thợ Rèn · Lò Rèn Hoàng Gia', map:'ardhaven', x:5230, y:990, img:'assets/npcs/thoren.png', talk:'forge', nhan:'Lò Rèn',
+  { id:'thoren', name:'Thợ Rèn · Lò Rèn Hoàng Gia', map:'ardhaven', x:5230, y:990, img:'assets/npcs/thoren_lun.png', talk:'forge', nhan:'Lò Rèn',
     lore:'"Lò này nhóm lại lần thứ ba rồi. Hai lần trước tắt vì hết than — lần này ta dặn xe than đi hai chuyến một tuần, tắt nữa thì là lỗi của ta."',
     barks:['"Đợi lò đỏ đã, đừng giục."','"Đồ mẻ thì mang đây, đừng vứt."',
            '"Búa nhỏ để khảm, búa lớn để nắn. Cầm nhầm là hỏng cả món."','"Nghe tiếng thép là biết đồ thật hay giả."'] },
 
-  { id:'duoclao', name:'Nhà Giả Kim · Tiệm Thuốc', map:'ardhaven', x:1830, y:990, img:'assets/npcs/duocsu.png', talk:'shop', nhan:'Tiệm Thuốc',
+  // ⚠ CON THỨ HAI MANG talk:'forge', VÀ ĐÓ LÀ CHỦ Ý. `forgeNpcHere()` nay trả về con GẦN
+  // NHẤT trên map chứ không phải con ĐẦU MẢNG (xem game.js) — nếu không thì thêm con này
+  // vào là `atRoyalForge()` vẫn chỉ đo tới Thợ Rèn, và người chơi đứng sát Lò Hỗn Độn lại
+  // bị báo "chưa tới Lò Rèn Hoàng Gia". Lỗi đó không ném gì, chỉ làm nút KẾT HỢP mờ đi.
+  // Đứng cách Thợ Rèn 190px, cùng hàng y — hai con đọc ra một CẶP, đúng lối MU đặt máy
+  // hỗn độn cạnh lò rèn. Chỗ đứng quét bằng máy (ngoài khối Lò, cách mọi NPC ≥180px).
+  { id:'ah_hondon', name:'Yêu Tinh Hỗn Độn · Lò Hỗn Độn', map:'ardhaven', x:5420, y:980, img:'assets/npcs/hondon_yt.png', talk:'forge', nhan:'Lò Hỗn Độn',
+    lore:'"Trên +9 thì búa của lão Thợ Rèn hết việc — thép không nhận thêm nét khắc nào bằng sức người nữa. Từ đó trở lên là việc của cái lò này, và cái lò này không hứa gì cả."',
+    barks:['"+10 là nửa ăn nửa thua. Ta nói trước rồi đấy."','"Đưa đồ đây. Đừng đưa đồ ngươi tiếc."',
+           '"Vỡ thì đừng trách lò. Trách cái tay bỏ nó vào."','"Thiên Mệnh Phù giữ được món, không giữ được nét khắc."'] },
+
+  // Bán Sách Kỹ Năng — trước đó sách CHỈ rơi từ tinh anh/trùm và Tầng Sâu, nên người chơi
+  // muốn nâng một chiêu cụ thể thì không có cửa nào ngoài cày may rủi. Đứng trước khối nhà
+  // #1 (940,520), cùng hàng shop bắc với Tiệm Thuốc — chỗ quét bằng máy, xem tools/…/cham_npc.
+  { id:'ah_phapsu', name:'Pháp Sư Rune · Quán Sách', map:'ardhaven', x:1340, y:940, img:'assets/npcs/phapsu_yt.png', talk:'shop', nhan:'Quán Sách',
+    lore:'"Qua Nhát Gọi thì mất ký ức chứ không mất nghề. Ta chép lại cái nghề ấy xuống giấy cho những kẻ chưa nhớ ra mình từng biết gì — đọc xong là tay tự làm được."',
+    barks:['"Sách chép tay, không có bản thứ hai."','"Đọc một quyển là nhớ ra một nấc."',
+           '"Giấy đắt hơn mực, mà mực đắt hơn cả hai."','"Đừng giở giữa trời mưa."'] },
+
+  { id:'duoclao', name:'Nhà Giả Kim · Tiệm Thuốc', map:'ardhaven', x:1830, y:990, img:'assets/npcs/duocnu_yt.png', talk:'shop', nhan:'Tiệm Thuốc',
     lore:'"Giá dán ngay cửa. Ta không nói thách cũng không bớt — bớt cho một người là hôm sau cả phố tới đòi bớt."',
     barks:['"Bình đỏ pha sáng nay, còn ấm."','"Ra khỏi cổng thì mang hai lọ, đừng mang một."',
            '"Đừng uống lúc đang chạy, sặc thì phí cả lọ."','"Nút bần bịt kín rồi, nhưng đừng để nghiêng trong túi."'] },
@@ -2026,7 +2053,7 @@ window.NPCS = [
   // Kẻ lang thang đứng lẻ phía đông, cách đường ra Cổng Đông một quãng. Cố ý KHÔNG đặt trong
   // quảng trường: cả bố cục của y là "một người không thuộc về đám đông nào", để giữa chợ thì
   // mất sạch ý đó.
-  { id:'ah_ronin', name:'Kỵ Sĩ Ronin', map:'ardhaven', x:4900, y:1900, img:'assets/npcs/ronin.png', talk:'quest',
+  { id:'ah_ronin', name:'Kỵ Sĩ Ronin', map:'ardhaven', x:4900, y:1900, img:'assets/npcs/ronin_canh.png', talk:'quest',
     lore:'"Ta vượt vết nứt cùng ba mươi người. Về tới đây còn một. Đừng hỏi tên đội — không còn ai gọi tên đội đó nữa."',
     barks:['"Đứng xa lưỡi thép ra."','"Ta không nhận việc. Ta đợi."',
            '"Mưa bên này lạ lắm. Nó không rửa được thứ gì cả."','"Đi một mình thì sống lâu hơn."'] },
@@ -2045,7 +2072,7 @@ window.NPCS = [
   // thành mà ai cũng nói về đại hoạ thì không phải một cái thành, nó là một bảng
   // thông báo có chân.
 
-  { id:'ah_banrong', name:'Người Bán Rong', map:'ardhaven', x:1450, y:1520, img:'assets/npcs/monkhach.png', talk:'quest',
+  { id:'ah_banrong', name:'Người Bán Rong', map:'ardhaven', x:1450, y:1520, img:'assets/npcs/banrong_yt.png', talk:'quest',
     lore:'"Ta gánh hai thúng, một thúng bánh một thúng chè. Thúng nào bán hết trước thì sáng mai ta gánh thúng đó nặng hơn. Đơn giản thế thôi."',
     barks:['"Bánh còn nóng, mua đi."','"Chè hôm nay đắt hơn hôm qua — đường lên giá, không phải ta."',
            '"Ta đứng đây tới trưa thôi đấy."'] },
@@ -2075,10 +2102,10 @@ window.NPCS = [
     barks:['"Dịch sang bên một tí, ta quét."','"Lá năm nay rụng nhiều hơn mọi năm."',
            '"Chổi này ta tự bó, bền hơn chổi mua ngoài chợ."'] },
 
-  { id:'trachu', name:'Chủ Quán Trọ · Trà Quán', map:'ardhaven', x:4150, y:1010, img:'assets/npcs/trachu.png', talk:'shop', nhan:'Quán Trọ',
-    lore:'"Mười hai phòng, tám phòng có người. Bốn phòng còn lại ta để trống cho ai về muộn — về muộn mà không có chỗ nằm thì tội lắm."',
+  { id:'trachu', name:'Cô Hầu Bàn · Quán Trọ', map:'ardhaven', x:4150, y:1010, img:'assets/npcs/hauban_yt.png', talk:'shop', nhan:'Quán Trọ',
+    lore:'"Chủ quán ngồi trong đếm tiền, ta chạy bàn. Mười hai phòng thì tám phòng có người, và cả tám đều biết tên ta còn ta chẳng biết tên ai."',
     barks:['"Còn phòng, đừng lo."','"Cơm dọn lúc trời chạng vạng, đừng tới trễ."',
-           '"Ai ngáy to thì ta xếp lên gác. Không giận nhé."'] },
+           '"Khay này nặng đấy, tránh ra một chút."','"Ai ngáy to thì ta xếp lên gác. Không giận nhé."'] },
 
   { id:'ah_duatin', name:'Người Đưa Tin', map:'ardhaven', x:4300, y:1620, img:'assets/npcs/noiung.png', talk:'quest',
     lore:'"Ta chạy tin giữa bốn cổng, trong tường thôi. Thư gửi ra ngoài thành thì ta không nhận — ngoài đó không có ai đứng đợi ở đầu đường cả."',
@@ -2109,7 +2136,7 @@ window.NPCS = [
     lore:'"Ta hát bài nào cũng được, trừ bài về cái đêm trời nứt. Hát bài đó thì có người bỏ về, có người ngồi lại khóc — mà cả hai hạng đều không bỏ tiền."',
     barks:['"Nghe một bài không mất gì cả."','"Dây thứ ba lại chùng rồi."',
            '"Hôm qua có người trả ta bằng một quả táo. Ta vẫn hát."'] },
-  { id:'thoren_dao', name:'Thợ Rèn Lưu Vong', map:'corran', x:520, y:560, img:'assets/npcs/thoren.png', talk:'forge',
+  { id:'thoren_dao', name:'Thợ Rèn Lưu Vong', map:'corran', x:520, y:560, img:'assets/npcs/thoren_lun.png', talk:'forge',
     lore:'"Lò của ta đi qua Nhát Gọi cùng ta. Nghe đâu người ta khắc cả một nét lên trời chỉ để gọi một cái lò — thế mà gọi được ta. Còn đỏ lửa là còn rèn, đưa đồ đây."',
     barks:['"Đảo này không có quặng, ta nấu lại đồ cũ."','"Còn đỏ lửa là còn rèn."',
            '"Ngươi cầm kiếm sai tay rồi đấy."'] },
