@@ -5897,6 +5897,23 @@ function veAvatar(g, p, dangDiChuyen, now){
   g.restore();
   return true;
 }
+// Vẽ Axie NHƯNG HUỶ phép nhấc do đôi cánh: con Axie không đeo cánh và không có hoạt cảnh bay
+// nào, nên nhấc nó lên là một cái thân treo lơ lửng cách vòng chân của chính nó mấy chục pixel.
+// `bayCao` > 0 nghĩa là khối gọi đang nằm trong một `translate(0, -bayCao)`; cộng lại là về đất.
+// Gom vào MỘT hàm vì có HAI chỗ gọi (xếp lớp theo chiều sâu) — sửa một chỗ quên chỗ kia là con
+// Axie bay ở nửa số hướng nhìn, mà kiểu lệch đó nhìn ra "hình như lag" chứ không ra một lỗi.
+function veAvatarDat(g, p, now, bayCao){
+  if (!bayCao){
+    if (window.TEST_MODE) _doNeo('axie', g, p.x, p.y);
+    veAvatar(g, p, !!p.moving, now); return;
+  }
+  g.save(); g.translate(0, bayCao);
+  // Phơi chỗ CHÂN con Axie ra cho bài kiểm — qua đúng ma trận đang vẽ, không chép lại phép
+  // tính. Xem `_doNeo`: đo bằng điểm ảnh ở đây là vô ích, con Axie thở ~8 FPS nên sàn nhiễu
+  // giữa hai lượt vẽ liên tiếp lớn hơn cả 24 px cần đo.
+  if (window.TEST_MODE) _doNeo('axie', g, p.x, p.y);
+  veAvatar(g, p, !!p.moving, now); g.restore();
+}
 // ĐO CHỖ MỘT ĐIỂM THẬT SỰ RƠI VÀO, qua đúng ma trận mà vòng vẽ đang dùng.
 // Vì sao phải đo chứ không tính lại trong bài kiểm: chép công thức sang bài kiểm là dựng bản
 // sao thứ hai của một phép biến hình đang sống — sửa một bên là hai bên lệch, mà bài vẫn xanh.
@@ -8837,6 +8854,12 @@ function loadGame(idx){
     // Kiếp mà không có một dòng báo nào.
     for (const s in player.equip) if (player.equip[s] && player.equip[s].plus > 12) player.equip[s].plus = 12;
     for (const it of player.inv) if (it.plus > 12) it.plus = 12;
+    // ⚠ BẢN CHƠI THỬ — phát bộ giai 7 cho save đời trước. PHẢI đứng ở ĐÂY, không được đưa lên
+    // cạnh `cotDiTru()`: `migrateGiai14()`/`migrateGiai7()` chạy mãi dưới kia và chúng viết lại
+    // `it.tier` của MỌI món trong equip/inv. Phát trước hai bước đó thì bộ giai 7 vừa phát bị
+    // chính phép di trú nghiền xuống giai 5 (7 → 10 → ceil(10/2)) — đo được, và không lỗi nào
+    // báo. Ở đây thì lưới túi cũng đã dựng xong nên `bagConCho`/`bagThem` trả lời đúng.
+    demoDoDiTru();
     let maxUid = 0;
     for (const s in player.equip) if (player.equip[s]) maxUid = Math.max(maxUid, player.equip[s].uid);
     for (const it of player.inv) maxUid = Math.max(maxUid, it.uid);
@@ -15059,7 +15082,7 @@ const NV_LOP_HOP = {
   // Phoenix — bộ giai 7 của Dark Knight. Lớp `h` (tóc sau) RỖNG ở bộ này nên không khai,
   // y như dkcw1/sbhd1/dlcm1: mũ giáp trùm kín gáy thì không còn tóc nào thò ra sau.
   'dkph1':  { t1:[61,133,135,105,43,102,175,131], c:[62,161,152,105,70,139,136,124],
-              a:[63,124,126,138,26,114,167,147], vk:[37,185,166,87,96,169,144,103],
+              a:[63,124,126,138,26,114,167,147], vk:[0,21,240,279,73,137,167,160],
               t2:[57,110,145,103,35,111,163,139], n:[84,87,105,75,0,79,179,169] },
   // Dark Lord — bộ vàng-đỏ nạm hồng ngọc. KHÔNG có lớp `vk`: lớp này cầm trượng BAY
   // (thần khí), nên nướng bằng cờ --khongvk. Xem NV_VK_LOP — cố ý không khai.
@@ -15069,11 +15092,11 @@ const NV_LOP_HOP = {
   // không đội mũ, và art của gói vốn đã vẽ vậy nên không phải xử gì thêm ở mã.
   'sbsm1':  { h:[80,94,109,89,6,86,174,182], t1:[70,128,113,91,38,111,167,118],
               c:[63,149,141,108,66,141,130,123], a:[89,119,95,96,26,111,148,143],
-              vk:[16,184,208,91,96,160,144,115], t2:[62,116,130,84,31,107,155,152],
+              vk:[0,0,240,300,63,133,177,167], t2:[62,116,130,84,31,107,155,152],
               n:[81,86,110,73,0,79,181,176] },
   'elnb1':  { h:[85,96,70,79,5,88,170,177], t1:[71,132,116,75,39,115,165,118],
               c:[70,159,121,101,71,142,127,119], a:[92,125,59,75,33,115,137,139],
-              vk:[42,129,145,144,96,170,144,113], t2:[63,126,132,80,36,119,156,136],
+              vk:[0,93,240,196,72,136,168,159], t2:[63,126,132,80,36,119,156,136],
               n:[82,86,76,62,0,79,178,173] },
   'dlbc1':  { t1:[68,132,126,91,44,112,175,131], c:[65,157,130,108,69,141,134,120],
               a:[74,121,98,89,28,111,154,161], t2:[65,127,137,85,36,114,161,139],
@@ -17574,6 +17597,9 @@ function drawPlayer(p){
   // xuống là cả map ai cũng đổ ra nằm, và ngược lại người khác chết vẫn đứng vung kiếm.
   // Người từ xa thì hỏi máu — đó là thứ ảnh chụp có chở theo.
   const _chet = (p === player) ? dead : !!p.chet;
+  // Có avatar hay không phải biết TỪ ĐÂY, không phải mãi dưới chỗ xếp lớp: khối BAY ngay bên
+  // dưới cần nó để quyết cái gì rời mặt đất. Xem `bayKNen`.
+  const _coAva = !!avatarId(p);
   // ═══ LAYERING: đất → sau lưng → người → vũ khí → aura quỹ đạo → danh hiệu ═══
   const riding = false; // không còn cơ chế cưỡi; giữ cờ vì vài phép tính bóng đổ đọc nó
   const now = performance.now();
@@ -17595,6 +17621,17 @@ function drawPlayer(p){
   if (Math.abs(_bayDich - bayCao) < 0.05) bayCao = _bayDich;
   _bayCao.set(_bayK0, bayCao);
   const bayK = bayCao / Math.max(1, BAY_CAO[2]);        // 0 = chạm đất, 1 = bay cao nhất
+  // ⚠ ĐÔI CÁNH ĐEO TRÊN LỚP NHÂN VẬT, KHÔNG TRÊN CON AXIE — nên chỉ lớp nhân vật rời mặt đất.
+  // `veCanh()` đã vẽ cánh ở chỗ lớp nhân vật đứng (xem chú thích tại chỗ vẽ), tức đôi cánh
+  // thuộc về kẻ hộ tống. Bản trước nhấc CẢ CẶP bằng một `ctx.translate(0, yOff)` bọc ngoài,
+  // nên con Axie — cái thân NHÌN THẤY của người chơi, không có cánh và không có hoạt cảnh bay
+  // nào — treo lơ lửng cách vòng chân của chính nó 24 px. Chủ dự án chụp lại và gọi đúng tên:
+  // "hình bay như này sai quá sai".
+  //
+  // ⇒ Khi có avatar: lớp nhân vật bay, con Axie ĐỨNG ĐẤT, và bóng đổ / vòng chân giữ nguyên
+  // cỡ (chúng là chân đế của con Axie, mà con Axie thì vẫn đang chạm đất). Tắt avatar bằng
+  // `/avatar off` thì thân người LÀ thân nhìn thấy ⇒ hành vi cũ y nguyên.
+  const bayKNen = _coAva ? 0 : bayK;
   let yOff = -bayCao;
   // Nhịp bước chân chỉ có nghĩa khi chân còn chạm đất. Đang bay mà vẫn nhún như đang chạy bộ
   // là thứ phá cảm giác bay nhanh nhất.
@@ -17606,7 +17643,7 @@ function drawPlayer(p){
   const _bobK = p.moving ? Math.abs(Math.sin(p.walkPh || 0)) : 0;
   // Bay cao thì bóng vừa CO lại vừa NHẠT đi — đó là tín hiệu duy nhất cho biết nhân vật đang
   // lơ lửng chứ không phải chỉ được vẽ dịch lên vài pixel.
-  const _shK = (1 - _bobK * 0.20) * (1 - bayK * 0.42);
+  const _shK = (1 - _bobK * 0.20) * (1 - bayKNen * 0.42);
   const _shRx = (riding?27:16) * _shK, _shRy = (riding?9:6) * _shK;
   ctx.fillStyle = 'rgba(0,0,0,' + (0.09*_shAl*_shK).toFixed(3) + ')'; ctx.beginPath();
   ctx.ellipse(p.x + _shDx, p.y+8, _shRx*1.5, _shRy*1.5, 0, 0, 7); ctx.fill();
@@ -17617,7 +17654,7 @@ function drawPlayer(p){
   // lơ lửng mà vòng vẫn nguyên cỡ thì nó dính xuống đất trong khi người đã bay lên.
   // Màu lấy theo LỚP, nên nó vừa chỉ chỗ vừa nhắc mình đang chơi lớp nào.
   if (!_chet){
-    const _neoK = 1 - bayK * 0.55;
+    const _neoK = 1 - bayKNen * 0.55;
     ctx.save();
     ctx.globalAlpha = 0.52 * _neoK * _shAl;
     ctx.strokeStyle = sect.color; ctx.lineWidth = 1.6;
@@ -17629,7 +17666,7 @@ function drawPlayer(p){
   // Bụi gót chân: nổ ĐÚNG LÚC bàn chân chạm đất, không phải rắc ngẫu nhiên 8% số khung.
   // Bàn chân chạm khi sải chân mở hết cỡ — tức cos(pha) đổi dấu. Bắt đúng lần đổi dấu
   // đó thì tiếng bước và bụi trùng nhau, chân mới có cảm giác BÁM đất.
-  if (!SETTINGS.lowFx && p.moving && bayK < 0.3){   // chân không chạm đất thì không có bụi gót
+  if (!SETTINGS.lowFx && p.moving && bayKNen < 0.3){   // chân không chạm đất thì không có bụi gót
     const _c = Math.cos(p.walkPh || 0);
     if (p._lastCos !== undefined && (_c <= 0) !== (p._lastCos <= 0)){
       const _sd = _c <= 0 ? 1 : -1;                    // chân nào vừa chạm
@@ -17703,7 +17740,6 @@ function drawPlayer(p){
   // > niệm chú > đánh), và `_veAva` bên dưới đọc lại chính nó — một nguồn sự thật, không
   // phải hai điều kiện song song rồi lệch nhau lúc ai đó sửa một bên.
   const _lopHien = !_chet && !((p.hurtT || 0) > 0) && (castK > 0 || atkK > 0);
-  const _coAva = !!avatarId(p);
   // Phơi hai quyết định này ra cho bài kiểm, KHOÁ THEO TỪNG THÂN NGƯỜI — cùng lối với
   // `__neoVe`/`__veThan`: đưa chính biến đang điều khiển vòng vẽ ra ngoài, thay vì để bài kiểm
   // dựng lại luật một lần nữa. Ở đây bắt buộc phải thế: đo bằng điểm ảnh KHÔNG dùng được, vì một
@@ -17741,7 +17777,9 @@ function drawPlayer(p){
   // Ai đứng THẤP hơn trên màn thì vẽ SAU. `_avaDy > 0` nghĩa là lớp nhân vật đứng thấp hơn
   // Axie ⇒ Axie phải vẽ TRƯỚC. Bản đầu vẽ Axie sau cùng ở mọi hướng, nên quay mặt xuống là
   // con Axie che mất nửa người — nhìn ra một lỗi hiển thị chứ không ra "đứng kế bên".
-  if (_coAva && _avaDy > 0) veAvatar(ctx, p, !!p.moving, now);
+  // ⚠ TRẢ CON AXIE VỀ MẶT ĐẤT. Khối này nằm trong `ctx.translate(0, yOff)` — phép nhấc do đôi
+  // cánh sinh ra — mà cánh thì đeo trên LỚP NHÂN VẬT, không trên Axie. Xem `bayKNen`.
+  if (_coAva && _avaDy > 0) veAvatarDat(ctx, p, now, bayCao);
   // Vòng triệu hồi nổ dưới chân LỚP NHÂN VẬT (thứ đang được gọi tới), và phải nằm DƯỚI nó.
   if (_coAva && _lopHien && _hienLop < 1)
     veVongTrieu(ctx, { x: p.x + _avaDx, y: p.y + _avaDy }, _hienLop);
@@ -18015,7 +18053,7 @@ function drawPlayer(p){
   // Axie là THÂN của người chơi nên vẽ ở MỌI trạng thái — kể cả lúc lớp nhân vật đang hiện.
   // Bản trước cho nó biến mất lúc đánh (đổi chỗ cho nhau), chủ dự án chốt lại là đứng cạnh.
   // Nửa còn lại của phép xếp chiều sâu ở trên: lớp nhân vật đứng CAO hơn ⇒ Axie vẽ SAU.
-  if (_coAva && _avaDy <= 0) veAvatar(ctx, p, !!p.moving, now);
+  if (_coAva && _avaDy <= 0) veAvatarDat(ctx, p, now, bayCao);
   if (_tk && _tk.truoc && _tkHien){                   // quét ra trước mặt: vẽ SAU thân
     ctx.save();
     ctx.translate(p.x + _avaDx, _lopNeoY + _avaDy + _lopChan);
@@ -19765,34 +19803,88 @@ const DEMO_DO_GIAI = 7;
 // Ba lớp có lớp vũ khí CẦM TAY (xem NV_VK_LOP) nên chọn sai dòng là mất luôn cây trong tay.
 const DEMO_VK_DONG = { thieulam:'kiem', minhgiao:'makiem', toanchan:'truongcung',
                        baidasan:'gay',  bug:'lenhtruong' };
-function phatDoKhoiDau(){
+const DEMO_O = ['vukhi', 'non', 'ao', 'tay', 'chan'];
+// Sinh ĐÚNG MỘT món của bộ chơi thử cho một ô. Tách khỏi `phatDoKhoiDau` vì có HAI đường gọi
+// (tạo nhân vật mới · di trú save cũ) — chép phép sinh sang đường thứ hai là dựng bản sao của
+// một luật đang sống, rồi hai đường phát ra hai bộ đồ khác nhau mà không ai thấy.
+function demoTaoMon(_id){
   const giai = clamp(DEMO_DO_GIAI, 1, GIAI_MAX);
   const cap  = clamp(capDauGiai(giai), 1, MAX_LV);
   const dong = DEMO_VK_DONG[player.sect];
-  for (const _id of ['vukhi', 'non', 'ao', 'tay', 'chan']){
-    const sl = SLOTS.find(s2 => s2.id === _id);
-    if (!sl || sl.special) continue;
-    let it = null;
-    // Vũ khí: quay cho tới khi ra ĐÚNG dòng có art. genItem bốc ngẫu nhiên trong các dòng lớp
-    // này dùng được, nên không ép được bằng tham số — mà đây là lúc tạo nhân vật, quay vài
-    // chục lượt không ai thấy.
-    for (let i = 0; i < (_id === 'vukhi' && dong ? 300 : 1); i++){
-      const t = genItem(cap, null, null, { slots: [_id], perfect: 0, plus9: 0 });
-      if (!t) continue;
-      it = t;
-      if (_id !== 'vukhi' || !dong) break;
-      const d = itemDef(t);
-      if (d && d.line === dong) break;
-    }
-    if (!it) continue;
-    // Ép GIAI để art khớp: nvLopCuaEquip() và nvVkLop() đều tra theo `it.tier`, nên món đúng
-    // cấp mà sai giai thì vẫn rơi về bộ cũ.
-    it.tier = giai; it.level = cap; it.plus = 0;
-    if (it.main && sl.base) it.main.v = sl.base(giai);
-    player.equip[_id] = it;
+  const sl = SLOTS.find(s2 => s2.id === _id);
+  if (!sl || sl.special) return null;
+  let it = null;
+  // Vũ khí: quay cho tới khi ra ĐÚNG dòng có art. genItem bốc ngẫu nhiên trong các dòng lớp
+  // này dùng được, nên không ép được bằng tham số — mà đây là lúc tạo nhân vật, quay vài
+  // chục lượt không ai thấy.
+  for (let i = 0; i < (_id === 'vukhi' && dong ? 300 : 1); i++){
+    const t = genItem(cap, null, null, { slots: [_id], perfect: 0, plus9: 0 });
+    if (!t) continue;
+    it = t;
+    if (_id !== 'vukhi' || !dong) break;
+    const d = itemDef(t);
+    if (d && d.line === dong) break;
   }
+  if (!it) return null;
+  // Ép GIAI để art khớp: nvLopCuaEquip() và nvVkLop() đều tra theo `it.tier`, nên món đúng
+  // cấp mà sai giai thì vẫn rơi về bộ cũ.
+  it.tier = giai; it.level = cap; it.plus = 0;
+  if (it.main && sl.base) it.main.v = sl.base(giai);
+  return it;
+}
+function phatDoKhoiDau(){
+  for (const _id of DEMO_O){
+    const it = demoTaoMon(_id);
+    if (it) player.equip[_id] = it;
+  }
+  player._demoDo = DEMO_DO_GIAI;   // đã nhận bộ chơi thử — xem demoDoDiTru()
   calcDerived();
   player.hp = player.maxHp; player.qi = player.maxQi;
+}
+// ═══ SAVE ĐỜI TRƯỚC CŨNG PHẢI NHẬN BỘ CHƠI THỬ ═══════════════════════════════════════════
+// `phatDoKhoiDau()` chỉ chạy trong `newGame()`, nên mọi nhân vật tạo TRƯỚC bản demo không bao
+// giờ thấy bộ giai 7 — và đó chính là những người đang chơi thử. Triệu chứng họ mô tả không
+// phải "thiếu đồ" mà là **"cây cung thiên mệnh gắn theo nhân vật của mình đâu?"**: cây vũ khí
+// cầm tay chỉ hiện khi món đang đeo trùng `dòng|giai` trong NV_VK_LOP (xem nvVkLop), nên một
+// cây cung giai 3 làm cả lớp art biến mất mà không lỗi nào báo.
+//
+// ⚠ CHỈ NÂNG, KHÔNG BAO GIỜ HẠ. Ô nào đã tốt hơn thì để yên; món bị thay thì **cho vào túi**
+// chứ không xoá — hết chỗ thì bỏ qua ô đó. Một bản demo lấy mất đồ của người chơi là đổi một
+// lỗi lấy một lỗi nặng hơn.
+// ⚠ Cờ `player._demoDo` chặn chạy hai lần: nạp save nhiều lần trong một phiên mà thiếu cờ là
+// in đồ. Cùng khuôn với `_diTruCot`.
+function demoDoDiTru(){
+  if (window.TEST_MODE || window.TEST_DO) return;   // bài kiểm cân bằng đo nhân vật TRẦN
+  if (!player || (player._demoDo || 0) >= DEMO_DO_GIAI) return;
+  player._demoDo = DEMO_DO_GIAI;
+  const dong = DEMO_VK_DONG[player.sect];
+  const ten = [];
+  for (const _id of DEMO_O){
+    const cu = player.equip && player.equip[_id];
+    // Đã đạt giai demo rồi thì thôi — TRỪ vũ khí sai dòng, vì đúng dòng mới có tranh.
+    if (cu && (cu.tier || 1) >= DEMO_DO_GIAI){
+      const d = _id === 'vukhi' ? itemDef(cu) : null;
+      if (_id !== 'vukhi' || !dong || (d && d.line === dong)) continue;
+    }
+    const it = demoTaoMon(_id);
+    if (!it) continue;
+    if (cu){
+      if (!bagConCho(cu)) continue;                 // hết chỗ ⇒ giữ nguyên, không vứt của ai
+      bagThem(cu);
+    }
+    player.equip[_id] = it;
+    ten.push(it.name);
+  }
+  if (!ten.length) return;
+  calcDerived();
+  player.hp = Math.min(player.maxHp, Math.max(player.hp, 1));
+  // Phải BÁO ra một dòng đọc được: một khoản phát mà không ai thấy thì không khác gì không phát.
+  setTimeout(() => {
+    if (!player) return;
+    logCombat('<b style="color:#ffd76a">Bản chơi thử</b> — đã trang bị bộ giai ' + DEMO_DO_GIAI +
+              ': ' + ten.join(' · ') + '. Đồ cũ nằm trong túi.');
+    addFloat(player.x, player.y - 78, 'Bản chơi thử — nhận trọn bộ giai ' + DEMO_DO_GIAI, '#ffd76a', 14);
+  }, 700);
 }
 function applyTestBoost(){
   // ===== CHẾ ĐỘ THỬ NGHIỆM: MỌI TÍNH NĂNG TỐI ĐA =====

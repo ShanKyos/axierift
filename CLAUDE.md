@@ -200,6 +200,62 @@ ngang người. Quên bước này là Axie to ra rồi nuốt luôn kẻ hộ t
    Đừng chép công thức biến hình sang bài kiểm — đó là dựng bản sao thứ hai của một luật đang
    sống, sửa một bên là hai bên lệch mà bài vẫn xanh.
 
+### 🪶 CÁNH NHẤC LỚP NHÂN VẬT, KHÔNG NHẤC CON AXIE
+
+Chủ dự án chụp màn hình và gọi đúng tên: *"hình bay như này sai quá sai"*. Thứ trong ảnh là con
+Axie — **cái thân NHÌN THẤY của người chơi** — treo lơ lửng cách vòng chân của chính nó 24 px,
+không cánh, không hoạt cảnh bay nào.
+
+Nguyên nhân: khối BAY bọc **cả cặp** trong một `ctx.translate(0, yOff)`, trong khi `veCanh()` thì
+vẽ đôi cánh ở chỗ **lớp nhân vật** đứng (chính là bản vá của đợt trước — "cánh mọc ra từ con Axie"
+đã sửa rồi). Tức đôi cánh đeo trên kẻ hộ tống mà cả hai cùng bay.
+
+| | bay | bóng đổ · vòng chân · bụi gót |
+|---|---|---|
+| có avatar | **chỉ lớp nhân vật** (`veAvatarDat` cộng `bayCao` lại) | **giữ nguyên cỡ** (`bayKNen = 0`) |
+| `/avatar off` | thân người — hành vi cũ y nguyên | co + nhạt theo `bayK` như cũ |
+
+⚠ **`bayKNen` là biến riêng, đừng gộp lại với `bayK`.** `bayK` vẫn điều khiển KHỐI VẼ của lớp
+nhân vật (khối `w` ghim ở `BAY_KHUNG`) và độ cao của nó; `bayKNen` chỉ trả lời *"chân đế còn
+chạm đất không"*. Gộp là hoặc con Axie bay lại, hoặc lớp nhân vật hết bay.
+
+⚠ **`veAvatarDat()` có HAI chỗ gọi** (xếp lớp theo chiều sâu: Axie vẽ trước hay sau lớp nhân vật
+tuỳ `_avaDy`). Sửa một chỗ quên chỗ kia là con Axie bay ở **nửa số hướng nhìn** — nhìn ra "hình
+như lag" chứ không ra một lỗi.
+
+⚠ **`_coAva` nay khai SỚM**, ngay dưới `_chet`, vì khối BAY cần nó. Chỗ khai cũ (dưới phần xếp
+lớp) đã gỡ — đừng khai lại thành hai.
+
+Gác: `tests/test_baydat.js` (3 mệnh đề, đã thử ngược). Mệnh đề ② **bắt buộc** phải có: nếu chỉ
+khẳng định "con Axie đứng đất" thì gỡ sạch hệ bay cũng xanh.
+
+### 🎒 BẢN CHƠI THỬ: SAVE ĐỜI TRƯỚC CŨNG PHẢI NHẬN BỘ GIAI 7
+
+`phatDoKhoiDau()` chỉ chạy trong `newGame()`. Nên mọi nhân vật tạo **trước** bản demo — tức đúng
+những người đang chơi thử — không bao giờ thấy bộ giai 7. Và triệu chứng không đọc ra là "thiếu
+đồ": chủ dự án hỏi *"cây cung thiên mệnh gắn theo nhân vật của mình đâu?"*, vì lớp vũ khí **cầm
+tay** chỉ bật khi món đang đeo trùng `dòng|giai` trong `NV_VK_LOP` — một cây cung giai 3 làm cả
+lớp art biến mất, không lỗi nào báo.
+
+`demoDoDiTru()` trong `loadGame()` trả chỗ đó. Bốn luật:
+
+- **CHỈ NÂNG, KHÔNG BAO GIỜ HẠ.** Ô nào đã ≥ `DEMO_DO_GIAI` thì để yên — trừ vũ khí **sai dòng**,
+  vì chỉ đúng dòng mới có tranh (`DEMO_VK_DONG`).
+- **Món bị thay vào TÚI, không xoá.** Hết chỗ thì bỏ qua ô đó. Một bản demo lấy mất đồ của người
+  chơi là đổi một lỗi lấy một lỗi nặng hơn.
+- ⚠ **PHẢI chạy SAU `migrateGiai14()` / `migrateGiai7()`.** Hai hàm đó viết lại `it.tier` của MỌI
+  món trong equip/inv, nên phát trước chúng thì bộ giai 7 vừa phát bị nghiền xuống **giai 5**
+  (7 → 10 → `ceil(10/2)`) — đo được, và im lặng tuyệt đối.
+- ⚠ **Cờ `player._demoDo` chặn phát hai lần**, và `TEST_MODE`/`TEST_DO` thì không phát: hơn 180
+  bài cân bằng đo nhân vật TRẦN.
+
+⚠ **Phép sinh món nằm ở MỘT chỗ** (`demoTaoMon`), dùng chung cho cả `newGame` lẫn di trú. Chép
+sang đường thứ hai là hai đường phát ra hai bộ đồ khác nhau mà không ai thấy.
+
+Gác: `tests/test_demodo.js` (6 mệnh đề). ⚠ Mệnh đề ⑥ gác THỨ TỰ và phải đứng RIÊNG: cảnh của
+① đặt sẵn `giai14`/`giai7` (đúng như save của bản đang chạy) nên hai hàm kia no-op và **đảo thứ
+tự vẫn xanh** — đã thử ngược đúng thế.
+
 ### Trúng đòn và chết vẫn giữ AXIE — cố ý
 
 Chỉ `'a'` (đánh) và `'c'` (niệm chú) mới gọi lớp nhân vật ra. Nếu lớp nhân vật nháy ra mỗi lần
@@ -2710,6 +2766,62 @@ lớp bằng đường viền ngoài. `CHIBI_CFG` giữ ba trục: `head` / `sh`
 **Tranh minh hoạ KHÔNG đặt vào luồng chơi.** Đã thử làm ảnh lớn ở màn chọn lớp và
 bị gỡ ra: tỉ lệ 8 đầu đứng cạnh chibi là lệch hẳn. Nó chỉ để xem, mở bằng
 `/art <lớp> [mavuong]`.
+
+## ⚔ VŨ KHÍ CẦM TAY TREO TRÊN **RÀNG BUỘC BIẾN HÌNH**, KHÔNG TREO TRÊN XƯƠNG BÀN TAY
+
+Đây là lỗi nặng nhất của đợt nhập năm bộ giáp, và nó **đã ship**: chủ dự án gõ đúng một câu —
+*"Tư thế cầm cung sai… tương tự hãy check lại với kiếm của dk và spellblade"*.
+
+Trong bản mẫu bốn-đầu-thân, cây vũ khí **không** treo trên xương bàn tay. Nó treo trên xương
+`武器` mà **cha là `root`** — đứng yên tuyệt đối — và thứ đưa nó vào tay là hai **ràng buộc
+biến hình** (`左手持剑` order 5 → `左手持剑点` · `右手持剑` order 6 → `右手持剑点`). Bộ nướng
+chưa cài loại ràng buộc đó (nó đã có IK và physics), nên cây vũ khí nằm y nguyên ở **tư thế
+gốc** trong khi cánh tay vung.
+
+**Số đo, trước khi sửa** (hộp bao lớp `vk` trên chính bảng khung game nạp):
+
+| bộ | đứng | đi | chạy | ĐÁNH | niệm |
+|---|---|---|---|---|---|
+| `dkph1` · `sbsm1` | 1/16 | 1/32 | **0/32** | **1/16** | 1/16 |
+| `elnb1` | 1/16 | 1/32 | **0/32** | 3/16 | 1/16 |
+| lớp tay `t2` (đối chứng) | 14/16 | 32/32 | 32/32 | 16/16 | 16/16 |
+
+**1 vị trí trên 16 khung của khối ĐÁNH** = một thanh kiếm dán cứng cạnh người trong lúc chủ
+nó vung tay. Sau khi cài `ap_bien_hinh()`: 14-16/16 · 32/32 · 32/32 · 15-16/16 · 16/16.
+
+**⚠ KHOÁ RỖNG `{}` NGHĨA LÀ MIX = 1, KHÔNG PHẢI 0.** Gói ghi `mixRotate: 0 … mixShearY: 0` ở
+**setup** (tắt) rồi mỗi hoạt cảnh đặt một khoá RỖNG — mà trong JSON của Spine, khoá thiếu
+trường thì mặc định **1**. Đọc nhầm chiều này thì ràng buộc không bao giờ bật và triệu chứng
+giống hệt như chưa cài gì. (`mixY` mặc định theo `mixX`, `mixScaleY` theo `mixScaleX`.)
+
+**⚠ RÀNG BUỘC GHI THẲNG MA TRẬN THẾ GIỚI** ⇒ sau nó **tuyệt đối không gọi `tt.tinh()`**, vì
+hàm ấy dựng lại từ xương CỤC BỘ và xoá sạch việc vừa làm. Chỉ `tt.tinh_cay(i)` cho nhánh con.
+Cùng cái bẫy của physics.
+
+**⚠ RIG CẤT VŨ KHÍ TRONG `00_Run`** — hai hàng cuối bảng (32 ô) rỗng trắng. Bản mẫu vẽ cho một
+game đánh bài, nơi nhân vật chỉ chạy một nhịp vào trận; ở đây lớp nhân vật chạy gần như liên
+tục, nên cây kiếm biến mất rồi hiện lại mỗi lần dừng chân. `VK_HIEN` trong `nuong_nv.py` ép
+mảnh hiện lại — ràng buộc `右手持剑` VẪN bật trong `00_Run` nên nó tự nằm đúng tay. **Chỉ ép khe
+chính**: `2b`/`2c` là dây cung và mũi tên, chúng chỉ thuộc về động tác giương cung.
+
+**⚠ GÓI `Dark_Knight.zip` KHÔNG CÓ ART VŨ KHÍ** (cả bốn vùng atlas đặc 0%); `Dark_Knight_1.zip`
+mới có. Thân người hai gói **trùng khít từng điểm ảnh** (đã đo), nên `dkph1` nay nướng trọn từ
+`Dark_Knight_1`. Ba gói kia tự có vũ khí.
+
+**Cung Thiên Mệnh lúc GIƯƠNG là một cung TRẮNG trơn — đó là ART CỦA GÓI, không phải lỗi.**
+`10_ArcheryAttack` đổi mảnh sang `左手武器2a`, một vòng cung trắng chưa vẽ theo bộ (kèm dây
+`2b` và mũi tên `2c`). Đã thử giữ cung Ngọc Bích ngọc-vàng cho khối đó và **nó tệ hơn hẳn**:
+cung không uốn theo dây nên chĩa ngang như một khẩu súng. Muốn đẹp thì phải đặt hoạ sĩ vẽ
+`左手武器2a` theo bộ, không sửa được bằng mã.
+
+**Giá phải trả, ghi ra chứ không giấu:** hộp cắt lớp `vk` nay là hợp của cả một cú vung nên
+phình gần bằng cả ô — `dkph1` 240×279, `sbsm1` 240×300. Tệp tăng ~400 KB cho cả ba bộ; bộ nhớ
+sau giải nén của lớp vũ khí tăng chừng 20 MB **cho đúng bộ đang mặc** (nạp theo nhu cầu). Muốn
+gọn lại thì phải cắt hộp THEO TỪNG KHỐI, không phải một hộp chung — chưa làm.
+
+Gác: `tests/test_vklop.js` — đọc chính bảng khung game nạp, đòi (①) không khối nào có khung
+TRỐNG và (②) vũ khí phải ĐỔI CHỖ theo khung. Suy danh sách bộ từ `NV_VK_LOP` nên thêm bộ mới là
+tự gác. Thử ngược bằng bảng cũ: **27 FAIL**.
 
 ## Art nướng sẵn từ Spine — có SKILL riêng, đọc trước khi đụng vào
 

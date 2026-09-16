@@ -276,6 +276,96 @@ def ap_ik(tt, d, hc, t, bo_qua=()):
         else:                    ik1(tt, c['bones'][0], c['target'], mix)
     tt.tinh()
 
+# ── ràng buộc BIẾN HÌNH (transform constraint) ─────────────────────────────────
+# VÌ SAO PHẢI CÓ — và đây là thứ đã ship hỏng một lần.
+#
+# Trong bản mẫu bốn-đầu-thân, CÂY VŨ KHÍ KHÔNG treo trên xương bàn tay. Nó treo trên một xương
+# tên `武器` mà CHA LÀ `root`, tức nó không nhúc nhích dù cả người cử động. Thứ đưa nó vào tay
+# là hai ràng buộc BIẾN HÌNH:
+#
+#     左手持剑 (order 5) → đích `左手持剑点` (con của `左手3`)
+#     右手持剑 (order 6) → đích `右手持剑点` (con của `右手3`)
+#
+# và hoạt cảnh bật/tắt chúng bằng dòng thời gian `transform` — `00_Idle`/`00_Walk`/
+# `08_SwordAttack` bật tay phải, `10_ArcheryAttack`/`05_MagicAttack` bật tay trái. Bộ nướng
+# trước bản này KHÔNG cài ràng buộc biến hình, nên cây vũ khí đứng NGUYÊN Ở TƯ THẾ GỐC trong
+# khi cánh tay vung — đo được: lớp `vk` của cả ba bộ (`dkph1` `sbsm1` `elnb1`) chỉ có **ĐÚNG
+# MỘT** vị trí hộp bao trên toàn bộ 16 khung của khối ĐÁNH, trong khi lớp tay `t2` có 16 vị trí
+# khác nhau. Trên màn: một thanh kiếm dán cứng cạnh người.
+#
+# ⚠ MẶC ĐỊNH CỦA KHOÁ LÀ 1, MẶC ĐỊNH CỦA SETUP LÀ THỨ GHI TRONG GÓI. Bản mẫu này ghi
+# `mixRotate: 0 … mixShearY: 0` ở setup (tức tắt) rồi mỗi hoạt cảnh đặt một khoá RỖNG `{}` —
+# mà khoá rỗng trong JSON của Spine nghĩa là **mọi mix = 1**, không phải 0. Đọc nhầm chiều này
+# thì ràng buộc không bao giờ bật và triệu chứng giống hệt như chưa cài gì.
+# (`mixY` mặc định theo `mixX`, `mixScaleY` theo `mixScaleX` — cả ở setup lẫn ở khoá.)
+#
+# Chép đúng `TransformConstraint.update` của Spine 4.2, nhánh không `local` không `relative`
+# (bản mẫu này không dùng hai cờ đó). Ràng buộc ghi thẳng MA TRẬN THẾ GIỚI, nên sau mỗi lần
+# ghi phải dựng lại nhánh con — và **tuyệt đối không được gọi `tt.tinh()` sau đó**, vì hàm ấy
+# tính lại từ xương CỤC BỘ và xoá sạch việc vừa làm. Cùng cái bẫy của ràng buộc physics.
+def ap_bien_hinh(tt, d, hc, t):
+    """Chạy ràng buộc biến hình theo `order`, sau IK và trước physics."""
+    rb = d.get('transform') or []
+    if not rb: return
+    tls = hc.get('transform') or {}
+    for c in sorted(rb, key=lambda c: c.get('order', 0)):
+        tl = tls.get(c['name'])
+        if tl:
+            mr  = lay(tl, t, 'mixRotate', 1.0)
+            mx  = lay(tl, t, 'mixX', 1.0)
+            my  = lay(tl, t, 'mixY', mx)
+            msx = lay(tl, t, 'mixScaleX', 1.0)
+            msy = lay(tl, t, 'mixScaleY', msx)
+            msh = lay(tl, t, 'mixShearY', 1.0)
+        else:
+            mr  = c.get('mixRotate', 1.0)
+            mx  = c.get('mixX', 1.0)
+            my  = c.get('mixY', mx)
+            msx = c.get('mixScaleX', 1.0)
+            msy = c.get('mixScaleY', msx)
+            msh = c.get('mixShearY', 1.0)
+        if not (mr or mx or my or msx or msy or msh): continue
+        j = tt.chiSo.get(c['target'])
+        if j is None: continue
+        ta, tb, tc, td, tx, ty = tt.W[j]
+        offR  = math.radians(c.get('rotation', 0))
+        offX, offY   = c.get('x', 0), c.get('y', 0)
+        offSX, offSY = c.get('scaleX', 0), c.get('scaleY', 0)
+        offSh = math.radians(c.get('shearY', 0))
+        for ten in c['bones']:
+            i = tt.chiSo.get(ten)
+            if i is None: continue
+            a, b, cc, dd, wx, wy = tt.W[i]
+            if mr:
+                r = math.atan2(tc, ta) - math.atan2(cc, a) + offR
+                r = (r + math.pi) % _PI2 - math.pi
+                r *= mr
+                co, si = math.cos(r), math.sin(r)
+                a, b, cc, dd = co*a - si*cc, co*b - si*dd, si*a + co*cc, si*b + co*dd
+            if mx or my:
+                # đích.localToWorld(offX, offY) — chỗ mà xương bị ràng buộc phải dời tới
+                nx = ta*offX + tb*offY + tx
+                ny = tc*offX + td*offY + ty
+                wx += (nx - wx) * mx
+                wy += (ny - wy) * my
+            if msx:
+                sc = math.hypot(a, cc)
+                if sc: sc = (sc + (math.hypot(ta, tc) - sc + offSX) * msx) / sc
+                a *= sc; cc *= sc
+            if msy:
+                sc = math.hypot(b, dd)
+                if sc: sc = (sc + (math.hypot(tb, td) - sc + offSY) * msy) / sc
+                b *= sc; dd *= sc
+            if msh > 0:
+                by = math.atan2(dd, b)
+                r = math.atan2(td, tb) - math.atan2(tc, ta) - (by - math.atan2(cc, a))
+                r = (r + math.pi) % _PI2 - math.pi
+                r = by + (r + offSh) * msh
+                sc = math.hypot(b, dd)
+                b, dd = math.cos(r)*sc, math.sin(r)*sc
+            tt.W[i] = (a, b, cc, dd, wx, wy)
+            tt.tinh_cay(i)
+
 # ── ràng buộc VẬT LÝ (physics) ─────────────────────────────────────────────────
 # VÌ SAO PHẢI CÓ. Gói Spellcaster có 28 ràng buộc physics, và chúng KHÔNG chỉ lái tóc bay:
 #     6  trên chuỗi đầu   (头2..头7)
@@ -448,6 +538,7 @@ def lang_vat_ly(bo, tt, d, hc, dai, n_khung, toi_da=60, eps=1e-6):
         for k in range(n):
             u = k * buoc
             ap_hoat_canh(tt, hc, u); tt.tinh(); ap_ik(tt, d, hc, u)
+            ap_bien_hinh(tt, d, hc, u)
             ap_vat_ly(bo, tt, buoc)
         nay = [v for c in bo for v in (c.rL, c.rV, c.xL, c.yL)]
         if truoc is not None and max(abs(a - b) for a, b in zip(nay, truoc)) < eps:
@@ -515,6 +606,9 @@ def ve_khung(d, im, R, tt, hc, t, skinName, W=900, H=1100, phong=1.0, ox=0.5, oy
     ép sang mặt đau, khối 'chết' và 'ngồi' thì ép sang nhắm mắt — không tốn khung nào.
     """
     ap_hoat_canh(tt, hc, t); tt.tinh(); ap_ik(tt, d, hc, t)
+    # Biến hình chạy SAU IK (nó đọc ma trận thế giới của xương đích, mà IK vừa vặn xong) và
+    # TRƯỚC physics. Đây là thứ đưa cây vũ khí vào tay — xem ap_bien_hinh.
+    ap_bien_hinh(tt, d, hc, t)
     # physics chạy SAU cùng, đúng thứ tự của Spine: khoá → IK → vật lý. `dt_vl` là khoảng
     # thời gian giữa hai khung nướng, KHÔNG phải `t` (vị trí trong vòng lặp hoạt cảnh).
     if bo_vl and dt_vl: ap_vat_ly(bo_vl, tt, dt_vl)

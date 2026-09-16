@@ -25,6 +25,14 @@ from hoatcanh import doc_goi, TuThe, ve_khung, bo_vat_ly, lang_vat_ly
 from PIL import Image
 
 KHE_VK  = ('左手武器', '左手武器2b', '左手武器2c')   # vũ khí bị cắt 4 mảnh trên 3 khe
+# ⚠ RIG GIẤU VŨ KHÍ TRONG `00_Run` — và trong game này thì đó là dáng chạy suốt ngày.
+# Hoạt cảnh chạy đặt một khoá attachment RỖNG lên khe `左手武器`, tức cất vũ khí đi. Bản mẫu
+# này vốn vẽ cho một game đánh bài, nơi nhân vật chỉ chạy một nhịp vào trận rồi thôi; ở đây
+# lớp nhân vật chạy theo người chơi gần như liên tục, nên cây kiếm biến mất rồi hiện lại mỗi
+# lần dừng chân — đo được: hai hàng cuối của bảng vũ khí (32 ô khối CHẠY) rỗng trắng ở cả ba bộ.
+# Ràng buộc `右手持剑` VẪN bật trong `00_Run`, nên chỉ cần ép mảnh hiện lại là nó tự nằm đúng tay.
+# Chỉ ép khe CHÍNH: `2b`/`2c` là dây cung và mũi tên, chúng chỉ thuộc về động tác giương cung.
+VK_HIEN = {'00_Run': {'左手武器': '左手武器'}}
 KHE_HFX = ('爆炸特效', '爆炸特效(残影）')            # hiệu ứng nổ — game tự lo, không nướng
 KHE_TOC = ('背后头发',)                              # tóc sau, chỉ dùng lúc ĐO
 # BẢNG MỘT — những khối vẽ ở mọi khung hình, luôn nạp.
@@ -137,7 +145,8 @@ def nuong(goi, skin, danh='08_SwordAttack'):
         ks = []
         for ten, n in KHUNG:
             tenTh = danh if ten == 'DANH' else ten
-            ks += _day_khung(d, im, R, tt, d['animations'][tenTh], tenTh, n, skin, phong, oy, bo)
+            ks += _day_khung(d, im, R, tt, d['animations'][tenTh], tenTh, n, skin, phong, oy, bo,
+                             VK_HIEN.get(tenTh))
         ra[lop] = ks
     # BẢNG HAI — cùng hệ toạ độ, cùng cỡ ô, chỉ khác chỗ chứa.
     ks2 = []
@@ -159,7 +168,8 @@ def _do_khung(d, im, R, tt, skin, phong, oy, bo, danh):
     k1 = []
     for ten, n in KHUNG:
         tenTh = danh if ten == 'DANH' else ten
-        k1 += _day_khung(d, im, R, tt, d['animations'][tenTh], tenTh, n, skin, phong, oy, bo)
+        k1 += _day_khung(d, im, R, tt, d['animations'][tenTh], tenTh, n, skin, phong, oy, bo,
+                         VK_HIEN.get(tenTh))
     k2 = []
     for ten, n, doi in KHUNG2:
         k2 += _day_khung(d, im, R, tt, d['animations'][ten], ten, n, skin, phong, oy, bo, doi)
