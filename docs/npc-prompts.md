@@ -607,3 +607,59 @@ thịt" và "Gió ở đây cắt được da"; mép vực lở trong bảng mà
    cho chúng trừ khi có NPC mới dùng đến.
 5. Ảnh về phải đọc được ở **64 px chiều cao** (cỡ trên bản đồ, xem `drawNpc()`) — chi tiết nhỏ hơn
    vài pixel sẽ biến mất hoàn toàn ở cỡ đó, nên bóng dáng và mảng màu lớn quan trọng hơn hoa văn.
+
+---
+
+## THỦ KHỐ — cửa duy nhất vào `player.kho`, và nó đang KHÔNG CÓ AI đứng
+
+`player.kho` đã chạy từ lâu: có mảng, có `khoCap()`, có hàng "Nới kho +N ô" bán bằng Shard, có
+hẳn một tab trong Túi Đồ. Nhưng **không một NPC nào mở nó** — `talk:` hiện có đúng sáu loại
+(`quest` · `shop` · `forge` · `stable` · `trunya` · `vanduyen`), không có `kho`. Tức cái kho là
+một cơ chế **chỉ vào được bằng giao diện**, không có chỗ nào trong thế giới.
+
+Đây là lý do Thủ Khố đáng thêm, và cũng là lý do đừng thêm y như một NPC trang trí: y là **cửa**.
+Thêm y thì thêm `talk:'kho'` và trỏ vào đúng `renderBag()` tab Kho đang chạy — đừng dựng bảng
+kho thứ hai (cùng bài học "Ngăn ngọc VẼ ở đúng MỘT nơi").
+
+**Canon:** NPC chức năng = **người Ardhaven sống sót**, tức người Vaeldra rơi qua Nhát Gọi cùng
+khu phố — không phải dân Lunacia bản địa, nên là người, không phải Axie. Và luật Rune nói *"trả
+bằng thứ nó dịch chuyển"*: **mất ký ức chứ không mất NGHỀ**. Thủ Khố là hiện thân gọn nhất của
+câu đó — y không nhớ nổi tên mình, nhưng nhớ chính xác ai gửi cái gì, số mấy, ngăn nào.
+
+```
+A meticulous Ardhaven warehouse keeper in his fifties, a survivor of the
+transplanted western quarter, standing squarely with a heavy ledger held flat
+against his chest in the crook of one arm. He wears a plain slate-grey wool
+coat buttoned to the throat over a dark work tunic, with a long canvas apron
+covered in rows of small stitched pockets, and a thick iron ring of numbered
+brass keys hanging at his hip. His hands are clean and careful, one finger
+marking his place in the ledger. His face is narrow and composed with tired
+patient eyes and a close-trimmed grey beard, the look of a man who has counted
+the same shelves every day for years and would notice a single missing item.
+The palette leans to slate grey, oiled leather brown, tarnished brass and the
+pale quarried stone of the transplanted city quarter. Keep the whole figure
+inside a plain front-facing standing pose: hair lies flat against the skull
+with no brim, no hood, no horns, no crest and no tall spikes, the shoulders
+stay level and unflared, the ledger and keys stay tight against the body, and
+the feet stand close together with nothing jutting past them. Render it as
+clean stylised 2D game art with soft cel shading, on a transparent background.
+```
+
+*Chi tiết bám lore:* chùm chìa khoá **đánh số** và cuốn sổ kê là nghề còn lại sau khi ký ức bị
+Rune lấy đi; áo dạ xám và đá xám của khu phố cấy sang đến từ chính Ardhaven; vẻ mặt "đếm cùng
+một dãy kệ mỗi ngày" là cách nói rằng y giữ đồ cho người khác, không giữ đồ của mình.
+
+**Tên tệp:** `assets/npcs/thukho.png` — ⚠ tên MỚI, đừng ghi đè tệp nào đang có. Ảnh cache 7 ngày
+(`deploy/nginx-axiewuxia.conf`), nên thay nội dung dưới một tên cũ là người chơi giữ tấm cũ cả
+tuần — đã dẫm đúng bẫy đó với `thoren.png`.
+
+**Khai một dòng** trong `window.NPCS` (`data/canbang.js`), map `ardhaven`:
+
+```js
+{ id:'thukho', name:'Thủ Khố · Kho Ardhaven', map:'ardhaven', x:?, y:?,
+  img:'assets/npcs/thukho.png', talk:'kho', nhan:'Kho', ... }
+```
+
+⚠ `nhan:'Kho'` là bắt buộc — thiếu nó thì bản đồ thành lấy nhãn nền theo `talk`, mà `THANH_TALK`
+chưa có khoá `kho` nên y hiện ra thành **một chấm không tên**.
+
