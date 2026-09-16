@@ -267,7 +267,44 @@ function mobFlatDef(m){
 }
 const MAP = { w: 2600, h: 1900 };
 
-const ELEMENTS = ['Kim','Mộc','Thủy','Hỏa','Thổ'];
+// ═══ TAM GIÁC LỚP AXIE — hệ khắc hệ của game này ═══════════════════════════════════════
+// Chín lớp Axie chính chủ, chia ba nhóm, mỗi nhóm khắc nhóm kế tiếp:
+//     ① Beast · Bug · Mech   ▶   ② Plant · Reptile · Dusk   ▶   ③ Aquatic · Bird · Dawn   ▶   ①
+//
+// Thay cho NGŨ GIÁC năm hệ (Steel · Verdant · Stone · Frost · Ember) thừa kế từ đời game kiếm
+// hiệp. Vòng cũ chạy tốt, nhưng không có gì trong nó nói "Axie" — nó là fantasy chung chung.
+// Tam giác này là đồ thật: người chơi biết Axie đọc ra ngay, và nội dung của game VỐN ĐÃ mô tả
+// nó (bảy vùng mang đúng tên bảy tộc, quái mang đúng tên lớp) — chỉ có dữ liệu là chưa khớp.
+//
+// ⚠ ĐỔI NGŨ GIÁC THÀNH TAM GIÁC LÀ ĐỔI CÂN BẰNG, không phải đổi nhãn. Ngũ giác: mỗi hệ khắc
+// ĐÚNG MỘT trong năm ⇒ 20% số cặp là khắc. Tam giác: mỗi lớp khắc BA trong chín ⇒ 33%. Tần
+// suất ăn hệ số ×1,20 / ×1,12 tăng hơn một lần rưỡi, nên nhịp cấp phải ĐO LẠI
+// (`tools/do_nhipcap.cjs`), đừng suy.
+//
+// ⚠ KHÔNG CÒN TRƯỜNG `beats`. Ngũ giác khắc một-đối-một nên `beats` là một CHUỖI và mã so sánh
+// bằng `===`. Tam giác khắc ba-đối-ba; giữ `beats` thành mảng rồi `.includes()` là chép cùng
+// một quan hệ ra chín chỗ. Nhóm (`nhom` 0/1/2) là nguồn DUY NHẤT, và `heKhac()` là cửa duy
+// nhất hỏi nó.
+const ELEM = {
+  Beast:   { name:'Beast',   color:'#e8873a', nhom:0, glyph:'✹' },
+  Bug:     { name:'Bug',     color:'#d94f6a', nhom:0, glyph:'✽' },
+  Mech:    { name:'Mech',    color:'#9aa8bd', nhom:0, glyph:'◆' },
+  Plant:   { name:'Plant',   color:'#5db86a', nhom:1, glyph:'♣' },
+  Reptile: { name:'Reptile', color:'#b07fd8', nhom:1, glyph:'▲' },
+  Dusk:    { name:'Dusk',    color:'#6f5bd0', nhom:1, glyph:'☾' },
+  Aquatic: { name:'Aquatic', color:'#4fb8e8', nhom:2, glyph:'❄' },
+  Bird:    { name:'Bird',    color:'#f06fa0', nhom:2, glyph:'✦' },
+  Dawn:    { name:'Dawn',    color:'#e6d46a', nhom:2, glyph:'☼' },
+};
+// `a` có khắc `b` không. Cửa DUY NHẤT — mọi chỗ tính sát thương và mọi chỗ hiện ra đều hỏi nó,
+// nên thứ người chơi ĐỌC và thứ máy THỰC THI không thể lệch nhau (cùng lối với `masteryKhoa`).
+function heKhac(a, b){
+  const A = ELEM[a], B = ELEM[b];
+  return !!(A && B && (A.nhom + 1) % 3 === B.nhom);
+}
+// SUY TỪ BẢNG, đừng chép ra một mảng thứ hai: hai danh sách cùng nghĩa là bảo đảm chúng lệch
+// nhau sau vài đợt sửa. Đây là danh sách vũ khí bốc Rune từ đó.
+const ELEMENTS = Object.keys(ELEM);
 
 // ── HỆ PHẨM ĐÃ GỠ ───────────────────────────────────────────────────────────
 // Phàm · Tinh · Linh · Thần · Chí Tôn không còn. MU Online không có hệ phẩm: hai món cùng
@@ -888,24 +925,56 @@ function wingSect(it){
   return null;
 }
 
-// Vòng khắc hệ: Kim > Mộc > Thổ > Thủy > Hỏa > Kim (khắc chế +20% sát thương)
-// Vòng khắc 5 hệ. KHÓA đối tượng giữ nguyên (chúng nằm trong save của người chơi và rải khắp
-// bảng quái); chỉ TÊN HIỆN RA đổi sang tên phương Tây — cùng quy ước đã dùng cho tên bãi săn
-// và tên quái. Vòng khắc không đổi một cạnh nào nên cân bằng giữ nguyên tuyệt đối:
-//   Steel ⚔ Verdant ⚔ Stone ⚔ Frost ⚔ Ember ⚔ Steel
-// (lưỡi thép đốn cây · rễ nứt đá · đất vùi băng · băng dập lửa · lửa nung chảy thép)
-const ELEM = {
-  Kim:  { name:'Steel',   color:'#c8d4e8', beats:'Mộc',  glyph:'◆' },
-  'Mộc':{ name:'Verdant', color:'#5db86a', beats:'Thổ',  glyph:'♣' },
-  'Thổ':{ name:'Stone',   color:'#c08a4a', beats:'Thủy', glyph:'▲' },
-  'Thủy':{ name:'Frost',  color:'#7ec8ff', beats:'Hỏa',  glyph:'❄' },
-  'Hỏa':{ name:'Ember',   color:'#e8552a', beats:'Kim',  glyph:'☼' },
-};
+// ── HỆ PHÒNG THỦ ĐẾN TỪ CON AXIE ĐANG ĐEO ──────────────────────────────────────
+// Trước bản này `SECTS[sect].element` là HẰNG SỐ: chọn lớp xong là hệ phòng thủ khoá cứng cả
+// đời, người chơi không có một cách nào tác động. Nay con Axie quyết định nó.
+//
+// ⚠ CHỈ CHIỀU PHÒNG THỦ. Chiều người → quái vẫn do VŨ KHÍ quyết (`atkElem`) — luật bất đối
+// xứng "đổi vũ khí không bao giờ làm ngươi ăn đòn nặng hơn" đã chốt từ trước và không đụng tới.
+// Ba nguồn hệ sẽ là ba thứ phải nhớ; hai nguồn cho hai CHIỀU thì đọc ra được:
+//     người → quái : VŨ KHÍ      quái → người : AXIE
+//
+// ⚠ KHÔNG CỘNG MỘT CHỈ SỐ NÀO. Hệ số ×1,12/×0,90 đã chạy sẵn trong `update`; đổi Axie chỉ đổi
+// NHÁNH nào được chọn, không đổi con số nào. Luật Đổi Vai (*Axie 0 chỉ số, 0 kỹ năng, 0 trang
+// bị*) còn nguyên: đây là một QUAN HỆ, không phải một nấc thang sức mạnh. Đừng "cải tiến" nó
+// thành +% kháng — làm thế là dựng lại đúng trục sức mạnh mua được đã bị tháo ba lần.
+//
+// ⚠ BẢNG `AXIE_HE` ĐÃ GỠ. Nó từng gộp 9 lớp Axie xuống 5 hệ của ngũ giác cũ — một bước đệm, và
+// nó không còn chỗ đứng từ khi vòng khắc CHÍNH LÀ chín lớp ấy. Lớp của con Axie giờ đọc thẳng
+// làm hệ, không qua bảng nào. Đừng dựng lại một bảng ánh xạ ở giữa: thêm một tầng dịch là thêm
+// một chỗ nói dối được.
+// Hệ PHÒNG THỦ của người chơi. Một cửa duy nhất — `update` và mọi chỗ hiện ra đều hỏi nó, nên
+// thứ người chơi ĐỌC và thứ máy THỰC THI không thể lệch nhau (cùng lối với `masteryKhoa`).
+//
+// ⚠ Lui về hệ của LỚP khi chưa có avatar. Không bao giờ trả `null`: nhánh khắc hệ đọc
+// `if (mobEl && sectEl2)`, nên trả rỗng là tắt câm cả cơ chế mà không một lỗi nào báo.
+function heThu(p){
+  const pl = p || (typeof player !== 'undefined' ? player : null);
+  if (!pl) return null;
+  const id = avatarId(pl);
+  const he = id && CHI_MAP[id] ? CHI_MAP[id].lop : null;
+  return (he && ELEM[he]) ? he : ((SECTS[pl.sect] || {}).element || null);
+}
+window.heThu = heThu;
+// Hệ của MỘT CON quái. `m.he` (do MIỀN DÂN SỐ gán) THẮNG `m.def.el` (hệ nền của loài) — cùng
+// đúng kiến trúc mà vai trò đã dùng: `MOB_ROLE` là lớp nền, `pk.vai` của bãi thì thắng.
+//
+// ⚠ VÌ SAO PHẢI CÓ HAI TẦNG. Loài dùng lại qua nhiều map: `thinu` có mặt ở bốn map, `mocnhan`
+// bốn, `bandao` bốn, `huyetbat` hai. Nếu hệ khoá theo LOÀI thì không một vùng nào có bản sắc
+// hệ — Bug Tribe Tunnels và Plant Tribe Glade dùng chung hai loài nên chúng bắt buộc trùng hệ,
+// và cả cơ chế "chọn Axie theo nơi sắp đi cày" mất nghĩa. Đo trước khi làm: chênh lệch tốt
+// nhất / tệ nhất giữa các Axie, tính trên đàn quái thật của từng map, chỉ 7,9%.
+//
+// ⚠ VÀ TUYỆT ĐỐI KHÔNG SỬA `m.def.el` TẠI CHỖ. `def` thường là chính đối tượng trong `MOBS`
+// (spawnMob chỉ clone khi vai có hệ số khác 1), nên ghi vào đó là đổi hệ của loài ấy ở MỌI map
+// cho tới khi tải lại trang. Cùng vết sẹo mà `goldify()` đã ghi.
+function mobHe(m){ return (m && (m.he || (m.def && m.def.el))) || null; }
 function elName(k){ return (ELEM[k] || {}).name || k || '—'; }
 function elColor(k){ return (ELEM[k] || {}).color || '#c9b889'; }
 // Hệ của ĐÒN ĐÁNH: lấy theo vũ khí đang cầm, không có vũ khí thì theo hệ của lớp.
-// CHỈ dùng cho chiều người → quái. Chiều quái → người vẫn theo hệ của LỚP, nên đổi vũ khí
-// không bao giờ làm ngươi ăn đòn nặng hơn — đúng như đã chốt.
+// CHỈ dùng cho chiều người → quái. Chiều quái → người đi qua `heThu(player)` — tức theo CON
+// AXIE đang đeo, không theo vũ khí — nên đổi vũ khí không bao giờ làm ngươi ăn đòn nặng hơn.
+// (Chú thích cũ ghi "theo hệ của LỚP"; đúng cho tới đợt Đổi Vai, sai từ đó.)
 function atkElem(){
   if (!player) return null;
   const w = player.equip && player.equip.vukhi;
@@ -974,9 +1043,9 @@ const DIBIEN = {
   chieubinh: { name:'Chiêu Binh',glyph:'☍', col:'#d0e07a', desc:'triệu 4 con nhỏ cùng loại, 12s một lần', summon:4, cd:12, mini:2 },
   loantien:  { name:'Loạn Tiễn', glyph:'⇶', col:'#8fd18f', desc:'mỗi đòn đánh 3 lần, mỗi lần 45%',      dmg:1.35, shots:3, mini:1.14 },
   nhiemdoc:  { name:'Nhiễm Độc', glyph:'☠', col:'#7ec850', desc:'đòn trúng gây độc 4 giây',           poison:4, mini:1.6 },
-  hoaphu:    { name:'Hoả Phụ',   glyph:'♨', col:'#ff7a3a', desc:'+15% sát thương dạng Hoả',           dmg:1.15, el:'Hỏa', mini:1.06 },
-  bangphu:   { name:'Băng Phụ',  glyph:'❄', col:'#9ed4ff', desc:'+15% sát thương dạng Băng',          dmg:1.15, el:'Thủy', mini:1.06 },
-  loiphu:    { name:'Lôi Phụ',   glyph:'⚡', col:'#ffd76a', desc:'+15% sát thương dạng Lôi',           dmg:1.15, el:'Kim', mini:1.06 },
+  hoaphu:    { name:'Hoả Phụ',   glyph:'♨', col:'#ff7a3a', desc:'+15% sát thương dạng Hoả',           dmg:1.15, el:'Beast', mini:1.06 },
+  bangphu:   { name:'Băng Phụ',  glyph:'❄', col:'#9ed4ff', desc:'+15% sát thương dạng Băng',          dmg:1.15, el:'Aquatic', mini:1.06 },
+  loiphu:    { name:'Lôi Phụ',   glyph:'⚡', col:'#ffd76a', desc:'+15% sát thương dạng Lôi',           dmg:1.15, el:'Bird', mini:1.06 },
   noxac:     { name:'Nổ Xác',    glyph:'✸', col:'#ff9a5a', desc:'chết nổ một vòng sát thương quanh xác', burst:0.6, r:95, mini:0.24 },
   phanthan:  { name:'Phân Thân', glyph:'⧉', col:'#c07fe0', desc:'có một bản sao 30% máu, 50% sát thương', clone:true },
   dichanh:   { name:'Dịch Ảnh',  glyph:'✧', col:'#a0ffe9', desc:'mỗi 6 giây chớp tới cạnh người chơi',  tp:6, mini:12 },
@@ -1112,49 +1181,49 @@ function syncTiepHp(pack){
 const TP_CD = 10, TP_QI = 50, TP_RADIUS = 185;
 
 const MOBS = {
-  boar:    { name:'Axie Heo Rừng',    lv:1, hp:55,  atk:7,  def:0, xp:28,  silver:[4,9],   speed:52, aggro:130, range:30, atkCd:1.4, size:15, color:'#6b5b4a', eye:'#e8ecff', drop:0.14, el:'Thổ', img:'assets/mobs/boar.png' },
-  wolf:    { name:'Axie Gai Tím',  lv:4, hp:160, atk:17, def:3, xp:85,  silver:[10,20],  speed:86, aggro:170, range:30, atkCd:1.2, size:15, color:'#5a5f6b', eye:'#ffd76a', drop:0.17, el:'Mộc', img:'assets/mobs/wolf.png' },
-  bandit:  { name:'Tay Sai Gloam',   lv:6, hp:270, atk:24, def:7, xp:140, silver:[15,32], speed:66, aggro:190, range:32, atkCd:1.3, size:16, color:'#4a3a30', eye:'#ff6a5a', sash:'#a03028', drop:0.20, el:'Kim', img:'assets/mobs/bandit.png' },
-  assassin:{ name:'Cướp Đường Gloam', lv:10, hp:700, atk:37, def:12, xp:450, silver:[52,89], speed:96, aggro:230, range:34, atkCd:1.1, size:17, color:'#1d1a24', eye:'#c07fe0', elite:true, drop:0.55, el:'Thủy', img:'assets/mobs/assassin.png' },
-  boss:    { name:'Thủ Lĩnh Gloam', lv:10, hp:2600, atk:44, def:16, xp:2500, silver:[300,420], speed:78, aggro:480, range:38, atkCd:1.2, size:26, color:'#120f18', eye:'#ff3a3a', boss:true, elite:true, drop:1, el:'Hỏa', img:'assets/mobs/boss.png' },
+  boar:    { name:'Axie Heo Rừng',    lv:1, hp:55,  atk:7,  def:0, xp:28,  silver:[4,9],   speed:52, aggro:130, range:30, atkCd:1.4, size:15, color:'#6b5b4a', eye:'#e8ecff', drop:0.14, el:'Beast', img:'assets/mobs/boar.png' },
+  wolf:    { name:'Axie Gai Tím',  lv:4, hp:160, atk:17, def:3, xp:85,  silver:[10,20],  speed:86, aggro:170, range:30, atkCd:1.2, size:15, color:'#5a5f6b', eye:'#ffd76a', drop:0.17, el:'Plant', img:'assets/mobs/wolf.png' },
+  bandit:  { name:'Tay Sai Gloam',   lv:6, hp:270, atk:24, def:7, xp:140, silver:[15,32], speed:66, aggro:190, range:32, atkCd:1.3, size:16, color:'#4a3a30', eye:'#ff6a5a', sash:'#a03028', drop:0.20, el:'Dusk', img:'assets/mobs/bandit.png' },
+  assassin:{ name:'Cướp Đường Gloam', lv:10, hp:700, atk:37, def:12, xp:450, silver:[52,89], speed:96, aggro:230, range:34, atkCd:1.1, size:17, color:'#1d1a24', eye:'#c07fe0', elite:true, drop:0.55, el:'Dusk', img:'assets/mobs/assassin.png' },
+  boss:    { name:'Thủ Lĩnh Gloam', lv:10, hp:2600, atk:44, def:16, xp:2500, silver:[300,420], speed:78, aggro:480, range:38, atkCd:1.2, size:26, color:'#120f18', eye:'#ff3a3a', boss:true, elite:true, drop:1, el:'Dusk', img:'assets/mobs/boss.png' },
 };
 // Quái theo tuyến bản đồ GDD (cấp 1 → 100+)
 Object.assign(MOBS, {
-  hautu:    { name:'Axie Bí Ngô', lv:2, hp:70, atk:8, def:1, xp:36, silver:[5,10], speed:95, aggro:150, range:26, atkCd:1.1, size:13, color:'#7a6248', eye:'#ffe9a0', drop:0.14, el:'Mộc', img:'assets/mobs/hautu.png' },
-  caodo:    { name:'Axie Cỏ Dại', lv:8, hp:300, atk:21, def:4, xp:175, silver:[13,26], speed:100, aggro:180, range:26, atkCd:1.1, size:13, color:'#b05030', eye:'#ffd76a', drop:0.18, el:'Hỏa', img:'assets/mobs/caodo.png' },
-  trannhan: { name:'Tượng Đá Canh Cổng', lv:12, hp:440, atk:29, def:10, xp:230, silver:[25,46], speed:55, aggro:160, range:34, atkCd:1.5, size:17, color:'#c88aa8', eye:'#ffffff', drop:0.22, el:'Mộc', skel:'golem', skelPal:{main:'#7d8290',dark:'#565b69',trim:'#9aa2b4',glow:'#7fd0ff'}, img:'assets/mobs/trannhan.png'},
+  hautu:    { name:'Axie Bí Ngô', lv:2, hp:70, atk:8, def:1, xp:36, silver:[5,10], speed:95, aggro:150, range:26, atkCd:1.1, size:13, color:'#7a6248', eye:'#ffe9a0', drop:0.14, el:'Plant', img:'assets/mobs/hautu.png' },
+  caodo:    { name:'Axie Cỏ Dại', lv:8, hp:300, atk:21, def:4, xp:175, silver:[13,26], speed:100, aggro:180, range:26, atkCd:1.1, size:13, color:'#b05030', eye:'#ffd76a', drop:0.18, el:'Plant', img:'assets/mobs/caodo.png' },
+  trannhan: { name:'Tượng Đá Canh Cổng', lv:12, hp:440, atk:29, def:10, xp:230, silver:[25,46], speed:55, aggro:160, range:34, atkCd:1.5, size:17, color:'#c88aa8', eye:'#ffffff', drop:0.22, el:'Mech', skel:'golem', skelPal:{main:'#7d8290',dark:'#565b69',trim:'#9aa2b4',glow:'#7fd0ff'}, img:'assets/mobs/trannhan.png'},
   // ── Bậc 14-24: bộ quái RIÊNG của Beast Herd Camp. Dùng lại tạo hình có sẵn theo
   // đúng lối MU (Bull Fighter → Elite Bull Fighter): cùng sinh vật, bậc cựu binh mạnh hơn.
   // Trước đây map 2 dùng y hệt bộ quái lv1-9 của map 1 nên không có bậc nào cho khoảng 10-24.
-  boar_tusk:  { name:'Heo Rừng Nhiễm Khí', lv:14, hp:520, atk:32, def:11, xp:295, silver:[31,56], speed:60, aggro:140, range:32, atkCd:1.3, size:16, color:'#7a5b48', eye:'#ff8a6a', drop:0.20, el:'Thổ', img:'assets/mobs/boar.png'},
-  wolf_alpha: { name:'Gai Tím Đầu Đàn', lv:16, hp:600, atk:36, def:12, xp:355, silver:[37,65], speed:96, aggro:185, range:32, atkCd:1.1, size:16, color:'#48505f', eye:'#ffd76a', drop:0.21, el:'Mộc', img:'assets/mobs/wolf.png'},
-  bandit_vet: { name:'Gloam Cựu Binh',   lv:18, hp:680, atk:39, def:13, xp:420, silver:[43,75], speed:84, aggro:200, range:34, atkCd:1.2, size:17, color:'#5a4a3a', eye:'#e8dcb0', drop:0.23, el:'Kim', img:'assets/mobs/bandit.png'},
-  caodo_fire: { name:'Cỏ Dại Bén Lửa',  lv:20, hp:760, atk:43, def:13, xp:480, silver:[49,85], speed:104, aggro:190, range:30, atkCd:1.0, size:14, color:'#d4552a', eye:'#ffd76a', drop:0.22, el:'Hỏa', img:'assets/mobs/caodo.png'},
-  gloam_scout:{ name:'Trinh Sát Gloam',  lv:22, hp:1300, atk:52, def:20, xp:1035, silver:[110,189], speed:100, aggro:240, range:34, atkCd:1.1, size:18, color:'#1d1a24', eye:'#c07fe0', elite:true, drop:0.55, el:'Thủy', img:'assets/mobs/assassin.png'},
-  chimera_bo: { name:'Tượng Đá Vỡ Lệnh',  lv:24, hp:920, atk:50, def:15, xp:605, silver:[61,104], speed:62, aggro:170, range:34, atkCd:1.4, size:18, color:'#b87a9a', eye:'#ffffff', drop:0.24, el:'Thủy', skel:'golem', skelPal:{main:'#6f7d8c',dark:'#4a5563',trim:'#8fb0c4',glow:'#6ae8c0'}, img:'assets/mobs/chimera_bo.png'},
-  phando:   { name:'Bộ Xương Phản Loạn', lv:26, hp:1000, atk:53, def:16, xp:670, silver:[67,114], speed:80, aggro:200, range:34, atkCd:1.2, size:16, color:'#3a9d8b', eye:'#a0ffe9', sash:'#2a6a5c', drop:0.25, el:'Thủy', skel:'skeleton', skelPal:{main:'#8b8f9c',dark:'#3f4450',trim:'#9a8a52',bone:'#ddd6c4',cloth:'#3a5c52',glow:'#a0ffe9'}},
-  xanu:     { name:'Chimera Phun Độc', lv:31, hp:1260, atk:64, def:18, xp:840, silver:[79,134], speed:88, aggro:210, range:30, atkCd:1.15, size:16, color:'#5c8a3a', eye:'#c8ffa0', drop:0.27, el:'Mộc', img:'assets/mobs/xanu.png' },
-  bandao:   { name:'Axie Sa Ngã', lv:38, hp:1790, atk:81, def:24, xp:1190, silver:[105,175], speed:92, aggro:230, range:36, atkCd:1.1, size:17, color:'#2d3a55', eye:'#9fd0ff', elite:true, drop:0.4, el:'Kim', img:'assets/mobs/bandao.png'},
-  thinu:    { name:'Oan Hồn Ổ Ấp', lv:42, hp:2190, atk:89, def:26, xp:1440, silver:[120,195], speed:78, aggro:200, range:34, atkCd:1.2, size:15, color:'#d8d0e8', eye:'#9a86d8', drop:0.28, el:'Mộc', skel:'wraith', skelPal:{main:'#8fa8c0',dark:'#3a4458',cloth:'#5a6a86',bone:'#e0e6f0',glow:'#9fd0ff'}},
-  mocnhan:  { name:'Axie Golem', lv:48, hp:3410, atk:101, def:43, xp:1880, silver:[143,230], speed:50, aggro:170, range:36, atkCd:1.5, size:19, color:'#8a6a42', eye:'#e8b04a', drop:0.3, el:'Thổ', img:'assets/mobs/mocnhan.png'},
-  huyetbat: { name:'Dơi Chimera', lv:56, hp:2870, atk:122, def:26, xp:2465, silver:[174,275], speed:115, aggro:240, range:28, atkCd:0.95, size:14, color:'#6a1a24', eye:'#ff3a3a', drop:0.32, el:'Hỏa', img:'assets/mobs/huyetbat.png' },
+  boar_tusk:  { name:'Heo Rừng Nhiễm Khí', lv:14, hp:520, atk:32, def:11, xp:295, silver:[31,56], speed:60, aggro:140, range:32, atkCd:1.3, size:16, color:'#7a5b48', eye:'#ff8a6a', drop:0.20, el:'Beast', img:'assets/mobs/boar.png'},
+  wolf_alpha: { name:'Gai Tím Đầu Đàn', lv:16, hp:600, atk:36, def:12, xp:355, silver:[37,65], speed:96, aggro:185, range:32, atkCd:1.1, size:16, color:'#48505f', eye:'#ffd76a', drop:0.21, el:'Plant', img:'assets/mobs/wolf.png'},
+  bandit_vet: { name:'Gloam Cựu Binh',   lv:18, hp:680, atk:39, def:13, xp:420, silver:[43,75], speed:84, aggro:200, range:34, atkCd:1.2, size:17, color:'#5a4a3a', eye:'#e8dcb0', drop:0.23, el:'Dusk', img:'assets/mobs/bandit.png'},
+  caodo_fire: { name:'Cỏ Dại Bén Lửa',  lv:20, hp:760, atk:43, def:13, xp:480, silver:[49,85], speed:104, aggro:190, range:30, atkCd:1.0, size:14, color:'#d4552a', eye:'#ffd76a', drop:0.22, el:'Plant', img:'assets/mobs/caodo.png'},
+  gloam_scout:{ name:'Trinh Sát Gloam',  lv:22, hp:1300, atk:52, def:20, xp:1035, silver:[110,189], speed:100, aggro:240, range:34, atkCd:1.1, size:18, color:'#1d1a24', eye:'#c07fe0', elite:true, drop:0.55, el:'Dusk', img:'assets/mobs/assassin.png'},
+  chimera_bo: { name:'Tượng Đá Vỡ Lệnh',  lv:24, hp:920, atk:50, def:15, xp:605, silver:[61,104], speed:62, aggro:170, range:34, atkCd:1.4, size:18, color:'#b87a9a', eye:'#ffffff', drop:0.24, el:'Mech', skel:'golem', skelPal:{main:'#6f7d8c',dark:'#4a5563',trim:'#8fb0c4',glow:'#6ae8c0'}, img:'assets/mobs/chimera_bo.png'},
+  phando:   { name:'Bộ Xương Phản Loạn', lv:26, hp:1000, atk:53, def:16, xp:670, silver:[67,114], speed:80, aggro:200, range:34, atkCd:1.2, size:16, color:'#3a9d8b', eye:'#a0ffe9', sash:'#2a6a5c', drop:0.25, el:'Dusk', skel:'skeleton', skelPal:{main:'#8b8f9c',dark:'#3f4450',trim:'#9a8a52',bone:'#ddd6c4',cloth:'#3a5c52',glow:'#a0ffe9'}},
+  xanu:     { name:'Chimera Phun Độc', lv:31, hp:1260, atk:64, def:18, xp:840, silver:[79,134], speed:88, aggro:210, range:30, atkCd:1.15, size:16, color:'#5c8a3a', eye:'#c8ffa0', drop:0.27, el:'Reptile', img:'assets/mobs/xanu.png' },
+  bandao:   { name:'Axie Sa Ngã', lv:38, hp:1790, atk:81, def:24, xp:1190, silver:[105,175], speed:92, aggro:230, range:36, atkCd:1.1, size:17, color:'#2d3a55', eye:'#9fd0ff', elite:true, drop:0.4, el:'Dusk', img:'assets/mobs/bandao.png'},
+  thinu:    { name:'Oan Hồn Ổ Ấp', lv:42, hp:2190, atk:89, def:26, xp:1440, silver:[120,195], speed:78, aggro:200, range:34, atkCd:1.2, size:15, color:'#d8d0e8', eye:'#9a86d8', drop:0.28, el:'Bug', skel:'wraith', skelPal:{main:'#8fa8c0',dark:'#3a4458',cloth:'#5a6a86',bone:'#e0e6f0',glow:'#9fd0ff'}},
+  mocnhan:  { name:'Axie Golem', lv:48, hp:3410, atk:101, def:43, xp:1880, silver:[143,230], speed:50, aggro:170, range:36, atkCd:1.5, size:19, color:'#8a6a42', eye:'#e8b04a', drop:0.3, el:'Mech', img:'assets/mobs/mocnhan.png'},
+  huyetbat: { name:'Dơi Chimera', lv:56, hp:2870, atk:122, def:26, xp:2465, silver:[174,275], speed:115, aggro:240, range:28, atkCd:0.95, size:14, color:'#6a1a24', eye:'#ff3a3a', drop:0.32, el:'Bird', img:'assets/mobs/huyetbat.png' },
   // Loài RIÊNG của Aquatic Tribe Causeway, lấp đúng khoảng trống 56→62 của bảng quái ngoài
   // trời. Dùng lại sprite xanu.png (Chimera Phun Độc) như satthuhy dùng lại assassin.png —
   // cùng dáng Chimera bò, khác dải cấp và khác hệ.
-  reunuoc:  { name:'Chimera Rêu Nước', lv:59, hp:3520, atk:133, def:31, xp:2790, silver:[186,294], speed:82, aggro:225, range:32, atkCd:1.1, size:16, color:'#3a6a5a', eye:'#7ecbff', drop:0.32, el:'Thủy', img:'assets/mobs/xanu.png' },
-  ttdetu:   { name:'Kẻ Cuồng Tín Lạc Lối', lv:62, hp:4320, atk:144, def:36, xp:3165, silver:[199,314], speed:84, aggro:210, range:34, atkCd:1.15, size:16, color:'#e0779a', eye:'#ffc0d8', sash:'#a04868', drop:0.3, el:'Thổ', skel:'cultist', skelPal:{main:'#c0c6d4',dark:'#2e2438',cloth:'#4a3a5e',trim:'#c8a84a',glow:'#8fe0a8'}},
-  docyeu:   { name:'Chimera Cầu Gai', lv:70, hp:5390, atk:166, def:41, xp:4025, silver:[242,378], speed:74, aggro:220, range:38, atkCd:1.3, size:18, color:'#4a7a2a', eye:'#7ec850', drop:0.34, el:'Mộc', poisonHit:true, img:'assets/mobs/docyeu.png'},
-  satthuhy: { name:'Sát Thủ Sương Mù', lv:78, hp:6800, atk:200, def:48, xp:5200, silver:[300,400], speed:100, aggro:240, range:34, atkCd:1.0, size:16, color:'#16121e', eye:'#c07fe0', elite:true, drop:0.45, el:'Thủy', img:'assets/mobs/assassin.png' },
-  thamtu:   { name:'Trinh Sát Tro Tàn', lv:84, hp:8070, atk:227, def:54, xp:6680, silver:[325,504], speed:96, aggro:230, range:33, atkCd:1.05, size:15, color:'#4a4238', eye:'#ffd76a', drop:0.34, el:'Thổ', img:'assets/mobs/thamtu.png'},
-  cungthu:  { name:'Cung Thủ Tro Tàn', lv:92, hp:8070, atk:271, def:52, xp:7920, silver:[369,567], speed:70, aggro:260, range:230, atkCd:1.6, size:15, color:'#7a5a30', eye:'#ffe9a0', drop:0.36, el:'Mộc', ranged:true, img:'assets/mobs/cungthu.png'},
-  kybinh:   { name:'Kỵ Sĩ Tro Tàn', lv:100, hp:10300, atk:277, def:77, xp:8820, silver:[406,626], speed:90, aggro:220, range:40, atkCd:1.3, size:21, color:'#1c1c24', eye:'#ff6a5a', elite:true, drop:0.5, el:'Kim', skel:'knight', skelPal:{main:'#6a6f80',dark:'#43485a',trim:'#c8a84a',cloth:'#7a2a30',glow:'#ffb15c'}, img:'assets/mobs/kybinh.png'},
-  kylan:    { name:'Chó Ngao Lửa', lv:112, hp:14480, atk:332, def:88, xp:13450, silver:[494,758], speed:94, aggro:240, range:42, atkCd:1.2, size:22, color:'#8a1a10', eye:'#ffd76a', elite:true, drop:0.55, el:'Hỏa', skel:'hound', skelPal:{main:'#8a3a2a',dark:'#5a2418',trim:'#ffb15c',glow:'#ff6a3a',bone:'#e8d0b0'}, img:'assets/mobs/kylan.png'},
-  cuongbinh:{ name:'Cuồng Binh Tro Tàn', lv:102, hp:12220, atk:345, def:67, xp:11645, silver:[445,685], speed:98, aggro:230, range:36, atkCd:1.0, size:17, color:'#5a2a1a', eye:'#ff9a3a', drop:0.42, el:'Thổ', img:'assets/mobs/cuongbinh.png'},
-  daokhach: { name:'Axie Cuồng Bão', lv:120, hp:14000, atk:380, def:75, xp:15000, silver:[750,1000], speed:102, aggro:250, range:38, atkCd:0.9, size:17, color:'#3a1010', eye:'#ff3a3a', elite:true, drop:0.6, el:'Hỏa', img:'assets/mobs/daokhach.png'},
+  reunuoc:  { name:'Chimera Rêu Nước', lv:59, hp:3520, atk:133, def:31, xp:2790, silver:[186,294], speed:82, aggro:225, range:32, atkCd:1.1, size:16, color:'#3a6a5a', eye:'#7ecbff', drop:0.32, el:'Aquatic', img:'assets/mobs/xanu.png' },
+  ttdetu:   { name:'Kẻ Cuồng Tín Lạc Lối', lv:62, hp:4320, atk:144, def:36, xp:3165, silver:[199,314], speed:84, aggro:210, range:34, atkCd:1.15, size:16, color:'#e0779a', eye:'#ffc0d8', sash:'#a04868', drop:0.3, el:'Dawn', skel:'cultist', skelPal:{main:'#c0c6d4',dark:'#2e2438',cloth:'#4a3a5e',trim:'#c8a84a',glow:'#8fe0a8'}},
+  docyeu:   { name:'Chimera Cầu Gai', lv:70, hp:5390, atk:166, def:41, xp:4025, silver:[242,378], speed:74, aggro:220, range:38, atkCd:1.3, size:18, color:'#4a7a2a', eye:'#7ec850', drop:0.34, el:'Aquatic', poisonHit:true, img:'assets/mobs/docyeu.png'},
+  satthuhy: { name:'Sát Thủ Sương Mù', lv:78, hp:6800, atk:200, def:48, xp:5200, silver:[300,400], speed:100, aggro:240, range:34, atkCd:1.0, size:16, color:'#16121e', eye:'#c07fe0', elite:true, drop:0.45, el:'Bird', img:'assets/mobs/assassin.png' },
+  thamtu:   { name:'Trinh Sát Tro Tàn', lv:84, hp:8070, atk:227, def:54, xp:6680, silver:[325,504], speed:96, aggro:230, range:33, atkCd:1.05, size:15, color:'#4a4238', eye:'#ffd76a', drop:0.34, el:'Reptile', img:'assets/mobs/thamtu.png'},
+  cungthu:  { name:'Cung Thủ Tro Tàn', lv:92, hp:8070, atk:271, def:52, xp:7920, silver:[369,567], speed:70, aggro:260, range:230, atkCd:1.6, size:15, color:'#7a5a30', eye:'#ffe9a0', drop:0.36, el:'Reptile', ranged:true, img:'assets/mobs/cungthu.png'},
+  kybinh:   { name:'Kỵ Sĩ Tro Tàn', lv:100, hp:10300, atk:277, def:77, xp:8820, silver:[406,626], speed:90, aggro:220, range:40, atkCd:1.3, size:21, color:'#1c1c24', eye:'#ff6a5a', elite:true, drop:0.5, el:'Reptile', skel:'knight', skelPal:{main:'#6a6f80',dark:'#43485a',trim:'#c8a84a',cloth:'#7a2a30',glow:'#ffb15c'}, img:'assets/mobs/kybinh.png'},
+  kylan:    { name:'Chó Ngao Lửa', lv:112, hp:14480, atk:332, def:88, xp:13450, silver:[494,758], speed:94, aggro:240, range:42, atkCd:1.2, size:22, color:'#8a1a10', eye:'#ffd76a', elite:true, drop:0.55, el:'Beast', skel:'hound', skelPal:{main:'#8a3a2a',dark:'#5a2418',trim:'#ffb15c',glow:'#ff6a3a',bone:'#e8d0b0'}, img:'assets/mobs/kylan.png'},
+  cuongbinh:{ name:'Cuồng Binh Tro Tàn', lv:102, hp:12220, atk:345, def:67, xp:11645, silver:[445,685], speed:98, aggro:230, range:36, atkCd:1.0, size:17, color:'#5a2a1a', eye:'#ff9a3a', drop:0.42, el:'Dusk', img:'assets/mobs/cuongbinh.png'},
+  daokhach: { name:'Axie Cuồng Bão', lv:120, hp:14000, atk:380, def:75, xp:15000, silver:[750,1000], speed:102, aggro:250, range:38, atkCd:0.9, size:17, color:'#3a1010', eye:'#ff3a3a', elite:true, drop:0.6, el:'Bird', img:'assets/mobs/daokhach.png'},
   // Axie Lang Thang — "người chơi" NPC trung lập để PK (3 cấp theo map)
-  duhiep1:  { name:'Axie Lang Thang', lv:30, hp:1800, atk:70, def:20, xp:900, silver:[90,140], speed:88, aggro:0, range:34, atkCd:1.2, size:16, color:'#4a5a7a', eye:'#dfe8ff', drop:0.5, el:'Kim', duHiep:true, img:'assets/mobs/duhiep.png'},
-  duhiep2:  { name:'Axie Lang Thang', lv:60, hp:5200, atk:160, def:42, xp:3600, silver:[260,360], speed:90, aggro:0, range:34, atkCd:1.15, size:16, color:'#5a4a6a', eye:'#dfe8ff', drop:0.55, el:'Thủy', duHiep:true, img:'assets/mobs/duhiep.png'},
-  duhiep3:  { name:'Cao Thủ Lang Thang', lv:115, hp:12000, atk:300, def:75, xp:10000, silver:[600,850], speed:94, aggro:0, range:36, atkCd:1.05, size:17, color:'#6a3a3a', eye:'#ffe0a0', elite:true, drop:0.7, el:'Hỏa', duHiep:true, img:'assets/mobs/duhiep.png'},
+  duhiep1:  { name:'Axie Lang Thang', lv:30, hp:1800, atk:70, def:20, xp:900, silver:[90,140], speed:88, aggro:0, range:34, atkCd:1.2, size:16, color:'#4a5a7a', eye:'#dfe8ff', drop:0.5, el:'Dawn', duHiep:true, img:'assets/mobs/duhiep.png'},
+  duhiep2:  { name:'Axie Lang Thang', lv:60, hp:5200, atk:160, def:42, xp:3600, silver:[260,360], speed:90, aggro:0, range:34, atkCd:1.15, size:16, color:'#5a4a6a', eye:'#dfe8ff', drop:0.55, el:'Aquatic', duHiep:true, img:'assets/mobs/duhiep.png'},
+  duhiep3:  { name:'Cao Thủ Lang Thang', lv:115, hp:12000, atk:300, def:75, xp:10000, silver:[600,850], speed:94, aggro:0, range:36, atkCd:1.05, size:17, color:'#6a3a3a', eye:'#ffe0a0', elite:true, drop:0.7, el:'Beast', duHiep:true, img:'assets/mobs/duhiep.png'},
 });
 const MOB_IMGS = {};
 
@@ -7057,6 +7126,20 @@ const MOC_NV = {
   ruong: { ten:'mở Rương Canh',           dem:() => Object.keys((player && player.ruong) || {}).length },
   hap:   { ten:'mở Box Kundun',           dem:() => (player && player.hapMo) || 0 },
   khe:   { ten:'quay Khế Ước',            dem:() => Object.keys(((player && player.chimera) || {}).co || {}).length },
+  // Cửa dạy **trục phòng thủ của Axie** — thứ gánh tiêu chí Axie Core mà trước đây không một
+  // nhiệm vụ nào trỏ tới. Đếm "đã TỰ cắm một cái thân", vì cửa duy nhất vào việc đó là bảng Khế
+  // Ước, và bảng đó nay nói thẳng mình đang đứng ở đất hệ gì (xem `axieTaiDay`). Nhiệm vụ mở
+  // cửa, cái bảng mới là thứ dạy.
+  //
+  // ⚠ ĐỪNG đòi "đang đeo một thân KHẮC LẠI đất này". Nghe mạnh hơn, nhưng thân là thứ bốc từ
+  // gacha: một người xui có thể không sở hữu con nào thuộc nhóm cần, và chính tuyến là chuỗi
+  // THẲNG — một ô không qua được là cả game dừng. Cùng bài học đã ghi ở mục "CỬA CƠ CHẾ MỞ Ở
+  // CẤP NÀO": hỏi *đếm được không* rồi phải hỏi tiếp *ai cũng làm được không*.
+  //
+  // ⚠ `player.avatar !== undefined` mới là "đã tự chọn" — `undefined` là chưa từng chạm, `null`
+  // là đã tắt bằng /avatar off (cũng là một lựa chọn hẳn hoi). Gộp hai cái thành `!player.avatar`
+  // là nhiệm vụ không bao giờ xong với người bấm nút tắt.
+  than:  { ten:'tự cắm thân Axie',        dem:() => (player && player.avatar !== undefined) ? 1 : 0 },
   // ⚠ §6 của docs/LORE_RUNE.md hứa một cửa "Tinh Luyện" — hứa sai: Tinh Luyện là một NÚT trong
   // bảng Đại Thành (`sr_tinhluyen`, +0,18% hiệu lực mỗi cấp rèn), không phải một hệ có hành
   // động để chạm vào. Không có gì đếm được, nên cửa đó đổi sang **Đại Thành** — thứ mà nút Tinh
@@ -7528,7 +7611,10 @@ function specialItem(slot, def, extra){
     // khác thì không — chúng lên cấp bằng đường riêng, cho rèn nữa là hai thang tiến hoá
     // chồng lên nhau trên cùng một món.
     noForge: slot !== 'canh',
-    main: null, element: 'Kim', subs, plus: 0, awakened: AWAKENED[0],
+    // `element: null` chứ không phải một lớp bất kỳ: món đặc biệt mang `special:true`, mà cả
+    // `hasElem()` lẫn `atkElem()` đều chặn ở đó — nên một cái hệ đặt ở đây không bao giờ được
+    // đọc. Để một giá trị trông-như-thật là mời người sau tưởng nó có tác dụng.
+    main: null, element: null, subs, plus: 0, awakened: AWAKENED[0],
   }, extra || {});
 }
 // LINH THÚ đã GỠ. Chú thích cũ ngay trên PET_DEFS đã tự nhận nó yếu: 'chỉ là MỘT ô, tốn cả
@@ -8984,7 +9070,8 @@ function mapBanSac(id){
     const d = MOBS[q.mob]; if (!d) continue;
     const n = q.n || 5; tong += n;
     dan[q.mob] = (dan[q.mob] || 0) + n;
-    if (d.el) he[d.el] = (he[d.el] || 0) + n;
+    const _he = q.he || d.el;              // bãi khai hệ thì bãi thắng — cùng luật mobHe()
+    if (_he) he[_he] = (he[_he] || 0) + n;
   }
   if (!tong) return null;
   const troi = o => Object.keys(o).sort((a,b) => o[b] - o[a])[0];
@@ -8994,11 +9081,176 @@ function mapBanSac(id){
            he: ht || null, tyLeHe: ht ? Math.round(100 * he[ht] / tong) : 0,
            cot: COT_DONG_THEO_MAP[id] || null };
 }
-// Một dòng, kiểu Ragnarok: đất của ai · khắc hệ gì · nơi duy nhất rơi cái gì.
+// Ba lớp Axie khắc được `he` — tức ba lớp mà người chơi nên CẦM tới vùng này: Axie thuộc một
+// trong ba lớp ấy ăn đòn nhẹ đi 10%, và vũ khí mang Rune của chúng đánh nặng thêm 20%.
+//
+// ⚠ SUY TỪ `heKhac`, đừng chép một bảng "khắc gì" thứ hai. Bảng thứ hai là bảo đảm nó lệch với
+// công thức sau vài đợt sửa, và kiểu lệch đó thì người chơi phát hiện trước bài kiểm: họ làm
+// đúng lời bảng Bản Đồ và ăn đòn nặng hơn.
+function heKhacLai(he){ return ELEMENTS.filter(k => heKhac(k, he)); }
+// Phán quyết khắc hệ ở chiều PHÒNG THỦ (quái → người). Đây là cửa DUY NHẤT cho mọi chỗ NÓI RA
+// vế đó — băng-rôn lúc vào map và số bay mỗi lần trúng đòn — và nó mang luôn hai hệ số, nên
+// `hurtPlayer` cũng đọc từ đây. Chép công thức ra ba nơi là ba nơi phải nhớ sửa, mà lệch nhau
+// thì băng-rôn hứa một đằng còn đòn đánh ra một nẻo, không một lỗi nào báo.
+//
+// ⚠ TRẢ CẢ TRẠNG THÁI TRUNG TÍNH (`ket:0`), đừng trả `null` cho nó. Im lặng ở nhánh trung tính
+// thì người chơi không phân biệt được "con Axie này không khắc gì ở đây" với "cơ chế không
+// chạy" — mà chính vế CÓ LỢI (×0,90) đã im lặng suốt từ đầu vì đúng kiểu bỏ sót ấy.
+//
+// ⚠ THAM SỐ THỨ BA `sac` LÀ ĐỘ SẮC TỪ SÁU BỘ PHẬN — xem `bpCung`/`bpSac` ngay dưới. Mặc định 1
+// = đúng hệ số của bản trước bộ phận, nên mọi lời gọi hai tham số cũ vẫn ra đúng số cũ.
+const HE_THIET = 1.12;   // quái khắc hệ mình  ⇒ ăn đòn nặng hơn
+const HE_LOI   = 0.90;   // mình khắc lại quái ⇒ chịu đòn nhẹ hơn
+const HE_TRUNG = 1.00;
+// ⚠⚠ ĐÂY LÀ CHỖ GIỮ LỜI HỨA "AXIE KHÔNG BÁN SỨC MẠNH", và nó giữ bằng PHÉP DỰNG chứ không bằng
+// một con số chọn khéo. Ba hệ số được nội suy về chính TRUNG BÌNH của chúng:
+//
+//     mul(sac) = HE_TB + (mul_gốc − HE_TB) × sac
+//
+// nên trung bình của ba nhánh **bằng `HE_TB` với MỌI `sac`** — đạo hàm theo `sac` của tổng ba
+// nhánh là đúng 0. Trên phân bố đều chín lớp quái (mỗi nhóm 3 lớp ⇒ 3 nhánh đều nhau) thì kỳ
+// vọng hệ số phòng thủ của **mọi** con Axie bằng nhau CHÍNH XÁC.
+//
+// ⚠ ĐỪNG "sửa gọn" thành `mul = 1 + (mul_gốc − 1) × sac`. Nhìn thì sạch hơn, nhưng `HE_THIET` và
+// `HE_LOI` KHÔNG đối xứng quanh 1 (+0,12 so với −0,10), nên cách đó cho trung bình
+// `1 + 0,00667 × sac` — tức con càng thuần càng ăn đòn nặng hơn trên tổng thể. Đó đúng là một
+// nấc thang, chỉ là một nấc đi xuống, và nó vẫn phá lời hứa.
+const HE_TB = (HE_THIET + HE_LOI + HE_TRUNG) / 3;
+function heThuKet(mobEl, axieEl, sac){
+  if (!mobEl || !axieEl || !ELEM[mobEl] || !ELEM[axieEl]) return null;
+  const k = (typeof sac === 'number' && isFinite(sac)) ? sac : 1;
+  const pha = g => HE_TB + (g - HE_TB) * k;
+  const gA = ELEM[axieEl].glyph, gM = ELEM[mobEl].glyph;
+  const pct = m => Math.round(Math.abs(m - 1) * 100);
+  if (heKhac(mobEl, axieEl)){
+    const mul = pha(HE_THIET);
+    return { ket:-1, mul, sac:k, mau:'#ff9a3a',
+             txt:`⚠ ${gM} ${mobEl} khắc ${gA} ${axieEl} +${pct(mul)}%`,
+             dai:`⚠ Axie ${gA} ${axieEl} ăn đòn NẶNG hơn ${pct(mul)}% ở đất ${mobEl} — đổi sang ${heKhacLai(mobEl).join(' / ')} thì chịu đòn nhẹ hơn (phím C → Khế Ước)` };
+  }
+  if (heKhac(axieEl, mobEl)){
+    const mul = pha(HE_LOI);
+    return { ket:1, mul, sac:k, mau:'#7ec850',
+             txt:`✦ ${gA} ${axieEl} khắc lại ${gM} ${mobEl} −${pct(mul)}%`,
+             dai:`✦ Axie ${gA} ${axieEl} khắc lại đất ${mobEl} — chịu đòn NHẸ hơn ${pct(mul)}% ở đây` };
+  }
+  const mul = pha(HE_TRUNG);
+  return { ket:0, mul, sac:k, mau:'#c9b889',
+           txt:`${gA} ${axieEl} trung tính`,
+           dai:`${gA} Axie ${axieEl} trung tính với đất ${mobEl} — đổi sang ${heKhacLai(mobEl).join(' / ')} thì chịu đòn nhẹ hơn (phím C → Khế Ước)` };
+}
+
+// ═══════════ SÁU BỘ PHẬN AXIE ═══════════
+// Trục THỨ HAI của con Axie. Trục một là `lop` (hệ phòng thủ — khắc ai, bị ai khắc); trục hai là
+// CẤU TẠO: sáu bộ phận theo `axie-hinh-hoa §1`, và mấy cái cùng nhóm tam giác với chính nó.
+//
+// Nó trả lời đúng hai khoản còn thiếu của tiêu chí Axie Core: *"con Axie mới có MỘT trục"* và
+// *"sáu bộ phận — thứ định nghĩa một con Axie thật — chưa đọc một lần nào"*.
+//
+// ⚠ ĐÂY KHÔNG PHẢI CHỈ SỐ. Nó không đi qua `calcDerived`, không cộng một điểm nào, và kỳ vọng
+// trên cả chín lớp quái bằng nhau cho mọi con — xem khối `HE_TB` ở trên. Luật *"Axie 0 chỉ số"*
+// còn nguyên, và `tests/test_hethu §4` vẫn gác nó.
+const BP_TEN  = ['mat', 'tai', 'sung', 'mieng', 'lung', 'duoi'];
+const BP_NHAN = { mat:'Mắt', tai:'Tai', sung:'Sừng', mieng:'Miệng', lung:'Lưng', duoi:'Đuôi' };
+// Độ sắc chạy từ TẠP tới THUẦN. Sàn CỐ Ý không phải 0: một con tạp hoàn toàn mà hệ số phẳng lì
+// ×1,00 là con Axie đó **tắt hẳn** cơ chế cho người đang đeo nó, tức trở lại đúng cái skin mà cả
+// đợt này sinh ra để gỡ. 0,45 thì nó vẫn còn nói được điều gì đó, chỉ là nói khẽ.
+const BP_SAC_MIN = 0.45, BP_SAC_MAX = 1.50;
+// Mấy bộ phận thuộc CÙNG NHÓM tam giác với `lop` của chính con Axie. `null` khi con đó chưa khai
+// bộ phận — và `null` phải đọc ra "không biết", không đọc ra 0: 0 là *tạp nhất có thể*, một phán
+// quyết hẳn hoi, còn thiếu dữ liệu thì phải lui về hành vi cũ (sắc = 1).
+function bpCung(c){
+  if (!c || !c.bp || !ELEM[c.lop]) return null;
+  const g = ELEM[c.lop].nhom;
+  let n = 0;
+  for (const k of BP_TEN){ const e = ELEM[c.bp[k]]; if (e && e.nhom === g) n++; }
+  return n;
+}
+function bpSac(cung){
+  if (typeof cung !== 'number') return 1;
+  return BP_SAC_MIN + (BP_SAC_MAX - BP_SAC_MIN) * (cung / BP_TEN.length);
+}
+// Cửa DUY NHẤT hỏi "người chơi này đang sắc tới đâu". Lui về 1 khi chưa có avatar hoặc con đó
+// chưa khai bộ phận ⇒ hệ số y hệt bản trước đợt này, và save cũ không phải di trú gì.
+function axieSac(p){
+  const pl = p || (typeof player !== 'undefined' ? player : null);
+  if (!pl) return 1;
+  const id = avatarId(pl);
+  const cung = id ? bpCung(CHI_MAP[id]) : null;
+  return cung === null ? 1 : bpSac(cung);
+}
+// Đọc ra cho người chơi: "Thuần 5/6" / "Tạp 1/6", kèm một chữ nói nó NGHĨA LÀ GÌ. Con số trần
+// trụi không nói được gì — 5/6 là tốt hay xấu thì người chơi không có cách nào đoán.
+function bpHang(cung){
+  if (cung === null || cung === undefined) return null;
+  if (cung >= 5) return { ten:'Thuần',     mau:'#ffd76a', y:'chuyên gia — cực nhẹ đòn ở vùng hợp, cực nặng ở vùng khắc' };
+  if (cung >= 3) return { ten:'Pha',       mau:'#9fd0ff', y:'cân — mạnh yếu vừa phải ở cả hai phía' };
+  return           { ten:'Tạp',       mau:'#c9b889', y:'thợ đụng — không bao giờ tệ, không bao giờ xuất sắc' };
+}
+// Một dòng đọc được cho DANH SÁCH Axie: hạng + sáu bộ phận, mỗi bộ phận tô theo lớp của nó.
+// Đây là chỗ DUY NHẤT người chơi nhìn thấy cả sáu — bảng Nhân Vật chỉ in được cái hạng.
+function bpDongMoTa(c){
+  const cung = bpCung(c), h = bpHang(cung);
+  if (!h) return '';
+  const o = BP_TEN.map(k => {
+    const e = ELEM[c.bp[k]];
+    return `<span style="color:${e ? e.color : '#c9b889'}" title="${BP_NHAN[k]}: ${c.bp[k]}">${e ? e.glyph : '?'}</span>`;
+  }).join('');
+  return `<br><b style="color:${h.mau}">${h.ten} ${cung}/6</b> <span style="letter-spacing:2px">${o}</span>`
+       + ` <span style="opacity:.7">${h.y}</span>`;
+}
+window.bpCung = bpCung; window.bpSac = bpSac; window.axieSac = axieSac; window.bpHang = bpHang;
+window.bpDongMoTa = bpDongMoTa;
+
+// ── "CON NÀY Ở ĐẤT ĐANG ĐỨNG THÌ THẾ NÀO" — cửa DUY NHẤT ──────────────────────────────────
+// Bảng Khế Ước trước đây giải thích cơ chế rất kỹ nhưng KHÔNG biết người chơi đang đứng ở đâu,
+// nên nó không trả lời được câu người chơi thật sự hỏi: *nên cắm con nào BÂY GIỜ*. Một bảng
+// thông số tuyệt đối thì bắt người đọc tự làm phép so sánh trong đầu — đúng cái mà hệ trang bị
+// đã phải học một lần rồi và chữa bằng `itemCompareHtml`.
+//
+// ⚠ ĐI QUA `heThuKet` + `bpSac(bpCung(c))`, đừng tự nhân hệ số. Chép `1.12`/`0.9` hay công thức
+// độ sắc ra thêm một chỗ là thêm một chỗ nói dối được — và kiểu nói dối đó không lỗi nào báo.
+// ⚠ TRẢ `null` KHI ĐẤT KHÔNG CÓ HỆ (trong thành, hành lang trộn hệ như Lối Mòn Corran). In
+// "trung tính" ở đó là nói dối theo chiều ngược lại: nó khiến người chơi tưởng đã hỏi và đã
+// được trả lời, trong khi chỗ đó vốn không có câu trả lời nào.
+function axieTaiDay(c, mapId){
+  const mid = mapId || (typeof curMap !== 'undefined' ? curMap : null);
+  if (!mid || !c || !ELEM[c.lop] || typeof mapBanSac !== 'function') return null;
+  const he = (mapBanSac(mid) || {}).he;
+  if (!he || !ELEM[he]) return null;
+  const kq = heThuKet(he, c.lop, bpSac(bpCung(c)));
+  if (!kq) return null;
+  const pct = Math.round(Math.abs(kq.mul - 1) * 100);
+  const gM = ELEM[he].glyph;
+  const txt = kq.ket > 0 ? `✦ chịu đòn nhẹ hơn −${pct}% ở đất ${gM} ${he}`
+            : kq.ket < 0 ? `⚠ ăn đòn nặng hơn +${pct}% ở đất ${gM} ${he}`
+                         : `trung tính với đất ${gM} ${he}`;
+  return { he, ket:kq.ket, mul:kq.mul, pct, mau:kq.mau, txt };
+}
+window.axieTaiDay = axieTaiDay;
+// Hồi cho số bay khắc hệ. Nó bắn theo TỪNG ĐÒN TRÚNG, mà một trận đông quái có hàng chục đòn
+// mỗi giây — không có hồi thì nó vừa phủ kín màn vừa đẩy tràn mảng `floats` (trần 70) và nuốt
+// mất mọi thông báo khác. Để ngoài `player` để nó không chui vào save.
+//
+// ⚠ MỐC KHỞI TẠO LÀ `-Infinity`, KHÔNG PHẢI 0 — và 0 là một lỗi THẬT, bài kiểm tìm ra.
+// `performance.now()` đếm từ lúc NẠP TRANG, nên với mốc 0 thì điều kiện `now - 0 > 2600` sai
+// trong suốt **2,6 giây đầu đời của trang**: ai vừa vào game mà ăn đòn ngay thì không thấy gì,
+// và cái không-thấy đó đọc ra y hệt "cơ chế không chạy". Nó cũng làm bài kiểm phụ thuộc vào
+// trang nạp nhanh hay chậm — `test_hethu §7a` đỏ 3/3 vì đúng chuyện đó, trong khi `heThuKet`
+// trả về hoàn toàn đúng. `-Infinity` thì đòn ĐẦU TIÊN luôn nói ra, rồi mới vào nhịp hồi.
+let _heFloatMs = -Infinity;
+const HE_FLOAT_HOI = 2600;
+// Một dòng, kiểu Ragnarok: đất của ai · lớp Axie nào · mang gì tới · nơi duy nhất rơi cái gì.
 function banSacHtml(id){
   const b = mapBanSac(id); if (!b) return '';
   const bits = [`Đất của <b style="color:#ffd76a">${b.tenChuDao}</b> <span style="opacity:.6">${b.tyLe}%</span>`];
-  if (b.he && ELEM[b.he]) bits.push(`hệ <b style="color:${ELEM[b.he].color}">${b.he}</b> <span style="opacity:.6">${b.tyLeHe}%</span>`);
+  if (b.he && ELEM[b.he]){
+    bits.push(`lớp <b style="color:${ELEM[b.he].color}">${ELEM[b.he].glyph} ${b.he}</b> <span style="opacity:.6">${b.tyLeHe}%</span>`);
+    // Cơ chế vô hình là cơ chế không tồn tại: không có dòng này thì tam giác chạy suốt mà người
+    // chơi không có một cửa nào để học nó.
+    const kh = heKhacLai(b.he);
+    if (kh.length) bits.push(`mang <b style="color:${ELEM[kh[0]].color}">${kh.join(' · ')}</b> tới`);
+  }
   if (b.cot && COT_DONG[b.cot]) bits.push(`nơi <b>duy nhất</b> rơi Cốt <b style="color:${COT_DONG[b.cot].mau}">${COT_DONG[b.cot].ten}</b>`);
   let ruong = '';
   if (typeof ruongCuaMap === 'function'){
@@ -9168,6 +9420,11 @@ function banRaiVung(mid){
       const vai = d.vai ? d.vai[i % d.vai.length] : null;
       const pk = { mob: d.mob, x: p.x, y: p.y, n, r: 90 + n * 4, vung: v.id, farm: !!v.farm };
       if (vai) pk.vai = vai;
+      // Hệ của cụm: `d.he` (một dòng dân số) > `v.he` (cả miền) > hệ nền của loài trong `MOBS`.
+      // Ba nấc, cùng khuôn với vai trò. Không khai gì thì loài giữ hệ của nó — nên map chưa
+      // được gán vùng vẫn chạy y như cũ.
+      const _he = d.he || v.he || null;
+      if (_he) pk.he = _he;
       if (v.tiep) pk.tiep = true;
       out.push(pk); daDat.push(p); datMien.push(p);
     }
@@ -9496,11 +9753,11 @@ function buildWorld(){
     // người chơi cận chiến không với tới được mục tiêu ưu tiên (docs §3.6).
     // `pk.vai` (nếu có) THẮNG vai mặc định của loài — đây là toàn bộ cơ chế A1: cùng một loài,
     // bãi khác thì vai khác, nên map ba loài vẫn có sáu kiểu đánh.
-    const _vai = pk.vai ? { role: pk.vai } : undefined;
+    const _vai = (pk.vai || pk.he) ? { role: pk.vai || undefined, he: pk.he || undefined } : undefined;
     if (pk.farm) _baiFarm.add(packId);   // Bãi Farm: quái ở đây rơi đậm hơn — xem FARM_THUONG
     for (let j = 0; j < soCon - (pk.tiep ? 1 : 0); j++) spawnMob(pk.mob, zone, packId, false, _vai); // dàn trải cụm quái, tránh chồng hình
     if (pk.tiep){
-      const t = spawnMob(pk.mob, zone, packId, false, { role:'tiep' });
+      const t = spawnMob(pk.mob, zone, packId, false, { role:'tiep', he: pk.he || undefined });
       const a = Math.random() * Math.PI * 2; t.x = pk.x + Math.cos(a) * 128; t.y = pk.y + Math.sin(a) * 128; t.homeX = t.x; t.homeY = t.y;
       if (inObstacle(curMap, t.x, t.y, 16)){ const _f = nearestFree(curMap, t.x, t.y); t.x = _f.x; t.y = _f.y; }
     }
@@ -9642,6 +9899,9 @@ function spawnMob(type, zone, pack, vfx, opts){
   }
   const m = {
     type, def, name: def.name, role, tiep: role === 'tiep',
+    // ⚠ Hệ nằm trên CON QUÁI, không phải trên `def`. `def` thường LÀ đối tượng trong `MOBS`
+    // (chỉ clone khi vai có hệ số khác 1), nên ghi hệ vào đó là đổi hệ của loài ấy ở mọi map.
+    he: (opts && opts.he) || def.el || null,
     x: zone ? zone.x + rnd(-zone.r, zone.r) : rnd(200, MAP.w-200),
     y: zone ? zone.y + rnd(-zone.r, zone.r) : rnd(200, MAP.h-200),
     zone, pack: pack ?? null, hp: mobHp(def), maxHp: mobHp(def), atkT: rnd(0,1), dead:false, face: 0,
@@ -9654,7 +9914,7 @@ function spawnMob(type, zone, pack, vfx, opts){
   // buildWorld() dựng cả map cùng lúc, gọi vfx ở đó sẽ spam hàng chục cột sáng cùng lúc, chỉ
   // bật cho respawn từng con lẻ, xem game.js chỗ "respawn dead mobs").
   if (vfx){
-    const bc = (def.el && ELEM[def.el]) ? ELEM[def.el].color : (def.color || '#ffd76a');
+    const bc = (m.he && ELEM[m.he]) ? ELEM[m.he].color : (def.color || '#ffd76a');
     addEffect({ type:'spawnbeam', x:m.x, y:m.y, color:bc, dur:0.6 });
   }
   return m;
@@ -10607,10 +10867,10 @@ function hurtMob(m, dmg, source){
   let shieldNote = false, counterNote = false, counteredNote = false, perfectNote = false;
   // Khắc hệ: hệ đòn đánh (VŨ KHÍ, không có thì hệ lớp) khắc hệ quái → +20% sát thương;
   // bị quái khắc → -12%. Chỉ chiều này đọc hệ vũ khí — xem atkElem().
-  const sectEl = atkElem();
-  if (sectEl && m.def.el){
-    if (ELEM[sectEl].beats === m.def.el){ final *= 1.2; counterNote = true; }
-    else if (ELEM[m.def.el] && ELEM[m.def.el].beats === sectEl){ final *= 0.88; counteredNote = true; }
+  const sectEl = atkElem(), mHe = mobHe(m);
+  if (sectEl && mHe){
+    if (heKhac(sectEl, mHe)){ final *= 1.2; counterNote = true; }
+    else if (heKhac(mHe, sectEl)){ final *= 0.88; counteredNote = true; }
   }
   // Áp Bức Võ Công (GDD Boss v2.1): boss cao hơn người chơi → ST bị áp chế theo chênh cấp (tường level mềm)
   if (m.def.bossKind){
@@ -12592,7 +12852,7 @@ function update(dt){
       m.atkT = m.def.atkCd;
       // hiệu ứng ra đòn: quái lao tới (lunge) + vệt chém màu nguyên tố
       m.lungeT = 0.22;
-      const elC = (m.def.el && ELEM[m.def.el]) ? ELEM[m.def.el].color : m.def.color;
+      const _mhe = mobHe(m); const elC = (_mhe && ELEM[_mhe]) ? ELEM[_mhe].color : m.def.color;
       addEffect({ type:'arc', x:m.x, y:m.y, face:Math.atan2(player.y-m.y,player.x-m.x), r:34, color:elC });
       if (m.def.ranged){ // Cung Thủ Thảo Nguyên: đạn bay từ xa (hình), sát thương tính trực tiếp
         projectiles.push({ cosmetic:true, x:m.x, y:m.y, ang:Math.atan2(player.y-m.y,player.x-m.x), speed:420, dmg:0, kind:'mobshot', life:d/420, color:'#d8b060' });
@@ -12617,13 +12877,12 @@ function update(dt){
         const lvGapM = (m.def.lv || 1) - player.level;
         if (lvGapM > 5) dmg *= 1 + Math.min(1.2, (lvGapM - 5) * 0.08);
         if (m.def.bossKind){ const gapB2 = m.def.lv - player.level; if (gapB2 > 10) dmg *= 1.6; else if (gapB2 >= 6) dmg *= 1.3; } // Áp Bức Võ Công chiều ngược
-        // khắc hệ chiều quái → người: hệ quái khắc phái +12%, bị phái khắc -10%
-        const mobEl = m.def.el, sectEl2 = SECTS[player.sect].element;
-        let mobCounter = false;
-        if (mobEl && sectEl2){
-          if (ELEM[mobEl].beats === sectEl2){ dmg *= 1.12; mobCounter = true; }
-          else if (ELEM[sectEl2].beats === mobEl) dmg *= 0.9;
-        }
+        // khắc hệ chiều quái → người: hệ quái khắc hệ NGƯỜI +12%, bị người khắc -10%.
+        // Hệ người nay do CON AXIE đang đeo quyết định — xem heThu(). Trước đây là
+        // `SECTS[player.sect].element`, tức một hằng số người chơi không tác động được.
+        const _hek = heThuKet(mobHe(m), heThu(player), axieSac(player));
+        if (_hek) dmg *= _hek.mul;
+        const mobCounter = !!_hek && _hek.ket === -1;
         dmg = Math.max(1, Math.round(dmg));
         // ĐỠ ĐÒN — cơ chế chỉ đồ Hoàn Hảo có: chặn HẲN một đòn, không phải giảm %. Đặt SAU khi
         // đã làm tròn để con số hiện lên đúng bằng thứ người chơi vừa chặn được.
@@ -12645,7 +12904,8 @@ function update(dt){
             player.poisonDps = Math.max(1, Math.round(player.maxHp * 0.008 * (1 - (player.vhPoisonRes || 0))));
             playStatusFx('poison', 'poison_apply', player.x, player.y, 0.5, 0.3); } }
         // đòn đánh trúng: vụ nổ hào quang nguyên tố + rung màn hình
-        const elC2 = _dbEl && ELEM[_dbEl] ? ELEM[_dbEl].color : (mobEl && ELEM[mobEl]) ? ELEM[mobEl].color : '#ff7a6a';
+        const _mobEl = mobHe(m);
+        const elC2 = _dbEl && ELEM[_dbEl] ? ELEM[_dbEl].color : (_mobEl && ELEM[_mobEl]) ? ELEM[_mobEl].color : '#ff7a6a';
         addEffect({ type:'ring', x:player.x, y:player.y-10, r:22, color:elC2 });
         for (let i=0;i<4;i++) addEffect({ type:'ink', x:player.x, y:player.y-12, vx:rnd(-70,70), vy:rnd(-90,-20), color:elC2 });
         player.hurtT = 0.25; // viền đỏ nhấp khi trúng đòn
@@ -12691,6 +12951,15 @@ function update(dt){
         }
         AudioSys.sfx('hurt', 0.7);
         logCombat(`🩸 ${mobCounter ? 'KHẮC CHẾ ' : ''}-${dmg} ← ${m.def.name}`, mobCounter ? '#ff9a3a' : '#ff7a6a');
+        // Vế PHÒNG THỦ của tam giác lớp Axie, nói thẳng lên đầu người chơi.
+        // Trước bản này nó chỉ có đúng một cửa: dòng nhật ký ngay trên — hộp 260px ở góc
+        // dưới-trái, trôi quá nhanh để đọc giữa lúc đánh nhau — và CHỈ ở vế bất lợi, vì
+        // `mobCounter` không bao giờ bật ở nhánh ×0,90. Tức nửa có lợi của cơ chế, cũng là nửa
+        // trả lời cho câu "vì sao phải có nhiều hơn một con Axie", chưa từng hiện ra một lần.
+        if (_hek && _hek.ket !== 0 && performance.now() - _heFloatMs > HE_FLOAT_HOI){
+          _heFloatMs = performance.now();
+          addFloat(player.x, player.y - 58, _hek.txt, _hek.mau, 13);
+        }
         // Thái Cực hộ thể (Lưỡng Nghi Cảnh): phản 5% sát thương
         if (player.reflect && !m.dead){
           const ref = Math.max(1, Math.round(dmg * player.reflect));
@@ -14094,9 +14363,10 @@ function drawMob(m){
     ctx.restore(); ctx.globalAlpha = 1;
   }
   // hào quang nguyên tố quanh quái (mờ, theo hệ)
-  if (d.el && ELEM[d.el]){
+  const _hauHe = mobHe(m);
+  if (_hauHe && ELEM[_hauHe]){
     ctx.save(); ctx.globalAlpha = 0.14 + 0.05*Math.sin(m.wob*1.3);
-    ctx.strokeStyle = ELEM[d.el].color; ctx.lineWidth = 2;
+    ctx.strokeStyle = ELEM[_hauHe].color; ctx.lineWidth = 2;
     ctx.beginPath(); ctx.ellipse(dx, dy+4, d.size+6, (d.size+6)*0.4, 0, 0, 7); ctx.stroke();
     ctx.restore();
   }
@@ -14185,7 +14455,7 @@ function drawMob(m){
     ctx.font = '8px "Be Vietnam Pro", sans-serif'; ctx.textAlign = 'center'; ctx.globalAlpha = 0.55;
     ctx.fillStyle = DIBIEN[c0.db[0]].col; ctx.fillText(DIBIEN[c0.db[0]].glyph, dx, topY - 24); ctx.globalAlpha = 1; } }
   ctx.font = '10px "Be Vietnam Pro", sans-serif'; ctx.textAlign='center';
-  const eld = d.el && ELEM[d.el];
+  const _nhanHe = mobHe(m); const eld = _nhanHe && ELEM[_nhanHe];
   const nw = ctx.measureText(nameTxt).width;
   const nameX = eld ? dx + 8 : dx;
   if (eld){
@@ -18421,7 +18691,30 @@ function renderChar(){
     // Mana = tài nguyên tung chiêu (hồi liên tục). Instinct = điểm nâng kỹ năng (tích lũy).
     ['Bản Năng (nâng kỹ năng)', Math.floor(p.khi || 0).toLocaleString('vi-VN')],
   ];
-  if (_ae) stats.push(['Hệ đòn đánh', `<span style="color:${elColor(_ae)}">${ELEM[_ae].glyph} ${elName(_ae)}</span>`]);
+  // Hai dòng HỆ chen lên ngay sau Công Kích / Sinh Lực, KHÔNG đẩy xuống cuối mảng.
+  //
+  // ⚠ Đây là chỗ đã phải sửa sau khi CHỤP RA NHÌN: đẩy xuống cuối thì chúng rơi khỏi vùng nhìn
+  // thấy của bảng và người chơi phải cuộn mới gặp. Mà đây lại là hai dòng DUY NHẤT trong cả
+  // khối mà người chơi đổi được bằng một lựa chọn (vũ khí đang cầm · Axie đang đeo) — mấy dòng
+  // còn lại chỉ là kết quả của cấp và trang bị. Một cơ chế bị chôn dưới đáy danh sách cuộn thì
+  // với người chơi không khác gì không tồn tại.
+  //
+  // Mỗi dòng nói rõ nó đến TỪ ĐÂU. Hai nguồn cho hai CHIỀU là cả thiết kế (xem heThu); in hai
+  // dòng mà không ghi nguồn thì người chơi đọc ra là game có hai cái hệ mâu thuẫn nhau.
+  const _he = heThu(player);
+  const _heRow = [];
+  if (_ae) _heRow.push(['Hệ đòn đánh <span style="opacity:.6;font-size:10px">(vũ khí)</span>', `<span style="color:${elColor(_ae)}">${ELEM[_ae].glyph} ${elName(_ae)}</span>`]);
+  if (_he) _heRow.push(['Hệ phòng thủ <span style="opacity:.6;font-size:10px">(Axie)</span>', `<span style="color:${elColor(_he)}">${ELEM[_he].glyph} ${elName(_he)}</span>`]);
+  // Dòng thứ BA: cấu tạo sáu bộ phận. Nó đứng cạnh hai dòng kia vì nó là trục thứ hai của cùng
+  // một thứ — con Axie — và vì nếu không in ra thì `bpCung` chạy suốt mà không ai biết nó tồn
+  // tại. Cùng bài học với vế phòng thủ từng chỉ có một dòng nhật ký.
+  //
+  // ⚠ In cả HẠNG lẫn con số, đừng in mỗi con số: "5/6" không nói được là tốt hay xấu, mà ở đây
+  // thì **không** có tốt/xấu — có chuyên gia và có thợ đụng. Chữ phải nói ra điều đó.
+  const _bpAva = avatarId(player), _bpC = _bpAva ? bpCung(CHI_MAP[_bpAva]) : null, _bpH = bpHang(_bpC);
+  if (_bpH) _heRow.push([`Cấu tạo Axie <span style="opacity:.6;font-size:10px">(sáu bộ phận)</span>`,
+    `<span style="color:${_bpH.mau}" title="${_bpH.y}">${_bpH.ten} ${_bpC}/6</span>`]);
+  stats.splice(2, 0, ..._heRow);
   for (const [n,v] of stats) html += `<div class="stat-row"><span>${n}</span><b>${v}</b></div>`;
   // Khối CHIÊU THỨC đã gỡ: bảng Kỹ Năng (phím K) vốn đã in đủ năm thông số của từng chiêu,
   // nên ba dòng ở đây là bản tóm tắt thứ ba của cùng một thứ.
@@ -20061,7 +20354,29 @@ function renderMount(){
   // Huyết Thống CN · <bị động> · Chiêu <tên> (Ns)" — bốn thứ đó nay đều không tồn tại. In lại
   // bất kỳ cái nào là hứa với người chơi một sức mạnh mà con Axie không còn cho.
   html += `<div class="stat-sec">ĐANG CÓ — ${dsCo.length}/${CHIMERA.length}</div>`;
-  html += `<div style="font-size:11px;color:#9aa8d4;margin-bottom:6px;line-height:1.5">Con Axie là <b>thân nhìn thấy</b> của bạn — nó không cộng chỉ số và không tự đánh. Toàn bộ sức mạnh nằm ở lớp nhân vật; lúc ra đòn lớp ấy hiện ra rồi tan.</div>`;
+  // ⚠ NÓI RA ĐANG ĐỨNG Ở ĐÂU, ngay trên danh sách. Không có dòng này thì mọi nhãn "ở đất X"
+  // bên dưới treo lơ lửng — người chơi không biết X là đất nào và vì sao bảng lại nhắc tới nó.
+  {
+    const _bsNay = (typeof curMap !== 'undefined' && typeof mapBanSac === 'function') ? mapBanSac(curMap) : null;
+    const _heNay = _bsNay && ELEM[_bsNay.he] ? _bsNay.he : null;
+    if (_heNay){
+      const _kh = heKhacLai(_heNay);
+      html += `<div style="font-size:11.5px;color:#cfd8ff;background:#1a1f33;border:1px solid #2e3a5c;border-radius:6px;padding:6px 9px;margin-bottom:7px;line-height:1.5">`
+            + `\ud83d\uddfa Đang đứng ở <b>${(MAPS[curMap]||{}).name || curMap}</b> — đất <b style="color:${ELEM[_heNay].color}">${ELEM[_heNay].glyph} ${_heNay}</b> <span style="opacity:.65">${_bsNay.tyLeHe}% đàn quái</span>.`
+            + (_kh.length ? ` Thân <b style="color:${ELEM[_kh[0]].color}">${_kh.join(' · ')}</b> chịu đòn nhẹ hơn ở đây.` : '')
+            + `</div>`;
+    } else {
+      html += `<div style="font-size:11.5px;color:#9aa8d4;margin-bottom:7px;line-height:1.5">\ud83d\uddfa Chỗ đang đứng <b>không có hệ trội</b> — không thân nào hợp hơn thân nào. Vào một vùng săn rồi mở lại bảng này để thấy con nào hợp ở đó.</div>`;
+    }
+  }
+  // ⚠ HAI CON SỐ NÀY TỪNG CHÉP CỨNG "12%" / "10%", và từ đợt sáu bộ phận thì đó là lời nói dối:
+  // hệ số phụ thuộc độ sắc của con đang đeo (×0,45 tới ×1,50). Suy thẳng từ `heThuKet` — một
+  // bảng hứa một đằng còn đòn đánh ra một nẻo thì không lỗi nào báo, và người chơi thì đọc ra
+  // là game nói dối. Lấy hai đầu dải để nói đúng cái RANGE, không nói một điểm.
+  const _dTap = heThuKet('Beast', 'Plant', BP_SAC_MIN), _dThuan = heThuKet('Beast', 'Plant', BP_SAC_MAX);
+  const _dLoiTap = heThuKet('Plant', 'Beast', BP_SAC_MIN), _dLoiThuan = heThuKet('Plant', 'Beast', BP_SAC_MAX);
+  const _pc = m => Math.round(Math.abs(m - 1) * 100);
+  html += `<div style="font-size:11px;color:#9aa8d4;margin-bottom:6px;line-height:1.5">Con Axie là <b>thân nhìn thấy</b> của bạn — nó <b>không cộng chỉ số</b> và không tự đánh. Toàn bộ sức mạnh nằm ở lớp nhân vật; lúc ra đòn lớp ấy hiện ra rồi tan.<br>Nhưng <b style="color:#ffd76a">lớp Axie quyết định hệ PHÒNG THỦ</b> của bạn: quái khắc hệ bạn đánh đau hơn <b>${_pc(_dTap.mul)}–${_pc(_dThuan.mul)}%</b>, bạn khắc lại thì nhẹ đi <b>${_pc(_dLoiTap.mul)}–${_pc(_dLoiThuan.mul)}%</b> — rộng hay hẹp là do <b style="color:#ffd76a">cấu tạo sáu bộ phận</b> của chính con đó. Đổi thân là đổi vùng đất nào dễ thở. Hệ đòn đánh vẫn theo <b>vũ khí</b>.<br><span style="opacity:.75">Con <b>thuần</b> là chuyên gia (ăn đòn rất nhẹ ở vùng hợp, rất nặng ở vùng khắc); con <b>tạp</b> là thợ đụng. Trung bình trên cả chín lớp quái thì <b>mọi con bằng nhau</b> — cấu tạo đổi hình dạng rủi ro, không đổi tổng.</span></div>`;
   for (const c of dsCo){
     const o = C.co[c.id], con = (o && o.con) || 0, dung = player.avatar === c.id;
     html += `<div class="skill-row${dung ? '' : ' locked'}" style="align-items:center">
@@ -20069,7 +20384,7 @@ function renderMount(){
       <span class="sk-info"><b style="color:${c.mau}">${c.ten}</b>
         <span style="font-size:10.5px;color:${CHI_SAO_MAU[c.sao]}"> · ${'★'.repeat(c.sao)} · </span>${lopHuyHieu(c.lop)}<span style="font-size:10.5px;color:${CHI_SAO_MAU[c.sao]}">${c.lop}</span>
         ${con ? `<span style="font-size:10.5px;color:#ffd76a"> · trùng ×${con}</span>` : ''}
-        <div class="sk-desc">Thân ${c.lop} — ${c.ten}</div></span>
+        <div class="sk-desc">Thân ${c.lop} — ${c.ten} · phòng thủ lớp <b style="color:${elColor(c.lop)}">${(ELEM[c.lop]||{}).glyph||''} ${elName(c.lop)}</b>${bpDongMoTa(c)}${(() => { const h = axieTaiDay(c); return h ? `<br><b style="color:${h.mau}">${h.txt}</b>` : ''; })()}</div></span>
       ${dung ? '<span style="font-size:11px;color:#8fd18f">ĐANG LÀM THÂN</span>'
            : `<button class="mini-btn" onclick="window.chiChon('${c.id}')">Đổi thân</button>`}</div>`;
   }
@@ -26836,8 +27151,18 @@ window.travelTo = function(mapId, from){
   // chết. `wpUnlocked[mapId]` là cờ "đã từng tới", được đặt ngay bên dưới, nên đọc trước khi đặt.
   const _dauTienFirst = !(player.wpUnlocked && player.wpUnlocked[mapId]);
   const _rlore = _dauTienFirst && typeof REGION_UNLOCK_LORE !== 'undefined' ? REGION_UNLOCK_LORE[mapId] : null;
-  zoneBanner = _rlore ? { text:'🗺 ' + md.name, sub:_rlore.sub, color:'#ffd76a', t:5.5 }
-                       : { text: md.name, sub: `${zt.name} — ${md.desc}`, color: zt.color, t: 3.2 };
+  // Vế phòng thủ của tam giác lớp Axie, nói ra ĐÚNG LÚC nó còn đổi được gì: vừa đặt chân, trước
+  // khi đánh trận đầu. Suy từ `mapBanSac` (hệ trội của chính miền dân số ở đây) qua cùng một cửa
+  // `heThuKet` mà đòn đánh dùng — băng-rôn và sát thương không thể nói hai đằng.
+  //
+  // ⚠ Băng-rôn KHÔNG thay được số bay mỗi đòn, và ngược lại. Nó bắn một lần lúc vào map, nên
+  // người chơi đổi Axie giữa map là nó thành một câu đã cũ; còn số bay thì không bao giờ nói
+  // được "nên cầm con nào TỚI đây". Hai kênh cho hai câu hỏi khác nhau.
+  const _bsHe = (mapBanSac(mapId) || {}).he;
+  const _kqHe = _bsHe ? heThuKet(_bsHe, heThu(player), axieSac(player)) : null;
+  const _subHe = _kqHe ? ' · ' + _kqHe.dai : '';
+  zoneBanner = _rlore ? { text:'🗺 ' + md.name, sub:_rlore.sub + _subHe, color:'#ffd76a', t:5.5 }
+                       : { text: md.name, sub: `${zt.name} — ${md.desc}${_subHe}`, color: zt.color, t: 3.2 };
   addEffect({ type:'ring', x:player.x, y:player.y, r:120, color:zt.color, big:true });
   // Điểm dịch chuyển: lần đầu đặt chân tới 1 vùng (dù được nhiệm vụ dẫn tới hay tự dịch chuyển
   // khi vừa đủ điều kiện) sẽ mở khoá nút "Dịch Chuyển" cho vùng đó trong Bản Đồ (M) từ giờ về sau.
@@ -29341,10 +29666,10 @@ Object.assign(MOBS, {
   // ⚠ skel còn là đường DƯ PHÒNG của TRÙM VÙNG: BOSS_DEFS trỏ vào khoá này rồi kế thừa
   // skel/skelPal (xem `_src.skel` trong hàm dựng trùm vùng) — bỏ skel là trùm vùng rơi về hình
   // mực dự phòng. Có sprite thật (nền trong suốt, trọn con) thì thêm lại img, giữ nguyên skel.
-  boss_hacphong:  { name:'Thủ Lĩnh Đoàn Gloam',    lv:16,  hp:3500,   atk:55,  def:20,  xp:3200,  silver:[350,500],   speed:80, aggro:9999, range:40, atkCd:1.2,  size:24, color:'#181420', eye:'#ff3a3a', boss:true, elite:true, bossKind:'dgn', bossId:'boss_hacphong', moves:['vach','xung','daovung'], drop:1, el:'Hỏa', skel:'knight', skelPal:{main:'#4a4450',dark:'#2a2632',trim:'#c8a84a',cloth:'#6a2a24',glow:'#ff6a3a'} },
-  boss_sontac:    { name:'Thủ Lĩnh Sói Hoang',  lv:22,  hp:6000,   atk:75,  def:28,  xp:5200,  silver:[500,700],   speed:76, aggro:9999, range:42, atkCd:1.25, size:25, color:'#241a12', eye:'#ff9a3a', boss:true, elite:true, bossKind:'dgn', bossId:'boss_sontac', moves:['vach','goi','vogiap'], drop:1, el:'Thổ', skel:'hound', skelPal:{main:'#5f5348',dark:'#3d342c',trim:'#c8a84a',glow:'#ffd76a',bone:'#e8dcc0'}, img:'assets/mobs/boss_sontac.png'},
-  boss_phando:    { name:'Đại Tướng Phản Loạn',     lv:34,  hp:11000,  atk:110, def:40,  xp:9000,  silver:[800,1100],  speed:82, aggro:9999, range:44, atkCd:1.2,  size:25, color:'#12201c', eye:'#a0ffe9', boss:true, elite:true, bossKind:'dgn', bossId:'boss_phando', moves:['vong','xung','cuong','daovung'], drop:1, el:'Thủy', skel:'knight', skelPal:{main:'#4f7a70',dark:'#2e4a44',trim:'#a0ffe9',cloth:'#1e3a34',glow:'#6ae8c0'}},
-  boss_mochu:     { name:'Chúa Tể Hầm Mộ',          lv:52,  hp:22000,  atk:170, def:70,  xp:16000, silver:[1300,1800], speed:70, aggro:9999, range:46, atkCd:1.3,  size:26, color:'#1c1a14', eye:'#9a86d8', boss:true, elite:true, bossKind:'dgn', bossId:'boss_mochu', moves:['vach','goi','cuong','vogiap'], drop:1, el:'Thổ', skel:'cultist', skelPal:{main:'#b0a890',dark:'#332a24',cloth:'#4a3a2a',trim:'#c8a84a',glow:'#8fe0a8'}},
+  boss_hacphong:  { name:'Thủ Lĩnh Đoàn Gloam',    lv:16,  hp:3500,   atk:55,  def:20,  xp:3200,  silver:[350,500],   speed:80, aggro:9999, range:40, atkCd:1.2,  size:24, color:'#181420', eye:'#ff3a3a', boss:true, elite:true, bossKind:'dgn', bossId:'boss_hacphong', moves:['vach','xung','daovung'], drop:1, el:'Dusk', skel:'knight', skelPal:{main:'#4a4450',dark:'#2a2632',trim:'#c8a84a',cloth:'#6a2a24',glow:'#ff6a3a'} },
+  boss_sontac:    { name:'Thủ Lĩnh Sói Hoang',  lv:22,  hp:6000,   atk:75,  def:28,  xp:5200,  silver:[500,700],   speed:76, aggro:9999, range:42, atkCd:1.25, size:25, color:'#241a12', eye:'#ff9a3a', boss:true, elite:true, bossKind:'dgn', bossId:'boss_sontac', moves:['vach','goi','vogiap'], drop:1, el:'Beast', skel:'hound', skelPal:{main:'#5f5348',dark:'#3d342c',trim:'#c8a84a',glow:'#ffd76a',bone:'#e8dcc0'}, img:'assets/mobs/boss_sontac.png'},
+  boss_phando:    { name:'Đại Tướng Phản Loạn',     lv:34,  hp:11000,  atk:110, def:40,  xp:9000,  silver:[800,1100],  speed:82, aggro:9999, range:44, atkCd:1.2,  size:25, color:'#12201c', eye:'#a0ffe9', boss:true, elite:true, bossKind:'dgn', bossId:'boss_phando', moves:['vong','xung','cuong','daovung'], drop:1, el:'Dusk', skel:'knight', skelPal:{main:'#4f7a70',dark:'#2e4a44',trim:'#a0ffe9',cloth:'#1e3a34',glow:'#6ae8c0'}},
+  boss_mochu:     { name:'Chúa Tể Hầm Mộ',          lv:52,  hp:22000,  atk:170, def:70,  xp:16000, silver:[1300,1800], speed:70, aggro:9999, range:46, atkCd:1.3,  size:26, color:'#1c1a14', eye:'#9a86d8', boss:true, elite:true, bossKind:'dgn', bossId:'boss_mochu', moves:['vach','goi','cuong','vogiap'], drop:1, el:'Bug', skel:'cultist', skelPal:{main:'#b0a890',dark:'#332a24',cloth:'#4a3a2a',trim:'#c8a84a',glow:'#8fe0a8'}},
   // ⚠ ART CÒN NỢ. assets/mobs/boss_tinhhoa.png là TRANH THẺ chứ không phải sprite: đục 100%,
   // không một điểm trong suốt nào, và con vật bị khung cắt ở cả bốn mép — đắp vào thế giới thì
   // hiện ra đúng một ô vuông dán lên nền — chụp lại được giữa đồng cỏ pastel của Plant
@@ -29353,21 +29678,21 @@ Object.assign(MOBS, {
   // ⚠ skel còn là đường DƯ PHÒNG của TRÙM VÙNG: BOSS_DEFS trỏ vào khoá này rồi kế thừa
   // skel/skelPal (xem `_src.skel` trong hàm dựng trùm vùng) — bỏ skel là trùm vùng rơi về hình
   // mực dự phòng. Có sprite thật (nền trong suốt, trọn con) thì thêm lại img, giữ nguyên skel.
-  boss_tinhhoa:   { name:'Xoáy Lá Nguyền',      lv:72,  hp:40000,  atk:240, def:95,  xp:28000, silver:[2000,2800], speed:88, aggro:9999, range:48, atkCd:1.15, size:26, color:'#2a1218', eye:'#7ec850', boss:true, elite:true, bossKind:'dgn', bossId:'boss_tinhhoa', moves:['vong','xung','daovung','vogiap'], drop:1, el:'Mộc', skel:'wraith', skelPal:{main:'#7fbf8f',dark:'#2e4a38',cloth:'#3f6a4e',bone:'#dff0d8',glow:'#7ec850'}, poisonHit:true },
-  boss_dothong:   { name:'Chúa Sói Thảo Nguyên',   lv:92,  hp:68000,  atk:340, def:130, xp:45000, silver:[3200,4200], speed:84, aggro:9999, range:50, atkCd:1.1,  size:27, color:'#1a1410', eye:'#ffd76a', boss:true, elite:true, bossKind:'dgn', bossId:'boss_dothong', moves:['vach','xung','goi','cuong','vogiap'], drop:1, el:'Kim', skel:'hound', skelPal:{main:'#6a6050',dark:'#443c30',trim:'#c8a84a',glow:'#ffd76a',bone:'#e8dcc0'}},
-  boss_thienbinh: { name:'Thống Soái Thiên Giáp', lv:108, hp:100000, atk:420, def:160, xp:70000, silver:[4500,6000], speed:92, aggro:9999, range:52, atkCd:1.0,  size:27, color:'#101018', eye:'#ff3a3a', boss:true, elite:true, bossKind:'dgn', bossId:'boss_thienbinh', moves:['vong','vach','xung','goi','cuong','daovung','vogiap'], drop:1, el:'Hỏa', skel:'knight', skelPal:{main:'#d0c8b0',dark:'#8a8068',trim:'#ffe9a8',cloth:'#c04a2a',glow:'#ffb15c'}},
+  boss_tinhhoa:   { name:'Xoáy Lá Nguyền',      lv:72,  hp:40000,  atk:240, def:95,  xp:28000, silver:[2000,2800], speed:88, aggro:9999, range:48, atkCd:1.15, size:26, color:'#2a1218', eye:'#7ec850', boss:true, elite:true, bossKind:'dgn', bossId:'boss_tinhhoa', moves:['vong','xung','daovung','vogiap'], drop:1, el:'Plant', skel:'wraith', skelPal:{main:'#7fbf8f',dark:'#2e4a38',cloth:'#3f6a4e',bone:'#dff0d8',glow:'#7ec850'}, poisonHit:true },
+  boss_dothong:   { name:'Chúa Sói Thảo Nguyên',   lv:92,  hp:68000,  atk:340, def:130, xp:45000, silver:[3200,4200], speed:84, aggro:9999, range:50, atkCd:1.1,  size:27, color:'#1a1410', eye:'#ffd76a', boss:true, elite:true, bossKind:'dgn', bossId:'boss_dothong', moves:['vach','xung','goi','cuong','vogiap'], drop:1, el:'Beast', skel:'hound', skelPal:{main:'#6a6050',dark:'#443c30',trim:'#c8a84a',glow:'#ffd76a',bone:'#e8dcc0'}},
+  boss_thienbinh: { name:'Thống Soái Thiên Giáp', lv:108, hp:100000, atk:420, def:160, xp:70000, silver:[4500,6000], speed:92, aggro:9999, range:52, atkCd:1.0,  size:27, color:'#101018', eye:'#ff3a3a', boss:true, elite:true, bossKind:'dgn', bossId:'boss_thienbinh', moves:['vong','vach','xung','goi','cuong','daovung','vogiap'], drop:1, el:'Reptile', skel:'knight', skelPal:{main:'#d0c8b0',dark:'#8a8068',trim:'#ffe9a8',cloth:'#c04a2a',glow:'#ffb15c'}},
   // Boss Săn (MU Online-style): xuất hiện SAU khi hạ Cổng Vực phó bản — hoạt động phụ, không bắt
   // buộc để thông quan, thưởng Rương (xem DROP_SRC.box1..5 + grantHuntBox()). huntBoss:true → bỏ
   // qua bảng rơi đồ thường theo-kill (m.def.bossKind/boss) vì phần thưởng đã do grantHuntBox() lo.
   // bossKind:'hunt' mượn nguyên não moveset/lãnh địa/né đòn của Boss Vùng-Cổng Vực (telegraph AoE,
   // vòng lãnh địa đỏ nét đứt, tự hồi nếu người chơi bỏ chạy) — không cần xây hệ thống riêng. Size
   // lớn hơn hẳn Cổng Vực thường (24-30) để áng ngữ đúng không gian rộng của phòng phó bản.
-  boss_cotma1:   { name:'Cốt Tướng',  lv:18,  hp:5600,   atk:88,  def:32,  xp:5100,  silver:[550,800],   speed:82, aggro:9999, range:40, atkCd:1.2,  size:32, color:'#d8d0b8', eye:'#7ec850', huntBoss:true, bossKind:'hunt', bossId:'boss_cotma1', moves:['vach','xung','cuong'], drop:0, el:'Thổ', skel:'skeleton', skelPal:{main:'#9aa4b0',dark:'#3a4450',trim:'#6ff0c0',bone:'#e4ecf4',cloth:'#2e4a44',glow:'#6ff0c0'}},
-  boss_cotma2:   { name:'Cốt Tướng',  lv:24,  hp:9600,   atk:120, def:45,  xp:8300,  silver:[800,1100],  speed:82, aggro:9999, range:40, atkCd:1.2,  size:32, color:'#d8d0b8', eye:'#7ec850', huntBoss:true, bossKind:'hunt', bossId:'boss_cotma2', moves:['vach','xung','goi','cuong'], drop:0, el:'Thổ', skel:'skeleton', skelPal:{main:'#9aa4b0',dark:'#3a4450',trim:'#6ff0c0',bone:'#e4ecf4',cloth:'#2e4a44',glow:'#6ff0c0'}},
-  boss_hacnu1:   { name:'Nữ Vu Bóng Tối',   lv:36,  hp:17600,  atk:176, def:64,  xp:14400, silver:[1300,1750], speed:86, aggro:9999, range:44, atkCd:1.15, size:34, color:'#241428', eye:'#c07fe0', huntBoss:true, bossKind:'hunt', bossId:'boss_hacnu1', moves:['vong','goi','cuong'], drop:0, el:'Mộc', poisonHit:true, skel:'wraith', skelPal:{main:'#a88ae0',dark:'#3a2a5a',cloth:'#5a3a86',bone:'#e8dcff',glow:'#c07fe0'}},
-  boss_hacnu2:   { name:'Nữ Vu Bóng Tối',   lv:54,  hp:35200,  atk:272, def:112, xp:25600, silver:[2100,2900], speed:86, aggro:9999, range:44, atkCd:1.15, size:34, color:'#241428', eye:'#c07fe0', huntBoss:true, bossKind:'hunt', bossId:'boss_hacnu2', moves:['vong','vach','goi','cuong'], drop:0, el:'Mộc', poisonHit:true, skel:'wraith', skelPal:{main:'#a88ae0',dark:'#3a2a5a',cloth:'#5a3a86',bone:'#e8dcff',glow:'#c07fe0'}},
-  boss_hoangkim1:{ name:'Tướng Quân Vàng', lv:74,  hp:64000,  atk:384, def:152, xp:44800, silver:[3200,4500], speed:80, aggro:9999, range:48, atkCd:1.15, size:36, color:'#3a2e10', eye:'#ffd76a', huntBoss:true, bossKind:'hunt', bossId:'boss_hoangkim1', moves:['vach','xung','vong'], drop:0, el:'Kim', skel:'knight', skelPal:{main:'#c8a84a',dark:'#8a6a20',trim:'#ffe9a8',cloth:'#6a2a1a',glow:'#ffd76a'}},
-  boss_hoangkim2:{ name:'Tướng Quân Vàng', lv:94,  hp:108800, atk:544, def:208, xp:72000, silver:[5100,6700], speed:80, aggro:9999, range:48, atkCd:1.1,  size:38, color:'#3a2e10', eye:'#ffd76a', huntBoss:true, bossKind:'hunt', bossId:'boss_hoangkim2', moves:['vach','xung','vong','cuong'], drop:0, el:'Kim', skel:'knight', skelPal:{main:'#c8a84a',dark:'#8a6a20',trim:'#ffe9a8',cloth:'#6a2a1a',glow:'#ffd76a'}},
+  boss_cotma1:   { name:'Cốt Tướng',  lv:18,  hp:5600,   atk:88,  def:32,  xp:5100,  silver:[550,800],   speed:82, aggro:9999, range:40, atkCd:1.2,  size:32, color:'#d8d0b8', eye:'#7ec850', huntBoss:true, bossKind:'hunt', bossId:'boss_cotma1', moves:['vach','xung','cuong'], drop:0, el:'Mech', skel:'skeleton', skelPal:{main:'#9aa4b0',dark:'#3a4450',trim:'#6ff0c0',bone:'#e4ecf4',cloth:'#2e4a44',glow:'#6ff0c0'}},
+  boss_cotma2:   { name:'Cốt Tướng',  lv:24,  hp:9600,   atk:120, def:45,  xp:8300,  silver:[800,1100],  speed:82, aggro:9999, range:40, atkCd:1.2,  size:32, color:'#d8d0b8', eye:'#7ec850', huntBoss:true, bossKind:'hunt', bossId:'boss_cotma2', moves:['vach','xung','goi','cuong'], drop:0, el:'Mech', skel:'skeleton', skelPal:{main:'#9aa4b0',dark:'#3a4450',trim:'#6ff0c0',bone:'#e4ecf4',cloth:'#2e4a44',glow:'#6ff0c0'}},
+  boss_hacnu1:   { name:'Nữ Vu Bóng Tối',   lv:36,  hp:17600,  atk:176, def:64,  xp:14400, silver:[1300,1750], speed:86, aggro:9999, range:44, atkCd:1.15, size:34, color:'#241428', eye:'#c07fe0', huntBoss:true, bossKind:'hunt', bossId:'boss_hacnu1', moves:['vong','goi','cuong'], drop:0, el:'Plant', poisonHit:true, skel:'wraith', skelPal:{main:'#a88ae0',dark:'#3a2a5a',cloth:'#5a3a86',bone:'#e8dcff',glow:'#c07fe0'}},
+  boss_hacnu2:   { name:'Nữ Vu Bóng Tối',   lv:54,  hp:35200,  atk:272, def:112, xp:25600, silver:[2100,2900], speed:86, aggro:9999, range:44, atkCd:1.15, size:34, color:'#241428', eye:'#c07fe0', huntBoss:true, bossKind:'hunt', bossId:'boss_hacnu2', moves:['vong','vach','goi','cuong'], drop:0, el:'Plant', poisonHit:true, skel:'wraith', skelPal:{main:'#a88ae0',dark:'#3a2a5a',cloth:'#5a3a86',bone:'#e8dcff',glow:'#c07fe0'}},
+  boss_hoangkim1:{ name:'Tướng Quân Vàng', lv:74,  hp:64000,  atk:384, def:152, xp:44800, silver:[3200,4500], speed:80, aggro:9999, range:48, atkCd:1.15, size:36, color:'#3a2e10', eye:'#ffd76a', huntBoss:true, bossKind:'hunt', bossId:'boss_hoangkim1', moves:['vach','xung','vong'], drop:0, el:'Mech', skel:'knight', skelPal:{main:'#c8a84a',dark:'#8a6a20',trim:'#ffe9a8',cloth:'#6a2a1a',glow:'#ffd76a'}},
+  boss_hoangkim2:{ name:'Tướng Quân Vàng', lv:94,  hp:108800, atk:544, def:208, xp:72000, silver:[5100,6700], speed:80, aggro:9999, range:48, atkCd:1.1,  size:38, color:'#3a2e10', eye:'#ffd76a', huntBoss:true, bossKind:'hunt', bossId:'boss_hoangkim2', moves:['vach','xung','vong','cuong'], drop:0, el:'Mech', skel:'knight', skelPal:{main:'#c8a84a',dark:'#8a6a20',trim:'#ffe9a8',cloth:'#6a2a1a',glow:'#ffd76a'}},
   // ── DRUE — người thứ bảy. Trùm NHIỆM VỤ của chương VIII, đứng dưới Nhát Gọi ở Trũng Nứt.
   //
   // ⚠ Vì sao hắn tồn tại: đo chuỗi 46 nhiệm vụ ra DRUE chỉ được nhắc **2 lần**, cả hai đều là
@@ -29380,8 +29705,8 @@ Object.assign(MOBS, {
   //
   // Art: vẽ bằng khung xương `fiend` như boss_amthan, KHÔNG thêm tệp ảnh nào. Bảng màu riêng và
   // `eye` trắng đục không tròng — đúng dấu của hắn trong manh mối `manh_lenh`.
-  drue:          { name:'DRUE, Người Thứ Bảy', lv:120, hp:260000, atk:820, def:300, xp:190000, silver:[12000,16000], speed:96, aggro:520, range:50, atkCd:0.95, size:46, color:'#0a0a12', eye:'#e8e8f0', boss:true, elite:true, bossId:'drue', moves:['vach','xung','vong','goi','cuong'], drop:1, el:'Kim', skel:'fiend', skelPal:{main:'#2a2a38',dark:'#15151f',trim:'#8e8ea8',bone:'#d8d8e4',glow:'#e8e8f0'}},
-  boss_amthan:   { name:'Ác Thần Bóng Tối',     lv:112, hp:180000, atk:680, def:260, xp:126000,silver:[8000,11000],speed:90, aggro:9999, range:52, atkCd:1.0,  size:44, color:'#0c0810', eye:'#ff2a2a', huntBoss:true, bossKind:'hunt', bossId:'boss_amthan', moves:['vach','xung','vong','goi','cuong'], drop:0, el:'Hỏa', skel:'fiend', skelPal:{main:'#5a2a3a',dark:'#331824',trim:'#ff6a5a',bone:'#e8c0b0',glow:'#ff4a3a'}},
+  drue:          { name:'DRUE, Người Thứ Bảy', lv:120, hp:260000, atk:820, def:300, xp:190000, silver:[12000,16000], speed:96, aggro:520, range:50, atkCd:0.95, size:46, color:'#0a0a12', eye:'#e8e8f0', boss:true, elite:true, bossId:'drue', moves:['vach','xung','vong','goi','cuong'], drop:1, el:'Mech', skel:'fiend', skelPal:{main:'#2a2a38',dark:'#15151f',trim:'#8e8ea8',bone:'#d8d8e4',glow:'#e8e8f0'}},
+  boss_amthan:   { name:'Ác Thần Bóng Tối',     lv:112, hp:180000, atk:680, def:260, xp:126000,silver:[8000,11000],speed:90, aggro:9999, range:52, atkCd:1.0,  size:44, color:'#0c0810', eye:'#ff2a2a', huntBoss:true, bossKind:'hunt', bossId:'boss_amthan', moves:['vach','xung','vong','goi','cuong'], drop:0, el:'Dusk', skel:'fiend', skelPal:{main:'#5a2a3a',dark:'#331824',trim:'#ff6a5a',bone:'#e8c0b0',glow:'#ff4a3a'}},
 });
 // Ảnh boss nạp thủ công — chạy SAU khi MOBS đã có đủ mob boss (MOB_IMGS ở đầu file chỉ
 // load được các mob khai báo trong literal đầu tiên). Boss vẽ khung xương thì bỏ qua,
@@ -30885,7 +31210,7 @@ function spawnMaTonMob(){
   const lv = Math.min(110, md.min + 12);
   const def = { name:'Hung Thần · Hỗn Độn', lv, hp: 5000 + lv*lv*7, atk: 10 + Math.round(lv*3), def: Math.round(lv*0.8),
     xp: lv*150, silver:[lv*8, lv*12], speed: 70, aggro: 9999, range: 46, atkCd: 1.3, size: 30,
-    color:'#2a0a24', eye:'#ff3a6a', boss:true, elite:true, drop:1, el:'Hỏa', img:'assets/mobs/boss.png' };
+    color:'#2a0a24', eye:'#ff3a6a', boss:true, elite:true, drop:1, el:'Beast', img:'assets/mobs/boss.png' };
   const m = { type:'maton', def, name: def.name,
     x: MAP.w*0.55, y: MAP.h*0.42, zone: null, pack: null,
     hp: mobHp(def), maxHp: mobHp(def), atkT: rnd(0,1), dead: false, face: 0,
@@ -31070,7 +31395,7 @@ function spawnRiftBoss(){
   const lv = clamp(Math.max(md.min + 10, player.level + 6), RIFT_MIN_LV, 120);
   const def = { name:'Chúa Tể Vực Nứt', lv, hp: 9000 + lv*lv*11, atk: 14 + Math.round(lv*3.4), def: Math.round(lv*1.0),
     xp: lv*260, silver:[lv*14, lv*20], speed: 74, aggro: 420, range: 50, atkCd: 1.25, size: 34,
-    color:'#1a0a2e', eye:'#c07fe0', boss:true, elite:true, drop:1, el:'Thủy',
+    color:'#1a0a2e', eye:'#c07fe0', boss:true, elite:true, drop:1, el:'Mech',
     // Dựng bằng khung xương 'fiend' thay vì boss.png: Hung Thần và boss vùng đã dùng chung ảnh
     // đó rồi — boss thế giới lớn nhất mà đụng hàng thì mất hết cảm giác "thứ này khác hẳn".
     skel:'fiend', skelPal:{ main:'#4a2a6e', dark:'#1a0a2e', trim:'#a06aff', cloth:'#2e1450',
@@ -31328,7 +31653,7 @@ function spawnTruyNaMob(){
   const lv = player.level;
   const def = { name:'⚖ ' + band.name, lv, hp: Math.round(1200 + lv*lv*3.5), atk: Math.round(8 + lv*2.1), def: Math.round(lv*0.7),
     xp: lv*120, silver:[lv*6, lv*9], speed: 74, aggro: 220, range: 40, atkCd: 1.2, size: 24,
-    color:'#3a2a10', eye:'#ffd76a', boss:true, elite:true, drop:1, el:'Thổ', img:'assets/mobs/boss.png' };
+    color:'#3a2a10', eye:'#ffd76a', boss:true, elite:true, drop:1, el:'Dusk', img:'assets/mobs/boss.png' };
   const m = { type:'truyna', def, name: def.name,
     x: rnd(300, MAP.w-300), y: rnd(300, MAP.h-300), zone: null, pack: null,
     hp: mobHp(def), maxHp: mobHp(def), atkT: rnd(0,1), dead: false, face: 0,

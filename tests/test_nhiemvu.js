@@ -129,6 +129,7 @@ const DANH = ['kill', 'tpkill', 'boss', 'tranai'];
       if (q.moc === 'cot'){ const O = cotO();
         for (const k of COT_O_IDS.slice(0, q.need)) O[k] = cotMoiO('votrung', 'tho', k); }
       if (q.moc === 'nangky'){ player.skillLv = {}; player.skillLv.a = 1 + q.need; }
+      if (q.moc === 'than'){ chiNhan(CHIMERA[0].id); window.chiChon(CHIMERA[0].id); }
       mocTick(99);   // dt lớn để vượt nhịp 0,5s ngay lượt đầu
       out.push({ id:q.id, moc:q.moc, need:q.need, prog:questProg, st:questState });
     }
