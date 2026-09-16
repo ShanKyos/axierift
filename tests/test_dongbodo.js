@@ -306,10 +306,15 @@ const cho = ms => new Promise(r => setTimeout(r, ms));
       if (!np) return { loi: 'A mất dấu B' };
       const G = window.NV_HD_GIAY || { a: 0.22 };
       const cu = dead, khoa = veKhoa(np);
-      np.atkAnim = G.a * 0.6; np.atkAct = np.atkAct || 'slash';
+      // ⚠ DỌN `hurtT` TRƯỚC MỖI LƯỢT VẼ. `_lopHien` đòi `!hurtT` (trúng đòn thì lớp nhân vật
+      // không xông ra), và từ lúc cú trúng đòn được ĐỒNG BỘ thì B — đang đứng giữa bãi quái —
+      // liên tục giật, nên lớp nhân vật của nó không bao giờ vật chất hoá. Mục này đỏ ở chốt
+      // tự kiểm, đúng như nó phải thế: cảnh dựng hỏng chứ không phải cơ chế hỏng. Hai lượt
+      // `render()` chạy đồng bộ nên không ảnh chụp nào chen vào giữa mà bật lại cờ.
+      np.atkAnim = G.a * 0.6; np.hurtT = 0; np.atkAct = np.atkAct || 'slash';
       window.__veChet = {}; render();
       const song = window.__veChet[khoa];
-      dead = true; np.atkAnim = G.a * 0.6;
+      dead = true; np.atkAnim = G.a * 0.6; np.hurtT = 0;
       window.__veChet = {}; render();
       const chet = window.__veChet[khoa], taChet = window.__veChet.ta;
       dead = cu; render();

@@ -206,7 +206,58 @@ Chỉ `'a'` (đánh) và `'c'` (niệm chú) mới gọi lớp nhân vật ra. N
 ăn đòn thì trong một trận đông quái người chơi gần như không còn thấy avatar của mình — mà
 avatar mới là thứ họ chọn hoặc mua.
 
-**Nợ:** rig có sẵn `defense/hit-by-normal` và chưa nướng. Nướng rồi thì Axie giật được khi trúng.
+### ✅ AXIE NAY PHẢN ỨNG — GỒNG lúc ra đòn, GIẬT lúc trúng đòn (và **KHÔNG ĐÁNH**)
+
+> ⚠ Mục này trước đây ghi *"Nợ: rig có sẵn `defense/hit-by-normal` và chưa nướng"*. Đã trả.
+
+Trước bản này `veAvatar` chỉ biết hai khối (thở · chạy), nên cái thân NHÌN THẤY của người chơi
+**đứng bất động suốt trận**: ra đòn thì lớp nhân vật vung bên cạnh còn con Axie không nhúc nhích,
+ăn đòn cũng thế.
+
+| khối | hoạt cảnh nguồn | tệp | khung |
+|---|---|---|---|
+| gồng | `battle/get-buff` (1,000s) | `<id>_b.webp` | 12, 6 cột |
+| giật | `defense/hit-by-normal` (0,417s) | `<id>_h.webp` | 8, 4 cột |
+
+Nướng: `tools/spine/nuong_chi_phanung.py` · **2,17 MB cho cả 16 con**, nạp theo con đang có mặt.
+Gác: `tests/test_avaphanung.js` (7 mục, ba cơ chế đã thử ngược và đều đỏ).
+
+**⚠ AXIE KHÔNG ĐÁNH — chủ dự án chốt lại (2026-09-15).** Kit có sẵn **8 đòn gần + 5 đòn xa** và
+rất dễ "tiện tay" nướng thêm. Đừng. Luật Đổi Vai nói *"Axie chỉ đơn thuần là avatar thôi, khi tấn
+công thì ví dụ Dark Wizard sẽ xuất hiện và tung chiêu"* — cho con Axie tự húc trong lúc Dark
+Wizard niệm chú bên cạnh là dựng lại đúng cái **hai kẻ cùng đánh** mà cả đợt Đổi Vai gỡ đi.
+`get-buff` đọc ra *"sức mạnh đang được gọi tới"*, tức đúng thứ đang xảy ra trên màn.
+`test_avaphanung §6` là chỗ DUY NHẤT nói ra rằng KHÔNG nướng là một QUYẾT ĐỊNH, không phải một
+thiếu sót ai đó quên làm.
+
+**⚠ THỨ TỰ ƯU TIÊN: giật > gồng > chạy > thở** — cùng thứ tự với `_kind` của khối thân người
+(chết > trúng đòn > niệm chú > đánh), TRỪ khối chết: luật *"trúng đòn và chết vẫn giữ Axie"*
+nghĩa là nằm xuống là việc của lớp nhân vật, không phải của cái thân nhìn thấy.
+
+**⚠ BA ĐỒNG HỒ ẤY ĐẾM NGƯỢC.** `hurtT` · `atkAnim` · `castT` đặt bằng ĐỘ DÀI rồi trừ dần về 0, nên
+tiến độ là `1 − t/dài`. Dùng thẳng là con vật gồng NGƯỢC — buông ra trước rồi mới lấy đà. Cùng cái
+bẫy đã ghi cho `atkK`; thử ngược ra khung đầu = 12 thay vì 0.
+
+**⚠ NẠP TRƯỚC, ĐỪNG NẠP LƯỜI — và đây là lỗi CÓ SẴN mà bài kiểm mới mới lôi ra.** Bảng CHẠY cũng
+nạp lười từ trước, nên **bước đi đầu tiên của mỗi phiên rơi vào nhánh lui-về-thở**. Nó chỉ xảy ra
+một lần rồi tự hết nên cực dễ nghiệm thu nhầm là đã xong. Nay `veAvatar` xin cả ba bảng ngay lúc
+con Axie hiện ra lần đầu.
+
+**⚠ Ô CẮT PHẢI TRÙNG KHÍT bảng nhỏ** (đo được: cả 16 con, ba bảng, cùng một ô). Lệch một pixel là
+con vật NHẢY một cái mỗi lần đổi khối. Công cụ dựng lại đúng phép tính hộp của `nuong_chi.py`
+(bb trên appear+idle) rồi mới đem đi cắt — cùng cách `nuong_chi_chay.py` làm.
+
+**⚠ ĐO CHỈ SỐ KHUNG, ĐỪNG ĐO ĐIỂM ẢNH cho phần lôgic.** `veAvatar` phơi khối đang vẽ ra
+`window.__avaKhoi` (chỉ khi `TEST_MODE`), khoá theo từng thân người — cùng lối `__veChet`/`__neoVe`.
+Lý do đã trả giá ở `test_dongbodo`: con Axie thở ~8 FPS nên hai lượt vẽ liên tiếp cùng điều kiện
+lệch tới 5.200/16.500 điểm ảnh.
+
+⚠ **Kit không còn trên đĩa sau mỗi phiên mới** (2,2 GB). Lấy lại:
+`GIT_LFS_SKIP_SMUDGE=1 git clone --depth 1 https://github.com/axieinfinity/axie-origins-asset-kit /home/user/axieinfinity/axie-origins-asset-kit`
+và `pip install pillow numpy` — cả hai đều mất theo container.
+
+**Nợ còn lại:** thân người từ xa chưa đồng bộ `hurtT`, nên Axie của NGƯỜI KHÁC gồng được (đã đồng
+bộ cú ra đòn) nhưng chưa giật được khi họ ăn đòn.
 
 ### 🔑 KIT AXIE CÓ 41 HOẠT CẢNH, GAME MỚI DÙNG 2
 
@@ -3212,11 +3263,174 @@ quái để lái một cú đánh THẬT; tới mục ⑦ thì B nằm ngoài kh
 trống, và **cả bản đúng lẫn bản đã tháo cơ chế đều XANH**. Mục nào đổi chỗ đứng thì mục sau phải
 dựng lại cảnh của mình, và phải TỰ KIỂM là đã dựng được.
 
+### 🛡 HAI CHỐT TRƯỚC PVP — tên không mạo danh được, `pos` không bắn dồn được
+
+| | |
+|---|---|
+| Tên | đặt **MỘT LẦN** ở gói `pos` đầu (`st.daDatTen`), và `tenRieng()` thêm hậu tố nếu trùng ai đang online |
+| Nhịp `pos` | `POS_CUA` 30 gói / `POS_CUA_MS` 1000 (nhịp thật là 10) · vượt bền `POS_QUA_MAX` 200 gói thì đóng |
+| Gác | `tests/test_giapvp.js` (6 mục, **cả sáu đã thử ngược và đều đỏ**) |
+
+**⚠ ĐÂY KHÔNG PHẢI XÁC THỰC — đừng nhầm hai thứ.** Không có tài khoản thì không cách nào biết ai
+thật sự là ai. Thứ chốt tên mua được là đúng một điều: **không mạo danh được người ĐANG CÓ MẶT.**
+Bản cũ nhận `name` ở MỌI gói `pos`, tức đổi tên bất cứ lúc nào — hồi chỉ có bóng người thì là
+chuyện nhỏ, từ lúc có CHAT thì là nói thay người khác mà họ không có cách nào biết.
+
+**⚠ TRÙNG TÊN THÌ ĐỔI, ĐỪNG ĐÁ RA.** Hai người cùng đặt "Kiếm Khách" là chuyện thường; đá người
+thứ hai là phạt nhầm người.
+
+**⚠ ĐỪNG ĐẶT TRẦN NHỊP SÁT 10 Hz.** Client gửi theo `requestAnimationFrame` nên hai gói dính sát
+nhau sau một khung nghẽn là bình thường. Và đừng ĐÁ ngay: một cú bắn dồn lẻ thì BỎ QUA gói là đủ,
+chỉ đá khi nó bền — người chơi thật không giữ được mức đó, bot thì có.
+
+### ☠ TRÚNG ĐÒN VÀ CHẾT ĐÃ ĐỒNG BỘ — và **ĐỪNG SUY CỜ CHẾT TỪ MÁU**
+
+Trúng đòn đi bằng **bộ đếm** `_hitSeq` (cùng lý do `_atkSeq`: cú giật 0,25-0,30 s lọt gọn giữa hai
+ảnh 10 Hz). Chết đi bằng **cờ riêng** `chet`, lấy từ `netDoc()`.
+
+**⚠⚠ ĐÂY LÀ LỖI ĐÃ VIẾT RA RỒI MỚI ĐO RA.** Bản đầu để `drawPlayer` suy `p.hp <= 0` cho thân người
+từ xa — nghe rất hợp lý, và SAI: hồi máu kịp chạy một nhịp giữa lúc máu về 0 và lúc cờ `dead` bật,
+nên người đã nằm xuống vẫn gửi đi **`{hp: 0,565 · dead: true}`**, rồi máy chủ `Math.round` thành
+**1**, và bên kia đọc ra "còn sống". Người chết đứng nguyên đó vung tay.
+
+⚠ **Và nó chỉ hỏng TUỲ LƯỢT** — đo được cả `0,57 → 1` (hỏng) lẫn `0,19 → 0` (không hỏng). Nên phép
+thử ngược phải **ghim máu ở 0,6**; để tự nhiên thì nó xanh chừng nửa số lượt và người sau sẽ kết
+luận nhầm là mệnh đề không gác được gì.
+
+⚠ **`deadT` phải được CỘNG Ở PHÍA NHẬN.** `update()` cộng nó cho người chơi của mình; thân người từ
+xa không bao giờ chạy `update()`, nên thiếu dòng này là **cú ngã đứng hình ở khung ĐẦU, vĩnh viễn**
+— nhìn ra "hình như lag" chứ không ra "chưa làm".
+
+⚠ **HỎI CẢ SỢI DÂY LẪN CHỖ TIÊU THỤ.** Mệnh đề đầu của tôi chỉ hỏi `n.chet` (thứ đến từ dây) và nó
+**KHÔNG ĐỎ** khi tôi trả `drawPlayer` về kiểu suy-từ-máu: dây vẫn chở cờ đúng, chỉ chỗ ĐỌC nó sai.
+Nay hỏi thẳng `window.__veChet` — quyết định mà `drawPlayer` thật sự dùng.
+
+⚠ **Bài kiểm nhiều mục: cảnh của mục trước còn nguyên ở mục sau.** B đứng giữa bãi quái `daohoa`
+nên nó có thể CHẾT trong lúc hai mục đầu chạy; bước dọn của tôi trả máu mà quên trả cờ `dead`, nên
+`deadT` đã chạy 4,5 s trước khi mục đo chết kịp giết nó. Chốt tự kiểm bắt được. *Trả lại trạng thái
+thì phải trả ĐỦ.*
+
+⚠ **ĐỪNG THỔI `maxHp` LÊN ĐỂ LÀM BẤT TỬ trong bài kiểm.** Đã thử `1e9`: hồi máu tính theo phần trăm
+máu trần nên mỗi nhịp kéo lại hàng trăm nghìn máu, nhân vật không chết nổi, và mục đo chết đọc ra
+"hp 840000" ngay sau lệnh giết. Dời quái đi là đủ.
+
+⚠ **Đo một hoạt cảnh NGẮN thì đừng lấy mẫu ở một mốc cố định.** Cú giật dài 0,30 s, ảnh chụp 10 Hz,
+độ trễ đổi theo lượt — đo được `0,017` ở mốc 300 ms và **đúng 0** ở mốc 150 ms, cùng một mã chạy
+tốt. Theo dõi liên tục rồi lấy ĐỈNH thì không còn khe nào để trượt.
+
+⚠ **HAI BÀI KIỂM CŨ ĐỎ VÌ HAI CƠ CHẾ MỚI LÀM ĐÚNG VIỆC CỦA CHÚNG** — cả hai sửa bằng cách đi
+theo, không bằng cách nới luật:
+- `test_wsnho §3/§4` nhận diện client bằng **TÊN**, mà §2 của chính nó đã cho cả chín client gửi
+  một `pos` kèm tên trước đó ⇒ tên đã chốt, hai cái tên mốc bị bỏ qua đúng như thiết kế. Nay
+  nhận diện bằng **TOẠ ĐỘ** — thứ hai mục ấy thật sự chứng minh (gói tới nơi nguyên vẹn).
+- `test_dongbodo §7` đo lớp nhân vật lúc ra đòn, mà `_lopHien` đòi `!hurtT`; từ lúc cú trúng đòn
+  được đồng bộ thì thân người từ xa đứng giữa bãi quái **liên tục giật** nên lớp nhân vật không
+  bao giờ vật chất hoá. Chốt tự kiểm của chính mục ấy bắt được — *đỏ ở chốt cảnh dựng, không đỏ
+  ở mệnh đề*, đúng như nó phải thế.
+
+### ⚔ SÀN ĐẤU ARDHAVEN — PvP đã chạy, và **MÁU TRẬN LÀ MỘT TÚI RIÊNG**
+
+Chủ dự án chốt: *"Dựng 1 map pvp và làm thử xem. Chỉ cần 2 người đánh nhau là được."* Đã chạy
+thật: hai trình duyệt, đi bộ qua cổng, đánh nhau, có kẻ thắng người thua.
+
+| | |
+|---|---|
+| Map | `pvp` trong `data/canbang.js` — *Sàn Đấu Ardhaven*, 1800×1400, `type:'freepk'`, `pvp:true` |
+| Cổng vào | `ardhaven (3820,1840)` → `pvp`, và cổng ra `pvp (900,1140)` → `ardhaven` |
+| Client | `PVP_MAP` · `PVP_HE` · `pvpDangO()` · `pvpGoc()` · `nearestNguoi()` · `pvpTran` · `drawPvpHUD()` |
+| Máy chủ | `nhanPvpDanh()` · `phatSan()` · `st.pvpHp/pvpMax/pvpChet/pvpHit` trong `bongnguoi.js` |
+| Dây | `netPvpDanh` gửi · `pvp-mau` / `pvp-ket` / `pvp-hoi` nhận, trong `net.js` |
+| Gác | `tests/test_pvp.js` (8 mệnh đề, **cả tám đã thử ngược và đều đỏ**) |
+
+**⚠⚠ QUYẾT ĐỊNH LỚN NHẤT: máu trận KHÔNG phải `player.hp`.** Ba lý do, mỗi lý do đủ để một mình
+nó quyết:
+1. `player.hp` nằm trên **máy của người BỊ đánh** — để nó quyết thì ai cũng bất tử bằng một dòng
+   devtools, và người thắng không có cách nào biết mình đang bị lừa.
+2. Chết thật thì `onDeath()` chạy: ném về map an toàn, mất tiến độ. **Thua một trận đấu không
+   được phép đụng vào bản lưu.**
+3. Túi riêng thì máy chủ giữ được, và nó mở **một** con số ra cho cả hai bên cùng nhìn.
+
+Nhưng túi ấy **khởi tạo bằng `maxHp` THẬT**, nên trang bị và cấp vẫn quyết thắng thua — đúng cái
+*"mang progress và đồ"* chủ dự án hỏi. `test_pvp §5` là mệnh đề nặng nhất của cả bài: nó đo
+`player.hp` · `dead` · `curMap` · `level` · `xp` của người vừa bị hạ và đòi **không một cái nào
+suy suyển**. Thử ngược (trừ thẳng vào `player.hp`) ra `1115 → 43` — đỏ ngay.
+
+**⚠ HAI GÓC ĐỨNG (`md.goc`), và thiếu nó thì lỗi trông y hệt "mạng không chạy".** Mọi nhân vật
+vào một map đều rơi vào **đúng một** `spawn`, nên hai người vừa vào là hai thân **chồng khít lên
+nhau lệch 0,0px** — đúng cái đã làm mất một vòng chẩn đoán ở lượt thử Bóng Người đầu tiên. Chọn
+góc theo **`NET.id`** (thứ duy nhất được máy chủ bảo đảm khác nhau giữa hai client), đừng bốc
+ngẫu nhiên: ngẫu nhiên thì một nửa số lượt hai người vẫn cùng một góc, tức lỗi cũ quay lại nhưng
+chỉ một nửa số lần.
+
+**⚠ KHÔNG hệ số phẳng nào cân được cả hai đầu — đo rồi mới biết.** Quét 5 lớp × 3 cấp × có/không
+BiS:
+
+| cảnh | `atk/maxHp` | `aspd` |
+|---|---|---|
+| tay trần (thieulam, mọi cấp) | 0,037 | 0,74 |
+| tay trần (toanchan cấp 20) | 0,083 | 0,79 |
+| BiS (`applyTestBoost`) | 0,089 | **0,25** |
+| BiS (toanchan cấp 120) | **0,266** | 0,25 |
+
+Tỉ lệ trải **7 lần**, mà `aspd` lại nhanh thêm **3 lần** ở đầu BiS ⇒ 21 lần chênh về tốc độ hạ.
+Nên chia việc: `PVP_HE = 1,0` đặt theo cảnh THẬT (trang bị thường), còn **trần một cú của máy
+chủ** `PVP_TRAN_DMG = 0,06` mới là thứ bó đầu BiS. Đo được: trận **17-32 cú**, tức ~4 giây (hai
+bên full BiS) tới ~24 giây (hai bên tay trần). **Bốn giây là đầu trên ĐÃ BIẾT, không phải chỗ
+chưa đo.**
+
+**⚠ TRẦN MỘT CÚ LÀM HAI VIỆC** — và đó là lý do nó đáng có: vừa chặn một client sửa đổi bắn một
+phát chết (`test_pvp §6` bắn thẳng `1e9` và đo ra 5,9%), vừa là cái duy nhất bó được cân bằng ở
+đầu trên. Nới nó là hai người full BiS hạ nhau trong vài cú; hạ nữa là trang bị hết nghĩa.
+
+**⚠ VÀ ĐÂY KHÔNG PHẢI CHỐNG GIAN LẬN — đừng đọc nó thành lời hứa kia.** Máy chủ không biết `atk`
+của ai (cho nó biết là phải chở cả `calcDerived` lên đấy). Ba hàng rào là để **bó thiệt hại**:
+**khoảng cách** (máy chủ có cả hai toạ độ ⇒ hàng rào THẬT), **nhịp** (`PVP_NHIP_MS` 120), và
+**trần một cú**. Kẻ sửa client đánh đau hơn — nhưng không một phát chết, không đánh xuyên map,
+không bắn 100 phát một giây.
+
+**⚠ CHỈ ĐÒN THƯỜNG.** Chiêu thức đi qua `hurtMob` ở hàng chục chỗ, mỗi chỗ một hình học riêng;
+nối tất cả vào PvP là một đợt việc riêng. Nói ra thay vì nối nửa vời — một chiêu nổ trùm qua
+người mà họ không mất máu là đúng cái "hứa suông" mà luật `pham` đã cấm.
+
+**Năm chỗ đã vấp, ghi lại:**
+1. **`return` giữa `update(dt)`.** Nhánh PvP của `pendingHit` nằm **trong** `update`, không phải
+   trong một hàm riêng — một `return` ở đó bỏ qua toàn bộ phần còn lại của khung (đạn, hồi chiêu,
+   nhặt đồ, sự kiện) và **chỉ ở đúng cái khung có một cú đánh PvP tới hạn**. Nhìn ra là "game
+   giật một cái mỗi lần đánh", không ra một lỗi. Phải là `else`.
+2. **Reset máu trận phải hỏi TRƯỚC dòng `curMap = mapId`** trong `travelTo` — sau dòng ấy thì
+   `curMap` đã bằng `mapId` và điều kiện không bao giờ đúng.
+3. **Cộng vào một bộ đếm RIÊNG (`st.pvpHit`), đừng ghi đè `st.hitSeq`.** `capNhat` ghi `hitSeq`
+   từ client ở mỗi gói `pos` (10 Hz), nên cộng thẳng vào đó là mất ngay ở gói kế tiếp. Nhờ bộ
+   đếm riêng, cú giật của người bị đánh đi qua **đúng sợi dây `hs` đã có** — không thêm cơ chế.
+4. **Báo máu trận NGAY LÚC VÀO, đừng đợi cú đánh đầu tiên.** Ảnh chụp chở `ph/pm` của người
+   KHÁC nhưng không bao giờ chở của chính mình ⇒ người vừa vào nhìn thanh máu của **trận trước**
+   cho tới lúc ăn đòn. Và `pvpMax = 0` lúc cú đầu bay tới thì trần một cú (tính theo `pvpMax`)
+   cũng bằng 0 ⇒ cú đầu tiên kẹp xuống 1 sát thương.
+5. **Trong sàn đấu, `doBasic` phải chạy tới NGƯỜI khi ngoài tầm.** Sàn không có con quái nào nên
+   nhánh cũ rơi thẳng xuống câu *"không có quái trong tầm — mở M hoặc Chọn Trận để tới bãi
+   quái"*: đứng giữa sàn đấu mà game bảo đi tìm bãi quái, và nhân vật đứng im.
+
+**Ba bài kiểm CŨ phải đi theo, và cả ba là "theo nội dung", không phải "nới luật":**
+`test_thegioi §1` (sàn đấu không có chỗ trên bản đồ thế giới — nó không giáp vùng nào nên không
+có hướng nào đúng để vẽ) · `test_domap` (mọi ngưỡng của bài đo *"map có đủ thứ để làm không"*,
+mà sàn đấu **cố ý** không có gì — cách duy nhất làm nó xanh là nhét một bãi quái vào sàn đấu,
+tức làm hỏng chính cái map) · cả hai lọc bằng `md.pvp`. `test_noimap` thì **xanh sẵn** và đó là
+bằng chứng cổng chạy: nó lan theo đúng đường người chơi và tới được `pvp`.
+
+**⚠ MAP CỐ Ý RỖNG.** Không `vung`, không `herbs`, không `boss`, không `thu` — nên Rương Canh và
+Vỉa Cốt tự vắng mặt (cửa duy nhất của cả hai là *"map có bãi quái"*). Nhét một bãi quái vào đây
+là biến sàn đấu thành một map cày có thêm người, và mọi thứ người chơi tới đây để làm sẽ bị AUTO
+làm hộ. `packs: []` / `duhiep: null` vẫn phải khai **tường minh** — `packsOf()` đọc `md.packs` và
+`.map(...)` trên `undefined` ném ngay giữa vòng dựng thế giới.
+
+**⚠ Sàn đấu KHÔNG mở điểm dịch chuyển** (`travelTo` loại cả `md.dungeon` lẫn `md.pvp`): mở ra thì
+bảng Bản Đồ có một nút dịch chuyển thẳng vào giữa một trận đang đánh.
+
 ### Còn nợ, biết rõ
 
 | | |
 |---|---|
-| Trạng thái trúng đòn / chết / niệm chú chưa đồng bộ | mới có `atkAnim` và `castT`. `hurtT`/`deadT` còn suy từ `hp` ở phía nhận, nên thân người từ xa không giật khi ăn đòn |
+| Niệm chú của thân người từ xa | `castT` đã đồng bộ, nhưng VFX của chiêu thì chưa — bên kia thấy tư thế niệm mà không thấy chiêu nổ |
 | Thân người từ xa không chở `avatar` khi ai đó đổi giữa chừng… | …thật ra CÓ (`g.av`, ba trạng thái `undefined`/`null`/id). Chỗ còn thiếu là **con Axie không có hoạt cảnh ĐÁNH** — xem "Nợ" ở mục Đổi Vai |
 | `cheatExec` vẫn ship | Giai đoạn 0 chưa làm. Vô hại ở bản offline; phải gỡ trước khi có bất cứ thứ gì chung |
 | Sandbox không SSH được vào VPS | mọi bước cài Node/nginx/systemd phải do chủ dự án chạy tay |

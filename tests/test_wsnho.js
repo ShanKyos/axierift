@@ -154,9 +154,14 @@ function clientTho(cong){
   await bay[0].guiNhoGiot(JSON.stringify({ t:'pos', map:'daohoa', x:2222, y:1500, hp:900, maxHp:900,
                                            level:7, speed:190, sect:'thieulam', name:'NhoGiot' }));
   await cho(500);
+  // ⚠ NHẬN DIỆN BẰNG TOẠ ĐỘ, KHÔNG BẰNG TÊN. Mục §2 ở trên đã cho cả chín client gửi một `pos`
+  // kèm tên, mà máy chủ nay chốt tên ở gói ĐẦU rồi thôi (chống mạo danh — xem CLAUDE.md), nên
+  // cái tên gửi kèm ở đây bị bỏ qua ĐÚNG NHƯ THIẾT KẾ. Dùng tên làm mốc là bài đỏ vì một cơ chế
+  // chẳng liên quan gì tới thứ nó định gác (ghép khung). Toạ độ mới là thứ §3/§4 thật sự chứng
+  // minh: gói tới nơi NGUYÊN VẸN.
   const anh3 = c1.tin.slice(truoc3).map(t => { try { return JSON.parse(t); } catch { return null; } })
                      .filter(x => x && x.t === 'anh').pop();
-  const thay3 = anh3 && anh3.ds.find(d => d.n === 'NhoGiot');
+  const thay3 = anh3 && anh3.ds.find(d => d.x === 2222);
   console.log('3 · gửi từng byte một →', thay3 ? `thấy x=${thay3.x} lv=${thay3.lv}` : 'KHÔNG THẤY');
   if (!thay3) fail('khung bị cắt thành từng byte thì máy chủ không ghép lại được');
   else if (thay3.x !== 2222) fail(`ghép sai: x=${thay3.x}, cần 2222`);
@@ -171,7 +176,7 @@ function clientTho(cong){
   await cho(500);
   const anh4 = c1.tin.slice(truoc4).map(t => { try { return JSON.parse(t); } catch { return null; } })
                      .filter(x => x && x.t === 'anh').pop();
-  const thay4 = anh4 && anh4.ds.find(d => d.n === 'PhanManh');
+  const thay4 = anh4 && anh4.ds.find(d => d.x === 1777);   // xem ghi chú ở §3: mốc là TOẠ ĐỘ
   console.log('4 · khung phân mảnh →', thay4 ? `thấy x=${thay4.x}` : 'KHÔNG THẤY');
   if (!thay4 || thay4.x !== 1777) fail('không ghép được khung phân mảnh (text + continuation)');
 

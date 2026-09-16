@@ -64,6 +64,12 @@
       // thoát ký tự. Nhét HTML vào đây là dựng một chỗ thứ hai biết về giao diện.
       if (tin.t === 'chat' && typeof window.netChatNhan === 'function') { window.netChatNhan(tin); return; }
       if (tin.t === 'chat-chan' && typeof window.netChatChan === 'function') { window.netChatChan(tin.ly); return; }
+      // ⚔ Sàn đấu. Cùng lối với chat: net.js là sợi dây, game.js quyết vẽ gì. Ba tin riêng chứ
+      // không một tin mang cờ — `pvp-mau` phải giật người, `pvp-hoi` thì tuyệt đối không được
+      // (một cú giật lúc hồi sinh đọc ra là "vừa dựng lại trận đã ăn đòn").
+      if (tin.t === 'pvp-mau' && typeof window.netPvpMau === 'function') { window.netPvpMau(tin); return; }
+      if (tin.t === 'pvp-ket' && typeof window.netPvpKet === 'function') { window.netPvpKet(tin); return; }
+      if (tin.t === 'pvp-hoi' && typeof window.netPvpHoi === 'function') { window.netPvpHoi(tin); return; }
     };
 
     ws.onclose = () => {
@@ -100,7 +106,7 @@
         // ⚠ GHI NHẬN BỘ ĐẾM MÀ KHÔNG NỔ HOẠT CẢNH. Người này có thể đã đánh 500 cú trước khi ta
         // nhìn thấy họ; coi lần đầu gặp là "vừa bắt đầu một đòn" thì ai lọt vào tầm mắt cũng
         // vung kiếm một cái chào — kể cả người đang đứng yên trong thành.
-        t._asCuoi = d.as; t._csCuoi = d.cs;
+        t._asCuoi = d.as; t._csCuoi = d.cs; t._hsCuoi = d.hs;
         NET.than.set(d.i, t);
       }
       // mốc cũ = chỗ ĐANG vẽ, không phải mốc `b` trước đó: nếu một ảnh tới trễ thì nhảy từ chỗ
@@ -116,8 +122,11 @@
       t.ax = t.x || d.x; t.ay = t.y || d.y; t.at = gio;
       t.bx = d.x; t.by = d.y; t.bt = gio + TRE_MS;
       t.face = d.f; t.moving = !!d.mv;
-      t.hp = d.hp; t.maxHp = d.mhp; t.level = d.lv; t.speed = d.sp;
+      t.hp = d.hp; t.maxHp = d.mhp; t.level = d.lv; t.speed = d.sp; t.chet = !!d.dd;
       t.sect = d.s; t.name = d.n;
+      // Máu TRẬN — chỉ có mặt khi người ấy đang đứng trong sàn đấu. `0` là "không ở trận nào",
+      // không phải "sắp chết"; `veNhanNet` phân biệt bằng `pvpMax > 0`.
+      t.pvpHp = d.ph || 0; t.pvpMax = d.pm || 0;
       t.map = tin.map || ta0.map;
       // ── Trang bị: chỉ tới khi nó ĐỔI (xem chú thích ở máy chủ) ────────────────────────
       // Dựng lại một `equip` giả bằng hàm của game, để thân người từ xa đi qua ĐÚNG đường vẽ
@@ -129,9 +138,11 @@
       // sự kiện. Gộp chúng lại là đổi vũ khí xong phải đợi cú đánh kế tiếp mới đúng tư thế.
       if (d.ak) t.atkAct = d.ak;
       if (d.ck) t.castAct = d.ck;
-      const G = window.NV_HD_GIAY || { a: 0.22, c: 0.38 };
+      const G = window.NV_HD_GIAY || { a: 0.22, c: 0.38, h: 0.30 };
       if (d.as !== t._asCuoi){ t._asCuoi = d.as; t.atkAnim = G.a; }
       if (d.cs !== t._csCuoi){ t._csCuoi = d.cs; t.castT  = G.c; }
+      // Trúng đòn cũng đi bằng BỘ ĐẾM, cùng lý do: một cú giật 0,25-0,30 s lọt gọn giữa hai ảnh.
+      if (d.hs !== t._hsCuoi){ t._hsCuoi = d.hs; t.hurtT = G.h; }
     }
     for (const id of [...NET.than.keys()]) if (!con.has(id)) NET.than.delete(id);
     capNhatMang();
@@ -176,6 +187,15 @@
       // vào đó là người chơi của mình bị trừ hai lần và mọi cú đánh ngắn đi một nửa.
       if (t.atkAnim > 0) t.atkAnim = Math.max(0, t.atkAnim - dt);
       if (t.castT   > 0) t.castT   = Math.max(0, t.castT   - dt);
+      if (t.hurtT   > 0) t.hurtT   = Math.max(0, t.hurtT   - dt);
+      // ── NẰM XUỐNG ──────────────────────────────────────────────────────────────────────
+      // `drawPlayer` suy "người này chết chưa" từ MÁU (`p.hp <= 0`), nên chuyện chết đã qua được
+      // dây từ trước — nhưng khung hình của khối chết đọc `deadT`, mà `netTaoThan` để nó bằng 0
+      // và không ai cộng. Hệ quả: thân người từ xa chết thì ĐỨNG HÌNH ở khung ĐẦU của cú ngã,
+      // vĩnh viễn. Không lỗi nào báo, và nhìn ra là "hình như lag" chứ không ra "chưa làm".
+      // Ở người chơi của mình thì `update()` cộng nó; thân người từ xa không chạy `update()`.
+      if (t.chet) t.deadT = (t.deadT || 0) + dt;
+      else if (t.deadT) t.deadT = 0;     // hồi sinh thì đứng dậy, đừng giữ khung cuối của cú ngã
     }
   }
 
@@ -199,7 +219,7 @@
       sect: p.sect, name: p.name || ('Khach' + NET.id),
       // Bộ đếm cú ra đòn, xem `_atkSeq` trong game.js. Gửi con số chứ không gửi thời gian còn
       // lại: 0,22 s lọt gọn giữa hai ảnh 10 Hz.
-      as: p._atkSeq || 0, cs: p._castSeq || 0,
+      as: p._atkSeq || 0, cs: p._castSeq || 0, hs: p._hitSeq || 0, chet: !!ta.chet,
       ak: p.atkAct || '', ck: p.castAct || '',
     };
     // ⚠ TRANG BỊ CHỈ GỬI KHI ĐỔI. Nó đổi vài phút một lần mà ảnh chụp thì 10 lần một giây —
@@ -212,6 +232,16 @@
     }
     ws.send(JSON.stringify(goi));
   }
+
+  /* ── Gửi một cú đánh trong sàn đấu ───────────────────────────────────────────────────
+   * Trả `false` khi chưa nối — bên gọi nói ra, đừng nuốt. Máy chủ mới là nơi quyết cú này có
+   * ăn hay không (khoảng cách, nhịp, trần sát thương): ở đây chỉ gửi.                        */
+  window.netPvpDanh = function (id, dmg) {
+    const ws = NET.ws;
+    if (!ws || ws.readyState !== 1 || !(id > 0)) return false;
+    ws.send(JSON.stringify({ t: 'pvp-danh', den: id, dmg: Math.max(1, Math.round(dmg) || 1) }));
+    return true;
+  };
 
   /* ── Gửi chat ────────────────────────────────────────────────────────────────────────
    * Trả `false` khi chưa nối, để bên gọi NÓI RA thay vì nuốt câu của người chơi. Một ô chat

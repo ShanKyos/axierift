@@ -46,6 +46,46 @@ const NGUOI_MAX  = parseInt(process.env.NGUOI_MAX || '64', 10);
  * ⚠ CHỐNG SPAM LÀ VIỆC CỦA MÁY CHỦ, không phải của client. Client có thể bị sửa; ô nhập bên
  * client chỉ để người dùng tử tế khỏi vô tình bấm liên tục. Hai lớp, vì chúng chặn hai kiểu
  * khác nhau: `CHAT_NHIP_MS` chặn giữ phím, `CHAT_CUA` chặn dán một loạt rồi bắn dồn.           */
+/* ── GIỚI HẠN NHỊP GÓI `pos` ──────────────────────────────────────────────────────────────
+ * Chat có hai lớp chống spam từ đầu; `pos` thì KHÔNG CÓ GÌ — mà nó mới là gói chạy 10 lần mỗi
+ * giây. Một client sửa đổi bắn 10.000 gói/giây là ăn CPU của cả phòng, và không ai trong phòng
+ * biết vì sao game giật.
+ *
+ * ⚠ ĐỪNG ĐẶT SÁT 10 Hz. Client gửi theo `requestAnimationFrame` nên hai gói có thể dính sát
+ * nhau sau một khung bị nghẽn; chặn sát nhịp là phạt nhầm người chơi tử tế trên máy yếu. Trần
+ * ở đây rộng gấp ba nhịp thật, đủ để bắt kẻ bắn dồn mà không chạm tới ai chơi bình thường.
+ * ⚠ Và ĐỪNG ĐÁ NGAY: một cú bắn dồn lẻ thì BỎ QUA gói là đủ. Chỉ đá khi nó bền — kẻ viết bot
+ * mới giữ được mức đó, còn người chơi thật thì không.                                          */
+const POS_CUA    = 30;       // tối đa ngần này gói `pos`…
+const POS_CUA_MS = 1000;     // …trong ngần này (nhịp thật là 10)
+const POS_QUA_MAX = 200;     // vượt liên tục ngần này gói thì đóng kết nối
+
+/* ── ⚔ SÀN ĐẤU ──────────────────────────────────────────────────────────────────────────
+ * Đây là chỗ DUY NHẤT trong tệp này máy chủ có QUYẾT ĐỊNH, không chỉ chuyển tiếp — và nó cố ý
+ * nhỏ nhất có thể: một túi máu riêng cho mỗi người đang đứng trong sàn đấu.
+ *
+ * ⚠ VÌ SAO KHÔNG TRÁI VỚI DÒNG "ĐỪNG BẮT NÓ GÁNH THÊM VIỆC" Ở ĐẦU TỆP. Luật ấy cấm những thứ
+ * CÓ GIÁ TRỊ LÂU DÀI — sinh vật phẩm, cộng tiền tệ, máu boss chung — vì chúng phải chờ có tài
+ * khoản thật và kho đồ trên máy chủ. Máu trận thì ngược hẳn: nó sống đúng một trận, biến mất
+ * khi rời map, không ghi vào bản lưu của ai, và KHÔNG có nó thì tính năng không tồn tại (hai
+ * client không thể tự thoả thuận ai chết trước).
+ *
+ * ⚠ ĐÂY KHÔNG PHẢI CHỐNG GIAN LẬN. Máy chủ không biết `atk` của ai — cho nó biết là phải chở
+ * cả `calcDerived` lên đây. Ba hàng rào dưới là để BÓ THIỆT HẠI, không phải để chặn: khoảng
+ * cách (máy chủ có cả hai toạ độ nên đây là hàng rào THẬT), nhịp, và trần một cú. Kẻ sửa client
+ * đánh đau hơn — nhưng không một phát chết, không đánh xuyên map, không bắn 100 phát một giây. */
+const PVP_MAP      = 'pvp';
+const PVP_TAM      = 460;    // xa hơn tầm đánh xa nhất trong game (~320) cộng lề nội suy
+const PVP_NHIP_MS  = 120;    // hai cú của cùng một người phải cách nhau chừng này
+/* ⚠ TRẦN MỘT CÚ LÀM HAI VIỆC, và việc thứ hai mới là việc chính. Nó chặn một client sửa đổi
+ * bắn một phát chết — nhưng nó cũng là thứ DUY NHẤT bó được đầu trên của cân bằng: đo trong
+ * game (xem `PVP_HE`) thì tỉ lệ `atk/maxHp` trải 7 lần giữa người tay trần và người full BiS,
+ * còn `aspd` nhanh thêm 3 lần nữa. Ở 0,06 thì mọi trận đều tốn ÍT NHẤT 17 cú, dù trang bị lệch
+ * tới đâu — mà dưới trần ấy thì trang bị vẫn quyết, đúng cái "mang progress và đồ".
+ * Nới nó lên là hai người full BiS hạ nhau trong vài cú; hạ xuống nữa là trang bị hết nghĩa. */
+const PVP_TRAN_DMG = 0.06;
+const PVP_HOI_MS   = 6000;   // bị hạ rồi bao lâu thì dựng lại trận
+
 const CHAT_DAI    = 200;     // ký tự — cắt, không đá
 const CHAT_NHIP_MS = 700;    // hai câu liền nhau phải cách nhau chừng này
 const CHAT_CUA    = 6;       // tối đa ngần này câu…
@@ -64,7 +104,21 @@ const batDau = Date.now();
 const so = (v, min, max, mac) => (Number.isFinite(v) ? Math.min(max, Math.max(min, v)) : mac);
 const chu = (v, n) => (typeof v === 'string' ? v.slice(0, n).replace(/[\u0000-\u001f]/g, '') : '');
 
+// Tên đã có người đang online dùng thì thêm hậu tố. KHÔNG từ chối kết nối: người thứ hai trùng
+// tên là chuyện thường (hai người cùng đặt "Kiếm Khách"), đá họ ra là phạt nhầm người.
+function tenRieng(xin, id){
+  const dung = new Set();
+  for (const st of nguoi.values()) if (st.id !== id && st.daDatTen) dung.add(st.name);
+  if (!dung.has(xin)) return xin;
+  for (let k = 2; k < 100; k++){
+    const t = (xin + '#' + k).slice(0, TEN_MAX);
+    if (!dung.has(t)) return t;
+  }
+  return ('Khach' + id).slice(0, TEN_MAX);
+}
+
 function capNhat(st, tin) {
+  const mapCu = st.map;
   st.map   = chu(tin.map, 32) || st.map;
   st.x     = so(tin.x, -1e5, 1e5, st.x);
   st.y     = so(tin.y, -1e5, 1e5, st.y);
@@ -75,12 +129,25 @@ function capNhat(st, tin) {
   st.level = Math.round(so(tin.level, 1, 999, st.level));
   st.speed = so(tin.speed, 0, 2000, st.speed);
   st.sect  = chu(tin.sect, 24) || st.sect;
-  st.name  = chu(tin.name, TEN_MAX) || st.name;
+  // ⚠ TÊN ĐẶT MỘT LẦN RỒI THÔI, VÀ KHÔNG ĐƯỢC TRÙNG AI ĐANG ONLINE.
+  // Bản cũ nhận `name` ở MỌI gói `pos`, tức client đổi tên bất cứ lúc nào. Hồi chỉ có bóng
+  // người thì đó là chuyện nhỏ; từ lúc có CHAT thì nó là mạo danh — ai cũng đổi tên mình thành
+  // tên người khác rồi nói thay họ, và người bị mạo danh không có cách nào biết.
+  //
+  // ⚠ ĐÂY KHÔNG PHẢI XÁC THỰC, và đừng nhầm hai thứ. Không có tài khoản thì không cách nào biết
+  // ai thật sự là ai; thứ chốt này mua được đúng một điều: KHÔNG mạo danh được người đang có
+  // mặt. Muốn hơn thế thì phải đợi giai đoạn có tài khoản (xem docs/THIET_KE_ONLINE.md).
+  if (!st.daDatTen){
+    const xin = chu(tin.name, TEN_MAX);
+    if (xin){ st.name = tenRieng(xin, st.id); st.daDatTen = true; }
+  }
   // ── Hành động ra đòn ──────────────────────────────────────────────────────────────────
   // Bộ đếm chứ không phải thời gian còn lại: một hoạt cảnh 0,22 s lọt gọn giữa hai ảnh 10 Hz,
   // nên gửi "còn bao lâu" là thỉnh thoảng mất hẳn một cú đánh. Một con số chỉ tăng thì không.
   st.atkSeq  = Math.round(so(tin.as, 0, 1e9, st.atkSeq));
   st.castSeq = Math.round(so(tin.cs, 0, 1e9, st.castSeq));
+  st.hitSeq  = Math.round(so(tin.hs, 0, 1e9, st.hitSeq));
+  st.chet    = !!tin.chet;
   st.atkAct  = chu(tin.ak, 16) || st.atkAct;
   st.castAct = chu(tin.ck, 16) || st.castAct;
   // ── Trang bị ──────────────────────────────────────────────────────────────────────────
@@ -90,7 +157,62 @@ function capNhat(st, tin) {
     st.gear = locTrangBi(tin.g);
     st.gearV++;
   }
+  // ⚠ DỰNG TRẬN Ở ĐÂY, ĐỪNG DỰNG LÚC BỊ ĐÁNH. Đặt máu trận lúc cú đầu tiên bay tới thì người
+  // vừa vào sàn có `pvpMax = 0`, mà trần một cú tính theo `pvpMax` ⇒ trần bằng 0 ⇒ cú đầu tiên
+  // kẹp xuống 1 sát thương. Và `pvpMax` phải bốc từ `maxHp` THẬT, đó là cả chỗ trang bị đi vào
+  // trận đấu. Vào sàn là máu đầy: một trận thua không được kéo sang trận sau.
+  if (st.map === PVP_MAP && mapCu !== PVP_MAP){
+    st.pvpMax = Math.max(1, Math.round(st.maxHp));
+    st.pvpHp = st.pvpMax; st.pvpChet = 0;
+    // ⚠ BÁO NGAY LÚC VÀO, đừng đợi cú đánh đầu tiên. Ảnh chụp chở `ph/pm` của NGƯỜI KHÁC nhưng
+    // không bao giờ chở của chính mình, nên thiếu tin này thì người vừa vào nhìn thấy thanh máu
+    // trận của TRẬN TRƯỚC cho tới lúc ăn đòn — một thanh máu nói dối đúng lúc nó là thứ duy
+    // nhất người chơi nhìn. Nó cũng báo cho đối thủ biết có người vừa xuống sân.
+    phatSan(JSON.stringify({ t:'pvp-hoi', id: st.id, hp: st.pvpHp, max: st.pvpMax }));
+  } else if (st.map !== PVP_MAP && mapCu === PVP_MAP){
+    st.pvpMax = 0; st.pvpHp = 0; st.pvpChet = 0;
+  }
   st.nghe  = Date.now();
+}
+
+/* Một cú đánh lên người. `tin = {den, dmg}`.
+ * ⚠ MỌI CHỐT Ở ĐÂY PHẢI ĐỌC TRẠNG THÁI CỦA MÁY CHỦ, không đọc gì trong `tin` ngoài hai trường
+ * ấy. Tin cậy một trường thứ ba (ví dụ "tôi đang ở map pvp") là mở cửa cho người đứng ngoài
+ * thành đánh người trong sàn.                                                                */
+function nhanPvpDanh(st, tin){
+  if (st.map !== PVP_MAP || st.pvpChet) return;
+  const gio = Date.now();
+  if (gio - (st.pvpLuc || 0) < PVP_NHIP_MS) return;
+  const bi = nguoi.get(Math.round(so(tin.den, 0, 1e9, 0)));
+  if (!bi || bi.id === st.id || bi.map !== PVP_MAP || bi.pvpChet || bi.pvpMax <= 0) return;
+  // Khoảng cách: máy chủ giữ cả hai toạ độ nên đây là chốt DUY NHẤT ở đây thật sự chặn được
+  // một client sửa đổi — đánh từ đầu này map sang đầu kia là không qua.
+  if (Math.hypot(st.x - bi.x, st.y - bi.y) > PVP_TAM) return;
+  st.pvpLuc = gio;
+  const tran = Math.max(1, Math.floor(bi.pvpMax * PVP_TRAN_DMG));
+  const dmg = Math.max(1, Math.min(tran, Math.round(so(tin.dmg, 1, 1e9, 1))));
+  bi.pvpHp = Math.max(0, bi.pvpHp - dmg);
+  // ⚠ CỘNG VÀO BỘ ĐẾM TRÚNG ĐÒN CỦA MÁY CHỦ, ĐỪNG GHI ĐÈ `hitSeq`. `capNhat` ghi `hitSeq` từ
+  // client ở mỗi gói `pos` (10 lần/giây), nên cộng thẳng vào đó là mất ngay ở gói kế tiếp. Nhờ
+  // bộ đếm riêng, cú giật của người bị đánh đi qua ĐÚNG sợi dây `hs` đã có — không thêm cơ chế.
+  bi.pvpHit = (bi.pvpHit || 0) + 1;
+  phatSan(JSON.stringify({ t:'pvp-mau', id: bi.id, hp: bi.pvpHp, max: bi.pvpMax, tu: st.id, dmg }));
+  if (bi.pvpHp <= 0){
+    bi.pvpChet = gio;
+    phatSan(JSON.stringify({ t:'pvp-ket', thang: st.id, thua: bi.id,
+                             tenThang: st.name, tenThua: bi.name }));
+    console.log(`[pvp] ${st.name} ha ${bi.name}`);
+  }
+}
+
+// Phát tới MỌI người đang đứng trong sàn đấu — kể cả người bị đánh. Ảnh chụp không bao giờ chở
+// chính mình, nên thiếu vế đó thì người bị đánh là người DUY NHẤT không thấy mình mất máu.
+function phatSan(goi){
+  for (const w of wss.clients){
+    if (!w.dangMo) continue;
+    const ai = nguoi.get(w.__id);
+    if (ai && ai.map === PVP_MAP) w.gui(goi);
+  }
 }
 
 /* ⚠ VỆ SINH CẢ MÔ TẢ TRANG BỊ, ĐỪNG CHUYỂN TIẾP THÔ. Gói này đi thẳng vào tầng vẽ của MỌI người
@@ -146,10 +268,14 @@ wss.khiNoi((ws) => {
   const st = {
     id, map: '', x: 0, y: 0, face: 0, moving: false,
     hp: 1, maxHp: 1, level: 1, speed: 190, sect: 'thieulam',
-    name: 'Khach' + id, nghe: Date.now(),
+    name: 'Khach' + id, daDatTen: false, nghe: Date.now(),
     chatLuc: 0, chatCua: [],     // chống spam, xem CHAT_* ở trên
-    atkSeq: 0, castSeq: 0, atkAct: '', castAct: '',
+    posCua: [], posQua: 0,       // chống bắn dồn `pos`, xem POS_* ở trên
+    atkSeq: 0, castSeq: 0, hitSeq: 0, chet: false, atkAct: '', castAct: '',
     gear: null, gearV: 0,        // số hiệu tăng mỗi lần trang bị đổi
+    // Sàn đấu. `pvpMax = 0` nghĩa là KHÔNG ở trong trận nào — phân biệt với "máu đầy", vì một
+    // thanh 0/0 vẽ ra trông hệt một người sắp chết.
+    pvpHp: 0, pvpMax: 0, pvpChet: 0, pvpLuc: 0, pvpHit: 0,
   };
   nguoi.set(id, st);
   ws.__id = id;
@@ -163,8 +289,14 @@ wss.khiNoi((ws) => {
     let tin;
     try { tin = JSON.parse(raw); } catch { return; }   // rác thì bỏ qua, đừng đá
     if (!tin || typeof tin !== 'object') return;
-    if (tin.t === 'pos') capNhat(st, tin);
+    if (tin.t === 'pos'){
+      if (!posQua(st, ws)) capNhat(st, tin);
+    }
     else if (tin.t === 'chat') nhanChat(st, ws, tin);
+    // ⚠ Đi CHUNG cửa hạn nhịp với `pos`? KHÔNG — `pos` chạy 10 Hz còn cú đánh thì thưa hơn
+    // nhiều, gộp hai thứ vào một cửa sổ là một người bấm đánh nhanh bị cắt mất gói vị trí.
+    // `nhanPvpDanh` có nhịp riêng (`PVP_NHIP_MS`).
+    else if (tin.t === 'pvp-danh') nhanPvpDanh(st, tin);
   });
 
   ws.khiDong(() => {
@@ -172,6 +304,18 @@ wss.khiNoi((ws) => {
     console.log(`[-] ${id} roi — con ${nguoi.size}`);
   });
 });
+
+// Trả `true` nghĩa là gói này VƯỢT trần — bỏ qua nó. Xem POS_* ở đầu tệp.
+function posQua(st, ws){
+  const gio = Date.now();
+  st.posCua = st.posCua.filter(t => gio - t < POS_CUA_MS);
+  if (st.posCua.length < POS_CUA){ st.posCua.push(gio); st.posQua = 0; return false; }
+  if (++st.posQua >= POS_QUA_MAX){
+    console.log(`[!] ${st.id} ban don ${st.posQua} goi pos — dong ket noi`);
+    ws.dong(1008, 'qua nhanh');    // 1008 = policy violation
+  }
+  return true;
+}
 
 /* ── Chat ────────────────────────────────────────────────────────────────────────────────
  * ⚠ TRẢ LỜI NGƯỜI BỊ CHẶN, ĐỪNG IM. Câu bị nuốt mà không nói gì thì người chơi gõ lại, rồi gõ
@@ -212,6 +356,14 @@ setInterval(() => {
   // rớt lặng lẽ: nghe thấy gì đó lần cuối quá lâu ⇒ bỏ khỏi ảnh chụp
   for (const [id, st] of nguoi) if (gio - st.nghe > IM_LANG_MS) nguoi.delete(id);
 
+  // Dựng lại trận cho ai vừa bị hạ. Máy chủ làm việc này chứ không phải client: người thua
+  // không được tự quyết lúc nào mình đứng dậy.
+  for (const st of nguoi.values()){
+    if (!st.pvpChet || gio - st.pvpChet < PVP_HOI_MS) continue;
+    st.pvpChet = 0; st.pvpHp = st.pvpMax = Math.max(1, Math.round(st.maxHp));
+    phatSan(JSON.stringify({ t:'pvp-hoi', id: st.id, hp: st.pvpHp, max: st.pvpMax }));
+  }
+
   // gom theo bản đồ MỘT LẦN, đừng quét lại cho từng người: với n người cùng map thì dựng
   // riêng cho từng người là O(n²) — ở 10 người không sao, nhưng đây là loại chi phí âm thầm
   // không ai đo lại khi con số tăng lên.
@@ -236,7 +388,11 @@ setInterval(() => {
                   f: +st.face.toFixed(2), mv: st.moving ? 1 : 0,
                   hp: Math.round(st.hp), mhp: Math.round(st.maxHp),
                   lv: st.level, sp: Math.round(st.speed), s: st.sect, n: st.name,
-                  as: st.atkSeq, cs: st.castSeq };
+                  as: st.atkSeq, cs: st.castSeq, hs: st.hitSeq + (st.pvpHit || 0),
+                  dd: st.chet ? 1 : 0 };
+      // Máu TRẬN, chỉ khi người ấy đang trong một trận. Hai byte tên khoá cho một thứ đổi vài
+      // lần một giây trong sàn đấu và KHÔNG BAO GIỜ có mặt ở 12 map còn lại.
+      if (st.pvpMax > 0){ e.ph = Math.round(st.pvpHp); e.pm = st.pvpMax; }
       if (st.atkAct)  e.ak = st.atkAct;
       if (st.castAct) e.ck = st.castAct;
       // ⚠ TRANG BỊ CHỈ GỬI KHI KẾT NỐI NÀY CHƯA CÓ BẢN ẤY. Nhét nó vào mọi ảnh chụp là ~180
