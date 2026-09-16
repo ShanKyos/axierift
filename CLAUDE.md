@@ -309,6 +309,7 @@ cả hai.
 | ở đâu | việc |
 |---|---|
 | `bp:{ mat, tai, sung, mieng, lung, duoi }` trong `data/canbang.js` | 16 × 6 = 96 ô, **tự khai theo chính `moTa` đã có** |
+| **`docs/BANG_BOPHAN.md`** | bảng đủ 96 ô + độ thuần + độ sắc — **sinh bằng `node tools/bang_bophan.cjs`, đừng sửa tay** |
 | `bpCung(c)` | đếm — `null` khi chưa khai, và `null` ≠ 0 (0 là *tạp nhất có thể*, một phán quyết hẳn hoi) |
 | `bpSac(cung)` → `BP_SAC_MIN` 0,45 … `BP_SAC_MAX` 1,50 | độ sắc |
 | **`axieSac(p)`** | cửa DUY NHẤT hỏi "người này sắc tới đâu"; lui về 1 khi thiếu dữ liệu ⇒ save cũ không phải di trú |
@@ -325,6 +326,10 @@ không đổi **tổng**.
 và `HE_LOI` (−0,10) **không đối xứng quanh 1**, nên cách đó cho trung bình `1 + 0,00667·sac`:
 con càng thuần càng ăn đòn nặng hơn trên tổng thể. Đó vẫn là một nấc thang, chỉ là nấc đi xuống.
 Thử ngược đúng phép ấy ⇒ `test_bophan §2` đỏ với lệch `7,0e-3`.
+
+⚠ Công cụ sinh bảng **đọc `ELEM` và hai hằng độ sắc THẲNG TỪ `game.js`** bằng regex và **dừng
+hẳn** khi không khớp. Chép một bảng nhóm tam giác thứ hai vào công cụ là đúng cái thứ nó sinh ra
+để tránh — và regex trượt rồi im lặng sinh ra một bảng khác là vết sẹo đã ghi ở `test_taitro §2`.
 
 **⚠ ĐỪNG CHO NGƯỜI CHƠI TỰ CHỌN BỘ PHẬN.** Bộ phận thuộc về con Axie và cố định. Cho chọn là dựng
 lại đúng cái trục đã bị tháo BA lần, chỉ khác tên.
