@@ -9357,6 +9357,12 @@ const BGM_TRACKS = {
   mongco:     'bgm_mongco',      // lunar_battle — thảo nguyên tro
   nhanmon:    'bgm_nhanmon',     // pvp — ải cuối, căng nhất
   deep: 'bgm_dungeon',         // Tầng Sâu
+  // Lò Khắc: mượn bản PvP — chú thích của chính nó ghi "ải cuối, căng nhất", và một sảnh 15 đợt
+  // dồn liên tục thì đúng chất đó hơn nhạc hang. Dùng chung nhạc là nếp đã có (bốn map rẻo rừng
+  // Corran dùng chung `bgm_chungnam`), không phải chỗ cắt góc.
+  // ⚠ Map nào KHÔNG có mục ở đây thì `nhacMap()` gọi `stopBgm()` — vào map là im bặt, và
+  // `test_nhacnen` bắt đúng chuyện đó. Thêm map mới thì thêm luôn một dòng ở bảng này.
+  lokhac: 'bgm_nhanmon',
 };
 const BGM_INTRO = 'bgm_intro';   // màn mở đầu & chọn nhân vật
 // boss.wav trong kho, chuyển sang mp3. Chỗ gọi playBgm(BGM_BOSS) lúc vào trận trùm đã có sẵn
