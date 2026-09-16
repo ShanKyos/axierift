@@ -146,6 +146,120 @@ Rồi hai dòng khai:
 
 ---
 
+## 1.5 HỒ NƯỚC — và ⚠ NÓ KHÔNG PHẢI `vatTo`
+
+**Đọc chốt kỹ thuật này trước, nếu không art gen ra sẽ dùng sai.** `vatTo` xếp lớp bằng **CHÂN**
+(`ents.push({ y: v.y + v.h })`) — đúng cho một cái nhà CÓ CHIỀU CAO: người đứng phía bắc (y nhỏ
+hơn) thì bị mái nhà che, đúng chiều sâu isometric. Một cái hồ thì **PHẲNG**, nằm TRONG mặt đất.
+Khai nó là `vatTo` thì người đi bờ BẮC bị mặt nước vẽ đè lên — đọc ra như lội giữa hồ.
+
+⇒ Hồ phải vẽ ở **tầng nền**, ngay sau `veSanIso()` và TRƯỚC danh sách `ents`. Hiện game **chưa có
+tầng đó** (`decor` mang `type:'iso'` cũng bị đẩy vào `ents`). Cần thêm một mảng `vatSan` phẳng —
+ba dòng, nhưng phải thêm TRƯỚC khi cắm art, không thì nghiệm thu sẽ ra đúng cái lỗi trên.
+
+Hệ quả cho chính bản prompt, và đây là ràng buộc NẶNG NHẤT của nó: **không gì trong tranh được
+cao lên.** Không cầu, không cột đèn, không cây bên bờ, không tượng. Tầng nền không che được ai,
+nên bất cứ thứ gì lẽ ra phải che người chơi sẽ lộ ngay là dán bẹt. Bờ đá phải THẤP.
+
+> Lorencia có cầu bắc qua hồ. **Đừng xin cầu ở prompt này.** Cầu là thứ người chơi ĐI QUA ĐƯỢC,
+> tức cần một khoảng đi được xuyên giữa một vùng bị chặn, cộng lớp tiền cảnh che lan can. Đó là
+> một đợt việc riêng, không phải một tấm art.
+
+### Prompt
+
+```
+Isometric water feature sprite for a 2D game, true 2:1 dimetric projection (a
+square ground tile renders as a diamond exactly twice as wide as tall),
+orthographic camera, no perspective convergence, viewed from the standard
+front-left isometric corner.
+
+THE SUBJECT: a shallow ornamental town pond set into paved ground. An
+irregular rounded pool, wider than it is deep front-to-back, ringed by a LOW
+kerb of fitted pale grey stone blocks no taller than a person's shin. Inside
+the kerb, a narrow band of short grass and a few smooth pebbles slope down to
+the water. The water is clear turquoise, paler and sandier where it meets the
+bank and deepening to a soft teal toward the middle, with gentle concentric
+ripple rings and a few gleaming highlight streaks. Scatter a small number of
+flat lily pads with one or two pale blossoms, and two or three low rounded
+rocks breaking the surface near one edge.
+
+ABSOLUTELY FLAT — this lies INSIDE the ground plane and will be drawn
+underneath every character. Nothing may rise: no bridge, no railing, no
+lamp post, no statue, no fountain, no jet of water, no trees, no tall reeds,
+no fence, no posts. The stone kerb is the tallest thing in the image and it
+is shin-high. Seen from above and to the side at the isometric angle, the
+whole shape reads as a hole in the ground filled with water.
+
+FRAMING — EXACTLY ONE pond, complete and unclipped, alone on the magenta with
+clear empty margin on all four sides. Do NOT draw surrounding pavement,
+buildings, paths, or any ground beyond the outer edge of the stone kerb.
+
+Output 1536x1024, the pond centered, its outline a rounded diamond about 1200
+wide and 620 tall. Background pure magenta #FF00FF, completely flat, no
+gradient.
+
+Scale anchor: the stone kerb blocks are each about 90px long — a person is
+roughly 132px tall, so the pond is about nine people wide.
+
+Art style: Axie Infinity. Soft rounded chunky shapes, thick warm-dark-brown
+outline (NOT black), cheerful saturated candy palette, gentle cel shading,
+storybook charm. The water must read as inviting and clean, never swampy,
+never dark.
+
+Lighting: single soft light from upper-left. The water highlights sit on the
+upper-left of each ripple. No cast shadow reaching away from the pond.
+
+Hard rules: no characters, no creatures, no fish, no text, no numbers, no
+signage, no watermark, no glow effects, no sparkle or star shapes, no ground
+outside the kerb, no bridge of any kind.
+```
+
+### Nhập vào game
+
+```bash
+python3 tools/iso/cat_congtrinh.py tools/iso/nguon/gem_honuoc.png vs_honuoc --o 4.7
+```
+
+`--o 4.7` vì hồ rộng 1200px thế giới mà một ô đất là `ISO_W` 256px ⇒ 1200/256 ≈ 4,7 ô.
+(Nhà cửa dùng 1,4-2,0 ô — hồ là thứ to nhất thành có, và đó là chủ ý: nó phải đọc ra
+là MỘT NƠI CHỐN, không phải một món trang trí.)
+
+Rồi ba chỗ khai:
+- `MAP_VAT_SRC` trong `game.js`: `vs_honuoc: 'assets/iso/vs_honuoc.png',`
+- **`vatSan`** (tầng phẳng mới) trong `MAPS.ardhaven` — KHÔNG phải `vatTo`
+- `MAP_OBSTACLES.ardhaven` một khối chặn khớp lòng hồ: người đi vòng, không lội qua
+
+### ⚠ CHỖ ĐẶT — đo được, và nó xác nhận đúng điều chủ dự án vừa nói
+
+Quét toàn map Ardhaven (6400×3200) tìm chỗ nhét lọt một hình chữ nhật 1200×700:
+
+| | số chỗ lọt |
+|---|---|
+| tính cả NPC (lề 120px) | **0** |
+| **bỏ qua NPC**, chỉ tránh nhà/tường/cổng/điểm thả | **1339** |
+
+Tức nhà cửa **không** phải thứ chắn — **NPC mới là thứ chắn**. Chỗ trống lớn nhất còn lại của cả
+thành chỉ đủ một hình 800×460, và nằm tận rìa ĐÔNG `(5040,1720)`, tức một vũng nước ở góc chứ
+không phải một cái hồ.
+
+Chỗ đúng là **(2640,880)**, tâm `(3240,1230)` — ngay trên trục đại lộ dọc `x=3200`, giữa điểm thả
+`(3200,1900)` và Cổng Bắc. Đó đúng vị trí hồ Lorencia: nằm trên đường người chơi bắt buộc đi qua.
+
+Để lấy chỗ đó phải dời **bốn NPC**, và cả bốn đều là NPC nói chuyện suông (`talk:'quest'`, không
+chức năng nào treo lên) nên dời không mất gì:
+
+| NPC | đang ở |
+|---|---|
+| Kẻ Hát Rong | (3200,1300) |
+| Ông Lão Ngồi Ghế Đá | (2870,1340) |
+| Người Quét Phố | (3620,1470) |
+| Lính Tuần Phố | (2560,1600) |
+
+Dời xong thì bốn người ấy **đứng quanh hồ** chứ không biến mất — một cái hồ có người ngồi bên bờ
+là một nơi chốn, một cái hồ trống là một vũng nước.
+
+---
+
 ## 2. VẬT NHỎ — một tấm, 12 món (còn nợ từ đợt trước)
 
 Thứ làm phố có người ở. Một prompt, 12 món.
