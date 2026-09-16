@@ -1668,6 +1668,11 @@ const VK_ANH = {
   // ⚠ Tranh nằm ở gói CẦM VŨ KHÍ, không phải gói giáp — gói giáp để TRỐNG cả bốn vùng
   // vũ khí trong atlas (đo được 0 điểm đặc). Cần nướng lại thì phải xin đúng gói ấy.
   'kiem|7': { tep:'vk_phoenix', x:65, y:16 },          // Phượng Kiếm — cây gốc của bộ Phoenix
+  // Quyền trượng vàng-đỏ nạm hồng ngọc, cắt từ gói Spine của Dark Lord.
+  // ⚠ Dark Lord CỐ Ý không có lớp vũ khí cầm tay (không khai trong NV_VK_LOP): chủ dự án
+  // chốt lớp này cầm trượng BAY theo người như Dark Wizard. Nên cây này chỉ cần MỘT tấm
+  // phẳng ở đây, không cần nướng bảng khung — và gói gốc cũng chỉ có mỗi vũ khí.
+  'lenhtruong|7': { tep:'vk_dltruong', x:65, y:26 },   // Vương Trượng Hồng Ngọc
 };
 // Tra art của một món vũ khí: tranh riêng của giai trước, tranh chung của dòng sau.
 function vkAnh(d){
