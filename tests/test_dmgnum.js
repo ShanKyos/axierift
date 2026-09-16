@@ -57,7 +57,13 @@ let bad = 0; const fail = m => { bad++; console.log('FAIL ' + m); };
     // Nhân vật trần thì perfectProc = 0 nên bài này xanh do MAY, không do chặt chẽ; từ khi
     // ?max=1 phát đồ thật thì nó đỏ ngẫu nhiên. Tắt cả hai nguồn khi đo.
     const _pp = player.perfectProc; player.perfectProc = 0;
+    // ⚠ PHẢI TẮT CẢ `m.he`, KHÔNG CHỈ `m.def.el`. `mobHe(m)` = `m.he || m.def.el` — `m.he` do
+    // MIỀN DÂN SỐ gán lúc `spawnMob` và nó THẮNG hệ nền của loài, nên chỉnh mỗi `def` là chỉnh
+    // một thứ không ai đọc tới: khắc hệ vẫn chạy, vẫn tô xanh đè lên CẢ bạo kích lẫn đòn thường,
+    // và phép so màu ngay dưới mất nghĩa — đúng cái mà chú thích ngay trên đã tự mô tả. Luật này
+    // có sẵn trong CLAUDE.md (vết sẹo `test_elem`): bài nào chỉnh hệ một con quái phải chỉnh `m.he`.
     const _def = m.def; m.def = Object.assign({}, m.def, { el: null });
+    const _he = m.he; m.he = null;
     m.hp = m.maxHp = 999999; floats.length = 0;
     hurtMob(m, 40, 'crit');
     await new Promise(r => setTimeout(r, 500));
@@ -66,7 +72,7 @@ let bad = 0; const fail = m => { bad++; console.log('FAIL ' + m); };
     hurtMob(m, 40, 'hit');
     await new Promise(r => setTimeout(r, 500));
     const g = floats.find(f => /^-\d+$/.test(f.text));
-    player.perfectProc = _pp; m.def = _def;
+    player.perfectProc = _pp; m.def = _def; m.he = _he;
     return { bao: f ? { co:f.size, mau:f.color } : null, thuong: g ? { co:g.size, mau:g.color } : null };
   });
   console.log('3) bạo kích vs đòn thường:', JSON.stringify(r3));
