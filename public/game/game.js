@@ -4709,7 +4709,10 @@ const CHIEU_TRANH = {
   sx_bug_a:      { atlas:'sx_bug_a',      xoay:true },  // Force Wave — sóng chấn quyền trượng Dark Lord
   sx_toanchan_a: { atlas:'sx_toanchan_a', xoay:true },  // Triple Shot — loé cung Sylvan Ranger
   dl_chaoticdiseier: { atlas:'fire_scream', xoay:true },  // Hoả Xích Diệm — ba ngọn lửa toả ra, Dark Lord
-  sx_bug_c:      { atlas:'raven_storm',   xoay:true },  // Bão Quạ — Trấn Phái Dark Lord
+  // `co:0.72` — chủ dự án nhìn ảnh chụp: "hơi to". Không khai `co` thì scale = R/neoR =
+  // 185/337,9 = 0,547 ⇒ hộp vẽ ra 210px, to hơn cả con Axie (113px). 0,72 đưa về 151px.
+  // ⚠ Chỉ được thu NHỎ hơn vòng sát thương, không bao giờ to hơn — xem luật `pham` ở trên.
+  sx_bug_c:      { atlas:'raven_storm',   xoay:true, co:0.72 },  // Bão Quạ — Trấn Phái Dark Lord
 };
 // Chỗ chiêu giáng xuống: CHUỘT CHỈ ĐÂU, CHIÊU GIÁNG ĐÓ.
 //
