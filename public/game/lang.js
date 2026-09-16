@@ -61,6 +61,10 @@ const EXACT = {
   // ── NPC trong thành ──
   'Trưởng Làng': 'Village Elder',
   'Thợ Rèn · Lò Rèn Hoàng Gia': 'Blacksmith · Royal Forge',
+  // ⚠ KHÔNG dịch là 'Chaos Goblin' — đó là tên riêng con NPC của MU (Quy tắc số 2). Chữ
+  // 'Chaos' thì giữ: game đã ship '● Hỗn Độn Châu' → '● Chaos Pearl' từ lâu.
+  'Yêu Tinh Hỗn Độn · Lò Hỗn Độn': 'Goblin Smith · Chaos Forge',
+  'Pháp Sư Rune · Quán Sách': 'Rune Scholar · Bookshop',
   'Nhà Giả Kim · Tiệm Thuốc': 'Alchemist · Apothecary',
   'Binh Khí Chủ · Vũ Khí Phường': 'Weaponmaster · Armoury',
   'Người Giữ Chuồng': 'Stablekeeper',
@@ -77,7 +81,7 @@ const EXACT = {
   'Lũ Trẻ Chạy Quanh': 'Children at Play',
   'Lính Tuần Phố': 'Street Patrol',
   'Người Quét Phố': 'Street Sweeper',
-  'Chủ Quán Trọ · Trà Quán': 'Innkeeper · Teahouse',
+  'Cô Hầu Bàn · Quán Trọ': 'Serving Girl · Inn',
   'Người Đưa Tin': 'Courier',
   'Bà Bán Hoa': 'Flower Seller',
   'Ông Lão Ngồi Ghế Đá': 'Old Man on the Stone Bench',
