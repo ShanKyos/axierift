@@ -1676,6 +1676,7 @@ const VK_ANH = {
   // Cung Thiên Mệnh. Cây này CÓ lớp cầm tay (NV_VK_LOP) nên trong màn không dùng tấm này —
   // nhưng ICON TRONG TÚI thì vẫn vẽ từ đây, nên thiếu dòng này là túi hiện cây cung cũ.
   'truongcung|7': { tep:'vk_elfcung', x:65, y:38 },    // Cung Thiên Mệnh
+  'makiem|7':     { tep:'vk_sbkiem',  x:65, y:28 },    // Kiếm Sinh Mệnh
 };
 // Tra art của một món vũ khí: tranh riêng của giai trước, tranh chung của dòng sau.
 function vkAnh(d){
@@ -14966,6 +14967,7 @@ const NV_GIAP = {
   'thieulam|7': 'dkph1',
   'bug|7': 'dlbc1',        // Dark Lord — trượng bay, không có lớp vũ khí cầm tay
   'toanchan|7': 'elnb1',   // Sylvan Ranger — bộ Ngọc Bích, cung CẦM TAY
+  'minhgiao|7': 'sbsm1',   // Spellblade — bộ Sinh Mệnh, kiếm CẦM TAY, KHÔNG mũ
 };
 // Lớp này có art giáp ở giai nào? Lấy giai CAO NHẤT có art. Có hàm này thì ?test=1 và bài kiểm
 // không ai phải thuộc lòng "Dark Wizard thì giai 7, Dark Knight thì giai 1", và thêm bộ mới
@@ -15060,6 +15062,12 @@ const NV_LOP_HOP = {
   // (thần khí), nên nướng bằng cờ --khongvk. Xem NV_VK_LOP — cố ý không khai.
   // Sylvan Ranger — bộ Ngọc Bích. Bộ ĐẦU TIÊN có lớp `h` (tóc sau): elf tóc dài nên khe
   // 背后头发 có nét vẽ thật, khác bốn bộ trước đều rỗng lớp này.
+  // Spellblade — bộ Sinh Mệnh. Lớp `n` (đầu) là TÓC TRẦN, không mũ: chủ dự án chốt lớp này
+  // không đội mũ, và art của gói vốn đã vẽ vậy nên không phải xử gì thêm ở mã.
+  'sbsm1':  { h:[80,94,109,89,6,86,174,182], t1:[70,128,113,91,38,111,167,118],
+              c:[63,149,141,108,66,141,130,123], a:[89,119,95,96,26,111,148,143],
+              vk:[16,184,208,91,96,160,144,115], t2:[62,116,130,84,31,107,155,152],
+              n:[81,86,110,73,0,79,181,176] },
   'elnb1':  { h:[85,96,70,79,5,88,170,177], t1:[71,132,116,75,39,115,165,118],
               c:[70,159,121,101,71,142,127,119], a:[92,125,59,75,33,115,137,139],
               vk:[42,129,145,144,96,170,144,113], t2:[63,126,132,80,36,119,156,136],
@@ -15080,6 +15088,7 @@ const NV_LOP_HOP = {
 // Có mặt ở đây thì thần khí tự tắt (xem `_tkHien`), nếu không là hiện HAI cây.
 const NV_VK_LOP = {
   'kiem|7': 'dkph1',        // Phượng Kiếm — nướng từ chính gói Spine của bộ Phoenix
+  'makiem|7': 'sbsm1',      // Kiếm Sinh Mệnh — Spellblade cầm kiếm, combo hai nhát a↔s
   'truongcung|7': 'elnb1',  // Cung Thiên Mệnh — cung thì PHẢI cầm tay, bắn bằng cung bay
                             // lơ lửng thì không đọc ra động tác giương cung nào cả.
 };
@@ -15235,7 +15244,7 @@ function nvMoc(kind){ return NV_BANG2[kind] ? NV_MOC2[kind] : NV_MOC[kind]; }
 // HS_FRAMES.r mặc định. Kiểm bằng phép chia: bềRộngBảng/bềRộngÔ = 16 và bềCao/caoÔ = 7.
 // Quên khai là lớp đó chỉ đọc NỬA ĐẦU vòng chạy — chân lệch nhịp so với lớp khai đủ.
 const NV_KHUNG_R = { dkcw1: 32, dwsc1: 32, elfar1: 32, dlcm1: 32,
-                     dkph1: 32, dlbc1: 32, elnb1: 32 };
+                     dkph1: 32, dlbc1: 32, elnb1: 32, sbsm1: 32 };
 function nvSoKhung(ten, kind){
   if (kind === 'r' && ten && NV_KHUNG_R[ten]) return NV_KHUNG_R[ten];
   return HS_FRAMES[kind] || 1;
@@ -19708,13 +19717,43 @@ function tangDoThuNghiem(){
 // là vừa thổi cân bằng vừa làm hỏng khoảnh khắc nhặt được món Hoàn Hảo THẬT về sau.
 // Dùng genItem() — đúng đường đồ rơi từ quái — ép perfect:0 và plus9:0, cấp 1. Đây là bộ đồ vải
 // tầm thường: đủ để nhân vật hiện ra có mặc gì đó, không đủ để ai thấy mình mạnh sẵn.
+// ═══ BẢN CHƠI THỬ — phát thẳng bộ giai 7 ═══
+// Chủ dự án chốt cho bản demo này: người thử phải thấy ngay năm bộ giáp giai 7 (Phoenix ·
+// Grand Soul · Ngọc Bích · Sinh Mệnh · bộ vàng Dark Lord) chứ không phải đồ vải cấp 1.
+//
+// ⚠ ĐÂY LÀ QUYẾT ĐỊNH CỦA BẢN THỬ, KHÔNG PHẢI CÂN BẰNG. Tách thành hằng riêng để gỡ về nhịp
+// chơi thật chỉ phải sửa MỘT dòng (`= 1`), và để ai đọc code biết ngay đoạn này không mô tả
+// trải nghiệm thật của người chơi mới.
+const DEMO_DO_GIAI = 7;
+// Dòng vũ khí có ART của từng lớp. Phát bừa một dòng khác thì bộ giáp giai 7 hiện đúng mà
+// trên tay lại là cây vũ khí chưa có tranh — mà vũ khí là thứ to nhất trên bóng dáng.
+// Ba lớp có lớp vũ khí CẦM TAY (xem NV_VK_LOP) nên chọn sai dòng là mất luôn cây trong tay.
+const DEMO_VK_DONG = { thieulam:'kiem', minhgiao:'makiem', toanchan:'truongcung',
+                       baidasan:'gay',  bug:'lenhtruong' };
 function phatDoKhoiDau(){
+  const giai = clamp(DEMO_DO_GIAI, 1, GIAI_MAX);
+  const cap  = clamp(capDauGiai(giai), 1, MAX_LV);
+  const dong = DEMO_VK_DONG[player.sect];
   for (const _id of ['vukhi', 'non', 'ao', 'tay', 'chan']){
     const sl = SLOTS.find(s2 => s2.id === _id);
     if (!sl || sl.special) continue;
-    const it = genItem(1, null, null, { slots: [_id], perfect: 0, plus9: 0 });
+    let it = null;
+    // Vũ khí: quay cho tới khi ra ĐÚNG dòng có art. genItem bốc ngẫu nhiên trong các dòng lớp
+    // này dùng được, nên không ép được bằng tham số — mà đây là lúc tạo nhân vật, quay vài
+    // chục lượt không ai thấy.
+    for (let i = 0; i < (_id === 'vukhi' && dong ? 300 : 1); i++){
+      const t = genItem(cap, null, null, { slots: [_id], perfect: 0, plus9: 0 });
+      if (!t) continue;
+      it = t;
+      if (_id !== 'vukhi' || !dong) break;
+      const d = itemDef(t);
+      if (d && d.line === dong) break;
+    }
     if (!it) continue;
-    it.plus = 0;
+    // Ép GIAI để art khớp: nvLopCuaEquip() và nvVkLop() đều tra theo `it.tier`, nên món đúng
+    // cấp mà sai giai thì vẫn rơi về bộ cũ.
+    it.tier = giai; it.level = cap; it.plus = 0;
+    if (it.main && sl.base) it.main.v = sl.base(giai);
     player.equip[_id] = it;
   }
   calcDerived();
@@ -20409,7 +20448,8 @@ function startGame(sectKey, quze){
       tangDoThuNghiem();
       addFloat(player.x, player.y-72, 'Chế độ test — mặc sẵn nguyên bộ giai 1 và vũ khí của lớp', '#a0ffe9', 13);
     } else if (!window.TEST_MODE){
-      // Người chơi THẬT: phát bộ khởi đầu hai ô (xem phatDoKhoiDau). Loại trừ TEST_MODE vì hơn
+      // Người chơi THẬT: phát bộ khởi đầu (xem phatDoKhoiDau — bản chơi thử phát NGUYÊN BỘ
+      // GIAI 7 cộng đúng dòng vũ khí có art, xem DEMO_DO_GIAI). Loại trừ TEST_MODE vì hơn
       // trăm bài kiểm tự đặt cờ đó rồi gọi startGame để mở cổng dịch chuyển — bài cân bằng nào
       // cũng đo trên nhân vật TRẦN, treo đồ vào đây là cả bộ đo đổi mốc trong im lặng.
       phatDoKhoiDau();
