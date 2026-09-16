@@ -119,33 +119,64 @@ const GOC = 'http://localhost:' + CONG + '/index.html';
 
   // ── 5. TẦNG HÀNH VI: khối gồng phải VẼ RA khác khối thở ────────────────────────────────
   // Chọn đúng khối mà `chiVeGong` lại không vẽ được gì (bảng hỏng, ô sai) thì bốn mục trên vẫn
-  // xanh. ⚠ Lấy TRUNG VỊ của ba lượt: con Axie thở ~8 FPS nên một cặp khung đơn lẻ có thể rơi
-  // đúng lúc nhịp thở nhảy và độn thêm vài nghìn điểm ảnh — xem CLAUDE.md, mục Giai đoạn 2.
+  // xanh. Mục này là chỗ duy nhất hỏi tới TẤM TRANH.
+  //
+  // ⚠ BẢN CŨ CỦA MỤC NÀY CHƯA BAO GIỜ GÁC ĐƯỢC GÌ — hai lỗi chồng nhau, cả hai đều im lặng:
+  //
+  //   ① Sàn nhiễu đo bằng hai lượt vẽ liên tiếp cùng điều kiện, và nó ra ĐÚNG 0 — không phải
+  //      vì phép đo sạch, mà vì hồi ấy khối thở chạy 9 FPS KHÔNG PHA nên 86% số lượt vẽ con
+  //      Axie đứng im. Tức "sàn nhiễu" chưa bao giờ đo nhiễu; nó đo đúng cái tật cứng đờ mà
+  //      đợt pha khung sinh ra để chữa. Mà sàn 0 thì luật `gong < nhieu*3` LUÔN đúng ⇒ vô nghĩa.
+  //   ② Ô đo là 160×180 quanh chân nhân vật TRONG KHUNG GAME, mà đặt `atkAnim` thì LỚP NHÂN VẬT
+  //      vật chất hoá ngay cạnh (trước 72 · bên 56) và nằm gọn trong ô. Đo được: bịt hẳn bảng
+  //      gồng/giật cho lui về khối thở — con Axie không đổi lấy một điểm ảnh — mà ô vẫn đếm
+  //      2.158 điểm. Mệnh đề xanh vì lớp nhân vật, không vì thứ nó nói là đang gác.
+  //
+  // Pha khung xong thì ① lộ ra: sàn nhiễu lên 3.800 còn tín hiệu vẫn ~7.000 (đo ở cả hai
+  // commit) ⇒ luật ×3 thành bất khả thi và bài đỏ vì một thứ KHÔNG hỏng. ⚠ Đừng "sửa" bằng
+  // cách hạ bội số ×3 — đó là nới luật cho xanh, và ② thì vẫn nguyên đó.
+  //
+  // Chữa cả hai bằng một việc: gọi thẳng `veAvatar` vào một canvas PHỤ với `now` ghim cứng.
+  // Trong ô khi ấy chỉ còn đúng con Axie — không lớp nhân vật, không loé trúng đòn, không rung
+  // màn, không nền trôi — và hai lượt cùng điều kiện phải trùng khít TỪNG điểm ảnh.
   const ve = await p.evaluate(() => {
-    const cv = document.getElementById('game'), g = cv.getContext('2d');
-    const z = ZOOM_MUC[ZOOM_CHON], tl = cv.width / (cv.clientWidth || cv.width);
-    const W = 160, H = 180;
-    const lay = () => {
-      const sx = (player.x - camera.x) * z, sy = (player.y - camera.y) * z;
-      return g.getImageData(Math.max(0, Math.round((sx - W / 2) * tl)),
-                            Math.max(0, Math.round((sy - H * 0.82) * tl)),
-                            Math.round(W * tl), Math.round(H * tl)).data;
+    // ⚠ VẼ RIÊNG CON AXIE RA CANVAS PHỤ, ĐỪNG ĐO TRÊN KHUNG GAME. Bản cũ đo một ô 160×180 quanh
+    // chân nhân vật trong khung thật, mà đặt `atkAnim` thì LỚP NHÂN VẬT vật chất hoá ngay cạnh
+    // (trước 72 · bên 56) và nằm gọn trong ô ấy. Đo được: bịt hẳn bảng gồng/giật cho nó lui về
+    // khối thở — tức con Axie KHÔNG đổi lấy một điểm ảnh — mà ô vẫn đếm 2.158 điểm, thừa sức
+    // vượt mọi ngưỡng. Cộng với sàn nhiễu 0 (luật ×3 hoá vô nghĩa), mệnh đề này CHƯA BAO GIỜ
+    // gác được gì: nó xanh vì lớp nhân vật, không vì con Axie.
+    //
+    // Gọi thẳng `veAvatar` vào canvas phụ thì trong ô chỉ còn đúng con Axie: không lớp nhân vật,
+    // không loé trúng đòn, không rung màn, không nền trôi. Thử ngược (bịt bảng) ra ĐÚNG 0.
+    const cv = document.createElement('canvas'); cv.width = 220; cv.height = 240;
+    const g = cv.getContext('2d');
+    const moc = performance.now();
+    const fp = { x: 110, y: 170, face: 0, walkPh: 0, atkAnim: 0, hurtT: 0, castT: 0,
+                 avatar: player.avatar, sect: player.sect };
+    const lay = d => {
+      fp.atkAnim = d.atk || 0; fp.hurtT = d.hurt || 0; fp.castT = 0;
+      g.clearRect(0, 0, cv.width, cv.height);
+      veAvatar(g, fp, false, moc);          // `now` ghim ⇒ khối thở không trôi giữa hai lượt
+      return g.getImageData(0, 0, cv.width, cv.height).data;
     };
     const dem = (u, v) => { let n = 0;
-      for (let i = 0; i < u.length; i += 4) if (u[i]!==v[i]||u[i+1]!==v[i+1]||u[i+2]!==v[i+2]) n++;
+      for (let i = 0; i < u.length; i += 4)
+        if (u[i]!==v[i]||u[i+1]!==v[i+1]||u[i+2]!==v[i+2]||u[i+3]!==v[i+3]) n++;
       return n; };
-    const giua = a => a.slice().sort((x, y) => x - y)[a.length >> 1];
-    const dat = d => { player.atkAnim = d.atk || 0; player.hurtT = d.hurt || 0; player.castT = 0; player.moving = false; };
-    const nhieu = [], gong = [], giat2 = [];
-    for (let i = 0; i < 5; i++){ dat({}); render(); const a = lay(); dat({}); render(); nhieu.push(dem(a, lay())); }
-    for (let i = 0; i < 3; i++){ dat({}); render(); const a = lay(); dat({ atk: 0.11 });  render(); gong.push(dem(a, lay())); }
-    for (let i = 0; i < 3; i++){ dat({}); render(); const a = lay(); dat({ hurt: 0.15 }); render(); giat2.push(dem(a, lay())); }
-    dat({}); render();
-    return { nhieu: giua(nhieu), gong: giua(gong), giat: giua(giat2), tong: lay().length / 4 };
+    const nen = lay({});
+    return { nhieu: dem(nen, lay({})), gong: dem(nen, lay({ atk: 0.11 })),
+             giat: dem(nen, lay({ hurt: 0.15 })), tong: cv.width * cv.height };
   });
   console.log(`5 · điểm ảnh đổi — gồng ${ve.gong} · giật ${ve.giat} · sàn nhiễu ${ve.nhieu} · ô ${ve.tong}`);
-  if (ve.gong < ve.nhieu * 3) fail(`khối GỒNG chỉ đổi ${ve.gong} điểm ảnh trên sàn nhiễu ${ve.nhieu} — chọn đúng khối nhưng không vẽ ra được gì khác`);
-  if (ve.giat < ve.nhieu * 3) fail(`khối GIẬT chỉ đổi ${ve.giat} điểm ảnh trên sàn nhiễu ${ve.nhieu}`);
+  // ⓪ Tự kiểm CẢNH DỰNG: cùng `now`, cùng trạng thái ⇒ phải trùng khít TỪNG điểm ảnh. Lệch thì
+  //    có một nguồn trôi nào đó lọt vào ô đo và hai mệnh đề dưới vô nghĩa — nói ra, đừng chấm.
+  if (ve.nhieu !== 0) fail(`hai lượt vẽ CÙNG điều kiện lệch ${ve.nhieu} điểm ảnh — còn nguồn trôi trong ô đo, phép đo dưới đây vô nghĩa`);
+  // Sàn tuyệt đối: bảng hỏng ⇒ `chiVeGong` trả false ⇒ lui về khối thở ⇒ ĐÚNG 0. Đo thật được
+  // ~4.000-7.000, nên sàn 400 rất rộng tay mà vẫn chặn sạch ca lui-về-thở.
+  const SAN = 400;
+  if (ve.gong < SAN) fail(`khối GỒNG chỉ đổi ${ve.gong} điểm ảnh (sàn ${SAN}) — chọn đúng khối nhưng không vẽ ra được gì khác khối thở`);
+  if (ve.giat < SAN) fail(`khối GIẬT chỉ đổi ${ve.giat} điểm ảnh (sàn ${SAN})`);
 
   // ── 6. AXIE KHÔNG CÓ KHỐI ĐÁNH — luật Đổi Vai ─────────────────────────────────────────
   // Kit có 8 đòn gần + 5 đòn xa và rất dễ "tiện tay" nướng thêm. Chốt này là chỗ duy nhất nói
