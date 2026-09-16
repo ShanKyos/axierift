@@ -1945,7 +1945,26 @@ window.NPCS = [
     barks:['"Đợi lò đỏ đã, đừng giục."','"Đồ mẻ thì mang đây, đừng vứt."',
            '"Búa nhỏ để khảm, búa lớn để nắn. Cầm nhầm là hỏng cả món."','"Nghe tiếng thép là biết đồ thật hay giả."'] },
 
-  { id:'duoclao', name:'Nhà Giả Kim · Tiệm Thuốc', map:'ardhaven', x:1830, y:990, img:'assets/npcs/duocsu.png', talk:'shop', nhan:'Tiệm Thuốc',
+  // ⚠ CON THỨ HAI MANG talk:'forge', VÀ ĐÓ LÀ CHỦ Ý. `forgeNpcHere()` nay trả về con GẦN
+  // NHẤT trên map chứ không phải con ĐẦU MẢNG (xem game.js) — nếu không thì thêm con này
+  // vào là `atRoyalForge()` vẫn chỉ đo tới Thợ Rèn, và người chơi đứng sát Lò Hỗn Độn lại
+  // bị báo "chưa tới Lò Rèn Hoàng Gia". Lỗi đó không ném gì, chỉ làm nút KẾT HỢP mờ đi.
+  // Đứng cách Thợ Rèn 190px, cùng hàng y — hai con đọc ra một CẶP, đúng lối MU đặt máy
+  // hỗn độn cạnh lò rèn. Chỗ đứng quét bằng máy (ngoài khối Lò, cách mọi NPC ≥180px).
+  { id:'ah_hondon', name:'Yêu Tinh Hỗn Độn · Lò Hỗn Độn', map:'ardhaven', x:5420, y:980, img:'assets/npcs/hondon_yt.png', talk:'forge', nhan:'Lò Hỗn Độn',
+    lore:'"Trên +9 thì búa của lão Thợ Rèn hết việc — thép không nhận thêm nét khắc nào bằng sức người nữa. Từ đó trở lên là việc của cái lò này, và cái lò này không hứa gì cả."',
+    barks:['"+10 là nửa ăn nửa thua. Ta nói trước rồi đấy."','"Đưa đồ đây. Đừng đưa đồ ngươi tiếc."',
+           '"Vỡ thì đừng trách lò. Trách cái tay bỏ nó vào."','"Thiên Mệnh Phù giữ được món, không giữ được nét khắc."'] },
+
+  // Bán Sách Kỹ Năng — trước đó sách CHỈ rơi từ tinh anh/trùm và Tầng Sâu, nên người chơi
+  // muốn nâng một chiêu cụ thể thì không có cửa nào ngoài cày may rủi. Đứng trước khối nhà
+  // #1 (940,520), cùng hàng shop bắc với Tiệm Thuốc — chỗ quét bằng máy, xem tools/…/cham_npc.
+  { id:'ah_phapsu', name:'Pháp Sư Rune · Quán Sách', map:'ardhaven', x:1340, y:940, img:'assets/npcs/phapsu_yt.png', talk:'shop', nhan:'Quán Sách',
+    lore:'"Qua Nhát Gọi thì mất ký ức chứ không mất nghề. Ta chép lại cái nghề ấy xuống giấy cho những kẻ chưa nhớ ra mình từng biết gì — đọc xong là tay tự làm được."',
+    barks:['"Sách chép tay, không có bản thứ hai."','"Đọc một quyển là nhớ ra một nấc."',
+           '"Giấy đắt hơn mực, mà mực đắt hơn cả hai."','"Đừng giở giữa trời mưa."'] },
+
+  { id:'duoclao', name:'Nhà Giả Kim · Tiệm Thuốc', map:'ardhaven', x:1830, y:990, img:'assets/npcs/duocnu_yt.png', talk:'shop', nhan:'Tiệm Thuốc',
     lore:'"Giá dán ngay cửa. Ta không nói thách cũng không bớt — bớt cho một người là hôm sau cả phố tới đòi bớt."',
     barks:['"Bình đỏ pha sáng nay, còn ấm."','"Ra khỏi cổng thì mang hai lọ, đừng mang một."',
            '"Đừng uống lúc đang chạy, sặc thì phí cả lọ."','"Nút bần bịt kín rồi, nhưng đừng để nghiêng trong túi."'] },
@@ -2036,7 +2055,7 @@ window.NPCS = [
   // thành mà ai cũng nói về đại hoạ thì không phải một cái thành, nó là một bảng
   // thông báo có chân.
 
-  { id:'ah_banrong', name:'Người Bán Rong', map:'ardhaven', x:1450, y:1520, img:'assets/npcs/monkhach.png', talk:'quest',
+  { id:'ah_banrong', name:'Người Bán Rong', map:'ardhaven', x:1450, y:1520, img:'assets/npcs/banrong_yt.png', talk:'quest',
     lore:'"Ta gánh hai thúng, một thúng bánh một thúng chè. Thúng nào bán hết trước thì sáng mai ta gánh thúng đó nặng hơn. Đơn giản thế thôi."',
     barks:['"Bánh còn nóng, mua đi."','"Chè hôm nay đắt hơn hôm qua — đường lên giá, không phải ta."',
            '"Ta đứng đây tới trưa thôi đấy."'] },
@@ -2066,10 +2085,10 @@ window.NPCS = [
     barks:['"Dịch sang bên một tí, ta quét."','"Lá năm nay rụng nhiều hơn mọi năm."',
            '"Chổi này ta tự bó, bền hơn chổi mua ngoài chợ."'] },
 
-  { id:'trachu', name:'Chủ Quán Trọ · Trà Quán', map:'ardhaven', x:4150, y:1010, img:'assets/npcs/trachu.png', talk:'shop', nhan:'Quán Trọ',
-    lore:'"Mười hai phòng, tám phòng có người. Bốn phòng còn lại ta để trống cho ai về muộn — về muộn mà không có chỗ nằm thì tội lắm."',
+  { id:'trachu', name:'Cô Hầu Bàn · Quán Trọ', map:'ardhaven', x:4150, y:1010, img:'assets/npcs/hauban_yt.png', talk:'shop', nhan:'Quán Trọ',
+    lore:'"Chủ quán ngồi trong đếm tiền, ta chạy bàn. Mười hai phòng thì tám phòng có người, và cả tám đều biết tên ta còn ta chẳng biết tên ai."',
     barks:['"Còn phòng, đừng lo."','"Cơm dọn lúc trời chạng vạng, đừng tới trễ."',
-           '"Ai ngáy to thì ta xếp lên gác. Không giận nhé."'] },
+           '"Khay này nặng đấy, tránh ra một chút."','"Ai ngáy to thì ta xếp lên gác. Không giận nhé."'] },
 
   { id:'ah_duatin', name:'Người Đưa Tin', map:'ardhaven', x:4300, y:1620, img:'assets/npcs/noiung.png', talk:'quest',
     lore:'"Ta chạy tin giữa bốn cổng, trong tường thôi. Thư gửi ra ngoài thành thì ta không nhận — ngoài đó không có ai đứng đợi ở đầu đường cả."',
