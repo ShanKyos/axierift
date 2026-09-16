@@ -9240,6 +9240,12 @@ window.axieTaiDay = axieTaiDay;
 // trả về hoàn toàn đúng. `-Infinity` thì đòn ĐẦU TIÊN luôn nói ra, rồi mới vào nhịp hồi.
 let _heFloatMs = -Infinity;
 const HE_FLOAT_HOI = 2600;
+// Cửa mở lại nhịp hồi, CHỈ cho bài kiểm. Không có nó thì không cách nào đo được kênh này một
+// cách xác định: mốc so với `performance.now()` là THỜI GIAN THẬT, mà vòng game vẫn chạy giữa
+// hai lệnh của bài kiểm — nên một cú đánh ngoài ý muốn đóng cửa hồi ngay trước lúc đo, và bài
+// báo "cơ chế câm" trong khi nó chạy hoàn hảo. Đã đo đúng thế: 2/3 lượt xanh, lượt thứ ba đỏ.
+// Nó KHÔNG đổi hành vi của game — chỉ đặt lại một cái mốc.
+window.__heFloatReset = function(){ _heFloatMs = -Infinity; };
 // Một dòng, kiểu Ragnarok: đất của ai · lớp Axie nào · mang gì tới · nơi duy nhất rơi cái gì.
 function banSacHtml(id){
   const b = mapBanSac(id); if (!b) return '';

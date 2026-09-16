@@ -14,6 +14,7 @@
 // cũng quay lại dưới dạng "chỉ vài dòng chỉ số nhỏ thôi". Hệ khắc là một QUAN HỆ, không phải
 // một nấc thang — nếu ai đó "cải tiến" nó thành +% kháng thì bài này phải đỏ.
 const { chromium } = require('playwright');
+const CONG = process.argv[2] || '8853';   // để thử ngược chạy được trên một cây khác
 let bad = 0;
 const fail = m => { console.log('FAIL ' + m); bad++; };
 const pass = m => console.log('PASS ' + m);
@@ -23,7 +24,7 @@ const pass = m => console.log('PASS ' + m);
   const page = await browser.newPage({ viewport: { width: 1280, height: 900 } });
   const errors = [];
   page.on('pageerror', e => errors.push(String(e)));
-  await page.goto('http://localhost:8853/index.html', { waitUntil: 'networkidle' });
+  await page.goto(`http://localhost:${CONG}/index.html`, { waitUntil: 'networkidle' });
   await page.waitForFunction(() => window.__gameReady).catch(()=>{});
   await page.waitForTimeout(300);
 
@@ -197,7 +198,7 @@ const pass = m => console.log('PASS ' + m);
   //
   // ⚠ Đo trên `floats` (số bay TRÊN ĐẦU người chơi), không đo nhật ký: nhật ký đã in sẵn từ
   // trước ở một vế, nên một bài hỏi nhật ký sẽ xanh mà chưa kiểm được gì mới.
-  const doFloat = async (avaId, moTa) => await page.evaluate(({ id }) => {
+  const doFloat = async (avaId, moTa) => await page.evaluate(async ({ id }) => {
     window.TEST_MODE = true; startGame('thieulam', null);
     player.level = 40; player.free = 0; calcDerived();
     player.reflect = 0;
@@ -212,6 +213,16 @@ const pass = m => console.log('PASS ' + m);
     // phán quyết của một con Dusk khác ("⚠ Dusk khắc Aquatic"), tức bài chấm một cảnh khác
     // hẳn cảnh nó tưởng mình dựng. §2 không lộ ra vì nó chỉ cộng tổng máu mất.
     for (const x of mobs) if (x) x.he = 'Beast';
+    // ⚠ MỞ CỬA HỒI TRƯỚC KHI ĐO — nếu không thì mục này đo một cảnh đã bị chính mục TRƯỚC
+    // khoá lại. `HE_FLOAT_HOI` (2,6 s) so với `performance.now()`, tức THỜI GIAN THẬT, còn 600
+    // nhịp `update(1/60)` chỉ tốn ~1-2 giây thật — nên cả vòng lặp nằm gọn trong cửa hồi mà một
+    // mục trước vừa mở, và mục này báo "không số bay nào hiện lên" trong khi cơ chế chạy hoàn
+    // hảo (đo trên trang mới tinh: bắn đúng một cái, đúng chữ). Cùng họ với vết sẹo `_heFloatMs`
+    // khởi tạo bằng 0 đã ghi trong CLAUDE.md, và với luật "mục nào để lại trạng thái thì mục sau
+    // phải dựng lại cảnh của mình".
+    // ⚠ VÀ ĐỪNG CHỮA BẰNG CÁCH NGỦ 2,7 GIÂY: vòng game VẪN CHẠY giữa hai lệnh của bài kiểm, nên
+    // một cú đánh ngoài ý muốn đóng lại cửa hồi ngay trước lúc đo. Đã thử — 2/3 lượt xanh.
+    __heFloatReset();
     floats.length = 0;
     const he = heThu(player);
     // ⚠ HỨNG NGAY TRONG VÒNG, đừng đọc `floats` sau khi chạy xong. 600 nhịp là 10 GIÂY thời gian
@@ -251,7 +262,7 @@ const pass = m => console.log('PASS ' + m);
   //     Đo trên một TRANG MỚI TINH và đánh NGAY, vì đó là cảnh duy nhất dựng lại được lỗi.
   {
     const p2 = await browser.newPage({ viewport: { width: 1000, height: 700 } });
-    await p2.goto('http://localhost:8853/index.html', { waitUntil: 'networkidle' });
+    await p2.goto(`http://localhost:${CONG}/index.html`, { waitUntil: 'networkidle' });
     await p2.waitForFunction(() => window.__gameReady).catch(()=>{});
     const rd = await p2.evaluate(() => {
       window.TEST_MODE = true; startGame('thieulam', null);
