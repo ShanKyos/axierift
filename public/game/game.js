@@ -1673,6 +1673,9 @@ const VK_ANH = {
   // chốt lớp này cầm trượng BAY theo người như Dark Wizard. Nên cây này chỉ cần MỘT tấm
   // phẳng ở đây, không cần nướng bảng khung — và gói gốc cũng chỉ có mỗi vũ khí.
   'lenhtruong|7': { tep:'vk_dltruong', x:65, y:26 },   // Vương Trượng Hồng Ngọc
+  // Cung Thiên Mệnh. Cây này CÓ lớp cầm tay (NV_VK_LOP) nên trong màn không dùng tấm này —
+  // nhưng ICON TRONG TÚI thì vẫn vẽ từ đây, nên thiếu dòng này là túi hiện cây cung cũ.
+  'truongcung|7': { tep:'vk_elfcung', x:65, y:38 },    // Cung Thiên Mệnh
 };
 // Tra art của một món vũ khí: tranh riêng của giai trước, tranh chung của dòng sau.
 function vkAnh(d){
@@ -14962,6 +14965,7 @@ const NV_GIAP = {
   // Phoenix — bộ ĐỈNH của Dark Knight, nên giai 7 chứ không phải giai 1 (cùng lý do dwsm1).
   'thieulam|7': 'dkph1',
   'bug|7': 'dlbc1',        // Dark Lord — trượng bay, không có lớp vũ khí cầm tay
+  'toanchan|7': 'elnb1',   // Sylvan Ranger — bộ Ngọc Bích, cung CẦM TAY
 };
 // Lớp này có art giáp ở giai nào? Lấy giai CAO NHẤT có art. Có hàm này thì ?test=1 và bài kiểm
 // không ai phải thuộc lòng "Dark Wizard thì giai 7, Dark Knight thì giai 1", và thêm bộ mới
@@ -15054,6 +15058,12 @@ const NV_LOP_HOP = {
               t2:[57,110,145,103,35,111,163,139], n:[84,87,105,75,0,79,179,169] },
   // Dark Lord — bộ vàng-đỏ nạm hồng ngọc. KHÔNG có lớp `vk`: lớp này cầm trượng BAY
   // (thần khí), nên nướng bằng cờ --khongvk. Xem NV_VK_LOP — cố ý không khai.
+  // Sylvan Ranger — bộ Ngọc Bích. Bộ ĐẦU TIÊN có lớp `h` (tóc sau): elf tóc dài nên khe
+  // 背后头发 có nét vẽ thật, khác bốn bộ trước đều rỗng lớp này.
+  'elnb1':  { h:[85,96,70,79,5,88,170,177], t1:[71,132,116,75,39,115,165,118],
+              c:[70,159,121,101,71,142,127,119], a:[92,125,59,75,33,115,137,139],
+              vk:[42,129,145,144,96,170,144,113], t2:[63,126,132,80,36,119,156,136],
+              n:[82,86,76,62,0,79,178,173] },
   'dlbc1':  { t1:[68,132,126,91,44,112,175,131], c:[65,157,130,108,69,141,134,120],
               a:[74,121,98,89,28,111,154,161], t2:[65,127,137,85,36,114,161,139],
               n:[86,88,80,55,0,80,186,168] },
@@ -15070,6 +15080,8 @@ const NV_LOP_HOP = {
 // Có mặt ở đây thì thần khí tự tắt (xem `_tkHien`), nếu không là hiện HAI cây.
 const NV_VK_LOP = {
   'kiem|7': 'dkph1',        // Phượng Kiếm — nướng từ chính gói Spine của bộ Phoenix
+  'truongcung|7': 'elnb1',  // Cung Thiên Mệnh — cung thì PHẢI cầm tay, bắn bằng cung bay
+                            // lơ lửng thì không đọc ra động tác giương cung nào cả.
 };
 function nvVkLop(p){
   const it = p && p.equip && p.equip.vukhi;
@@ -15222,7 +15234,8 @@ function nvMoc(kind){ return NV_BANG2[kind] ? NV_MOC2[kind] : NV_MOC[kind]; }
 // ⚠ Bộ nào nướng ra 112 ô (16 cột × 7 hàng) thì khối CHẠY là 32 khung, không phải 16 như
 // HS_FRAMES.r mặc định. Kiểm bằng phép chia: bềRộngBảng/bềRộngÔ = 16 và bềCao/caoÔ = 7.
 // Quên khai là lớp đó chỉ đọc NỬA ĐẦU vòng chạy — chân lệch nhịp so với lớp khai đủ.
-const NV_KHUNG_R = { dkcw1: 32, dwsc1: 32, elfar1: 32, dlcm1: 32, dkph1: 32, dlbc1: 32 };
+const NV_KHUNG_R = { dkcw1: 32, dwsc1: 32, elfar1: 32, dlcm1: 32,
+                     dkph1: 32, dlbc1: 32, elnb1: 32 };
 function nvSoKhung(ten, kind){
   if (kind === 'r' && ten && NV_KHUNG_R[ten]) return NV_KHUNG_R[ten];
   return HS_FRAMES[kind] || 1;
