@@ -90,14 +90,28 @@ const THU = { k: 1, cols: 2, rows: 1, frameW: 64, frameH: 64, frames: 2, fps: 10
       return chup();
     }
 
+    // ⚠ TẮT AVATAR TRONG LÚC ĐO — con Axie KHÔNG phải thứ bài này gác, mà nó nằm giữa ô đo.
+    // Ô đo là hộp 140×140 quanh chân nhân vật, và con Axie đứng ngay đấy. Khối thở của nó chạy
+    // theo `performance.now()`, nên giữa hai lượt `veLuot` nó có thể nhích một khung — và khi
+    // nhích thì nó nhích cả NGHÌN điểm ảnh. Đo được: `nenTroi` nhảy giữa **0 và 2.167** tuỳ
+    // lượt, tức cùng một mã chạy tốt mà bài đỏ chừng 1/3 số lần.
+    //   ⇒ Đó là NHIỄU LƯỠNG CỰC, đúng cái đã ghi trong CLAUDE.md ở mục đồng bộ đồ.
+    // Và từ lúc khối thở được PHA hai khung liền nhau (nó nhích ở MỌI lượt vẽ thay vì 14%),
+    // nhiễu ấy không còn là xúc xắc nữa: bài đỏ 3/3.
+    // Tắt avatar rồi thì `nenTroi` về **0** ở cả ba lượt thử, còn tín hiệu vẫn 480 — tách hẳn.
+    player.avatar = null;
     // Đứng yên tuyệt đối trong lúc đo: một bước chân cũng đủ làm mọi ô đo lệch.
     player.moveTarget = null; player.vx = 0; player.vy = 0;
 
     // ── §1 ĐỐI CHỨNG — vẽ hai lượt Y HỆT phải ra gần như y hệt ──────────────────────
     // Không có mệnh đề này thì mọi con số dưới đây vô nghĩa: nền vẫn trôi chút ít giữa hai
     // lượt, và nếu nó trôi nhiều thì "khác nhau" không chứng minh được điều gì.
-    const c1 = veLuot(0), c2 = veLuot(0);
-    const nenTroi = khac(c1, c2);
+    // Lấy TRUNG VỊ chứ không lấy một cặp: kể cả khi đã tắt avatar thì lớp nhân vật, cỏ và ánh
+    // sáng vẫn có thể nhích một nhịp: một mẫu đơn lẻ rơi trúng nhịp ấy là cả bài sai mốc.
+    const _mauNen = [];
+    for (let i = 0; i < 9; i++) _mauNen.push(khac(veLuot(0), veLuot(0)));
+    _mauNen.sort((a, b) => a - b);
+    const nenTroi = _mauNen[_mauNen.length >> 1];
     ok('đối chứng: hai lượt vẽ y hệt nhau thì gần như không đổi',
        nenTroi < 400, nenTroi + '/' + (hop[2]*hop[3]) + ' điểm ảnh trôi');
 

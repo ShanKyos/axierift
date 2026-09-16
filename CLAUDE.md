@@ -286,6 +286,33 @@ Wizard niệm chú bên cạnh là dựng lại đúng cái **hai kẻ cùng đ�
 `test_avaphanung §6` là chỗ DUY NHẤT nói ra rằng KHÔNG nướng là một QUYẾT ĐỊNH, không phải một
 thiếu sót ai đó quên làm.
 
+**⚠ KHỐI THỞ PHA HAI KHUNG — 9 FPS là thứ người chơi nhìn nhiều nhất.** Con Axie LÀ thân nhìn
+thấy của người chơi và nó đứng trên màn 100% thời gian, mà `CHI_THO_FPS` = 9: mỗi khung bảng nằm
+im gần **bảy lượt vẽ** trên màn 60 Hz. Đo trên 60 lượt vẽ liên tiếp:
+
+| | trước | sau khi pha |
+|---|---|---|
+| lượt vẽ **ĐỨNG IM** | **51/59 (86%)** | 19/59 (32%) |
+| lệch TB mỗi lượt | 81 px | 36 px |
+| **lệch chuẩn** | **205** | **81** |
+| đỉnh | 634 | 288 |
+
+86% số khung đứng im rồi một khung nhảy 634 điểm ảnh — đó chính là "cứng nhắc", viết thành số.
+
+⚠ **Nâng `CHI_THO_FPS` KHÔNG chữa được**: bảng chỉ có 12 khung, chạy nhanh hơn thì thành thở gấp.
+
+⚠ **CHỈ pha khối THỞ, đừng pha khối CHẠY.** Đo lệch giữa hai khung liền nhau trên thân 4.290
+điểm ảnh đặc: thở **407 px (9,5%)** · chạy **1.507 px (35%)**. 9,5% pha ra hơi thở liền mạch;
+35% pha ra **bóng đôi**. Khối chạy vốn đã ~35 khung/giây trên màn (12 khung × ~2,9 bước/giây)
+nên không có khe nào để lấp.
+
+⚠ **Và nó làm đỏ một bài kiểm CŨ — đúng cái bài đang đo nhầm.** `test_xoayvfx` đặt ô đo 140×140
+quanh chân nhân vật, tức **ôm trọn con Axie**, rồi lấy một cặp ảnh làm đối chứng "nền trôi". Ở
+9 FPS thì 2/3 số lượt con Axie không nhích ⇒ nền trôi = 0 ⇒ xanh; 1/3 số lượt nó nhích ⇒ 2.167 ⇒
+đỏ. Pha khung xong thì nó nhích ở MỌI lượt ⇒ đỏ 3/3. Sửa ở BÀI KIỂM, không ở cơ chế: tắt avatar
+trong lúc đo (con Axie không phải thứ bài ấy gác) + lấy **trung vị 9 mẫu**. Sau đó nền trôi về
+**0** ở cả ba lượt, tín hiệu vẫn 480. Thử ngược (ép `goc: 0`) vẫn đỏ 5 mệnh đề.
+
 **⚠ THỨ TỰ ƯU TIÊN: giật > gồng > chạy > thở** — cùng thứ tự với `_kind` của khối thân người
 (chết > trúng đòn > niệm chú > đánh), TRỪ khối chết: luật *"trúng đòn và chết vẫn giữ Axie"*
 nghĩa là nằm xuống là việc của lớp nhân vật, không phải của cái thân nhìn thấy.

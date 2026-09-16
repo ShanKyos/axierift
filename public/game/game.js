@@ -5887,7 +5887,31 @@ function veAvatar(g, p, dangDiChuyen, now){
   }
   // Bảng chưa tải xong thì lui về khối thở — hơi trượt một nhịp, nhưng không bao giờ để trống
   // chỗ đứng của nhân vật. (Cùng lý do và cùng cách với khối chạy từ trước.)
-  if (!ok){ khoi = 'tho'; khung = Math.floor(now / 1000 * CHI_THO_FPS); chiVeNho(g, id, khung, 0, 0, than); }
+  if (!ok){
+    // ⚠ KHỐI THỞ CHẠY 9 FPS — và đó là thứ người chơi nhìn nhiều nhất. Con Axie LÀ thân nhìn
+    // thấy của người chơi, đứng trên màn 100% thời gian; ở 9 FPS thì mỗi khung bảng nằm im
+    // gần BẢY lượt vẽ trên màn 60 Hz, mắt đọc ra một tấm hình đổi nấc chứ không ra hơi thở.
+    //
+    // Nâng `CHI_THO_FPS` KHÔNG chữa được: bảng chỉ có 12 khung, chạy nhanh hơn thì thành thở
+    // gấp. Thứ chữa được là PHA hai khung liền nhau — đúng cách khối chạy của lớp nhân vật đã
+    // làm (xem `_phaLe`/`_phaSau`), và ở đây còn an toàn hơn hẳn:
+    //
+    //   đo trên thân 4.290 điểm ảnh đặc — thở lệch TB 407 px giữa hai khung liền nhau (9,5%)
+    //                                   — chạy lệch TB 1.507 px (35%)
+    //
+    // 9,5% thì pha ra hơi thở liền mạch; 35% thì pha ra BÓNG ĐÔI. Nên chỉ pha khối thở.
+    // Khối chạy đã ~35 khung/giây trên màn (12 khung × ~2,9 bước/giây) nên vốn không có khe.
+    khoi = 'tho';
+    const _kf = now / 1000 * CHI_THO_FPS;
+    khung = Math.floor(_kf);
+    const _le = _kf - khung;
+    chiVeNho(g, id, khung, 0, 0, than);
+    if (_le > 0.02){
+      // Vẽ ĐÈ khung sau ở alpha = phần lẻ: cùng phép hoà mà `heroBlit` dùng cho lớp nhân vật.
+      const _a = g.globalAlpha;
+      g.globalAlpha = _a * _le; chiVeNho(g, id, khung + 1, 0, 0, than); g.globalAlpha = _a;
+    }
+  }
   // Phơi quyết định ra cho bài kiểm, khoá theo từng thân người — cùng lối với `__veChet` và
   // `__neoVe`. Ở đây bắt buộc phải thế: thứ cần gác là CHỈ SỐ KHUNG (một con số), mà đo nó bằng
   // điểm ảnh thì vấp đúng sàn nhiễu đã ghi ở mục Giai đoạn 2 — con Axie thở ~8 FPS nên hai lượt
