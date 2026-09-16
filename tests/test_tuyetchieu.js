@@ -176,15 +176,17 @@ const pass = m => console.log('PASS ' + m);
       else if (vec && MAC_DINH.includes(vec)) oRong.push(id + '=' + vec + ' (mặc định)');
     }
 
-    const _bugC = SECT_VFX.sx_bug_c;
+    // ⚠ MỆNH ĐỀ `fireScream` ĐÃ GỠ — nó chốt cứng `SECT_VFX.sx_bug_c.style === 'firepillar'`,
+    // tức gác đúng MỘT ô của MỘT lớp bằng đúng MỘT tên style. Ô đó nay có tranh thật (Bão Quạ),
+    // mà luật của kho là có tranh thì KHÔNG khai style nữa ⇒ mệnh đề đòi ngược lại luật.
+    // Vòng `oRong` ngay trên đã bao trọn nó và còn mạnh hơn: quét CẢ 5 lớp × 2 ô, và chấp nhận
+    // "tranh thật HOẶC vector riêng" thay vì một tên chép tay. Gỡ là bớt một chỗ sẽ mục, không
+    // phải bớt một chỗ đang gác.
     return { sai, oRong,
-             fireScream: _bugC && _bugC.style,
-             penetrationProj: VH_VFX.elf_penetration && VH_VFX.elf_penetration.proj,
-             deuKhacMacDinh: !!_bugC && !MAC_DINH.includes(_bugC.style) };
+             penetrationProj: VH_VFX.elf_penetration && VH_VFX.elf_penetration.proj };
   });
   console.log('4) hiệu ứng riêng:', JSON.stringify(r4));
   if (r4.sai.length) fail(`tuyệt chiêu dùng hiệu ứng mặc định: ${r4.sai.join(', ')}`);
-  if (r4.fireScream !== 'firepillar') fail(`Fire Scream dùng ${r4.fireScream}, phải là firepillar (ba vệt lửa rồi DỰNG CỘT LỬA)`);
   if (r4.oRong.length) fail(`ô 1/ô 2 của lớp không có hình riêng: ${r4.oRong.join(', ')}`);
   if (r4.penetrationProj !== 'lance') fail('Penetration không có đạn riêng — dùng mũi tên thường');
   await p3.close();

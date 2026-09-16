@@ -787,7 +787,9 @@ window.SECTS = {
     // chim tuôn ra từ tay thì không nên với xa hơn một khối thiên thạch gọi từ trên trời xuống.
     // ⚠ Bốn lớp kia để `tam` trống ⇒ `skillInfo` quy ra 0 (nổ ngay dưới chân). Đây là lớp thứ hai
     // sau Dark Wizard khai tầm thật cho Trấn Phái.
-    tp:{ name:'Raven Storm', mult:3.0, tam:320 } },
+    // ⚠ Tên TIẾNG VIỆT là CHỦ Ý, chủ dự án chốt — bốn tuyệt chiêu kia để tiếng Anh (Death Stab ·
+    // Ice Arrow · Meteorite · Flame Strike). Đừng "dọn cho đồng bộ" bằng cách dịch ngược.
+    tp:{ name:'Bão Quạ', mult:3.0, tam:320 } },
 };
 
 // packs: quái đứng thành cụm 5-7 con, đánh 1 con cả cụm lao vào (GDD Mob Mechanics)
