@@ -155,24 +155,43 @@ const cho = ms => new Promise(r => setTimeout(r, ms));
     for (let i = 0; i < 40; i++) render();
     await new Promise(r => setTimeout(r, 1200));
     for (let i = 0; i < 40; i++) render();
-    // ⚠ SÀN NHIỄU LÀ TRUNG VỊ, KHÔNG PHẢI MỘT CẶP VÀ CŨNG KHÔNG PHẢI MAX. Đo được trên một thân
-    // người ĐỨNG YÊN: 10 cặp khung liên tiếp ra 507·444·501·527·458·**5221**·509·448·441·377.
-    // Cái đỉnh đơn độc kia là con AXIE THỞ — nó chạy ~8 FPS trong khi một lượt render tốn ~13 ms,
-    // nên cứ chừng 10 khung lại có đúng một lần nhảy khung hình. Lấy MỘT cặp là 10% số lượt rơi
-    // trúng đỉnh; lấy MAX là 100% rơi trúng. Cả hai đều làm bài đỏ vì con Axie thở, không vì bộ
-    // đồ — đã đỏ 2/3 lượt trước khi đổi sang trung vị.
-    const dsNhieu = [];
-    let truoc = lay(bx, by);
-    for (let i = 0; i < 7; i++){ render(); const nay = lay(bx, by); dsNhieu.push(dem(truoc, nay)); truoc = nay; }
-    // Tín hiệu cũng lấy trung vị, cùng lý do: một lượt đo đơn lẻ có thể rơi trúng đúng cái đỉnh
-    // ấy và ĐỘN THÊM 5.200 điểm ảnh — tức bài sẽ xanh kể cả khi bộ đồ chẳng đổi gì.
-    const dsTin = [], dsDoiChung = [];
-    for (let i = 0; i < 3; i++){
-      np.equip = giu;  render(); const coDo = lay(bx, by), coDoC = lay(bx + 420, by - 300);
-      np.equip = {};   render(); const tran = lay(bx, by), tranC = lay(bx + 420, by - 300);
-      dsTin.push(dem(coDo, tran)); dsDoiChung.push(dem(coDoC, tranC));
-    }
+    // ⚠ GHÌM ĐỒNG HỒ RỒI MỚI ĐO — TRUNG VỊ LÀ BẢN VÁ CŨ VÀ NÓ ĐÃ HẾT TÁC DỤNG.
+    //
+    // Bản cũ ghi: sàn nhiễu đo được 507·444·501·527·458·**5221**·509·448·441·377, cái đỉnh đơn
+    // độc kia là con AXIE THỞ ở ~8 FPS trong khi một lượt render tốn ~13 ms — nên cứ chừng 10
+    // khung mới có một lần nhảy khung hình, và TRUNG VỊ né được nó.
+    //
+    // Từ đợt PHA HAI KHUNG khối thở (con Axie nhúc nhích ở MỌI lượt vẽ, đúng ý đồ — trước đó
+    // 86% số lượt nó đứng im) thì không còn cái đa số ~450 nào để trung vị rơi vào nữa: sàn
+    // nhiễu lên đều 4.433 trong khi tín hiệu vẫn ~6.800 ⇒ luật ×3 thành bất khả thi và bài đỏ
+    // vì một thứ KHÔNG hỏng. Tức trung vị chưa bao giờ KHỬ nhiễu, nó chỉ né được một cái đỉnh
+    // thưa; nguồn nhiễu thì vẫn nguyên đó.
+    //
+    // Ghim `performance.now()` thành hằng số là gỡ hẳn nguồn: con Axie, cánh vỗ, hào quang đập,
+    // vũ khí bay — tất cả đứng yên, nên hai lượt vẽ cùng điều kiện phải trùng khít TỪNG điểm
+    // ảnh và sàn nhiễu về 0 vì nó THẬT SỰ bằng 0. ⚠ Đừng "sửa" bằng cách hạ bội số ×3: đó là
+    // nới luật cho xanh, và lần sau bộ đồ thật sự không hiện lên thì bài vẫn xanh.
+    const thatNow = performance.now.bind(performance);
+    const moc = thatNow();
+    const dsNhieu = [], dsTin = [], dsDoiChung = [];
+    try {
+      performance.now = () => moc;
+      // ⚠ HÂM LẠI SAU KHI GHIM, không chỉ trước. `bayCao` nhích 8% về đích MỖI LẦN `render()`
+      // — theo lượt gọi, KHÔNG theo đồng hồ — nên ghim thời gian không làm nó đứng. Và chính
+      // cú chuyển sang trạng thái ghim cũng đẻ một khung chuyển tiếp. Đo được nếu bỏ vòng này:
+      // sàn nhiễu ra 3207·55·62·62·0·0·0 — đuôi đã sạch, chỉ đầu còn bẩn, tức lỗi nằm ở chỗ
+      // CHƯA LẮNG chứ không phải ở phép ghim.
+      for (let i = 0; i < 24; i++) render();
+      let truoc = lay(bx, by);
+      for (let i = 0; i < 7; i++){ render(); const nay = lay(bx, by); dsNhieu.push(dem(truoc, nay)); truoc = nay; }
+      for (let i = 0; i < 3; i++){
+        np.equip = giu;  render(); const coDo = lay(bx, by), coDoC = lay(bx + 420, by - 300);
+        np.equip = {};   render(); const tran = lay(bx, by), tranC = lay(bx + 420, by - 300);
+        dsTin.push(dem(coDo, tran)); dsDoiChung.push(dem(coDoC, tranC));
+      }
+    } finally { performance.now = thatNow; }
     np.equip = giu;
+    const truoc = lay(bx, by);
     return { oDo: giua(dsTin), oDoiChung: giua(dsDoiChung), nhieu: giua(dsNhieu),
              tong: truoc.length / 4, thoNhieu: dsNhieu, thoTin: dsTin };
   });
@@ -186,6 +205,17 @@ const cho = ms => new Promise(r => setTimeout(r, ms));
                          + 'tầng vẽ không đọc nó');
   if (doVe.oDo < doVe.oDoiChung * 6)
     fail(`ô có người (${doVe.oDo}) không nổi hơn hẳn ô đối chứng (${doVe.oDoiChung})`);
+  // ⓪ Tự kiểm CẢNH DỰNG: ghim đồng hồ có ăn không. Ăn thì hai lượt vẽ cùng điều kiện phải
+  //    trùng khít; không ăn thì luật ×3 dưới đây đo trên một nền đang trôi — nói ra, đừng chấm.
+  //    ⚠ Đây là chốt DUY NHẤT còn giữ được luật ×3 có nghĩa: sàn nhiễu 0 làm nó luôn đúng.
+  // Ngưỡng 200 là ĐO ĐƯỢC, không đoán: ghim xong vẫn còn một cái RUNG hai trạng thái, không
+  // phải trôi — chuỗi ra `0,64,64,0,0,77,77` (không hề lắng dần). Nó là `bayCao` dao động quanh
+  // đích vì bước nhích 8% mỗi lượt render vượt qua rồi lại vượt về. 77/16.500 = 0,5% ô, trong
+  // khi tín hiệu là 4.000 (24%) và ca hỏng thật đo được 4.433 — nên 200 nằm gọn giữa hai bên và
+  // luật ×3 bên dưới lấy lại được sức (4.000 trên 60 là 66 lần, không phải 1,5 lần).
+  if (doVe.nhieu > 200)
+    fail(`ghim đồng hồ KHÔNG ăn: hai lượt vẽ cùng điều kiện vẫn lệch ${doVe.nhieu} điểm ảnh — `
+       + 'còn nguồn trôi trong ô đo (con Axie? cánh? hào quang?), luật ×3 dưới đây vô nghĩa');
   if (doVe.oDo < doVe.nhieu * 3)
     fail(`tháo đồ đổi ${doVe.oDo} điểm ảnh trong khi hai khung liên tiếp cùng điều kiện đã đổi `
        + `${doVe.nhieu} — không tách được bộ đồ ra khỏi hoạt ảnh của chính thân người đó`);
