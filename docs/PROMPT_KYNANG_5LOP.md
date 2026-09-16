@@ -136,6 +136,572 @@ Ba thứ đo được lúc cắm, mỗi thứ là một cái bẫy:
    (đo được 45,5 vs −46,5 px). Xoay quanh tâm ô cũng làm hình ĐỔI, nên chỉ phép đo ấy phân biệt
    được hai cách làm.
 
+### 0.5 ⚠ CHUẨN CHẤT LƯỢNG LÀ METEORITE — và ba tấm đầu KHÔNG đạt
+
+Chủ dự án xem ba tấm Gemini đã cắm rồi chốt: *"hình ảnh này cũng khá xấu. Mình muốn gen
+animation skill như DW (meteorite ấy) nhìn nó mới hấp dẫn."*
+
+Đo cả sáu atlas đang có, ba con số tách bạch ngay:
+
+| | khung | độ phủ ô | rìa mềm | dung lượng |
+|---|---|---|---|---|
+| `meteor_rain` · Meowa | 14 | **31,7%** | 8,9% | 1,9 MB |
+| `fire_pillar` · Meowa | 16 | 25,9% | 7,0% | 1,5 MB |
+| `dragon_spirit` · Meowa | 8 | 29,7% | 66,6% | 1,25 MB |
+| `sx_thieulam_a` · Gemini | 8 | **10,9%** | 55,4% | 0,36 MB |
+| `sx_bug_a` · Gemini | 6 | 17,0% | 53,8% | 0,41 MB |
+| `sx_toanchan_a` · Gemini | 5 | 21,6% | 41,2% | 0,36 MB |
+
+⚠ **Nhưng đừng đọc bảng này thành "thiếu khung".** `dragon_spirit` chỉ 8 khung mà vẫn đẹp.
+Chụp cả sáu ra cạnh nhau mới thấy thứ thật sự khác:
+
+> **Tấm Meowa là NĂM-SÁU LỚP chồng nhau. Tấm Gemini là MỘT NÉT.**
+
+Đếm được trên từng tấm:
+
+| `meteor_rain` | `fire_pillar` |
+|---|---|
+| ① ba viên đá có lõi trắng | ① vòng dung nham đỏ dưới chân |
+| ② đuôi tím dài, xoắn | ② mảnh đá đen vỡ quanh vành |
+| ③ tia sét trắng lúc chạm | ③ cột lửa **xoắn**, có thể tích |
+| ④ khối nổ tím-lam cuộn | ④ **hồn lửa XANH LÁ bay quanh** |
+| ⑤ khói xám bốc lên | ⑤ tia lửa bắn lên |
+| ⑥ vành sáng lan trên nền | |
+
+Ba tấm Gemini: một vòng cung xanh. Hết. Không khói, không mảnh vỡ, không lõi, không vành nền.
+
+**Và một chi tiết cụ thể, gọi tên được:** cả hai tấm Meowa đều có **một màu TƯƠNG PHẢN thứ hai**
+— cột lửa cam thì hồn bay màu xanh lá, thiên thạch tím thì tia sét màu xanh lam. Ba tấm Gemini
+đơn sắc từ đầu đến cuối. Đó là thứ làm mắt bám vào, và nó rẻ: chỉ là một dòng trong prompt.
+
+⇒ **Prompt ở §3–§6 của bản 1 tả MỘT HÌNH** ("a wide crescent of cold steel-blue light"). Đó là
+lý do gốc, không phải Gemini kém. Prompt tả một nét thì sinh ra một nét.
+
+### 0.6 CÔNG THỨC NĂM LỚP — dán vào MỌI prompt hiệu ứng
+
+Mọi prompt từ đây phải gọi tên đủ năm lớp. Thiếu lớp nào thì hiệu ứng mỏng đúng lớp đó.
+
+| lớp | là gì | ví dụ trong `fire_pillar` |
+|---|---|---|
+| **① NỀN** | dấu để lại trên mặt đất, vành sáng lan | vòng dung nham đỏ |
+| **② THÂN** | khối chính — phải có **thể tích và xoắn**, không phải nét | cột lửa xoắn |
+| **③ LÕI** | sợi trắng nóng bên trong thân, vẫn sắc khi thân đã nhoè | lõi trắng giữa cột |
+| **④ PHỤ KIỆN BAY** | mảnh vỡ · tia lửa · sinh vật nhỏ — **màu tương phản** | hồn lửa xanh lá |
+| **⑤ TÀN** | khói, bụi, hơi còn đọng ở khung cuối | khói đen cuộn |
+
+Kèm hai luật nhịp:
+- **Ba hồi rõ**: dồn → nổ → tan. Hồi giữa là khung sát thương áp xuống.
+- **14–16 khung** cho ô 3, **10–12** cho ô 1 và ô 2. Ít hơn thì ba hồi không đủ chỗ.
+
+**Khối dán vào cuối mọi prompt hiệu ứng** (thay cho khối ở §2.2 của bản 1):
+
+```
+Build it from five stacked layers rather than one shape: a mark left on the ground beneath it,
+a main body with real volume that twists along its length instead of reading as a drawn line,
+a hair-thin white-hot core inside that body which stays sharp even where the outer edges blur,
+loose debris and sparks flying around it in a clearly contrasting second colour, and a drift of
+smoke or vapour still hanging in the final frames. Play the whole thing in three clear beats:
+gathering, the loudest moment, then falling apart. Render it as a game visual effect with
+painted cel shading, saturated colour that reads over both bright grass and a dark swamp at
+night, and a crisp bright core fading to a soft coloured edge. Keep every frame the same canvas
+size with the effect centred the same way. Place it on a solid background of pure magenta
+#FF00FF, completely flat, with no gradient, no checkerboard pattern and no transparency grid.
+No character, no weapon, no text and no numbers anywhere in the image.
+```
+
+### 0.7 ⚠ VÀ CẢ BA TẤM ĐẸP ĐỀU TỪ MEOWA, KHÔNG PHẢI GEMINI
+
+`meteor_rain` · `fire_pillar` · `dragon_spirit` đều nhập bằng `tools/vfx_meowa.py` — cờ
+`--cat/--neo/--sat/--sang` chỉ tệp đó có, và chú thích của `dragon_spirit` ngay trong
+`VFX_ATLAS_DEFS` ghi rõ nó đã phải `--sang` lúc nhập gói Meowa.
+
+Công thức năm lớp ở §0.6 dùng được cho cả hai bộ sinh, và nó là phần cải thiện lớn nhất. Nhưng
+nếu muốn đúng chuẩn Meteorite thì **đặt qua Meowa** (lệnh cụ thể ở §0.11) — cùng đường đã sinh ra ba
+tấm ấy. Gemini vẫn hợp cho **ảnh tĩnh** (nhà cửa, vật nhỏ, vũ khí, icon), đúng như
+`docs/PROMPT_ART_GEMINI.md` đã phân vai.
+
+### 0.8 Ba prompt ô 1 VIẾT LẠI theo công thức năm lớp
+
+Thay hẳn ba prompt tương ứng ở §3. Mỗi cái vẫn nối khối ở §0.6 vào cuối.
+
+---
+
+**Twisting Slash** · Dark Knight · `sx_thieulam_a` · thân #4c8dff · phụ kiện #ffe9a0
+
+```
+A two-handed greatsword sweep, seen from slightly above. Gouged into the ground along the path
+of the swing is a pale scar of light that spreads outward into a low ring. Above it the sweep
+is a thick ribbon of cold steel-blue energy with real volume, wrung and twisted along its
+length, heavy through the middle and tapering only at the very tips. A hair-thin white-hot
+line runs inside that ribbon and stays razor sharp even where the outer body smears with
+speed. Thrown forward around it, in warm gold against all that blue, are torn shards of light
+and a spray of sparks. The first frames wind the blade back while the ground scar starts to
+glow; the middle frames tear the sweep wide open and blow the gold sparks forward at the
+moment of impact; the last frames shred the ribbon and leave a low drift of pale blue vapour
+hanging where it passed.
+```
+
+---
+
+**Force Wave** · Dark Lord · `sx_bug_a` · thân #8a9a3a · phụ kiện #ffb15c
+
+```
+A blunt shockwave punched out of a commander's sceptre, seen from slightly above. Dust lifts
+off the ground in a flat ring beneath it. The wave itself is three or four nested crescent
+walls of olive-green force, each one a thick slab with visible thickness rather than a drawn
+band, the air between them warped like heat haze. A white-hot seam runs along the leading edge
+of the innermost wall. Tumbling in the gap between the walls, in warm amber against the green,
+are chips of broken stone and short crackling arcs lifted off the ground by the pressure. The
+first frames compress the walls almost into one line; the middle frames drive them apart and
+outward so the wave visibly travels and the amber debris is flung ahead of it; the last frames
+stretch the walls thin and leave a low roll of dust settling behind. Keep every edge blunt and
+rounded — this one is weight, not a cutting edge.
+```
+
+---
+
+**Triple Shot** · Sylvan Ranger · `sx_toanchan_a` · thân #3a9d8b · phụ kiện #ffd76a
+
+```
+Three arrows released at once from a longbow, seen from slightly above. A faint ring of
+disturbed grass and dust marks the ground under the release point. The three shafts are thick
+bolts of teal-green light with real body, each wrapped in a spiralling ribbon of mist that
+twists as it travels, fanning out at slightly different angles. Inside each bolt runs a
+hair-thin white core that stays sharp while the mist around it blurs. Scattered between them,
+in warm gold against the teal, are torn feather fragments and a spray of bright motes shaken
+loose by the shot. The first frames draw everything tight and inward as the string is pulled;
+the middle frames snap the three bolts outward at their brightest with the gold motes bursting
+from the release point; the last frames let the bolts thin away and leave a slow cloud of teal
+haze and drifting feathers behind.
+```
+
+---
+
+### 0.9 ⚠ ĐỔI HẲN LỐI VIẾT — chủ dự án đưa prompt mẫu, và nó thắng
+
+Chủ dự án đưa cặp prompt đã sinh ra đúng thứ muốn (Meteorite, hai lần gen ra hai hình).
+Nó **không phải văn xuôi** — nó là chuỗi mệnh đề ngăn bằng dấu phẩy, mỗi dòng một việc.
+
+⚠ **Điều này lệch `docs/npc-prompts.md §2.2`, vốn cấm thẳng "xếp chồng từ khoá".** Tôi đổi theo
+prompt mẫu, cố ý, và ghi ra đây để người sau đừng "sửa ngược" về văn xuôi: luật kia viết cho
+prompt **sinh vật và NPC** — ở đó văn xuôi giữ được nhận dạng một con vật. Hiệu ứng thì không có
+nhận dạng nào để giữ; nó là một danh sách lớp, và danh sách thì viết thành danh sách.
+Ba tấm Gemini "khá xấu" là viết bằng văn xuôi. Tấm chủ dự án chỉ vào thì viết kiểu này.
+
+#### Khuôn — mười một dòng, mỗi dòng một việc
+
+```
+A 2D game VFX sprite, <TÊN CHIÊU> spell <beginning|impact> phase,      ← ① chiêu gì, thì nào
+top-down slightly angled view, solid flat magenta background,          ← ② góc nhìn + NỀN
+<lớp ① nền / bối cảnh>,
+<lớp ② thân — nhấn "thick", "twisted", "with real depth">,
+<lớp ③ lõi trắng bên trong>,
+<lớp ④ phụ kiện bay, MÀU TƯƠNG PHẢN>,
+no <thứ của thì KIA>, no character, no weapon,                          ← ③ phủ định
+cel-shaded art style, bold black outlines, flat colors,
+dark fantasy MMORPG aesthetic like MU Online,
+clean vector-like game asset, centered composition,
+512x512 pixels, high quality, PNG
+```
+
+**Ba chỗ tôi sửa so với prompt mẫu, mỗi chỗ một lý do đo được:**
+
+1. ⚠ **`transparent background` → `solid flat magenta background`.** Dòng đó trong prompt mẫu
+   **không chạy**: đo cả ba tấm Gemini nhận được thì `alpha = 0` chiếm **0,0%** — nó vẽ lưới ô
+   caro thành điểm ảnh thật. Thêm luôn `no checkerboard pattern, no transparency grid` vào dòng
+   phủ định, vì với Gemini lưới caro CHÍNH LÀ cách nó vẽ "nền trong suốt".
+   Đây cũng là convention `docs/PROMPT_ART_GEMINI.md` đã chốt cho mọi art Gemini của dự án.
+2. **Dòng phủ định phải nêu thứ của THÌ KIA.** Prompt mẫu làm rất đúng chỗ này —
+   `no explosion yet` ở thì đầu, `no meteors in sky anymore` ở thì sau. Thiếu nó thì hai hình
+   giống nhau và không ghép được thành chuyển động.
+3. **Giữ `512x512`** dù ô atlas của game là 384 — nguồn to hơn thì thu xuống đẹp hơn, và công cụ
+   nhập tự thu.
+
+*(`like MU Online` trong prompt thì được: Quy tắc số 2 cấm tên riêng trong **text người chơi
+thấy**, prompt không phải nội dung ship.)*
+
+#### ⚠ HAI HÌNH CHƯA PHẢI HOẠT ẢNH — Gemini dựng THÌ, Meowa dựng CHUYỂN ĐỘNG
+
+Chủ dự án chốt đường đi: *"Sau đó mới bỏ vào Meowa để gen full animation."*
+
+Và nó khớp đúng bằng chứng đo được: **cả ba tấm đẹp** (`meteor_rain` · `fire_pillar` ·
+`dragon_spirit`) đều nhập bằng `tools/vfx_meowa.py`, tức đều là gói Meowa. Gemini chưa bao giờ
+dựng ra tấm nào trong số đó.
+
+| bước | làm gì | công cụ | ra cái gì |
+|---|---|---|---|
+| 1 | gen **thì đầu** | Gemini, prompt ① | 1 ảnh 512², nền magenta |
+| 2 | gen **thì sau** | Gemini, prompt ② | 1 ảnh 512², nền magenta |
+| 3 | **bóc nền magenta** khỏi hai ảnh | `tools/vfx_gemini.py --nen "#ff00ff"` | 2 PNG trong suốt thật |
+| 4 | **gen chuyển động từ hai thì** | **Meowa** (`keyframes-run`, xem §0.11) | gói **16** khung |
+| 5 | gói → atlas + đo neo | `tools/vfx_meowa.py` | `atlas.png` + dòng dán vào `VFX_ATLAS_DEFS` |
+
+**Vì sao bước 3 không bỏ được:** Gemini trả nền đặc (đo: `alpha = 0` chiếm **0,0%** ở cả ba
+tấm). Đưa thẳng một ảnh có nền vào Meowa là bảo nó animate luôn cái nền.
+
+**⚠ VÀ MỘT CÁI BẪY Ở BƯỚC 4, đã có người trả giá — xuất từ Meowa PHẢI bật "preserve translucent
+areas".** Không bật thì lưới ô caro của chính trình vẽ bị nướng thẳng vào tranh, và gói Meowa
+mắc đúng cái bệnh vừa phải gỡ ở Gemini. `tools/vfx_meowa.py` có cờ `--caro` để vá, nhưng vá thì
+bao giờ cũng tệ hơn xuất đúng ngay từ đầu. Hai dạng hỏng khác của gói Meowa cũng đã ghi sẵn ở
+đầu tệp ấy (`--suong` cho lưới rung ở vùng sương, `--sang` cho gói tối hơn nền).
+
+**Nhánh phụ — video:** chủ dự án cũng đã thử `Animate this image` của Gemini và gửi sang một
+video. Đo được: **video tách nền SẠCH HƠN ảnh tĩnh** (viền sắc, không sót mảng caro nào; xem
+§0.3). Nên đó là đường lui dùng được nếu Meowa tắc — `ffmpeg -i <video> -vsync 0 khung_%04d.png`
+rồi vẫn `tools/vfx_gemini.py`. Nhưng nó là đường LUI: một video Gemini là showreel nhiều hiệu
+ứng nối bằng chuyển cảnh mờ, phải tự chỉ đoạn, và nó không cho `neoY`/`neoR` như đường Meowa.
+
+⚠ Dấu chìm của Gemini nằm ở khối **48×48 góc dưới-phải** và **đứng yên qua mọi khung** ⇒ cắt bỏ
+được ở cả hai nhánh.
+
+---
+
+### 0.10 SÁU PROMPT — ba chiêu ô 1, mỗi chiêu hai thì
+
+Ba chiêu này là ba tấm "khá xấu" đang chạy trên production, cần gen lại trước.
+
+---
+
+**① TWISTING SLASH · Dark Knight · thì ĐẦU**
+
+```
+A 2D game VFX sprite, greatsword whirlwind slash spell beginning phase,
+top-down slightly angled view, solid flat magenta background,
+a wide crescent blade trail of cold steel-blue energy sweeping from left to right,
+the trail is a thick twisted ribbon with real depth and weight, not a thin drawn line,
+a hair-thin white-hot core running inside the ribbon along its whole length,
+pale blue wind streaks and small ice-bright flecks curling off the trailing edge,
+no impact burst yet, no ground crack, no debris, no character, no sword,
+no checkerboard pattern, no transparency grid,
+cel-shaded art style, bold black outlines, flat colors,
+dark fantasy MMORPG aesthetic like MU Online,
+clean vector-like game asset, centered composition,
+512x512 pixels, high quality, PNG
+```
+
+**② TWISTING SLASH · Dark Knight · thì SAU**
+
+```
+A 2D game VFX sprite, greatsword whirlwind slash spell impact phase,
+top-down slightly angled view, solid flat magenta background,
+the steel-blue crescent trail fully opened and tearing apart into torn ribbons,
+a bright warm gold impact burst exploding at the right end of the arc,
+a pale scar of light gouged into the ground along the swing path, spreading into a low ring,
+golden shards and sparks flying outward in all directions against the blue,
+thin blue vapour rising off the shredded ribbon,
+no intact blade trail, no character, no sword, no meteors,
+no checkerboard pattern, no transparency grid,
+cel-shaded art style, bold black outlines, flat colors,
+dark fantasy MMORPG aesthetic like MU Online,
+clean vector-like game asset, centered composition,
+512x512 pixels, high quality, PNG
+```
+
+---
+
+**③ FORCE WAVE · Dark Lord · thì ĐẦU**
+
+```
+A 2D game VFX sprite, sceptre shockwave spell beginning phase,
+top-down slightly angled view, solid flat magenta background,
+three nested crescent walls of olive-green force compressed close together on the left side,
+each wall is a thick slab with visible depth and blunt rounded ends, not a drawn band,
+a white-hot seam running along the leading edge of the innermost wall,
+the air between the walls warped like green heat haze,
+no scattered debris yet, no dust cloud, no character, no sceptre, no fire,
+no checkerboard pattern, no transparency grid,
+cel-shaded art style, bold black outlines, flat colors,
+dark fantasy MMORPG aesthetic like MU Online,
+clean vector-like game asset, centered composition,
+512x512 pixels, high quality, PNG
+```
+
+**④ FORCE WAVE · Dark Lord · thì SAU**
+
+```
+A 2D game VFX sprite, sceptre shockwave spell impact phase,
+top-down slightly angled view, solid flat magenta background,
+the three olive-green force walls driven far apart and travelling to the right,
+warm amber stone chips and short crackling arcs flung ahead of the front wall,
+a flat ring of lifted dust spreading across the ground beneath the walls,
+the outermost wall stretched thin and breaking up at its ends,
+no compressed walls, no character, no sceptre, no fire, no meteors,
+no checkerboard pattern, no transparency grid,
+cel-shaded art style, bold black outlines, flat colors,
+dark fantasy MMORPG aesthetic like MU Online,
+clean vector-like game asset, centered composition,
+512x512 pixels, high quality, PNG
+```
+
+---
+
+**⑤ TRIPLE SHOT · Sylvan Ranger · thì ĐẦU**
+
+```
+A 2D game VFX sprite, triple arrow volley spell beginning phase,
+top-down slightly angled view, solid flat magenta background,
+a tight dense knot of teal-green light gathered at the release point on the left,
+three thick bolts of teal light just beginning to fan out toward the right,
+each bolt wrapped in a spiralling ribbon of mist with a hair-thin white core inside it,
+a faint ring of disturbed dust on the ground directly under the release point,
+no arrows, no bow, no impact burst, no character,
+no checkerboard pattern, no transparency grid,
+cel-shaded art style, bold black outlines, flat colors,
+dark fantasy MMORPG aesthetic like MU Online,
+clean vector-like game asset, centered composition,
+512x512 pixels, high quality, PNG
+```
+
+**⑥ TRIPLE SHOT · Sylvan Ranger · thì SAU**
+
+```
+A 2D game VFX sprite, triple arrow volley spell impact phase,
+top-down slightly angled view, solid flat magenta background,
+three teal-green light bolts fully extended and fanned wide across the right side,
+warm golden motes and torn feather fragments bursting outward from the release point,
+a slow drifting cloud of teal haze trailing behind the bolts,
+the mist ribbons around each bolt unwinding and thinning into wisps,
+no gathered knot of light, no arrows, no bow, no character, no explosion,
+no checkerboard pattern, no transparency grid,
+cel-shaded art style, bold black outlines, flat colors,
+dark fantasy MMORPG aesthetic like MU Online,
+clean vector-like game asset, centered composition,
+512x512 pixels, high quality, PNG
+```
+
+---
+
+### 0.11 PROMPT MEOWA — bước 4, và nó viết **NGƯỢC HẲN** với bước 1-2
+
+Chủ dự án hỏi đúng chỗ còn thiếu: §0.9 mới cho prompt của **Gemini** (bước 1-2), chưa cho prompt
+của **Meowa** (bước 4). Và hai thứ đó không dùng chung một lối viết.
+
+⚠ **Đây là chỗ dễ chép nhầm nhất của cả tài liệu này.** Bản năng là dán luôn cái khuôn mười một
+dòng của §0.9 sang Meowa cho đồng bộ. Làm thế là hỏng: `.claude/skills/game-assets/SKILL.md`
+cấm thẳng lối đó cho mọi lệnh Meowa — *"Do not use legacy diffusion-style prompt engineering: no
+long keyword stacks, separate positive and negative prompt blocks, repeated quality terms, token
+weights, sampler syntax… These additions can interfere with the model's own interpretation and
+reduce consistency."*
+
+| | Gemini (bước 1-2) | Meowa (bước 4) |
+|---|---|---|
+| lối viết | chuỗi mệnh đề ngăn phẩy, 11 dòng | **một câu tiếng Anh thường**, ngắn |
+| tả cái gì | **HÌNH** — năm lớp, màu, chất liệu | **CHUYỂN ĐỘNG** — một hành động + một hướng |
+| dòng phủ định | bắt buộc (`no …`) | **bỏ hẳn** |
+| câu phong cách | bắt buộc | **bỏ hẳn** — hình đã nằm trong ảnh nguồn rồi |
+| độ dài | ~11 dòng | **1 câu, ≤ 20 chữ** |
+
+Lý do vật lý, không phải quy ước: ở bước 4 **hình đã xong**. Ảnh nguồn CHÍNH LÀ khung đầu, nên
+mọi chữ tả màu/lớp/phong cách ở đây chỉ đi cãi nhau với thứ Meowa đang nhìn thấy. Việc duy nhất
+còn lại là nói cho nó biết **thứ đó động như thế nào**.
+
+Và Meowa **bật sẵn `--optimize-prompt`**: backend đọc ảnh nguồn + câu của mình, dịch sang tiếng
+Anh, rồi tự viết lại thành câu mà mô hình hoạt ảnh hiểu chắc hơn. Viết dài là tự tay đá vào bước
+đó. Cứ viết câu ngắn nhất đủ nghĩa, xem kết quả, rồi **mới** thêm đúng một ràng buộc nếu kết quả
+chứng minh là cần.
+
+#### ⚠ Bốn con số đọc ra từ chính ảnh chụp bảng Meowa của chủ dự án
+
+Ảnh chụp cho biết chủ dự án đang đứng ở giao diện web của `meowa-animation-run`. Bốn thứ trong
+đó phải đổi, và mỗi thứ có một lý do đo được từ chính kho này:
+
+| ô trong bảng | ảnh chụp đang để | **phải để** | vì sao |
+|---|---|---|---|
+| Loop playback | ☐ tắt | **giữ TẮT** ✅ | đúng rồi. Chiêu là nổ rồi tắt, không phải vòng lặp. `--animation-mode non_loop` |
+| Preserve translucent areas | ☑ bật | **giữ BẬT** ✅ | đúng rồi, và đây là cái nút đã ghi ở §0.9. Tắt là gói Meowa về mang đúng lưới caro vừa phải bóc khỏi Gemini |
+| Length | **24 frames (3s)** | **16 frames** | xem ngay dưới |
+| Padding | ☑ bật, nhưng **bị chặn** | **TẮT** | xem ngay dưới |
+
+**① Length 16, không phải 24 — neo vào ba gói đang chạy, không đoán:**
+
+| gói đang chạy | khung | ô atlas | fps | dài thật |
+|---|---|---|---|---|
+| `meteor_rain` (tấm chủ dự án chỉ vào) | **14** | 7×2 | 22 | 0,64 s |
+| `fire_pillar` | **16** | 8×2 | 20 | 0,80 s |
+| `dragon_spirit` | 8 | 8×1 | 14 | 0,57 s |
+
+24 khung phát ở 22 fps là **1,09 giây** — dài gấp rưỡi tấm mẫu, mà ô 1 là đòn CẬN CHIẾN: người
+chơi bấm xong phải thấy nó ăn ngay. 16 khung rơi đúng vào `fire_pillar` (8 cột × 2 hàng), tức
+`tools/vfx_meowa.py` cắt ra là vừa khít một khuôn đã có người gác.
+
+⚠ Và tài liệu Meowa cảnh báo sẵn cho mốc 16: *"A 16-frame run has twice the temporal budget of an
+8-frame run, so the model may invent an extra motion beat instead of simply improving the same
+action."* ⇒ câu prompt phải **nói rõ là một nhát, chậm rãi** (`one single …`, `slowly`), nếu
+không nó tự chèn thêm một nhịp thứ hai và chiêu hoá ra đánh hai lần.
+
+**② Padding TẮT — và cái thông báo đỏ trong ảnh chụp không phải lỗi phải sửa:**
+
+Ảnh chụp báo *"The source image has reached the size limit. Reduce its dimensions before adding
+padding."* với `Source 2048 x 2048`. **Đừng đi thu nhỏ ảnh để mở khoá ô Padding** — với dự án
+này padding là thứ phải tắt:
+
+`VFX_ATLAS_DEFS` neo mỗi gói bằng **một điểm cố định trong ô** (`anchorX` / `anchorY`), và
+`tools/vfx_meowa.py` đo điểm đó từ chính khung hình. Chèn padding lệch (`--padding-alignment` có
+9 hướng) là **dời tâm hình so với tâm ô** ⇒ mọi số neo đã đo thành sai, và triệu chứng là chiêu
+nổ lệch chỗ con trỏ — đúng lỗi §2 của `docs/PROMPT_KYNANG_5LOP.md` đang cố tránh.
+
+⇒ **Chỗ chừa khoảng trống cho chuyển động là ở bước 1-2, trong chính bố cục của Gemini.** Khuôn
+§0.9 đã có sẵn câu `centered composition`; giữ nó, và khi duyệt ảnh Gemini thì đuổi theo đúng một
+câu hỏi: *cú quét này khi mở hết ra có còn nằm trong khung không.* Meowa không tự đẻ ra chỗ mà
+ảnh nguồn không có — tài liệu của nó nói thẳng: *"The model cannot reliably move into space that
+does not exist… Prompt enhancement cannot compensate for missing canvas space."*
+
+**③ Resolution 480P là TRẦN, và nó vừa đủ — nhưng chỉ vừa đủ.** Tài liệu Meowa:
+*"the general frame mode outputs at no more than 480p even when the source image is much larger."*
+Ô atlas của game là **384**. 384 < 480 nên lọt, còn dư 96 px. ⇒ Gen ảnh Gemini ở 2048 **không
+mua thêm được gì ở đầu ra** (nó vẫn về 480), nhưng cũng không hại — thu 2048 → 480 thì mép sạch
+hơn. Điều phải nhớ là chiều ngược lại: **đừng bao giờ nới ô atlas quá 480**, vì không có nguồn
+nào nuôi nổi.
+
+**④ Quality "Detailed"** — giữ như ảnh chụp. (Bản CLI có ba nấc `standard` / `medium` /
+`advanced`; theo thứ tự thì `medium` ứng với Detailed. ⚠ **Đây là suy từ thứ tự, chưa đo** — ai
+chạy bằng CLI thì đối chiếu lại `python3 meowart_api.py meowa-animation-run --help` trước khi tin.)
+
+#### ⚠ VÀ MỘT CHỖ ĐỔI ĐƯỜNG: hai thì ⇒ dùng `keyframes-run`, KHÔNG phải `meowa-animation-run`
+
+`meowa-animation-run` nhận **một** ảnh (`--image-file`). Nhưng cả §0.9 và §0.10 dựng ra **hai**
+ảnh mỗi chiêu — thì đầu và thì sau — và làm thế chính là để *ràng buộc* chuyển động chứ không
+phải để chọn lấy một tấm. Đường đúng cho hai tấm là `keyframes-run`, và tài liệu Meowa gọi tên
+đúng ca này: *"For an ordinary but complex action, create two or more important poses and use
+`keyframes-run`… making this preferable to video for attacks."*
+
+| | dùng khi | khung cho phép | hai thì |
+|---|---|---|---|
+| `meowa-animation-run` | chỉ có **một** ảnh | 8 · 16 · 24 · 32 | ✗ |
+| **`keyframes-run`** | có **cả hai** thì | 6 · 8 · 10 · 12 · **16** · 20 | ✓ |
+
+Cả hai đều cho 16 khung, nên khuôn atlas không đổi. Cứ gen hai thì như §0.10 rồi đi đường
+`keyframes-run`; tấm thì-sau là thứ giữ cho Meowa không bịa ra một cái kết khác.
+
+```bash
+python3 .claude/skills/game-assets/meowart_api.py keyframes-run \
+  --keyframe 0=twisting_slash_thi_dau.png \
+  --keyframe 15=twisting_slash_thi_sau.png \
+  --prompt "<câu ngắn bên dưới>" \
+  --total-frames 16 \
+  --animation-type attack \
+  --output-format spritesheet \
+  --remove-bg-method standard \
+  --output-dir <thư mục mới>
+```
+
+⚠ **Hai tấm phải CÙNG khổ, cùng tâm, cùng lề** — `keyframes-run` đòi thế. Hai ảnh Gemini đều
+512² và đều `centered composition` nên đã thoả, nhưng **bóc nền (bước 3) xong phải đo lại**:
+`tools/vfx_gemini.py` không cắt khung nên khổ giữ nguyên, đừng ai tự tay crop một tấm.
+
+#### Ba prompt Meowa — bước 4
+
+Ngắn, một hành động, một hướng, một hiệu ứng. Không màu, không phong cách, không dòng phủ định.
+
+**① TWISTING SLASH · Dark Knight**
+
+```
+The crescent blade trail sweeps once slowly from left to right and bursts at the end.
+```
+
+**② FORCE WAVE · Dark Lord**
+
+```
+The three force walls push forward to the right together in one slow wave, lifting dust.
+```
+
+**③ TRIPLE SHOT · Sylvan Ranger**
+
+```
+The three bolts of light fan out to the right in one slow volley, trailing mist.
+```
+
+**Vì sao ba câu này đều có `once` / `together` / `one` và đều có `slowly` / `slow`:** đó là hai
+ràng buộc duy nhất mà mốc 16 khung bắt buộc phải nói ra (bẫy "bịa thêm một nhịp" ở trên). Mọi
+chữ khác đã nằm trong ảnh rồi.
+
+**Và cả ba đều nói hướng `to the right`** vì gói atlas được vẽ theo một hướng rồi game tự xoay —
+`CHIEU_TRANH` khai `xoay:true`, `spawnAtlasVfx` quay quanh chính điểm neo (xem `tests/test_xoayvfx.js`).
+⚠ Gen mỗi chiêu một hướng khác nhau là vứt đi cái đó: neo đo được một kiểu, hình quay một kiểu.
+
+#### ✅ ĐÃ CHẠY THẬT — gói đầu tiên (Twisting Slash), và bốn thứ đo được
+
+Chủ dự án gửi gói **Godot 4.2** (`image-3-godot4_2.zip`) và nó đã nhập xong vào
+`sx_thieulam_a`. Bốn điều học được, mỗi điều đổi một dòng trong hướng dẫn ở trên:
+
+**① XUẤT KIỂU GODOT 4.2 LÀ ĐỊNH DẠNG TỐT NHẤT — đừng xin PNG trần.** Gói gồm 4 tệp,
+và `image-3_frames.tres` **nói thẳng ra lưới và nhịp** thay vì bắt đoán:
+
+```
+region = Rect2(0, 0, 640, 640)   ⇒ ô 640px, tấm 2560×2560 ⇒ lưới 4×4
+"speed": 8.0 · 16 AtlasTexture   ⇒ 16 khung @ 8 fps
+```
+
+Với ba tấm Gemini trước đó tôi phải **đo** lưới bằng cách dò mép. Ở đây nó là dữ liệu.
+⇒ Khi đặt gói Meowa, **chọn xuất Godot 4**, không phải PNG hay GIF.
+
+**② NỀN VỀ ĐẶC, KHÔNG TRONG SUỐT — nhưng lần này keyed sạch.** Đo: `alpha == 0` chiếm
+**0,00%**, cả tấm chỉ có **một** mức alpha. Tức ô *"Preserve translucent areas"* trong ảnh
+chụp bảng Meowa **không có tác dụng ở đường này**, hoặc ảnh nguồn còn nền magenta.
+
+⚠ **Và màu nền đã TRÔI**: `#ff00ff` (255,0,255) vào, `(183,61,144)` ra — mô hình hoạt ảnh
+vẽ lại cả khung nên nền bị nén lossy theo. Hệ quả cụ thể: phép thử chroma của
+`vfx_gemini.py --nen` (`(R+B)/2 − G > 120`) cho nền này ra **102,5**, tức **trượt ngưỡng**.
+Phải gọi bằng **màu thật đo được**, đừng gọi bằng màu đã gửi đi:
+
+```bash
+python3 tools/vfx_gemini.py <spritesheet.png> sx_thieulam_a \
+  --luoi 4,4 --o 384 --fps 20 --nen "#b73d90" --nen-toi 26 --nen-xa 90 \
+  --bo 10,11,12,13,14,15
+```
+
+Ngưỡng 26/90 không đoán: biểu đồ khoảng cách RGB tới màu nền có **vùng phẳng rõ rệt** —
+`d<30` bắt 63,4% · `d<60` bắt 65,8% · `d<100` bắt 68,7%, rồi `d<140` vọt lên 85,4% (bắt đầu
+ăn vào art). Cứ đo cái vùng phẳng ấy rồi đặt ngưỡng vào giữa nó.
+
+**③ 6/16 KHUNG LÀ KHUNG CHẾT — cảnh báo "16 khung thì mô hình độn thêm nhịp" là THẬT.**
+Đo đổi giữa hai khung liền nhau (RMS trên thang 0-255):
+
+| | 0→1 | 4→5 | 7→8 | 8→9 | **9→10** | 10→11 | 13→14 | 14→15 |
+|---|---|---|---|---|---|---|---|---|
+| RMS | 12,2 | **37,0** | 11,5 | 7,9 | **1,1** | 1,7 | 1,4 | **0,9** |
+
+Từ khung 9 trở đi đổi 0,9–1,7 — đó là **mức nhiễu nén, không phải chuyển động**. Khung 8 so
+với khung 15 lệch 8,2, còn khung 8 so với khung 9 đã lệch 7,9 ⇒ bảy khung cuối gần như *một
+tấm*. Hoạt ảnh thật dài **10 khung**; `--bo 10,11,12,13,14,15`.
+
+⇒ **Lần sau đặt `--output-frames 8`**, hoặc giữ 16 nhưng câu prompt phải bảo nó **tan đi**
+(`and fades away`), vì `animation_mode: loop` ở đây không quay về tư thế đầu — nó **giữ
+nguyên khung cuối**. Hệ quả: gói không có đoạn tắt dần, hiệu ứng cắt cụt ở khung chót.
+
+**④ ATLAS NẠP LƯỜI ⇒ CÚ TUNG ĐẦU PHIÊN CÓ THỂ KHÔNG VẼ GÌ.** `getVfxAtlasImg()` mới bắt đầu
+tải ở lần gọi đầu, và nhánh vẽ có chốt `img.complete && img.naturalWidth`. Tấm này **1,8 MB**.
+Không có tấm lùi nào như `MOB_KHUNG` có — nên nó không 404, nó chỉ **không vẽ**.
+
+⚠ Đây cũng là cái bẫy đã ăn mất ba lượt chụp của tôi: gọi `spawnAtlasVfx` rồi `render()` trong
+**cùng một `evaluate` đồng bộ** thì ảnh không bao giờ kịp tải ⇒ **cả 10 khung đều trống**, mà
+không lỗi nào in ra. Bài kiểm nào chụp atlas phải hâm trước:
+`await pg.waitForFunction(() => { const i = getVfxAtlasImg(id); return i.complete && i.naturalWidth; })`
+
+⚠ **Và vòng RAF của game vẫn chạy giữa hai lệnh `evaluate`.** Chụp kiểu
+`evaluate(render)` → `screenshot()` → `evaluate(update)` thì vòng RAF đốt hết `dur` 0,5 s
+trước khi tới khung thứ hai — tôi đo ra "chỉ khung 0 có hình" và suýt đổ cho atlas. Phải ghim
+`e.t` rồi `render()` rồi `canvas.toDataURL()` **trong cùng một `evaluate`**.
+
+**Kết quả:** `frames:8 → 10` · `rows:1 → 2` · `fps:18 → 20` (10/20 = 0,50 s, hợp đòn cận chiến;
+để so: `meteor_rain` 0,64 s · `fire_pillar` 0,80 s). Giữ `cong:false` — art này **sáng**
+(0,509) và **lệch chuẩn 0,154**, tức vẽ đè, không cộng sáng. `anchorX/anchorY/neoR` giữ y
+nguyên nên không phải đụng `CHIEU_TRANH` hay bài kiểm nào.
+
+#### Bước 5 — gói về thì làm gì
+
+Không đổi so với §0.9: `tools/vfx_meowa.py` nhận gói, cắt ô, **đo** `anchorX`/`anchorY`/`neoR`
+rồi in ra dòng dán thẳng vào `VFX_ATLAS_DEFS`. Với 16 khung thì dòng ấy ra dạng
+`cols:8, rows:2, frames:16` — trùng khuôn `fire_pillar`.
+
+⚠ **`neoR` là TẦM VỚI TÍNH TỪ NEO, không phải nửa ô.** Đã trả giá một lần: khai nhầm thành nửa ô
+thì chiêu đặc tả 125 px vẽ ra **211 px**. Công thức đúng nằm sẵn trong công cụ, đừng chép tay.
+
+⚠ **`cong:false` cho mọi gói này.** Art của ta sáng và có viền chàm đậm; cộng sáng (`lighter`) là
+cháy trắng mất viền. Cộng sáng chỉ dành cho gói **tối hơn nền** — xem mục art tối trong `CLAUDE.md`.
+
+---
+
 ## 1. BỐN Ô — bảng chốt
 
 Ba bộ chiếm ba ô đầu. Ô 4 là hào quang phù trợ: nó **không đánh trúng ai** nên không treo tâm

@@ -1436,7 +1436,7 @@ const VFX_ATLAS_DEFS = {
   // đậm bao ngoài. Cộng sáng trên nền cát sáng của thị trấn thì cả quạt chém cháy TRẮNG và
   // viền biến mất — chụp ra là một vệt trắng, không còn ra nhát kiếm xanh thép. Cùng lý do
   // meteor_rain và fire_pillar đều khai cờ này. Luật: cộng sáng dành cho gói TỐI HƠN nền.
-  sx_thieulam_a:  { k:1, cols:8, rows:1,  frameW:384, frameH:384, frames:8,  fps:18, anchorX:46.1, anchorY:192.0, neoR:337.9, cong:false },
+  sx_thieulam_a:  { k:1, cols:8, rows:2,  frameW:384, frameH:384, frames:10, fps:20, anchorX:46.1, anchorY:192.0, neoR:337.9, cong:false },
   // Hai tấm dưới cùng đường ống, cùng gói Gemini. `cong:false` vì cả hai đều sáng hơn nền và
   // có viền tối riêng — cộng sáng là cháy trắng, mất cả màu lẫn viền (đã chụp ra so).
   sx_bug_a:       { k:1, cols:6, rows:1,  frameW:384, frameH:384, frames:6,  fps:18, anchorX:46.1, anchorY:192.0, neoR:337.9, cong:false },
