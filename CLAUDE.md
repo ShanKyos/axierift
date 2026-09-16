@@ -278,13 +278,65 @@ Trước bản này `veAvatar` chỉ biết hai khối (thở · chạy), nên c
 Nướng: `tools/spine/nuong_chi_phanung.py` · **2,17 MB cho cả 16 con**, nạp theo con đang có mặt.
 Gác: `tests/test_avaphanung.js` (7 mục, ba cơ chế đã thử ngược và đều đỏ).
 
-**⚠ AXIE KHÔNG ĐÁNH — chủ dự án chốt lại (2026-09-15).** Kit có sẵn **8 đòn gần + 5 đòn xa** và
-rất dễ "tiện tay" nướng thêm. Đừng. Luật Đổi Vai nói *"Axie chỉ đơn thuần là avatar thôi, khi tấn
-công thì ví dụ Dark Wizard sẽ xuất hiện và tung chiêu"* — cho con Axie tự húc trong lúc Dark
-Wizard niệm chú bên cạnh là dựng lại đúng cái **hai kẻ cùng đánh** mà cả đợt Đổi Vai gỡ đi.
-`get-buff` đọc ra *"sức mạnh đang được gọi tới"*, tức đúng thứ đang xảy ra trên màn.
-`test_avaphanung §6` là chỗ DUY NHẤT nói ra rằng KHÔNG nướng là một QUYẾT ĐỊNH, không phải một
-thiếu sót ai đó quên làm.
+### ⚔ ~~AXIE KHÔNG ĐÁNH~~ — LUẬT NÀY ĐÃ BỊ LẬT (2026-09-16). Axie NAY RA ĐÒN.
+
+> ⚠ Giữ đúng cái tiêu đề gạch ngang này để cảnh báo, thay vì xoá trắng rồi để người sau đọc
+> `test_avaphanung §6` trong lịch sử git mà tưởng luật cũ còn. Cùng kiểu bẫy đã ghi ở mục
+> "~~Khắc Ấn~~" và "~~Bốn Ô Cốt~~".
+
+**Luật cũ (chốt 2026-09-15) nói:** kit có 8 đòn gần + 5 đòn xa, rất dễ "tiện tay" nướng thêm,
+**đừng** — vì cho con Axie tự húc *trong lúc* Dark Wizard niệm chú **bên cạnh** là dựng lại đúng
+cái **hai kẻ cùng đánh** mà cả đợt Đổi Vai gỡ đi.
+
+**Lý do đó hết hiệu lực vì HÌNH DẠNG đã đổi, không phải vì ai đó quên nó.** Chủ dự án chốt lại
+2026-09-16, nguyên văn: *"Cứ cho Axie ra đòn… Người chơi muốn đánh quái thì phải nhập vào Axie,
+nhưng để flex được bộ giáp thì hãy làm cho nó đi theo ở trong thành."* Nay lớp nhân vật **NHẬP
+VÀO** con Axie khi ra khỏi thành ⇒ lúc đánh trên màn chỉ còn **MỘT** thân, tức ngược hẳn với thứ
+luật cũ cấm.
+
+| | lớp nhân vật | con Axie |
+|---|---|---|
+| **trong thành** | HIỆN, đi theo, cỡ `AVA_THANH_CO` **1,00** | khối GỒNG như cũ |
+| **ngoài thành** | **nhập vào** — không vẽ | **ra đòn của LỚP mình** |
+
+**⚠ LUẬT THEO MAP, KHÔNG THEO "ĐANG ĐÁNH NHAU" — cố ý.** Gắn vào trạng thái đánh nhau thì AUTO
+cày liên tục ⇒ người chơi ở dạng đã-nhập gần như **100% thời gian**, và bộ giáp vẫn không ai
+thấy — tức mất đúng cái lợi mà cả đợt này sinh ra để lấy.
+
+**⚠ `safe` MỘT MÌNH KHÔNG ĐỦ.** Outskirts (`ngoai`) khai `safe` nhưng là **bãi săn 8 bãi** —
+cùng bẫy đã ghi ở mục Rương Canh: *cửa duy nhất đúng là CÓ BÃI QUÁI*. Sàn đấu `pvp` không bãi
+quái nhưng `freepk` ⇒ **vẫn nhập**, đúng ý. Cả ba ca đều có mệnh đề gác.
+
+**⚠ NĂM LỚP PHẢI RA NĂM ĐÒN KHÁC NHAU — đây là cả điểm của đợt này.** Lúc đánh không còn thân
+người nào để nhìn, nên nếu Axie của năm lớp vung giống hệt nhau thì 5 lớp mất sạch dấu hiệu
+**nhìn thấy được**. Kit có 9 đòn gần + 5 đòn xa dùng chung mọi rig ⇒ năm kiểu đọc tốn **0 đồng
+art**. Chọn theo cách lớp ấy đánh (khớp `SECT_ACT`), không chọn cho đủ mặt:
+
+| lớp | hoạt cảnh kit | tệp | khung |
+|---|---|---|---|
+| `thieulam` Dark Knight | `attack/melee/tail-smash` | `_ts` | 12 |
+| `baidasan` Dark Wizard | `attack/ranged/cast-high` | `_ch` | 12 |
+| `toanchan` Sylvan Ranger | `attack/ranged/cast-fly` | `_cf` | 12 |
+| `minhgiao` Spellblade | `attack/melee/multi-attack` | `_ma` | **16** |
+| `bug` Dark Lord | `attack/ranged/cast-low` | `_cl` | 12 |
+
+Đo được: **10/10 cặp lệch 5.627-6.990 điểm ảnh**. Nướng: `tools/spine/nuong_chi_danh.py` —
+**80 bảng, 7,0 MB** trên đĩa, nạp lười ~88 KB (đúng một con × một lớp đang dùng). Ô cắt
+**175×132 trùng khít** bảng nhỏ/chạy/gồng/giật ở cả 16 con ⇒ không nhảy khi đổi khối.
+
+**⚠ BỐN CHỖ PHẢI GÁC RIÊNG BẰNG `_nhap` vì chúng KHÔNG đọc `_hienLop`:** vòng triệu hồi · cánh ·
+thần khí · hào quang Thần Hiệp. Bỏ sót một chỗ là **một đôi cánh bay lơ lửng không ai đeo** cạnh
+con Axie. Cái giá, nói thẳng chứ không giấu: **ngoài thành người chơi không còn thấy đôi cánh
+mình mua** — chỗ khoe cánh nay là trong thành.
+
+`get-buff` (khối GỒNG) **vẫn dùng**, hai chỗ: trong thành, và làm nấc lui khi bảng đòn chưa tải
+xong — nhờ vậy cú đánh đầu phiên vẫn có cái để vẽ thay vì rơi thẳng về khối đứng yên.
+
+Gác: `tests/test_axiedanh.js` (5 mục). Hai phép thử ngược đều đỏ: bỏ cửa `avaNhap()` ⇒ ② đỏ
+(*"TRONG THÀNH Axie không được ra đòn"*); cho 5 lớp chung một bảng ⇒ ④ đỏ (lệch **0**).
+⚠ Mục ④ **tự kiểm cảnh dựng trước khi chấm** — đòi cả năm lớp THẬT SỰ vào khối `'danh'`, nếu
+không nó đang so năm khối thở với nhau và xanh vô nghĩa. Đã dẫm đúng thế một lần: bài chạy ở
+`ardhaven` (thành) nên cả năm ra `gong` và mười cặp đều lệch **0**.
 
 **⚠ KHỐI THỞ PHA HAI KHUNG — 9 FPS là thứ người chơi nhìn nhiều nhất.** Con Axie LÀ thân nhìn
 thấy của người chơi và nó đứng trên màn 100% thời gian, mà `CHI_THO_FPS` = 9: mỗi khung bảng nằm
