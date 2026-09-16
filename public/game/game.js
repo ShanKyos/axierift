@@ -15165,20 +15165,29 @@ function nvTai(ten, duoi){
   if (!ten) return null;
   const k = ten + '.' + duoi;
   let im = NV_ANH[k];
-  if (!im){ im = new Image(); im.src = 'assets/nv/' + k; NV_ANH[k] = im; }
-  if (!(im.complete && im.naturalWidth)) return null;
-  if (im._bm) return im._bm;
-  if (im._bmLoi) return im;                 // nướng bitmap hỏng — về đúng hành vi cũ
-  if (!im._bmCho){
-    im._bmCho = true;
-    if (typeof createImageBitmap === 'function'){
+  if (!im){
+    im = new Image(); NV_ANH[k] = im;
+    // ⚠ NƯỚNG BITMAP NGAY LÚC ẢNH TẢI XONG, KHÔNG ĐỢI TỚI LÚC VẼ. Đặt ở `onload` thì phép
+    // giải mã chạy song song với phần còn lại của lượt nạp, nên tới khung vẽ đầu tiên bitmap
+    // gần như luôn sẵn — mà cửa sổ hở chỉ còn ~24 ms thay vì cả cú 210 ms.
+    im.onload = () => {
+      if (typeof createImageBitmap !== 'function') return;
       createImageBitmap(im).then(bm => {
+        // Mấy chỗ gọi (vòng kiếm, vũ khí cầm tay) đọc `naturalWidth`/`complete`, mà ImageBitmap
+        // chỉ có `width`/`height`. Thiếu ba dòng này là hai hàm ấy lặng lẽ trả null và vũ khí
+        // biến mất — không lỗi nào báo.
         bm.naturalWidth = bm.width; bm.naturalHeight = bm.height; bm.complete = true;
         im._bm = bm;
-      }, () => { im._bmLoi = true; });
-    } else im._bmLoi = true;
+      }, () => {});      // 404 / ảnh hỏng: cứ để đường `Image` gánh như cũ
+    };
+    im.src = 'assets/nv/' + k;
   }
-  return im._bm || null;
+  // ⚠ KHÔNG CHẶN CHỜ BITMAP. Bản đầu của tôi trả `null` tới khi bitmap xong, và nó làm ĐỎ 6 bài
+  // art (`test_herosprite` · `test_lopdo` · `test_vongkiem` · `test_khoihinh` · `test_itemdb` ·
+  // `test_chaos`): mấy bài đó gọi `heroSprite()` ĐỒNG BỘ ngay sau khi nạp, không nhả lượt cho
+  // trình duyệt, nên bitmap không bao giờ kịp về và art KHÔNG BAO GIỜ được dùng. Người chơi
+  // cũng gặp đúng thế ở khung đầu tiên — chỉ là ở đó nó tự khỏi nên không ai thấy.
+  return im._bm || ((im.complete && im.naturalWidth) ? im : null);
 }
 // ── TÁM HƯỚNG NHÌN — TÊN BỘ MANG LUÔN HƯỚNG ───────────────────────────────────────────────
 // Thế giới nhìn từ trên xuống, còn art thì CHỈ CÓ MỘT hướng nghiêng. Đo được trước bản này:
