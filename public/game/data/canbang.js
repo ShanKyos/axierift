@@ -852,15 +852,6 @@ window.MAPS = {
       [4160,3168], [3648,3168], [3584,3104], [3456,3104],
     ],
     isoCum: [[320,1920], [384,2752], [2176,1024], [2816,2624], [3968,3008], [960,3008], [2688,1088], [960,2496], [3776,1408], [576,448], [1408,2624], [1664,3008], [2112,2752], [2304,2304], [4224,2176], [384,1408], [3008,192], [3392,1664], [1920,640], [3200,3072], [3456,2432]],
-    // ⚠ MÁY LÁT TƯỜNG THÀNH — ART CÒN CHỜ. Bảy tên trong `anh:` đều đang nằm trong
-    // `MAP_VAT_CHO` (game.js) nên `vatTai()` trả null và máy vẽ số không viên: khối này
-    // là ĐƯỜNG THẢ SẴN, bỏ 7 tệp PNG vào `assets/iso/` rồi xoá tên khỏi MAP_VAT_CHO là
-    // tường hiện ra, không phải sửa một dòng mã. Khổ ảnh + hợp đồng neo (mép DƯỚI ảnh =
-    // đường chân tường, tâm ngang = tim tường): docs/DE_XUAT_TUONG_CONG.md §5 và §5c.
-    tuong: { cao:300, nhip:256, day:160, congRong:2.77, congCao:700, congDay:400,
-             anh:{ ngang:'tuong_ngang_trong', ngangSau:'tuong_ngang_ngoai',
-                   doc:'tuong_doc', goc:'tuong_goc',
-                   congNgang:'cong_bac', congNgangSau:'cong_nam', congDoc:'cong_doc' } },
     isoDuong: [
       [[256,896], [521,1102], [840,1182], [1152,1280], [1331,1485], [1536,1664], [1869,1691], [2163,1875], [2478,1978], [2816,1984], [3128,1932], [3412,2077], [3712,2112], [4037,1897], [4288,1600], [4293,1245], [4224,896], [3953,783], [3685,661], [3406,579], [3112,548], [2814,531], [2526,479], [2252,376], [1984,256], [1665,349], [1393,541], [1136,763], [826,876], [506,966]],
       [[1152,1280], [909,1513], [783,1818], [640,2112]],
@@ -905,6 +896,15 @@ window.MAPS = {
     // LƯỚI PHỐ. Map rộng thì luật "đường mòn = dải xa mép nhất" biến cả thành một bãi sỏi
     // mênh mông, nên phải khai đường thật. Hai đại lộ nối thẳng bốn cổng, bốn ngõ dọc rơi
     // đúng khe 200px giữa các khối nhà, hai phố vòng chạy men dãy nhà bắc và nam.
+    // ⚠ MÁY LÁT TƯỜNG THÀNH — ART CÒN CHỜ. Bảy tên trong `anh:` đều đang nằm trong
+    // `MAP_VAT_CHO` (game.js) nên `vatTai()` trả null và máy vẽ số không viên: khối này
+    // là ĐƯỜNG THẢ SẴN, bỏ 7 tệp PNG vào `assets/iso/` rồi xoá tên khỏi MAP_VAT_CHO là
+    // tường hiện ra, không phải sửa một dòng mã. Khổ ảnh + hợp đồng neo (mép DƯỚI ảnh =
+    // đường chân tường, tâm ngang = tim tường): docs/DE_XUAT_TUONG_CONG.md §5 và §5c.
+    tuong: { cao:300, nhip:256, day:160, congRong:2.77, congCao:700, congDay:400,
+             anh:{ ngang:'tuong_ngang_trong', ngangSau:'tuong_ngang_ngoai',
+                   doc:'tuong_doc', goc:'tuong_goc',
+                   congNgang:'cong_bac', congNgangSau:'cong_nam', congDoc:'cong_doc' } },
     isoDuong: [
       [[230,1600],[6170,1600]], [[3200,210],[3200,2990]],
       [[1500,370],[1500,2830]], [[2160,370],[2160,2830]],
@@ -1932,7 +1932,7 @@ window.NPCS = [
   // đứng ở thành. Lore của bốn người dưới đây viết cho ra chuyện đó: mỗi cái cửa
   // phải nói được vì sao nó tồn tại, không chỉ là một cái nút bấm.
 
-  { id:'thoren', name:'Thợ Rèn · Lò Rèn Hoàng Gia', map:'ardhaven', x:5230, y:990, img:'assets/npcs/thoren.png', talk:'forge', nhan:'Lò Rèn',
+  { id:'thoren', name:'Thợ Rèn · Lò Rèn Hoàng Gia', map:'ardhaven', x:5230, y:990, img:'assets/npcs/thoren_lun.png', talk:'forge', nhan:'Lò Rèn',
     lore:'"Lò này nhóm lại lần thứ ba rồi. Hai lần trước tắt vì hết than — lần này ta dặn xe than đi hai chuyến một tuần, tắt nữa thì là lỗi của ta."',
     barks:['"Đợi lò đỏ đã, đừng giục."','"Đồ mẻ thì mang đây, đừng vứt."',
            '"Búa nhỏ để khảm, búa lớn để nắn. Cầm nhầm là hỏng cả món."','"Nghe tiếng thép là biết đồ thật hay giả."'] },
@@ -2092,7 +2092,7 @@ window.NPCS = [
     lore:'"Ta hát bài nào cũng được, trừ bài về cái đêm trời nứt. Hát bài đó thì có người bỏ về, có người ngồi lại khóc — mà cả hai hạng đều không bỏ tiền."',
     barks:['"Nghe một bài không mất gì cả."','"Dây thứ ba lại chùng rồi."',
            '"Hôm qua có người trả ta bằng một quả táo. Ta vẫn hát."'] },
-  { id:'thoren_dao', name:'Thợ Rèn Lưu Vong', map:'corran', x:520, y:560, img:'assets/npcs/thoren.png', talk:'forge',
+  { id:'thoren_dao', name:'Thợ Rèn Lưu Vong', map:'corran', x:520, y:560, img:'assets/npcs/thoren_lun.png', talk:'forge',
     lore:'"Lò của ta đi qua Nhát Gọi cùng ta. Nghe đâu người ta khắc cả một nét lên trời chỉ để gọi một cái lò — thế mà gọi được ta. Còn đỏ lửa là còn rèn, đưa đồ đây."',
     barks:['"Đảo này không có quặng, ta nấu lại đồ cũ."','"Còn đỏ lửa là còn rèn."',
            '"Ngươi cầm kiếm sai tay rồi đấy."'] },
