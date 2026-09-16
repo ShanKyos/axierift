@@ -119,12 +119,13 @@ const THU = { k: 1, cols: 2, rows: 1, frameW: 64, frameH: 64, frames: 2, fps: 10
     // Giữ CẢ HAI: tắt avatar đưa sàn nhiễu về 0, trung vị lo nốt phần lớp nhân vật/cỏ/ánh sáng
     // vẫn có thể nhích một nhịp. 9 mẫu thay vì 7 — rẻ, và một mẫu lẻ rơi trúng nhịp là cả bài
     // sai mốc.
+    // ⚠ `trungVi` dùng ở CẢ hai chỗ: sàn nhiễu đây, và d90/d180 bên dưới. Khai một lần.
+    const trungVi = (xs) => xs.slice().sort((a, b) => a - b)[Math.floor(xs.length / 2)];
     const _mauNen = [];
     for (let i = 0; i < 9; i++) _mauNen.push(khac(veLuot(0), veLuot(0)));
-    _mauNen.sort((a, b) => a - b);
-    const nenTroi = _mauNen[_mauNen.length >> 1];
+    const nenTroi = trungVi(_mauNen);
     ok('đối chứng: hai lượt vẽ y hệt nhau thì gần như không đổi',
-       nenTroi < 400, nenTroi + '/' + (hop[2]*hop[3]) + ' điểm ảnh trôi · mẫu ' + nenMau.join(','));
+       nenTroi < 400, nenTroi + '/' + (hop[2]*hop[3]) + ' điểm ảnh trôi · mẫu ' + _mauNen.join(','));
 
     // ── §2 KHÔNG KHAI `xoay` ⇒ GÓC BỊ BỎ QUA ────────────────────────────────────────
     // Đây là vế "không đổi gì cả". Chỗ gọi thật (`spawnSkillVfx`) truyền `0` khi tranh không
