@@ -197,6 +197,91 @@ const cho = ms => new Promise(r => setTimeout(r, ms));
     else if (Math.abs(t[0] - r) > 40) fail(`B đã dời tới x=${r} mà A vẫn vẽ ở x=${t[0]} — thân người từ xa đứng chết`);
   }
 
+  // ── 3c. RA ĐÒN PHẢI ĐI QUA DÂY ─────────────────────────────────────────────────────────
+  // Trước bản này ảnh chụp mang x·y·hướng·máu·cấp·lớp·tên và KHÔNG mang trạng thái ra đòn, nên
+  // `atkAnim`/`castT` của thân người từ xa đứng 0 vĩnh viễn — mọi người trượt quanh bản đồ mà
+  // không ai đánh gì. Không lỗi nào in ra, và cả năm mệnh đề trên vẫn xanh: chúng đo VỊ TRÍ.
+  //
+  // Hai lớp, vì hai thứ hỏng khác nhau:
+  //   (a) DÂY  — lái `doBasic()` THẬT trên B rồi đòi A phải thấy `atkAnim` nhấc lên khỏi 0.
+  //              Đặt thẳng `player.atkAnim = 0.22` là kiểm chính cái mình vừa viết.
+  //   (b) VẼ   — với `atkAnim` bật, lớp nhân vật phải VẬT CHẤT HOÁ bên cạnh Axie, tức phải ra
+  //              thêm điểm ảnh. Một trường đi qua dây mà không ai vẽ nó thì vẫn là không thấy gì.
+  {
+    const chuanBi = await B.p.evaluate(() => {
+      // ⚠ `mobs` bare, KHÔNG `window.mobs`. Khai bằng `let` ở tầng cao nhất nên nó không gắn
+      // vào `window` — đúng cái bẫy đã ghi cho `player` trong net.js. `window.mobs` trả
+      // `undefined` và cảnh dựng hỏng trong im lặng.
+      const m = mobs.find(x => x && x.hp > 0);
+      if (!m) return false;
+      player.x = m.x + 24; player.y = m.y; player.auto = false;
+      return true;
+    });
+    if (!chuanBi) fail('3c: không dựng được cảnh — daohoa không có con quái nào còn sống');
+
+    let dinh = 0;
+    for (let i = 0; i < 16 && chuanBi; i++) {
+      await B.p.evaluate(() => { player.cd.basic = 0; doBasic(); });
+      await cho(120);
+      const v = await A.p.evaluate(() => Math.max(0, ...window.NETPLAYERS.map(n => n.atkAnim || 0)));
+      if (v > dinh) dinh = v;
+    }
+    console.log('3c(a) · A thấy atkAnim lớn nhất của B:', dinh.toFixed(3));
+    if (chuanBi && dinh <= 0.01) {
+      fail('B đang đánh mà A thấy atkAnim = 0 — trạng thái ra đòn không đi qua dây');
+    }
+
+    // (b) cùng lối đo với §2: hai lượt vẽ trong CÙNG một evaluate (hoạt ảnh nền chỉ trôi ~1 ms)
+    // và một ô đối chứng làm sàn nhiễu.
+    const doDanh = await A.p.evaluate(() => {
+      const np = window.NETPLAYERS[0];
+      if (!np) return null;
+      const cv = document.getElementById('game'), g = cv.getContext('2d');
+      const z = (typeof ZOOM_MUC !== 'undefined' && typeof ZOOM_CHON !== 'undefined')
+        ? ZOOM_MUC[ZOOM_CHON] : 1;
+      const tl = cv.width / (cv.clientWidth || cv.width);
+      const W = 170, H = 150;   // rộng hơn ô của §2: lớp nhân vật đứng KẾ BÊN Axie, không chồng lên
+      const lay = (wx, wy) => {
+        const sx = (wx - camera.x) * z, sy = (wy - camera.y) * z;
+        const x0 = Math.max(0, Math.round((sx - W / 2) * tl));
+        const y0 = Math.max(0, Math.round((sy - H * 0.82) * tl));
+        return g.getImageData(x0, y0, Math.round(W * tl), Math.round(H * tl)).data;
+      };
+      // ⚠ KÉO THÂN NGƯỜI VỀ CẠNH MÌNH TRƯỚC KHI ĐO. Mục (a) vừa dời B tới sát một con quái,
+      // tức rất có thể ra ngoài khung hình của A — và ô đo nằm ngoài canvas thì CẢ HAI lượt
+      // đều trả về vùng trống, hiệu số ra 0, trông y hệt "lớp nhân vật không vẽ". `noiSuy`
+      // chạy ở rAF nên trong cùng một `evaluate` không có gì ghi đè lại.
+      const giuX = np.x, giuY = np.y;
+      np.x = player.x + 110; np.y = player.y;
+      const cxw = np.x + 420, cyw = np.y - 300;      // ô đối chứng: chỗ không có ai đứng
+      const giuA = np.atkAnim, giuC = np.castT;
+      np.atkAnim = 0.22; np.castT = 0; render();
+      const coB = lay(np.x, np.y), coC = lay(cxw, cyw);
+      np.atkAnim = 0;    np.castT = 0; render();
+      const khongB = lay(np.x, np.y), khongC = lay(cxw, cyw);
+      np.atkAnim = giuA; np.castT = giuC; np.x = giuX; np.y = giuY;
+      const dem = (u, v) => { let n = 0;
+        for (let i = 0; i < u.length; i += 4) if (u[i] !== v[i] || u[i+1] !== v[i+1] || u[i+2] !== v[i+2]) n++;
+        return n; };
+      return { oBong: dem(coB, khongB), oDoiChung: dem(coC, khongC), tong: coB.length / 4 };
+    });
+    console.log('3c(b) · điểm ảnh đổi khi bật atkAnim — ô có bóng:', doDanh && doDanh.oBong,
+                '· ô đối chứng:', doDanh && doDanh.oDoiChung);
+    if (!doDanh) fail('3c(b): A không còn thân người nào để đo');
+    else {
+      if (doDanh.oDoiChung > doDanh.tong * 0.15) {
+        fail(`3c(b): ô đối chứng đổi ${doDanh.oDoiChung}/${doDanh.tong} — nhiễu nền quá lớn, `
+           + 'đừng đọc kết quả dưới là "xanh"');
+      }
+      if (doDanh.oBong < 300) {
+        fail(`3c(b): bật atkAnim mà hình chỉ đổi ${doDanh.oBong} điểm ảnh — lớp nhân vật không hiện ra`);
+      }
+      if (doDanh.oBong < doDanh.oDoiChung * 4) {
+        fail(`3c(b): ô có bóng (${doDanh.oBong}) không nổi hơn hẳn ô đối chứng (${doDanh.oDoiChung})`);
+      }
+    }
+  }
+
   // ── 4. Rời map thì bóng biến mất ngay, không lạc sang map mới ─────────────────────────
   await B.p.evaluate(() => travelTo('ngoai'));
   await cho(900);

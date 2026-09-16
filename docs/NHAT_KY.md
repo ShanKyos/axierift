@@ -5,6 +5,146 @@ sai**. Phần thứ hai mới là thứ có giá trị về sau — nó là danh
 
 ---
 
+## 2026-09-16 (b) — Cây vũ khí là một cái nhãn dán, suốt từ lúc nhập gói
+
+Chủ dự án: *"Tư thế cầm cung sai, hãy nghiên cứu và chỉnh lại cách cầm cung cho đúng. Tương tự
+hãy check lại với kiếm của dk và spellblade."*
+
+### Số đo trước khi sửa
+
+Đếm **hộp bao khác nhau** của lớp `vk` trên chính bảng khung mà game nạp:
+
+| | đứng 16 | đi 32 | chạy 32 | **ĐÁNH 16** | niệm 16 |
+|---|---|---|---|---|---|
+| `dkph1` (kiếm Phượng) | 1 | 1 | **0** | **1** | 1 |
+| `sbsm1` (Kiếm Sinh Mệnh) | 1 | 1 | **0** | **1** | 1 |
+| `elnb1` (Cung Thiên Mệnh) | 1 | 1 | **0** | 3 | 1 |
+| lớp tay `t2`, đối chứng | 14 | 32 | 32 | 16 | 16 |
+
+Một vị trí trên mười sáu khung của khối ĐÁNH. Tay vung, kiếm đứng yên.
+
+### Nguyên nhân
+
+Xương `武器` có **cha là `root`**. Thứ đưa nó vào tay là **ràng buộc biến hình** —
+`左手持剑`/`右手持剑`, đích là `左手持剑点`/`右手持剑点` (con của xương bàn tay). `hoatcanh.py`
+cài IK và physics đầy đủ nhưng **chưa cài loại ràng buộc này**, nên vũ khí nằm ở tư thế gốc.
+
+Đã chép `TransformConstraint.update` của Spine 4.2 (nhánh không `local`, không `relative`).
+Sau khi cài: 14-16 · 32 · 32 · 15-16 · 16.
+
+### Ba chỗ đã đoán sai
+
+1. **Tôi suýt kết luận "bộ nướng lấy nhầm khe".** `KHE_VK` trỏ `左手武器*` nghe như "tay TRÁI"
+   trong khi Dark Knight cầm tay phải — rất dễ tin là sai khe. Không phải: cả ba khe đều treo
+   trên cùng một xương `武器`, và tay nào cầm là do ràng buộc nào đang bật. *Tên khe không nói
+   được nó nằm ở đâu; phải đọc xương.*
+2. **Phép dựng lại đầu tiên của tôi ra LỚP RỖNG và tôi tưởng mình vừa làm hỏng thêm.** Hoá ra
+   gói `Dark_Knight.zip` **không có art vũ khí** (bốn vùng atlas đặc 0%) — cây kiếm nằm ở
+   `Dark_Knight_1.zip`. Thân hai gói trùng khít từng điểm ảnh, nên nay nướng trọn từ gói sau.
+3. **Giữ cung Ngọc Bích cho động tác giương cung thì TỆ HƠN.** Rig đổi sang một cung TRẮNG trơn
+   (`左手武器2a`) khi giương; tôi tưởng đó là mảnh placeholder cần thay. Dựng ảnh A/B: cung ngọc
+   không uốn theo dây nên chĩa ngang như một khẩu súng. Giữ cung trắng. *Cái xấu nhìn thấy được
+   không phải lúc nào cũng là cái sai.*
+
+### Và một thứ không phải lỗi của ta
+
+Rig **cất vũ khí đi trong `00_Run`** (khoá attachment rỗng). Đúng với một game đánh bài, sai với
+game này vì lớp nhân vật chạy gần như liên tục. `VK_HIEN` ép mảnh hiện lại; ràng buộc tay vẫn bật
+trong `00_Run` nên nó tự nằm đúng tay.
+
+### Và một vòng nữa: "cung thì không cầm vậy được"
+
+Ràng buộc chạy đúng rồi mà chủ dự án vẫn gọi sai — lần này không phải lỗi máy. Bản mẫu chỉ có
+**MỘT tư thế mang** (chuôi ở tay, thân chĩa chéo xuống trước). Đúng cho kiếm, sai cho cung: đo ra
+trục chính của cây cung lệch **44,8°** so với phương dọc, tức nó nằm ngang ống chân như một cây
+kích. Vặn thêm **−40°** ở mọi khối TRỪ `10_ArcheryAttack` (khối đó rig đã dựng đúng tư thế bắn).
+
+Chốt bằng **ảnh A/B 0 · −32 · −40 · −48 trên cả ba khối** chứ không bằng một con số đẹp: `0` là
+cây kích, `−48` thì mũi cung quặt ra sau. *Một phép chỉnh THỊ GIÁC thì phải chốt bằng mắt trên
+ảnh, không chốt bằng công thức.*
+
+### Giá phải trả
+
+Hộp cắt lớp `vk` nay là hợp của cả cú vung ⇒ phình gần bằng cả ô (240×279, 240×300). Tệp +400 KB
+cho ba bộ; bộ nhớ sau giải nén +~20 MB cho **đúng bộ đang mặc**. Cắt hộp theo từng khối sẽ gọn
+hơn nhiều — chưa làm, ghi lại làm nợ.
+
+### Và một nửa nữa mà ảnh chụp mới lôi ra
+
+Chủ dự án hỏi tiếp: *"DK có đại long đao theo sau mà? kiểm tra lại hình ảnh đi"*. Dựng lại
+được ngay: một Dark Knight cầm kiếm giai 3 thì `nvVkLop` trả `null` (bảng chỉ khai `kiem|7`),
+`_tkHien` bật **thần khí**, và trên màn là một thanh đại kiếm cao gần bằng người **trôi lơ lửng**
+cạnh nhân vật. Đo được **60/63** món của ba lớp rơi vào đường đó.
+
+Thêm nấc lùi theo LỚP (`NV_VK_LOP_LOP`). Đánh đổi ghi thẳng ra: cây rìu giai 3 nay vẽ ra Phượng
+Kiếm — hình trong túi và hình trên tay lệch nhau. Nhưng cái lệch đó sửa được bằng cách nướng
+thêm bảng khung cho từng dòng, còn cây trôi lơ lửng thì không sửa được bằng mã.
+
+⚠ Và mệnh đề gác nó **xanh vô nghĩa ở lượt đầu**: `genItem` chỉ sinh vũ khí của lớp ĐANG CHƠI,
+nên nó quét đúng 21/63 món (ba dòng của một lớp) rồi báo PASS. Phải đổi `player.sect` theo từng
+lớp, và thêm một chốt tự kiểm đòi ≥50 món mới cho chấm.
+
+Gác: `tests/test_vklop.js`. Thử ngược: bảng khung cũ **27 FAIL**; gỡ nấc lùi theo lớp **60/63 FAIL**.
+
+---
+
+## 2026-09-16 — Con Axie bay lơ lửng, và cây cung không ai thấy
+
+Nền: `c37c077`. Chủ dự án gửi một ảnh chụp kèm đúng hai câu:
+*"hình bay như này sai quá sai"* · *"với lại cây cung thiên mệnh gắn theo nhân vật của mình đâu?"*
+
+Hai câu, hai lỗi khác hẳn nhau, và **cả hai đều không ném lỗi, không bài kiểm nào đỏ**.
+
+### ① Con Axie bay
+
+Dựng lại được ngay trong vòng vẽ thật: đeo cánh bậc 3 thì **cả cặp** nhấc lên 24 px, vì khối BAY
+bọc mọi thứ trong một `ctx.translate(0, yOff)`. Mà `veCanh()` thì đã được sửa từ đợt trước để vẽ
+đôi cánh ở chỗ **lớp nhân vật** đứng — tức đôi cánh đeo trên kẻ hộ tống, còn con Axie thì bay
+theo mà **không có cánh và không có hoạt cảnh bay nào**. Vòng chân và bóng đổ cũng co lại theo
+`bayK`, nên trên màn là một cái thân treo cách chân đế của chính nó 24 px.
+
+Sửa: `bayKNen` (chân đế còn chạm đất không) tách khỏi `bayK` (lớp nhân vật bay cao bao nhiêu), và
+`veAvatarDat()` cộng `bayCao` lại để trả con Axie về đất. `/avatar off` thì `bayKNen === bayK`,
+hành vi cũ y nguyên.
+
+### ② Cây cung
+
+`phatDoKhoiDau()` — bộ giai 7 của bản chơi thử — **chỉ chạy trong `newGame()`**. Người đang chơi
+thử thì nhân vật đã tạo từ trước, nên họ không bao giờ nhận được nó. Và triệu chứng không đọc ra
+là "thiếu đồ": lớp vũ khí **cầm tay** chỉ bật khi món đang đeo trùng `dòng|giai` trong
+`NV_VK_LOP`, nên một cây cung giai 3 làm **cả lớp art biến mất** trong im lặng.
+
+| đo được | |
+|---|---|
+| nhân vật MỚI, sau `phatDoKhoiDau` | `nvVkLop` = `elnb1` ✓ |
+| save đời trước, cung giai 3 | `nvVkLop` = **null** — không cung, không cả thần khí |
+| sau `demoDoDiTru()` | `elnb1`, năm ô đều giai 7, đồ cũ nằm trong túi |
+
+### Ba chỗ đã đoán sai
+
+1. **Tôi đã hai lần định kết luận "lớp vũ khí nướng hỏng".** Dựng dải 32 khung của khối ĐI ra xem
+   thì cây cung nằm **đúng trong tay**, chỉ là nó dài và chúc xuống nên ở cỡ 40 px trên màn đọc
+   thành một cái que bắc ngang ống chân. *Art không hỏng — sợi dây tới nó mới hỏng.*
+2. **Phép di trú đặt sai chỗ, và số đo tố cáo nó.** Bản đầu tôi gọi `demoDoDiTru()` cạnh
+   `cotDiTru()`. Bộ giai 7 vừa phát ra **giai 5**: `migrateGiai14` đẩy 7 → 10 rồi `migrateGiai7`
+   chia đôi thành `ceil(10/2)` = 5. Không một lỗi nào báo; tôi chỉ thấy vì in tier ra để đối chiếu.
+3. **Và phép thử ngược của mệnh đề ấy XANH lần đầu** — vì cảnh dựng của tôi đặt sẵn
+   `giai14`/`giai7` (đúng như save của bản đang chạy), nên hai hàm kia no-op và đảo thứ tự vẫn
+   qua. Phải thêm hẳn một mệnh đề ⑥ dựng **save chưa qua đổi giai** mới gác được.
+   *Một mệnh đề chỉ gác được cái cấu hình mà cảnh của nó dựng ra.*
+
+### Và một bài học về phép đo
+
+Mệnh đề *"con Axie đứng đất"* một mình thì **vô nghĩa**: gỡ sạch hệ bay đi nó cũng xanh. Phải có
+mệnh đề ② đi kèm — *"lớp nhân vật vẫn phải bay thật"* — thì cặp đó mới nói được điều gì. Cùng họ
+với `test_muigio §0` và với luật *"một cái chốt đúng ở mọi trạng thái là một cái chốt không chốt
+gì"*.
+
+Đo qua `window.__neoVe` (`_doNeo` ghi bằng chính ma trận vòng vẽ), không đo điểm ảnh: con Axie thở
+~8 FPS nên hai lượt vẽ liên tiếp cùng điều kiện lệch tới 5.200 điểm ảnh — lớn hơn hẳn 24 px cần đo.
+
+---
+
 ## 2026-09-12 — Cánh tụt khỏi vai, và tỉ lệ Axie ↔ kẻ hộ tống
 
 Nền: `7772e3e` (kẻ hộ tống đã lên `main`)

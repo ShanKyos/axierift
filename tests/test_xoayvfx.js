@@ -90,23 +90,42 @@ const THU = { k: 1, cols: 2, rows: 1, frameW: 64, frameH: 64, frames: 2, fps: 10
       return chup();
     }
 
+    // ⚠ TẮT AVATAR TRONG LÚC ĐO — con Axie KHÔNG phải thứ bài này gác, mà nó nằm giữa ô đo.
+    // Ô đo là hộp 140×140 quanh chân nhân vật, và con Axie đứng ngay đấy. Khối thở của nó chạy
+    // theo `performance.now()`, nên giữa hai lượt `veLuot` nó có thể nhích một khung — và khi
+    // nhích thì nó nhích cả NGHÌN điểm ảnh. Đo được: `nenTroi` nhảy giữa **0 và 2.167** tuỳ
+    // lượt, tức cùng một mã chạy tốt mà bài đỏ chừng 1/3 số lần.
+    //   ⇒ Đó là NHIỄU LƯỠNG CỰC, đúng cái đã ghi trong CLAUDE.md ở mục đồng bộ đồ.
+    // Và từ lúc khối thở được PHA hai khung liền nhau (nó nhích ở MỌI lượt vẽ thay vì 14%),
+    // nhiễu ấy không còn là xúc xắc nữa: bài đỏ 3/3.
+    // Tắt avatar rồi thì `nenTroi` về **0** ở cả ba lượt thử, còn tín hiệu vẫn 480 — tách hẳn.
+    player.avatar = null;
     // Đứng yên tuyệt đối trong lúc đo: một bước chân cũng đủ làm mọi ô đo lệch.
     player.moveTarget = null; player.vx = 0; player.vy = 0;
 
     // ── §1 ĐỐI CHỨNG — vẽ hai lượt Y HỆT phải ra gần như y hệt ──────────────────────
     // Không có mệnh đề này thì mọi con số dưới đây vô nghĩa: nền vẫn trôi chút ít giữa hai
     // lượt, và nếu nó trôi nhiều thì "khác nhau" không chứng minh được điều gì.
-    // ⚠ PHẢI LẤY TRUNG VỊ, KHÔNG LẤY MỘT CẶP. Con Axie thở ~8 fps nên sàn nhiễu LƯỠNG CỰC: phần
-    // lớn cặp ra vài trăm điểm ảnh, nhưng cứ chừng mười lượt render lại có đúng một lượt rơi
-    // trúng nhịp lật khung và vọt lên hàng nghìn. Bản đầu của bài này lấy MỘT cặp và vì thế đỏ
-    // 2/3 lượt — đo được: nenTroi 2115 trong khi tín hiệu xoay chỉ 480, tức nhiễu nuốt tín hiệu.
-    // Cùng bài học đã ghi ở mục "GIAI ĐOẠN 2" của CLAUDE.md, mà chính tôi viết rồi không dùng.
+    // ⚠ PHẢI LẤY TRUNG VỊ, KHÔNG LẤY MỘT CẶP — và hai nhánh đã sửa chỗ này theo HAI cách, nay
+    // gộp cả hai vì chúng chữa hai tầng khác nhau của cùng một lỗi:
+    //
+    //   · nhánh này TẮT AVATAR (dòng trên) — gỡ hẳn nguồn nhiễu, vì con Axie nằm trọn trong ô
+    //     đo 140×140 mà nó lại chẳng liên quan gì tới thứ bài này gác;
+    //   · nhánh `main` lấy TRUNG VỊ — vì sàn nhiễu LƯỠNG CỰC: phần lớn cặp ra vài trăm điểm
+    //     ảnh, nhưng cứ chừng mười lượt render lại có một lượt rơi trúng nhịp lật khung và vọt
+    //     lên hàng nghìn. Đo được: nenTroi 2115 trong khi tín hiệu xoay chỉ 480 — nhiễu NUỐT
+    //     tín hiệu, và bản lấy một cặp vì thế đỏ 2/3 lượt.
+    //
+    // Giữ CẢ HAI: tắt avatar đưa sàn nhiễu về 0, trung vị lo nốt phần lớp nhân vật/cỏ/ánh sáng
+    // vẫn có thể nhích một nhịp. 9 mẫu thay vì 7 — rẻ, và một mẫu lẻ rơi trúng nhịp là cả bài
+    // sai mốc.
+    // ⚠ `trungVi` dùng ở CẢ hai chỗ: sàn nhiễu đây, và d90/d180 bên dưới. Khai một lần.
     const trungVi = (xs) => xs.slice().sort((a, b) => a - b)[Math.floor(xs.length / 2)];
-    const nenMau = [];
-    for (let i = 0; i < 7; i++) nenMau.push(khac(veLuot(0), veLuot(0)));
-    const nenTroi = trungVi(nenMau);
+    const _mauNen = [];
+    for (let i = 0; i < 9; i++) _mauNen.push(khac(veLuot(0), veLuot(0)));
+    const nenTroi = trungVi(_mauNen);
     ok('đối chứng: hai lượt vẽ y hệt nhau thì gần như không đổi',
-       nenTroi < 400, nenTroi + '/' + (hop[2]*hop[3]) + ' điểm ảnh trôi · mẫu ' + nenMau.join(','));
+       nenTroi < 400, nenTroi + '/' + (hop[2]*hop[3]) + ' điểm ảnh trôi · mẫu ' + _mauNen.join(','));
 
     // ── §2 KHÔNG KHAI `xoay` ⇒ GÓC BỊ BỎ QUA ────────────────────────────────────────
     // Đây là vế "không đổi gì cả". Chỗ gọi thật (`spawnSkillVfx`) truyền `0` khi tranh không
