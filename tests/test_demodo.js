@@ -45,11 +45,17 @@ const { chromium } = require('playwright');
     delete player._demoDo;
     player.giai14 = true; player.giai7 = true;   // save của bản đang chạy đã qua hai bước đó
     calcDerived(); saveGame();
-    return { vkLop: nvVkLop(player), tui: player.inv.length,
+    return { vkLop: nvVkLop(player), tui: player.inv.length, demo: DEMO_DO_GIAI,
              giai: Object.keys(player.equip).map(k => player.equip[k] && player.equip[k].tier) };
   });
-  if (truoc.vkLop) fail('cảnh dựng hỏng: save "đời trước" đã có lớp vũ khí cầm tay sẵn');
-  else pass('cảnh dựng: save đời trước không có lớp vũ khí cầm tay (đúng triệu chứng)');
+  // ⓪ Tự kiểm cảnh dựng. ⚠ Bản đầu chốt "save đời trước KHÔNG có lớp vũ khí cầm tay" — đúng lúc
+  // viết, sai ngay sau đó: `NV_VK_LOP_LOP` (nấc lùi theo LỚP) làm mọi cây của ba lớp ấy đều cầm
+  // được, kể cả giai 3. Tức chốt ấy mô tả một TRIỆU CHỨNG đã được chữa ở chỗ khác, không mô tả
+  // cái mà bài này gác. Thứ phải chốt là: save dựng ra thật sự THẤP HƠN giai demo.
+  const caoNhat = Math.max(...truoc.giai.filter(x => x));
+  if (!(caoNhat < truoc.demo))
+    fail(`cảnh dựng hỏng: save "đời trước" đã ở giai ${caoNhat} ≥ ${truoc.demo} — không còn gì để nâng`);
+  else pass(`cảnh dựng: save đời trước cao nhất giai ${caoNhat} (< ${truoc.demo})`);
 
   // Nạp lại như NGƯỜI CHƠI THẬT.
   const sau = await p.evaluate(() => {
