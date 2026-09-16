@@ -6618,6 +6618,20 @@ const MOC_NV = {
   ruong: { ten:'mở Rương Canh',           dem:() => Object.keys((player && player.ruong) || {}).length },
   hap:   { ten:'mở Box Kundun',           dem:() => (player && player.hapMo) || 0 },
   khe:   { ten:'quay Khế Ước',            dem:() => Object.keys(((player && player.chimera) || {}).co || {}).length },
+  // Cửa dạy **trục phòng thủ của Axie** — thứ gánh tiêu chí Axie Core mà trước đây không một
+  // nhiệm vụ nào trỏ tới. Đếm "đã TỰ cắm một cái thân", vì cửa duy nhất vào việc đó là bảng Khế
+  // Ước, và bảng đó nay nói thẳng mình đang đứng ở đất hệ gì (xem `axieTaiDay`). Nhiệm vụ mở
+  // cửa, cái bảng mới là thứ dạy.
+  //
+  // ⚠ ĐỪNG đòi "đang đeo một thân KHẮC LẠI đất này". Nghe mạnh hơn, nhưng thân là thứ bốc từ
+  // gacha: một người xui có thể không sở hữu con nào thuộc nhóm cần, và chính tuyến là chuỗi
+  // THẲNG — một ô không qua được là cả game dừng. Cùng bài học đã ghi ở mục "CỬA CƠ CHẾ MỞ Ở
+  // CẤP NÀO": hỏi *đếm được không* rồi phải hỏi tiếp *ai cũng làm được không*.
+  //
+  // ⚠ `player.avatar !== undefined` mới là "đã tự chọn" — `undefined` là chưa từng chạm, `null`
+  // là đã tắt bằng /avatar off (cũng là một lựa chọn hẳn hoi). Gộp hai cái thành `!player.avatar`
+  // là nhiệm vụ không bao giờ xong với người bấm nút tắt.
+  than:  { ten:'tự cắm thân Axie',        dem:() => (player && player.avatar !== undefined) ? 1 : 0 },
   // ⚠ §6 của docs/LORE_RUNE.md hứa một cửa "Tinh Luyện" — hứa sai: Tinh Luyện là một NÚT trong
   // bảng Đại Thành (`sr_tinhluyen`, +0,18% hiệu lực mỗi cấp rèn), không phải một hệ có hành
   // động để chạm vào. Không có gì đếm được, nên cửa đó đổi sang **Đại Thành** — thứ mà nút Tinh
@@ -8541,7 +8555,7 @@ function heThuKet(mobEl, axieEl, sac){
     const mul = pha(HE_THIET);
     return { ket:-1, mul, sac:k, mau:'#ff9a3a',
              txt:`⚠ ${gM} ${mobEl} khắc ${gA} ${axieEl} +${pct(mul)}%`,
-             dai:`⚠ Axie ${gA} ${axieEl} ăn đòn NẶNG hơn ${pct(mul)}% ở đất ${mobEl} — đổi sang ${heKhacLai(mobEl).join(' / ')} thì chịu đòn nhẹ hơn` };
+             dai:`⚠ Axie ${gA} ${axieEl} ăn đòn NẶNG hơn ${pct(mul)}% ở đất ${mobEl} — đổi sang ${heKhacLai(mobEl).join(' / ')} thì chịu đòn nhẹ hơn (phím C → Khế Ước)` };
   }
   if (heKhac(axieEl, mobEl)){
     const mul = pha(HE_LOI);
@@ -8552,7 +8566,7 @@ function heThuKet(mobEl, axieEl, sac){
   const mul = pha(HE_TRUNG);
   return { ket:0, mul, sac:k, mau:'#c9b889',
            txt:`${gA} ${axieEl} trung tính`,
-           dai:`${gA} Axie ${axieEl} trung tính với đất ${mobEl} — đổi sang ${heKhacLai(mobEl).join(' / ')} thì chịu đòn nhẹ hơn` };
+           dai:`${gA} Axie ${axieEl} trung tính với đất ${mobEl} — đổi sang ${heKhacLai(mobEl).join(' / ')} thì chịu đòn nhẹ hơn (phím C → Khế Ước)` };
 }
 
 // ═══════════ SÁU BỘ PHẬN AXIE ═══════════
@@ -8616,6 +8630,33 @@ function bpDongMoTa(c){
 }
 window.bpCung = bpCung; window.bpSac = bpSac; window.axieSac = axieSac; window.bpHang = bpHang;
 window.bpDongMoTa = bpDongMoTa;
+
+// ── "CON NÀY Ở ĐẤT ĐANG ĐỨNG THÌ THẾ NÀO" — cửa DUY NHẤT ──────────────────────────────────
+// Bảng Khế Ước trước đây giải thích cơ chế rất kỹ nhưng KHÔNG biết người chơi đang đứng ở đâu,
+// nên nó không trả lời được câu người chơi thật sự hỏi: *nên cắm con nào BÂY GIỜ*. Một bảng
+// thông số tuyệt đối thì bắt người đọc tự làm phép so sánh trong đầu — đúng cái mà hệ trang bị
+// đã phải học một lần rồi và chữa bằng `itemCompareHtml`.
+//
+// ⚠ ĐI QUA `heThuKet` + `bpSac(bpCung(c))`, đừng tự nhân hệ số. Chép `1.12`/`0.9` hay công thức
+// độ sắc ra thêm một chỗ là thêm một chỗ nói dối được — và kiểu nói dối đó không lỗi nào báo.
+// ⚠ TRẢ `null` KHI ĐẤT KHÔNG CÓ HỆ (trong thành, hành lang trộn hệ như Lối Mòn Corran). In
+// "trung tính" ở đó là nói dối theo chiều ngược lại: nó khiến người chơi tưởng đã hỏi và đã
+// được trả lời, trong khi chỗ đó vốn không có câu trả lời nào.
+function axieTaiDay(c, mapId){
+  const mid = mapId || (typeof curMap !== 'undefined' ? curMap : null);
+  if (!mid || !c || !ELEM[c.lop] || typeof mapBanSac !== 'function') return null;
+  const he = (mapBanSac(mid) || {}).he;
+  if (!he || !ELEM[he]) return null;
+  const kq = heThuKet(he, c.lop, bpSac(bpCung(c)));
+  if (!kq) return null;
+  const pct = Math.round(Math.abs(kq.mul - 1) * 100);
+  const gM = ELEM[he].glyph;
+  const txt = kq.ket > 0 ? `✦ chịu đòn nhẹ hơn −${pct}% ở đất ${gM} ${he}`
+            : kq.ket < 0 ? `⚠ ăn đòn nặng hơn +${pct}% ở đất ${gM} ${he}`
+                         : `trung tính với đất ${gM} ${he}`;
+  return { he, ket:kq.ket, mul:kq.mul, pct, mau:kq.mau, txt };
+}
+window.axieTaiDay = axieTaiDay;
 // Hồi cho số bay khắc hệ. Nó bắn theo TỪNG ĐÒN TRÚNG, mà một trận đông quái có hàng chục đòn
 // mỗi giây — không có hồi thì nó vừa phủ kín màn vừa đẩy tràn mảng `floats` (trần 70) và nuốt
 // mất mọi thông báo khác. Để ngoài `player` để nó không chui vào save.
@@ -19151,6 +19192,21 @@ function renderMount(){
   // Huyết Thống CN · <bị động> · Chiêu <tên> (Ns)" — bốn thứ đó nay đều không tồn tại. In lại
   // bất kỳ cái nào là hứa với người chơi một sức mạnh mà con Axie không còn cho.
   html += `<div class="stat-sec">ĐANG CÓ — ${dsCo.length}/${CHIMERA.length}</div>`;
+  // ⚠ NÓI RA ĐANG ĐỨNG Ở ĐÂU, ngay trên danh sách. Không có dòng này thì mọi nhãn "ở đất X"
+  // bên dưới treo lơ lửng — người chơi không biết X là đất nào và vì sao bảng lại nhắc tới nó.
+  {
+    const _bsNay = (typeof curMap !== 'undefined' && typeof mapBanSac === 'function') ? mapBanSac(curMap) : null;
+    const _heNay = _bsNay && ELEM[_bsNay.he] ? _bsNay.he : null;
+    if (_heNay){
+      const _kh = heKhacLai(_heNay);
+      html += `<div style="font-size:11.5px;color:#cfd8ff;background:#1a1f33;border:1px solid #2e3a5c;border-radius:6px;padding:6px 9px;margin-bottom:7px;line-height:1.5">`
+            + `\ud83d\uddfa Đang đứng ở <b>${(MAPS[curMap]||{}).name || curMap}</b> — đất <b style="color:${ELEM[_heNay].color}">${ELEM[_heNay].glyph} ${_heNay}</b> <span style="opacity:.65">${_bsNay.tyLeHe}% đàn quái</span>.`
+            + (_kh.length ? ` Thân <b style="color:${ELEM[_kh[0]].color}">${_kh.join(' · ')}</b> chịu đòn nhẹ hơn ở đây.` : '')
+            + `</div>`;
+    } else {
+      html += `<div style="font-size:11.5px;color:#9aa8d4;margin-bottom:7px;line-height:1.5">\ud83d\uddfa Chỗ đang đứng <b>không có hệ trội</b> — không thân nào hợp hơn thân nào. Vào một vùng săn rồi mở lại bảng này để thấy con nào hợp ở đó.</div>`;
+    }
+  }
   // ⚠ HAI CON SỐ NÀY TỪNG CHÉP CỨNG "12%" / "10%", và từ đợt sáu bộ phận thì đó là lời nói dối:
   // hệ số phụ thuộc độ sắc của con đang đeo (×0,45 tới ×1,50). Suy thẳng từ `heThuKet` — một
   // bảng hứa một đằng còn đòn đánh ra một nẻo thì không lỗi nào báo, và người chơi thì đọc ra
@@ -19166,7 +19222,7 @@ function renderMount(){
       <span class="sk-info"><b style="color:${c.mau}">${c.ten}</b>
         <span style="font-size:10.5px;color:${CHI_SAO_MAU[c.sao]}"> · ${'★'.repeat(c.sao)} · </span>${lopHuyHieu(c.lop)}<span style="font-size:10.5px;color:${CHI_SAO_MAU[c.sao]}">${c.lop}</span>
         ${con ? `<span style="font-size:10.5px;color:#ffd76a"> · trùng ×${con}</span>` : ''}
-        <div class="sk-desc">Thân ${c.lop} — ${c.ten} · phòng thủ lớp <b style="color:${elColor(c.lop)}">${(ELEM[c.lop]||{}).glyph||''} ${elName(c.lop)}</b>${bpDongMoTa(c)}</div></span>
+        <div class="sk-desc">Thân ${c.lop} — ${c.ten} · phòng thủ lớp <b style="color:${elColor(c.lop)}">${(ELEM[c.lop]||{}).glyph||''} ${elName(c.lop)}</b>${bpDongMoTa(c)}${(() => { const h = axieTaiDay(c); return h ? `<br><b style="color:${h.mau}">${h.txt}</b>` : ''; })()}</div></span>
       ${dung ? '<span style="font-size:11px;color:#8fd18f">ĐANG LÀM THÂN</span>'
            : `<button class="mini-btn" onclick="window.chiChon('${c.id}')">Đổi thân</button>`}</div>`;
   }

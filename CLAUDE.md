@@ -291,6 +291,61 @@ thông báo khác — chữa một chỗ mù bằng cách làm mù chỗ khác.
    một con khác. Phải ghim cả map, và bài nay **tự kiểm cảnh dựng** (đòi chữ bắt được phải nhắc
    đúng tên con quái đã ghim) trước khi chấm.
 
+### 📣 HAI TRỤC AXIE PHẢI ĐƯỢC **DẠY**, và đo mới biết là chưa
+
+Cơ chế chạy đúng và có bài gác từ lâu (`test_hethu` · `test_bophan`). Nhưng đếm lại các cửa nói ra
+nó thì ra **sáu kênh, không kênh nào là nhiệm vụ** — `grep` toàn bộ 50 nhiệm vụ chính + 32 phụ cho
+**0** chỗ nhắc tới hệ phòng thủ, đổi thân hay cấu tạo. Với người chơi mới, một cơ chế chiếm 35%
+barem mà chuỗi hướng dẫn không trỏ tới lấy một lần thì nó ngang với không tồn tại.
+
+**⚠ VÀ CHỖ GIẢI THÍCH BẰNG LỜI DUY NHẤT TRONG CẢ GAME ĐANG DẠY SAI.** Trang dẫn truyện — thứ
+người chơi đọc ĐẦU TIÊN — viết *"Mỗi lớp mang một **hệ nguyên tố** — khắc hệ +20% sát thương"*.
+Sai cả hai nửa kể từ đợt tam giác: hệ đòn đánh lấy từ **vũ khí** (`atkElem`, lớp chỉ là đường lui),
+còn hệ phòng thủ — đúng cái trục gánh Axie Core — **không được nhắc một chữ**. Câu đó sống sót qua
+cả đợt tam giác lẫn đợt sáu bộ phận vì **không bài kiểm nào đọc văn xuôi**.
+
+| kênh | trục | ai thấy | nó trả lời câu gì |
+|---|---|---|---|
+| số bay trên đầu mỗi đòn trúng | 1 | mọi người | *đang xảy ra chuyện gì* |
+| băng-rôn lúc vào map | 1 | mọi người | *nên cầm con nào TỚI đây* + **chỗ đổi (phím C)** |
+| `mang X · Y · Z tới` — bảng Bản Đồ | 1 | ai mở M | hệ của **đất** |
+| hai dòng hệ — bảng Nhân Vật | 1 | ai mở C | hệ của **mình** |
+| `Cấu tạo Axie — Thuần 6/6` — bảng Nhân Vật | 2 | ai mở C | hạng của con đang đeo |
+| danh sách Khế Ước | 1+2 | cấp 6+ | chỗ **duy nhất** thấy đủ sáu bộ phận |
+| **`axieTaiDay(c)` — phán quyết TẠI CHỖ** | 1+2 | cấp 6+ | ***nên cắm con nào BÂY GIỜ*** |
+| **`c1q4` Thân Nào Cho Đất Nào** (cấp 19) | 1 | mọi người | *cơ chế này có tồn tại* |
+
+**`axieTaiDay(c, mapId)` là cửa DUY NHẤT** hỏi "con này ở đất đang đứng thì thế nào". Bảng Khế Ước
+trước đây giải thích cơ chế rất kỹ nhưng **không biết người chơi đang đứng ở đâu**, nên nó bắt người
+đọc tự làm phép so sánh trong đầu — đúng cái mà hệ trang bị đã học một lần rồi và chữa bằng
+`itemCompareHtml`. ⚠ Nó đi qua `heThuKet` + `bpSac(bpCung(c))`, **đừng tự nhân hệ số**.
+
+**⚠ TRẢ `null` KHI ĐẤT KHÔNG CÓ HỆ TRỘI** (trong thành, hành lang trộn hệ). In "trung tính" ở đó là
+nói dối theo chiều ngược lại: người chơi tưởng đã hỏi và đã được trả lời, trong khi chỗ đó vốn không
+có câu trả lời nào. Và dòng đầu bảng in kèm **tỉ lệ** (`tyLeHe%`) — không có nó thì Lối Mòn Corran,
+vùng **cố ý trộn hệ**, đọc ra mạnh y như một vùng thuần 100% trong khi chênh ở đó chỉ 11,7%.
+
+**⚠ `MOC_NV.than` CỐ Ý KHÔNG ĐÒI "đang đeo thân KHẮC LẠI đất này".** Nghe mạnh hơn hẳn, nhưng thân
+là thứ bốc từ gacha: người xui có thể không sở hữu con nào thuộc nhóm cần, mà chính tuyến là chuỗi
+**THẲNG** — một ô không qua được là cả game dừng. Đo được: 16 con chia **4 · 7 · 5** cho ba nhóm,
+nên xác suất cả ba lượt quay của `c1q3` rơi cùng một nhóm lên tới ~8%. Cùng bài học ở mục "CỬA CƠ
+CHẾ MỞ Ở CẤP NÀO": hỏi *đếm được không* rồi phải hỏi tiếp *ai cũng làm được không*. Nhiệm vụ mở
+cửa; **cái bảng mới là thứ dạy**.
+
+**⚠ `player.avatar !== undefined`, KHÔNG phải `!player.avatar`.** `undefined` là chưa từng chạm,
+`null` là đã tắt bằng `/avatar off` — cũng là một lựa chọn hẳn hoi. Gộp hai cái là người bấm nút tắt
+kẹt nhiệm vụ vĩnh viễn, và không lỗi nào báo. Cùng luật ba-trạng-thái đã ghi ở mục `avatarId`.
+
+**⚠ CHÈN MỘT NHIỆM VỤ CHÍNH LÀ MỌI `reqMain` TRƯỢT.** `c1q4` chèn ở **chỉ số 11**, nên 8 mốc
+`reqMain` ≥ 11 đã +1 (`12·16·17·20·24·27·33·39` → `13·17·18·21·25·28·34·40`). Sửa bằng máy, đừng
+sửa tay từng dòng — và `test_daythan §1` gác chiều đó (`reqMain` phải trỏ vào trong chuỗi).
+
+Gác: **`tests/test_daythan.js`** (6 mệnh đề, **cả sáu đã thử ngược và đều đỏ**). ④ đo ở **HAI map**
+— một bảng hỏi ở đúng một chỗ thì mọi cách cài đều xanh, kể cả cài chết cứng một hệ; phải đổi map
+rồi đòi phán quyết ĐỔI THEO. ⚠ Phép thử ngược của ⑤ lần đầu **im lặng** vì mỏ neo có **hai** chỗ
+(hai nhánh của `heThuKet`) — đúng vết sẹo đã ghi ở `test_hethong`: *mỏ neo của phép thử ngược phải
+DUY NHẤT, và phải đếm số lần xuất hiện trước khi thay.*
+
 ### ▲▲ SÁU BỘ PHẬN AXIE — trục THỨ HAI, và nó chứng minh được là KHÔNG bán sức mạnh
 
 `axie-hinh-hoa §1` chốt: một con Axie luôn dựng từ **đúng sáu bộ phận** — Mắt · Tai · Sừng ·
@@ -807,7 +862,7 @@ chơi không có cách nào biết map nào hệ gì. Nay hệ trội nằm ngay
 
 | | Trạng thái |
 |---|---|
-| `QUESTS` | **ĐANG CHẠY** — 9 chương / 50 nhiệm vụ (thêm chương VIII · Người Thứ Bảy), canon Nhát Gọi. Xem mục "Cốt truyện (canon)" và `docs/LORE_RUNE.md` |
+| `QUESTS` | **ĐANG CHẠY** — 9 chương / **51** nhiệm vụ (chương VIII · Người Thứ Bảy; `c1q4` dạy trục phòng thủ Axie), canon Nhát Gọi. Xem mục "Cốt truyện (canon)" và `docs/LORE_RUNE.md` |
 | `SIDE_QUESTS` | **ĐANG CHẠY** — **32 nhiệm vụ / 10 map**, phủ cấp 3→116. Trước là 9 mục chỉ trên ba map lối đi. |
 
 **Vì sao chuỗi CŨ bị gỡ (ghi lại để đừng vá nó từ git):** lối chơi đã đổi quá nhiều so với lúc
@@ -890,7 +945,7 @@ chứ không phải đi tìm. Cả map chỉ có **41 điểm** thoả bộ ràn
 Bốn nhánh thưởng, **đều trỏ vào hệ đang chạy**, không đẻ tiền tệ mới: `item` (ô trang bị) ·
 `cot` (Dòng Cốt độc quyền của vùng) · `ngoc` (ép thẳng vào đồ) · `gk` (vé quay Khế Ước). **Shard
 CỐ Ý không có mặt** — nó chỉ tới từ mốc mỗi ngày và thông quan, cho nhiệm vụ nhả Shard là phá đúng
-luật đó. Nay **24/50 chính tuyến + 9/32 phụ tuyến** có thưởng vật phẩm (trước: 9/50 + 0/32).
+luật đó. Nay **24/51 chính tuyến + 9/32 phụ tuyến** có thưởng vật phẩm (trước: 9/50 + 0/32).
 
 ### ⏱ NHỊP CẤP — `XP_TABLE` NAY DẪN TỪ SỐ ĐO, KHÔNG TỪ CẢM GIÁC
 
@@ -1046,7 +1101,7 @@ kẹt cứng ở ô 26/50**. Không một lỗi nào trên console, không bài 
 một `moc` mới, hỏi đủ hai câu — *đếm được không* **và** *mở ở cấp nào*. Câu thứ hai là câu đã bị
 bỏ qua. `c4q3` nay gate **Box Kundun** (mở từ đầu game: rơi từ quái, mua ở tiệm).
 
-**Bài kiểm gác: `tests/test_daochoi.js`** — đi HẾT 50 ô chính tuyến bằng chính `turnInQuest()`,
+**Bài kiểm gác: `tests/test_daochoi.js`** — đi HẾT mọi ô chính tuyến bằng chính `turnInQuest()`,
 không nhảy cóc `questIdx`, và ở mỗi ô hỏi ba câu của người chơi: nhận được không · làm được
 không · trả được không. Kèm phép lan **theo đường người chơi** (chỉ qua `GATES`) để bắt map
 thành nội dung chết.
@@ -3447,13 +3502,14 @@ khởi động**. Triệu chứng: thoát **144**, `$OUT` không tồn tại, kh
 nhầm thành "bộ kiểm hỏng". Tắt server thì tìm pid **theo CỔNG** (`ss -lptn "sport = :8853"`), đừng
 tìm theo chuỗi lệnh.
 
-⚠ **HAI BÀI ĐANG CÒN ĐỎ THEO XÚC XẮC — đã đo, chưa sửa tận gốc.** Ghi ra để người sau đừng mất
+⚠ **BA BÀI ĐANG CÒN ĐỎ THEO XÚC XẮC — đã đo, chưa sửa tận gốc.** Ghi ra để người sau đừng mất
 một buổi truy lại từ đầu, và đừng vội đổ cho commit của mình:
 
 | bài | dấu hiệu | đã đo được |
 |---|---|---|
 | `test_ngamchuot §4` | *"con quái cạnh chân cũng mất máu"*, `ganMat` = **đúng 1** | xanh 3/3 khi chạy riêng · mục này **đã** `player.reflect = 0` rồi, nên 1 máu ấy tới từ nguồn KHÁC, chưa truy ra. Ngưỡng là `ganMat > 0` nên đúng một điểm máu của một cơ chế khác cũng đủ làm đỏ |
 | `test_tamphap §3` | *"số lần bị khoá chân không giảm hẳn (47 → 28)"* | xanh 3/3 khi chạy riêng · đây là phép đo THỐNG KÊ, mẫu mỏng |
+| `test_qablock` | *"dựng cảnh sai: người chơi không ăn đòn nào"* rồi kéo theo 2 FAIL nữa | **xanh 8/8 lượt liên tiếp** khi chạy riêng · chính chú thích trong bài đã ghi nó nhạy với mạch ngẫu nhiên (*"từng xanh chỉ vì may"*) — con quái phải kịp đánh trúng trong 40 khung, máy bận là trượt. Phân biệt bằng `git diff -U0 … | grep '^@@'`: nếu diff không chạm `update`/`hurtPlayer`/`swingFeel`/`shakeDir` thì nó không thể là của mình |
 
 **Cách phân biệt "đỏ do mình" với "đỏ do xúc xắc", làm theo thứ tự này:** chạy riêng bài đó
 **3 lượt** trên cây của mình → rồi chạy trên cây **trước commit của mình** (`git worktree add`).

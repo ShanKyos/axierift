@@ -257,20 +257,41 @@ hai chiều**: đổi qua cả 16 con phải đổi **0 điểm** chỉ số, *v
 
 ### 5.7 Người chơi NHÌN THẤY cơ chế này ở đâu
 
-Một cơ chế vô hình là một cơ chế không tồn tại. Bốn cửa, mỗi cửa trả lời một câu khác nhau:
+Một cơ chế vô hình là một cơ chế không tồn tại. **Bảy cửa**, mỗi cửa trả lời một câu khác nhau —
+và câu quan trọng nhất là câu cuối bảng:
 
 | cửa | trả lời | bắn khi nào |
 |---|---|---|
 | số bay trên đầu nhân vật | *đang xảy ra gì* | mỗi đòn trúng, **cả hai vế**, hồi 2,6 giây |
-| băng-rôn lúc vào map | *nên cầm con nào TỚI đây* | lúc đặt chân |
-| bảng Bản Đồ | *con nào hợp vùng nào* | bất cứ lúc nào |
-| bảng Nhân Vật | *con đang đeo thuần hay tạp* | bất cứ lúc nào |
+| băng-rôn lúc vào map | *nên cầm con nào TỚI đây* + **chỗ đổi (phím C)** | lúc đặt chân |
+| bảng Bản Đồ | *vùng này là đất hệ gì* | bất cứ lúc nào |
+| bảng Nhân Vật — hai dòng hệ | *mình đang mang hệ gì* | bất cứ lúc nào |
+| bảng Nhân Vật — `Cấu tạo Axie` | *con đang đeo thuần hay tạp* | bất cứ lúc nào |
+| danh sách Khế Ước | *sáu bộ phận của từng con* | cấp 6+ |
+| **phán quyết TẠI CHỖ trong Khế Ước** | ***nên cắm con nào BÂY GIỜ*** | cấp 6+ |
+
+Cửa cuối là thứ mới nhất và là thứ đắt giá nhất. Bảng Khế Ước trước đây giải thích cơ chế rất kỹ
+nhưng **không biết người chơi đang đứng ở đâu**, nên nó bắt người đọc tự làm phép so sánh trong
+đầu. Nay mỗi con hiện thẳng kết quả *tại vùng đang đứng* — `✦ chịu đòn nhẹ hơn −13% ở đất ✹ Beast`
+· `trung tính` · `⚠ ăn đòn nặng hơn +16%` — và con số đổi theo cả **lớp** lẫn **cấu tạo** của
+chính con đó. Đây là cùng lối mà hệ trang bị đã học một lần rồi: so với thứ đang có, đừng chỉ in
+thông số tuyệt đối.
+
+Và một nhiệm vụ chính — **`c1q4` Thân Nào Cho Đất Nào**, cấp 19, ngay sau nhiệm vụ mở Khế Ước —
+bắt người chơi mở bảng đó ra mà tự cắm lấy một cái thân. Nhiệm vụ mở cửa; cái bảng mới là thứ dạy.
+Nó **cố ý không** đòi "phải đeo con khắc lại đất này": thân là thứ bốc từ gacha, mà chính tuyến là
+chuỗi thẳng — một ô không qua được là cả game dừng.
 
 > **Chỗ này từng hỏng nặng, và ghi lại để không tái diễn:** vế phòng thủ chạy suốt dự án mà chỉ
 > có **một** cửa hiện ra — một dòng trong hộp nhật ký nhỏ ở góc — và dòng đó **chỉ in ở nhánh
 > bất lợi**. Nửa CÓ LỢI, tức nửa trả lời cho *"vì sao phải có nhiều hơn một con Axie"*, **chưa
 > từng hiện ra một lần nào**. Trong khi chiều tấn công (do vũ khí quyết định, không phải Axie)
 > thì có hẳn số bay với bốn tiền tố riêng.
+
+> **Và một lỗi cùng họ, phát hiện sau đó:** chỗ giải thích bằng LỜI duy nhất trong cả game — trang
+> dẫn truyện, thứ người chơi đọc đầu tiên — vẫn dạy mô hình đã chết (*"mỗi lớp mang một hệ nguyên
+> tố"*). Sai cả hai nửa: hệ đòn đánh lấy từ **vũ khí**, hệ phòng thủ lấy từ **cái thân**. Nó sống
+> sót qua hai đợt cải tổ vì **không bài kiểm nào đọc văn xuôi**. Nay `tests/test_daythan.js §6` đọc.
 
 ---
 
@@ -399,7 +420,7 @@ game gốc cũng vậy, và chính cái đó là thứ đáng giữ.
 
 ## 9. Chuỗi nhiệm vụ
 
-**50 nhiệm vụ chính / 9 chương**, cấp 1 → 120. Mỗi chương = **một Rune Cổ**, và đóng lại bằng
+**51 nhiệm vụ chính / 9 chương**, cấp 1 → 120. Mỗi chương = **một Rune Cổ**, và đóng lại bằng
 việc hạ **Tướng Quân Trấn Ải** của chính vùng đó.
 
 | loại | số | | loại | số |
