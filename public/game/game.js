@@ -1445,6 +1445,19 @@ const VFX_ATLAS_DEFS = {
   // art trắng-bạc hà rơi đúng dải sáng ấy và phép tách không phân biệt nổi. Không chữa được ở
   // khâu nhập; phải sinh lại gói trên NỀN MỘT MÀU PHẲNG (tools/vfx_gemini.py --nen '#ff00ff').
   sx_toanchan_a:  { k:1, cols:5, rows:1,  frameW:384, frameH:384, frames:5,  fps:18, anchorX:46.1, anchorY:192.0, neoR:337.9, cong:false },
+  // Hoả Xích Diệm (Hành Vi ô 2 của Dark Lord) — ba ngọn lửa toả ra từ một điểm, lõi trắng chạy dọc.
+  // Gói Meowa 8 khung / lưới 3×3; ô thứ 9 rỗng nên bỏ bằng `--bo 8`.
+  fire_scream:    { k:1, cols:8, rows:1,  frameW:384, frameH:384, frames:8,  fps:16, anchorX:46.1, anchorY:192.0, neoR:337.9, cong:false },
+  // Bão Quạ (Trấn Phái của Dark Lord) — bầy quạ tuôn ra từ một xoáy tối, vệt khói tím kéo theo.
+  // ⚠ ART TỐI: sáng 0,136 · lệch chuẩn 0,094 — DƯỚI ngưỡng 0,12 mà CỐ Ý không nâng sáng. Chụp
+  // trên map tối nhì (`chungnam` 0,376; tối nhất là `deep` 0,361) thì bản gốc đọc rõ, còn liều
+  // nâng nhẹ nhất đã làm quạ ngả xám và mất luôn chất "chim đen". Ngưỡng 0,12 rút ra từ art TRÙM
+  // vẽ ở 113px; tấm này vẽ ~230px nên chi tiết sống sót, cộng viền tím và vệt khói cho tương phản.
+  raven_storm:    { k:1, cols:8, rows:1,  frameW:384, frameH:384, frames:8,  fps:16, anchorX:46.1, anchorY:192.0, neoR:337.9, cong:false },
+  // Death Stab / "đâm gió" (Trấn Phái của Dark Knight) — ngọn thương xoắn dài ra, hơi lam cuốn quanh.
+  // 16 khung và KHÔNG khung nào chết: đổi thấp nhất giữa hai khung liền nhau là 11,5 RMS, tức
+  // ngọn thương vẫn đang xoay. (Hai gói trước phải bỏ khung độn; gói này thì không.)
+  death_stab:     { k:1, cols:8, rows:2,  frameW:384, frameH:384, frames:16, fps:20, anchorX:46.1, anchorY:192.0, neoR:337.9, cong:false },
 };
 const VFX_ATLAS_IMGS = {};
 const VFX_ATLAS_DUNG = {};   // id → lúc dùng gần nhất (ms)
@@ -2458,6 +2471,16 @@ const GATES = [
   // đi lên. Phím G ở đây chạy nhánh RÚT LUI (deepLeave) chứ không travelTo — `to` chỉ là chỗ về.
   { map:'deep', x:1300, y:1660, to:'ardhaven', portal:true, label:'Xuất Môn',
     name:'Rời Tầng Sâu → Sapidae Chiefdom' },
+  // Lò Khắc — mini-game roguelite chọn thẻ (docs/DAC_TA_LO_KHAC.md). Đặt ở góc ĐÔNG-NAM,
+  // đối xứng với giếng Tầng Sâu ở tây-nam. Chỗ đứng QUÉT BẰNG MÁY, không đặt tay: trong đa
+  // giác sàn, lề 70px tới mọi khối trong MAP_OBSTACLES, cách mọi NPC ≥220px, cách mọi cổng
+  // khác ≥420px, thoáng đủ 8 hướng ở bán kính 120px, và cách điểm thả 1237px nên người chơi
+  // đi ngang qua chứ không phải đi tìm. Cả map có 226 điểm thoả — đừng dịch tay, quét lại.
+  // KHÔNG dùng `to`: nó không dẫn tới một map cố định mà mở một LƯỢT, xem lkStart().
+  { map:'ardhaven', x:3980, y:2860, lokhac:true, portal:true, label:'Lò Khắc',
+    name:'Cửa Lò Khắc — 15 đợt, mỗi đợt khắc một nếp (cấp 15+)' },
+  { map:'lokhac', x:1300, y:1660, to:'ardhaven', portal:true, label:'Rời Lò',
+    name:'Rời Lò Khắc → Sapidae Chiefdom' },
   // ── ⚔ SÀN ĐẤU ARDHAVEN ───────────────────────────────────────────────────────────
   // Chỗ đứng QUÉT BẰNG MÁY, không chấm tay (luật CLAUDE.md). Bộ ràng buộc: trong đa giác sàn ·
   // cách mọi NPC ≥200px · ngoài mọi `vatTo` và mọi khối nhà +40px lề · cách mọi cổng khác
@@ -2577,7 +2600,11 @@ const DGN_ROOMS = [
 const DGN_WALLS = [ { y:1140, h:60 }, { y:690, h:60 } ];  // hai bức tường ngăn
 const DGN_GATE = { x0:1230, x1:1370 };                    // khe cửa giữa mỗi tường
 function dgnWallObs(){
-  if (DEEP) return [];   // Tầng Sâu: sảnh mở, dọn sạch là xuống tầng — không có cửa để mở
+  // ⚠ Tầng Sâu VÀ Lò Khắc đều là sảnh MỞ — không có cửa để mở, nên không dựng tường ngăn.
+  // Thiếu `|| LK` ở đây là một lỗi câm: hai mode đó chạy với `DGN === null`, mà điều kiện
+  // `!(DGN && DGN.doorOpen && …)` dưới kia khi đó thành TRUE ⇒ cả hai khe cửa bị bịt kín và
+  // người chơi kẹt cứng trong phòng 1, không một lỗi nào in ra.
+  if (DEEP || LK) return [];
   const out = [];
   DGN_WALLS.forEach((w, i) => {
     out.push({ x:330, y:w.y, wd: DGN_GATE.x0 - 330, ht: w.h });
@@ -4085,7 +4112,8 @@ function vhKnockback(m, ang, px){
 const SECT_VFX = {
   // sx_thieulam_a đã GỠ khỏi bảng này — nay có tranh thật trong CHIEU_TRANH. Giữ lại dòng style
   // là chồng một vòng sáng vector lên đúng chỗ tấm dán đang toả ra, thành hai lớp lệch nhau.
-  sx_thieulam_c: { style:'stabburst',    c2:'#cfe8ff', dur:0.85 },            // Death Stab (Dark Knight) — chuỗi nhát đâm liên tiếp
+  // sx_thieulam_c — ĐÃ CÓ ART THẬT (`death_stab` trong CHIEU_TRANH). Style tạm `stabburst` gỡ
+  // theo luật: có mặt trong CHIEU_TRANH mà còn khai style là chồng hai lớp lệch tâm lên nhau.
   // sx_toanchan_a đã GỠ khỏi bảng này — nay có tranh thật trong CHIEU_TRANH.
   sx_toanchan_c: { style:'icefall',      c2:'#dff4ff', dur:1.0 },             // Ice Arrow (Sylvan Ranger) — phiến băng kết trên cao rồi rơi xuống vỡ
   sx_baidasan_a: { style:'poisonbloom',  c2:'#b8ff9a', proj:'serpent', dur:1.1 }, // Poison (Dark Wizard) — vũng độc loang ra, sủi bọt
@@ -4095,7 +4123,8 @@ const SECT_VFX = {
   // QA: Dark Lord (sect id 'bug') chưa từng có entry nào ở đây — cả chiêu chính lẫn Trấn Phái đều rơi
   // về style mặc định chung chung, là lớp DUY NHẤT không có hình ảnh nhận diện riêng khi tung chiêu.
   // sx_bug_a đã GỠ khỏi bảng này — nay có tranh thật trong CHIEU_TRANH.
-  sx_bug_c:      { style:'firepillar',   c2:'#ffb15c', dur:1.15 },            // Fire Scream (Dark Lord) — ba vệt lửa chạy ra rồi dựng cột lửa
+  // sx_bug_c — ĐÃ CÓ ART THẬT (`raven_storm` trong CHIEU_TRANH). Style tạm `firepillar` gỡ theo
+  // luật: có mặt trong CHIEU_TRANH mà còn khai style là chồng hai lớp lệch tâm lên nhau.
                       // Hatchling Strike (Unclassed) — cú đấm trần, chưa có binh khí
                       // Wanderer's Resolve (Unclassed) — dồn hết sức vào một đòn
 };
@@ -4117,7 +4146,8 @@ const VH_VFX = {
   mg_flamestrike:   { style:'flamewall',   c2:'#ff9a5a', dur:1.15 }, // hàng cột lửa phía trước
   dk_ragefulblow:   { style:'groundburst', c2:'#cfe8ff', dur:0.9 },  // nền toác thành tia từ điểm giáng
   mg_powerslash:    { style:'lightwave',   c2:'#ffe9b0', dur:0.85 }, // sóng sáng rời kiếm bay đi
-  dl_chaoticdiseier:{ style:'quakeburst',  c2:'#e8c88a', dur:1.0 },  // Earthquake — nền nứt thành vòng, đá bắn lên
+  // dl_chaoticdiseier — ĐÃ CÓ ART THẬT (`fire_scream` trong CHIEU_TRANH). Style tạm `quakeburst`
+  // gỡ theo luật: có mặt trong CHIEU_TRANH mà còn khai style là chồng hai lớp lệch tâm lên nhau.
   elf_penetration:  { style:'flash',       c2:'#dfffff', proj:'lance' }, // mũi tên xuyên — xem drawProjStyled
 };
 function _vxLine(x1, y1, x2, y2){ ctx.beginPath(); ctx.moveTo(x1, y1); ctx.lineTo(x2, y2); ctx.stroke(); }
@@ -4711,6 +4741,13 @@ const CHIEU_TRANH = {
   sx_thieulam_a: { atlas:'sx_thieulam_a', xoay:true },  // Twisting Slash — quạt chém Dark Knight
   sx_bug_a:      { atlas:'sx_bug_a',      xoay:true },  // Force Wave — sóng chấn quyền trượng Dark Lord
   sx_toanchan_a: { atlas:'sx_toanchan_a', xoay:true },  // Triple Shot — loé cung Sylvan Ranger
+  dl_chaoticdiseier: { atlas:'fire_scream', xoay:true },  // Hoả Xích Diệm — ba ngọn lửa toả ra, Dark Lord
+  // `co:0.60` — chủ dự án chốt sau khi xem bốn cỡ chụp trên map thật. Không khai `co` thì
+  // scale = R/neoR = 185/337,9 = 0,547 ⇒ hộp vẽ ra 210px, to hơn cả con Axie (113px).
+  // Bảng đã chụp: 1,00→210px · 0,85→179 · 0,72→151 · **0,60→126**.
+  // ⚠ Chỉ được thu NHỎ hơn vòng sát thương (`pham` 185), không bao giờ to hơn — xem luật `pham`.
+  sx_bug_c:      { atlas:'raven_storm',   xoay:true, co:0.60 },  // Bão Quạ — Trấn Phái Dark Lord
+  sx_thieulam_c: { atlas:'death_stab',    xoay:true },  // Death Stab — Trấn Phái Dark Knight
 };
 // Chỗ chiêu giáng xuống: CHUỘT CHỈ ĐÂU, CHIÊU GIÁNG ĐÓ.
 //
@@ -8290,6 +8327,33 @@ function calcDerived(){
   const _psEva = biDongChiSo('evaPP'), _psCrit = biDongChiSo('critPP');
   if (_psEva)  player.eva  = Math.min(0.45, player.eva  + _psEva / 100);
   if (_psCrit) player.crit = Math.min(0.65, player.crit + _psCrit / 100);
+  // ── LÒ KHẮC · Nếp Khắc ──────────────────────────────────────────────────
+  // MỘT khối, MỘT cửa đọc (`lkCong`). `lkCong` trả 0 khi `LK` null, nên khối này vô hại với
+  // 100% thời gian người chơi ở ngoài mini-game — và lượt kết thúc là mọi thẻ tự biến mất ở
+  // lần calcDerived kế tiếp, không phải dọn tay. Đặt CUỐI HÀM vì nó nhân lên chỉ số đã thành
+  // hình, đúng thứ người chơi đọc trên bảng Nhân Vật (cùng lý do khối bị động chỉ số ở trên).
+  if (LK){
+    const _kA = lkCong('atkPct'), _kH = lkCong('hpPct'), _kQ = lkCong('qiPct'),
+          _kD = lkCong('defPct'), _kS = lkCong('spdPct'), _kC = lkCong('cdPct'),
+          _kR = lkCong('critPP'), _kAs = lkCong('aspdPct');
+    if (_kA)  player.atk    = Math.max(1, Math.round(player.atk * (1 + _kA / 100)));
+    if (_kH)  player.maxHp  = Math.max(1, Math.round(player.maxHp * (1 + _kH / 100)));
+    if (_kQ)  player.maxQi  = Math.max(1, Math.round(player.maxQi * (1 + _kQ / 100)));
+    if (_kD)  player.dDef   = Math.round(player.dDef * (1 + _kD / 100));
+    if (_kS)  player.speed  = Math.round(player.speed * (1 + _kS / 100));
+    // ⚠ `player.aspd` là KHOẢNG CÁCH giữa hai đòn (giây), THẤP hơn = NHANH hơn. Nhân với
+    // (1 + %) ở đây là biến lá Tay Nhanh thành một lá debuff, và không gì báo. Dùng cùng
+    // phép trừ và cùng sàn 0,25 mà nhánh trang bị (`P.aspdPct`) đang dùng.
+    if (_kAs) player.aspd   = Math.max(0.25, player.aspd * (1 - _kAs / 100));
+    // Hồi chiêu dùng CÙNG sàn 0,35 với Đại Thành — hai nguồn trừ thẳng chồng nhau là về 0.
+    if (_kC)  player.vhCdMult = Math.max(0.35, (player.vhCdMult || 1) * (1 - _kC / 100));
+    // Bạo kích đi qua ĐÚNG cái trần 0,65 mà mọi nguồn khác đi qua — bỏ trần ở đây là mở cửa
+    // sau cho chính chỉ số mà cả phần trên của hàm này cẩn thận kẹp lại.
+    if (_kR)  player.crit   = Math.min(0.65, player.crit + _kR / 100);
+    const _kL = lkCong('leech'), _kP = lkCong('phan');
+    if (_kL)  player.hpLeech = (player.hpLeech || 0) + _kL / 100;   // dùng lại cơ chế có sẵn
+    if (_kP)  player.reflect = (player.reflect || 0) + _kP / 100;   // ...và cơ chế phản đòn có sẵn
+  }
   player.hp = Math.min(player.hp, player.maxHp);
   player.qi = Math.min(player.qi, player.maxQi);
 }
@@ -8797,6 +8861,9 @@ function loadGame(idx){
     if (player.khoPlus == null) player.khoPlus = 0;
     if (!player.khoNgoc || typeof player.khoNgoc !== 'object') player.khoNgoc = { hap:{} };
     if (player.autoNgoc == null) player.autoNgoc = false;
+    // Lò Khắc: sổ lượt/ngày. Thiếu dòng này thì lkNgay() tự dựng lại ở lần gọi đầu — nhưng
+    // vá ở đây để bảng hiện số lượt còn lại được ngay khi vào game, không phải đợi bấm cổng.
+    if (!player.lokhac || typeof player.lokhac !== 'object') player.lokhac = { day:'', luot:0 };
     // ═══ GỘP TIỀN TỆ — bậc 5: Tu La Tinh Thạch ra khỏi game ════════════════════════════
     // Chủ dự án chốt: ép ngọc lo +1→+9, Lò lo +10/+11/+12. "Rèn Thường" — đường Lumen + Tu La
     // lên +9 — gỡ theo, và Tu La mất chỗ tiêu chính. Phần nó còn giữ ở Phá Thiên Kiếp đã dồn
@@ -10051,6 +10118,12 @@ const BGM_TRACKS = {
   mongco:     'bgm_mongco',      // lunar_battle — thảo nguyên tro
   nhanmon:    'bgm_nhanmon',     // pvp — ải cuối, căng nhất
   deep: 'bgm_dungeon',         // Tầng Sâu
+  // Lò Khắc: mượn bản PvP — chú thích của chính nó ghi "ải cuối, căng nhất", và một sảnh 15 đợt
+  // dồn liên tục thì đúng chất đó hơn nhạc hang. Dùng chung nhạc là nếp đã có (bốn map rẻo rừng
+  // Corran dùng chung `bgm_chungnam`), không phải chỗ cắt góc.
+  // ⚠ Map nào KHÔNG có mục ở đây thì `nhacMap()` gọi `stopBgm()` — vào map là im bặt, và
+  // `test_nhacnen` bắt đúng chuyện đó. Thêm map mới thì thêm luôn một dòng ở bảng này.
+  lokhac: 'bgm_nhanmon',
   // ⚠ SÀN ĐẤU PHẢI CÓ NHẠC — `test_nhacnen` bắt được chỗ này và nó đúng: một map không khai
   // nhạc thì `nhacMap()` gọi `stopBgm()`, tức bước qua cổng là IM BẶT. Không lỗi nào báo.
   //
@@ -10198,6 +10271,10 @@ function phimXuong(e){
   if (e.key.toLowerCase()==='t') useManaPot();   // T kề R trên bàn phím — hai ô thuốc kề nhau trên thanh
   if (e.key.toLowerCase()==='g' && nearGate && player && !dead){
     if (nearGate.deep) deepStart();
+    // Lò Khắc KHÔNG cần nhánh rời riêng ở đây: cửa ra khai `to`, và travelTo() đã có chốt
+    // `if (LK && mapId !== LK_MAP)`. Thêm chốt thứ hai ở đây là dựng bản sao thứ hai của một
+    // luật đang sống — sửa một bên là hai bên lệch.
+    else if (nearGate.lokhac) window.lkStart();
     // Đang trong Tầng Sâu mà đi cổng thoát: coi như RÚT LUI, đừng để mất trắng kho tạm chỉ vì
     // người chơi bấm nhầm cổng quen tay thay vì nút Rút Lui.
     else if (DEEP) window.deepLeave();
@@ -10715,6 +10792,10 @@ function hurtMob(m, dmg, source){
   // Sàn DMG_FLOOR giữ cho không ai kẹt cứng ở 0 sát thương — luôn còn đường gỡ, chỉ là rất chậm.
   if (m.def.def) final *= 1 - m.def.def / (m.def.def + 250);
   final = Math.max(final * DMG_FLOOR, final - mobFlatDef(m));
+  // LÒ KHẮC: chỉ HAI lá đi qua đây — `lo_chua_nguoi` (tăng theo giây trong đợt) và
+  // `chong_chat` (tăng theo đợt). Mọi lá còn lại cộng vào player.atk ở calcDerived, nên
+  // KHÔNG được nhân lại ở đây — nhân hai lần là một lỗi không ai nhìn ra từ bảng chỉ số.
+  if (LK) final *= lkDmgMul();
   final = Math.max(1, Math.round(final));
   m.hp -= final; m.hitT = 0.15;
   // Màu loé theo LOẠI đòn — trước đây `ctx.filter` chỉ làm sáng lên, không phân biệt được gì.
@@ -10820,6 +10901,18 @@ function hurtMob(m, dmg, source){
     player.hp = Math.min(player.maxHp, player.hp + final * 0.25);
   }
   if (m.hp <= 0) killMob(m, source);
+  // ── LÒ KHẮC · hai lá đổi CÁCH ĐÁNH ──────────────────────────────────────
+  if (LK && !m.dead){
+    const _cham = lkCong('cham');
+    if (_cham > 0){ m.slowT = Math.max(m.slowT || 0, 2); m.slowPct = Math.min(m.slowPct == null ? 1 : m.slowPct, 1 - _cham / 100); }
+    // Hai Lưỡi: nhát thứ hai là một lời gọi hurtMob THẬT (ăn giáp, ăn khắc hệ, ăn bạo kích như
+    // mọi đòn khác). `_lkNhat2` chặn đệ quy vô hạn; `!m.dead` chặn killMob chạy hai lần cho
+    // cùng một xác. swingFeel gộp theo cửa sổ 60ms nên hai nhát KHÔNG nối hitstop.
+    if (!_lkNhat2 && (source === 'hit' || source === 'crit')){
+      const _hl = lkCong('haiLuoi');
+      if (_hl > 0){ _lkNhat2 = true; try { hurtMob(m, final * _hl / 100, 'hit'); } finally { _lkNhat2 = false; } }
+    }
+  }
 }
 // ═══════════ PHẦN THƯỞNG KHI HẠ QUÁI — tách QUYẾT ĐỊNH khỏi GHI VÀO ═══════════
 // computeKillRewards() quyết định ĐƯỢC GÌ. applyRewards() ghi vào player và phát phản hồi.
@@ -11023,6 +11116,9 @@ function killMob(m, source){
   // khi ngươi chủ động rút. Đo được: để chúng phát Lumen như quái thường thì chết vẫn +2730 Lumen,
   // tức là chẳng còn gì để đặt cược và cả chế độ mất sạch ý nghĩa.
   if (m.def.deepMob){ addEffect({ type:'ink', x:m.x, y:m.y-6, vx:0, vy:-28, color:'#c07fe0' }); AudioSys.sfx('die', 0.5); return; }
+  // Quái Lò Khắc: cùng lý do với Tầng Sâu — thưởng trả một cục lúc kết lượt, không rơi lẻ.
+  // ⚠ `lkOnKill` phải chạy TRƯỚC `return`, nếu không hai lá Nổ Xác / Thu Hồn không bao giờ nổ.
+  if (m.def.lkMob){ lkOnKill(m); addEffect({ type:'ink', x:m.x, y:m.y-6, vx:0, vy:-28, color:'#ff9a4d' }); AudioSys.sfx('die', 0.5); return; }
   // Hai cơ chế chỉ đồ Hoàn Hảo có: hạ địch hồi Mana / Sinh Lực. Đặt ở killMob() để mọi đường
   // sát thương (đòn thường, chiêu) đều tính — không phải chỉ đòn tay.
   if (player.excQi && player.qi < player.maxQi){
@@ -12238,6 +12334,12 @@ function update(dt){
     // đứng im vĩnh viễn. Đây là ổ duy nhất nên kéo neo về tâm luôn, không sợ "lan sang bãi kế".
     if (DEEP){ player._autoAX = DEEP_HALL.cx; player._autoAY = DEEP_HALL.cy;
                player._autoPack = null; player._autoZoneLocked = false; player._autoEmptyT = 0; }
+    // Lò Khắc: y hệt lý do trên, và đo được là nó xảy ra THẬT. Ghim neo MỖI KHUNG chứ không chỉ
+    // lúc sang đợt — bật AUTO sau khi đã vào lò, hay `toggleAuto` neo lại tại chỗ, đều kéo neo
+    // về điểm thả (cách tâm sảnh 560px) và cả lượt treo. Probe chạy thật: nhân vật cấp 40/60/90
+    // trang bị đúng cấp đứng 33 PHÚT mô phỏng mà không dọn nổi đợt 1.
+    if (LK){ player._autoAX = LK_HALL.cx; player._autoAY = LK_HALL.cy;
+             player._autoPack = null; player._autoZoneLocked = false; player._autoEmptyT = 0; }
     // Chỉ quét quanh điểm neo (bán kính 430 ≈ 1-2 bãi quái) — không rượt quái khắp map
     // QA: chỉ farm ĐÚNG 1 bãi quái — khoá vào zone của mục tiêu đầu tiên tìm được (m.zone: cùng
     // tham chiếu cho mọi quái spawn từ 1 bãi/1 đợt), các frame sau chỉ xét quái CÙNG zone đó, dù
@@ -12246,7 +12348,7 @@ function update(dt){
     // vĩnh viễn — đo được con cuối cách neo 427px với tầm 430px, sát mép tới mức chỉ cần nó nhích
     // thêm một bước là AUTO mất dấu. Trong sảnh kín chỉ có ĐÚNG một ổ quái nên quét rộng ra không
     // sợ lan sang bãi khác.
-    let _at = null, _bd = DEEP ? Math.max(_ac.range, 900) : _ac.range;
+    let _at = null, _bd = (DEEP || LK) ? Math.max(_ac.range, 900) : _ac.range;
     for (const m of mobs){
       if (m.dead) continue;
       if (!_ac.boss && (m.def.bossKind || m.type === 'boss')) continue; // auto không tự khơi trận boss — trừ khi bật trong Cài Đặt
@@ -12411,6 +12513,7 @@ function update(dt){
   updateKyngo(dt); // A2: Kỳ ngộ trên đường
   if (DGN) updateDungeon(dt); // Phó bản: đợt quái → boss → thưởng
   if (DEEP) updateDeep();   // Tầng Sâu: dọn sạch tầng → gửi kho tạm → xuống tầng kế
+  if (LK) lkTick(dt);       // Lò Khắc: dọn sạch đợt → thưởng → bày ba lá Nếp Khắc
   mocTick(dt);     // nhiệm vụ loại `moc` — đếm từ TRẠNG THÁI, xem MOC_NV
   updateHorses(dt); // GDD Đợt 2 B5
   player.qi = Math.min(player.maxQi, player.qi + (player.qireg + player.maxQi*(player.combatT <= 0 ? 0.01 : 0.0025))*dt); // GDD Đợt 2 B1: +1% maxQi/s ngoài combat, +0.25% trong combat
@@ -12929,6 +13032,7 @@ function update(dt){
 function onDeath(){
   moveTarget = null; moveWaypoint = null; movePlanClear(); // Click-to-move: hủy đích khi chết, tránh tự đi lung tung sau khi hồi sinh
   deepOnDeath();   // Tầng Sâu: chết là mất sạch kho tạm — phải chạy TRƯỚC mọi nhánh hồi sinh
+  lkOnDeath();     // Lò Khắc: chết thì GIỮ phần thưởng đã ăn, chỉ mất bộ thẻ
   npcTalkTarget = null;
   // The Hatching · THIÊN MỆNH: mỗi màn chơi 1 lần, chết hồi sinh tại chỗ
   if (player.traitRevive && !player.reviveUsed){
@@ -13472,6 +13576,7 @@ function render(){
   drawBeaconArrow(); // GDD Đợt 2 B2: mũi tên chỉ hướng khi mục tiêu ngoài màn hình
   if (DGN) drawDungeonHUD(); // HUD phó bản: đợt quái + thanh máu boss
   if (DEEP) drawDeepHUD();   // HUD Tầng Sâu: tầng hiện tại + kho tạm chưa vào túi
+  if (LK) drawLoKhacHUD();   // HUD Lò Khắc: đợt · kho · danh sách nếp đang cầm
   drawPvpHUD();              // HUD sàn đấu: máu TRẬN (không phải máu nhân vật)
   { const _dl = el('deep-leave'); if (_dl) _dl.classList.toggle('hidden', !DEEP); }
 
@@ -15282,12 +15387,69 @@ const NV_COT = 16, NV_OW = 240, NV_OH = 300;
 const NV_MOC = { i: 0, w: 16, a: 48, c: 64, r: 80 };   // trong BẢNG MỘT
 // Thân dùng WEBP (bảng 3840x1500, nén còn ~36%), vũ khí dùng PNG — lớp vũ khí gần như trong
 // suốt hoàn toàn, mà PNG nén khoảng trong suốt giỏi hơn WEBP: đo được 69 KB PNG so với 124 KB.
+// ⚠ VẼ TỪ `ImageBitmap`, KHÔNG VẼ THẲNG TỪ `Image`. `im.complete` bật ngay khi BYTE về, còn
+// phép GIẢI MÃ webp thì trình duyệt để dành tới lần `drawImage` đầu tiên — tức nó rơi thẳng vào
+// vòng vẽ, và nó đắt hơn mọi thứ khác trong khung đó cộng lại.
+//
+// SỐ ĐO (headless, không GPU · `assets/nv/dkph1_n.webp` 1680×525):
+//   Image + drawImage lần đầu            210 ms   ← nằm TRONG vòng vẽ
+//   Image + await decode() rồi mới vẽ    283 ms   ← vẫn chặn luồng chính, KHÔNG cứu được gì
+//   createImageBitmap() rồi vẽ            24 ms   ← giải mã NGOÀI luồng chính, vẽ 0 ms
+//
+// ⚠ ĐÃ THỬ `decode()` VÀ NÓ KHÔNG ĂN THUA — đừng thử lại. Khung tệ nhất chỉ hạ 272 → 254 ms,
+// và mọi tấm đều báo đã giải mã xong trong khi `drawImage` vẫn tốn 210 ms: `decode()` chuẩn bị
+// ảnh cho việc HIỂN THỊ, không chuẩn bị cho việc vẽ vào canvas 2D.
+//
+// VÌ SAO NÓ THÀNH VẤN ĐỀ ĐÚNG LÚC NÀY: một nhân vật mặc bộ giáp có lớp rời phải nạp HAI bộ —
+// thân nền (`dkcw1`, 1,10 MB) cộng bộ đang mặc (`dkph1`, 1,85 MB). Trước khi có năm bộ giáp giai
+// 7 thì chỉ có một bộ, khung tệ nhất 76 ms; sau đó là 272 ms.
+//
+// VÀ CÁI KHỰNG ẤY ĂN VÀO LỐI CHƠI, không chỉ gây khó chịu: `dt` kẹp 0,05 s mỗi khung, nên một
+// khung 272 ms chỉ nhích đồng hồ trò chơi 0,05 s. Bộ gộp số sát thương đếm 0,22 s ⇒ cần đủ 5
+// khung; mất một khung vào giải mã là nửa giây thật không đủ 5 khung và SỐ SÁT THƯƠNG KHÔNG BAY
+// RA. `test_dmgnum` bắt được đúng chuyện đó (đỏ 3/5 lượt) với một triệu chứng trông chẳng liên
+// quan gì tới art.
+//
+// ⚠ TRẢ `null` TRONG LÚC CHỜ NƯỚNG BITMAP, ĐỪNG TRẢ TẠM `Image`. Trả tạm là trả lại đúng cú
+// 210 ms mình vừa gỡ. Trạng thái "chưa có art" ĐÃ CÓ đường xử lý sẵn: `nvKhungGop()` trả null,
+// `heroSprite()` giữ `_choArt` nên khung dựng dở không bị nhớ lại.
+//
+// ⚠ PHẢI GẮN `naturalWidth`/`naturalHeight`/`complete` LÊN BITMAP. Mấy chỗ gọi (vòng kiếm, vũ
+// khí cầm tay) đọc đúng ba thuộc tính đó; `ImageBitmap` chỉ có `width`/`height`. Thiếu bước này
+// là mấy hàm ấy lặng lẽ trả null và vũ khí biến mất — không lỗi nào báo.
+//
+// ⚠ NHÁNH HỎNG PHẢI LUI VỀ `Image`. `createImageBitmap` ném khi ảnh 404/hỏng, và trình duyệt cũ
+// có thể không có nó; không bắt lỗi là lớp đó treo `null` vĩnh viễn và nhân vật rơi về hình dựng
+// bằng đường — im lặng, không lỗi nào báo.
+// Thân dùng WEBP (bảng 3840x1500, nén còn ~36%), vũ khí dùng PNG — lớp vũ khí gần như trong
+// suốt hoàn toàn, mà PNG nén khoảng trong suốt giỏi hơn WEBP: đo được 69 KB PNG so với 124 KB.
 function nvTai(ten, duoi){
   if (!ten) return null;
   const k = ten + '.' + duoi;
   let im = NV_ANH[k];
-  if (!im){ im = new Image(); im.src = 'assets/nv/' + k; NV_ANH[k] = im; }
-  return (im.complete && im.naturalWidth) ? im : null;
+  if (!im){
+    im = new Image(); NV_ANH[k] = im;
+    // ⚠ NƯỚNG BITMAP NGAY LÚC ẢNH TẢI XONG, KHÔNG ĐỢI TỚI LÚC VẼ. Đặt ở `onload` thì phép
+    // giải mã chạy song song với phần còn lại của lượt nạp, nên tới khung vẽ đầu tiên bitmap
+    // gần như luôn sẵn — mà cửa sổ hở chỉ còn ~24 ms thay vì cả cú 210 ms.
+    im.onload = () => {
+      if (typeof createImageBitmap !== 'function') return;
+      createImageBitmap(im).then(bm => {
+        // Mấy chỗ gọi (vòng kiếm, vũ khí cầm tay) đọc `naturalWidth`/`complete`, mà ImageBitmap
+        // chỉ có `width`/`height`. Thiếu ba dòng này là hai hàm ấy lặng lẽ trả null và vũ khí
+        // biến mất — không lỗi nào báo.
+        bm.naturalWidth = bm.width; bm.naturalHeight = bm.height; bm.complete = true;
+        im._bm = bm;
+      }, () => {});      // 404 / ảnh hỏng: cứ để đường `Image` gánh như cũ
+    };
+    im.src = 'assets/nv/' + k;
+  }
+  // ⚠ KHÔNG CHẶN CHỜ BITMAP. Bản đầu của tôi trả `null` tới khi bitmap xong, và nó làm ĐỎ 6 bài
+  // art (`test_herosprite` · `test_lopdo` · `test_vongkiem` · `test_khoihinh` · `test_itemdb` ·
+  // `test_chaos`): mấy bài đó gọi `heroSprite()` ĐỒNG BỘ ngay sau khi nạp, không nhả lượt cho
+  // trình duyệt, nên bitmap không bao giờ kịp về và art KHÔNG BAO GIỜ được dùng. Người chơi
+  // cũng gặp đúng thế ở khung đầu tiên — chỉ là ở đó nó tự khỏi nên không ai thấy.
+  return im._bm || ((im.complete && im.naturalWidth) ? im : null);
 }
 // ── TÁM HƯỚNG NHÌN — TÊN BỘ MANG LUÔN HƯỚNG ───────────────────────────────────────────────
 // Thế giới nhìn từ trên xuống, còn art thì CHỈ CÓ MỘT hướng nghiêng. Đo được trước bản này:
@@ -18388,6 +18550,7 @@ window.toggleAuto = function(){
     // Trong phó bản, quái đợt luôn spawn ở (1300,800) — cách xa cửa vào (1300,1560) hơn tầm AUTO
     // mặc định. Bật AUTO ngay cửa vào trước đây neo tại chỗ đứng, đứng im không đánh gì (QA phát hiện).
     if (DEEP){ player._autoAX = DEEP_HALL.cx; player._autoAY = DEEP_HALL.cy; }
+    else if (LK){ player._autoAX = LK_HALL.cx; player._autoAY = LK_HALL.cy; }
     else if (DGN && mapDef().dungeon){ player._autoAX = 1300; player._autoAY = 800; }
     else { player._autoAX = player.x; player._autoAY = player.y; } // neo tại chỗ bật — auto chỉ ôm 1-2 bãi quái quanh neo
     // QA: bật AUTO khi còn 1 lệnh click-di-chuyển tay đang treo (chưa tới đích) — nếu không huỷ ở
@@ -21199,6 +21362,7 @@ function cheatHelp(){
     '/map <phó bản> — ' + _pb,
     '/go <x> <y> — dịch chuyển tọa độ · /boss — mở phong ấn & tới Cổng Vực · /boss reset — dựng lại phong ấn',
     '/deep — vào Tầng Sâu',
+    '/lokhac [đợt] — vào Lò Khắc (mini-game chọn thẻ), nhảy thẳng tới một đợt',
     '── kỹ năng ──',
     `/fullskill — học hết ${Object.keys(VOHOC_DEFS).length} kỹ năng, mọi chiêu cấp 120`,
     '/learn — học toàn bộ Sổ Kỹ Năng · /bikip <n> — số Sách Kỹ Năng',
@@ -21497,6 +21661,15 @@ window.cheatExec = function(raw){
       }
       case 'wipe': window.wipeSave(true); return;
       case 'deep': deepStart(); cheatLog('Tầng Sâu: bắt đầu', '#c07fe0'); return;
+      case 'lokhac': {          // /lokhac [đợt] — vào lò, tuỳ chọn nhảy thẳng tới một đợt
+        if (LK){ cheatLog('Đang trong Lò Khắc rồi. /lokhac ra để rời.', '#ff7a6a'); return; }
+        if ((parts[1] || '') === 'ra'){ cheatLog('Không ở trong lò.', '#ff7a6a'); return; }
+        player.lokhac = { day:new Date().toDateString(), luot:0 };   // gỡ trần ngày khi thử
+        window.lkStart();
+        const _d = Math.max(1, Math.min(LK_DOT_TONG, parseInt(parts[1], 10) || 1));
+        if (LK && _d > 1){ LK.dot = _d - 1; lkDotMoi(); }
+        cheatLog(`Lò Khắc: đợt ${LK ? LK.dot : '?'}/${LK_DOT_TONG}`, '#ff9a4d'); return;
+      }
       // ⚠ /dat và /chilv đã GỠ cùng vòng nuôi Ragoon (Đất Hồn · cấp 80 · sáu lần Hoá). Đừng
       // thêm lại một lệnh đặt cấp cho con Axie: nó không có cấp nữa, nó là một cái thân.
       // ⚠ /cot đã GỠ cùng hệ Cốt. Bản Năng thay chỗ nó — dùng `/khi <n>` hoặc đi khai vỉa.
@@ -26863,6 +27036,9 @@ window.travelTo = function(mapId, from){
   // có chốt này, nên teleport ra ngoài vẫn để DEEP sống: updateDeep() thấy map an toàn sạch quái
   // liền coi như "dọn xong tầng", tự lên tầng và spawn quái Tầng Sâu ngay giữa Sapidae Chiefdom.
   if (DEEP && mapId !== DEEP_MAP){ window.deepLeave(mapId); return; }
+  // ...và Lò Khắc y hệt. Cổng G, nút Rời Lò, nút Dịch Chuyển của bảng Bản Đồ đều đổ về đây,
+  // nên một chốt ở travelTo() phủ đủ ba đường — đừng chép chốt thứ hai vào updateGate().
+  if (LK && mapId !== LK_MAP){ window.lkRoi(mapId); return; }
   const md = MAPS[mapId];
   if (!md || !player) return;
   // Rời sàn đấu ⇒ quên máu trận NGAY, và phải hỏi TRƯỚC dòng `curMap = mapId` bên dưới — sau
@@ -29633,6 +29809,333 @@ function updateDeep(){   // không dùng dt: mỗi tầng chỉ chuyển khi S�
     return;
   }
   deepNextFloor();
+}
+
+// ═══════════ LÒ KHẮC — mini-game roguelite chọn thẻ ═══════════
+// Đặc tả đầy đủ: docs/DAC_TA_LO_KHAC.md. Nguồn cảm hứng: Wanderburg (Randwerk) — nhưng chỉ
+// nửa "Vampire Survivors" của nó (tự đánh + chồng module). Nửa vật lý xe cộ CỐ Ý không làm:
+// engine này không có vận tốc, di chuyển là click-to-move dời thẳng toạ độ (xem §9 đặc tả).
+//
+// Khác Tầng Sâu ở TRỤC, không chỉ ở con số: Tầng Sâu hỏi "xuống thêm không?" (tham/rút), Lò
+// Khắc hỏi "khắc nếp nào?" (build). Chết ở đây GIỮ phần thưởng đã ăn — đúng để hai mode không
+// đè lên nhau. Trần 3 lượt/ngày giữ cho nó là một sự kiện, không phải bãi cày thứ tám.
+let LK = null; // { dot, the:[id…], dotT, thuong, cho, choN }
+const LK_MAP = 'lokhac';
+// MỘT sảnh mở, không phải ba phòng DGN_ROOMS. Lý do đã ghi ở khối Tầng Sâu: tầm quét AUTO là
+// 430px, ba tâm phòng cách nhau tới 960px ⇒ AUTO neo ở phòng 1 không bao giờ với tới phòng 3.
+const LK_HALL = { cx: 1300, cy: 1000, r: 380 };
+// ⚠ RẢI THEO ĐĨA, KHÔNG THEO HỘP — và đây là một lỗi ĐO ĐƯỢC, không phải cẩn thận thừa.
+// `spawnMob(type, zone)` đặt quái ở `zone.x + rnd(-r, r)`, tức một HỘP: góc hộp cách tâm
+// r·√2 = 1,41 lần bán kính. Ở r=420 thì góc hộp xa tâm 594px, cộng 560px từ điểm thả tới tâm
+// sảnh ⇒ con xa nhất cách người chơi tới 1.154px, gấp 2,7 lần tầm quét 430 của AUTO.
+// Đo được bằng probe chạy thật: **3 trong 7 con của đợt 1 không bao giờ bị đụng tới**, đợt
+// không bao giờ sạch, và cả lượt TREO VĨNH VIỄN — không lỗi nào in ra, không bài kiểm lái
+// -bằng-hàm nào thấy. Nay đĩa bán kính 380 (nén 0,85 theo trục sâu, cùng lối bóng đổ) nên
+// con xa nhất cách tâm đúng 380, dưới tầm 430.
+function lkDatQuai(m, bk){
+  const a = Math.random() * Math.PI * 2, d = Math.sqrt(Math.random()) * bk;
+  m.x = clamp(LK_HALL.cx + Math.cos(a) * d, 380, MAP.w - 380);
+  m.y = clamp(LK_HALL.cy + Math.sin(a) * d * 0.85, 350, MAP.h - 350);
+  if (inObstacle(curMap, m.x, m.y, 16)){ const f = nearestFree(curMap, m.x, m.y); m.x = f.x; m.y = f.y; }
+  m.homeX = m.x; m.homeY = m.y;
+}
+const LK_DOT_TONG = 15;
+const LK_TRUM_MOI = 5;      // đợt 5 · 10 · 15 là đợt trùm
+const LK_LUOT_NGAY = 3;
+const LK_CAP_MIN = 15;
+const LK_TRUMS = ['boss_hacphong', 'boss_mochu', 'boss_thienbinh'];
+const NEP_KHAC = window.NEP_KHAC || [];
+const NEP_MAP = {}; for (const _c of NEP_KHAC) NEP_MAP[_c.id] = _c;
+const LK_BAC_MAU = { 1:'#9aa8d4', 2:'#7ecbff', 3:'#ff9a4d' };
+const LK_BAC_TEN = { 1:'Thường', 2:'Hiếm', 3:'Cổ Vật' };
+const LK_BAC_W   = { 1:70, 2:25, 3:5 };
+
+// ⚠ CỬA ĐỌC DUY NHẤT của cả bộ thẻ. Trả 0 khi LK null — đó là thứ giữ cho khối trong
+// calcDerived() vô hại với 100% thời gian người chơi ở NGOÀI mini-game. Đừng đọc NEP_MAP
+// thẳng ở chỗ khác: hai chỗ cộng là hai chỗ sẽ lệch nhau sau vài đợt sửa.
+function lkCong(khoa){
+  if (!LK) return 0;
+  let s = 0;
+  for (const id of LK.the){ const c = NEP_MAP[id]; if (c && c[khoa]) s += c[khoa]; }
+  return s;
+}
+// Hai lá Cổ Vật đổi sát thương theo THỜI GIAN và theo ĐỢT, nên chúng không thể nằm trong
+// calcDerived() (chỉ chạy khi đổi trang bị). Nhân ở hurtMob, đúng một dòng.
+function lkDmgMul(){
+  if (!LK) return 1;
+  let m = 1;
+  const nong = lkCong('nongLo');
+  if (nong) m *= 1 + Math.min(0.60, nong / 100 * (LK.dotT || 0));
+  const cc = lkCong('chongChat');
+  if (cc) m *= 1 + cc / 100 * Math.max(0, LK.dot - 1);
+  return m;
+}
+let _lkNhat2 = false;   // chặn đệ quy của lá Hai Lưỡi
+let _lkNoXac = false;   // chặn đệ quy dây chuyền của lá Nổ Xác
+
+function lkNgay(){
+  const d = new Date().toDateString();
+  if (!player.lokhac || player.lokhac.day !== d) player.lokhac = { day: d, luot: 0 };
+  return player.lokhac;
+}
+function lkConLuot(){ return Math.max(0, LK_LUOT_NGAY - lkNgay().luot); }
+
+window.lkStart = function(){
+  if (!player || LK || DEEP) return;
+  if (player.level < LK_CAP_MIN){
+    addFloat(player.x, player.y - 50, `Cần cấp ${LK_CAP_MIN} để vào Lò Khắc`, '#ff9a6a', 13); return;
+  }
+  if (lkConLuot() <= 0){
+    addFloat(player.x, player.y - 50, `Hết lượt Lò Khắc hôm nay (${LK_LUOT_NGAY}/ngày)`, '#ff9a6a', 13); return;
+  }
+  lkNgay().luot++;
+  LK = { dot: 0, the: [], dotT: 0, cho: null, choN: 0,
+         thuong: { silver: 0, khi: 0, hap: {} }, batDau: Date.now() };
+  DGN = null; navInvalidate();   // sảnh Lò Khắc gỡ hết tường ngăn ⇒ lưới cũ còn ghi tường
+  travelTo(LK_MAP);
+  lkDotMoi();
+  saveGame();
+};
+
+function lkDotMoi(){
+  if (!LK) return;
+  LK.dot++; LK.dotT = 0;
+  mobs = []; groundLoot = [];
+  const w = LK.dot, lv = player.level;
+  if (w % LK_TRUM_MOI === 0){
+    const key = LK_TRUMS[clamp(Math.floor(w / LK_TRUM_MOI) - 1, 0, LK_TRUMS.length - 1)];
+    const b = spawnMob(key, { x: LK_HALL.cx, y: LK_HALL.cy, r: 30, count: 1 }, null);
+    b.zone = null;
+    b.def = Object.assign({}, b.def, { hp: Math.round(b.def.hp * (1 + w * 0.22)),
+      atk: Math.round(b.def.atk * (1 + w * 0.07)), lkMob: true, drop: 0 });
+    b.hp = b.maxHp = b.def.hp;
+    // Não moveset boss cần bốn field này — spawnMob() không tự khởi tạo, thiếu là NaN và chiêu
+    // không bao giờ tung ra (cùng cái bẫy đã ghi ở spawnHuntBoss).
+    b.x = LK_HALL.cx; b.y = LK_HALL.cy;
+    b.homeX = b.x; b.homeY = b.y; b.moveT = 3; b.punishT = 0; b.introduced = false;
+    zoneBanner = { text: `ĐỢT ${w} — ${b.def.name}`,
+      sub: w >= LK_DOT_TONG ? 'ĐỢT CUỐI. Hạ nó là trọn lượt.' : 'Đợt trùm — hạ nó để được chọn HAI lá',
+      color: '#ff5a4a', t: 4 };
+    AudioSys.sfx('crit', 0.9);
+    lkNeoAuto();
+    // ⚠ AUTO mặc định KHÔNG đánh trùm (`autoCfg.boss` = false), nên để AUTO bật ở đợt trùm là
+    // người chơi đứng im trước một con trùm VÔ THỜI HẠN và không có gì nói cho họ biết vì sao —
+    // đo được bằng probe chạy thật: kẹt ở đợt 5 suốt 24 phút mô phỏng. Tắt và NÓI RA, đúng
+    // khuôn spawnHuntBoss() đã dùng cho Trùm Săn của phó bản.
+    if (player.auto){
+      player.auto = false; updateAutoBtn();
+      addFloat(player.x, player.y - 70, 'Đợt trùm cần tự tay chiến — TỰ ĐÁNH đã tắt!', '#ff9a5a', 13);
+    }
+    return;
+  }
+  // ⚠ CHỈ LẤY LOÀI TỪ CẤP NGƯỜI CHƠI TRỞ XUỐNG. Tầng Sâu lọc `|lv − cấp| ≤ 22` vì nó có 20
+  // tầng để leo dần; ở đây lọc hai chiều nghĩa là ngay ĐỢT 1 người chơi cấp 40 đã có thể gặp
+  // loài cấp 62. Độ khó phải đến từ SỐ ĐỢT, không từ việc bốc trúng loài trên cấp.
+  const pool = DEEP_MOBS.filter(k => MOBS[k] && (MOBS[k].lv || 1) <= lv && (MOBS[k].lv || 1) >= lv - 26);
+  const use = pool.length ? pool : [DEEP_MOBS[0]];
+  const n = Math.min(18, 4 + w);
+  for (let i = 0; i < n; i++){
+    const m = spawnMob(use[Math.floor(Math.random() * use.length)],
+                       { x: LK_HALL.cx, y: LK_HALL.cy, r: LK_HALL.r, count: n }, null);
+    m.zone = null;
+    m.def = Object.assign({}, m.def, { hp: Math.round(m.def.hp * (1 + w * 0.14)),
+      atk: Math.round(m.def.atk * (1 + w * 0.07)), lkMob: true, drop: 0 });
+    m.hp = m.maxHp = m.def.hp;
+    lkDatQuai(m, LK_HALL.r);
+  }
+  zoneBanner = { text: `ĐỢT ${w}/${LK_DOT_TONG}`,
+    sub: `${n} quái · máu ×${(1 + w * 0.14).toFixed(1)} — dọn sạch để khắc một nếp mới`,
+    color: '#ff9a4d', t: 3 };
+  lkNeoAuto();
+}
+// ⚠ ĐẶT VÔ ĐIỀU KIỆN, đừng gác sau `if (player.auto)`. Người chơi bật AUTO SAU khi đã vào lò
+// thì neo còn null, AUTO tự neo tại chỗ đứng — mà chỗ đứng là điểm thả, cách tâm sảnh 560px.
+// Neo là vô nghĩa khi AUTO tắt và travelTo() xoá nó lúc rời map, nên đặt sẵn không tốn gì.
+function lkNeoAuto(){
+  if (!player) return;
+  player._autoAX = LK_HALL.cx; player._autoAY = LK_HALL.cy;
+  player._autoPack = null; player._autoZoneLocked = false; player._autoEmptyT = 0;
+}
+
+function lkThuongDot(){
+  const w = LK.dot, T = LK.thuong;
+  const sv = Math.round(80 * w * (1 + player.level / 40)), kh = 25 * w;
+  T.silver += sv; T.khi += kh;
+  // Đợt trùm trả thêm một Box Kundun, tầng theo cấp NGƯỜI CHƠI (shopBaoHapTier) — không theo
+  // đợt: tính theo đợt thì người chơi cấp 120 nhận hạp tầng I ở đợt 5.
+  // Tầng hạp LEO THEO ĐỢT rồi mới kẹp bởi cấp người chơi — cùng hình dạng Tầng Sâu đã dùng
+  // (tầng 5·10·15·20 cho hạp bậc 1·2·3·4). Lấy thẳng `shopBaoHapTier()` thì một lượt trả BA
+  // hạp bậc cao nhất game, ×3 lượt/ngày = 9 hạp đỉnh mỗi ngày — đo được ở cấp 80 là 3× bậc VII.
+  if (w % LK_TRUM_MOI === 0){
+    const t = Math.max(1, Math.min(shopBaoHapTier(), Math.floor(w / LK_TRUM_MOI) + 2));
+    T.hap[t] = (T.hap[t] || 0) + 1;
+  }
+  addFloat(player.x, player.y - 70, `Đợt ${w} sạch — +${sv.toLocaleString('vi-VN')}◈ · +${kh} Bản Năng`, '#ffd76a', 15);
+  AudioSys.sfx('coin', 0.7);
+}
+
+// Bày BA lá không trùng nhau. Lá đã chạm trần `lap` bị loại khỏi kho trước khi bốc, nên không
+// bao giờ bày ra một lá bấm vào không có tác dụng gì.
+function lkBayThe(){
+  if (!LK) return;
+  const tranBac = LK.dot >= 8 ? 3 : LK.dot >= 4 ? 2 : 1;
+  const dem = {}; for (const id of LK.the) dem[id] = (dem[id] || 0) + 1;
+  const con = NEP_KHAC.filter(c => c.bac <= tranBac && (dem[c.id] || 0) < c.lap);
+  const bay = [];
+  while (bay.length < 3 && con.length){
+    let tong = 0; for (const c of con) tong += (LK_BAC_W[c.bac] || 1);
+    let r = Math.random() * tong, pick = con[con.length - 1];
+    for (const c of con){ r -= (LK_BAC_W[c.bac] || 1); if (r <= 0){ pick = c; break; } }
+    bay.push(pick); con.splice(con.indexOf(pick), 1);
+  }
+  if (!bay.length){ LK.cho = null; LK.choN = 0; lkDotMoi(); return; }   // kho cạn — đi tiếp, đừng treo
+  LK.cho = bay.map(c => c.id);
+  const inner = lopPhuMo(true);   // khoá: phải chọn mới đi tiếp
+  if (!inner) return;
+  inner.innerHTML = `
+    <h2 style="letter-spacing:2px">◆ KHẮC MỘT NẾP</h2>
+    <p style="margin-bottom:10px"><b style="color:#ffd76a">Đợt ${LK.dot}/${LK_DOT_TONG}</b> đã sạch.<br>
+    <span>Chọn một lá Nếp Khắc — nếp chồng lên nhau và tan khi rời lò.</span>
+    ${LK.choN > 1 ? `<br><span style="color:#ff9a4d">Đợt trùm — còn ${LK.choN} lượt chọn.</span>` : ''}</p>
+    <div style="display:flex;gap:12px;justify-content:center;flex-wrap:wrap">
+      ${bay.map(c => `
+        <button class="choice-card" style="max-width:220px;font-size:13px;line-height:1.6;text-align:left"
+                onclick="window.lkChonThe('${c.id}')">
+          <span style="font-size:10px;letter-spacing:1px;color:${LK_BAC_MAU[c.bac]}">${LK_BAC_TEN[c.bac]}</span><br>
+          <b style="font-size:15px;color:${LK_BAC_MAU[c.bac]}">${c.ten}</b><br>
+          <span style="font-weight:400;opacity:.9">${c.mo}</span>
+          ${c.lap > 1 ? `<br><span style="font-size:10px;opacity:.6">chồng tối đa ${c.lap}</span>` : ''}
+        </button>`).join('')}
+    </div>`;
+}
+
+window.lkChonThe = function(id){
+  if (!LK || !LK.cho || LK.cho.indexOf(id) < 0) return;
+  const c = NEP_MAP[id]; if (!c) return;
+  LK.the.push(id);
+  LK.cho = null;
+  lopPhuDong(true);
+  addFloat(player.x, player.y - 58, `◆ Nếp Khắc — ${c.ten}!`, LK_BAC_MAU[c.bac], 14);
+  addEffect({ type:'ring', x: player.x, y: player.y, r: 80, color: LK_BAC_MAU[c.bac] });
+  AudioSys.sfx('levelup', 0.6);
+  calcDerived();   // thẻ đi qua calcDerived, không có bảng chỉ số thứ hai
+  LK.choN--;
+  if (LK.choN > 0){ lkBayThe(); return; }
+  lkDotMoi();
+};
+
+function lkTick(dt){
+  if (!LK || dead) return;
+  if (LK.cho) return;            // đang mở bảng chọn thẻ — đóng băng nhịp đợt
+  LK.dotT += dt;                 // lá Lò Chưa Nguội đọc số này
+  if (mobs.some(m => !m.dead)) return;
+  lkThuongDot();
+  // ⚠ NHỊP HỒI NỀN 25% GIỮA HAI ĐỢT — không phải quà, là thứ làm mode này chạy được.
+  // Không có nó thì 15 đợt liên tiếp là một trận tiêu hao mà người chơi CHẮC CHẮN thua: đo được
+  // nhân vật cấp 40/60/90 trang bị đúng cấp đều gục ở đợt 4, tức 11/15 nội dung không ai thấy.
+  // Lá `nep_vua` nâng nó lên hồi ĐẦY — nên lá đó vẫn đáng một ô Cổ Vật.
+  if (lkCong('hoiDot')){
+    player.hp = player.maxHp; player.qi = player.maxQi;
+    addFloat(player.x, player.y - 86, '◆ Nếp Vừa — hồi đầy', '#6ae88a', 13);
+  } else {
+    player.hp = Math.min(player.maxHp, player.hp + player.maxHp * 0.25);
+    player.qi = Math.min(player.maxQi, player.qi + player.maxQi * 0.25);
+  }
+  if (LK.dot >= LK_DOT_TONG){ lkXong(true); return; }
+  LK.choN = (LK.dot % LK_TRUM_MOI === 0) ? 2 : 1;
+  lkBayThe();
+}
+
+// Trao thưởng + dọn lượt. `dest` là map về; để trống thì về thành.
+function lkXong(win, dest){
+  if (!LK) return;
+  const T = LK.thuong, dot = LK.dot;
+  if (win) T.silver = Math.round(T.silver * 1.5);
+  player.silver += T.silver;
+  player.khi = (player.khi || 0) + T.khi;
+  if (!player.baohap) player.baohap = {};
+  for (const t in T.hap) player.baohap[t] = (player.baohap[t] || 0) + T.hap[t];
+  const hapTxt = Object.keys(T.hap).map(t => `${T.hap[t]}× ${BAOHAP_TIERS[t].name}`).join(' · ');
+  // ⚠ ĐÓNG BẢNG CHỌN THẺ TRƯỚC KHI DỌN `LK`. Bảng ấy mở bằng `lopPhuMo(true)` — lớp phủ KHOÁ,
+  // chỉ `lopPhuDong(true)` tắt được. Mà phím G vẫn ăn khi lớp phủ đang mở, nên đứng ở cổng bấm
+  // G đúng lúc bảng vừa bày ra là: lượt kết thúc, `LK` thành null, `lkChonThe` thoát sớm ở mọi
+  // nút — và người chơi ngồi sau một lớp phủ phủ kín màn hình với ba cái nút đã chết.
+  if (LK.cho) lopPhuDong(true);
+  LK = null;                      // đặt TRƯỚC travelTo: travelTo bail sớm khi LK còn sống
+  if (win){ chiVe(1, 'trọn Lò Khắc', 'gk'); themShard(3, 'trọn Lò Khắc'); }
+  AudioSys.sfx('levelup', 1);
+  calcDerived(); saveGame();
+  travelTo(dest || 'ardhaven');
+  // ⚠ BANNER ĐẶT SAU `travelTo`, KHÔNG TRƯỚC. travelTo() tự ghi đè `zoneBanner` bằng banner
+  // tên vùng nó vừa tới, nên đặt trước là bảng tổng kết bị nuốt trọn — đo được bằng probe:
+  // thứ hiện ra cuối lượt là đoạn mô tả Sapidae Chiefdom, không một chữ nào về phần thưởng.
+  // Trao thưởng và HIỆN thưởng là hai việc; sửa một cái mà quên cái kia thì không lỗi nào báo.
+  zoneBanner = { text: win ? '◆ TRỌN LÒ KHẮC' : `◆ RỜI LÒ Ở ĐỢT ${dot}`,
+    sub: `+${T.silver.toLocaleString('vi-VN')}◈ Lumen · +${T.khi} Bản Năng${hapTxt ? ' · ' + hapTxt : ''}${win ? ' · +1 ✦ Ấn Giao Kết · +3 ♦ Shard' : ''}`,
+    color: win ? '#ffd76a' : '#ff9a4d', t: 7 };
+}
+// Rời lò bằng BẤT KỲ đường nào (cổng G · nút Rời Lò · dịch chuyển từ bảng Bản Đồ). Đây chính
+// là cái bẫy DEEP đã dẫm: chỉ updateGate() có chốt, nên teleport ra ngoài để DEEP sống và quái
+// Tầng Sâu sinh ra giữa thành. Cửa duy nhất là travelTo() — xem chốt ở đầu hàm đó.
+window.lkRoi = function(dest){ if (LK) lkXong(false, dest); };
+
+// Chết trong lò: GIỮ phần thưởng đã ăn. Khác hẳn Tầng Sâu, và đó là chủ ý — hai mode phải hỏi
+// hai câu khác nhau, nếu không thì mode thứ hai chỉ là mode thứ nhất đổi tên.
+function lkOnDeath(){
+  if (!LK) return;
+  if (LK.cho) lopPhuDong(true);   // cùng lý do với lkXong — xem chú thích ở đó
+  const T = LK.thuong, dot = LK.dot;
+  player.silver += T.silver;
+  player.khi = (player.khi || 0) + T.khi;
+  if (!player.baohap) player.baohap = {};
+  for (const t in T.hap) player.baohap[t] = (player.baohap[t] || 0) + T.hap[t];
+  LK = null;
+  mobs = []; groundLoot = [];   // respawn() giữ nguyên map cho md.dungeon — đừng để nguyên bầy
+  zoneBanner = { text: `☠ GỤC Ở ĐỢT ${dot}`,
+    sub: `Nếp Khắc tan hết, nhưng phần thưởng đã ăn thì giữ: +${T.silver.toLocaleString('vi-VN')}◈ · +${T.khi} Bản Năng.`,
+    color: '#ff5a4a', t: 6 };
+}
+
+// Lá Nổ Xác + Thu Hồn. Gọi TRƯỚC nhánh thoát sớm `lkMob` trong killMob.
+function lkOnKill(m){
+  if (!LK) return;
+  const nx = lkCong('noXac');
+  if (nx > 0 && !_lkNoXac){
+    _lkNoXac = true;
+    try {
+      const R = 120, d = Math.max(1, Math.round(m.maxHp * nx / 100));
+      addEffect({ type:'ring', x: m.x, y: m.y, r: R, color:'#ff9a4d', big: true });
+      // aoeHit: nổ diện rộng KHÔNG được hất lùi — nó tự phá tan đội hình cho chính nó.
+      aoeHit(() => { for (const o of mobs) if (!o.dead && o !== m && dist(o.x, o.y, m.x, m.y) < R) hurtMob(o, d, 'tp'); });
+    } finally { _lkNoXac = false; }
+  }
+  const hq = lkCong('honQi');
+  if (hq > 0 && player.qi < player.maxQi) player.qi = Math.min(player.maxQi, player.qi + player.maxQi * hq / 100);
+}
+
+function drawLoKhacHUD(){
+  if (!LK || !player) return;
+  ctx.textAlign = 'center';
+  ctx.font = 'bold 13px "Be Vietnam Pro", sans-serif';
+  ctx.strokeStyle = 'rgba(0,0,0,.7)'; ctx.lineWidth = 3;
+  const con = mobs.filter(m => !m.dead).length;
+  const t1 = `LÒ KHẮC · Đợt ${LK.dot}/${LK_DOT_TONG} · còn ${con} quái · ${LK.the.length} nếp`;
+  ctx.fillStyle = '#ff9a4d'; ctx.strokeText(t1, W/2, 46); ctx.fillText(t1, W/2, 46);
+  const T = LK.thuong;
+  const t2 = `Kho: ${T.silver.toLocaleString('vi-VN')}◈ · ${T.khi} Bản Năng — chết vẫn giữ`;
+  ctx.font = '11.5px "Be Vietnam Pro", sans-serif'; ctx.fillStyle = '#ffd76a';
+  ctx.strokeText(t2, W/2, 63); ctx.fillText(t2, W/2, 63);
+  // Danh sách nếp đang cầm, gom theo lá — 15 đợt có thể chồng tới 16 lá, in rời là tràn màn hình.
+  if (LK.the.length){
+    const dem = {}; for (const id of LK.the) dem[id] = (dem[id] || 0) + 1;
+    // Tiền tố `Nếp: ` không phải trang trí — nó là thứ neo cho lớp dịch. Một chuỗi tên thẻ nối
+    // bằng ` · ` thì không quy tắc nào bắt được mà không đồng thời nuốt nửa số chữ khác trong
+    // game; có tiền tố thì lang.js bắt đúng dòng này rồi dịch từng tên một.
+    const txt = 'Nếp: ' + Object.keys(dem).map(id => `${NEP_MAP[id].ten}${dem[id] > 1 ? '×' + dem[id] : ''}`).join(' · ');
+    ctx.font = '11px "Be Vietnam Pro", sans-serif'; ctx.fillStyle = '#c9c6b4';
+    ctx.strokeText(txt, W/2, 80); ctx.fillText(txt, W/2, 80);
+  }
+  ctx.textAlign = 'left';
 }
 
 // Engine phó bản: DGN = trạng thái lượt chạy hiện tại

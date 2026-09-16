@@ -106,14 +106,25 @@ const THU = { k: 1, cols: 2, rows: 1, frameW: 64, frameH: 64, frames: 2, fps: 10
     // ── §1 ĐỐI CHỨNG — vẽ hai lượt Y HỆT phải ra gần như y hệt ──────────────────────
     // Không có mệnh đề này thì mọi con số dưới đây vô nghĩa: nền vẫn trôi chút ít giữa hai
     // lượt, và nếu nó trôi nhiều thì "khác nhau" không chứng minh được điều gì.
-    // Lấy TRUNG VỊ chứ không lấy một cặp: kể cả khi đã tắt avatar thì lớp nhân vật, cỏ và ánh
-    // sáng vẫn có thể nhích một nhịp: một mẫu đơn lẻ rơi trúng nhịp ấy là cả bài sai mốc.
+    // ⚠ PHẢI LẤY TRUNG VỊ, KHÔNG LẤY MỘT CẶP — và hai nhánh đã sửa chỗ này theo HAI cách, nay
+    // gộp cả hai vì chúng chữa hai tầng khác nhau của cùng một lỗi:
+    //
+    //   · nhánh này TẮT AVATAR (dòng trên) — gỡ hẳn nguồn nhiễu, vì con Axie nằm trọn trong ô
+    //     đo 140×140 mà nó lại chẳng liên quan gì tới thứ bài này gác;
+    //   · nhánh `main` lấy TRUNG VỊ — vì sàn nhiễu LƯỠNG CỰC: phần lớn cặp ra vài trăm điểm
+    //     ảnh, nhưng cứ chừng mười lượt render lại có một lượt rơi trúng nhịp lật khung và vọt
+    //     lên hàng nghìn. Đo được: nenTroi 2115 trong khi tín hiệu xoay chỉ 480 — nhiễu NUỐT
+    //     tín hiệu, và bản lấy một cặp vì thế đỏ 2/3 lượt.
+    //
+    // Giữ CẢ HAI: tắt avatar đưa sàn nhiễu về 0, trung vị lo nốt phần lớp nhân vật/cỏ/ánh sáng
+    // vẫn có thể nhích một nhịp. 9 mẫu thay vì 7 — rẻ, và một mẫu lẻ rơi trúng nhịp là cả bài
+    // sai mốc.
     const _mauNen = [];
     for (let i = 0; i < 9; i++) _mauNen.push(khac(veLuot(0), veLuot(0)));
     _mauNen.sort((a, b) => a - b);
     const nenTroi = _mauNen[_mauNen.length >> 1];
     ok('đối chứng: hai lượt vẽ y hệt nhau thì gần như không đổi',
-       nenTroi < 400, nenTroi + '/' + (hop[2]*hop[3]) + ' điểm ảnh trôi');
+       nenTroi < 400, nenTroi + '/' + (hop[2]*hop[3]) + ' điểm ảnh trôi · mẫu ' + nenMau.join(','));
 
     // ── §2 KHÔNG KHAI `xoay` ⇒ GÓC BỊ BỎ QUA ────────────────────────────────────────
     // Đây là vế "không đổi gì cả". Chỗ gọi thật (`spawnSkillVfx`) truyền `0` khi tranh không
@@ -123,10 +134,15 @@ const THU = { k: 1, cols: 2, rows: 1, frameW: 64, frameH: 64, frames: 2, fps: 10
     ok('không truyền góc ⇒ goc = 0', effects[0].goc === 0, String(effects[0].goc));
 
     // ── §3 CÓ GÓC ⇒ HÌNH ĐỔI THẬT ──────────────────────────────────────────────────
-    const g0   = veLuot(0);
-    const g90  = veLuot(Math.PI / 2);
-    const g180 = veLuot(Math.PI);
-    const d90  = khac(g0, g90), d180 = khac(g0, g180);
+    // Tín hiệu cũng phải lấy TRUNG VỊ, không chỉ sàn nhiễu: một lượt đo đơn lẻ rơi trúng nhịp
+    // lật khung sẽ được độn thêm cả nghìn điểm ảnh ⇒ XANH kể cả khi phép xoay không chạy.
+    const d90m = [], d180m = [];
+    for (let i = 0; i < 5; i++){
+      const g0 = veLuot(0);
+      d90m.push(khac(g0, veLuot(Math.PI / 2)));
+      d180m.push(khac(g0, veLuot(Math.PI)));
+    }
+    const d90 = trungVi(d90m), d180 = trungVi(d180m);
     ok('xoay 90° đổi hình nhiều hơn hẳn nền trôi',  d90  > nenTroi * 8 && d90  > 200, d90 + ' vs nền ' + nenTroi);
     ok('xoay 180° đổi hình nhiều hơn hẳn nền trôi', d180 > nenTroi * 8 && d180 > 200, d180 + ' vs nền ' + nenTroi);
 
