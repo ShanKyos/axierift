@@ -106,10 +106,20 @@ const { dungPbThu } = require('./pbthu.js');   // phòng dựng riêng cho bài 
   if (die.tuiTang !== 0) fail(`chết mà vẫn được +${die.tuiTang} bạc — phải mất SẠCH`);
 
   // ── 5. Cổng dịch chuyển Tầng Sâu ──
+  // ⚠ Mục 4 vừa GIẾT nhân vật, và mục này cần một nhân vật SỐNG (`updateGate` bỏ qua người
+  // chết ⇒ `nearGate` null ⇒ `DEEP.bank` ném lỗi ở dòng dưới). Trước đây mục 4 tự hồi sinh
+  // nhờ bị động Bản Nguyên Công, nhưng bị động nay chỉ chạy khi NẰM TRÊN THANH CHIÊU — tức
+  // mục này từng dựa vào một thứ chẳng liên quan gì tới phó bản, và cái thứ ấy đã đổi luật.
+  // Hồi sinh thẳng tay ở đây: mục 5 hỏi về CỔNG, không hỏi về cái chết.
+  await p.evaluate(() => {
+    player.hp = player.maxHp; player.deadT = 0; dead = false;
+    if (typeof lopPhuDong === 'function') lopPhuDong(true);   // màn Bại Trận là lớp phủ CHẶN
+  });
   const gate = await p.evaluate(() => {
     const g = GATES.find(x => x.deep);
     if (!g) return { co:false };
     travelTo('ardhaven'); player.level = 60; calcDerived();
+    if (player.hp <= 0 || dead) return { co:true, chet:true };
     DEEP = null;
     player.x = g.x; player.y = g.y; updateGate();
     const batDuoc = nearGate === g;
@@ -128,6 +138,7 @@ const { dungPbThu } = require('./pbthu.js');   // phòng dựng riêng cho bài 
              trongVatCan: inObstacle('ardhaven', g.x, g.y, 20) };
   });
   console.log('cổng Tầng Sâu:', JSON.stringify(gate));
+  if (gate.chet) fail('mục 5 dựng cảnh hỏng: nhân vật vẫn đang chết nên không cổng nào bắt được');
   if (!gate.co) fail('không có cổng dịch chuyển nào cho Tầng Sâu');
   if (!gate.batDuoc) fail('đứng ngay cổng mà updateGate không bắt được');
   if (!gate.vaoDuoc) fail('dùng cổng mà không vào được Tầng Sâu');

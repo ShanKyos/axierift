@@ -71,7 +71,11 @@ let bad = 0; const fail = m => { bad++; console.log('FAIL ' + m); };
     // Thẻ Sách Kỹ Năng nay nằm ở tab CHIÊU ĐANG DÙNG, không ở tab di sản nữa: sau khi bỏ "học
     // di sản ngoại lớp", sách dùng để nâng cấp chiêu của chính mình, và nút 📜 nằm ngay cạnh
     // từng dòng chiêu ở tab đó (xem docs/KY_NANG_5_LOP.md §5).
-    closePanels(); togglePanel('skill');   // bảng Kỹ Năng nay MỘT trang, không còn tab
+    closePanels(); togglePanel('skill');
+    // Bảng Kỹ Năng nay là CÂY CÓ TAB. Thẻ Sách Kỹ Năng + mục "thanh chiêu 4 ô" nằm ở tab Khác,
+    // không còn hiện mặc định. Chuyển tab rồi mới soi — vẫn gác đúng thứ bài này vốn gác
+    // (thẻ có hình thật, và bảng không nói dối về số ô thanh chiêu).
+    if (typeof KN_TAB !== 'undefined') window.knTab('khac');
     const sk = el('panel-skill').innerHTML;
     // Chỉ soi THẺ Sách Kỹ Năng. 📜 ở chỗ khác là ký hiệu ĐƠN VỊ trong nút giá ("Học · 3📜"),
     // giống ◈ cho bạc — nó render bình thường, khác ⚔/🛡 vốn ra ô vuông. Cấm nó khắp nơi là
@@ -85,7 +89,11 @@ let bad = 0; const fail = m => { bad++; console.log('FAIL ' + m); };
                    theCoAnh: !!(the && the.querySelector('img[src^="data:image/png"]')),
                    theCoGiay: !!(the && /📜/.test(the.textContent)) };
     // Câu "thanh chiêu chỉ có 4 ô" trước nằm ở tab DI SẢN; nay cùng một trang với phần trên.
-    out.baOo = /Thanh chiêu chỉ có 4 ô/.test(el('panel-skill').innerHTML);
+    // ⚠ ĐẾM Ô THẬT, đừng dò câu chữ. Mệnh đề này trước đây khớp chuỗi "Thanh chiêu chỉ có 4 ô"
+    // trong một dòng dẫn nhập — dòng ấy đã bị thay khi tab Khác chuyển sang khung cây, và cái
+    // nó muốn biết (thanh có mấy ô) thì nay ĐẾM ĐƯỢC. Dò chuỗi thì đổi cách diễn đạt là đỏ,
+    // còn đếm ô thì chỉ đỏ khi số ô sai — tức đúng thứ nó định gác.
+    out.baOo = el('panel-skill').querySelectorAll('.kn-bo').length === 4;
     return out;
   });
   console.log('4) các bảng:', JSON.stringify(r4));
@@ -96,7 +104,7 @@ let bad = 0; const fail = m => { bad++; console.log('FAIL ' + m); };
   if (!r4.kyNang.coThe) fail('không tìm thấy thẻ Sách Kỹ Năng trong bảng kỹ năng');
   if (!r4.kyNang.theCoAnh) fail('thẻ Sách Kỹ Năng chưa có hình');
   if (r4.kyNang.theCoGiay) fail('thẻ Sách Kỹ Năng vẫn dùng emoji thay cho hình');
-  if (!r4.baOo) fail('bảng kỹ năng vẫn ghi thanh chiêu 3 ô (đã là 4)');
+  if (!r4.baOo) fail('bảng kỹ năng không vẽ đúng 4 ô thanh chiêu');
 
   await p.waitForTimeout(400);
   console.log('errors:', JSON.stringify(errs));

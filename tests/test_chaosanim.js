@@ -169,7 +169,7 @@ const PORT = process.argv[2] || '8853';
       it.noForge = false; it.special = false; it.tier = 3; it.plus = 9;
       player.inv.push(it);
       player.jewels = { chucPhuc:9, linhHon:9, sinhMenh:9, honDon:9 };
-      player.gems.tuLa = 9999; player.gems.honNguyen = 9999; player.silver = 9999999;
+      player.gems.honNguyen = 9999; player.silver = 9999999;
       player.charms = 0; window.forgeUseCharm = false;
       window.chaosAddItem(it.uid);
       window.chaosAddJewel('honDon');

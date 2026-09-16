@@ -85,7 +85,12 @@ const TRAN = {
       return d;
     };
     const o = {};
-    for (const id of Object.keys(MAPS).filter(k => !MAPS[k].dungeon)){
+    // ⚠ BỎ SÀN ĐẤU RA, và đây KHÔNG phải nới luật cho một map lười. Mọi ngưỡng của bài này đo
+    // "map có đủ thứ để làm không": số điểm nội dung, mật độ, thang loài quái. Sàn đấu CỐ Ý
+    // không có gì trong đó — nội dung của nó là người đứng đối diện, và `md.pvp` là khoá nói
+    // ra đúng điều ấy. Đo nó bằng thước dành cho map cày thì thước sẽ luôn đỏ, và cách duy
+    // nhất làm nó xanh là nhét một bãi quái vào sàn đấu — tức làm hỏng chính cái map.
+    for (const id of Object.keys(MAPS).filter(k => !MAPS[k].dungeon && !MAPS[k].pvp)){
       curMap = id; navInvalidate(); buildWorld(); navEnsure(); doLaiKhungLuoi();
       const M = MAPS[id], diem = [];
       for (const q of (M.packs || [])) diem.push({ k:'bãi quái', ten:q.mob, x:q.x, y:q.y });

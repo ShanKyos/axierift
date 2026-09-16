@@ -20,10 +20,44 @@
 <body>
 <canvas id="game"></canvas>
 
+<!-- ═══════════ MÀN TẢI ═══════════
+     Trước bản này KHÔNG có màn tải nào: cảnh Lunacia mười lớp lắp dần ngay trước mắt người
+     chơi — trời hiện trước, núi hiện sau, nhân vật hiện cuối. Trên mạng chậm nó trông như hỏng.
+
+     ⚠ THANH NÀY CÂN THEO SỐ BYTE THẬT, không theo số tệp và tuyệt đối không theo đồng hồ.
+     Bản kê nằm ở data/taitro.js, sinh bằng tools/title/liet_ke_taitro.cjs từ chính kích thước
+     tệp trên đĩa. Một thanh chạy theo setTimeout là đúng cái thứ mà dự án này đã gỡ một lần rồi
+     (thanh "Tiếp nhận 28%…82%" ở màn chọn máy chủ) — xem QUY TẮC ở CLAUDE.md. -->
+<div id="preload">
+  <div class="pl-inner">
+    <div class="sv-logo"><span class="sv-logo-a">AXIE</span><span class="sv-logo-b">RIFT</span></div>
+    <div class="pl-bar"><i id="pl-fill"></i></div>
+    <div class="pl-hang"><span id="pl-nhom">Đang mở vết nứt…</span><b id="pl-pct">0%</b></div>
+    <div class="pl-byte" id="pl-byte"></div>
+    <div class="pl-tip" id="pl-tip"></div>
+  </div>
+</div>
+
 <!-- HUD -->
 <div id="hud" class="hidden">
   <div id="hud-left">
-    <div id="hud-name">—</div>
+    <!-- KHUNG CHÂN DUNG. Trước bản này góc trên trái chỉ có một dòng tên trần, còn Sinh Lực và
+         Mana là hai viên cầu ở HAI ĐẦU thanh chiến đấu. Chủ dự án chốt đổi sang khuôn quen
+         thuộc hơn: chân dung + tên + cấp + hai thanh, gom về một khối ở góc trái.
+         ⚠ GIỮ NGUYÊN id `orb-hp` / `bar-hp` / `txt-hp` (và bộ qi) dù nay chúng là THANH chứ
+         không còn là viên cầu: hai bài kiểm và sáu chỗ trong updateHud() gọi thẳng mấy id đó.
+         Đổi tên id chỉ để cho "đúng chữ" là trả một cái giá thật để mua một thứ không ai thấy. -->
+    <div id="chan-dung">
+      <div id="cd-khung">
+        <canvas id="cd-ava" width="128" height="128"></canvas>
+        <img id="cd-lop" alt="">
+      </div>
+      <div id="cd-phai">
+        <div id="cd-dau"><div id="hud-name">—</div><b id="hud-lv">LV.1</b></div>
+        <div class="cd-thanh cd-hp" id="orb-hp" title="Sinh Lực"><i class="fill" id="bar-hp"></i><span id="txt-hp"></span></div>
+        <div class="cd-thanh cd-qi" id="orb-qi" title="Mana"><i class="fill" id="bar-qi"></i><span id="txt-qi"></span></div>
+      </div>
+    </div>
     <!-- Số Bình Thuốc đã dời xuống ô thuốc trong thanh chiến đấu (#sk-thuoc) — cùng một con
          số bày hai chỗ thì chỗ nào cũng bị liếc qua, mà không chỗ nào được tin. -->
     <div id="hud-buff" title="Rượu Hổ Cốt — tạm thời +12% công lực" style="display:none">🍶</div>
@@ -42,16 +76,33 @@
     </div>
     <button id="btn-pk" class="hbtn pk-off hidden" title="Bật/tắt chế độ PK">PK: Tắt</button>
     <button id="btn-auto" class="hbtn auto-off hidden" title="Tự đánh — treo máy: tự đánh quái & tung kỹ năng quanh điểm neo, tối đa 1-2 bãi (Z)">⚔ AUTO</button>
-    <div id="minimap-wrap">
-      <canvas id="minimap" width="200" height="146" title="Bản đồ thu nhỏ (U)"></canvas>
-      <button id="btn-minimap" title="Ẩn/hiện bản đồ thu nhỏ (U)">🗺</button>
-    </div>
-    <div id="quest-tracker-wrap">
-      <button id="btn-questtracker" title="Ẩn/hiện bảng nhiệm vụ">📜 Nhiệm Vụ <span id="qt-arrow">▾</span></button>
-      <div id="quest-tracker"></div>
+    <!-- CỘT PHẢI là MỘT khối, không phải ba tấm rời chồng lên nhau. Trước bản này bản đồ nhỏ
+         và bảng nhiệm vụ mỗi cái một khung riêng, cách nhau một khe hở để lọt nền map — nên
+         chỗ tiếp giáp đổi sáng-tối theo địa hình đang đứng, và hai tấm lúc đọc ra một khối,
+         lúc đọc ra hai. Cùng lý do đã ghi ở #bottom-hud và ở khung chân dung. -->
+    <div id="cot-phai">
+      <div id="minimap-wrap">
+        <canvas id="minimap" width="200" height="146" title="Bản đồ thu nhỏ (U)"></canvas>
+      </div>
+      <!-- Hàng nút dưới bản đồ: đúng ba cửa người chơi mở từ chỗ này. KHÔNG bịa thêm nút cho
+           tính năng game chưa có (kênh, chợ…) — nút bấm vào không ra gì thì tệ hơn hẳn không
+           có nút. Nút Ẩn dời từ góc canvas xuống đây: nằm trên bản đồ thì nó che mất đúng
+           một góc bản đồ, mà góc nào cũng có thể là chỗ người chơi đang cần nhìn. -->
+      <div id="mm-nut">
+        <button class="cp-nut" title="Bản Đồ (M)" onclick="togglePanel('map')">🗺 Bản Đồ</button>
+        <button class="cp-nut" title="Bảng Sự Kiện" onclick="openEventBoard()">⏱ Sự Kiện</button>
+        <button class="cp-nut" id="btn-minimap" title="Ẩn/hiện bản đồ thu nhỏ (U)">👁 Ẩn</button>
+      </div>
+      <!-- NHẬT KÝ NHIỆM VỤ CẮM THẲNG VÀO CỘT, không còn là cửa sổ nổi giữa màn.
+           Trước bản này có HAI chỗ nói về nhiệm vụ: bảng theo dõi ở cột phải (mục tiêu đang
+           làm) và Nhật Ký mở bằng Q (cả chuỗi, 3 tab) — hai cửa đọc cùng một dữ liệu, và
+           người chơi phải nhớ cái nào ở đâu. Nay gộp: khối này CHÍNH LÀ Nhật Ký, và bảng theo
+           dõi cũ thành tab đầu của nó.
+           ⚠ Nó KHÔNG còn đi qua togglePanel: một khối cắm trong HUD mà mở Túi Đồ là biến mất
+           thì đọc ra như lỗi. Phím Q gọi `toggleQlog()` — thu/mở tại chỗ. -->
+      <div id="panel-qlog" class="panel bang-cam"></div>
     </div>
   </div>
-  <div id="hint-bar"></div>
 </div>
 
 
@@ -63,7 +114,19 @@
        · #bottom-hud  = CHIẾN TRƯỜNG — chỉ thứ dùng lúc đánh: hai viên đá, ô chiêu, thuốc, Trợ Thủ
        · #menu-cot    = MENU HỆ THỐNG — cột dọc sát mép phải, thu gọn được về một tab nhỏ -->
 <div id="bottom-hud" class="hidden">
-  <div class="orb orb-hp" id="orb-hp" title="Sinh Lực"><div class="orb-fill" id="bar-hp"></div><span class="orb-val" id="txt-hp"></span></div>
+  <!-- ⚠ BA CỤM, DÀN ĐỀU HAI BÊN Ô CHIÊU. Chủ dự án đưa ảnh mẫu MU và chốt: "phải dàn trải đều
+       2 bên thì UI mới cân đối" — Nhân Vật · Túi Đồ · Kỹ Năng · Nhiệm Vụ sang TRÁI, ô chiêu ở
+       GIỮA, Tổ Đội · Hảo Hữu · Bản Đồ · Cài Đặt · Menu ở PHẢI.
+       Trước bản này cả chín nút menu dồn hết vào đuôi bên phải: thanh nặng hẳn một bên, và ô
+       chiêu — thứ người chơi nhìn nhiều nhất — bị đẩy lệch khỏi tâm màn hình.
+       Cụm trái là CỬA (mở bảng của chính mình), cụm phải là NGƯỜI KHÁC + hệ thống. -->
+  <div id="mc-trai" class="hidden">
+    <button class="mc-btn" id="btn-char"  title="Nhân Vật (C) — chỉ số"><img src="assets/ui/ic_nhanvat.png" alt=""><span>Nhân Vật</span></button>
+    <button class="mc-btn" id="btn-bag"   title="Túi Đồ (B)"><img src="assets/ui/ic_tuido.png" alt=""><span>Túi Đồ</span></button>
+    <button class="mc-btn" id="btn-skill" title="Kỹ Năng (K)"><img src="assets/ui/ic_kynang.png" alt=""><span>Kỹ Năng</span></button>
+    <button class="mc-btn" id="btn-qlog"  title="Nhiệm Vụ (Q)"><img src="assets/ui/ic_nhiemvu.png" alt=""><span>Nhiệm Vụ</span></button>
+  </div>
+  <i class="sk-vach"></i>
   <div id="skillbar">
     <button class="skill" id="sk-basic"><span class="sk-ico">⚔</span><span class="sk-key">Space</span><span class="sk-cd"></span></button>
     <button class="skill sk-slot" data-slot="0" id="sk-0" title="Chiêu chính"><span class="sk-ico">+</span><span class="sk-key">1</span><span class="sk-cd"></span></button>
@@ -80,30 +143,40 @@
     <i class="sk-vach"></i>
     <button class="skill sk-troly" id="sk-helper" title="Trợ Thủ — bật/tắt TỰ ĐÁNH (Z) · chuột phải để chỉnh"><span class="sk-ico">⚙</span><span class="sk-key">Z</span></button>
   </div>
-  <div class="orb orb-qi" id="orb-qi" title="Mana"><div class="orb-fill" id="bar-qi"></div><span class="orb-val" id="txt-qi"></span></div>
+  <i class="sk-vach"></i>
+  <!-- MENU HỆ THỐNG nằm TRÊN THANH CHIẾN ĐẤU, không phải một khối thứ tư trôi ở đáy.
+       Chủ dự án chốt: "để UI qua bên phải cho đồng nhất". Trước đó nó đã đi hai chặng —
+       cột dọc mép TRÁI, rồi hàng ngang đáy PHẢI — và cả hai đều để nó đứng RIÊNG, tức
+       giao diện có thêm một khối nữa phải nhớ chỗ. Nay cả bên phải là MỘT cột: ví, tự
+       đánh, bản đồ, nhiệm vụ, rồi menu. -->
+  <div id="menu-cot" class="hidden">
+    <div id="mc-list">
+      <!-- Tổ Đội và Hảo Hữu CHƯA có tranh trong bộ ic_*.png, nên dùng ký hiệu chữ (gold, cùng
+           cỡ ô). Đừng mượn tạm một tranh của nút khác: hai nút cùng hình là hai nút không phân
+           biệt được, mà nhãn thì chỉ hiện lúc rê chuột. -->
+      <button class="mc-btn mc-chu" id="btn-party"  title="Tổ Đội (P)">⚑<span>Tổ Đội</span></button>
+      <button class="mc-btn mc-chu" id="btn-friend" title="Hảo Hữu (H)">♥<span>Hảo Hữu</span></button>
+      <button class="mc-btn" id="btn-map"      title="Bản Đồ (M)"><img src="assets/ui/ic_bando.png" alt=""><span>Bản Đồ</span></button>
+      <button class="mc-btn" id="btn-settings" title="Cài Đặt (O)"><img src="assets/ui/ic_caidat.png" alt=""><span>Cài Đặt</span></button>
+      <!-- ⚠ Ký hiệu là `≡`, KHÔNG phải `☰`. Cái thứ hai trông giống hệt và cũng đọc ra "menu",
+           nhưng nó là quẻ Càn của BÁT QUÁI — Quy tắc số 1 cấm motif kiếm hiệp. -->
+      <button class="mc-btn mc-menu" id="btn-menu" title="Menu Hệ Thống (F6)">≡<span>Menu Hệ Thống</span></button>
+    </div>
+    <!-- ⚠ #mc-drop ĐÃ GỠ. Nó là một thả-xuống bốn dòng treo trên nút ≡, và từ lúc có Menu
+         Hệ Thống (F6) thì hai trong bốn dòng trùng thẳng với nút trong đó (Bảng Sự Kiện ·
+         Hướng Dẫn). Một cái thả-xuống chỉ để chứa hai mục còn lại là một tầng bấm thừa: nay
+         nút ≡ mở luôn Menu Hệ Thống. Nhật Ký Chiến Đấu có công tắc riêng ngay trên chính nó,
+         Nhạc Nền có thanh trượt trong Cài Đặt — không mục nào mất đường vào. -->
+  </div>
+  <!-- ⚠ THANH EXP NẰM TRONG #bottom-hud, và đó là cách DUY NHẤT giữ nó bằng ngang dải icon.
+       Chủ dự án chốt: "kéo thanh EXP cho bằng ngang dải icon đi". Bề ngang thanh chiến đấu là
+       KẾT QUẢ của số ô nhân cỡ ô — không có con số nào chép sang được. Bản cũ khai
+       `width: min(520px, 62vw)`, tức một con số rời hẳn: ở màn 1600 nó ra 520px cạnh một thanh
+       756px, và mỗi lần thêm hay bớt một ô là hai bên lệch thêm mà không gì báo.
+       Cắm vào trong rồi `left:0; right:0` thì hai bề ngang BẰNG NHAU THEO CẤU TRÚC. -->
+  <div id="xp-strip" class="hidden"><div class="bar xp"><div id="bar-xp" class="fill"></div><span id="txt-xp"></span></div></div>
 </div>
 
-<!-- Cột menu hệ thống. Sáu cửa hay dùng nhất, mỗi cửa một icon 32px trong khung kim loại;
-     mũi tên trên đầu thu cả cột về một tab nhỏ, thứ còn lại dồn vào nút Menu ▾. -->
-<div id="menu-cot" class="hidden">
-  <button id="mc-thu" title="Thu gọn thanh menu">▸</button>
-  <div id="mc-list">
-    <button class="mc-btn" id="btn-char"     title="Nhân Vật (C) — trang bị + chỉ số"><img src="assets/ui/ic_nhanvat.png" alt=""><span>Nhân Vật</span></button>
-    <button class="mc-btn" id="btn-bag"      title="Túi Đồ (B)"><img src="assets/ui/ic_tuido.png" alt=""><span>Túi Đồ</span></button>
-    <button class="mc-btn" id="btn-skill"    title="Kỹ Năng (K)"><img src="assets/ui/ic_kynang.png" alt=""><span>Kỹ Năng</span></button>
-    <button class="mc-btn" id="btn-qlog"     title="Nhiệm Vụ (Q)"><img src="assets/ui/ic_nhiemvu.png" alt=""><span>Nhiệm Vụ</span></button>
-    <button class="mc-btn" id="btn-map"      title="Bản Đồ (M)"><img src="assets/ui/ic_bando.png" alt=""><span>Bản Đồ</span></button>
-    <button class="mc-btn" id="btn-settings" title="Cài Đặt (O)"><img src="assets/ui/ic_caidat.png" alt=""><span>Cài Đặt</span></button>
-    <button class="mc-btn mc-menu" id="btn-menu" title="Thêm">Menu ▾</button>
-  </div>
-  <div id="mc-drop" class="hidden">
-    <button id="btn-combatlog"><img src="assets/ui/ic_nhatky.png" alt="">Nhật Ký Chiến Đấu <span id="cl-arrow">▾</span></button>
-    <button id="btn-sukien">⏱ Bảng Sự Kiện</button>
-    <button id="btn-music" title="Nhạc nền">♪ Nhạc Nền</button>
-  </div>
-</div>
-<!-- Thanh EXP nằm NGAY DƯỚI viên đá Máu, mép dưới màn hình — đúng chỗ MU đặt nó. -->
-<div id="xp-strip" class="hidden"><div class="bar xp"><div id="bar-xp" class="fill"></div><span id="txt-xp"></span></div></div>
 <!-- Tầng Sâu: nút rút lui. Không có nút này thì kho tạm không có cách nào mang về, cả chế độ
      chỉ còn là "cày tới chết" — đúng thứ nó KHÔNG nên là. -->
 <button id="deep-leave" class="hidden" onclick="deepLeave()">⬆ RÚT LUI <i>mang kho tạm về</i></button>
@@ -125,8 +198,32 @@
 
 <!-- Nhật ký chiến đấu: thay cho số sát thương/thông báo bay đầy màn hình lúc tự đánh nhiều quái —
      gộp lại thành 1 dòng chữ ở góc, đọc được thay vì rối mắt -->
+<!-- ⚠ NHẬT KÝ CHIẾN ĐẤU DỜI SANG PHẢI, dưới cột bản đồ. Chủ dự án chốt: bên TRÁI để dành
+     cho khung chat giữa người chơi khi có tầng realtime (xem docs/THIET_KE_ONLINE.md — Giai
+     đoạn 1 mới chỉ có bóng người, chưa có chat). Ghi lại ở đây để đừng ai dọn nốt sườn trái
+     đi: nó đang trống CÓ CHỦ Ý, không phải quên.
+     Tiêu đề + nút thu nay nằm NGAY TRÊN cái nhật ký. Trước đó nút thu nằm trong thả xuống của
+     nút ≡ — tắt xong thì không còn gì trên màn hình chỉ ra đường bật lại. -->
 <div id="combat-log-wrap" class="hidden">
+  <div id="cl-dau"><span>Nhật Ký</span>
+    <button id="btn-combatlog" title="Thu / mở nhật ký"><i id="cl-arrow">▾</i></button></div>
   <div id="combat-log"></div>
+</div>
+
+<!-- CHAT (Giai đoạn 2 online). Góc dưới-TRÁI, đúng khuôn MU — và CỐ Ý tách khỏi Nhật Ký ở
+     góc phải: nhật ký là thanh chạy `nowrap` cho đòn của chính mình, chat là hội thoại phải
+     xuống dòng và có ô nhập. Gộp hai thứ vào một hộp 190px thì hỏng cả hai.
+     ⚠ Khối này chỉ hiện khi có nối mạng (`NET.on`) — xem `chatDung()` trong game.js. Bày một ô
+     chat gõ được mà không ai nhận là đúng cái lỗi "một cái vỏ giả vờ là máy chạy". -->
+<div id="chat-wrap" class="hidden">
+  <div id="chat-tabs">
+    <button class="chat-tab on" data-kenh="the-gioi">Thế Giới</button>
+    <button class="chat-tab"    data-kenh="vung">Vùng</button>
+    <span id="chat-trangthai"></span>
+    <button id="chat-thu" title="Thu / mở khung chat"><i>▾</i></button>
+  </div>
+  <div id="chat-log"></div>
+  <input id="chat-input" maxlength="200" autocomplete="off" placeholder="Enter để nói…">
 </div>
 
 <!-- Panels -->
@@ -135,8 +232,12 @@
 <div id="panel-bag" class="panel hidden"></div>
 <div id="panel-skill" class="panel hidden"></div>
 <div id="panel-map" class="panel hidden"></div>
+<div id="panel-ngocbank" class="panel hidden"></div>
+<div id="panel-nhat" class="panel hidden"></div>
+<div id="panel-party" class="panel hidden"></div>
+<div id="panel-friend" class="panel hidden"></div>
 <div id="panel-settings" class="panel hidden"></div>
-<div id="panel-qlog" class="panel hidden"></div>
+<div id="panel-help" class="panel hidden"></div>
 <div id="panel-quest" class="panel hidden"></div>
 <!-- Lò rèn: bảng RIÊNG, chỉ mở khi đứng cạnh Thợ Rèn (không còn là tab trong bảng Nhân Vật) -->
 <div id="panel-forge" class="panel hidden"></div>
@@ -223,8 +324,15 @@
 <script src="lang.js"></script>
 <script src="data/canbang.js"></script>
 <script src="data/chi_anh.js"></script>
+<script src="data/thu_anh.js"></script>
+<script src="data/taitro.js"></script>
 <script src="data/lop_cho.js"></script>
 <script src="data/iso.js"></script>
+<script src="data/vatcan.js"></script>
 <script src="game.js"></script>
+<!-- Bóng Người (Giai đoạn 1 online). Nạp SAU game.js và TỰ TẮT khi không khai máy chủ, nên bản
+     chơi một mình — thứ đang sống trên production — chạy y nguyên. Bật: ?net=ws://localhost:8877/ws
+     hoặc ?net=1 khi nginx đã có location /ws. Xem public/game/net.js. -->
+<script src="net.js"></script>
 </body>
 </html>

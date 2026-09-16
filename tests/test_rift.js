@@ -21,11 +21,13 @@ const { chromium } = require('playwright');
     player.level = 40; calcDerived();
     const hours = [], gaps = [];
     // rải 24 điểm xuất phát trong ngày, mỗi điểm lệch 37 phút cho khỏi rơi đúng đầu giờ
-    let t = new Date(); t.setHours(0, 37, 12, 0);
+    // ⚠ UTC ở cả hai đầu: mốc vực nứt neo theo UTC (xem matonNextBoundary). Bản cũ dùng
+    // setHours/getHours nên chỉ xanh khi máy chạy bộ kiểm để TZ=UTC.
+    let t = new Date(); t.setUTCHours(0, 37, 12, 0);
     let base = t.getTime();
     for (let i = 0; i < 24; i++){
       const nb = riftNextBoundary(base + i*3600000);
-      hours.push(new Date(nb).getHours());
+      hours.push(new Date(nb).getUTCHours());
       if (nb <= base + i*3600000) gaps.push('KHONG_TIEN:' + i);
     }
     // chuỗi liên tiếp
@@ -33,7 +35,7 @@ const { chromium } = require('playwright');
     for (let i = 0; i < 5; i++){ cur = riftNextBoundary(cur + 60000); seq.push(cur); }
     const deltas = seq.slice(1).map((v, i) => (v - seq[i]) / 3600000);
     return { gioDuoc: [...new Set(hours)].sort((a,b)=>a-b), khoangCach: deltas, loi: gaps,
-             soLuotMotNgay: 24 / 6, gioDauNgay: new Date(seq[0]).getHours() };
+             soLuotMotNgay: 24 / 6, gioDauNgay: new Date(seq[0]).getUTCHours() };
   });
   console.log('lịch:', JSON.stringify(sched));
   const want = [0, 6, 12, 18];
@@ -96,7 +98,7 @@ const { chromium } = require('playwright');
     const m = mobs.find(x => x.type === 'rift');
     return { active: RIFT.active, banner: zoneBanner && zoneBanner.text,
              conLai: Math.round((RIFT.endsAt - Date.now()) / 60000),
-             lichSau: new Date(RIFT.next).getHours(),
+             lichSau: new Date(RIFT.next).getUTCHours(),
              co: !!m, ten: m && m.name, cap: m && m.def.lv, mau: m && m.maxHp,
              danhDau: Object.keys(RIFT.done) };
   });
@@ -164,12 +166,30 @@ const { chromium } = require('playwright');
     RIFT = { next: riftNextBoundary(Date.now()), warned: false, active: false, endsAt: 0, done: {}, kills: 0 };
     const rows = eventList(Date.now());
     const r = rows.find(x => x.icon === '✹');
-    return { soDong: rows.length, co: !!r, ten: r && r.name, sub: r && r.sub,
+    // Dãy mốc ĐÚNG, tính lại bằng chính hàm mà game dùng để kích hoạt Vực Nứt.
+    const d = new Date(); d.setHours(0, 0, 0, 0);
+    const that = []; for (let t = riftNextBoundary(d.getTime()-1); t < d.getTime()+86400000 && that.length < 24; t = riftNextBoundary(t)) that.push(fmtClock(t));
+    return { soDong: rows.length, co: !!r, ten: r && r.name, sub: r && r.sub, lich: r && r.lich,
+             that: that.join(', '), soMoc: that.length,
+             // Chu kỳ đọc THẲNG từ hằng của game — đừng chép số 4 vào bài kiểm.
+             canMoc: Math.round(86400000 / RIFT_CHU_KY), gioCK: RIFT_CHU_KY / 3600000,
              ke: (nextEventInfo(Date.now()) || {}).name };
   });
   console.log('bảng sự kiện:', JSON.stringify(board));
   if (!board.co) fail('bảng sự kiện thiếu dòng Chúa Tể Vực Nứt');
-  if (!/6 tiếng\/lần/.test(board.sub || '')) fail(`dòng bảng không nói rõ nhịp 6 tiếng: ${board.sub}`);
+  // ⚠ NHỊP ĐÃ DỜI SANG CỘT "LỊCH TRÌNH", MỆNH ĐỀ THÌ ĐI THEO — và mạnh lên.
+  // Bản cũ đòi câu mô tả chứa đúng chữ "6 tiếng/lần". Chữ đó nay đã gỡ, và gỡ có lý do: nó đi
+  // kèm một dãy giờ CHÉP TAY ("0h·6h·12h·18h") neo theo UTC trong khi bảng in giờ MÁY NGƯỜI
+  // CHƠI — với người Việt là 01:00·07:00·13:00·19:00, tức câu đó nói sai. Thứ mệnh đề này sinh
+  // ra để gác (*người chơi phải biết Vực Nứt mở lúc nào*) nay do cột `lich` gánh, nên hỏi
+  // thẳng cột đó — và hỏi bằng cách ĐỐI CHIẾU với `riftNextBoundary`, không bằng cách tìm một
+  // chuỗi văn xuôi. Một chuỗi văn xuôi thì chép cứng vào là qua; đối chiếu thì không.
+  if (board.lich !== board.that)
+    fail(`cột lịch "${board.lich}" KHÁC dãy mốc thật "${board.that}" — dãy giờ đang bị chép tay ở đâu đó`);
+  else console.log(`  ok  dòng Vực Nứt nói đúng lịch: ${board.lich}`);
+  if (board.soMoc !== board.canMoc)
+    fail(`một ngày ra ${board.soMoc} mốc, chu kỳ ${board.gioCK} tiếng thì phải ${board.canMoc}`);
+  else console.log(`  ok  đúng ${board.canMoc} mốc/ngày (chu kỳ ${board.gioCK} tiếng)`);
   const BAN = /Kundun|Lorencia|Noria|Devias|Icarus|Atlans|Tarkan|Fairy Elf|Magic Gladiator|Devil Square|Blood Castle|cảnh giới|đan điền|chân khí|môn phái|giang hồ|độ kiếp|phi thăng/i;
   for (const [k, v] of Object.entries(board)) if (typeof v === 'string' && BAN.test(v)) fail(`text lộ từ cấm (${k}): ${v}`);
   if (BAN.test(kill.log.map(x=>x.banner).join(' ') + ' ' + act.banner + ' ' + warn.banner)) fail('banner lộ từ cấm');

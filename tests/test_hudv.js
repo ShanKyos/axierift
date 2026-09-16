@@ -22,14 +22,22 @@ const { chromium } = require('playwright');
   const hud = await p.evaluate(() => {
     const nm = document.getElementById('hud-name'), r = nm.getBoundingClientRect();
     const xp = document.querySelector('#xp-strip .bar.xp'), xr = xp && xp.getBoundingClientRect();
+    // `orb-hp` giữ nguyên id nhưng nay là THANH NGANG trong khung chân dung góc trên trái,
+    // không còn là viên cầu ở đáy màn hình.
     const orb = document.getElementById('orb-hp').getBoundingClientRect();
+    const cd = document.getElementById('chan-dung').getBoundingClientRect();
     return { coHudKhi: !!document.getElementById('hud-khi'),
       tenText: nm.textContent.trim(), soDong: Math.round(r.height / 20),
       coLop: /Sylvan Ranger|Dark Knight/.test(nm.textContent),
       coCap: /Cấp \d/.test(nm.textContent),
       coDauDiem: /\+12/.test(nm.textContent),
       xpTrongHud: !!document.querySelector('#hud-left .bar.xp'),
-      xpDuoiOrb: !!(xr && xr.top > orb.top),
+      // Mệnh đề cũ ("EXP nằm dưới viên đá máu") nay vô nghĩa: thanh máu đã lên góc TRÊN nên
+      // mọi thứ ở đáy màn hình đều thoả nó. Thay bằng thứ thật sự cần gác — thanh máu phải
+      // nằm TRONG khung chân dung, chứ không trôi ra ngoài thành một mảnh rời.
+      hpTrongChanDung: !!(orb.top >= cd.top - 1 && orb.bottom <= cd.bottom + 1
+                          && orb.left >= cd.left - 1 && orb.right <= cd.right + 1),
+      hpTrenCao: orb.top < innerHeight / 3,
       xpCuoiManHinh: !!(xr && xr.bottom > innerHeight - 30),
       xpHien: !!(xr && xr.width > 100) };
   });
@@ -38,7 +46,8 @@ const { chromium } = require('playwright');
   if (hud.coLop || hud.coCap) fail(`dòng tên vẫn nhồi lớp/cấp: "${hud.tenText}"`);
   if (!hud.coDauDiem) fail('mất dấu "+12 điểm chưa cộng" cạnh tên');
   if (hud.xpTrongHud) fail('thanh EXP vẫn nằm ở góc trên trái');
-  if (!hud.xpDuoiOrb) fail('thanh EXP không nằm DƯỚI viên đá máu');
+  if (!hud.hpTrongChanDung) fail('thanh Sinh Lực nằm ngoài khung chân dung — nó phải là một phần của khối góc trái, không phải một mảnh trôi');
+  if (!hud.hpTrenCao) fail('thanh Sinh Lực không ở nửa trên màn hình — khung chân dung phải ở góc TRÊN trái');
   if (!hud.xpCuoiManHinh || !hud.xpHien) fail('thanh EXP không hiện ở đáy màn hình');
 
   // ---- 2. Phím V mở cửa sổ Nhân Vật, có đủ thứ đã chuyển sang ----
@@ -92,13 +101,17 @@ const { chromium } = require('playwright');
     coNutNhat: !!document.getElementById('sk-loot'),
     nhan: (document.getElementById('sk-loot') || {}).title,
     conDoJump: typeof window.doJump !== 'undefined',
-    hint: (document.getElementById('hint-bar') || {}).textContent || '',
+    // Dải gợi ý `#hint-bar` đã gỡ (nó nằm sau thanh chiến đấu nên bị che). Chỗ dạy phím nay
+    // là bảng Hướng Dẫn F6 — mệnh đề "không được nhắc phím nhảy" phải theo sang đó, nếu không
+    // nó lặng lẽ đo một phần tử không tồn tại và xanh vĩnh viễn.
+    hint: (() => { renderHelpPanel(); return (document.getElementById('panel-help') || {}).textContent || ''; })(),
   }));
   console.log('thanh kỹ năng:', JSON.stringify(sk));
   if (sk.conNutNhay) fail('nút nhảy (sk-jump) vẫn còn');
   if (!sk.coNutNhat) fail('không có nút Nhặt thay thế — điện thoại mất đường nhặt đồ');
   if (sk.conDoJump) fail('hàm doJump vẫn tồn tại (mã chết)');
-  if (/nhảy|jump/i.test(sk.hint)) fail(`dòng gợi ý phím vẫn nhắc nhảy: "${sk.hint}"`);
+  if (!sk.hint) fail('bảng Hướng Dẫn F6 rỗng — không còn chỗ nào dạy phím cho người chơi');
+  if (/nhảy|jump/i.test(sk.hint)) fail('bảng Hướng Dẫn vẫn nhắc phím nhảy');
 
   // nút Nhặt phải nhặt được đồ thật
   const pick = await p.evaluate(() => {
