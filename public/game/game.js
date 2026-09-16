@@ -5765,6 +5765,12 @@ const AVA_THEO_CO  = 0.72;   // …và thu còn mấy phần. Nhỏ hơn Axie th
 // ở CẢ HAI trạng thái mới giữ được thứ bậc đó; cú đổi 0,60 → 0,80 vẫn đủ để mắt thấy nó lớn
 // lên khi xông ra.
 const AVA_DANH_CO  = 0.90;
+// …và CỠ TRONG THÀNH. Chủ dự án: *"bộ giáp nhìn xấu cũng là do scale bé quá, bạn thử scale nhân
+// vật to ra xem sao"*. Trong thành là chỗ DUY NHẤT còn thấy lớp nhân vật (ngoài thành nó đã nhập
+// vào Axie), nên ở đây không còn lý do thu nhỏ: thứ bậc "Axie là thân, người là sức mạnh" chỉ có
+// nghĩa khi hai hình cùng đứng trong một cảnh ĐÁNH NHAU. Trong thành thì cả cảnh là để khoe đồ.
+// 0,72 → 1,00 là +39% chiều, tức gần GẤP ĐÔI số điểm ảnh đọc được của bộ giáp.
+const AVA_THANH_CO = 1.00;
 const AVA_TY  = 0.95;   // thân Axie cao mấy phần thân người…
 const AVA_TRAN = 1.18;  // …và hộp vẽ ra, chiều nào cũng vậy, không quá ngần này lần
 function avaCo(id){
@@ -5815,6 +5821,67 @@ function _chiVeKhoi(g, id, im, K, i, x, y, thanPx){
 }
 function chiVeGong(g, id, i, x, y, thanPx){ return _chiVeKhoi(g, id, chiGongImg(id), CHI_GONG, i, x, y, thanPx); }
 function chiVeGiat(g, id, i, x, y, thanPx){ return _chiVeKhoi(g, id, chiGiatImg(id), CHI_GIAT, i, x, y, thanPx); }
+
+/* ── KHỐI RA ĐÒN — MỖI LỚP MỘT KIỂU ─────────────────────────────────────────────────────────
+ * ⚠ ĐÂY LÀ LUẬT "AXIE KHÔNG ĐÁNH" BỊ LẬT, có chủ ý, không phải ai đó quên nó. Luật cũ (chốt
+ * 2026-09-15) cấm cho Axie đánh, và lý do ghi ở đầu `nuong_chi_phanung.py` là: cho Axie tự húc
+ * TRONG LÚC lớp nhân vật niệm chú BÊN CẠNH là dựng lại cái "hai kẻ cùng đánh" mà đợt Đổi Vai
+ * gỡ đi. Lý do ấy hết hiệu lực vì HÌNH DẠNG đã đổi: nay lớp nhân vật NHẬP VÀO con Axie khi ra
+ * khỏi thành, nên lúc đánh trên màn chỉ còn MỘT thân. Chủ dự án chốt lại 2026-09-16.
+ *
+ * ⚠ NĂM LỚP PHẢI RA NĂM ĐÒN KHÁC NHAU, và đó là cả điểm của đợt này. Lúc đánh không còn thân
+ * người nào để nhìn, nên nếu Axie của cả năm lớp vung giống hệt nhau thì 5 lớp mất sạch dấu
+ * hiệu nhìn thấy được. Kit Axie có sẵn 9 đòn gần + 5 đòn xa dùng chung cho mọi rig ⇒ năm kiểu
+ * đọc khác nhau tốn 0 đồng art. Bảng này phải TRÙNG KHÍT `LOP` trong `nuong_chi_danh.py`.
+ *
+ * ⚠ CHỌN ĐÒN THEO CÁCH LỚP ẤY ĐÁNH (khớp `SECT_ACT`/`HERO_ACT`), không chọn cho đủ mặt — nếu
+ * không thì con Axie húc đầu trong lúc VFX của chiêu rơi từ trên trời xuống.                */
+/* ── NHẬP VÀO AXIE: một luật, một cửa ───────────────────────────────────────────────────────
+ * Chủ dự án chốt 2026-09-16: *"Người chơi muốn đánh quái thì phải nhập vào Axie, nhưng để flex
+ * được bộ giáp thì hãy làm cho nó đi theo ở trong thành."*
+ *
+ *   TRONG THÀNH   lớp nhân vật HIỆN, đi theo, đủ giáp — chỗ duy nhất khoe đồ
+ *   NGOÀI THÀNH   lớp nhân vật NHẬP VÀO Axie ⇒ trên màn một thân, Axie ra đòn của lớp mình
+ *
+ * ⚠ ĐÂY LÀ LUẬT THEO MAP, KHÔNG PHẢI THEO "ĐANG ĐÁNH NHAU". Cố ý. Gắn vào trạng thái đánh nhau
+ * thì AUTO cày liên tục ⇒ người chơi ở dạng đã nhập gần như 100% thời gian, và bộ giáp vẫn
+ * không ai thấy — tức mất đúng cái lợi mà cả đợt này sinh ra để lấy.
+ *
+ * ⚠ VÀ `safe` MỘT MÌNH LÀ KHÔNG ĐỦ. Outskirts (`ngoai`) khai `safe` (không PK) nhưng vẫn là bãi
+ * săn 8 bãi — cùng cái bẫy đã ghi ở mục Rương Canh: *"cửa duy nhất đúng là CÓ BÃI QUÁI"*. Nên
+ * thành = `safe` VÀ không bãi quái nào. Sàn đấu `pvp` không bãi quái nhưng `freepk` ⇒ vẫn nhập,
+ * đúng ý: ở đó người chơi đánh nhau thật.                                                   */
+function avaTrongThanh(mid){
+  const md = MAPS[mid || curMap];
+  if (!md || md.type !== 'safe') return false;
+  const pk = packsMd(md);
+  return !(pk && pk.length);
+}
+function avaNhap(mid){ return !avaTrongThanh(mid); }
+
+const CHI_DANH = {
+  thieulam: { duoi: '_ts', n: 12, cot: 6 },  // tail-smash   — bổ nặng từ trên
+  baidasan: { duoi: '_ch', n: 12, cot: 6 },  // cast-high    — Meteorite giáng xuống
+  toanchan: { duoi: '_cf', n: 12, cot: 6 },  // cast-fly     — bắn đi xa
+  minhgiao: { duoi: '_ma', n: 16, cot: 8 },  // multi-attack — combo nhiều nhát
+  bug:      { duoi: '_cl', n: 12, cot: 6 },  // cast-low     — quét thấp, ra lệnh
+};
+const CHI_DANH_IMGS = {};
+// Khoá đệm phải gồm CẢ LỚP: cùng một con Axie phục vụ năm lớp với năm bảng khác nhau, khoá
+// theo mỗi `id` là người chơi lớp này thấy đòn của lớp kia.
+function chiDanhImg(id, sect){
+  const K = CHI_DANH[sect];
+  if (!K || !CHI_MAP[id]) return null;
+  const khoa = id + K.duoi;
+  let im = CHI_DANH_IMGS[khoa];
+  if (!im){ im = new Image(); im.src = 'assets/chimera/' + khoa + '.webp'; CHI_DANH_IMGS[khoa] = im; }
+  return im;
+}
+function chiVeDanh(g, id, sect, i, x, y, thanPx){
+  const K = CHI_DANH[sect];
+  if (!K) return false;
+  return _chiVeKhoi(g, id, chiDanhImg(id, sect), K, i, x, y, thanPx);
+}
 // Avatar MẶC ĐỊNH theo lớp — chủ dự án chốt: bản này người chơi vào là thấy Axie luôn,
 // không phải gõ lệnh mới có. Mỗi lớp một con khác nhau cho dễ phân biệt ngoài đường.
 const AVA_MAC_DINH = {
@@ -5873,14 +5940,29 @@ function veAvatar(g, p, dangDiChuyen, now){
   // ⚠ BẢNG CHẠY CŨNG NẰM Ở ĐÂY, và nó là lỗi CÓ SẴN chứ không phải lỗi của đợt này: nó cũng
   // nạp lười, nên BƯỚC ĐI ĐẦU TIÊN của mỗi phiên cũng rơi vào nhánh lui-về-thở. Chỉ lộ ra khi
   // bài kiểm mới đặt `moving = true` trên một nhân vật chưa từng đi và nhận về khối 'tho'.
-  chiChayImg(id); chiGongImg(id); chiGiatImg(id);
+  chiChayImg(id); chiGongImg(id); chiGiatImg(id); chiDanhImg(id, p.sect);
   let ok = false, khoi = 'tho', khung = 0;
   if (ht > 0){
     khung = (1 - Math.min(1, ht)) * CHI_GIAT.n;
     ok = chiVeGiat(g, id, khung, 0, 0, than); if (ok) khoi = 'giat';
   } else if (gt > 0){
-    khung = (1 - Math.min(1, gt)) * CHI_GONG.n;
-    ok = chiVeGong(g, id, khung, 0, 0, than); if (ok) khoi = 'gong';
+    // ⚠ CHỈ NGOÀI THÀNH AXIE MỚI RA ĐÒN. Trong thành lớp nhân vật còn đứng đó và tự vung, nên
+    // cho Axie vung cùng lúc là dựng lại đúng cái "hai kẻ cùng đánh" mà đợt Đổi Vai gỡ đi —
+    // lần này ở ngay giữa thành phố. Trong thành Axie giữ khối GỒNG như cũ (sức mạnh đang được
+    // gọi tới), ngoài thành nó ra đòn của LỚP mình.
+    if (avaNhap()){
+      const K = CHI_DANH[p.sect];
+      if (K){
+        khung = (1 - Math.min(1, gt)) * K.n;
+        ok = chiVeDanh(g, id, p.sect, khung, 0, 0, than); if (ok) khoi = 'danh';
+      }
+    }
+    // Bảng đòn chưa tải xong thì lui về GỒNG trước khi lui về thở: gồng đã nạp sẵn từ lâu nên
+    // cú đánh đầu phiên vẫn có cái để vẽ, thay vì rơi thẳng về khối đứng yên.
+    if (!ok){
+      khung = (1 - Math.min(1, gt)) * CHI_GONG.n;
+      ok = chiVeGong(g, id, khung, 0, 0, than); if (ok) khoi = 'gong';
+    }
   } else if (dangDiChuyen){
     khung = Math.floor(((p.walkPh || 0) / (Math.PI * 2)) * CHI_CHAY.n);
     ok = chiVeChay(g, id, khung, 0, 0, than); if (ok) khoi = 'chay';
@@ -17795,7 +17877,10 @@ function drawPlayer(p){
   // vòng triệu hồi lo. Trượt từ sau ra trước đọc thành "chạy vòng lên", không ra "hộ pháp".
   const _lopT  = _lopHien ? AVA_CHAN_TRUOC : -AVA_THEO_SAU;
   const _lopB  = _lopHien ? AVA_CHAN_BEN   :  AVA_THEO_BEN;
-  const _lopCo = _coAva ? (_lopHien ? AVA_DANH_CO : AVA_THEO_CO) : 1;
+  // Trong thành thì cỡ riêng (khoe giáp); ngoài thành lớp nhân vật đã nhập nên `_lopCo` chỉ
+  // còn ý nghĩa với nhánh không-avatar.
+  const _lopCo = _coAva ? (avaTrongThanh() ? AVA_THANH_CO
+                         : _lopHien ? AVA_DANH_CO : AVA_THEO_CO) : 1;
   const _avaDx = _coAva ? Math.cos(p.face)*_lopT - Math.sin(p.face)*_lopB : 0;
   const _avaDy = _coAva ? (Math.sin(p.face)*_lopT + Math.cos(p.face)*_lopB)*0.55 : 0;
   // Thu quanh BÀN CHÂN, không quanh tâm hộp. Hộp 160x220 vẽ quanh tâm nên gót nằm thấp hơn neo
@@ -17810,8 +17895,14 @@ function drawPlayer(p){
   const _lopNeoY = p.y - NV_LECH_Y;
   // Độ VẬT CHẤT HOÁ, cũng tính sớm vì vòng triệu hồi phải vẽ TRƯỚC thân người.
   // ⚠ `atkAnim` ĐẾM NGƯỢC nên tiến độ là 1 − atkK, không phải atkK.
+  // ⚠ ĐÃ NHẬP VÀO AXIE thì lớp nhân vật KHÔNG có mặt trên màn — không mờ đi, không nhỏ lại,
+  // là KHÔNG CÓ. `_hienLop = 0` tắt cả thân người lẫn mọi thứ đọc nó; ba chỗ KHÔNG đọc nó
+  // (vòng triệu hồi · cánh/thần khí · hào quang Thần Hiệp) phải gác riêng bằng `_nhap`, nếu
+  // không thì trên màn còn một đôi cánh và một vòng sáng bay lơ lửng không có ai đeo.
+  const _nhap = _coAva && avaNhap();
   let _hienLop = 1;
-  if (_coAva && _lopHien)
+  if (_nhap) _hienLop = 0;
+  else if (_coAva && _lopHien)
     _hienLop = clamp((castK > 0 ? Math.min(1, castK) : 1 - Math.min(1, atkK)) / 0.28, 0, 1);
   // ── THỨ TỰ VẼ THEO CHIỀU SÂU ───────────────────────────────────────────────────────
   // Ai đứng THẤP hơn trên màn thì vẽ SAU. `_avaDy > 0` nghĩa là lớp nhân vật đứng thấp hơn
@@ -17821,7 +17912,7 @@ function drawPlayer(p){
   // cánh sinh ra — mà cánh thì đeo trên LỚP NHÂN VẬT, không trên Axie. Xem `bayKNen`.
   if (_coAva && _avaDy > 0) veAvatarDat(ctx, p, now, bayCao);
   // Vòng triệu hồi nổ dưới chân LỚP NHÂN VẬT (thứ đang được gọi tới), và phải nằm DƯỚI nó.
-  if (_coAva && _lopHien && _hienLop < 1)
+  if (_coAva && _lopHien && _hienLop < 1 && !_nhap)
     veVongTrieu(ctx, { x: p.x + _avaDx, y: p.y + _avaDy }, _hienLop);
   // ── CÁNH và THẦN KHÍ đi theo LỚP NHÂN VẬT, không theo neo người chơi ────────────────
   // Cả hai là trang bị CỦA NGƯỜI. Trước bản này chúng vẽ thẳng ở (p.x, p.y) không hỏi avatar,
@@ -17834,7 +17925,7 @@ function drawPlayer(p){
   // Bộ nào có LỚP VŨ KHÍ nướng sẵn thì cây kiếm đã nằm trong tay rồi — tắt thần khí, không
   // thì trên màn có HAI cây: một cây trong tay và một cây bay lượn cạnh người.
   const _coVkLop = !!nvVkLop(p);
-  const _tkHien = (!_coAva || _lopHien) && !_coVkLop;
+  const _tkHien = (!_coAva || _lopHien) && !_coVkLop && !_nhap;
   {
     ctx.save();
     // Cùng cả phép LẤY ĐÀ của khối thân: cánh cắm vào lưng, thân lùi lại lấy đà rồi bổ tới mà
@@ -17844,7 +17935,11 @@ function drawPlayer(p){
                   _lopNeoY + _avaDy + _lopChan + Math.sin(p.face)*lungeK*3);
     ctx.scale(_lopCo, _lopCo);
     ctx.translate(-p.x, -_lopNeoY);
-    if (wingIt) veCanh(ctx, wingIt, p.x, p.y + CANH_CHAN_MAN, p.sway || 0, p.swayDir || 0,
+    // ⚠ Đã nhập vào Axie thì KHÔNG vẽ cánh: cánh đeo trên lớp nhân vật, mà lớp ấy không còn
+    // trên màn. Bỏ chốt này là một đôi cánh bay lơ lửng cạnh con Axie, không ai đeo.
+    // (Cái giá, nói thẳng: ngoài thành người chơi KHÔNG thấy đôi cánh mình mua nữa. Đó là hệ
+    //  quả thẳng của việc nhập vào, không phải một lỗi — chỗ khoe cánh nay là trong thành.)
+    if (wingIt && !_nhap) veCanh(ctx, wingIt, p.x, p.y + CANH_CHAN_MAN, p.sway || 0, p.swayDir || 0,
                        CANH_CO_MAN, bayK, p.sect);
     if (window.TEST_MODE) _doNeo('canh', ctx, p.x, p.y + CANH_CHAN_MAN + CANH_CO_MAN * CANH_GOC_Y);
     if (_tk && !_tk.truoc && _tkHien) veThanKhi(ctx, _tk, p);   // nằm sau lưng: vẽ TRƯỚC thân
@@ -17857,7 +17952,7 @@ function drawPlayer(p){
   if (flip) ctx.scale(-1, 1);
   ctx.scale(pulse, pulse);
   // Thần Hiệp: hào quang vàng rực sau lưng + viền kim quang quanh thân
-  if (maxed && (!_coAva || _lopHien)){
+  if (maxed && (!_coAva || _lopHien) && !_nhap){
     const hg = ctx.createRadialGradient(0, -8, 6, 0, -8, 64);
     hg.addColorStop(0, 'rgba(255,228,150,.55)'); hg.addColorStop(0.55, 'rgba(255,177,92,.16)'); hg.addColorStop(1, 'rgba(0,0,0,0)');
     ctx.globalAlpha = 0.85 + 0.15*Math.sin(now/300); ctx.fillStyle = hg;
