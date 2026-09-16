@@ -2089,6 +2089,16 @@ Và một luật vẽ: **art tối thì phải cộng sáng.** `cong:false` (v�
 nền — Meteorite, Inferno. Gói tối như Dragon Spirit vẽ đè thì thành vệt bóng; bỏ `cong:false`
 cho nó cộng sáng là bầy long hồn phát sáng lên ngay. Đã thử cả hai và chụp lại để so.
 
+⚠ **NHƯNG ĐỘ SÁNG TRUNG BÌNH KHÔNG QUYẾT ĐỊNH MỘT MÌNH — VIỀN ĐEN THẮNG NÓ.** Gói `fire_scream`
+(Hoả Xích Diệm, Dark Lord) đo ra **sáng 0,397** trong khi nền map trung bình **0,658**, tức
+TỐI HƠN nền ⇒ theo luật trên thì phải cộng sáng. Chụp cả hai lối ra thì ngược hẳn: cộng sáng
+**ăn mất đường viền đen** (đen cộng vào nền là ra chính nền), ba ngọn lửa thành mấy vệt hồng
+nhợt không còn hình dạng; vẽ đè thì đọc rõ từng lưỡi lửa trên nền gạch sáng.
+
+⇒ Luật đầy đủ: **gói có viền đen đậm thì KHÔNG BAO GIỜ cộng sáng, bất kể sáng trung bình.**
+Cộng sáng dành cho gói *không có viền* mà chỉ có ánh sáng (Dragon Spirit là bầy hồn phát quang,
+không có nét bao). Và đây vẫn là chỗ **phải chụp ra so**, đừng quyết bằng một con số.
+
 ### 🧬 HAI HỌ BỊ ĐỘNG — khoá phân biệt là trường `chiSo`, đừng nhập chúng làm một
 
 Cây kỹ năng của **cả năm lớp** nay có một **xương sống chung**: bảy bị động cộng chỉ số, khai
@@ -3496,6 +3506,14 @@ gặp `rc=124` thì **chạy lại đúng một lần**, ghi tên vào `chaylai.
 `ĐÃ CHẠY LẠI`. Lượt hai vẫn 124 thì vẫn tính đỏ. *Một bộ kiểm im lặng nuốt lỗi thì tệ hơn một
 bộ kiểm nói ra là nó đã phải chạy lại.*
 
+⚠ **BA BÀI CHÉP CỨNG CỔNG, chạy lẻ ngoài `reg.sh` là ĐỎ GIẢ.** `test_phutdau` (8861) ·
+`test_nowuxia2` (8861) · `test_bonho` (8871) mở thẳng `http://localhost:<cổng>/index.html` và
+**không đọc argv**. Chạy riêng mà quên dựng server đúng cổng thì lỗi báo ra là
+`ERR_CONNECTION_REFUSED` ở dòng `page.goto` — trông y như bài hỏng, mà thực ra chưa một khẳng
+định nào chạy. Đã mất một vòng chẩn đoán vì chuyện này: tôi đọc "3/3 đỏ" rồi suýt kết luận là
+lỗi tất định của commit mình. **Trước khi tin một lượt chạy lẻ, hỏi log xem nó có tới được trang
+không.**
+
 ⚠ **Dọn trình duyệt mồ côi bằng lọc `ppid=1`, TUYỆT ĐỐI không `pkill -f chrom`.** Mẫu đó khớp
 luôn dòng lệnh của chính shell đang chạy rồi giết nó (thoát 144) — cùng vết sẹo đã ghi ở mục
 git bên dưới, và nó đã bị dẫm lại một lần nữa trong phiên gần đây.
@@ -3507,13 +3525,14 @@ khởi động**. Triệu chứng: thoát **144**, `$OUT` không tồn tại, kh
 nhầm thành "bộ kiểm hỏng". Tắt server thì tìm pid **theo CỔNG** (`ss -lptn "sport = :8853"`), đừng
 tìm theo chuỗi lệnh.
 
-⚠ **HAI BÀI ĐANG CÒN ĐỎ THEO XÚC XẮC — đã đo, chưa sửa tận gốc.** Ghi ra để người sau đừng mất
+⚠ **BA BÀI ĐANG CÒN ĐỎ THEO XÚC XẮC — đã đo, chưa sửa tận gốc.** Ghi ra để người sau đừng mất
 một buổi truy lại từ đầu, và đừng vội đổ cho commit của mình:
 
 | bài | dấu hiệu | đã đo được |
 |---|---|---|
 | `test_ngamchuot §4` | *"con quái cạnh chân cũng mất máu"*, `ganMat` = **đúng 1** | xanh 3/3 khi chạy riêng · mục này **đã** `player.reflect = 0` rồi, nên 1 máu ấy tới từ nguồn KHÁC, chưa truy ra. Ngưỡng là `ganMat > 0` nên đúng một điểm máu của một cơ chế khác cũng đủ làm đỏ |
 | `test_tamphap §3` | *"số lần bị khoá chân không giảm hẳn (47 → 28)"* | xanh 3/3 khi chạy riêng · đây là phép đo THỐNG KÊ, mẫu mỏng |
+| `test_phutdau §4` | *"bảo đảm rơi đồ vẫn áp dụng sau giai đoạn tân thủ — lạm phát đồ"* | xanh 3/3 khi chạy riêng (rơi 4/7 · 0/6 · 0/6); lượt đỏ bốc trúng **7/7**. Chốt là `roiThem >= haThem` với `haThem` chỉ 6-7 — vòng lặp xin 12 con nhưng `break` khi hết quái trong 400px. Tỉ lệ rơi cao thì 100% do may là chuyện thường. Muốn sửa tận gốc phải NỚI MẪU (bảo đảm đủ quái) hoặc đo thẳng `computeKillRewards` — nó là hàm THUẦN nên gọi 200 lượt là dứt điểm |
 
 ✅ **`test_tamphap §2` (*"định thân KHÔNG khoá được chân: đi được 46px"*) ĐÃ SỬA TẬN GỐC** — ghi lại
 vì nó là khuôn mẫu cho cả loại: **một mục đo trên cảnh mà mục TRƯỚC để lại.** `keoQuaiDanh` ghim
