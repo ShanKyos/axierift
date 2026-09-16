@@ -52,13 +52,39 @@ Rig **cất vũ khí đi trong `00_Run`** (khoá attachment rỗng). Đúng vớ
 game này vì lớp nhân vật chạy gần như liên tục. `VK_HIEN` ép mảnh hiện lại; ràng buộc tay vẫn bật
 trong `00_Run` nên nó tự nằm đúng tay.
 
+### Và một vòng nữa: "cung thì không cầm vậy được"
+
+Ràng buộc chạy đúng rồi mà chủ dự án vẫn gọi sai — lần này không phải lỗi máy. Bản mẫu chỉ có
+**MỘT tư thế mang** (chuôi ở tay, thân chĩa chéo xuống trước). Đúng cho kiếm, sai cho cung: đo ra
+trục chính của cây cung lệch **44,8°** so với phương dọc, tức nó nằm ngang ống chân như một cây
+kích. Vặn thêm **−40°** ở mọi khối TRỪ `10_ArcheryAttack` (khối đó rig đã dựng đúng tư thế bắn).
+
+Chốt bằng **ảnh A/B 0 · −32 · −40 · −48 trên cả ba khối** chứ không bằng một con số đẹp: `0` là
+cây kích, `−48` thì mũi cung quặt ra sau. *Một phép chỉnh THỊ GIÁC thì phải chốt bằng mắt trên
+ảnh, không chốt bằng công thức.*
+
 ### Giá phải trả
 
 Hộp cắt lớp `vk` nay là hợp của cả cú vung ⇒ phình gần bằng cả ô (240×279, 240×300). Tệp +400 KB
 cho ba bộ; bộ nhớ sau giải nén +~20 MB cho **đúng bộ đang mặc**. Cắt hộp theo từng khối sẽ gọn
 hơn nhiều — chưa làm, ghi lại làm nợ.
 
-Gác: `tests/test_vklop.js`. Thử ngược bằng bảng khung cũ: **27 FAIL**.
+### Và một nửa nữa mà ảnh chụp mới lôi ra
+
+Chủ dự án hỏi tiếp: *"DK có đại long đao theo sau mà? kiểm tra lại hình ảnh đi"*. Dựng lại
+được ngay: một Dark Knight cầm kiếm giai 3 thì `nvVkLop` trả `null` (bảng chỉ khai `kiem|7`),
+`_tkHien` bật **thần khí**, và trên màn là một thanh đại kiếm cao gần bằng người **trôi lơ lửng**
+cạnh nhân vật. Đo được **60/63** món của ba lớp rơi vào đường đó.
+
+Thêm nấc lùi theo LỚP (`NV_VK_LOP_LOP`). Đánh đổi ghi thẳng ra: cây rìu giai 3 nay vẽ ra Phượng
+Kiếm — hình trong túi và hình trên tay lệch nhau. Nhưng cái lệch đó sửa được bằng cách nướng
+thêm bảng khung cho từng dòng, còn cây trôi lơ lửng thì không sửa được bằng mã.
+
+⚠ Và mệnh đề gác nó **xanh vô nghĩa ở lượt đầu**: `genItem` chỉ sinh vũ khí của lớp ĐANG CHƠI,
+nên nó quét đúng 21/63 món (ba dòng của một lớp) rồi báo PASS. Phải đổi `player.sect` theo từng
+lớp, và thêm một chốt tự kiểm đòi ≥50 món mới cho chấm.
+
+Gác: `tests/test_vklop.js`. Thử ngược: bảng khung cũ **27 FAIL**; gỡ nấc lùi theo lớp **60/63 FAIL**.
 
 ---
 

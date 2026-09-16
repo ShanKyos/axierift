@@ -15,7 +15,12 @@
 //
 // Bài này đo đúng hai thứ đó, trên CHÍNH bảng khung mà game nạp:
 //   ① không khối nào có khung TRỐNG — cây vũ khí không được biến mất;
-//   ② vũ khí phải ĐỔI CHỖ theo khung — đứng yên là nó không dính vào tay.
+//   ② vũ khí phải ĐỔI CHỖ theo khung — đứng yên là nó không dính vào tay;
+//   ③ lớp nào đã có bảng cầm tay thì MỌI dòng vũ khí của lớp ấy, ở MỌI giai, phải dùng nó.
+//      Chủ dự án nhìn ảnh chụp và hỏi: *"DK có đại long đao theo sau mà?"* — đúng: một cây
+//      không khai trong NV_VK_LOP làm `nvVkLop` trả null, `_tkHien` bật thần khí, và một thanh
+//      đại kiếm cao gần bằng người trôi lơ lửng cạnh nhân vật. Mệnh đề này quét CẢ bảng
+//      WEAPON_LINES chứ không hỏi vài món mẫu.
 //
 // ⚠ Đo HỘP BAO, không đo điểm ảnh: hai khung liền nhau của một cây kiếm đang vung khác nhau
 // hàng nghìn điểm ảnh vì lý do chính đáng, còn một cái nhãn dán thì khác 0. Hộp bao tách hai
@@ -97,6 +102,45 @@ const { chromium } = require('playwright');
   else if (!bad) pass(`${soBo} bộ có lớp vũ khí cầm tay, mọi khối đều đủ khung và có chuyển động`);
   for (const t in ra) if (typeof ra[t] !== 'string')
     console.log('  ' + t + ': ' + BANG1.map(k => `${k}=${ra[t][k].khac}/${ra[t][k].n}`).join(' '));
+
+  // ── ③ không lớp nào rơi lại về thần khí ────────────────────────────────────────────────
+  const r3 = await p.evaluate(() => {
+    const ra = { thieu: [], daQuet: 0, lop: Object.keys(NV_VK_LOP_LOP) };
+    const sectCu = player.sect;
+    for (const L of (window.WEAPON_LINES || [])){
+      if (L.slot !== 'vukhi' || !NV_VK_LOP_LOP[L.sect]) continue;
+      // ⚠ `genItem` chỉ sinh vũ khí của LỚP ĐANG CHƠI. Không đổi `player.sect` thì mệnh đề này
+      // chỉ quét được ba dòng của một lớp — đo được 21 món thay vì 63 — mà vẫn xanh, tức nó
+      // âm thầm bỏ qua hai lớp còn lại.
+      player.sect = L.sect;
+      for (let giai = 1; giai <= GIAI_MAX; giai++){
+        // Dựng một món THẬT của đúng dòng/giai đó rồi hỏi qua CHÍNH cửa mà vòng vẽ dùng.
+        let it = null;
+        for (let i = 0; i < 400 && !it; i++){
+          const t = genItem(capDauGiai(giai), null, null, { slots: ['vukhi'] });
+          const d = t && itemDef(t);
+          if (d && d.line === L.line) it = t;
+        }
+        if (!it) continue;                       // dòng của lớp khác — genItem không ra được
+        it.tier = giai;
+        const cu = player.equip.vukhi;
+        player.equip.vukhi = it;
+        const co = nvVkLop(player);
+        player.equip.vukhi = cu;
+        ra.daQuet++;
+        if (!co) ra.thieu.push(L.line + '|' + giai);
+      }
+    }
+    player.sect = sectCu;
+    return ra;
+  });
+  // Tự kiểm cảnh dựng: 3 lớp × 3 dòng × 7 giai = 63 món. Ít hơn hẳn là genItem đang lọc theo
+  // lớp và mệnh đề chỉ quét được một phần — xanh mà không gác gì.
+  if (r3.daQuet < 50) fail(`③ chỉ dựng được ${r3.daQuet} món (cần ~63) — cảnh hỏng, mệnh đề vô nghĩa`);
+  else if (r3.thieu.length)
+    fail(`③ ${r3.thieu.length}/${r3.daQuet} món rơi về THẦN KHÍ (vũ khí trôi lơ lửng): ` +
+         r3.thieu.slice(0, 8).join(', '));
+  else pass(`③ ${r3.daQuet} món của ${r3.lop.length} lớp đều cầm được trên tay`);
 
   if (errs.length) fail('lỗi trang: ' + errs.slice(0, 3).join(' | '));
   console.log(bad ? `\n${bad} FAIL` : '\nOK');

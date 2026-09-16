@@ -597,8 +597,20 @@ def _tam_giac(dst, src, P, Q, tris):
         khung = dst[mny:mxy, mnx:mxx].astype(np.float32)
         dst[mny:mxy, mnx:mxx] = (khung*(1-a) + lay_[..., :4].astype(np.float32)*a).astype(np.uint8)
 
+# Vặn thêm MỘT xương sau khi mọi ràng buộc đã chạy. Ghi thẳng ma trận thế giới rồi dựng lại
+# nhánh con — cùng lối với ap_bien_hinh, và cùng cái cấm: sau nó đừng gọi `tt.tinh()`.
+# Dùng để sửa TƯ THẾ CẦM của những cây mà bản mẫu Spine cầm sai kiểu — xem VK_XOAY.
+def xoay_xuong(tt, ten, do):
+    if not do: return
+    i = tt.chiSo.get(ten)
+    if i is None: return
+    a, b, c, dd, wx, wy = tt.W[i]
+    r = math.radians(do); co, si = math.cos(r), math.sin(r)
+    tt.W[i] = (co*a - si*c, co*b - si*dd, si*a + co*c, si*b + co*dd, wx, wy)
+    tt.tinh_cay(i)
+
 def ve_khung(d, im, R, tt, hc, t, skinName, W=900, H=1100, phong=1.0, ox=0.5, oy=0.94,
-             bo_khe=(), doi_manh=None, bo_vl=None, dt_vl=None):
+             bo_khe=(), doi_manh=None, bo_vl=None, dt_vl=None, xoay_vk=None):
     """`doi_manh` — ép một KHE dùng mảnh khác mảnh hoạt cảnh chọn, dạng {tên khe: tên mảnh}.
 
     Dùng để đổi KHUÔN MẶT: khe đầu có sẵn bốn mảnh (thường · vui · đau đớn · nhắm mắt) ở
@@ -609,6 +621,7 @@ def ve_khung(d, im, R, tt, hc, t, skinName, W=900, H=1100, phong=1.0, ox=0.5, oy
     # Biến hình chạy SAU IK (nó đọc ma trận thế giới của xương đích, mà IK vừa vặn xong) và
     # TRƯỚC physics. Đây là thứ đưa cây vũ khí vào tay — xem ap_bien_hinh.
     ap_bien_hinh(tt, d, hc, t)
+    if xoay_vk: xoay_xuong(tt, '武器', xoay_vk)
     # physics chạy SAU cùng, đúng thứ tự của Spine: khoá → IK → vật lý. `dt_vl` là khoảng
     # thời gian giữa hai khung nướng, KHÔNG phải `t` (vị trí trong vòng lặp hoạt cảnh).
     if bo_vl and dt_vl: ap_vat_ly(bo_vl, tt, dt_vl)

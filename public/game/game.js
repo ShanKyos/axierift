@@ -15096,7 +15096,7 @@ const NV_LOP_HOP = {
               n:[81,86,110,73,0,79,181,176] },
   'elnb1':  { h:[85,96,70,79,5,88,170,177], t1:[71,132,116,75,39,115,165,118],
               c:[70,159,121,101,71,142,127,119], a:[92,125,59,75,33,115,137,139],
-              vk:[0,93,240,196,72,136,168,159], t2:[63,126,132,80,36,119,156,136],
+              vk:[0,93,240,207,9,141,231,159], t2:[63,126,132,80,36,119,156,136],
               n:[82,86,76,62,0,79,178,173] },
   'dlbc1':  { t1:[68,132,126,91,44,112,175,131], c:[65,157,130,108,69,141,134,120],
               a:[74,121,98,89,28,111,154,161], t2:[65,127,137,85,36,114,161,139],
@@ -15118,11 +15118,27 @@ const NV_VK_LOP = {
   'truongcung|7': 'elnb1',  // Cung Thiên Mệnh — cung thì PHẢI cầm tay, bắn bằng cung bay
                             // lơ lửng thì không đọc ra động tác giương cung nào cả.
 };
+// ⚠ LỚP NÀO ĐÃ CÓ MỘT CÂY CẦM TAY THÌ CẦM CÂY ẤY CHO MỌI MÓN — đừng để rơi về thần khí.
+// Chủ dự án nhìn ảnh chụp và hỏi thẳng: *"DK có đại long đao theo sau mà?"*. Đúng: đeo bất cứ
+// cây nào KHÔNG khai trong NV_VK_LOP (rìu, chuỳ, hay chính cây kiếm ở giai 1-6) là `nvVkLop`
+// trả null ⇒ `_tkHien` bật thần khí ⇒ một thanh đại kiếm cao gần bằng người TRÔI LƠ LỬNG cạnh
+// nhân vật. Mà chủ dự án đã chốt từ đợt nhập gói: *"với DK thì nhân vật tay sẽ cầm kiếm"* —
+// thần khí CỐ Ý chỉ dành cho Dark Wizard và Dark Lord.
+//
+// ⚠ ĐÁNH ĐỔI, nói thẳng: bảng khung cầm tay là hoạt cảnh của ĐÚNG cây trong gói Spine, nên
+// một cây rìu giai 3 sẽ vẽ ra Phượng Kiếm. Tức hình trong TÚI và hình TRÊN TAY lệch nhau.
+// Đổi lại là không còn cây nào trôi lơ lửng. Cái lệch kia sửa được bằng cách nướng thêm một
+// bảng khung cho từng dòng; cái trôi kia thì không sửa được bằng mã.
+//
+// Khoá theo lớp của MÓN (`d.sect`), không theo lớp người chơi: món của lớp khác thì không mặc
+// được (itemUsable gác), nhưng đọc theo món mới là cùng một nguồn sự thật với hai dòng trên.
+const NV_VK_LOP_LOP = { thieulam: 'dkph1', minhgiao: 'sbsm1', toanchan: 'elnb1' };
 function nvVkLop(p){
   const it = p && p.equip && p.equip.vukhi;
   const d = it && itemDef(it);
   if (!d || !d.line) return null;
-  const ten = NV_VK_LOP[d.line + '|' + (it.tier || 1)] || NV_VK_LOP[d.line];
+  const ten = NV_VK_LOP[d.line + '|' + (it.tier || 1)] || NV_VK_LOP[d.line]
+            || NV_VK_LOP_LOP[d.sect];
   return (ten && NV_LOP_HOP[ten] && NV_LOP_HOP[ten].vk) ? ten : null;
 }
 function nvLopCuaEquip(p){

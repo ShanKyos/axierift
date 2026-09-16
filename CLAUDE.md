@@ -2819,9 +2819,56 @@ phình gần bằng cả ô — `dkph1` 240×279, `sbsm1` 240×300. Tệp tăng 
 sau giải nén của lớp vũ khí tăng chừng 20 MB **cho đúng bộ đang mặc** (nạp theo nhu cầu). Muốn
 gọn lại thì phải cắt hộp THEO TỪNG KHỐI, không phải một hộp chung — chưa làm.
 
+### 🏹 BẢN MẪU CẦM MỌI CÂY NHƯ CẦM KIẾM — cung phải VẶN LẠI (`VK_XOAY`)
+
+Chủ dự án nhìn ảnh chụp và nói đúng một câu: *"cung thì không cầm vậy được"*. Đúng — và đây
+KHÔNG phải lỗi của ràng buộc biến hình, nó chạy đúng. Vấn đề là bản mẫu chỉ có **MỘT tư thế
+mang**: chuôi ở bàn tay, thân chĩa chéo xuống trước. Với kiếm thì đó là dáng xách kiếm; với
+cung thì nó đọc ra **một cây kích nằm ngang ống chân**.
+
+**Số đo:** trên khung đứng, trục chính của cây cung lệch **44,8°** so với phương dọc, và xương
+`武器` nằm ở ĐẦU cây chứ không ở giữa. Vặn thêm **−40°** đưa nó về gần dọc — cung buông xuống
+dọc theo chân, dây quay vào người.
+
+⚠ **Chốt bằng ảnh A/B, không bằng một con số đẹp.** Dựng 0 · −32 · −40 · −48 trên cả ba khối
+(đứng · đi · chạy) rồi mới chọn: `0` là cây kích, `−48` thì mũi cung quặt ra sau.
+
+⚠ **BỎ QUA `10_ArcheryAttack`.** Ở khối đó rig đã đổi sang mảnh cung GIƯƠNG và dựng đúng tư thế
+bắn — vặn thêm là phá chính cái khối duy nhất đang đúng. `VK_XOAY` vì thế là cặp
+`(số độ, những hoạt cảnh bỏ qua)`.
+
+⚠ **Chỉ vặn khi đang nướng CHÍNH lớp `vk`.** Các lớp thân không có xương `武器` trong bộ khe của
+chúng nên vặn ở đấy không đổi gì, chỉ tốn một lượt dựng lại nhánh con mỗi khung.
+
+Máy: `xoay_xuong()` trong `hoatcanh.py` (ghi thẳng ma trận thế giới rồi `tinh_cay`, cùng cấm kỵ
+với `ap_bien_hinh`: sau nó đừng gọi `tt.tinh()`) · bảng `VK_XOAY` trong `nuong_nv.py`.
+Kiếm của Dark Knight và Spellblade **không** vặn — chúng vốn là kiếm, dáng xách kiếm là đúng.
+
+### ⚠ LỚP NÀO ĐÃ CÓ CÂY CẦM TAY THÌ CẦM CHO **MỌI** MÓN — `NV_VK_LOP_LOP`
+
+Chủ dự án nhìn ảnh chụp và hỏi thẳng: *"DK có đại long đao theo sau mà?"*. Đúng. `NV_VK_LOP`
+khai theo `dòng|giai`, nên đeo **bất cứ cây nào khác** — cây rìu, cây chuỳ, hay chính cây kiếm
+ở giai 1-6 — là `nvVkLop` trả `null`, `_tkHien` bật **thần khí**, và một thanh đại kiếm cao gần
+bằng người **trôi lơ lửng** cạnh nhân vật. Đo được: **60/63** món của ba lớp rơi vào đường đó.
+
+⇒ `NV_VK_LOP_LOP = { thieulam:'dkph1', minhgiao:'sbsm1', toanchan:'elnb1' }` là nấc lùi cuối,
+tra theo lớp của **MÓN** (`d.sect`). Thần khí **cố ý** chỉ còn dành cho Dark Wizard và Dark Lord
+— chủ dự án chốt từ đợt nhập gói: *"với DK thì nhân vật tay sẽ cầm kiếm"*, và riêng Dark Lord
+*"cho vũ khí bay theo nhé"*.
+
+⚠ **ĐÁNH ĐỔI, nói thẳng:** bảng khung cầm tay là hoạt cảnh của ĐÚNG cây trong gói Spine, nên
+một cây rìu giai 3 vẽ ra Phượng Kiếm — hình trong TÚI và hình TRÊN TAY lệch nhau. Đổi lại là
+không còn cây nào trôi. Cái lệch kia sửa được bằng cách nướng thêm bảng khung cho từng dòng;
+cái trôi kia **không sửa được bằng mã**.
+
 Gác: `tests/test_vklop.js` — đọc chính bảng khung game nạp, đòi (①) không khối nào có khung
-TRỐNG và (②) vũ khí phải ĐỔI CHỖ theo khung. Suy danh sách bộ từ `NV_VK_LOP` nên thêm bộ mới là
-tự gác. Thử ngược bằng bảng cũ: **27 FAIL**.
+TRỐNG, (②) vũ khí phải ĐỔI CHỖ theo khung, và (③) mọi dòng × mọi giai của ba lớp ấy đều cầm
+được trên tay. Suy danh sách bộ từ `NV_VK_LOP` và quét `WEAPON_LINES` nên thêm bộ/dòng mới là
+tự gác. Thử ngược: bảng khung cũ **27 FAIL**, gỡ nấc lùi theo lớp **60/63 FAIL**.
+
+⚠ Mệnh đề ③ phải **đổi `player.sect`** theo từng lớp: `genItem` chỉ sinh vũ khí của lớp đang
+chơi, nên bản đầu chỉ quét 21/63 món mà vẫn xanh — tức âm thầm bỏ qua hai lớp. Chốt tự kiểm
+đòi ≥50 món mới cho chấm.
 
 ## Art nướng sẵn từ Spine — có SKILL riêng, đọc trước khi đụng vào
 
