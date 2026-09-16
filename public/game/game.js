@@ -14961,6 +14961,7 @@ const NV_GIAP = {
   'baidasan|1': 'dwvt1',
   // Phoenix — bộ ĐỈNH của Dark Knight, nên giai 7 chứ không phải giai 1 (cùng lý do dwsm1).
   'thieulam|7': 'dkph1',
+  'bug|7': 'dlbc1',        // Dark Lord — trượng bay, không có lớp vũ khí cầm tay
 };
 // Lớp này có art giáp ở giai nào? Lấy giai CAO NHẤT có art. Có hàm này thì ?test=1 và bài kiểm
 // không ai phải thuộc lòng "Dark Wizard thì giai 7, Dark Knight thì giai 1", và thêm bộ mới
@@ -15051,6 +15052,11 @@ const NV_LOP_HOP = {
   'dkph1':  { t1:[61,133,135,105,43,102,175,131], c:[62,161,152,105,70,139,136,124],
               a:[63,124,126,138,26,114,167,147], vk:[37,185,166,87,96,169,144,103],
               t2:[57,110,145,103,35,111,163,139], n:[84,87,105,75,0,79,179,169] },
+  // Dark Lord — bộ vàng-đỏ nạm hồng ngọc. KHÔNG có lớp `vk`: lớp này cầm trượng BAY
+  // (thần khí), nên nướng bằng cờ --khongvk. Xem NV_VK_LOP — cố ý không khai.
+  'dlbc1':  { t1:[68,132,126,91,44,112,175,131], c:[65,157,130,108,69,141,134,120],
+              a:[74,121,98,89,28,111,154,161], t2:[65,127,137,85,36,114,161,139],
+              n:[86,88,80,55,0,80,186,168] },
   'dwvt1':  { t1:[61,137,136,82,44,105,174,128], c:[64,154,135,114,67,136,141,125],
               a:[65,121,129,122,28,111,163,142], t2:[68,125,130,81,31,116,163,139],
               n:[87,88,80,55,0,79,187,172] },
@@ -15216,7 +15222,7 @@ function nvMoc(kind){ return NV_BANG2[kind] ? NV_MOC2[kind] : NV_MOC[kind]; }
 // ⚠ Bộ nào nướng ra 112 ô (16 cột × 7 hàng) thì khối CHẠY là 32 khung, không phải 16 như
 // HS_FRAMES.r mặc định. Kiểm bằng phép chia: bềRộngBảng/bềRộngÔ = 16 và bềCao/caoÔ = 7.
 // Quên khai là lớp đó chỉ đọc NỬA ĐẦU vòng chạy — chân lệch nhịp so với lớp khai đủ.
-const NV_KHUNG_R = { dkcw1: 32, dwsc1: 32, elfar1: 32, dlcm1: 32, dkph1: 32 };
+const NV_KHUNG_R = { dkcw1: 32, dwsc1: 32, elfar1: 32, dlcm1: 32, dkph1: 32, dlbc1: 32 };
 function nvSoKhung(ten, kind){
   if (kind === 'r' && ten && NV_KHUNG_R[ten]) return NV_KHUNG_R[ten];
   return HS_FRAMES[kind] || 1;
