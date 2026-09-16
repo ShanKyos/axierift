@@ -1454,6 +1454,10 @@ const VFX_ATLAS_DEFS = {
   // nâng nhẹ nhất đã làm quạ ngả xám và mất luôn chất "chim đen". Ngưỡng 0,12 rút ra từ art TRÙM
   // vẽ ở 113px; tấm này vẽ ~230px nên chi tiết sống sót, cộng viền tím và vệt khói cho tương phản.
   raven_storm:    { k:1, cols:8, rows:1,  frameW:384, frameH:384, frames:8,  fps:16, anchorX:46.1, anchorY:192.0, neoR:337.9, cong:false },
+  // Death Stab / "đâm gió" (Trấn Phái của Dark Knight) — ngọn thương xoắn dài ra, hơi lam cuốn quanh.
+  // 16 khung và KHÔNG khung nào chết: đổi thấp nhất giữa hai khung liền nhau là 11,5 RMS, tức
+  // ngọn thương vẫn đang xoay. (Hai gói trước phải bỏ khung độn; gói này thì không.)
+  death_stab:     { k:1, cols:8, rows:2,  frameW:384, frameH:384, frames:16, fps:20, anchorX:46.1, anchorY:192.0, neoR:337.9, cong:false },
 };
 const VFX_ATLAS_IMGS = {};
 const VFX_ATLAS_DUNG = {};   // id → lúc dùng gần nhất (ms)
@@ -4080,7 +4084,8 @@ function vhKnockback(m, ang, px){
 const SECT_VFX = {
   // sx_thieulam_a đã GỠ khỏi bảng này — nay có tranh thật trong CHIEU_TRANH. Giữ lại dòng style
   // là chồng một vòng sáng vector lên đúng chỗ tấm dán đang toả ra, thành hai lớp lệch nhau.
-  sx_thieulam_c: { style:'stabburst',    c2:'#cfe8ff', dur:0.85 },            // Death Stab (Dark Knight) — chuỗi nhát đâm liên tiếp
+  // sx_thieulam_c — ĐÃ CÓ ART THẬT (`death_stab` trong CHIEU_TRANH). Style tạm `stabburst` gỡ
+  // theo luật: có mặt trong CHIEU_TRANH mà còn khai style là chồng hai lớp lệch tâm lên nhau.
   // sx_toanchan_a đã GỠ khỏi bảng này — nay có tranh thật trong CHIEU_TRANH.
   sx_toanchan_c: { style:'icefall',      c2:'#dff4ff', dur:1.0 },             // Ice Arrow (Sylvan Ranger) — phiến băng kết trên cao rồi rơi xuống vỡ
   sx_baidasan_a: { style:'poisonbloom',  c2:'#b8ff9a', proj:'serpent', dur:1.1 }, // Poison (Dark Wizard) — vũng độc loang ra, sủi bọt
@@ -4714,6 +4719,7 @@ const CHIEU_TRANH = {
   // Bảng đã chụp: 1,00→210px · 0,85→179 · 0,72→151 · **0,60→126**.
   // ⚠ Chỉ được thu NHỎ hơn vòng sát thương (`pham` 185), không bao giờ to hơn — xem luật `pham`.
   sx_bug_c:      { atlas:'raven_storm',   xoay:true, co:0.60 },  // Bão Quạ — Trấn Phái Dark Lord
+  sx_thieulam_c: { atlas:'death_stab',    xoay:true },  // Death Stab — Trấn Phái Dark Knight
 };
 // Chỗ chiêu giáng xuống: CHUỘT CHỈ ĐÂU, CHIÊU GIÁNG ĐÓ.
 //
