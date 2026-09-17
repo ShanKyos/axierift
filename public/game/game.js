@@ -1652,29 +1652,48 @@ function veVongKiem(g, e, nua){
   g.globalAlpha = 1; g.globalCompositeOperation = 'source-over';
 
   // Vũ khí bay quanh — cùng elip, cùng tâm, chỉ nhỏ hơn một chút để nó chạy trong lòng vệt lửa
+  // ⚠ NHIỀU LƯỠI, KHÔNG PHẢI MỘT. Bản đầu vẽ đúng MỘT cây: chụp ra thì nửa vòng nó nằm ở nửa
+  // XA — nhỏ, khuất sau lưng người — nên phần lớn thời gian trên màn chỉ còn một vòng lửa trống
+  // ruột, và chủ dự án đọc nó thành "một chiêu hình ảnh đơn lẻ". `VONGKIEM_LUOI` lưỡi rải ĐỀU
+  // quanh elip ⇒ luôn có ít nhất một cây ở nửa gần, tức lúc nào cũng đọc ra "vũ khí đang xoay".
   const W = e.wpn;
   if (W){
-    const ang = -Math.PI / 2 + k * Math.PI * 2 * VONGKIEM_VONG;
-    const s = Math.sin(ang);
-    if ((s < 0) === sauNua){
+    const goc0 = -Math.PI / 2 + k * Math.PI * 2 * VONGKIEM_VONG;
+    for (let b = 0; b < VONGKIEM_LUOI; b++){
+      const ang = goc0 + b * (Math.PI * 2 / VONGKIEM_LUOI);
+      const s = Math.sin(ang);
+      if ((s < 0) !== sauNua) continue;
       const gan = 1 + s * 0.22;                    // nửa gần to hơn nửa xa
       g.save();
+      g.globalAlpha = mo;                          // tắt cùng vệt lửa, đừng biến mất đột ngột
       g.translate(e.x + Math.cos(ang) * VONGKIEM_VKX, cyc + s * VONGKIEM_VKY);
-      g.rotate(ang + Math.PI / 2);                 // lưỡi nằm theo tiếp tuyến
+      // Tiếp tuyến + phần TỰ QUAY quanh chuôi. Chỉ có tiếp tuyến thì cây vũ khí đi vòng mà thân
+      // nó đứng im so với quỹ đạo — đọc ra "bị kéo lê", không ra "đang xoay".
+      g.rotate(ang + Math.PI / 2 + k * Math.PI * 2 * VONGKIEM_TUQUAY);
       g.scale(gan * W.k, gan * W.k);
       g.translate(0, W.dy);
       W.ve(g);
       g.restore();
     }
+    g.globalAlpha = 1;
   }
 }
 // Gom thông tin vẽ vũ khí MỘT LẦN lúc tung chiêu, không phải mỗi khung.
-// Chỉ vẽ được cây nào CÓ TRANH trong VK_ANH. Dòng chưa có tranh thì vòng kiếm quay không —
-// vẫn là một vòng lửa đầy đủ, chỉ thiếu mấy lưỡi kiếm bay quanh.
+//
+// ⚠ NẤC LÙI THEO LỚP, và nó phải nằm ở ĐÂY chứ không phải trong `vkAnh()`. Đo được: Dark Knight
+// có ba dòng vũ khí (kiem · riu · chuy) mà VK_ANH chỉ có tranh cho `kiem` ⇒ **2/3 người chơi DK
+// tung tuyệt chiêu ra một vòng lửa RỖNG**, không một lưỡi nào. Nới ngay trong `vkAnh()` thì sửa
+// được chỗ này nhưng đồng thời nói dối ở ba chỗ khác đang gọi nó — ICON trong túi đồ (23064 ·
+// 23217 · 23251): cây rìu sẽ hiện ra hình thanh kiếm ngay trong ô túi, tức đổi một lỗi lấy một
+// lỗi nặng hơn. Ở cỡ lưỡi bay vòng thì thứ cần là một BÓNG DÁNG vũ khí; trong ô túi thì thứ cần
+// là đúng món ấy. Cùng đánh đổi đã ghi cho `NV_VK_LOP_LOP` (vũ khí cầm tay), và cùng lý do.
+const VK_VONGKIEM_LOP = { thieulam:'kiem', minhgiao:'makiem', toanchan:'no', bug:'lenhtruong', baidasan:'gay' };
 function vongKiemVuKhi(){
   const it = player.equip && player.equip.vukhi;
   const d = it && itemDef(it);
-  const A = d && vkAnh(d);
+  // ⚠ NẤC LÙI CHỈ ÁP KHI THẬT SỰ CÓ CẦM MỘT CÂY. `d` rỗng nghĩa là TAY KHÔNG — lùi ở đó là
+  // người chơi cởi sạch đồ vẫn có ba lưỡi kiếm bay quanh, đúng cái `test_vongkiem §6` gác từ đầu.
+  const A = d ? (vkAnh(d) || VK_ANH[VK_VONGKIEM_LOP[d.sect || player.sect]] || null) : null;
   if (!A) return null;
   const im = nvTai(A.tep, 'png');
   if (!(im && im.complete && im.naturalWidth)) return null;
@@ -1800,6 +1819,8 @@ const VONGKIEM_RX = 1.254 * NV_CAO, VONGKIEM_RY = 0.576 * NV_CAO;   // vành l�
 const VONGKIEM_VKX = 1.119 * NV_CAO, VONGKIEM_VKY = 0.525 * NV_CAO; // quỹ đạo vũ khí, hơi lọt vào trong vành lửa
 const VONGKIEM_QUET = Math.PI * 1.15;        // vệt lửa dài bao nhiêu radian, tính từ đầu vệt
 const VONGKIEM_VONG = 2;                     // số vòng trọn trong một lần tung
+const VONGKIEM_LUOI = 3;                     // số lưỡi bay quanh, rải ĐỀU trên elip
+const VONGKIEM_TUQUAY = 3;                   // số vòng mỗi lưỡi tự quay quanh chuôi trong một lần tung
 // Trả về { dai, ve } — `ve` vẽ cây vũ khí với CHỖ NẮM ở gốc và MŨI dọc trục +X, đơn vị px thế
 // giới. Nhờ chuẩn hoá đó mà thanKhiTuThe() chỉ cần lo quỹ đạo, không cần biết đang cầm cây gì.
 function thanKhiNguon(p){
