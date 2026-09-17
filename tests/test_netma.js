@@ -50,7 +50,10 @@ const cho = ms => new Promise(r => setTimeout(r, ms));
     render();
 
     const truoc = window.NETPLAYERS.length;
-    window.cheatExec('/net ma 3');
+    // ⚠ MỘT bóng, không phải ba. Từ đợt `main` cho lớp nhân vật ĐI THEO ở cỡ 1,00 trong thành,
+    // mỗi bóng chiếm chỗ rộng hơn hẳn — ba con vây quanh thì con nào cũng lọt vào ô đối chứng
+    // của con kia, và ô đối chứng nhiễm 1.688 điểm ảnh (trước là 121). Ô đối chứng phải TRỐNG.
+    window.cheatExec('/net ma 1');
     const sau = window.NETPLAYERS.length;
     const m = window.NET_MA[0];
 
@@ -71,16 +74,32 @@ const cho = ms => new Promise(r => setTimeout(r, ms));
     const sxm = (m.x - camera.x) * z, sym = (m.y - camera.y) * z;
     const trongKhung = sxm > 80 && sym > 80 && sxm < cv.clientWidth - 80 && sym < cv.clientHeight - 80;
 
-    // Vẽ CẢ HAI lượt trong CÙNG một `evaluate` ⇒ hoạt ảnh nền chỉ trôi ~1 ms.
-    render();
-    const coA = lay(m.x, m.y), coC = lay(m.x - 480, m.y);
-    const giu = window.NET_MA.slice();
-    window.cheatExec('/net xoa');
-    render();
-    const khA = lay(m.x, m.y), khC = lay(m.x - 480, m.y);
-    window.NET_MA.push(...giu); window.NETPLAYERS.push(...giu);
+    // Ô ĐỐI CHỨNG đặt ở phía ĐỐI DIỆN người chơi so với bóng, nên nó cách CẢ HAI thân người.
+    // Chọn theo hình học chứ không bằng một độ lệch chép tay: `m.x − 480` từng rơi cách một
+    // bóng khác đúng 269px, và ở cỡ trong-thành thì thế là chạm.
+    const gx = m.x - player.x, gy = m.y - player.y, gl = Math.hypot(gx, gy) || 1;
+    const ccx = player.x - gx / gl * 620, ccy = player.y - gy / gl * 620;
+    const xaNhat = Math.min(Math.hypot(player.x - ccx, player.y - ccy),
+                            Math.hypot(m.x - ccx, m.y - ccy));
 
     const dem = (u, v) => { let n = 0; for (let i = 0; i < u.length; i += 4) if (u[i]!==v[i]||u[i+1]!==v[i+1]||u[i+2]!==v[i+2]) n++; return n; };
+    const trungVi = a => a.slice().sort((x, y) => x - y)[a.length >> 1];
+
+    // ⚠ TRUNG VỊ, KHÔNG PHẢI MỘT CẶP. Con Axie nay PHA hai khung (xem mục "Khối thở của Axie
+    // PHA hai khung") nên nó nhúc nhích ở MỌI lượt vẽ — sàn nhiễu của một cặp đơn lẻ nhảy rất
+    // rộng. Cùng bản vá mà `test_xoayvfx` và `test_dongbodo` đã phải dùng.
+    const giu = window.NET_MA.slice();
+    const sBong = [], sChung = [];
+    for (let lap = 0; lap < 9; lap++){
+      window.NET_MA.length = 0; window.NET_MA.push(...giu); netMaDong();
+      render();
+      const coA = lay(m.x, m.y), coC = lay(ccx, ccy);
+      window.cheatExec('/net xoa');
+      render();
+      sBong.push(dem(coA, lay(m.x, m.y)));
+      sChung.push(dem(coC, lay(ccx, ccy)));
+    }
+    window.NET_MA.length = 0; window.NET_MA.push(...giu); netMaDong();
 
     // ③ nhịp + hoạt cảnh: bóng giả phải THỞ và phải ĐẾM NGƯỢC như thân người thật.
     const ph0 = giu[0].walkPh;
@@ -96,18 +115,21 @@ const cho = ms => new Promise(r => setTimeout(r, ms));
     window.cheatExec('/net toi');
     const dSau = Math.hypot(player.x - giu[0].x, player.y - giu[0].y);
 
-    return { truoc, sau, trongKhung, oBong: dem(coA, khA), oDoiChung: dem(coC, khC),
+    return { truoc, sau, trongKhung, xaNhat: Math.round(xaNhat),
+             oBong: trungVi(sBong), oDoiChung: trungVi(sChung),
              ph0, ph1, atk0, atk1, oDo: Object.keys(giu[0].equip || {}).length,
              xTruoc, dSau, sect: giu[0].sect, sectTa: player.sect };
   });
 
-  console.log('1 · /net ma 3 ⇒ NETPLAYERS', r.truoc, '→', r.sau, '· ô đồ mặc:', r.oDo);
+  console.log('1 · /net ma 1 ⇒ NETPLAYERS', r.truoc, '→', r.sau, '· ô đồ mặc:', r.oDo);
   if (!r.trongKhung) fail('⓪ cảnh dựng hỏng — bóng giả nằm ngoài khung hình, mọi phép đo dưới đây vô nghĩa');
-  if (r.sau - r.truoc !== 3) fail('① `/net ma 3` không đổ đủ 3 bóng vào NETPLAYERS (đường KHÔNG mạng)');
+  if (r.sau - r.truoc !== 1) fail('① `/net ma 1` không đổ bóng nào vào NETPLAYERS (đường KHÔNG mạng)');
   if (r.oDo < 1) fail('① bóng giả không mặc gì — `netApTrangBi` không chạy, tức nó không thử được đường trang bị');
   if (r.sect !== r.sectTa) fail('① bóng giả khác lớp với mình — không so được với thân của chính mình');
 
-  console.log('2 · điểm ảnh đổi — ô có bóng:', r.oBong, '· ô đối chứng:', r.oDoiChung);
+  console.log('2 · điểm ảnh đổi (trung vị 9 cặp) — ô có bóng:', r.oBong,
+              '· ô đối chứng:', r.oDoiChung, '· ô đối chứng cách thân gần nhất', r.xaNhat + 'px');
+  if (r.xaNhat < 400) fail('② cảnh dựng hỏng — ô đối chứng nằm sát một thân người, nó không còn là sàn nhiễu của NỀN');
   if (!(r.oBong > 800 && r.oBong > r.oDoiChung * 5))
     fail(`② bóng giả KHÔNG VẼ RA (ô bóng ${r.oBong} · đối chứng ${r.oDoiChung}) — /net ma là một cái vỏ`);
 
