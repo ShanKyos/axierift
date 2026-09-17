@@ -114,15 +114,22 @@ const { chromium } = require('playwright');
   else {
     // Cắt theo KHỐI `ctx.save()` gần nhất, không theo một cửa sổ N ký tự: cửa sổ cố định thì
     // thêm một dòng chú thích vào giữa khối là bài đỏ ở chỗ chẳng liên quan gì tới thứ nó gác.
+    // ⚠ HAI NEO HỢP LỆ, KHÔNG PHẢI MỘT — đừng "dọn" lại thành một. `_avaDx` là chỗ LỚP NHÂN VẬT
+    // đứng; `_tkDx` là chỗ vũ khí đứng khi lớp nhân vật đã NHẬP vào Axie (ngoài thành), lúc ấy
+    // chỗ kia không có ai nên neo vào đó là cây vũ khí trôi lơ lửng cách con Axie một thân người.
+    // CÁNH thì vẫn chỉ được neo `_avaDx`: cánh đeo trên lớp nhân vật, không đeo trên Axie.
     const hong = goi.filter(m => {
       const truoc = src.slice(0, m.index);
       const mo = truoc.lastIndexOf('ctx.save()');
-      return mo < 0 || !/ctx\.translate\(p\.x \+ _avaDx/.test(truoc.slice(mo));
+      if (mo < 0) return true;
+      const khoi = truoc.slice(mo);
+      return m[1] === 'Canh' ? !/ctx\.translate\(p\.x \+ _avaDx/.test(khoi)
+                             : !/ctx\.translate\(p\.x \+ _(ava|tk)Dx/.test(khoi);
     });
     if (hong.length)
       fail(`${hong.length}/${goi.length} lời gọi vẽ cánh/thần khí KHÔNG nằm trong phép dời về ` +
-           'neo lớp nhân vật — thứ đó sẽ vẽ đè lên con Axie');
-    else pass(`${goi.length}/${goi.length} lời gọi vẽ cánh + thần khí đều bám neo lớp nhân vật`);
+           'neo lớp nhân vật (hoặc neo vũ khí khi đã nhập) — thứ đó sẽ vẽ đè lên con Axie');
+    else pass(`${goi.length}/${goi.length} lời gọi vẽ cánh + thần khí đều bám một neo hợp lệ`);
   }
   // Vũ khí phải TẮT lúc đi theo sau — nửa còn lại của "xuất hiện đằng trước kèm vũ khí".
   const _tk = src.match(/const _tkHien = ([^;]+);/);
@@ -134,7 +141,13 @@ const { chromium } = require('playwright');
     fail('cửa `_tkHien` không hỏi lớp vũ khí — bộ có kiếm nướng sẵn trong tay sẽ hiện HAI cây');
   else if (!/_tk && !_tk\.truoc && _tkHien/.test(src) || !/_tk && _tk\.truoc && _tkHien/.test(src))
     fail('một trong hai lớp thần khí (trước/sau thân) chưa đi qua cửa `_tkHien`');
-  else pass('thần khí chỉ hiện khi lớp nhân vật ra trước — cả hai lớp vẽ đều qua cửa');
+  // ⚠ VÀ CỬA ẤY PHẢI CÓ NHÁNH "ĐÃ NHẬP". Chủ dự án chốt: *"nhân vật có thể không hiện nhưng
+  // vũ khí sẽ LUÔN xuất hiện để đồng bộ được skill"*. Không có `_tkNhap` thì ngoài thành ba lớp
+  // cầm vũ khí (DK · Spellblade · Sylvan Ranger) ra đòn mà trên màn không có cây vũ khí nào —
+  // `!_nhap` tắt thần khí, còn cây trong tay thì nằm trong lớp thân người đã nhập.
+  else if (!/_tkNhap/.test(_tk[1]))
+    fail('cửa `_tkHien` không có nhánh `_tkNhap` — ngoài thành ra đòn sẽ KHÔNG có vũ khí nào');
+  else pass('thần khí hiện khi lớp nhân vật ra trước, VÀ khi đã nhập vào Axie — cả hai lớp vẽ đều qua cửa');
 
   // ── ④ Cánh phải NGỒI TRÊN VAI ở mọi cỡ thu ────────────────────────────────────────────
   // Không đo bằng điểm ảnh, và cũng không chép lại phép biến hình sang đây: game tự đưa hai

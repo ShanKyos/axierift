@@ -1834,12 +1834,24 @@ const VONGKIEM_DAY = 2.2;                    // bề dày lõi tia (bản lửa 
 const VONGKIEM_XET = 5;                      // biên độ giật ngang của tia, px
 // Trả về { dai, ve } — `ve` vẽ cây vũ khí với CHỖ NẮM ở gốc và MŨI dọc trục +X, đơn vị px thế
 // giới. Nhờ chuẩn hoá đó mà thanKhiTuThe() chỉ cần lo quỹ đạo, không cần biết đang cầm cây gì.
+// Cây LÙI theo LỚP, cho dòng vũ khí chưa có tranh riêng. Lấy đúng cây cắt ra từ gói Spine của
+// chính lớp đó, nên nó luôn là vũ khí "của lớp mình" chứ không phải một cây bốc đại.
+// ⚠ Vì sao phải có: đo được **48/98 tổ hợp (dòng × giai) không có tranh trong `VK_ANH`** —
+// `riu` `chuy` `cungngan` `songdao` `bua` `kich` trống sạch bảy giai. Tức gần MỘT NỬA số cây
+// vũ khí trong game, khi ra đòn, không hiện ra một cái gì. Từ đợt "lớp nhân vật NHẬP vào Axie"
+// thì chỗ này thành lỗ thủng hẳn: ba lớp cầm vũ khí bằng lớp nướng sẵn không còn thân người để
+// mà cầm, nên trên màn KHÔNG có vũ khí nào cả.
+const TK_LOP = { thieulam:'kiem', toanchan:'no', minhgiao:'makiem', baidasan:'gay', bug:'lenhtruong' };
 function thanKhiNguon(p){
   const it = p.equip && p.equip.vukhi;
   const d  = it && itemDef(it);
   if (!d) return null;                         // tay không thì không có gì bay theo
-  const A = vkAnh(d);
-  if (!A) return null;                         // dòng chưa có tranh thì chưa có gì bay theo
+  // ⚠ Nấc lùi đặt Ở ĐÂY, không đặt trong `vkAnh()`. Nới trong `vkAnh` thì ICON trong túi đồ
+  // cũng đổi theo — cây rìu sẽ hiện ra hình thanh kiếm ngay trong ô túi. Ở cỡ vũ khí bay quanh
+  // thì thứ cần là một BÓNG DÁNG; trong ô túi thì phải đúng món ấy. Cùng đánh đổi đã ghi cho
+  // `NV_VK_LOP_LOP`, và cùng chỗ đặt.
+  const A = vkAnh(d) || VK_ANH[TK_LOP[d.sect || (p && p.sect) || player.sect]] || null;
+  if (!A) return null;                         // lớp chưa khai cây lùi thì đành chịu
   const im = nvTai(A.tep, 'png');
   if (!(im && im.complete && im.naturalWidth)) return null;
   const s = (NV_CAO / HERO_H) * TK_PHONG;
@@ -5909,6 +5921,10 @@ const AVA_DANH_CO  = 0.90;
 // nghĩa khi hai hình cùng đứng trong một cảnh ĐÁNH NHAU. Trong thành thì cả cảnh là để khoe đồ.
 // 0,72 → 1,00 là +39% chiều, tức gần GẤP ĐÔI số điểm ảnh đọc được của bộ giáp.
 const AVA_THANH_CO = 1.00;
+// Cỡ THẦN KHÍ lúc lớp nhân vật đã NHẬP vào Axie. Lúc đó cây vũ khí là thứ DUY NHẤT trên màn nói
+// rằng người chơi vừa ra đòn, nên nó không còn phải nhường chỗ cho thân người nào — để bằng cỡ
+// lúc ra đòn (`AVA_DANH_CO`) là nó tụt xuống nhỏ hơn con Axie đang cầm nó.
+const AVA_TK_NHAP_CO = 1.00;
 // …và CHỖ ĐỨNG TRONG THÀNH. ⚠ ĐO RỒI MỚI BIẾT: KÉO CỠ TO RA KHÔNG CHỮA ĐƯỢC GÌ. Chụp thử ở ba
 // cỡ 0,72 · 1,00 · 1,20 thì cả ba đều cho ra một bộ giáp bị CON AXIE CHE — vì lúc thường lớp
 // nhân vật đứng LÙI SAU 70px và chỉ lệch sang bên 34px, trong khi hộp vẽ của Axie rộng tới
@@ -18415,7 +18431,34 @@ function drawPlayer(p){
   // Bộ nào có LỚP VŨ KHÍ nướng sẵn thì cây kiếm đã nằm trong tay rồi — tắt thần khí, không
   // thì trên màn có HAI cây: một cây trong tay và một cây bay lượn cạnh người.
   const _coVkLop = !!nvVkLop(p);
-  const _tkHien = (!_coAva || _lopHien) && !_coVkLop && !_nhap;
+  // ⚠⚠ ĐÃ NHẬP VÀO AXIE THÌ VŨ KHÍ VẪN PHẢI HIỆN — chủ dự án chốt (2026-09-17), nguyên văn:
+  // *"khi Axie ra chiêu thì sẽ hiện cây vũ khí… nhân vật có thể không hiện nhưng vũ khí sẽ
+  // LUÔN xuất hiện để đồng bộ được skill"*.
+  //
+  // Vì sao đây là một luật chứ không phải một tuỳ chọn: ngoài thành lớp nhân vật nhập vào Axie
+  // nên nó không có trên màn, mà ba lớp (DK · Spellblade · Sylvan Ranger) cầm vũ khí bằng LỚP
+  // NƯỚNG SẴN trong chính bộ khung người — lớp ấy không vẽ thì cây vũ khí biến mất theo. Cộng
+  // với `!_coVkLop` vốn tắt thần khí cho đúng ba lớp đó, kết quả là **ngoài thành, ba lớp cầm
+  // vũ khí tung chiêu mà trên màn không có một cây vũ khí nào** — người chơi không đọc được
+  // chiêu, và mọi mốc rèn +N trên vũ khí cũng tàng hình theo.
+  //
+  // ⇒ `_tkNhap` là cửa riêng, và nó CỐ Ý bỏ qua `_coVkLop`: lúc đã nhập thì không có cây nào
+  // "trong tay" để mà trùng, nên thần khí là cây DUY NHẤT trên màn, không phải cây thứ hai.
+  const _tkNhap = _nhap && _lopHien;
+  const _tkHien = _tkNhap || ((!_coAva || _lopHien) && !_coVkLop && !_nhap);
+  // Đã nhập thì vũ khí thuộc về CON AXIE, nên nó neo vào chỗ Axie đứng (độ lệch 0), không neo
+  // vào chỗ lớp nhân vật LẼ RA đứng — chỗ đó nay không có ai, cây vũ khí sẽ trôi lơ lửng cách
+  // con Axie gần một thân người. Cùng lỗi mà `_nhap` sinh ra để chặn, chỉ đổi vai.
+  const _tkDx  = _tkNhap ? 0 : _avaDx;
+  const _tkDy  = _tkNhap ? 0 : _avaDy;
+  const _tkCo  = _tkNhap ? AVA_TK_NHAP_CO : _lopCo;
+  const _tkChan = _tkNhap ? (HERO_GOT - HERO_H/2) * (NV_CAO / HERO_H) * (1 - _tkCo) : _lopChan;
+  // Phơi QUYẾT ĐỊNH ra cho bài kiểm, khoá theo từng thân người — cùng lối `__veChet`/`__neoVe`.
+  // Đếm điểm ảnh ở đây không dùng được: thần khí phát sáng bằng `lighter` trên nền map sáng, mà
+  // sàn nhiễu của một thân người đang vung kiếm còn lớn hơn cả cây vũ khí (xem `test_dongbodo`).
+  if (window.TEST_MODE)
+    (window.__veVuKhi || (window.__veVuKhi = {}))[_bayK0] =
+      { co: !!_tk, hien: _tkHien, nhap: _nhap, nhapTk: _tkNhap, vkLop: _coVkLop, lopHien: _lopHien };
   {
     ctx.save();
     // Cùng cả phép LẤY ĐÀ của khối thân: cánh cắm vào lưng, thân lùi lại lấy đà rồi bổ tới mà
@@ -18432,7 +18475,18 @@ function drawPlayer(p){
     if (wingIt && !_nhap) veCanh(ctx, wingIt, p.x, p.y + CANH_CHAN_MAN, p.sway || 0, p.swayDir || 0,
                        CANH_CO_MAN, bayK, p.sect);
     if (window.TEST_MODE) _doNeo('canh', ctx, p.x, p.y + CANH_CHAN_MAN + CANH_CO_MAN * CANH_GOC_Y);
-    if (_tk && !_tk.truoc && _tkHien) veThanKhi(ctx, _tk, p);   // nằm sau lưng: vẽ TRƯỚC thân
+    if (_tk && !_tk.truoc && _tkHien && !_tkNhap) veThanKhi(ctx, _tk, p);   // nằm sau lưng: vẽ TRƯỚC thân
+  }
+  // Đã nhập ⇒ thần khí có hệ toạ độ RIÊNG (neo vào Axie), không đi nhờ khối cánh ở trên.
+  if (_tk && !_tk.truoc && _tkNhap){
+    ctx.save();
+    ctx.translate(p.x + _tkDx, _lopNeoY + _tkDy + _tkChan);
+    ctx.scale(_tkCo, _tkCo);
+    ctx.translate(-p.x, -_lopNeoY);
+    veThanKhi(ctx, _tk, p);
+    ctx.restore();
+  }
+  {
     ctx.restore();
   }
   ctx.save();
@@ -18686,8 +18740,8 @@ function drawPlayer(p){
   if (_coAva && _avaDy <= 0) veAvatarDat(ctx, p, now, bayCao);
   if (_tk && _tk.truoc && _tkHien){                   // quét ra trước mặt: vẽ SAU thân
     ctx.save();
-    ctx.translate(p.x + _avaDx, _lopNeoY + _avaDy + _lopChan);
-    ctx.scale(_lopCo, _lopCo);
+    ctx.translate(p.x + _tkDx, _lopNeoY + _tkDy + _tkChan);
+    ctx.scale(_tkCo, _tkCo);
     ctx.translate(-p.x, -_lopNeoY);
     veThanKhi(ctx, _tk, p);
     ctx.restore();

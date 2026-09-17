@@ -677,6 +677,58 @@ thần khí · hào quang Thần Hiệp. Bỏ sót một chỗ là **một đôi
 con Axie. Cái giá, nói thẳng chứ không giấu: **ngoài thành người chơi không còn thấy đôi cánh
 mình mua** — chỗ khoe cánh nay là trong thành.
 
+> ⚠ **Câu trên nay chỉ còn đúng với BA chỗ. Thần khí (vũ khí) đã tách ra — xem mục ngay dưới.**
+> Giữ nguyên câu cũ ở đây để thấy luật đã dời tới đâu, đừng đọc nó như trạng thái hiện tại.
+
+### 🗡 LUẬT: **VŨ KHÍ LUÔN HIỆN LÚC RA ĐÒN** — nhân vật có thể không, vũ khí thì không bao giờ
+
+Chủ dự án chốt (2026-09-17), nguyên văn: *"khi Axie ra chiêu thì sẽ hiện cây vũ khí… nhân vật có
+thể không hiện nhưng **vũ khí sẽ LUÔN xuất hiện để đồng bộ được skill**"*.
+
+**Vì sao nó là một LUẬT chứ không phải một tuỳ chọn.** Đo trên bản trước:
+
+| | |
+|---|---|
+| Ngoài thành, cả **5/5 lớp** ra đòn | trên màn **không có một cây vũ khí nào** |
+| Tổ hợp (dòng × giai) không có tranh trong `VK_ANH` | **48/98 — gần một nửa** |
+
+Hai nguyên nhân chồng lên nhau, và mỗi cái tự nó đã đủ:
+- `_tkHien` có `!_nhap` ⇒ ngoài thành thần khí tắt hẳn; mà ba lớp (DK · Spellblade · Sylvan
+  Ranger) cầm vũ khí bằng **lớp nướng sẵn trong chính bộ khung người** — lớp ấy đã nhập vào Axie
+  nên không vẽ, cây vũ khí biến mất theo. `!_coVkLop` lại tắt thần khí cho đúng ba lớp đó.
+- `thanKhiNguon()` trả `null` khi dòng vũ khí chưa có tranh riêng ⇒ 48/98 tổ hợp không có gì bay.
+
+Người chơi không đọc được chiêu, và mọi mốc rèn **+N** trên vũ khí cũng tàng hình theo.
+
+| cửa | việc |
+|---|---|
+| **`_tkNhap` = `_nhap && _lopHien`** | đã nhập mà đang ra đòn ⇒ vũ khí HIỆN. **Cố ý bỏ qua `_coVkLop`**: lúc đã nhập thì không có cây nào "trong tay" để mà trùng, nên thần khí là cây DUY NHẤT trên màn, không phải cây thứ hai |
+| `_tkDx` · `_tkDy` · `_tkCo` · `_tkChan` | hệ toạ độ RIÊNG của vũ khí khi đã nhập |
+| **`TK_LOP`** | cây LÙI theo lớp cho dòng chưa có tranh: `kiem` · `no` · `makiem` · `gay` · `lenhtruong` — đúng cây cắt ra từ gói Spine của chính lớp đó |
+| `window.__veVuKhi` | phơi QUYẾT ĐỊNH ra cho bài kiểm (chỉ khi `TEST_MODE`), khoá theo từng thân người |
+
+**⚠ ĐÃ NHẬP THÌ VŨ KHÍ NEO VÀO **AXIE**, KHÔNG NEO VÀO CHỖ LỚP NHÂN VẬT LẼ RA ĐỨNG.** `_avaDx/_avaDy`
+vẫn tính ra chỗ ấy dù ở đó không còn ai — dùng nó là cây vũ khí trôi lơ lửng cách con Axie gần một
+thân người. Đúng cái lỗi mà `_nhap` sinh ra để chặn, chỉ đổi vai.
+
+**⚠ NẤC LÙI ĐẶT TRONG `thanKhiNguon()`, KHÔNG ĐẶT TRONG `vkAnh()`.** Nới trong `vkAnh` thì ba chỗ
+khác đang gọi nó cũng đổi theo — **ICON trong túi đồ**: cây rìu sẽ hiện ra hình thanh kiếm ngay
+trong ô túi, tức đổi một lỗi lấy một lỗi nặng hơn. Ở cỡ vũ khí bay quanh thì thứ cần là một BÓNG
+DÁNG; trong ô túi thì phải đúng món ấy. Cùng đánh đổi đã ghi cho `NV_VK_LOP_LOP`.
+
+**⚠ VÀ NẤC LÙI CHỈ ÁP KHI THẬT SỰ CẦM MỘT CÂY.** `d` rỗng là TAY KHÔNG — lùi ở đó là người cởi
+sạch đồ vẫn có vũ khí bay quanh. `test_vukhihien ④` gác.
+
+**Cái giá, không giấu:** cầm rìu thì cây bay ra vẫn là hình **kiếm**. Sửa được bằng ART (thêm một
+dòng vào `VK_ANH`), không sửa được bằng mã.
+
+Gác: **`tests/test_vukhihien.js`** (4 mệnh đề, hai phép thử ngược đều đỏ) — ① ngoài thành cả 5 lớp
+ra đòn phải có vũ khí · ② trong thành lúc đi theo thì vẫn phải TẮT (luật cũ, đừng phá) · ③ cả 98
+tổ hợp dòng×giai đều dựng được nguồn · ④ tay không thì không. Kèm `test_hopve`: mọi lời gọi
+`veThanKhi` phải neo `_avaDx` **hoặc** `_tkDx`, còn `veCanh` thì vẫn chỉ được neo `_avaDx`.
+⚠ ① **tự kiểm cảnh dựng trước khi chấm** — đòi cả 5 lớp THẬT SỰ `nhap` ở map đo, nếu không nó
+đang đo một cảnh khác hẳn cảnh nó định đo và xanh vô nghĩa.
+
 `get-buff` (khối GỒNG) **vẫn dùng**, hai chỗ: trong thành, và làm nấc lui khi bảng đòn chưa tải
 xong — nhờ vậy cú đánh đầu phiên vẫn có cái để vẽ thay vì rơi thẳng về khối đứng yên.
 
