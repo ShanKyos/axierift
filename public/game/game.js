@@ -1527,6 +1527,12 @@ const VFX_ATLAS_DEFS = {
   // 16 khung và KHÔNG khung nào chết: đổi thấp nhất giữa hai khung liền nhau là 11,5 RMS, tức
   // ngọn thương vẫn đang xoay. (Hai gói trước phải bỏ khung độn; gói này thì không.)
   death_stab:     { k:1, cols:8, rows:2,  frameW:384, frameH:384, frames:16, fps:20, anchorX:46.1, anchorY:192.0, neoR:337.9, cong:false },
+  // Ngũ Tiễn (Trấn Phái của Sylvan Ranger) — năm mũi tên vàng bung thành nan quạt từ một điểm.
+  // `cong:false`: 17,0% điểm ảnh đặc là gần-đen (viền bao quanh từng mũi tên). Cộng sáng ăn mất
+  // viền đen — đen cộng vào nền là ra chính nền — nên cả nan quạt sẽ nhoè thành mấy vệt vàng
+  // nhợt không còn hình mũi tên. Đúng vết sẹo đã ghi cho `fire_scream`.
+  // Không nâng sáng lúc nhập: lệch chuẩn 0,224, gấp đôi ngưỡng 0,12 (sáng TB 110,4/255).
+  five_arrow:     { k:1, cols:8, rows:1,  frameW:384, frameH:384, frames:8,  fps:16, anchorX:46.1, anchorY:192.0, neoR:337.9, cong:false },
 };
 const VFX_ATLAS_IMGS = {};
 const VFX_ATLAS_DUNG = {};   // id → lúc dùng gần nhất (ms)
@@ -3890,7 +3896,17 @@ function knRaSoat(){
 // ⚠ PHẢI TRẢ VỀ MẢNG MỚI MỖI LẦN GỌI. Bản công thức dựng mảng literal nên chuyện đó là mặc
 // nhiên; đọc từ một bảng thì không — thiếu `.slice()` là mọi người chơi cùng lớp dùng CHUNG
 // một mảng, và cú kéo thả đầu tiên sửa luôn cái bảng gốc cho cả phiên.
-const THANH_LOP = { baidasan: ['a', null, 'tp', null] };
+const THANH_LOP = {
+  baidasan: ['a', null, 'tp', null],
+  // Sylvan Ranger: chủ dự án chốt Ngũ Tiễn là "tuyệt chiêu số 3 trấn phái" ⇒ `tp` xuống ô 3 và
+  // Bless (`elf_greaterdmg`) lên ô 2 — tức ĐỔI CHỖ đúng hai ô, không đụng ô 1 lẫn ô 4.
+  // ⚠ Ô 4 PHẢI GIỮ Penetration. Ô 4 là ô TUYỆT CHIÊU và phím Space gán thẳng vào nó
+  // (`SIGNATURE_SKILL`); đẩy Bless xuống đó là Space bấm ra một chiêu phù trợ.
+  // `test_tuyetchieu §5` gác đúng chỗ ấy — đã dẫm một lần khi xếp Penetration lên ô 2.
+  // Cả BỐN ô vẫn đầy và vẫn đúng bộ bốn chiêu cũ ⇒ %Công Kích Di Sản không đổi một điểm
+  // (`calcDerived()` trừ theo THÀNH VIÊN của thanh, không theo vị trí).
+  toanchan: ['a', 'elf_greaterdmg', 'tp', 'elf_penetration'],
+};
 function defaultSkillBar(sect){
   const t = THANH_LOP[sect];
   return t ? t.slice() : ['a', 'tp', O3_SKILL_ID[sect] || null, SIGNATURE_SKILL[sect] || null];
@@ -4228,7 +4244,8 @@ const SECT_VFX = {
   // sx_thieulam_c — ĐÃ CÓ ART THẬT (`death_stab` trong CHIEU_TRANH). Style tạm `stabburst` gỡ
   // theo luật: có mặt trong CHIEU_TRANH mà còn khai style là chồng hai lớp lệch tâm lên nhau.
   // sx_toanchan_a đã GỠ khỏi bảng này — nay có tranh thật trong CHIEU_TRANH.
-  sx_toanchan_c: { style:'icefall',      c2:'#dff4ff', dur:1.0 },             // Ice Arrow (Sylvan Ranger) — phiến băng kết trên cao rồi rơi xuống vỡ
+  // sx_toanchan_c — ĐÃ CÓ ART THẬT (`five_arrow` trong CHIEU_TRANH). Style tạm `icefall` gỡ theo
+  // luật: có mặt trong CHIEU_TRANH mà còn khai style là chồng hai lớp lệch tâm lên nhau.
   sx_baidasan_a: { style:'poisonbloom',  c2:'#b8ff9a', proj:'serpent', dur:1.1 }, // Poison (Dark Wizard) — vũng độc loang ra, sủi bọt
   // Meteorite (Dark Wizard) KHÔNG khai style: nó chạy gói art thật, xem CHIEU_TRANH.
   sx_minhgiao_a: { style:'fireslash',    c2:'#ffcf7a' },                      // Fire Slash (Spellblade) — đao quang cuốn lửa
@@ -4861,6 +4878,7 @@ const CHIEU_TRANH = {
   // ⚠ Chỉ được thu NHỎ hơn vòng sát thương (`pham` 185), không bao giờ to hơn — xem luật `pham`.
   sx_bug_c:      { atlas:'raven_storm',   xoay:true, co:0.60 },  // Bão Quạ — Trấn Phái Dark Lord
   sx_thieulam_c: { atlas:'death_stab',    xoay:true },  // Death Stab — Trấn Phái Dark Knight
+  sx_toanchan_c: { atlas:'five_arrow',    xoay:true },  // Ngũ Tiễn — Trấn Phái Sylvan Ranger
 };
 // Chỗ chiêu giáng xuống: CHUỘT CHỈ ĐÂU, CHIÊU GIÁNG ĐÓ.
 //

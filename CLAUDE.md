@@ -2368,6 +2368,46 @@ Chủ dự án chốt (nguyên văn): *"Chuyển lại tuyệt chiêu meteriote 
   `test_canbanglop`) đọc thẳng `THANH_LOP` để biết ô nào được phép trống. Miễn trừ bằng một danh
   sách tên lớp NGAY TRONG BÀI KIỂM là mở cửa cho lớp thứ hai rơi vào cùng trạng thái mà lọt êm.
 
+### 🏹 SYLVAN RANGER: NGŨ TIỄN XUỐNG Ô 3 — và Ô 4 THÌ KHÔNG ĐƯỢC ĐỘNG VÀO
+
+Chủ dự án chốt: *"đây là tuyệt chiêu ngũ tiễn của elf… Nó sẽ là tuyệt chiêu số 3 trấn phái,
+mang hơi hướng đánh lan"*. Trấn Phái **vốn đã** là đòn lan (`TP_RADIUS` 185 · `desc` ghi thẳng
+*"sát thương lan"*), nên đợt này chỉ đổi ART và VỊ TRÍ, không đụng một hệ số nào.
+
+| | |
+|---|---|
+| thanh SR | `['a', 'elf_greaterdmg', 'tp', 'elf_penetration']` trong **`THANH_LOP`** |
+| ô 3 | **Ngũ Tiễn** — chính là `tp`, đúng khuôn Meteorite của Dark Wizard |
+| art | `five_arrow` trong `VFX_ATLAS_DEFS` + `CHIEU_TRANH.sx_toanchan_c` |
+| tên | `SECTS.toanchan.tp.name` **'Ice Arrow' → 'Ngũ Tiễn'** |
+
+- **⚠ ĐỔI CHỖ ĐÚNG HAI Ô (2↔3), ĐỪNG XẾP LẠI CẢ THANH.** Ô 4 là ô **TUYỆT CHIÊU** và phím Space
+  gán thẳng vào nó (`SIGNATURE_SKILL`); đẩy Bless xuống đó là Space bấm ra một chiêu phù trợ.
+  `test_tuyetchieu §5` gác đúng chỗ ấy — đã dẫm một lần khi thử xếp Penetration lên ô 2.
+- **⚠ ĐỔI TÊN THEO ART, không phải để "Việt hoá cho đồng bộ".** Tấm dán là NĂM MŨI TÊN VÀNG,
+  không còn phiến băng nào; để tên 'Ice Arrow' là bảng kỹ năng hứa một đằng còn màn hình cho một
+  nẻo. Ba lớp kia vẫn để tiếng Anh, và đó vẫn là chủ ý (xem chú thích tại chỗ trong `canbang.js`).
+  Không đặt 'Five Shot': `elf_fiveshot` đã mang đúng cái tên ấy và `test_kynang5lop` dò trùng tên.
+- **⚠ `cong:false`.** 17,0% điểm ảnh đặc của gói là gần-đen (viền bao từng mũi tên). Cộng sáng ăn
+  mất viền — đen cộng vào nền là ra chính nền — và cả nan quạt nhoè thành mấy vệt vàng nhợt. Đúng
+  vết sẹo `fire_scream`: **độ sáng trung bình không quyết định một mình, viền đen thắng nó.**
+- **`co` để TRỐNG (= 1,00) là cố ý.** Scale = `R/neoR` = 185/337,9 ⇒ tầm với vẽ ra **đúng bằng**
+  vòng sát thương, tức `pham` không hứa suông. Khác Bão Quạ (phải thu còn 0,60): tấm đó là một
+  vụ nổ 360° quanh người niệm, tấm này neo ở thân Axie rồi bung về **một** phía nên ở cỡ thật nó
+  vẫn đọc ra một nan quạt chứ không trùm kín màn hình. Đã chụp 1,00 / 0,75 / 0,60 rồi mới chốt.
+- **Gỡ `SECT_VFX.sx_toanchan_c` (`style:'icefall'`)** theo luật chung: có mặt trong `CHIEU_TRANH`
+  mà còn khai style là chồng hai lớp lệch tâm. `test_tuyetchieu §4` suy từ bảng nên tự gác.
+
+**⚠ VÀ NÓ LÀM LỘ MỘT BÀI KIỂM ĐO TRÊN CẢNH CỦA CHÍNH NÓ.** `test_ganchieu §3` kéo một chiêu Di
+Sản vào **ô 1 chép cứng** rồi đòi %Công Kích tụt đúng bậc của chiêu ấy. Phép trừ đó sạch sẽ chỉ
+vì ô 1 hồi đó là `tp` ở cả năm lớp — mà `tp` không nằm trong Di Sản. Từ lúc ô 1 của SR giữ Bless
+(một chiêu Di Sản THẬT), kéo chiêu mới vào là **đẩy Bless ra và Bless trả lại % của nó**: đo ra
+**−1 trong khi mong 1,5**. Bài đỏ vì cảnh dựng, không vì cơ chế. Nay §3 ưu tiên ô không giữ chiêu
+Di Sản nào, và nếu không có thì **trừ lại** phần của kẻ bị đẩy; vế `knGo` chốt bằng một con số
+đúng (`legacy0 − buLai`) thay vì dựng lại thanh rồi so với chính nó — dựng lại thì `knGo` hỏng
+cũng xanh. Hai phép thử ngược đều đỏ (gỡ `!_tren.has(sid)` ⇒ 5/5 lớp; `knGo` no-op ⇒ 10 FAIL).
+*Một hằng số vị trí chép cứng trong bài kiểm là một quả mìn hẹn giờ cho đợt xếp lại thanh kế tiếp.*
+
 #### Bốn mệnh đề đã mục vì chúng đoán VỊ TRÍ thay vì hỏi MÃ CHIÊU
 
 Cả bốn đỏ ngay khi `tp` rời ô 2 — và cả bốn đều đỏ vì cách hỏi, không vì cơ chế:

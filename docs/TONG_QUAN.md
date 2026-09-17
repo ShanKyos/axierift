@@ -84,10 +84,15 @@ Dark Wizard là lớp giòn nhất và mạnh nhất — đúng mẫu glass cann
 
 **Thanh kỹ năng cố định 3 ô**, không cho tự gán:
 
+> ⚠ Hai câu trên và cột **Ô** bên dưới đã CŨ, chưa dọn hết: thanh nay có **4 ô** và người chơi
+> **tự gán được** (kéo thả từ cây kỹ năng), còn ô nào giữ chiêu gì thì tuỳ lớp — Dark Wizard và
+> Sylvan Ranger đều để Trấn Phái ở **ô 3**. Nguồn đúng là `THANH_LOP` trong `public/game/game.js`.
+> Phần TÊN và HỆ SỐ trong bảng thì vẫn đúng.
+
 | Ô | Dark Knight | Sylvan Ranger | Dark Wizard | Spellblade | Dark Lord |
 |---|---|---|---|---|---|
 | **1** chiêu chính | Twisting Slash (quạt, ×1,6) | Multi-Shot (5 mũi, ×1,5) | Poison (đạn, ×1,5) | Fire Slash (quạt, ×1,6) | Force Wave (quạt, ×1,5) |
-| **2** Trấn Phái | Death Stab ×3,0 | Ice Arrow ×2,8 | Meteor ×3,2 | Flame Strike ×3,2 | Fire Scream ×3,0 |
+| Trấn Phái | Death Stab ×3,0 | **Ngũ Tiễn** ×2,8 | Meteor ×3,2 | Flame Strike ×3,2 | Fire Scream ×3,0 |
 | **3** buff riêng | Cương Khí Hộ Thể (−30% ST nhận, 6s) | Greater Damage (+35% ST, 6s) | Soul Barrier (khiên 45% HP, 6s) | Battle Fury (+30% ST, 6s) | Command Aura (+25% ST, 6s) |
 
 - Chiêu chính: hồi 4s, tốn 20 Qi (Spellblade 22).

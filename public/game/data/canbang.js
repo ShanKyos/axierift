@@ -867,7 +867,12 @@ window.SECTS = {
     // 3 mũi × 2.5 = tổng sát thương y hệt bản cũ (5 × 1.5), chỉ đổi cho khớp tên MU:
     // Triple Shot bắn BA mũi, Five Shot (di sản) mới là năm. Mỗi bậc Tiến Hóa +1 mũi.
     skillA:{ name:'Triple Shot', type:'proj', cd:4, qi:20, mult:2.5, count:3 },
-    tp:{ name:'Ice Arrow', mult:2.8 } },
+    // ⚠ ĐỔI TÊN THEO ART, không phải để "Việt hoá cho đồng bộ". Trấn Phái này nay chạy gói
+    // `five_arrow` — NĂM MŨI TÊN VÀNG bung thành nan quạt, không còn phiến băng nào. Để tên
+    // 'Ice Arrow' là bảng kỹ năng hứa một đằng còn màn hình cho một nẻo.
+    // Không đặt 'Five Shot': `elf_fiveshot` đã mang đúng cái tên ấy, và `test_kynang5lop` dò
+    // trùng tên trong cùng một lớp.
+    tp:{ name:'Ngũ Tiễn', mult:2.8 } },
   baidasan: { name:'Dark Wizard', role:'Pháp thuật / Độc tố', element:'Aquatic', color:'#7ec850', glow:'#c8ffa0', bonus:{vit:1,def:0,str:0,agi:1,ene:3},
     hpMult:0.72, defMult:0.65, dmgMult:1.30, atkSrc:{ene:1.6, agi:0.6},
     desc:'Áo thụng trùm kín, quyền trượng nạm ngọc, thân thể mỏng như giấy. Dark Wizard đứng xa nhất chiến trường và gọi độc tố cùng thiên thạch xuống thay mình. Tiềm năng: cần cả Mẫn Tiệp lẫn Linh Lực.',
@@ -891,8 +896,9 @@ window.SECTS = {
     // chim tuôn ra từ tay thì không nên với xa hơn một khối thiên thạch gọi từ trên trời xuống.
     // ⚠ Bốn lớp kia để `tam` trống ⇒ `skillInfo` quy ra 0 (nổ ngay dưới chân). Đây là lớp thứ hai
     // sau Dark Wizard khai tầm thật cho Trấn Phái.
-    // ⚠ Tên TIẾNG VIỆT là CHỦ Ý, chủ dự án chốt — bốn tuyệt chiêu kia để tiếng Anh (Death Stab ·
-    // Ice Arrow · Meteorite · Flame Strike). Đừng "dọn cho đồng bộ" bằng cách dịch ngược.
+    // ⚠ Tên TIẾNG VIỆT là CHỦ Ý, chủ dự án chốt — BA tuyệt chiêu kia còn để tiếng Anh (Death Stab ·
+    // Meteorite · Flame Strike). Đừng "dọn cho đồng bộ" bằng cách dịch ngược. (Sylvan Ranger đổi
+    // sang 'Ngũ Tiễn' vì ART đổi, không phải vì quy ước ngôn ngữ.)
     tp:{ name:'Bão Quạ', mult:3.0, tam:320 } },
 };
 
