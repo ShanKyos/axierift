@@ -32,20 +32,55 @@ KHE_VK  = ('左手武器', '左手武器2b', '左手武器2c')   # vũ khí bị
 # lần dừng chân — đo được: hai hàng cuối của bảng vũ khí (32 ô khối CHẠY) rỗng trắng ở cả ba bộ.
 # Ràng buộc `右手持剑` VẪN bật trong `00_Run`, nên chỉ cần ép mảnh hiện lại là nó tự nằm đúng tay.
 # Chỉ ép khe CHÍNH: `2b`/`2c` là dây cung và mũi tên, chúng chỉ thuộc về động tác giương cung.
-VK_HIEN = {'00_Run': {'左手武器': '左手武器'}}
-# ⚠ BẢN MẪU CẦM MỌI CÂY NHƯ CẦM KIẾM — và một cây CUNG thì không cầm vậy được.
-# Xương `武器` chỉ có MỘT tư thế mang: chuôi ở bàn tay, thân chĩa chéo xuống trước, đúng dáng
-# xách một thanh kiếm. Với cung thì cái chéo ấy đọc ra một cây kích nằm ngang ống chân — chủ dự
-# án nhìn ảnh chụp và nói đúng một câu: *"cung thì không cầm vậy được"*.
+# ⚠ VÀ KHÔNG CHỈ `00_Run` — đo lại thì rig cất vũ khí ở BỐN khối, cả ba khối kia đều là dáng
+# đứng trong thành: `09_Interactive` (bắt chuyện NPC / mở rương), `07_StatusEffect` (đang dính
+# buff), `01_Dance` (màn chọn lớp). Bản cũ chỉ vá `00_Run` nên nói chuyện với một NPC là cây
+# kiếm biến mất khỏi tay — đúng ở chỗ duy nhất người chơi còn thấy lớp nhân vật.
+# Đo được trên cả ba bộ: lớp `vk` của `n`/`t`/`e` KHÔNG CÓ MỘT ĐIỂM ẢNH NÀO.
+VK_HIEN = {a: {'左手武器': '左手武器'} for a in
+           ('00_Run', '09_Interactive', '07_StatusEffect', '01_Dance')}
+# ⚠ BẢN MẪU CHỈ CÓ **MỘT** TƯ THẾ MANG, VÀ NÓ QUÉT XUỐNG DƯỚI MẶT ĐẤT.
+# Xương `武器` mang cây vũ khí theo đúng một kiểu: chuôi ở bàn tay, thân chĩa chéo xuống
+# trước. Đo trên khung ĐỨNG (đếm điểm ảnh của riêng lớp `vk`, không đọc lưới — lưới của bản
+# mẫu GIỐNG HỆT NHAU ở cả bốn gói, chỉ ART bên trong khác):
 #
-# Đo trên khung đứng: trục chính của cây cung lệch **44,8°** so với phương DỌC, và xương nằm ở
-# ĐẦU cây chứ không ở giữa. Vặn thêm −40° đưa nó về gần dọc — cung buông xuống dọc theo chân,
-# dây quay vào người, đúng dáng xách cung. Đã dựng ảnh A/B 0 · −32 · −40 · −48 trên cả ba khối
-# (đứng · đi · chạy) rồi mới chốt: 0 là cây kích, −48 thì mũi cung quặt ra sau.
+#   | gói             | trục lệch DỌC | dài  | mũi cây rơi ở đâu |
+#   |-----------------|---------------|------|-------------------|
+#   | Dark Knight     | 52,0°         |  971 | **dưới mặt đất**  |
+#   | Fairy Elf       | 44,8°         |  898 | **dưới mặt đất**  |
+#   | Magic Gladiator | 52,1°         | 1100 | **dưới mặt đất**  |
+#   | Dark Lord       | 58,7°         | 1018 | **dưới mặt đất**  |
 #
-# Cặp (số độ, những hoạt cảnh BỎ QUA). Bỏ qua `10_ArcheryAttack` vì ở đó rig đã đổi sang mảnh
-# cung GIƯƠNG và dựng đúng tư thế bắn — vặn thêm là phá chính khối duy nhất đang đúng.
-VK_XOAY = {'elnb1': (-40, ('10_ArcheryAttack',))}
+# Chủ dự án chốt: *"trong thành cho vũ khí khoác lên vai (kiểu khu an toàn)"*. Từ lúc lớp nhân
+# vật NHẬP VÀO con Axie ngoài thành (xem CLAUDE.md), khối đi-đứng của nó **chỉ còn hiện trong
+# thành** — nên tư thế mang là thứ duy nhất người chơi nhìn thấy lâu, và nó đang là một cây
+# kiếm cắm xuống đất.
+#
+# ⚠ KHÔNG khoác chéo sau lưng được, và đó là một phép ĐO chứ không phải một ý thích: cây dài
+# 898-1100 trên một thân cao 1166, tức 77-94% chiều cao người. Mọi tư thế chéo đều đẩy một đầu
+# xuống dưới gót (đã dựng ảnh: chéo 25° ⇒ mũi ở y=27 trong khi gót y=−44, và cán thì đè lên
+# MẶT). Chỉ tư thế GẦN DỌC là sạch cả hai đầu — nên đây là "dựng cây bên vai", không phải
+# "đeo sau lưng".
+#
+# ⚠ Và xương nằm ở ĐẦU cây (chỗ nắm), nên vặn quanh nó ≈ vặn quanh bàn tay: cây vẫn dính tay.
+# Dời thêm là cây rời khỏi tay — đã thử, nhìn ra đồ bay chứ không ra đồ đeo.
+#
+# Số độ chốt bằng ẢNH A/B (0 · ±15° quanh giá trị tính ra), không bằng một con số đẹp.
+VK_XOAY = {'dkph1': 147, 'elnb1': 139, 'sbsm1': 147}
+# ⚠ CHỈ VẶN Ở KHỐI MANG, và đây là danh sách "ÁP VÀO", không phải "bỏ qua".
+# Bản cũ khai (số độ, những hoạt cảnh BỎ QUA) — nghĩa là mọi khối MỚI thêm vào KHUNG/KHUNG2
+# đều tự động bị vặn, kể cả một khối ra đòn, và nó hỏng trong im lặng. Đảo lại thì quên một
+# dòng chỉ làm khối đó giữ tư thế cũ, chứ không phá một khối đang đúng.
+# Mọi khối RA ĐÒN (`08_SwordAttack` · `08_SwordAttack2` · `05_MagicAttack` · `06_PunchAttack`
+# · `10_ArcheryAttack` · `11_Throw`) vắng mặt ở đây là CỐ Ý: ở đó rig đã dựng đúng tư thế
+# đánh, vặn thêm là phá chính cái khối đang đúng.
+# ⚠ `03_Hurt` · `02_Death` · `04_Jump*` vắng mặt, và đó là một phép ĐO chứ không phải bỏ sót.
+# Từ lúc lớp nhân vật nhập vào Axie ngoài thành, ba khối đó **không còn cửa nào hiện ra**:
+# trong thành không ai đánh được ai, còn bay thì đọc khối ĐI (`BAY_KHUNG` ghim vào một khung
+# trong đó), không đọc `04_Jumpping`. Thử đưa chúng vào thì hộp cắt bảng hai của `dkph1` phình
+# **55,2% → 86,6%** một tấm thân liền — trả thêm bộ nhớ cho ba khối không ai thấy.
+VK_MANG = ('00_Idle', '00_Walk', '00_Run', '09_Interactive', '07_StatusEffect',
+           '00_Squat', '01_Dance', '01_Dance2')
 KHE_HFX = ('爆炸特效', '爆炸特效(残影）')            # hiệu ứng nổ — game tự lo, không nướng
 KHE_TOC = ('背后头发',)                              # tóc sau, chỉ dùng lúc ĐO
 # BẢNG MỘT — những khối vẽ ở mọi khung hình, luôn nạp.
@@ -177,10 +212,9 @@ def nuong(goi, skin, danh='08_SwordAttack'):
     return ra, phong
 
 def _xoay(xoay, tenHc):
-    """Số độ phải vặn thêm cho xương vũ khí ở hoạt cảnh này — xem VK_XOAY."""
+    """Số độ phải vặn thêm cho xương vũ khí ở hoạt cảnh này — xem VK_XOAY và VK_MANG."""
     if not xoay: return 0
-    do, bo_qua = xoay
-    return 0 if tenHc in bo_qua else do
+    return xoay if tenHc in VK_MANG else 0
 
 def _do_khung(d, im, R, tt, skin, phong, oy, bo, danh, xoay=None):
     """Mọi khung của CẢ HAI bảng, cùng một hệ toạ độ — trả (khung bảng một, khung bảng hai)."""
@@ -191,12 +225,17 @@ def _do_khung(d, im, R, tt, skin, phong, oy, bo, danh, xoay=None):
                          VK_HIEN.get(tenTh), _xoay(xoay, tenTh))
     k2 = []
     for ten, n, doi in KHUNG2:
-        k2 += _day_khung(d, im, R, tt, d['animations'][ten], ten, n, skin, phong, oy, bo, doi,
-                         _xoay(xoay, ten))
+        # ⚠ GỘP `VK_HIEN` VÀO CỘT ĐỔI-MẢNH CỦA BẢNG HAI. Bản cũ chỉ tra VK_HIEN ở bảng một, nên
+        # ba khối cất-vũ-khí nằm ở bảng hai (`09_Interactive` · `07_StatusEffect` · `01_Dance`)
+        # không ai vá — mà cột `doi` của chúng đang dùng để đổi KHUÔN MẶT, hai việc khác nhau
+        # trên cùng một tham số. Cột `doi` thắng khi trùng khoá.
+        d2 = {**(VK_HIEN.get(ten) or {}), **(doi or {})}
+        k2 += _day_khung(d, im, R, tt, d['animations'][ten], ten, n, skin, phong, oy, bo,
+                         d2 or None, _xoay(xoay, ten))
     return k1, k2
 
 
-def nuong_lop(goi, skin, danh='08_SwordAttack', bo_vk=False, xoay=None):
+def nuong_lop(goi, skin, danh='08_SwordAttack', bo_vk=False, xoay=None, chi_lop=None):
     """Nướng NĂM LỚP RỜI thay cho một tấm thân liền — xem bảng LOP ở đầu tệp.
 
     Mỗi lớp CẮT SÁT hộp bao của chính nó, tính trên CẢ HAI bảng cùng lúc để hai bảng dùng
@@ -219,6 +258,10 @@ def nuong_lop(goi, skin, danh='08_SwordAttack', bo_vk=False, xoay=None):
         # dính vào thân — nướng vào là trên màn có hai cây. Bỏ ngay ở khâu nướng chứ đừng nướng
         # rồi không khai: mỗi bộ thừa ~170 KB tệp chết mà không ai biết vì sao chúng ở đó.
         if bo_vk and ten == 'vk': continue
+        # --chilop: nướng lại ĐÚNG mấy lớp được gọi tên. Hộp cắt của một lớp không phụ thuộc
+        # lớp nào khác (xem `hop` ngay dưới), nên nướng lẻ ra đúng bằng nướng cả bộ — và khi
+        # chỉ đổi tư thế MANG thì sáu lớp thân không có gì để nướng lại.
+        if chi_lop and ten not in chi_lop: continue
         bo = tuple(k for k in moiKhe if k not in giu)
         # Chỉ vặn khi đang nướng CHÍNH lớp vũ khí: các lớp thân không có xương `武器` trong bộ
         # khe của chúng, nên vặn ở đấy là vô nghĩa — nhưng vẫn tốn một lượt dựng lại nhánh con.
@@ -280,10 +323,10 @@ def bang(ks, duong):
     sh.save(duong, optimize=True)
     return os.path.getsize(duong)
 
-def main_lop(goi, skin, ten, danh, thu, bo_vk=False):
+def main_lop(goi, skin, ten, danh, thu, bo_vk=False, chi_lop=None):
     """--lop: năm tấm LỚP RỜI thay cho một tấm thân liền."""
     t0 = time.time()
-    lop, phong = nuong_lop(goi, skin, danh, bo_vk, VK_XOAY.get(ten))
+    lop, phong = nuong_lop(goi, skin, danh, bo_vk, VK_XOAY.get(ten), chi_lop)
     js = []
     tong = 0
     tong2 = 0
@@ -319,7 +362,10 @@ def main():
     os.makedirs(thu, exist_ok=True)
     # --khongvk: bỏ lớp vũ khí (lớp cầm vũ khí BAY — xem chú thích trong nuong_lop).
     bo_vk = '--khongvk' in sys.argv
-    if '--lop' in sys.argv: return main_lop(goi, skin, ten, danh, thu, bo_vk)
+    chi_lop = None
+    if '--chilop' in sys.argv:
+        chi_lop = tuple(sys.argv[sys.argv.index('--chilop') + 1].split(','))
+    if '--lop' in sys.argv: return main_lop(goi, skin, ten, danh, thu, bo_vk, chi_lop)
     t0 = time.time()
     lop, phong = nuong(goi, skin, danh)
     for hau, k in (('', 'than'), ('2', 'than2'), ('_vk', 'vukhi')):

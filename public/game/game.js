@@ -15581,7 +15581,7 @@ const NV_LOP_HOP = {
   // Phoenix — bộ giai 7 của Dark Knight. Lớp `h` (tóc sau) RỖNG ở bộ này nên không khai,
   // y như dkcw1/sbhd1/dlcm1: mũ giáp trùm kín gáy thì không còn tóc nào thò ra sau.
   'dkph1':  { t1:[61,133,135,105,43,102,175,131], c:[62,161,152,105,70,139,136,124],
-              a:[63,124,126,138,26,114,167,147], vk:[0,21,240,279,73,137,167,160],
+              a:[63,124,126,138,26,114,167,147], vk:[0,21,240,279,16,68,224,229],
               t2:[57,110,145,103,35,111,163,139], n:[84,87,105,75,0,79,179,169] },
   // Dark Lord — bộ vàng-đỏ nạm hồng ngọc. KHÔNG có lớp `vk`: lớp này cầm trượng BAY
   // (thần khí), nên nướng bằng cờ --khongvk. Xem NV_VK_LOP — cố ý không khai.
@@ -15591,11 +15591,11 @@ const NV_LOP_HOP = {
   // không đội mũ, và art của gói vốn đã vẽ vậy nên không phải xử gì thêm ở mã.
   'sbsm1':  { h:[80,94,109,89,6,86,174,182], t1:[70,128,113,91,38,111,167,118],
               c:[63,149,141,108,66,141,130,123], a:[89,119,95,96,26,111,148,143],
-              vk:[0,0,240,300,63,133,177,167], t2:[62,116,130,84,31,107,155,152],
+              vk:[0,0,240,300,0,45,240,255], t2:[62,116,130,84,31,107,155,152],
               n:[81,86,110,73,0,79,181,176] },
   'elnb1':  { h:[85,96,70,79,5,88,170,177], t1:[71,132,116,75,39,115,165,118],
               c:[70,159,121,101,71,142,127,119], a:[92,125,59,75,33,115,137,139],
-              vk:[0,93,240,207,9,141,231,159], t2:[63,126,132,80,36,119,156,136],
+              vk:[0,58,240,214,30,79,210,216], t2:[63,126,132,80,36,119,156,136],
               n:[82,86,76,62,0,79,178,173] },
   'dlbc1':  { t1:[68,132,126,91,44,112,175,131], c:[65,157,130,108,69,141,134,120],
               a:[74,121,98,89,28,111,154,161], t2:[65,127,137,85,36,114,161,139],
@@ -18326,8 +18326,6 @@ function drawPlayer(p){
   // thân người đang vung kiếm đổi 6.545/102.000 điểm ảnh giữa HAI LƯỢT VẼ LIÊN TIẾP cùng điều
   // kiện (cánh vỗ, hào quang đập, vũ khí bay — tất cả chạy theo performance.now()). Sàn nhiễu ấy
   // lớn hơn thứ cần đo, nên mọi ngưỡng đặt trên nó đều là ngưỡng đặt trên nhiễu.
-  if (window.TEST_MODE)
-    (window.__veChet || (window.__veChet = {}))[_bayK0] = { chet: _chet, lopHien: _lopHien, nhap: _nhap };
   // Trục sâu nén 0,55 — cùng lối với bóng đổ: game nhìn chếch từ trên nên dời dọc phải ngắn
   // hơn dời ngang, không thì nhân vật nhảy lên cao hẳn khi Axie quay mặt lên.
   // RA TRƯỚC khi tung chiêu · ĐI THEO SAU lúc thường. Một phép nội suy thì mượt hơn, nhưng chủ
@@ -18383,7 +18381,39 @@ function drawPlayer(p){
   // Bộ nào có LỚP VŨ KHÍ nướng sẵn thì cây kiếm đã nằm trong tay rồi — tắt thần khí, không
   // thì trên màn có HAI cây: một cây trong tay và một cây bay lượn cạnh người.
   const _coVkLop = !!nvVkLop(p);
-  const _tkHien = (!_coAva || _lopHien) && !_coVkLop && !_nhap;
+  // ⚠ NGOÀI THÀNH THÌ THẦN KHÍ LÀ THỨ DUY NHẤT CÒN LẠI — chủ dự án chốt: *"khi nhân vật ra
+  // đòn ở bãi quái thì chỉ cần XUẤT HIỆN VŨ KHÍ thôi"*. Lớp nhân vật đã nhập vào Axie nên
+  // không còn bàn tay nào để cầm, và lớp `vk` nướng sẵn cũng theo nó mà biến mất ⇒ ở đây
+  // `_coVkLop` KHÔNG được chặn nữa, nếu không thì đúng ba lớp có vũ khí cầm tay
+  // (dkph1 · elnb1 · sbsm1) là ba lớp ra đòn tay không.
+  // Và nó chỉ hiện ĐÚNG LÚC RA ĐÒN: một cây kiếm bay theo suốt ngày thì lại thành hai thân
+  // trên màn, tức dựng lại chính cái mà đợt nhập-vào gỡ đi.
+  // ⚠ VÀ TRONG THÀNH THÌ NÓ PHẢI HIỆN LÚC ĐỨNG YÊN — vế `(!_coAva || _lopHien)` của bản cũ
+  // nghĩa là: bật avatar lên thì cây trượng bay CHỈ hiện lúc ra đòn. Đo được: Dark Lord và
+  // Dark Wizard — hai lớp cố ý không có vũ khí cầm tay — đứng trong thành TAY KHÔNG, tức đúng
+  // hai trong năm lớp không khoe được thứ to nhất trên bóng dáng mình. Ba lớp kia thì có lớp
+  // `vk` nướng sẵn nên không ai để ý.
+  // Ba nhánh, và `_nhap`/`_oThanh`/`!_coAva` phủ kín không chừa ca nào (`_nhap` và `_oThanh`
+  // loại trừ nhau khi có avatar, còn không avatar thì cả hai đều tắt):
+  //   đã nhập  → CHỈ lúc ra đòn (nửa sau của luật trên)
+  //   trong thành / không avatar → luôn hiện, trừ khi cây đã nằm sẵn trong tay (`_coVkLop`)
+  const _tkHien = _nhap ? (atkK > 0 || castK > 0) : !_coVkLop;
+  // Chỗ MỌC RA: bình thường là chỗ lớp nhân vật đang đứng (vũ khí của NÓ). Đã nhập thì lớp ấy
+  // không có toạ độ nào trên màn — bám theo `_avaDx/_avaDy` là cây vũ khí hiện lệch sang một
+  // bên, cạnh một người vô hình. Nhập thì mọc ra trên chính con Axie.
+  const _tkDx = _nhap ? 0 : _avaDx, _tkDy = _nhap ? 0 : _avaDy;
+  const _tkCo = _nhap ? 1 : _lopCo, _tkChan = _nhap ? 0 : _lopChan;
+  // Phơi mấy quyết định này ra cho bài kiểm, KHOÁ THEO TỪNG THÂN NGƯỜI — cùng lối với
+  // `__neoVe`/`__veThan`: đưa chính biến đang điều khiển vòng vẽ ra ngoài, thay vì để bài kiểm
+  // dựng lại luật một lần nữa. Ở đây bắt buộc phải thế: đo bằng điểm ảnh KHÔNG dùng được, vì một
+  // thân người đang vung kiếm đổi 6.545/102.000 điểm ảnh giữa HAI LƯỢT VẼ LIÊN TIẾP cùng điều
+  // kiện (cánh vỗ, hào quang đập, vũ khí bay — tất cả chạy theo performance.now()). Sàn nhiễu ấy
+  // lớn hơn thứ cần đo, nên mọi ngưỡng đặt trên nó đều là ngưỡng đặt trên nhiễu.
+  // ⚠ Khối này phải đứng SAU `_tkHien`, không đứng trên chỗ tính `_nhap` như bản cũ: `tk` là
+  // thứ trả lời "ngoài thành ra đòn có hiện vũ khí không", mà đó mới là nửa sau của luật.
+  if (window.TEST_MODE)
+    (window.__veChet || (window.__veChet = {}))[_bayK0] =
+      { chet: _chet, lopHien: _lopHien, nhap: _nhap, tk: !!(_tk && _tkHien) };
   {
     ctx.save();
     // Cùng cả phép LẤY ĐÀ của khối thân: cánh cắm vào lưng, thân lùi lại lấy đà rồi bổ tới mà
@@ -18400,7 +18430,19 @@ function drawPlayer(p){
     if (wingIt && !_nhap) veCanh(ctx, wingIt, p.x, p.y + CANH_CHAN_MAN, p.sway || 0, p.swayDir || 0,
                        CANH_CO_MAN, bayK, p.sect);
     if (window.TEST_MODE) _doNeo('canh', ctx, p.x, p.y + CANH_CHAN_MAN + CANH_CO_MAN * CANH_GOC_Y);
-    if (_tk && !_tk.truoc && _tkHien) veThanKhi(ctx, _tk, p);   // nằm sau lưng: vẽ TRƯỚC thân
+    ctx.restore();
+  }
+  // Thần khí có khối RIÊNG, không đi ké khối cánh nữa: hai thứ nay neo vào hai chỗ khác nhau
+  // khi đã nhập vào Axie (cánh TẮT, còn vũ khí thì mọc ra trên chính con Axie). Phép biến hình
+  // giữ nguyên từng số hạng của khối cũ, kể cả phép LẤY ĐÀ — để nhánh chưa nhập không lệch
+  // lấy một điểm ảnh.
+  if (_tk && !_tk.truoc && _tkHien){                  // nằm sau lưng: vẽ TRƯỚC thân
+    ctx.save();
+    ctx.translate(p.x + _tkDx + Math.cos(p.face)*lungeK*7,
+                  _lopNeoY + _tkDy + _tkChan + Math.sin(p.face)*lungeK*3);
+    ctx.scale(_tkCo, _tkCo);
+    ctx.translate(-p.x, -_lopNeoY);
+    veThanKhi(ctx, _tk, p);
     ctx.restore();
   }
   ctx.save();
@@ -18654,8 +18696,8 @@ function drawPlayer(p){
   if (_coAva && _avaDy <= 0) veAvatarDat(ctx, p, now, bayCao);
   if (_tk && _tk.truoc && _tkHien){                   // quét ra trước mặt: vẽ SAU thân
     ctx.save();
-    ctx.translate(p.x + _avaDx, _lopNeoY + _avaDy + _lopChan);
-    ctx.scale(_lopCo, _lopCo);
+    ctx.translate(p.x + _tkDx, _lopNeoY + _tkDy + _tkChan);
+    ctx.scale(_tkCo, _tkCo);
     ctx.translate(-p.x, -_lopNeoY);
     veThanKhi(ctx, _tk, p);
     ctx.restore();

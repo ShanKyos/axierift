@@ -642,10 +642,10 @@ nhưng để flex được bộ giáp thì hãy làm cho nó đi theo ở trong 
 VÀO** con Axie khi ra khỏi thành ⇒ lúc đánh trên màn chỉ còn **MỘT** thân, tức ngược hẳn với thứ
 luật cũ cấm.
 
-| | lớp nhân vật | con Axie |
-|---|---|---|
-| **trong thành** | HIỆN, đi theo, cỡ `AVA_THANH_CO` **1,00** | khối GỒNG như cũ |
-| **ngoài thành** | **nhập vào** — không vẽ | **ra đòn của LỚP mình** |
+| | lớp nhân vật | con Axie | cây vũ khí |
+|---|---|---|---|
+| **trong thành** | HIỆN, đi theo, cỡ `AVA_THANH_CO` **1,00** | khối GỒNG như cũ | **mang bên vai, LUÔN hiện** |
+| **ngoài thành** | **nhập vào** — không vẽ | **ra đòn của LỚP mình** | **CHỈ hiện lúc ra đòn** |
 
 **⚠ LUẬT THEO MAP, KHÔNG THEO "ĐANG ĐÁNH NHAU" — cố ý.** Gắn vào trạng thái đánh nhau thì AUTO
 cày liên tục ⇒ người chơi ở dạng đã-nhập gần như **100% thời gian**, và bộ giáp vẫn không ai
@@ -677,10 +677,51 @@ thần khí · hào quang Thần Hiệp. Bỏ sót một chỗ là **một đôi
 con Axie. Cái giá, nói thẳng chứ không giấu: **ngoài thành người chơi không còn thấy đôi cánh
 mình mua** — chỗ khoe cánh nay là trong thành.
 
+#### ⚔ TRONG THÀNH MANG BÊN VAI · NGOÀI THÀNH VŨ KHÍ **XUẤT HIỆN** LÚC RA ĐÒN
+
+Chủ dự án chốt (nguyên văn): *"thôi dễ nhất là khi ở trong thành, cho vũ khí khoác lên vai
+(kiểu khu an toàn). Sau đó khi nhân vật ra đòn ở bãi quái thì chỉ cần xuất hiện vũ khí thôi."*
+
+Nửa **trong thành** là việc của bộ nướng — xem mục `VK_XOAY` · `VK_MANG`. Nửa **ngoài thành** là
+đúng một biểu thức, `_tkHien`:
+
+```js
+const _tkHien = _nhap ? (atkK > 0 || castK > 0) : !_coVkLop;
+```
+
+Ba nhánh phủ kín, không chừa ca nào — `_nhap` và `_oThanh` loại trừ nhau khi có avatar, còn
+không avatar thì cả hai đều tắt:
+
+| ca | thần khí |
+|---|---|
+| đã nhập (ngoài thành) | **CHỈ lúc ra đòn** |
+| trong thành · hoặc `/avatar off` | luôn hiện, trừ khi cây đã nằm sẵn trong tay (`_coVkLop`) |
+
+**⚠ Ở nhánh đã nhập thì `_coVkLop` KHÔNG được chặn nữa.** Lớp nhân vật đã nhập nên lớp `vk`
+nướng sẵn cũng theo nó mà biến mất; giữ cửa cũ là đúng **ba lớp có vũ khí cầm tay**
+(`dkph1` · `elnb1` · `sbsm1`) — tức ba lớp có art vũ khí đẹp nhất — ra đòn **tay không**.
+`test_axiedanh §5` gác đúng ca đó, và thử ngược (cắm lại `&& !_coVkLop`) làm đỏ đúng ba lớp ấy.
+
+**⚠ VÀ VẾ NGƯỢC LẠI PHẢI CÓ:** ngoài thành mà đứng yên thì **tắt**. Bỏ vế đó thì một cây kiếm
+bay theo suốt ngày cạnh con Axie — lại thành hai thân trên màn, tức dựng lại chính cái mà đợt
+nhập-vào gỡ đi.
+
+**⚠ VẾ "TRONG THÀNH LUÔN HIỆN" LÀ MỘT LỖI ĐÃ CÓ SẴN, không phải thứ mới thêm.** Cửa cũ là
+`(!_coAva || _lopHien) && !_coVkLop && !_nhap` — nghĩa là bật avatar lên thì cây trượng bay
+**chỉ hiện lúc ra đòn**. Đo được: Dark Lord và Dark Wizard — hai lớp CỐ Ý không có vũ khí cầm
+tay — đứng trong thành **tay không**, tức đúng hai trong năm lớp không khoe được thứ to nhất
+trên bóng dáng mình. Ba lớp kia có lớp `vk` nướng sẵn nên không ai để ý.
+
+**⚠ CHỖ MỌC RA cũng phải đổi theo** (`_tkDx`/`_tkDy`/`_tkCo`/`_tkChan`): bình thường cây vũ khí
+neo vào chỗ **lớp nhân vật** đang đứng. Đã nhập thì lớp ấy không có toạ độ nào trên màn — bám
+theo `_avaDx/_avaDy` là cây hiện lệch hẳn sang một bên, cạnh một người vô hình. Nhập thì mọc ra
+trên chính con Axie. Và vì thế thần khí nay có **khối vẽ RIÊNG**, không đi ké khối cánh nữa:
+hai thứ neo vào hai chỗ khác nhau khi đã nhập (cánh TẮT, vũ khí thì không).
+
 `get-buff` (khối GỒNG) **vẫn dùng**, hai chỗ: trong thành, và làm nấc lui khi bảng đòn chưa tải
 xong — nhờ vậy cú đánh đầu phiên vẫn có cái để vẽ thay vì rơi thẳng về khối đứng yên.
 
-Gác: `tests/test_axiedanh.js` (5 mục). Hai phép thử ngược đều đỏ: bỏ cửa `avaNhap()` ⇒ ② đỏ
+Gác: `tests/test_axiedanh.js` (6 mục). Hai phép thử ngược đều đỏ: bỏ cửa `avaNhap()` ⇒ ② đỏ
 (*"TRONG THÀNH Axie không được ra đòn"*); cho 5 lớp chung một bảng ⇒ ④ đỏ (lệch **0**).
 ⚠ Mục ④ **tự kiểm cảnh dựng trước khi chấm** — đòi cả năm lớp THẬT SỰ vào khối `'danh'`, nếu
 không nó đang so năm khối thở với nhau và xanh vô nghĩa. Đã dẫm đúng thế một lần: bài chạy ở
@@ -3296,30 +3337,79 @@ phình gần bằng cả ô — `dkph1` 240×279, `sbsm1` 240×300. Tệp tăng 
 sau giải nén của lớp vũ khí tăng chừng 20 MB **cho đúng bộ đang mặc** (nạp theo nhu cầu). Muốn
 gọn lại thì phải cắt hộp THEO TỪNG KHỐI, không phải một hộp chung — chưa làm.
 
-### 🏹 BẢN MẪU CẦM MỌI CÂY NHƯ CẦM KIẾM — cung phải VẶN LẠI (`VK_XOAY`)
+### 🏹 ~~cung phải VẶN LẠI~~ → **TƯ THẾ MANG TRONG THÀNH** (`VK_XOAY` · `VK_MANG`)
 
-Chủ dự án nhìn ảnh chụp và nói đúng một câu: *"cung thì không cầm vậy được"*. Đúng — và đây
-KHÔNG phải lỗi của ràng buộc biến hình, nó chạy đúng. Vấn đề là bản mẫu chỉ có **MỘT tư thế
-mang**: chuôi ở bàn tay, thân chĩa chéo xuống trước. Với kiếm thì đó là dáng xách kiếm; với
-cung thì nó đọc ra **một cây kích nằm ngang ống chân**.
+> ⚠ Giữ tiêu đề gạch ngang để cảnh báo: `VK_XOAY` **đã đổi hẳn ngữ nghĩa lẫn giá trị**. Bản cũ
+> là cặp `(số độ, những hoạt cảnh BỎ QUA)` và chỉ khai `elnb1: −40` cho riêng cây cung. Đọc
+> lịch sử git rồi tưởng luật cũ còn là sai cả hai nửa.
 
-**Số đo:** trên khung đứng, trục chính của cây cung lệch **44,8°** so với phương dọc, và xương
-`武器` nằm ở ĐẦU cây chứ không ở giữa. Vặn thêm **−40°** đưa nó về gần dọc — cung buông xuống
-dọc theo chân, dây quay vào người.
+Bản mẫu bốn-đầu-thân chỉ có **MỘT tư thế mang**: chuôi ở bàn tay, thân chĩa chéo xuống trước.
+Đo lại trên khung ĐỨNG bằng cách **đếm điểm ảnh của riêng lớp `vk`** — lưới mesh của bản mẫu
+**giống hệt nhau ở cả bốn gói**, chỉ ART bên trong khác, nên đo lưới thì bốn gói ra cùng một
+con số và không phát hiện được gì:
 
-⚠ **Chốt bằng ảnh A/B, không bằng một con số đẹp.** Dựng 0 · −32 · −40 · −48 trên cả ba khối
-(đứng · đi · chạy) rồi mới chọn: `0` là cây kích, `−48` thì mũi cung quặt ra sau.
+| gói | trục lệch DỌC | dài | mũi cây rơi ở đâu |
+|---|---|---|---|
+| Dark Knight | 52,0° | 971 | **dưới mặt đất** |
+| Fairy Elf | 44,8° | 898 | **dưới mặt đất** |
+| Magic Gladiator | 52,1° | 1100 | **dưới mặt đất** |
+| Dark Lord | 58,7° | 1018 | **dưới mặt đất** |
 
-⚠ **BỎ QUA `10_ArcheryAttack`.** Ở khối đó rig đã đổi sang mảnh cung GIƯƠNG và dựng đúng tư thế
-bắn — vặn thêm là phá chính cái khối duy nhất đang đúng. `VK_XOAY` vì thế là cặp
-`(số độ, những hoạt cảnh bỏ qua)`.
+Chủ dự án chốt: *"trong thành cho vũ khí khoác lên vai (kiểu khu an toàn)"*. Và từ đợt **nhập
+vào Axie**, khối đi-đứng của lớp nhân vật **chỉ còn hiện trong thành** — nên tư thế mang là thứ
+duy nhất người chơi nhìn thấy lâu, mà nó đang là một cây kiếm cắm xuống đất.
+
+**⚠ KHÔNG KHOÁC CHÉO SAU LƯNG ĐƯỢC, và đó là một phép ĐO chứ không phải một ý thích.** Cây dài
+898–1100 trên một thân cao 1166, tức **77–94% chiều cao người**. Đã dựng ảnh cho cả hai họ tư
+thế: chéo 25° ⇒ mũi ở y=27 trong khi gót ở y=−44 (cắm đất) *và* cán đè lên **MẶT**; chỉ tư thế
+**gần DỌC** là sạch cả hai đầu. Nên thứ chốt được là "dựng cây bên vai", không phải "đeo sau
+lưng" — và cũng vì thế **không phải đổi thứ tự lớp** (`vk` vẫn nằm giữa `a` và `t2`).
+
+⚠ **Xương `武器` nằm ở ĐẦU cây (chỗ nắm)**, nên vặn quanh nó ≈ vặn quanh bàn tay: cây vẫn dính
+tay. Thêm phép DỜI thì cây rời khỏi tay — đã dựng ảnh, nhìn ra đồ bay chứ không ra đồ đeo.
+
+| bộ | vặn | đo được sau khi vặn (đáy cây trong ô 240×300, **gót ở 252**) |
+|---|--:|--:|
+| `dkph1` | **+147°** | 197 |
+| `sbsm1` | **+147°** | 197 |
+| `elnb1` | **+139°** | 200 |
+
+⚠ **Chốt bằng ảnh A/B (0 · ±15° quanh giá trị tính ra), không bằng một con số đẹp.**
+
+⚠ **`VK_MANG` là danh sách "ÁP VÀO", KHÔNG phải "bỏ qua".** Bản cũ khai những hoạt cảnh bỏ qua,
+nghĩa là mọi khối MỚI thêm vào `KHUNG`/`KHUNG2` đều **tự động bị vặn** — kể cả một khối ra đòn,
+và nó hỏng trong im lặng. Đảo lại thì quên một dòng chỉ làm khối đó giữ tư thế cũ, chứ không phá
+một khối đang đúng. Mọi khối ra đòn vắng mặt là CỐ Ý: ở đó rig đã dựng đúng tư thế đánh.
+
+⚠ **`03_Hurt` · `02_Death` · `04_Jump*` cũng vắng mặt, và đó là phép ĐO.** Từ lúc nhập vào Axie,
+ba khối đó không còn cửa nào hiện ra (trong thành không ai đánh được ai; bay thì đọc khối ĐI —
+`BAY_KHUNG` ghim vào một khung trong đó — chứ không đọc `04_Jumpping`). Thử đưa chúng vào thì
+hộp cắt bảng hai của `dkph1` phình **55,2% → 86,6%** một tấm thân liền.
 
 ⚠ **Chỉ vặn khi đang nướng CHÍNH lớp `vk`.** Các lớp thân không có xương `武器` trong bộ khe của
 chúng nên vặn ở đấy không đổi gì, chỉ tốn một lượt dựng lại nhánh con mỗi khung.
 
+#### ⚠ VÀ RIG CẤT VŨ KHÍ Ở **BỐN** KHỐI, `VK_HIEN` chỉ vá một
+
+Đã biết `00_Run` đặt một khoá attachment RỖNG lên khe `左手武器`. Đo lại cả 20 hoạt cảnh: ba khối
+nữa làm y hệt — **`09_Interactive`** (bắt chuyện NPC / mở rương) · `07_StatusEffect` · `01_Dance`.
+Cả ba là dáng **đứng trong thành**, tức đúng chỗ duy nhất lớp nhân vật còn hiện ra.
+
+Và `VK_HIEN` chỉ được tra ở **bảng MỘT**, còn ba khối kia nằm ở bảng hai — nơi cột `doi` đang
+dùng để đổi KHUÔN MẶT. Hai việc khác nhau trên cùng một tham số, nên chúng phải **gộp**
+(`{...VK_HIEN, ...doi}`, cột `doi` thắng khi trùng khoá). Đo được trước khi vá: lớp `vk` của
+`n`/`t`/`e` **không có một điểm ảnh nào** — nói chuyện với một NPC là cây kiếm biến mất khỏi tay.
+
+⚠ **Và `test_vklop` KHÔNG hề đo bốn khối mang ở bảng hai** (`q` Ngồi · `n` Bắt chuyện ·
+`t` Dính buff · `e` Nhảy múa) — mệnh đề ① *"không khối nào có khung TRỐNG"* nghe như phủ hết,
+nhưng danh sách khối của nó chỉ có tám cái. *Một mệnh đề phủ "mọi khối" mà danh sách khối do
+chính bài kiểm chép tay thì nó chỉ phủ đúng cái danh sách ấy.*
+
 Máy: `xoay_xuong()` trong `hoatcanh.py` (ghi thẳng ma trận thế giới rồi `tinh_cay`, cùng cấm kỵ
-với `ap_bien_hinh`: sau nó đừng gọi `tt.tinh()`) · bảng `VK_XOAY` trong `nuong_nv.py`.
-Kiếm của Dark Knight và Spellblade **không** vặn — chúng vốn là kiếm, dáng xách kiếm là đúng.
+với `ap_bien_hinh`: sau nó đừng gọi `tt.tinh()`) · `VK_XOAY` + `VK_MANG` + `VK_HIEN` trong
+`nuong_nv.py` · cờ **`--chilop <tên,tên>`** nướng lại đúng mấy lớp được gọi tên (hộp cắt của một
+lớp không phụ thuộc lớp nào khác, nên nướng lẻ ra đúng bằng nướng cả bộ — 3 giây thay vì cả bộ).
+Gác: `tests/test_vklop.js` ① (bốn khối mới) và ④ (đáy cây phải trên gót); cả hai đã thử ngược.
 
 ### ⚠ LỚP NÀO ĐÃ CÓ CÂY CẦM TAY THÌ CẦM CHO **MỌI** MÓN — `NV_VK_LOP_LOP`
 
