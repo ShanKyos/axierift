@@ -23,10 +23,21 @@ const { chromium } = require('playwright');
     // 1150ms) giữa cú bấm và lúc bốc kết quả — cả tiếng động lẫn dòng chữ của công thức đều
     // nổ ra ở NỬA SAU. Bài này đo KẾT QUẢ công thức, không đo hoạt cảnh, nên chỉ cần đợi cho
     // hết nhịp rồi mới đọc. (Phần hoạt cảnh do test_chaosanim.js gác riêng.)
-    // ⚠ 2400ms, KHÔNG PHẢI 1200. Khoá `_loBan` giữ tới khi bảng VẼ LẠI, tức LO_KHUI (1150ms)
-    // cộng thêm 1000ms nữa — tổng ~2150ms. Chờ ngắn hơn thì cú bấm KẾ TIẾP bị khoá nuốt mất,
-    // và bài đọc ra thành "công thức không chạy" trong khi thật ra nó chưa được bấm.
-    const xong = () => new Promise(r2 => setTimeout(r2, 2400));
+    // ⚠ CHỜ ĐÚNG CÁI CỜ, ĐỪNG NGỦ MỘT KHOẢNG CỐ ĐỊNH. Khoá `_loBan` giữ từ lúc bấm tới khi
+    // bảng VẼ LẠI — LO_KHUI (1150ms) cộng 1000ms nữa, tổng ~2150ms — và `doChaos()` `return`
+    // NGAY nếu khoá còn. Bản cũ ngủ 2400ms, nhìn thì dư 250ms, nhưng đo được: tới bước 3b
+    // khoá VẪN còn `true` (4/5 lượt, cả khi chạy một mình), nên `run()` của công thức Đổi Hệ
+    // **không được gọi một lần nào** và bài in ra "Đổi Hệ không đổi được hệ (Beast → Beast)".
+    // Một lỗi GIẢ, và nó đổ tội cho công thức trong khi chỗ hỏng là cảnh dựng — chính cái bẫy
+    // mà chú thích cũ ngay đây đã mô tả, chỉ là chữa bằng một con số thay vì bằng một điều kiện.
+    // `soKetKhoa` đếm số lần phải chờ thêm; in ra ở cuối để không ai tưởng chỗ này miễn phí.
+    let soKetKhoa = 0;
+    const xong = async () => {
+      if (_loBan) soKetKhoa++;
+      for (let i = 0; i < 200 && _loBan; i++) await new Promise(r2 => setTimeout(r2, 40));
+      await new Promise(r2 => setTimeout(r2, 120));   // cho renderForge vẽ nốt
+      if (_loBan) o.__khoaKet = (o.__khoaKet || 0) + 1;   // vẫn khoá sau 8 giây — nói ra
+    };
     const reset = () => {
       applyTestBoost(); calcDerived(); chaosClear(); chaosGroup = 'ren'; chaosPick = null;
       player.forgeBonus = 0; forgeUseCharm = false;
@@ -147,6 +158,7 @@ const { chromium } = require('playwright');
     o.npcMoMay = { panelForge: !el('panel-forge').classList.contains('hidden'),
                    panelChar: !el('panel-char').classList.contains('hidden'),
                    panelQuest: !el('panel-quest').classList.contains('hidden') };
+    o.__soKetKhoa = soKetKhoa;
     return o;
   });
 
@@ -170,6 +182,12 @@ const { chromium } = require('playwright');
   if (r.chucPhuc.ngocTru !== 1) fail(`Chúc Phúc trừ ${r.chucPhuc.ngocTru} viên, phải là 1`);
   if (r.chucPhuc.khayConNgoc !== 0) fail('khay chưa nhả viên ngọc đã dùng');
   if (r.chucPhuc.khayConDo !== 1) fail('khay nhả luôn món đồ — phải giữ lại để khảm tiếp');
+  // ⓪ tự kiểm cảnh dựng TRƯỚC khi chấm bất cứ công thức nào: khoá lò còn giữ thì `doChaos()`
+  // `return` ngay và MỌI mệnh đề dưới đây đọc ra "công thức không chạy" — sai chỗ, sai lý do.
+  if (r.__khoaKet) fail(`cảnh dựng hỏng — ${r.__khoaKet} lần lò VẪN khoá sau 8 giây chờ; `
+                      + 'mọi mệnh đề công thức bên dưới không đo được gì');
+  else if (r.__soKetKhoa) console.log(`  (đã phải chờ khoá lò ${r.__soKetKhoa} lần — `
+                                    + 'ngủ cố định 2400ms là không đủ)');
   if (!r.doiHe.doi) fail(`Đổi Hệ không đổi được hệ (${r.doiHe.heCu} → ${r.doiHe.heMoi})`);
   if (r.doiHe.nhanGiap) fail('Đổi Hệ vẫn nhận GIÁP — giáp không có hệ, ăn 1 Hỗn Độn Châu cho không');
   // 50% PHẲNG mọi bậc, dùng chung con số với đường ép thẳng trong túi (NGOC_EP.sinhMenh.rate).

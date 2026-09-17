@@ -117,24 +117,39 @@ const { chromium } = require('playwright');
     const hong = goi.filter(m => {
       const truoc = src.slice(0, m.index);
       const mo = truoc.lastIndexOf('ctx.save()');
-      return mo < 0 || !/ctx\.translate\(p\.x \+ _avaDx/.test(truoc.slice(mo));
+      // ⚠ HAI TÊN NEO, và đó là chủ ý chứ không phải trùng lặp. Cánh bám `_avaDx/_avaDy`
+      // (chỗ lớp nhân vật đứng); thần khí bám `_tkDx/_tkDy`, vốn BẰNG `_avaDx/_avaDy` lúc chưa
+      // nhập nhưng về 0 khi đã nhập vào Axie — lúc đó lớp nhân vật không có toạ độ nào trên
+      // màn, nên bám theo nó là cây vũ khí hiện lệch hẳn sang một bên cạnh một người vô hình.
+      // Thứ mệnh đề này gác vẫn y nguyên: KHÔNG lời gọi nào được vẽ thẳng ở (p.x, p.y).
+      return mo < 0 || !/ctx\.translate\(p\.x \+ _(ava|tk)Dx/.test(truoc.slice(mo));
     });
     if (hong.length)
       fail(`${hong.length}/${goi.length} lời gọi vẽ cánh/thần khí KHÔNG nằm trong phép dời về ` +
            'neo lớp nhân vật — thứ đó sẽ vẽ đè lên con Axie');
     else pass(`${goi.length}/${goi.length} lời gọi vẽ cánh + thần khí đều bám neo lớp nhân vật`);
   }
-  // Vũ khí phải TẮT lúc đi theo sau — nửa còn lại của "xuất hiện đằng trước kèm vũ khí".
+  // ⚠ LUẬT ĐÃ ĐỔI, và mệnh đề này đi theo chứ không bị nới ra. Bản cũ đòi `_tkHien` phải hỏi
+  // `_coAva`/`_lopHien` — nghĩa là *"bật avatar thì vũ khí chỉ hiện lúc ra đòn"*. Từ đợt
+  // "trong thành mang bên vai · ngoài thành vũ khí XUẤT HIỆN lúc ra đòn", luật là:
+  //     _tkHien = _nhap ? (atkK > 0 || castK > 0) : !_coVkLop
+  // tức TRONG THÀNH thì luôn hiện (đó là chỗ khoe đồ), ĐÃ NHẬP thì chỉ lúc ra đòn. Vế cũ chính
+  // là cái lỗi đã phải sửa: Dark Lord và Dark Wizard — hai lớp cố ý không có vũ khí cầm tay —
+  // đứng trong thành TAY KHÔNG.
   const _tk = src.match(/const _tkHien = ([^;]+);/);
   if (!_tk)
-    fail('không thấy cửa `_tkHien` — thần khí sẽ hiện cả lúc đang đi theo sau');
-  else if (!/_lopHien/.test(_tk[1]) || !/_coAva/.test(_tk[1]))
-    fail('cửa `_tkHien` không còn hỏi `_coAva`/`_lopHien` — thần khí sẽ hiện lúc đi theo sau');
+    fail('không thấy cửa `_tkHien` — thần khí sẽ hiện ở mọi trạng thái');
+  else if (!/_nhap/.test(_tk[1]))
+    fail('cửa `_tkHien` không hỏi `_nhap` — trong thành và ngoài thành sẽ xử như nhau');
+  else if (!/atkK/.test(_tk[1]) || !/castK/.test(_tk[1]))
+    fail('cửa `_tkHien` không hỏi `atkK`/`castK` — đã nhập vào Axie mà vũ khí vẫn bay theo '
+       + 'suốt ngày thì lại thành HAI thân trên màn');
   else if (!/_coVkLop/.test(_tk[1]))
-    fail('cửa `_tkHien` không hỏi lớp vũ khí — bộ có kiếm nướng sẵn trong tay sẽ hiện HAI cây');
+    fail('cửa `_tkHien` không hỏi lớp vũ khí — trong thành bộ có kiếm nướng sẵn trong tay '
+       + 'sẽ hiện HAI cây');
   else if (!/_tk && !_tk\.truoc && _tkHien/.test(src) || !/_tk && _tk\.truoc && _tkHien/.test(src))
     fail('một trong hai lớp thần khí (trước/sau thân) chưa đi qua cửa `_tkHien`');
-  else pass('thần khí chỉ hiện khi lớp nhân vật ra trước — cả hai lớp vẽ đều qua cửa');
+  else pass('thần khí: trong thành luôn hiện · đã nhập thì chỉ lúc ra đòn — cả hai lớp vẽ qua cửa');
 
   // ── ④ Cánh phải NGỒI TRÊN VAI ở mọi cỡ thu ────────────────────────────────────────────
   // Không đo bằng điểm ảnh, và cũng không chép lại phép biến hình sang đây: game tự đưa hai

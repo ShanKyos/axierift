@@ -20,7 +20,8 @@
 //  ⑤ CẮT CỤT TÊN. `text-overflow:ellipsis` ăn mất đuôi "…Mục Tiêu Ng…". §3.
 //  ⑥ KHÔNG PHẢI LƯỚI. Nếu ai đó lùi về chồng thẻ dọc thì các cột không còn thẳng lối. §1 đo
 //     toạ độ x thật của từng ô, không hỏi tên lớp.
-//  ⑦ NÚT CHẾT. "Tới Ngay" chỉ là một chuỗi `onclick`. §7 bấm THẬT rồi hỏi đã đi chưa.
+//  ⑦ NÚT CHẾT. "Tới Ngay" chỉ là một chuỗi `onclick`. §7 bấm THẬT rồi hỏi đã đi chưa —
+//     và hỏi cả chiều ngược lại: chưa đủ cấp thì phải NÓI RA, không được im lặng.
 const { chromium } = require('playwright');
 const PORT = process.argv[2] || '8853';
 let bad = 0;
@@ -188,20 +189,91 @@ async function moBang(p, truoc){
     ok(`§6 mở Xâm Lăng Vàng ⇒ ĐÚNG 1 hàng tô sáng (${r6b.tenLive[0]}), ${r6b.san} hàng Vỉa vẫn không tô`);
   else fail(`§6 có ${r6b.live} hàng tô sáng [${r6b.tenLive}] — phải đúng 1; Vỉa Cốt bật suốt ngày nên tô cả nó là cả bảng xanh lè và màu xanh hết nghĩa`);
 
-  // ── §7 NÚT "TỚI NGAY" BẤM THẬT PHẢI ĐI THẬT ─────────────────────────────────────────
+  // ── §7 NÚT "TỚI NGAY" BẤM THẬT PHẢI ĐI THẬT — VÀ TỪ CHỐI THÌ PHẢI NÓI RA ────────────
+  //
+  // ⚠ BẢN CŨ CỦA MỤC NÀY ĐỎ VÌ MỘT CẢNH DO ĐỒNG HỒ DỰNG, không vì nút hỏng. Nó lấy hàng
+  // `.sk-live` đầu tiên — mà §6 vừa ép Xâm Lăng Vàng thành hàng live duy nhất — rồi đòi
+  // `curMap` phải đổi. Nhưng đích của Xâm Lăng Vàng là `goldenMapFor(slot)`, **xoay vòng 7 map
+  // theo GIỜ THẬT**, nên có khung giờ nó rơi vào Dusk Marsh (`min: 100`) trong khi `moBang`
+  // đặt nhân vật ở **cấp 78**. `goEventMap` từ chối đúng luật, và bài báo "nút chết".
+  //
+  // Đo được (3/3 lượt, cùng một khung giờ): hàng live = Xâm Lăng Vàng → `nhanmon`,
+  // `mapGate` trả `{ok:false, why:'lv', need:100}`, và nó CÓ bắn số bay
+  // *"Cần cấp 100 để vào Dusk Marsh!"* — tức cả nút lẫn thông báo đều chạy.
+  //
+  // ⚠ Và phép đo ĐẦU TIÊN của tôi bảo "không có số bay nào" — vì nó đọc `window.floats`.
+  // `floats` khai bằng `let` ở tầng cao nhất nên KHÔNG gắn vào `window`; đọc qua `window.` ra
+  // `undefined` rồi `|| []` che mất. Đúng vết sẹo đã ghi trong CLAUDE.md cho `net.js`.
+  //
+  // ⇒ Mục này nay LÁI CẢ HAI NHÁNH thay vì nhận cảnh mà đồng hồ đưa cho, nên nó không còn phụ
+  // thuộc khung giờ chạy nữa. Nhánh TỪ CHỐI phải có mặt: một nút bấm vào mà không thấy gì xảy
+  // ra thì với người chơi đọc ra y hệt nút chết — đúng cái §7 sinh ra để chặn.
   const r7 = await p.evaluate(async () => {
-    const h = [...document.querySelectorAll('.sk-bang .sk-hang.sk-live')][0];
-    if (!h) return { thieu: true };
-    const nut = h.querySelector('.sk-di');
-    if (!nut) return { khongNut: true };
-    const truoc = curMap;
-    nut.click();
-    await new Promise(r => setTimeout(r, 400));
-    return { truoc, sau: curMap, chu: nut.textContent.trim() };
+    const lay = () => [...document.querySelectorAll('.sk-bang .sk-hang.sk-live')][0];
+    const h0 = lay();
+    if (!h0) return { thieu: true };
+    const nut0 = h0.querySelector('.sk-di');
+    if (!nut0) return { khongNut: true };
+    const oc = nut0.getAttribute('onclick') || '';
+    const id = (oc.match(/goEventMap\('([^']+)'\)/) || [])[1];
+    if (!id) return { khongDich: true, oc };
+    const ra = { id, ten: MAPS[id] && MAPS[id].name, min: (MAPS[id] || {}).min || 1,
+                 chu: nut0.textContent.trim() };
+
+    const bam = async () => {
+      lopPhuDong(); openEventBoard();
+      await new Promise(r => setTimeout(r, 300));
+      const h = lay(); if (!h) return null;
+      const n = h.querySelector('.sk-di'); if (!n) return null;
+      const truoc = curMap, nF = floats.length;      // ⚠ `floats` là `let`, KHÔNG có trên window
+      n.click();
+      await new Promise(r => setTimeout(r, 400));
+      return { truoc, sau: curMap, bao: floats.slice(nF).map(f => f.text) };
+    };
+
+    player.level = MAX_LV; calcDerived();
+    ra.capCuoi = player.level;
+    // ① nhánh TỪ CHỐI — DỰNG cảnh, đừng chờ đồng hồ đưa cho. Nâng ngưỡng cấp của chính map
+    // đích lên trên đầu người chơi rồi trả lại ngay. Cách cũ (hạ cấp xuống dưới `MAPS[id].min`)
+    // chỉ chạy khi map đích TÌNH CỜ có ngưỡng — mà đích là `goldenMapFor(slot)`, xoay vòng
+    // theo giờ thật: đo được ngay trong một phiên, nó đi từ `nhanmon` (min 100) sang `corran`
+    // (min 1) và nhánh này lặng lẽ bị bỏ qua nửa ngày.
+    const minCu = MAPS[id].min;
+    MAPS[id].min = MAX_LV + 5;
+    ra.chan = await bam();
+    MAPS[id].min = minCu;
+    ra.minChan = MAX_LV + 5;
+    // ② nhánh ĐI THẬT. Làm SAU vì nó đổi `curMap`.
+    ra.cong = mapGate(id);
+    ra.di = await bam();
+    return ra;
   });
   if (r7.thieu || r7.khongNut) fail('§7 hàng đang diễn ra không có nút Tham Gia');
-  else if (r7.sau !== r7.truoc) ok(`§7 bấm "${r7.chu}" đi thật: ${r7.truoc} → ${r7.sau}`);
-  else fail(`§7 bấm "${r7.chu}" KHÔNG đi đâu (vẫn ở ${r7.sau}) — nút chết, đúng bẫy openEvoPanel của test_cayky`);
+  else if (r7.khongDich) fail(`§7 nút không trỏ tới map nào: onclick="${r7.oc}"`);
+  else {
+    // ⓪ tự kiểm cảnh dựng: nâng lên MAX_LV rồi mà cổng vẫn đóng thì hai mệnh đề dưới vô nghĩa.
+    if (!r7.cong || !r7.cong.ok)
+      fail(`§7 cảnh dựng hỏng — ở cấp ${r7.capCuoi} mà cổng vào ${r7.ten} vẫn đóng `
+         + `(${JSON.stringify(r7.cong)}), mệnh đề "đi thật" không đo được gì`);
+    else if (r7.di && r7.di.sau === r7.id && r7.di.sau !== r7.di.truoc)
+      ok(`§7 bấm "${r7.chu}" đi thật: ${r7.di.truoc} → ${r7.di.sau}`);
+    else if (r7.di && r7.di.sau === r7.di.truoc && r7.di.sau === r7.id)
+      fail(`§7 đã đứng sẵn ở ${r7.ten} trước khi bấm — nhánh TỪ CHỐI đã dời người chơi tới đó, `
+         + 'mệnh đề này không đo được gì (xem mệnh đề cổng map ngay dưới)');
+    else
+      fail(`§7 bấm "${r7.chu}" KHÔNG đi đâu (vẫn ở ${r7.di && r7.di.sau}) — nút chết, `
+         + 'đúng bẫy openEvoPanel của test_cayky');
+
+    if (!r7.chan)
+      fail('§7 nhánh TỪ CHỐI không dựng được cảnh — không mở lại được bảng');
+    else if (r7.chan.sau !== r7.chan.truoc)
+      fail(`§7 chưa đủ cấp mà vẫn đi được vào ${r7.ten} (cần ${r7.minChan}) — cổng map bị bỏ qua`);
+    else if (r7.chan.bao.some(t => t.includes(String(r7.minChan))))
+      ok(`§7 chưa đủ cấp thì NÓI RA: "${r7.chan.bao.find(t => t.includes(String(r7.minChan)))}"`);
+    else
+      fail(`§7 chưa đủ cấp thì im lặng (số bay: ${JSON.stringify(r7.chan.bao)}) — `
+         + 'với người chơi thì "bấm không thấy gì" đọc ra y hệt nút chết');
+  }
 
   // ── §8 KHÔNG DỰNG PHÂN TRANG GIẢ ────────────────────────────────────────────────────
   // Ảnh mẫu có "1/1" vì nó phân trang sẵn; ở đây 7 dòng thì nút lật trang vĩnh viễn hiện 1/1.
