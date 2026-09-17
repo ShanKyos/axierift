@@ -1604,49 +1604,55 @@ function veVongKiem(g, e, nua){
 
   g.save();
   g.lineCap = 'round';
-  // Vệt lửa: dựng từ N đốt ngắn nối nhau, mỗi đốt một màu và một bề dày. Không dùng gradient
-  // dọc theo đường cong được — canvas chỉ có gradient thẳng và gradient toả tròn, mà đây là
-  // một cung elip. Đủ đốt và bo đầu tròn thì mắt đọc thành một dải liền.
+  g.globalCompositeOperation = 'lighter';
+  // ⚠ KHÔNG CÒN VỆT LỬA DÀY. Bản cũ vẽ một dải cam-đỏ dày 16px với năm nấc màu
+  // (#fff6d8 → #ffd76a → #ff9a2e → #e8552a → #8f2418) cộng một quầng mềm rộng gấp đôi — nó
+  // nuốt mất chính thanh kiếm, mà thanh kiếm mới là thứ chiêu này nói về. Chủ dự án chốt:
+  // *"bỏ hiệu ứng màu cam đi… nó chỉ cần hiện lên màu cam nhạt (như tia lửa xẹt điện là ok)"*.
+  // Nay là một vệt MỎNG, cam nhạt, có nhiễu dọc đường như tia điện.
+  //
+  // Nhiễu tính từ CHỈ SỐ ĐỐT + thời gian, không phải `Math.random` mỗi khung: random thì nó
+  // nhấp nháy loạn 60 lần một giây, đọc ra nhiễu hạt chứ không ra một tia điện đang chạy.
   for (let i = 0; i < N; i++){
-    const t0 = i / N, t1 = (i + 1) / N;            // 0 = đầu vệt (nóng nhất) → 1 = đuôi
+    const t0 = i / N, t1 = (i + 1) / N;            // 0 = đầu vệt (sáng nhất) → 1 = đuôi
     const a0 = dau - t0 * VONGKIEM_QUET, a1 = dau - t1 * VONGKIEM_QUET;
     const s0 = Math.sin(a0), s1 = Math.sin(a1);
     // Nửa dưới elip là phần GẦN người xem. Mỗi lượt vẽ chỉ nhận đúng nửa của mình; đốt nào vắt
     // qua ranh giới thì bỏ, đốt kế bên đã phủ chỗ đó rồi nên không hở.
     if ((s0 < 0) !== sauNua || (s1 < 0) !== sauNua) continue;
-    const x0 = e.x + Math.cos(a0) * VONGKIEM_RX, y0 = cyc + s0 * VONGKIEM_RY;
-    const x1 = e.x + Math.cos(a1) * VONGKIEM_RX, y1 = cyc + s1 * VONGKIEM_RY;
-    // Nửa gần vẽ dày hơn nửa xa — chính chỗ này làm vòng lửa trông có chiều sâu chứ không phải
-    // một cái vòng dán bẹt.
-    const gan = 1 + s0 * 0.30;
-    const day = (16 - t0 * 11) * gan;
-    const mau = t0 < 0.16 ? '#fff6d8' : t0 < 0.34 ? '#ffd76a'
-              : t0 < 0.58 ? '#ff9a2e' : t0 < 0.80 ? '#e8552a' : '#8f2418';
-    // Quầng mềm vẽ TRƯỚC và rộng gấp đôi: thiếu nó thì vệt lửa ra như một dải ruy băng nhựa,
-    // sắc cạnh đều tăm tắp. Lửa phải có mép loang.
-    g.globalAlpha = mo * (1 - t0 * 0.72) * 0.26;
-    g.strokeStyle = mau; g.lineWidth = day * 2.1;
+    const n0 = Math.sin(i * 2.7 + k * 44) * VONGKIEM_XET * (1 - t0);   // tia điện giật dọc đường
+    const n1 = Math.sin((i + 1) * 2.7 + k * 44) * VONGKIEM_XET * (1 - t1);
+    const x0 = e.x + Math.cos(a0) * (VONGKIEM_RX + n0), y0 = cyc + s0 * VONGKIEM_RY + n0 * 0.45;
+    const x1 = e.x + Math.cos(a1) * (VONGKIEM_RX + n1), y1 = cyc + s1 * VONGKIEM_RY + n1 * 0.45;
+    const gan = 1 + s0 * 0.30;                     // nửa gần dày hơn nửa xa — giữ chiều sâu
+    const mo0 = mo * (1 - t0) * (1 - t0);          // tắt nhanh về đuôi, đừng kéo lê cả vòng
+    // ⚠ QUẦNG cộng sáng, LÕI vẽ ĐÈ — và đây là một phép đo, không phải khẩu vị. Để cả hai cộng
+    // sáng thì trên nền map SÁNG (~200) kênh đỏ kịch trần trước, hai kênh kia vẫn leo, nên phần
+    // ánh sáng cộng vào đo ra (57 · 61 · 56) — **xám trơn, bão hoà 0,07**: đúng thứ chủ dự án
+    // bảo bỏ đi, chỉ nhạt hơn. Cùng bẫy đã ghi cho gói `fire_scream`: cộng sáng ăn mất SẮC.
+    g.globalCompositeOperation = 'lighter';
+    g.globalAlpha = mo0 * 0.30;
+    g.strokeStyle = VONGKIEM_QUANG; g.lineWidth = VONGKIEM_DAY * gan * 3.4;
     g.beginPath(); g.moveTo(x0, y0); g.lineTo(x1, y1); g.stroke();
-    g.globalAlpha = mo * (1 - t0 * 0.72) * 0.92;
-    g.lineWidth = day;
+    g.globalCompositeOperation = 'source-over';
+    g.globalAlpha = mo0 * 0.92;
+    g.strokeStyle = VONGKIEM_LOI; g.lineWidth = VONGKIEM_DAY * gan;
     g.beginPath(); g.moveTo(x0, y0); g.lineTo(x1, y1); g.stroke();
-    // Lõi trắng chỉ ở khúc đầu — đó là chỗ lưỡi kiếm vừa quét qua, phải chói hơn hẳn phần đuôi.
-    if (t0 < 0.30){
-      g.globalAlpha = mo * (1 - t0 / 0.30) * 0.85;
-      g.strokeStyle = '#ffffff'; g.lineWidth = day * 0.34;
-      g.beginPath(); g.moveTo(x0, y0); g.lineTo(x1, y1); g.stroke();
-    }
   }
-  // Tàn lửa bắn ra ngoài — sinh từ chính vị trí đầu vệt, không random mỗi khung (nhấp nháy).
-  g.globalCompositeOperation = 'lighter';
-  for (let i = 0; i < 7; i++){
-    const a = dau - i * 0.19, s = Math.sin(a);
-    if ((s < 0) !== sauNua) continue;
-    const r = 1 + i * 0.055;                       // càng về sau càng văng xa
-    const x = e.x + Math.cos(a) * VONGKIEM_RX * r, y = cyc + s * VONGKIEM_RY * r - i * 3;
-    g.globalAlpha = mo * (1 - i / 7) * 0.8;
-    g.fillStyle = i < 3 ? '#fff0be' : '#ffb15c';
-    g.beginPath(); g.arc(x, y, 2.6 - i * 0.22, 0, 7); g.fill();
+  // Tia lửa bắn ra ngoài — ĐOẠN THẲNG ngắn theo phương tiếp tuyến, không phải chấm tròn: chấm
+  // tròn đọc ra tàn than rơi, đoạn thẳng mới đọc ra điện xẹt.
+  for (let i = 0; i < 9; i++){
+    const a = dau - i * 0.17, sn = Math.sin(a);
+    if ((sn < 0) !== sauNua) continue;
+    const r = 1 + i * 0.05 + Math.sin(i * 5.1 + k * 60) * 0.03;
+    const x = e.x + Math.cos(a) * VONGKIEM_RX * r, y = cyc + sn * VONGKIEM_RY * r - i * 2.4;
+    const tt = a - Math.PI / 2, L = 7 - i * 0.5;
+    g.globalAlpha = mo * (1 - i / 9) * 0.75;
+    g.strokeStyle = i < 3 ? VONGKIEM_LOI : VONGKIEM_QUANG; g.lineWidth = 1.5;
+    g.beginPath();
+    g.moveTo(x, y);
+    g.lineTo(x + Math.cos(tt) * L, y + Math.sin(tt) * L * 0.6);
+    g.stroke();
   }
   g.restore();
   g.globalAlpha = 1; g.globalCompositeOperation = 'source-over';
@@ -1680,20 +1686,20 @@ function veVongKiem(g, e, nua){
 }
 // Gom thông tin vẽ vũ khí MỘT LẦN lúc tung chiêu, không phải mỗi khung.
 //
-// ⚠ NẤC LÙI THEO LỚP, và nó phải nằm ở ĐÂY chứ không phải trong `vkAnh()`. Đo được: Dark Knight
-// có ba dòng vũ khí (kiem · riu · chuy) mà VK_ANH chỉ có tranh cho `kiem` ⇒ **2/3 người chơi DK
-// tung tuyệt chiêu ra một vòng lửa RỖNG**, không một lưỡi nào. Nới ngay trong `vkAnh()` thì sửa
-// được chỗ này nhưng đồng thời nói dối ở ba chỗ khác đang gọi nó — ICON trong túi đồ (23064 ·
-// 23217 · 23251): cây rìu sẽ hiện ra hình thanh kiếm ngay trong ô túi, tức đổi một lỗi lấy một
-// lỗi nặng hơn. Ở cỡ lưỡi bay vòng thì thứ cần là một BÓNG DÁNG vũ khí; trong ô túi thì thứ cần
-// là đúng món ấy. Cùng đánh đổi đã ghi cho `NV_VK_LOP_LOP` (vũ khí cầm tay), và cùng lý do.
-const VK_VONGKIEM_LOP = { thieulam:'kiem', minhgiao:'makiem', toanchan:'no', bug:'lenhtruong', baidasan:'gay' };
+// ⚠ CÂY CỐ ĐỊNH CỦA CHIÊU, KHÔNG PHẢI CÂY ĐANG CẦM. Chủ dự án chốt: *"bỏ cây đại kiếm giai 7
+// của DK vào, sau đó cho thanh kiếm đó xoay… như kiểu tuyệt chiêu xoay kiếm của Dark Knight
+// trong MU Online Season 2"*. Ở MU, hình của một chiêu KHÔNG đổi theo món đang cầm — chiêu có
+// tạo hình riêng, và đó là thứ làm người chơi nhận ra nó từ xa.
+//
+// Bản trước vẽ đúng cây đang cầm. Nghe hay, nhưng đo ra hai chỗ hỏng: Dark Knight có ba dòng
+// (kiem · riu · chuy) mà `VK_ANH` chỉ vẽ `kiem` ⇒ 2/3 người chơi tung ra vòng RỖNG; và ngay cả
+// khi có tranh thì cây giai 1 là một thanh kiếm đồng mảnh — đọc không ra một tuyệt chiêu.
+// ⚠ `vongKiem` hiện CHỈ `dk_cyclone` dùng (xem `CHIEU_TRANH`), nên "cây của chiêu" ở đây đúng
+// bằng "cây của Dark Knight". Ngày nào lớp khác mượn hình này thì phải đổi thành một BẢNG theo
+// lớp — đừng để nó lặng lẽ vẽ kiếm DK trên tay một pháp sư.
+const VK_VONGKIEM_CAY = 'kiem|7';            // Kiếm Long Vương — cây giai 7 của Dark Knight
 function vongKiemVuKhi(){
-  const it = player.equip && player.equip.vukhi;
-  const d = it && itemDef(it);
-  // ⚠ NẤC LÙI CHỈ ÁP KHI THẬT SỰ CÓ CẦM MỘT CÂY. `d` rỗng nghĩa là TAY KHÔNG — lùi ở đó là
-  // người chơi cởi sạch đồ vẫn có ba lưỡi kiếm bay quanh, đúng cái `test_vongkiem §6` gác từ đầu.
-  const A = d ? (vkAnh(d) || VK_ANH[VK_VONGKIEM_LOP[d.sect || player.sect]] || null) : null;
+  const A = VK_ANH[VK_VONGKIEM_CAY];
   if (!A) return null;
   const im = nvTai(A.tep, 'png');
   if (!(im && im.complete && im.naturalWidth)) return null;
@@ -1821,6 +1827,11 @@ const VONGKIEM_QUET = Math.PI * 1.15;        // vệt lửa dài bao nhiêu radi
 const VONGKIEM_VONG = 2;                     // số vòng trọn trong một lần tung
 const VONGKIEM_LUOI = 3;                     // số lưỡi bay quanh, rải ĐỀU trên elip
 const VONGKIEM_TUQUAY = 3;                   // số vòng mỗi lưỡi tự quay quanh chuôi trong một lần tung
+// Vệt để lại sau lưỡi. CAM NHẠT và MỎNG — chủ dự án chốt bỏ hẳn dải lửa cam-đỏ dày của bản cũ.
+const VONGKIEM_LOI = '#ffb877';              // lõi tia — CAM NHẠT thật, không phải trắng ngả cam
+const VONGKIEM_QUANG = '#ff8a38';            // quầng quanh lõi, cam đậm hơn lõi một nấc
+const VONGKIEM_DAY = 2.2;                    // bề dày lõi tia (bản lửa cũ: 16)
+const VONGKIEM_XET = 5;                      // biên độ giật ngang của tia, px
 // Trả về { dai, ve } — `ve` vẽ cây vũ khí với CHỖ NẮM ở gốc và MŨI dọc trục +X, đơn vị px thế
 // giới. Nhờ chuẩn hoá đó mà thanKhiTuThe() chỉ cần lo quỹ đạo, không cần biết đang cầm cây gì.
 function thanKhiNguon(p){
