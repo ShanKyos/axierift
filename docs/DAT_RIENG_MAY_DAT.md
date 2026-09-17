@@ -258,12 +258,19 @@ thể trước khi chấm. Bản đầu của mấy bài kiểm ảnh trong kho 
 ⚠ **2b trước 2c là chủ ý.** Đường VẼ phải chạy đúng trước khi có đường ĐẶT, nếu không thì lúc
 đặt mà không thấy gì, không biết hỏng ở khâu nào. Cùng lối `test_isoneo` chia hai tầng.
 
-## §11 — Còn treo, cần chủ dự án
+## §11 — Đã chốt, và một thứ còn treo
 
-1. **Tên tính năng.** "Gia viên" vi phạm Quy tắc số 1 (kiếm hiệp). Đề nghị: **Đất Riêng** ·
-   **Trang Trại** · **Phong Ấp**. Tài liệu này dùng tạm "Đất Riêng"; đổi là sửa chữ, không sửa mã.
-2. **Art 4 món đầu** — bồn hoa · hàng rào · luống đất · ao cá. Đường ống đã có
-   (`tools/iso/nuong_biome.py` + `ghi_neo()`), chỉ thiếu tranh. Đây là thứ **chặn 2d**, không
-   chặn 2a-2c (dùng tạm viên nền có sẵn để nhìn được đường vẽ).
-3. **`DAT_TRAN` = 300?** Đo được là dư sức về dung lượng; con số này thật ra là **trần hiệu
-   năng vẽ**, nên nên đo lại bằng ảnh chụp khi có art thật.
+**Tên tính năng: ĐẤT RIÊNG.** Chủ dự án chốt (2026-09-17) — *"cứ để tạm đất riêng đi"*. Tạm
+theo nghĩa **có thể đổi sau**, không theo nghĩa chưa quyết: mã cứ dùng tiền tố `dat*` và khoá
+`player.dat`, và đó là thứ KHÔNG đổi kể cả khi tên hiện ra đổi. Đừng đem tên hiện ra vào tên
+khoá lưu — save thì di trú được, nhưng di trú một cái tên là trả giá cho đúng một chữ.
+
+⚠ "Gia viên" vi phạm Quy tắc số 1 (kiếm hiệp). Đừng "sửa ngược" về đó tưởng là sót.
+
+**Art 4 món đầu — prompt đã viết: `docs/PROMPT_DAT_RIENG_ART.md`.** Chủ dự án tự sinh bằng
+Gemini. Đây là thứ **chặn 2d**, không chặn 2a-2c: ba bước đầu dùng tạm viên nền có sẵn là nhìn
+được đường vẽ rồi.
+
+**Còn treo: `DAT_TRAN` = 300?** Đo được là dư sức về dung lượng; con số này thật ra là **trần
+hiệu năng vẽ**, nên phải đo lại bằng ảnh chụp khi có art thật. Không chặn bước nào — cứ để 300
+rồi chỉnh.
