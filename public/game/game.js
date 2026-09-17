@@ -1703,8 +1703,14 @@ function veVongKiem(g, e, nua){
 // ⚠ `vongKiem` hiện CHỈ `dk_cyclone` dùng (xem `CHIEU_TRANH`), nên "cây của chiêu" ở đây đúng
 // bằng "cây của Dark Knight". Ngày nào lớp khác mượn hình này thì phải đổi thành một BẢNG theo
 // lớp — đừng để nó lặng lẽ vẽ kiếm DK trên tay một pháp sư.
+//
+// ⚠ THAM SỐ `p` GIỮ LẠI DÙ KHÔNG ĐỌC — và chính nó là bằng chứng hai nhánh gặp nhau ở đây.
+// `main` thêm `p` để vòng kiếm của NGƯỜI KHÁC vẽ bằng vũ khí của họ chứ không phải của mình
+// (cùng họ lỗi với `wingDef` vẽ nhầm cánh). Cây CỐ ĐỊNH thì lỗi ấy không còn cửa xảy ra — mọi
+// người cùng một lưỡi — nhưng chỗ gọi ở `castSkill` vẫn truyền `_p` vào, và ngày nào cây quay
+// lại theo người thì tham số đã có sẵn ở đúng chỗ cần.
 const VK_VONGKIEM_CAY = 'kiem|7';            // Kiếm Long Vương — cây giai 7 của Dark Knight
-function vongKiemVuKhi(){
+function vongKiemVuKhi(p){                   // eslint-disable-line no-unused-vars
   const A = VK_ANH[VK_VONGKIEM_CAY];
   if (!A) return null;
   const im = nvTai(A.tep, 'png');
@@ -4924,16 +4930,33 @@ function diemGiang(tam){
 // Là hàm chứ không phải hằng vì HERO_H/HERO_GOT khai ở dưới xa — hằng ở đây sẽ đọc trúng vùng
 // chết của `const` ngay lúc nạp trang.
 function chanDy(){ return (HERO_GOT - HERO_H / 2) * (NV_CAO / HERO_H) - NV_LECH_Y; }
-function spawnSkillVfx(id, v, phase, ang, R, x0, y0){
+/* ⚠ `nguoi` LÀ THAM SỐ CUỐI VÀ MẶC ĐỊNH LÀ NGƯỜI CHƠI NÀY — mọi lời gọi 7 tham số cũ chạy y
+ * nguyên (cùng quy ước đã dùng cho `heroPose(..., sway, swayDir)`).
+ *
+ * ⚠⚠ VÀ ĐÂY LÀ CỬA DUY NHẤT GỬI VFX CHIÊU SANG NGƯỜI KHÁC. Có CHÍN chỗ gọi hàm này; móc tay
+ * từng chỗ là chỗ thứ mười thêm sau sẽ lặng lẽ không đồng bộ — đúng cái bẫy đã ghi cho
+ * `dailyTrack()` và `mobDoBuoc()`. Gửi từ BÊN TRONG thì chiêu mới thêm tự có mặt.
+ *
+ * ⚠ VFX KHÔNG BAO GIỜ GÂY SÁT THƯƠNG, và đó là thứ làm đồng bộ này an toàn. Vòng cập nhật
+ * `effects` chỉ cộng `e.t`, dời hạt và quay — không một lời gọi `hurtMob` nào. Sát thương nằm
+ * ở `castVohoc`/`castSkill`, tách hẳn. Nên vẽ chiêu của người khác lên máy mình là vẽ, không
+ * phải đánh. Đừng "tiện tay" nối sát thương vào đây: PvP cố ý mới chỉ có đòn thường. */
+function spawnSkillVfx(id, v, phase, ang, R, x0, y0, nguoi){
+  const _p = nguoi || player;
+  if (!_p) return;
+  // Người chơi NÀY niệm ⇒ bắn sang những người cùng bản đồ. `nguoi` có giá trị nghĩa là đang
+  // dựng lại chiêu của người khác — không gửi tiếp, nếu không là một vòng dội vô tận.
+  if (!nguoi && typeof window.netChieuGui === 'function')
+    window.netChieuGui(id, v && v.color, v && v.glyph, phase, ang, R, x0, y0);
   // Chiêu đã có tranh thì DỪNG Ở ĐÂY. Hình vector chung bên dưới sẽ chồng thêm một vòng sáng
   // nữa lên đúng chỗ tranh đang toả ra, thành hai lớp lệch nhau — một lớp vẽ tay, một lớp hình
   // học. Đó chính là thứ phải bỏ, không phải thứ để làm nền dự phòng.
   const _tr = CHIEU_TRANH[id];
   if (_tr){
     if (_tr.ve === 'vongKiem')
-      addEffect({ type:'vongKiem', x:player.x, y:player.y, dur:1.0, scale:1, wpn: vongKiemVuKhi() });
+      addEffect({ type:'vongKiem', x:_p.x, y:_p.y, dur:1.0, scale:1, wpn: vongKiemVuKhi(_p) });
     else {
-      const _cx = x0 == null ? player.x : x0, _cy = (y0 == null ? player.y : y0) + chanDy();
+      const _cx = x0 == null ? _p.x : x0, _cy = (y0 == null ? _p.y : y0) + chanDy();
       // ⚠ Góc lấy từ tham số `ang` của chính lời gọi, KHÔNG đọc thẳng `player.face`. Hai thứ đó
       // thường bằng nhau nhưng không phải luôn: nhánh `proj` đặt `player.face = ang` TRƯỚC khi
       // gọi, còn nhánh Trấn Phái thì chỉ đổi face khi điểm giáng lệch chỗ đứng. Đọc `player.face`
@@ -4951,18 +4974,18 @@ function spawnSkillVfx(id, v, phase, ang, R, x0, y0){
   // trước khi nổ. Chiêu nào có hoạt ảnh nhiều nhịp thì khai `dur` riêng trong bảng VFX.
   const _d = (t) => (c && c.dur) || t;
   if (phase === 'cone'){
-    addEffect({ type:'vfx', style, x:player.x, y:player.y, face:ang, r:R, c1:col, c2, glyph, dur:_d(0.55), spin:(c && c.spin) || 0 });
-    for (let i = 0; i < 5; i++) addEffect({ type:'ink', x:player.x + Math.cos(ang)*rnd(30,90), y:player.y + Math.sin(ang)*rnd(30,90), vx:rnd(-30,30), vy:rnd(-60,-10), color:c2 });
+    addEffect({ type:'vfx', style, x:_p.x, y:_p.y, face:ang, r:R, c1:col, c2, glyph, dur:_d(0.55), spin:(c && c.spin) || 0 });
+    for (let i = 0; i < 5; i++) addEffect({ type:'ink', x:_p.x + Math.cos(ang)*rnd(30,90), y:_p.y + Math.sin(ang)*rnd(30,90), vx:rnd(-30,30), vy:rnd(-60,-10), color:c2 });
   } else if (phase === 'cast'){
-    addEffect({ type:'vfx', style, x:player.x, y:player.y, face:ang, r:R, c1:col, c2, glyph, dur:_d(0.4) });
+    addEffect({ type:'vfx', style, x:_p.x, y:_p.y, face:ang, r:R, c1:col, c2, glyph, dur:_d(0.4) });
   } else if (phase === 'aoe'){
-    addEffect({ type:'vfx', style, x:player.x, y:player.y, face:ang, r:R, c1:col, c2, glyph, dur:_d(0.7), big:true, spin:(c && c.spin) || 0 });
-    addEffect({ type:'vfx', style:'shock', x:player.x, y:player.y, face:0, r:R, c1:col, c2, glyph, dur:0.5 });
+    addEffect({ type:'vfx', style, x:_p.x, y:_p.y, face:ang, r:R, c1:col, c2, glyph, dur:_d(0.7), big:true, spin:(c && c.spin) || 0 });
+    addEffect({ type:'vfx', style:'shock', x:_p.x, y:_p.y, face:0, r:R, c1:col, c2, glyph, dur:0.5 });
   } else if (phase === 'dash'){
-    addEffect({ type:'vfx', style, x:player.x, y:player.y, face:ang, r:R, c1:col, c2, glyph, dur:_d(0.6), x0, y0 });
-    addEffect({ type:'vfx', style:'shock', x:player.x, y:player.y, face:0, r:80, c1:col, c2, glyph, dur:0.45 });
+    addEffect({ type:'vfx', style, x:_p.x, y:_p.y, face:ang, r:R, c1:col, c2, glyph, dur:_d(0.6), x0, y0 });
+    addEffect({ type:'vfx', style:'shock', x:_p.x, y:_p.y, face:0, r:80, c1:col, c2, glyph, dur:0.45 });
   } else if (phase === 'buff'){
-    addEffect({ type:'vfx', style, x:player.x, y:player.y, face:0, r:R, c1:col, c2, glyph, dur:_d(1.0), big:true, spin:(c && c.spin) || 0 });
+    addEffect({ type:'vfx', style, x:_p.x, y:_p.y, face:0, r:R, c1:col, c2, glyph, dur:_d(1.0), big:true, spin:(c && c.spin) || 0 });
   }
 }
 
@@ -12495,6 +12518,7 @@ document.addEventListener('click', e=>{
 let _zoneAliveCache = null; // per-frame memo for zoneAliveCount(), reset every update() tick
 function update(dt){
   if (!player) return;
+  netMaNhip(dt);           // bóng giả của `/net ma` — trên nhánh `dead` để chúng còn thở lúc mình nằm
   _zoneAliveCache = null;
   _gtiCache = null; // gameTimeInfo() per-frame memo — reset once per tick, see its own comment
   if (hitStop > 0){ hitStop -= dt; dt *= 0.08; } // hit-stop: thế giới khựng lại 1 nhịp khi chém trúng — đòn có lực
@@ -13919,6 +13943,7 @@ function render(){
   if (DEEP) drawDeepHUD();   // HUD Tầng Sâu: tầng hiện tại + kho tạm chưa vào túi
   if (LK) drawLoKhacHUD();   // HUD Lò Khắc: đợt · kho · danh sách nếp đang cầm
   drawPvpHUD();              // HUD sàn đấu: máu TRẬN (không phải máu nhân vật)
+  drawNetHUD();              // ô chỉ số mạng — chỉ hiện sau khi gõ `/net hud`
   { const _dl = el('deep-leave'); if (_dl) _dl.classList.toggle('hidden', !DEEP); }
 
   // Cốt truyện — HAI bộ đếm, không phải một. Trước đây cả hiệu ứng này lẫn chú thích của nó nói
@@ -17850,6 +17875,87 @@ function netTaoThan(nid){
 }
 window.netTaoThan = netTaoThan;
 
+// ⚠ MỘT NHỊP CỦA MỘT THÂN NGƯỜI TỪ XA — MỘT luật, HAI chỗ gọi.
+// `noiSuy()` trong net.js gọi nó cho thân người THẬT; `netMaNhip()` ngay dưới gọi nó cho BÓNG
+// GIẢ của lệnh `/net ma`. Chép nó ra làm bản thứ hai thì bóng giả diễn một kiểu còn người thật
+// diễn một kiểu — mà bóng giả sinh ra chính để THỬ đường vẽ của người thật, nên hai bên lệch
+// nhau là công cụ thử nói dối. Cùng lý do `thanNhip` tồn tại.
+// ⚠ Ba đồng hồ hoạt cảnh đếm ngược Ở ĐÂY, KHÔNG nhét vào `thanNhip`: `thanNhip` thì CẢ người
+// chơi của mình lẫn thân người từ xa cùng gọi, nên đặt vào đó là mình bị trừ hai lần.
+window.netThanNhip = function(t, dt, dx, dy){
+  const dl = Math.hypot(dx || 0, dy || 0);
+  if (typeof window.thanNhip === 'function') window.thanNhip(t, dt, dx || 0, dy || 0, dl > 0.01 ? 1 : 0);
+  if (t.atkAnim > 0) t.atkAnim = Math.max(0, t.atkAnim - dt);
+  if (t.castT   > 0) t.castT   = Math.max(0, t.castT   - dt);
+  if (t.hurtT   > 0) t.hurtT   = Math.max(0, t.hurtT   - dt);
+  // Nằm xuống: `update()` cộng `deadT` cho người chơi của mình, còn thân người từ xa không bao
+  // giờ chạy `update()` — thiếu dòng này là cú ngã đứng hình ở khung ĐẦU, vĩnh viễn.
+  if (t.chet) t.deadT = (t.deadT || 0) + dt;
+  else if (t.deadT) t.deadT = 0;
+};
+
+/* ═══ BÓNG GIẢ — thử tầng vẽ online mà KHÔNG cần cửa sổ thứ hai ═══════════════════════════
+ * `/net ma 3` dựng ba thân người từ xa ngay cạnh chân, đi qua ĐÚNG `netTaoThan` + `netApTrangBi`
+ * mà một người thật đi qua. Vì sao đáng có: thử online bằng hai cửa sổ có một cái bẫy đã ghi
+ * trong CLAUDE.md — mọi nhân vật mới hiện ra ở ĐÚNG một điểm, nên hai thân chồng khít lên nhau
+ * lệch 0,0px và kết nối chạy hoàn hảo vẫn đọc ra "không thấy ai".
+ *
+ * ⚠ CHÚNG CHỈ SỐNG TRÊN MÁY NÀY. Không gói tin nào mang chúng đi: `gui()` chỉ gửi `netDoc()`,
+ * tức người chơi của mình. Đừng "tiện tay" nối chúng vào đường gửi — đó là dựng đúng cái cửa
+ * cho một client sửa đổi bơm người giả vào màn của người khác.
+ * ⚠ Và chúng KHÔNG có máu thật, không bị nhắm, không đánh được: cùng lý do đàn thú hoang vô
+ * dụng — giá trị của một vật thử nằm ở chỗ nó không phải nội dung. */
+window.NET_MA = [];
+window.NET_HUD = false;
+
+window.netMaTao = function(n){
+  if (!player) return 0;
+  const g0 = window.netTrangBi ? window.netTrangBi() : null;
+  for (let i = 0; i < n; i++){
+    const t = netTaoThan(-(1000 + window.NET_MA.length));
+    const g = Math.PI * 2 * (i + 0.5) / Math.max(1, n);
+    t.x = player.x + Math.cos(g) * 170;
+    t.y = player.y + Math.sin(g) * 170;
+    t.map = curMap;
+    t.face = g + Math.PI;                       // quay mặt về phía mình
+    t.sect = player.sect;                        // cùng lớp ⇒ cùng bộ art, so được với thân mình
+    t.level = player.level;
+    t.hp = t.maxHp = player.maxHp;
+    t.speed = player.speed;
+    t.name = 'Bóng Giả ' + (window.NET_MA.length + 1);
+    // Mặc đúng bộ đồ của mình, và mặc QUA hai hàm của sợi dây thật — nếu chữ ký trang bị hỏng
+    // thì bóng giả hỏng y như người thật sẽ hỏng, đó mới là chỗ nó có ích.
+    if (g0 && window.netApTrangBi) window.netApTrangBi(t, g0);
+    window.NET_MA.push(t);
+  }
+  netMaDong();
+  return window.NET_MA.length;
+};
+
+window.netMaXoa = function(){
+  const n = window.NET_MA.length;
+  window.NET_MA.length = 0;
+  netMaDong();
+  return n;
+};
+
+// Đổ bóng giả vào mảng mà vòng vẽ đọc. Khi có mạng thì `capNhatMang()` của net.js dựng lại mảng
+// ấy mỗi ảnh chụp và tự nối `NET_MA` vào đuôi; khi KHÔNG có mạng thì net.js `return` ngay từ
+// đầu tệp nên không ai dựng lại — vì thế phải tự đồng bộ ở đây, nếu không `/net ma` im lặng
+// không vẽ gì ở đúng cái đường chơi một mình mà người ta hay thử trước.
+function netMaDong(){
+  const a = window.NETPLAYERS;
+  for (let i = a.length - 1; i >= 0; i--) if (a[i]._netId <= -1000) a.splice(i, 1);
+  for (const t of window.NET_MA) a.push(t);
+}
+
+// Nhịp của bóng giả. Gọi từ `update()`, và đứng TRƯỚC nhánh `dead` — người chơi nằm xuống thì
+// bóng giả vẫn phải thở, nếu không nó đứng hình đúng lúc ta đang xem khối chết trông thế nào.
+function netMaNhip(dt){
+  if (!window.NET_MA.length) return;
+  for (const t of window.NET_MA) window.netThanNhip(t, dt, 0, 0);
+}
+
 // ⚠ CỬA ĐỌC BẮT BUỘC — `net.js` không tự lấy được `player` và `curMap`.
 // Cả hai khai bằng `let` ở tầng cao nhất của một script THƯỜNG, mà `let` ở tầng ấy **không** gắn
 // vào `window` (khác `var` và khác `function`). Đo được: `typeof window.player` → "undefined"
@@ -17948,6 +18054,47 @@ function veNhanNet(np){
   ctx.fillText(np.name || '?', x, y);
   ctx.restore();
 }
+
+/* ═══ ✦ VFX CHIÊU CỦA NGƯỜI BÊN KIA ═══════════════════════════════════════════════════════
+ * Trước bản này `castT` đã đồng bộ nên người bên kia thấy TƯ THẾ niệm — giơ trượng, xoay người —
+ * mà không thấy một tia lửa nào. Đứng cạnh một Dark Wizard đang thả Meteorite thì trên màn chỉ
+ * có một người vung tay trong khoảng không.
+ *
+ * ⚠ ĐÂY LÀ HÌNH, KHÔNG PHẢI ĐÒN. Vòng cập nhật `effects` chỉ cộng `e.t`, dời hạt và quay — không
+ * một lời gọi `hurtMob` nào (đã đếm: 22 chỗ gọi `hurtMob`, không chỗ nào trong vòng ấy). Nên
+ * chiêu của người khác nổ trên máy mình thì quái của mình KHÔNG mất máu, và người mình đang đấu
+ * cũng không. Đó là chủ ý: sát thương PvP cố ý mới chỉ có đòn thường.
+ *
+ * ⚠ GỬI TỪ TRONG `spawnSkillVfx`, ĐỪNG MÓC TỪNG CHỖ GỌI. Có chín chỗ gọi nó; móc tay từng chỗ
+ * là chỗ thứ mười thêm sau sẽ lặng lẽ không đồng bộ, và kiểu thiếu đó không ném lỗi.             */
+
+// Bắn một chiêu vừa niệm sang những người cùng bản đồ. Gọi từ `spawnSkillVfx` — đừng gọi thẳng.
+window.netChieuGui = function(id, mau, gly, phase, ang, R, x0, y0){
+  if (typeof window.netChieu !== 'function') return false;   // chưa nối mạng
+  return window.netChieu({
+    id: String(id || ''), mau: mau || '', gly: gly || '', ph: String(phase || ''),
+    ang: +(ang || 0).toFixed(2), R: Math.round(R || 0),
+    // ⚠ `x0/y0` là TOẠ ĐỘ THẾ GIỚI TUYỆT ĐỐI (điểm ngắm của chiêu giáng), không phải độ lệch so
+    // với người niệm — `diemGiang()` trả toạ độ tuyệt đối. Quy nó về tương đối rồi cộng lại ở
+    // bên kia là thêm một phép biến hình để sai, mà cả hai bên vốn đã dùng chung một hệ toạ độ.
+    x0: x0 == null ? null : Math.round(x0), y0: y0 == null ? null : Math.round(y0),
+  });
+};
+
+// Máy chủ báo có người niệm chiêu. `d` là gói trên, kèm `tu` = id người niệm.
+window.netChieuNhan = function(d){
+  if (!d || !player) return;
+  // ⚠ DỰNG LẠI BẰNG CHÍNH `spawnSkillVfx`, và truyền THÂN NGƯỜI TỪ XA vào tham số cuối. Viết
+  // một đường vẽ thứ hai "cho gọn" là chiêu mới thêm sẽ hiện trên mình mà không hiện trên họ —
+  // đúng lý do mà trang bị cũng dựng lại một `equip` giả thay vì tự vẽ lấy.
+  const np = window.NETPLAYERS.find(n => n._netId === d.tu);
+  if (!np || np.map !== curMap) return;
+  try {
+    spawnSkillVfx(d.id, { color: d.mau || undefined, glyph: d.gly || undefined },
+                  d.ph, d.ang || 0, d.R || 0,
+                  d.x0 == null ? undefined : d.x0, d.y0 == null ? undefined : d.y0, np);
+  } catch (e) { console.error('[net] vfx chiêu', e); }
+};
 
 /* ═══ ⚔ SÀN ĐẤU — ĐẤU TAY ĐÔI (Giai đoạn 2b online) ══════════════════════════════════════
  * Chủ dự án chốt: *"Dựng 1 map pvp và làm thử xem. Chỉ cần 2 người đánh nhau là được."*
@@ -18090,6 +18237,30 @@ window.netPvpHoi = function(d){
 
 // HUD trận — một thanh máu của mình ở giữa trên. Chỉ hiện trong sàn đấu và chỉ khi đã vào trận.
 // ⚠ Vẽ SAU `ctx.restore()` của khối thế giới (gọi từ vùng HUD), nên toạ độ ở đây là MÀN HÌNH.
+// Ô chỉ số mạng. Bật bằng `/net hud`, mặc định TẮT — nó là công cụ thử, không phải giao diện.
+// Vì sao vẽ ra màn thay vì in ra console: lúc thử hai cửa sổ thì thứ cần nhìn là con số ĐANG
+// ĐỔI (ảnh chụp có tới đều không, có ai rơi khỏi danh sách không), mà một dòng log in một lần
+// thì không nói được điều đó. Đọc thẳng `window.NET`, không giữ bản sao nào.
+function drawNetHUD(){
+  if (!window.NET_HUD) return;
+  const N = window.NET || { on:false, tinhTrang:'tat', id:0, soAnh:0 };
+  const that = window.NETPLAYERS.filter(n => n._netId > -1000).length;
+  const gia  = (window.NET_MA || []).length;
+  const d = [
+    'NET ' + (N.on ? N.tinhTrang : 'tat') + (N.on ? '  #' + N.id : ''),
+    'người thật: ' + that + '   bóng giả: ' + gia,
+    'ảnh chụp: ' + (N.soAnh || 0),
+  ];
+  ctx.save();
+  ctx.font = '11px ui-monospace, monospace'; ctx.textAlign = 'left'; ctx.textBaseline = 'top';
+  const w = 168, h = d.length * 14 + 8, x = 10, y = H - h - 96;
+  ctx.fillStyle = 'rgba(8,10,14,.72)'; ctx.fillRect(x, y, w, h);
+  ctx.strokeStyle = N.tinhTrang === 'da-noi' ? 'rgba(95,208,122,.8)' : 'rgba(255,215,106,.8)';
+  ctx.lineWidth = 1; ctx.strokeRect(x + .5, y + .5, w - 1, h - 1);
+  ctx.fillStyle = '#cfe8ff';
+  d.forEach((t, i) => ctx.fillText(t, x + 7, y + 5 + i * 14));
+  ctx.restore();
+}
 function drawPvpHUD(){
   if (!pvpDangO() || pvpTran.max <= 0) return;
   const w = Math.min(360, W * 0.34), h = 14, x = W/2 - w/2, y = 74;
@@ -21814,6 +21985,11 @@ function cheatHelp(){
     '/ruong — kéo Rương Canh chưa mở gần nhất về sát chân + dọn trại · /ruong ds — rương của mọi vùng',
     '── tranh ──',
     `/art [lớp=${Object.keys(SPLASH_CFG).join('|')}] [mavuong] — mở tranh minh hoạ + chibi của lớp`,
+    '── online (chạy với ?test=1&net=1) ──',
+    '/net — tình trạng nối · /net ds — ai đang ở trong map · /net toi [id|tên] — dịch tới cạnh họ',
+    '/net ma [n] — dựng n bóng GIẢ để thử tầng vẽ mà không cần cửa sổ thứ hai',
+    '/net ma danh|chieu|nga — bắt bóng giả diễn · /net xoa — dọn · /net hud — ô chỉ số mạng',
+    '/net pvp — vào Sàn Đấu Ardhaven',
     '/wipe — xóa save & tải lại game',
   ];
 }
@@ -22083,6 +22259,91 @@ window.cheatExec = function(raw){
         const mul = num(1, 1);
         player.speed = 190 * mul;
         cheatLog('Tốc chạy ×' + mul, '#8fd18f'); break;
+      }
+      /* /net … — công cụ thử tầng online. Xem `window.NET_MA` để biết vì sao có bóng giả.
+       * ⚠ Console này vẫn khoá sau `?test=1`, KHÔNG mở theo `?net=1`. Hai cờ đọc hai tham số
+       * khác nhau nên `?test=1&net=1` bật cả hai — đó là đường thử. Cho `?net=1` tự mở console
+       * là phát lệnh gỡ rối cho mọi người đang chơi thật trên cùng máy chủ. */
+      case 'net': {
+        const N = window.NET || { on:false };
+        const sub = (parts[1] || '').toLowerCase();
+
+        if (sub === 'ds'){
+          const ds = window.NETPLAYERS.filter(n => n.map === curMap);
+          if (!ds.length){ cheatLog('Không có ai trong map này. /net — xem tình trạng nối · /net ma 2 — dựng bóng giả.', '#ff7a6a'); break; }
+          cheatLog(`${ds.length} thân người trong ${MAPS[curMap].name}:`, '#7fd4ff');
+          for (const n of ds){
+            const d = Math.round(Math.hypot(n.x - player.x, n.y - player.y));
+            const gi = Object.keys(n.equip || {}).length;
+            cheatLog(`  #${n._netId}${n._netId <= -1000 ? ' (giả)' : ''} ${n.name || '?'} · ${(SECTS[n.sect]||{}).name || n.sect} c${n.level}`
+                   + ` · (${Math.round(n.x)},${Math.round(n.y)}) cách ${d}px · máu ${Math.round(n.hp)}/${Math.round(n.maxHp)}`
+                   + (n.pvpMax > 0 ? ` · TRẬN ${Math.round(n.pvpHp)}/${Math.round(n.pvpMax)}` : '')
+                   + ` · ${gi} ô đồ` + (n.chet ? ' · ĐÃ NGÃ' : ''), n._netId <= -1000 ? '#9a8cff' : '#cfe8ff');
+          }
+          break;
+        }
+
+        // ⚠ LỆNH ĐÁNG GIÁ NHẤT CỦA CẢ NHÓM. Bẫy đã ghi trong CLAUDE.md: mọi nhân vật mới hiện ra
+        // ở ĐÚNG một điểm, nên hai cửa sổ vừa vào là hai thân chồng khít lên nhau lệch 0,0px —
+        // kết nối chạy hoàn hảo mà nhìn ra "không thấy ai". Đây là cách bác bỏ nó trong một giây.
+        if (sub === 'toi'){
+          const ds = window.NETPLAYERS.filter(n => n.map === curMap);
+          if (!ds.length){ cheatLog('Không có ai trong map này để tới.', '#ff7a6a'); break; }
+          const key = (parts[2] || '').replace(/^#/, '');
+          let t = key ? ds.find(n => String(n._netId) === key || (n.name || '').toLowerCase().includes(key.toLowerCase())) : null;
+          if (!t && key){ cheatLog(`Không thấy ai tên/id khớp "${key}".`, '#ff7a6a'); break; }
+          if (!t) t = ds.reduce((b, n) => (Math.hypot(n.x-player.x, n.y-player.y) < Math.hypot(b.x-player.x, b.y-player.y) ? n : b));
+          // Đứng CẠNH, đừng đứng ĐÈ — chồng khít lên nhau đúng là cái đang muốn gỡ.
+          player.x = t.x + 110; player.y = t.y + 40;
+          moveTarget = null; player.moving = false;
+          cheatLog(`Đã tới cạnh ${t.name || ('#'+t._netId)} tại (${Math.round(t.x)},${Math.round(t.y)}).`, '#7ecbff');
+          break;
+        }
+
+        if (sub === 'ma'){
+          const arg = (parts[2] || '').toLowerCase();
+          if (arg === 'danh' || arg === 'chieu'){
+            // Nổ hoạt cảnh bằng cách đặt ĐÚNG đồng hồ mà `nhanAnh` đặt khi bộ đếm của người thật
+            // nhảy — nên thứ nhìn thấy là đúng thứ một người thật sẽ làm, không phải một bản diễn
+            // riêng cho công cụ thử.
+            const G = window.NV_HD_GIAY || { a:0.22, c:0.38, h:0.30 };
+            for (const m of window.NET_MA){ if (arg === 'danh') m.atkAnim = G.a; else m.castT = G.c; }
+            cheatLog(`${window.NET_MA.length} bóng giả ${arg === 'danh' ? 'vung một cú' : 'niệm chú'}.`, '#9a8cff');
+            break;
+          }
+          if (arg === 'nga'){ for (const m of window.NET_MA){ m.chet = !m.chet; m.hp = m.chet ? 0 : m.maxHp; }
+            cheatLog('Bóng giả đổi trạng thái nằm/đứng.', '#9a8cff'); break; }
+          const n = clamp(Math.round(num(2, 2)), 1, 12);
+          const tong = window.netMaTao(n);
+          cheatLog(`Dựng ${n} bóng giả quanh chân (tổng ${tong}). Chúng CHỈ có trên máy này — không gói tin nào mang chúng đi.`, '#9a8cff');
+          cheatLog('  /net ma danh · /net ma chieu · /net ma nga · /net xoa', '#7f8ea8');
+          break;
+        }
+
+        if (sub === 'xoa'){ cheatLog(`Đã xoá ${window.netMaXoa()} bóng giả.`, '#9a8cff'); break; }
+
+        if (sub === 'hud'){ window.NET_HUD = !window.NET_HUD;
+          cheatLog('Ô chỉ số mạng: ' + (window.NET_HUD ? 'BẬT' : 'TẮT'), '#7ecbff'); break; }
+
+        if (sub === 'pvp'){
+          if (!MAPS[PVP_MAP]){ cheatLog('Không có map sàn đấu.', '#ff7a6a'); break; }
+          travelTo(PVP_MAP);
+          cheatLog(`Đã vào ${MAPS[PVP_MAP].name}. Máu TRẬN là túi riêng của máy chủ — thua không đụng gì vào bản lưu.`, '#e84a3a');
+          break;
+        }
+
+        // /net — tình trạng. Đọc thẳng NET của net.js, không giữ bản sao nào.
+        if (!N.on){
+          cheatLog('Online: TẮT — trang này nạp không có máy chủ.', '#ff7a6a');
+          cheatLog('  Bật bằng: ?test=1&net=1   (hoặc ?test=1&net=ws://localhost:8877/ws)', '#cfe8ff');
+          cheatLog('  Vẫn thử được tầng vẽ mà không cần mạng: /net ma 2', '#cfe8ff');
+          break;
+        }
+        cheatLog(`Online: ${N.tinhTrang} · ${N.url}`, N.tinhTrang === 'da-noi' ? '#5fd07a' : '#ffd76a');
+        cheatLog(`  id mình #${N.id} · ${window.NETPLAYERS.filter(n => n._netId > -1000).length} người khác trong map`
+               + ` · ${window.NET_MA.length} bóng giả · ${N.soAnh} ảnh chụp đã nhận`, '#cfe8ff');
+        cheatLog('  /net ds · /net toi [id|tên] · /net ma [n] · /net xoa · /net hud · /net pvp', '#7f8ea8');
+        break;
       }
       case 'wipe': window.wipeSave(true); return;
       case 'deep': deepStart(); cheatLog('Tầng Sâu: bắt đầu', '#c07fe0'); return;

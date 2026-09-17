@@ -4154,6 +4154,148 @@ làm hộ. `packs: []` / `duhiep: null` vẫn phải khai **tường minh** — 
 **⚠ Sàn đấu KHÔNG mở điểm dịch chuyển** (`travelTo` loại cả `md.dungeon` lẫn `md.pvp`): mở ra thì
 bảng Bản Đồ có một nút dịch chuyển thẳng vào giữa một trận đang đánh.
 
+### ✦ VFX CHIÊU CỦA NGƯỜI BÊN KIA — và nó là HÌNH, không phải ĐÒN
+
+Trước bản này `castT` đã đồng bộ nên người bên kia thấy **tư thế** niệm mà không thấy một tia lửa
+nào: đứng cạnh một Dark Wizard thả Meteorite thì trên màn chỉ có người vung tay trong khoảng không.
+
+| | |
+|---|---|
+| Cửa gửi | **bên trong `spawnSkillVfx`** — `window.netChieuGui()` |
+| Cửa nhận | `window.netChieuNhan(d)` trong `game.js` |
+| Dây | `window.netChieu` gửi · tin `chieu` nhận, trong `net.js` |
+| Máy chủ | `nhanChieu()` · `CHIEU_CUA` 12 gói / `CHIEU_CUA_MS` 2000 |
+| Gác | `tests/test_vfxchieu.js` (6 mệnh đề, **cả sáu đã thử ngược và đều đỏ**) |
+
+**⚠ GỬI TỪ TRONG `spawnSkillVfx`, ĐỪNG MÓC TỪNG CHỖ GỌI.** Có **chín** chỗ gọi nó; móc tay từng
+chỗ là chỗ thứ mười thêm sau sẽ lặng lẽ không đồng bộ — cùng cái bẫy đã ghi cho `dailyTrack()` và
+`mobDoBuoc()`. Gửi từ bên trong thì **chiêu mới thêm tự có mặt**, và `test_vfxchieu §1` gác đúng
+chỗ đó bằng cách gọi thẳng `spawnSkillVfx` (không qua `castSkill`) rồi đòi nó phải gửi.
+
+**⚠ `spawnSkillVfx(id, v, phase, ang, R, x0, y0, nguoi)` — `nguoi` là tham số CUỐI và mặc định là
+người chơi này.** Trong thân hàm có **10 chỗ đọc `player.x` và 10 chỗ đọc `player.y`**; thiếu bước
+đổi chúng sang `_p` thì chiêu của người khác nổ **dưới chân MÌNH** — vẫn "có vẽ ra", nên một mệnh
+đề chỉ đếm số hiệu ứng sẽ XANH suốt. `§2` đo khoảng cách tới **cả hai** người rồi đòi hiệu ứng
+phải gần NGƯỜI NIỆM hơn; thử ngược ra `0 vs 120px`.
+
+**⚠ `vongKiemVuKhi(p)` cũng phải nhận người niệm** — nếu không, vòng kiếm của người khác vẽ bằng
+**vũ khí của mình**. Cùng họ với lỗi `wingDef` mọc cánh sai lớp: hình vẫn vẽ ra, chỉ là sai người.
+
+**⚠ VÀ ĐÂY LÀ THỨ LÀM CẢ ĐỢT NÀY AN TOÀN: VFX KHÔNG GÂY SÁT THƯƠNG.** Vòng cập nhật `effects` chỉ
+cộng `e.t`, dời hạt và quay — không một lời gọi `hurtMob` nào. Sát thương nằm ở `castVohoc` /
+`castSkill`, tách hẳn. Nên chiêu của người khác nổ trên máy mình thì quái của mình **mất đúng 0
+máu**. `§3` là mệnh đề nặng nhất; thử ngược (nối `hurtMob` vào nhánh nhận) ra `893 → 888`.
+**Đừng "tiện tay" nối sát thương vào đây** — PvP cố ý mới chỉ có đòn thường.
+
+**Ba lỗi của chính BÀI KIỂM, cả ba cho ra một bài XANH VÌ LÝ DO SAI** — ghi lại vì cùng một họ:
+
+1. **Đếm `effects.length` là đếm SỐNG SÓT, không phải đếm NHẬN.** Hiệu ứng hết hạn sau 0,4-0,7 s,
+   mà phép chờ là 600 ms — nên `§6` xanh kể cả khi đã **gỡ hẳn** hạn nhịp của máy chủ. Nay bọc
+   `window.netChieuNhan` mà đếm lời gọi.
+2. **Mục trước bắn dồn làm nghẽn mục sau.** `§3` bắn 8 gói trong ~1 giây, đầy cửa 12/2 s của máy
+   chủ, nên cú của `§4` bị **bỏ qua** — B nhận 0, và "B không gửi ngược" thành một câu vô nghĩa.
+   Nay có `choCuaTroi()` và **chốt tự kiểm**: chưa nhận được gì thì không được chấm.
+3. **NGƯỜI NIỆM CHẾT GIỮA BÀI.** Đo được ở `§5`: A ra `{dead:true, hp:0}` — nó đứng giữa bãi quái
+   `daohoa` suốt 15 giây. Mà `castSkill` `return` ngay dòng đầu khi `dead`, nên mọi mục sau đó đo
+   trên một xác chết và đọc ra "sợi dây đứt". Nay `vao()` dời quái ra góc map (giữ lại để `§3`
+   kéo về), và `tung()` trả `null` khi đã chết.
+
+**⚠ VÀ MỘT QUE DÒ HỎNG SUÝT LÀM TÔI KẾT LUẬN NGƯỢC.** `§5` (lọc theo map) có **hai lớp** gác: lọc
+ở máy chủ *và* chốt `!np` ở client. Gỡ một lớp thì lớp kia đỡ ⇒ bài vẫn xanh ⇒ trông như mệnh đề
+rỗng. Nhưng gỡ **cả hai** thì nó đỏ ngay (`nhận 12 gói`). *Một phép thử ngược im lặng là bằng
+chứng cái QUE DÒ chưa chạm đúng chỗ, không phải bằng chứng mệnh đề yếu* — đúng câu đã ghi ở mục
+`test_hethong`.
+
+**⚠ `x0/y0` là TOẠ ĐỘ THẾ GIỚI TUYỆT ĐỐI**, không phải độ lệch so với người niệm (`diemGiang()`
+trả tuyệt đối). Và máy chủ phải **giữ được `null`**: `x0 == null` nghĩa là "nổ ngay tại chỗ người
+niệm", khác hẳn "nổ tại (0,0)" — tức góc bản đồ.
+
+### ⚔ SÀN ĐẤU CÓ BỘ VIÊN RIÊNG — và ẢNH CHỤP mới bắt được cái sai, số đo thì không
+
+Sàn đấu dựng xong thì đi **mượn** viên của Ardhaven (`nen_da` + `nen_soi`), nên đứng trong đó nhìn
+ra y hệt một góc phố. Nay có bộ riêng, nướng bằng **`tools/iso/nuong_sandau.py`**.
+
+| | trước | sau |
+|---|---|---|
+| nền | `nen_da` — 163,6/139,1/115,3 · sáng **139,3** · ấm (B−R −48) | `nen_sanda` — 80,3/87,4/100,7 · sáng **89,5** · **lạnh** (B−R +20) |
+| lối | `nen_soi` · sáng 126,9 | `nen_sanmai` · sáng **129,1** |
+
+**⚠ `isoDat` ở đây SÁNG HƠN `isoCo`, ngược mọi map khác.** Ở map hoang dã lối mòn sẫm hơn (đất lộ
+ra dưới cỏ); ở đây là đá bị đế giày **mài nhẵn** suốt bảy trăm buổi sáng nên nó BÓNG lên. Đảo
+chiều ấy là thứ làm vòng giữa sàn đọc ra một *vòng mài* chứ không ra một *vũng bùn*. Khoảng cách
+sáng nền↔mài đo được **39,6** — rộng hơn Ardhaven (28,8) vì nền sàn đấu sẫm, mà trên nền sẫm mắt
+phân biệt kém hơn hẳn (bài học Bird Tribe Heights, đảo đầu).
+
+**⚠⚠ VÀ ĐÂY LÀ CHỖ SỐ ĐO NÓI DỐI.** Lượt đầu tôi rải **70 hòn `da1-3` sẵn có** cho đủ ngưỡng của
+`test_isoneo`. Bài xanh, số đạt — mà **chụp ra thì mặt sàn đọc thành một BÃI ĐÁ VỤN BỎ HOANG**,
+trong khi cả map kể chuyện một sân còn được quét dọn mỗi sáng. Đá sẵn có vừa to vừa **trùng tông
+với vòng mài** nên nó là thứ mắt bắt trước tiên. Nay `nho_san1-3` nhỏ hơn hẳn và **SẪM hơn nền**
+(0,30/0,32/0,36 so với nền 0,40/0,42/0,46) ⇒ đọc ra vết sứt trên đá phiến, và làm luôn cái **mốc
+tương phản sẫm** mà bài học kia đòi. Số lượng 70 → **46**.
+*Một ngưỡng đếm được thoả mãn bằng thứ sai — đó là lý do luật "vẽ xong phải render ra ảnh mà
+nhìn" có mặt trong tài liệu này.*
+
+**⚠ BỘ NƯỚNG TỪNG NỔ Ở DÒNG CUỐI MÀ KHÔNG AI THẤY.** `nuong_biome.py` và `nuong_sandau.py` đều nạp
+`nuong_tile.py` bằng `exec` vào một dict globals tự dựng — mà dict ấy **không có `__file__`**, nên
+`ghi_neo()` ném `NameError` **sau khi đã nướng xong hết**. Tức ảnh ra đủ, mọi dòng `NUONG XONG` đã
+in, mà **bảng neo thì không được ghi** — đúng cái dạng hỏng đã xoá sạch cây của sáu map một lần
+rồi. Đã vá cả hai tệp (thêm `'__file__'` vào `NT`). Đo lại: `ISO_NEO` 60 → **63** sprite.
+
+### 🧪 `/net` — CÔNG CỤ THỬ TẦNG ONLINE, và **BÓNG GIẢ** thay cho cửa sổ thứ hai
+
+| | |
+|---|---|
+| Cửa mở | console cũ, phím `` ` ``, vẫn khoá sau **`?test=1`** — chạy `?test=1&net=1` để có cả hai |
+| Lệnh | `/net` · `/net ds` · `/net toi [id\|tên]` · `/net ma [n]` · `/net ma danh\|chieu\|nga` · `/net xoa` · `/net hud` · `/net pvp` |
+| Máy | `window.NET_MA` · `netMaTao()` · `netMaXoa()` · `netMaDong()` · `netMaNhip()` · `drawNetHUD()` |
+| Gác | `tests/test_netma.js` (5 mệnh đề, **bốn cơ chế đã thử ngược và đều đỏ**) |
+
+**⚠ CONSOLE KHÔNG MỞ THEO `?net=1`, và đừng "tiện tay" nối vào.** Hai cờ đọc hai tham số khác
+nhau (`TEST_MODE` đọc `test|max`, `net.js` đọc `net`), nên `?test=1&net=1` bật cả hai — đó là
+đường thử. Cho `?net=1` tự mở console là phát lệnh gỡ rối cho **mọi người đang chơi thật trên
+cùng máy chủ**, mà `cheatExec` thì CLAUDE.md đã ghi là phải gỡ trước khi có bất cứ thứ gì chung.
+
+**⚠ `/net toi` LÀ LỆNH ĐÁNG GIÁ NHẤT, vì nó bác bỏ một cái bẫy đã ăn nguyên một vòng chẩn đoán.**
+Mọi nhân vật mới hiện ra ở ĐÚNG một điểm, nên hai cửa sổ vừa vào game là hai thân **chồng khít
+lên nhau lệch 0,0px** — kết nối chạy hoàn hảo mà nhìn ra "không thấy ai". `/net ds` in khoảng
+cách, `/net toi` dời mình sang **đứng CẠNH** (lệch 110px, cố ý không đứng đè: đứng đè đúng là
+cái đang muốn gỡ).
+
+**⚠ BÓNG GIẢ CHỈ SỐNG TRÊN MÁY NÀY.** Không gói tin nào mang chúng đi — `gui()` chỉ gửi
+`netDoc()`, tức người chơi của mình. Đừng nối chúng vào đường gửi: đó là dựng đúng cái cửa cho
+một client sửa đổi bơm người giả vào màn của người khác. Chúng cũng **không** có máu thật, không
+bị nhắm, không đánh được — cùng lý do đàn thú hoang vô dụng: *giá trị của một vật thử nằm ở chỗ
+nó không phải nội dung.*
+
+**⚠ HAI ĐƯỜNG PHẢI NỐI RIÊNG, và chúng hỏng theo hai kiểu khác nhau:**
+
+| | ai dựng lại `NETPLAYERS` | thiếu chỗ nối thì |
+|---|---|---|
+| **không** mạng | không ai — `net.js` `return` ngay đầu tệp | `/net ma` im lặng không vẽ gì, ở đúng đường chơi một mình mà người ta thử TRƯỚC |
+| **có** mạng | `capNhatMang()`, mỗi ảnh chụp (10 Hz) | bóng giả vẽ được đúng một nhịp rồi biến — đọc ra "tầng vẽ hỏng" |
+
+Nên `netMaDong()` (game.js) tự đổ vào cho đường đầu, và `capNhatMang()` nối `NET_MA` vào đuôi
+cho đường sau. Thử ngược từng chỗ đều đỏ đúng mệnh đề của nó.
+
+**⚠ `netThanNhip()` LÀ MỘT LUẬT, HAI CHỖ GỌI.** `noiSuy()` gọi nó cho thân người THẬT, `netMaNhip()`
+gọi nó cho bóng giả. Trước bản này phép đếm ngược ba đồng hồ hoạt cảnh + `deadT` nằm thẳng trong
+`noiSuy`; giữ nguyên rồi chép sang cho bóng giả là bóng giả diễn một kiểu còn người thật diễn một
+kiểu — mà bóng giả sinh ra **chính để thử đường vẽ của người thật**, nên hai bên lệch nhau là công
+cụ thử nói dối. Cùng lý do `thanNhip` tồn tại.
+
+**⚠ Ba đồng hồ ấy vẫn đếm ngược trong `netThanNhip`, KHÔNG được dời vào `thanNhip`** — `thanNhip`
+thì cả người chơi của mình lẫn thân người từ xa cùng gọi, nên đặt vào đó là mình bị trừ hai lần.
+
+**Hai lỗi của chính QUE DÒ, cả hai cho ra một phép đo vô nghĩa** — ghi lại vì cùng họ với những
+cái đã ghi ở mục `test_dongbodo`:
+1. **Quên tỉ lệ bộ đệm/CSS.** Canvas 2560×1500 trên khung nhìn 1280×800 ⇒ `tl` = 2. Công thức
+   đúng là `screen = (thế giới − camera) × zoom`, **rồi mới** nhân `tl`. Thiếu bước hai là đo
+   vào một ô lệch hẳn chỗ: ra 190 điểm ảnh, trông y như "vẽ được một tí".
+2. **Ô đo và ô đối chứng ra BẰNG NHAU TUYỆT ĐỐI (224 = 224).** Cả hai toạ độ âm nên
+   `getImageData` kẹp về góc trên-trái ⇒ hai ô là **cùng một vùng**. Đó là bằng chứng cảnh dựng
+   hỏng, không phải bằng chứng cơ chế hỏng. `test_netma` nay tự kiểm `trongKhung` trước khi chấm.
+   Sau khi sửa: **6.869 điểm ảnh đổi ở ô có bóng, 121 ở ô đối chứng.**
+
 ### Còn nợ, biết rõ
 
 | | |

@@ -86,6 +86,18 @@ const PVP_NHIP_MS  = 120;    // hai cú của cùng một người phải cách 
 const PVP_TRAN_DMG = 0.06;
 const PVP_HOI_MS   = 6000;   // bị hạ rồi bao lâu thì dựng lại trận
 
+/* ── ✦ VFX CHIÊU ────────────────────────────────────────────────────────────────────────
+ * Chuyển tiếp thuần: máy chủ KHÔNG hiểu chiêu nào là chiêu gì, và không nên hiểu. Nó chỉ vệ
+ * sinh rồi đẩy sang những người cùng bản đồ — vì đây là HÌNH, không phải đòn (vòng cập nhật
+ * `effects` bên client không gọi `hurtMob`).
+ *
+ * ⚠ VẪN PHẢI HẠN NHỊP. Chiêu có hồi chiêu nên người chơi thật không vượt nổi mức này, nhưng
+ * một client sửa đổi bắn 1000 gói/giây thì cả phòng phải VẼ 1000 hiệu ứng — tức nó không ăn
+ * cắp được gì nhưng làm treo máy người khác. Rộng tay hơn chat (chiêu nổ liên tục là chuyện
+ * thường trong một trận), chặt hơn `pos` (chiêu thưa hơn vị trí rất nhiều).                   */
+const CHIEU_CUA    = 12;     // tối đa ngần này chiêu…
+const CHIEU_CUA_MS = 2000;   // …trong ngần này
+
 const CHAT_DAI    = 200;     // ký tự — cắt, không đá
 const CHAT_NHIP_MS = 700;    // hai câu liền nhau phải cách nhau chừng này
 const CHAT_CUA    = 6;       // tối đa ngần này câu…
@@ -276,6 +288,7 @@ wss.khiNoi((ws) => {
     // Sàn đấu. `pvpMax = 0` nghĩa là KHÔNG ở trong trận nào — phân biệt với "máu đầy", vì một
     // thanh 0/0 vẽ ra trông hệt một người sắp chết.
     pvpHp: 0, pvpMax: 0, pvpChet: 0, pvpLuc: 0, pvpHit: 0,
+    chieuCua: [],                // chống bắn dồn VFX chiêu, xem CHIEU_* ở trên
   };
   nguoi.set(id, st);
   ws.__id = id;
@@ -297,6 +310,7 @@ wss.khiNoi((ws) => {
     // nhiều, gộp hai thứ vào một cửa sổ là một người bấm đánh nhanh bị cắt mất gói vị trí.
     // `nhanPvpDanh` có nhịp riêng (`PVP_NHIP_MS`).
     else if (tin.t === 'pvp-danh') nhanPvpDanh(st, tin);
+    else if (tin.t === 'chieu') nhanChieu(st, tin);
   });
 
   ws.khiDong(() => {
@@ -315,6 +329,37 @@ function posQua(st, ws){
     ws.dong(1008, 'qua nhanh');    // 1008 = policy violation
   }
   return true;
+}
+
+/* Một chiêu vừa niệm. Chuyển tiếp cho người CÙNG BẢN ĐỒ, bỏ chính người niệm ra (họ đã tự vẽ
+ * rồi — gửi lại là chiêu nổ hai lần chồng lên nhau).
+ * ⚠ VỆ SINH TỪNG TRƯỜNG. Gói này đi thẳng vào vòng vẽ của mọi người khác: một `id` dài 2 MB hay
+ * `R` bằng `1e9` là một client làm treo cả phòng. Đây là chống RÁC, không phải chống gian lận —
+ * ai sửa màu chiêu của mình thì chiêu của họ đổi màu, và ở giai đoạn này thế là chấp nhận được. */
+function nhanChieu(st, tin){
+  if (!st.map) return;
+  const gio = Date.now();
+  st.chieuCua = st.chieuCua.filter(t => gio - t < CHIEU_CUA_MS);
+  if (st.chieuCua.length >= CHIEU_CUA) return;     // bỏ qua, đừng đá: có thể chỉ là một trận dày
+  st.chieuCua.push(gio);
+  const id = chu(tin.id, 40);
+  if (!id) return;
+  const goi = JSON.stringify({
+    t: 'chieu', tu: st.id, id,
+    mau: chu(tin.mau, 24), gly: chu(tin.gly, 8), ph: chu(tin.ph, 12),
+    ang: so(tin.ang, -Math.PI*2, Math.PI*2, 0),
+    R: Math.round(so(tin.R, 0, 4000, 0)),
+    // ⚠ GIỮ ĐƯỢC `null`. `x0 == null` bên client nghĩa là "nổ ngay tại chỗ người niệm", khác hẳn
+    // "nổ tại toạ độ 0,0" — tức góc bản đồ. Ép `null` thành 0 là mọi chiêu giáng của người khác
+    // nổ ở góc trên-trái map.
+    x0: tin.x0 == null ? null : Math.round(so(tin.x0, -1e5, 1e5, 0)),
+    y0: tin.y0 == null ? null : Math.round(so(tin.y0, -1e5, 1e5, 0)),
+  });
+  for (const w of wss.clients){
+    if (!w.dangMo || w.__id === st.id) continue;
+    const ai = nguoi.get(w.__id);
+    if (ai && ai.map === st.map) w.gui(goi);
+  }
 }
 
 /* ── Chat ────────────────────────────────────────────────────────────────────────────────
