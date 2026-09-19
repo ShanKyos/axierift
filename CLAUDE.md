@@ -1482,6 +1482,56 @@ cuối trùng). Đúng bệnh nhân bản mà mục chẩn đoán ở đầu tà
   Nay là `QUEST_BOSS_IDX = QUESTS.findIndex(q => q.type === 'boss')`, fallback `Infinity` chứ
   không phải `-1` (vì `questIdx >= -1` là luôn đúng ⇒ trùm hiện ra từ cấp 1).
 
+### 🐣 HƯỚNG DẪN TÂN THỦ — TRẦN THỜI GIAN KHÔNG ĐƯỢC ĐẨY NGƯỜI VÀO VIỆC BẤT KHẢ
+
+`TUT_STEPS` (6 bước) · `tutTick` · `tutGhi` · `tutAdvance` · `tutKha` · `tutTat`, trong `game.js`.
+Gác: **`tests/test_tanthu.js`** (6 mục, **cả sáu cơ chế đã thử ngược và đều đỏ**).
+
+**⚠⚠ CÁI TRẦN 90 GIÂY ĐẺ RA MỘT LỖI TỆ HƠN THỨ NÓ CHỮA.** Trần sinh ra vì bước cũ treo mãi
+("còn nguyên ở cấp 120") — đúng vấn đề, sai thuốc: hết giờ thì nó **đẩy sang bước kế** bất kể
+bước ấy có làm được ở chỗ người chơi đang đứng hay không. Đo được, đứng YÊN trong thành từ giây 0:
+
+```
+90s → npc · 180s → map · 270s → kill · 360s → loot → quest · 385s → "Hướng dẫn hoàn tất"
+```
+
+Nặng nhất là mốc 270: hộp nói *"Nhấn SPACE — hạ 1 con Axie Heo Rừng"* trong khi
+`packsOf('ardhaven').length === 0`. Bấm SPACE 90 lần trong 67 giây rồi bật AUTO 3 phút ⇒
+`kills 0 · xp 0 · bạc 0`, toạ độ không nhích một pixel, và game không nói một câu nào. Rồi ở
+giây 385 nó tự **tuyên bố hoàn tất** cho một người chưa đi, chưa nói, chưa đánh gì.
+
+⇒ **`kha()`** — bước này làm được ở đây không. Chỉ gác nhánh HẾT GIỜ; tiến bộ THẬT (`xong`) thì
+luôn được đi tiếp. Hết giờ mà bước kế bất khả ⇒ **`tutTat()`, tắt lặng lẽ** (không có lời chúc
+mừng — họ không hoàn tất). Nay đứng yên trong thành ra `npc → map → TAT` ở giây 270.
+⚠ `tutKha` trả **`true`** khi `kha()` ném — hỏi không được thì đừng tắt hướng dẫn của người ta.
+
+**⚠ CỜ TRẠNG THÁI, KHÔNG PHẢI SỰ KIỆN — `TUT_CO` + `tutGhi(key)`.** `tutAdvance` chỉ ăn khi đang
+đứng ĐÚNG bước ấy, nên ai nói chuyện / nhặt đồ / mở bảng TRƯỚC lúc hộp trôi tới bước đó sẽ kẹt
+lại đủ 90 giây ở một việc đã làm xong. Cùng luật đã ghi cho `MOC_NV.dem()`. Ba cờ:
+`tutNoi` (`tryTalk`) · `tutNhat` (`takeLoot`) · `tutBang` (`togglePanel('char')`).
+
+**Bốn thứ khác cùng đợt, mỗi thứ im lặng một kiểu:**
+
+| | đã hỏng thế nào |
+|---|---|
+| bước `npc` bảo *"gặp **Trưởng Lão Rell** … nhận nhiệm vụ đầu tiên"* | SAI cả ba vế: `c0q1` đã `active` từ giây 0; người giao là **Lính Gác Cổng Tây** (`ah_gac_tay`, cách điểm thả 2540px) còn Rell (cách 300px) tới cấp 14 mới có `c1q1` — đo `npcMark()`: Gác Tây ra `…`, Rell ra chuỗi RỖNG; và `xong` là `level >= 3`, chẳng dính gì tới nói chuyện. Nay dạy **cái dấu trên đầu NPC**, thứ luôn đúng dù ai giao gì |
+| bước `loot` khai `xong: inv.length > 0` | nhân vật vừa tạo ĐÃ CÓ đồ khởi đầu ⇒ nó và bước kế cùng nhảy trong MỘT nhịp (đo: cả hai ở giây 360,1). Cả bước dạy nhặt đồ **chưa từng hiện ra một lần nào** |
+| hai lời gọi `tutAdvance('panel')` trong `togglePanel` | **không bước nào mang khoá `panel`** (bước cuối là `quest`) ⇒ hai lời gọi chết, và bước cuối không có hành động nào đóng được nó. Nay bước cuối LÀ `panel` |
+| hai khối chép **chỉ số cứng** trong `update()` | `tutStep === 0` cộng quãng đường lần thứ HAI (tutTick đã cộng theo toạ độ thật, và nó đếm được cả AUTO lẫn bấm bản đồ nhỏ) ⇒ bước 1 chạy gấp đôi; `tutStep === 4` gọi `tutAdvance('quest')` trong khi ô thứ 4 nay mang khoá `loot` ⇒ không bao giờ khớp. **Chỉ số cứng vào một mảng khai ở chỗ khác là một quả mìn hẹn giờ cho đợt thêm/bớt bước kế tiếp** |
+
+**⚠ VÀ MỘT CỜ CẤP `window` SỐNG SÓT QUA LƯỢT DỰNG LẠI NGƯỜI CHƠI:** `trackerHtml()` chỉ ghim đèn
+hiệu khi `window._beaconQuestId !== q.id`, mà cờ đó không ai đặt lại ⇒ nhân vật thứ hai dựng
+trong cùng một trang có `player.beacon` đứng `null`: mất cả dải **"Đi ngay"** lẫn mũi tên định
+hướng — đúng cái dải mà bước 3 của hướng dẫn trỏ vào. Hôm nay mọi đường đổi nhân vật đều
+`location.reload()` nên chưa ai gặp; xoá một lời gọi reload là gặp ngay. `startGame()` nay đặt
+lại. Cùng họ với dòng `loadGame()` từng nuốt thanh chiêu người chơi tự gán.
+
+**⚠ LỖI CỦA CHÍNH BÀI KIỂM, ghi lại vì nó cho một mệnh đề XANH VÔ NGHĨA:** mục ⑤ đặt
+`player.x += 200` rồi tick MỘT lượt — mà `tutTick` cộng quãng đường theo HIỆU hai khung và khung
+đầu chỉ ghi mốc, nên nó cộng **đúng 0**. Người chơi kẹt ở `move` suốt, và mệnh đề *"không kẹt ở
+npc"* xanh vì một lý do chẳng liên quan gì tới cờ trạng thái. Phép thử ngược lộ ra. Nay dời qua
+nhiều khung và **tự kiểm** là đã rời bước `move` trước khi chấm.
+
 ### 🧭 NỐI MAP BẰNG RÌA (B1) + ĐIỂM DỊCH CHUYỂN MỞ BẰNG ĐI BỘ (B2)
 
 **⚠ Đây trước hết là một BẢN VÁ LỖI.** Trước bản này, **Bug Tribe Tunnels (40) · Reptile Sunstone Flats (80) ·

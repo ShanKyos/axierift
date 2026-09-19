@@ -103,7 +103,7 @@ tools/reg.sh      commit 0ab8a08 · 224/225 xanh · 0 bài phải chạy lại v
 
 ---
 
-## ❸ LỖI CÒN MỞ — 5 cái, xếp theo mức đau
+## ❸ LỖI CÒN MỞ — 5 cái lúc kiểm toán, **nay còn 4** (mục tân thủ đã sửa), xếp theo mức đau
 
 ### 🔴 P1 · Nhật Ký Chiến Đấu cắt mất ĐÚNG phần thưởng — 50% số dòng
 
@@ -151,9 +151,23 @@ chính lớp / hiệu ứng của nó, **KHÔNG bỏ trống**."*
 **hiển thị** nói dối. Chữa: khai `range` cho ba lớp cận chiến (đúng 90, đang là số thật), hoặc
 thêm `|| 90` vào dòng 5347.
 
-### 🟠 P2 · Hướng dẫn tân thủ bước 2 vẫn nói sai, và trần 90 giây vẫn đẩy người chơi vào ngõ cụt
+### ✅ ~~P2 · Hướng dẫn tân thủ bước 2 nói sai, và trần 90 giây đẩy người chơi vào ngõ cụt~~ — ĐÃ SỬA
 
-Không đổi so với báo cáo trước — chép lại vì chúng **vẫn còn nguyên** ở `0ab8a08`:
+> **Đã sửa** (mục `🐣 HƯỚNG DẪN TÂN THỦ` trong `CLAUDE.md`, gác bằng `tests/test_tanthu.js`,
+> sáu cơ chế đều thử ngược đỏ). Giữ nguyên phần chẩn đoán bên dưới làm mốc đo: đó là **trạng
+> thái tại `0ab8a08`**, đừng đọc nó như hiện trạng.
+>
+> Đo lại sau khi sửa, cùng một cảnh (đứng yên trong thành từ giây 0): `npc → map → TAT` ở giây
+> 270 — hộp **không** còn trôi tới bước `kill`, và **không** còn tuyên bố "Hướng dẫn hoàn tất"
+> cho một người chưa làm gì. Đường thuận vẫn đi hết sáu bước bằng hành động thật.
+>
+> Đợt sửa đó cũng lộ thêm ba chỗ hỏng mà kiểm toán này chưa bắt được: bước `loot` **chưa từng
+> hiện ra một lần nào** (`xong: inv.length > 0`, mà nhân vật mới đã có đồ khởi đầu); hai lời gọi
+> `tutAdvance('panel')` trong `togglePanel` **không khớp bước nào**; và `window._beaconQuestId`
+> sống sót qua một lượt dựng lại người chơi, làm dải "Đi ngay" biến mất với nhân vật thứ hai
+> trong cùng một trang.
+
+Chẩn đoán gốc, tại `0ab8a08`:
 
 - `TUT_STEPS[1]` — *"Đến gần **Trưởng Lão Rell** … nhấn **E** … **nhận nhiệm vụ đầu tiên**"*.
   Nhưng NV đầu đã `active` từ giây 0, người giao là **Lính Gác Cổng Tây**, và điều kiện qua
@@ -274,8 +288,8 @@ Dark Knight 1.808 thấp nhất) · chênh Máu **2,01×** (ngược lại). Đ�
 | 1 | Cho `#combat-log .cl-row` xuống dòng, hoặc rút ngắn câu thưởng | `style.css:480` |
 | 2 | Khai `range` cho `thieulam` · `minhgiao` · `bug` (hoặc `\|\| 90` ở dòng 5347) | `game.js` |
 | 3 | Sửa `reset()` của `test_chaos` để nhả `_loBan` | `tests/test_chaos.js` |
-| 4 | Viết lại bước 2 hướng dẫn cho đúng NPC + đúng điều kiện | `game.js:26934` |
-| 5 | Bước hướng dẫn hết giờ thì DỪNG, đừng nhảy sang bước bất khả thi tại map hiện tại | `game.js` `updateTut` |
+| ~~4~~ | ~~Viết lại bước 2 hướng dẫn cho đúng NPC + đúng điều kiện~~ — **XONG** | `game.js` `TUT_STEPS` |
+| ~~5~~ | ~~Bước hướng dẫn hết giờ thì DỪNG, đừng nhảy sang bước bất khả thi tại map hiện tại~~ — **XONG** (`tutKha` + `tutTat`) | `game.js` `tutTick` |
 | 6 | Tiêu đề phụ tuyến lấy `MAPS[q.map]`, không lấy `MAPS[n.map]` | `game.js:29166` |
 | 7 | Gỡ khoá `MOC_NV.mastery` không ai dùng | `game.js` |
 | 8 | Cập nhật 3 con số đã lệch trong `CLAUDE.md` / `reg.sh` | tài liệu |

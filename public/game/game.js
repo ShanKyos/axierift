@@ -10905,7 +10905,7 @@ function takeLoot(g, idx){
   }
   addEffect({ type:'ring', x: g.x, y: g.y, r: 26, color: lootColor(g) });
   groundLoot.splice(idx, 1);
-  tutAdvance('loot');
+  tutGhi('loot');
   return true;
 }
 // Phím J (không truyền toạ độ): với quanh người chơi, ưu tiên món gần nhất.
@@ -12848,17 +12848,13 @@ function update(dt){
       }
     }
     player.face = Math.atan2(my,mx);
-    // hướng dẫn tân thủ bước 1: di chuyển một đoạn
-    if (player.tutStep === 0){
-      player.tutDist = (player.tutDist || 0) + spd*dt;
-      if (player.tutDist > 150) tutAdvance('move');
-    }
   }
-  // hướng dẫn bước cuối: tự hoàn thành sau 12s
-  if (player.tutStep === 4){
-    player.tutTimer = (player.tutTimer || 0) + dt;
-    if (player.tutTimer > 12) tutAdvance('quest');
-  }
+  // ⚠ HAI KHỐI HƯỚNG DẪN CHÉP CHỈ SỐ CỨNG ĐÃ GỠ Ở ĐÂY — cả hai đều mục theo một kiểu khác nhau:
+  //   `tutStep === 0` cộng quãng đường LẦN THỨ HAI (tutTick đã cộng theo toạ độ thật, và nó
+  //   đếm được cả AUTO lẫn bấm bản đồ nhỏ, thứ nhánh này không đếm) ⇒ bước 1 chạy gấp đôi tốc độ;
+  //   `tutStep === 4` gọi `tutAdvance('quest')` trong khi ô thứ 4 nay mang khoá `loot` ⇒ không
+  //   bao giờ khớp, chỉ còn cộng `player.tutTimer` cho không ai đọc.
+  // Chỉ số cứng vào một mảng khai ở chỗ khác là một quả mìn hẹn giờ cho đợt thêm/bớt bước kế tiếp.
   updateTut();
   updateGate();
   // qi regen + hp regen (P0: hồi máu nhanh hơn — base ×3, ngoài combat thêm 5% max HP/s)
@@ -21519,6 +21515,14 @@ function startGame(sectKey, quze){
   if (el('ghha-lang-toggle')) el('ghha-lang-toggle').style.display = 'none';
   if (maxMode) player.tutStep = -1; // chế độ thử nghiệm: bỏ qua hướng dẫn
   updateTut();
+  // ⚠ `_beaconQuestId` là cờ CẤP `window`, nên nó SỐNG SÓT qua một lượt dựng lại người chơi.
+  // `trackerHtml()` chỉ ghim đèn hiệu khi cờ này KHÁC mã nhiệm vụ đang làm, nên nhân vật thứ
+  // hai dựng trong cùng một trang không bao giờ được ghim: `player.beacon` đứng `null`, mất cả
+  // dải "Đi ngay" lẫn mũi tên định hướng — mà bước 3 của hướng dẫn tân thủ thì trỏ thẳng vào
+  // cái dải đó. Hôm nay mọi đường đổi nhân vật đều `location.reload()` nên chưa ai gặp; xoá
+  // một lời gọi reload là gặp ngay, và nó im lặng tuyệt đối. Cùng họ với dòng `loadGame()`
+  // từng nuốt thanh chiêu người chơi tự gán.
+  window._beaconQuestId = null;
   snapCamera(); // vào game: camera đặt thẳng vào nhân vật, không pan từ góc (0,0)
   AudioSys.nhacMap(curMap); // chuyển từ nhạc intro sang nhạc map
   saveGame();
@@ -22735,7 +22739,7 @@ function togglePanel(which){
       AudioSys.sfx('ui', 0.6);
       window.charTab = tabbed[which];
       renderCharPanel(); p.classList.remove('hidden');
-      tutAdvance('panel');
+      tutGhi('panel');
     }
     return;
   }
@@ -22764,7 +22768,7 @@ function togglePanel(which){
     const e2 = el(map[k]); if (e2) e2.classList.add('hidden');
   }
   if (wasHidden){
-    AudioSys.sfx('ui', 0.6); renderPanel(which); p.classList.remove('hidden'); if (which==='char') tutAdvance('panel');
+    AudioSys.sfx('ui', 0.6); renderPanel(which); p.classList.remove('hidden'); if (which==='char') tutGhi('panel');
     bangGhiChong(id); bangDatCho(p); bangGanKeo(p);
     // Trang Bị + Túi Đồ: trên màn hình đủ rộng, mở cùng lúc cả 2 (side-by-side, xem CSS) để
     // kéo-thả đồ từ Túi Đồ sang ô Trang Bị được — kéo-thả HTML5 cần cả 2 cùng có mặt trên DOM.
@@ -26925,17 +26929,54 @@ el('is-skip').addEventListener('click', closeIntro);
 // cấp, hộp hướng dẫn vẫn nằm giữa màn hình nói "Bấm chuột phải trên nền đất… hãy thử một lần".
 // Lý do: bước 1 cộng quãng đường trong nhánh DI CHUYỂN TAY, mà TỰ ĐÁNH không đi qua nhánh đó.
 // Người chơi có thể vượt qua toàn bộ nội dung mà bước 1 vẫn đứng nguyên.
-// Kèm theo: TRẦN THỌI GIAN cho MỌI bước. Bản cũ chỉ có trần cho bước cuối — và chú thích ở
+// Kèm theo: TRẦN THỜI GIAN cho MỌI bước. Bản cũ chỉ có trần cho bước cuối — và chú thích ở
 // đó ghi rõ vì sao: nó từng "treo mãi, chơi thử: còn nguyên ở cấp 120". Năm bước kia treo được
 // theo đúng kiểu đó, chỉ là chưa ai đo.
+//
+// ⚠⚠ VÀ CÁI TRẦN ẤY ĐẺ RA MỘT LỖI TỆ HƠN THỨ NÓ CHỮA — đo được, không phải lo xa. Đứng yên
+// trong thành từ giây 0, `tutTick` tự đẩy hộp qua đủ sáu bước rồi tuyên bố **"Hướng dẫn hoàn
+// tất"** ở giây 385, cho một người chơi CHƯA đi một bước, CHƯA nói một câu, CHƯA hạ một con:
+//
+//     90s → npc · 180s → map · 270s → kill · 360s → loot → quest · 385s → "hoàn tất"
+//
+// Nặng nhất là mốc 270: hộp nói *"Nhấn SPACE — hạ 1 con Axie Heo Rừng"* trong khi Ardhaven có
+// **0 bãi quái** (`packsOf('ardhaven').length === 0`). Bấm SPACE 90 lần trong 67 giây rồi bật
+// AUTO 3 phút ⇒ `kills 0 · xp 0 · bạc 0`, toạ độ không nhích một pixel, và game không nói một
+// câu nào. Hướng dẫn tân thủ dạy sai chỗ thì tệ hơn hẳn không có hướng dẫn.
+// ⇒ `kha()` — bước này LÀM ĐƯỢC ở chỗ đang đứng không. Chỉ gác nhánh HẾT GIỜ; tiến bộ THẬT
+// (`xong`) thì luôn được đi tiếp. Hết giờ mà bước kế không làm được ở đây ⇒ **tắt hẳn hướng
+// dẫn**, đừng đẩy người ta vào một việc bất khả. Người ngồi yên trong thành 4 phút không phải
+// người đang theo hướng dẫn.
 const TUT_TRAN = 90;   // giây — trần mặc định mỗi bước
+// ⚠ CỜ TRẠNG THÁI, KHÔNG PHẢI SỰ KIỆN. `tutAdvance` chỉ ăn khi đang đứng ĐÚNG bước ấy, nên ai
+// nói chuyện / nhặt đồ / mở bảng TRƯỚC lúc hộp trôi tới bước đó sẽ kẹt lại đủ 90 giây ở một
+// việc họ đã làm xong. Cùng luật đã ghi cho `MOC_NV.dem()`: đếm từ TRẠNG THÁI, không từ sự kiện.
+const TUT_CO = { npc:'tutNoi', loot:'tutNhat', panel:'tutBang' };
+function tutGhi(stepKey){
+  if (!player) return;
+  const f = TUT_CO[stepKey];
+  if (f) player[f] = (player[f] || 0) + 1;
+  tutAdvance(stepKey);
+}
 const TUT_STEPS = [
   { key:'move',  xong:() => (player.tutDist || 0) > 150 || (player.level || 1) >= 2, txt:'Bấm <b>chuột phải</b> trên nền đất hoặc bấm vào <b>bản đồ thu nhỏ</b> — nhân vật sẽ tự chạy tới đó, hãy thử một lần', },
-  { key:'npc',   xong:() => (player.level || 1) >= 3, txt:'Đến gần <b>Trưởng Lão Rell</b> giữa thành và nhấn <b>E</b> để trò chuyện, nhận nhiệm vụ đầu tiên' },
-  { key:'map',   xong:() => curMap !== 'ardhaven', txt:'Bấm <b>Đi ngay</b> trên dải nhiệm vụ giữa màn hình (hoặc <b>🧭 Tới Ngay</b> ở khung nhiệm vụ) để dịch chuyển tới <b>Rẻo Rừng Corran</b>' },
-  { key:'kill',  xong:() => (player.kills || 0) > 0, txt:'Nhấn <b>SPACE</b> — nhân vật tự chạy tới con quái gần nhất và đánh. Hãy hạ 1 con <b>Axie Heo Rừng</b>' },
-  { key:'loot',  xong:() => (player.inv && player.inv.length > 0), txt:'Quái chết có thể rơi đồ hoặc <b>Châu</b> xuống đất — <b>đi ngang qua</b>, bấm <b>J</b> hoặc <b>bấm chuột trúng món</b> để nhặt. Giữ <b>ALT</b> xem tên mọi món trên màn' },
-  { key:'quest', tran:25, txt:'Làm theo nhiệm vụ ở <b>góc phải màn hình</b> · <b>C</b> nhân vật · <b>K</b> kỹ năng · <b>B</b> túi đồ' },
+  // ⚠ ĐỪNG VIẾT LẠI THÀNH "đến gặp Trưởng Lão Rell nhận nhiệm vụ đầu tiên" — câu đó SAI cả ba
+  // vế và đã ship một thời gian: (a) nhiệm vụ đầu `c0q1` đã `active` từ giây 0, không ai phải
+  // đi nhận; (b) người giao nó là **Lính Gác Cổng Tây** (`ah_gac_tay`, cách điểm thả 2540px),
+  // còn Rell (`quachtinh`, cách 300px) tới tận cấp 14 mới có `c1q1` — đo `npcMark()` lúc vào
+  // game: Gác Tây ra `…`, Rell ra chuỗi RỖNG; (c) điều kiện qua bước là `level >= 3`, chẳng
+  // dính gì tới việc nói chuyện. Nay dạy CÁI DẤU trên đầu NPC — thứ luôn đúng dù ai giao gì.
+  { key:'npc',   xong:() => (player.tutNoi || 0) > 0, txt:'Lại gần một người trong thành rồi nhấn <b>E</b> để nói chuyện — ai có dấu <b>!</b> (nhiệm vụ mới) hoặc <b>…</b> (đang làm dở) trên đầu là người đang có việc cho ngươi' },
+  { key:'map',   xong:() => curMap !== 'ardhaven', txt:'Nhiệm vụ đầu đã nằm sẵn ở <b>góc phải màn hình</b>. Bấm <b>Đi ngay</b> trên dải nhiệm vụ (hoặc <b>🧭 Tới Ngay</b> ở khung nhiệm vụ) để tới <b>Rẻo Rừng Corran</b> — hoặc tự đi bộ ra <b>Cổng Tây</b> rồi nhấn <b>G</b>' },
+  { key:'kill',  kha:() => packsOf(curMap).length > 0, xong:() => (player.kills || 0) > 0, txt:'Nhấn <b>SPACE</b> — nhân vật tự chạy tới con quái gần nhất và đánh. Hãy hạ 1 con <b>Axie Heo Rừng</b>' },
+  // ⚠ ĐIỀU KIỆN CŨ LÀ `player.inv.length > 0` — mà nhân vật vừa tạo ĐÃ CÓ đồ khởi đầu trong
+  // túi, nên bước này qua ngay trong cùng một nhịp với bước trước: đo được `loot` và `quest`
+  // cùng nhảy ở giây 360,1. Tức cả bước dạy nhặt đồ chưa từng hiện ra một lần nào.
+  { key:'loot',  xong:() => (player.tutNhat || 0) > 0, txt:'Quái chết có thể rơi đồ hoặc <b>Châu</b> xuống đất — <b>đi ngang qua</b>, bấm <b>J</b> hoặc <b>bấm chuột trúng món</b> để nhặt. Giữ <b>ALT</b> xem tên mọi món trên màn' },
+  // ⚠ KHOÁ LÀ `panel`, KHÔNG PHẢI `quest`. Hai chỗ trong `togglePanel` gọi `tutGhi('panel')`
+  // từ lâu, mà bước cuối lại mang khoá `quest` ⇒ hai lời gọi ấy KHÔNG BAO GIỜ khớp, và bước
+  // cuối không có hành động nào đóng được nó (chỉ còn cái trần 25 giây).
+  { key:'panel', tran:25, xong:() => (player.tutBang || 0) > 0, txt:'Mở thử bảng <b>Nhân Vật</b> (phím <b>C</b>) để xem chỉ số và con Axie đang đeo · <b>K</b> kỹ năng · <b>B</b> túi đồ · <b>M</b> bản đồ' },
 ];
 function updateTut(){
   const box = el('tut-hint');
@@ -26952,9 +26993,17 @@ function updateTut(){
     <span class="tut-x" onclick="player.tutStep=-1; window._tutShown=-99; updateTut()">Đã biết ✕</span>${s.txt}`;
   box.classList.remove('hidden');
 }
-// Bước cuối ('quest') chỉ là bảng tổng kết phím — không có hành động nào đóng nó, nên nó treo
-// mãi (chơi thử: còn nguyên ở cấp 120) và che mất prompt "Nhấn J — Hái Thảo Dược" vẽ cùng chỗ.
-// Tự tắt sau 25 giây kể từ khi tới bước đó.
+// Bước cuối ('panel') tự tắt sau 25 giây nếu người chơi không mở bảng nào — nó từng treo mãi
+// (chơi thử: còn nguyên ở cấp 120) và che mất prompt "Nhấn J — Hái Thảo Dược" vẽ cùng chỗ.
+function tutKha(s){
+  if (!s || !s.kha) return true;           // không khai `kha` ⇒ làm được ở mọi nơi
+  try { return !!s.kha(); } catch { return true; }  // hỏi không được thì ĐỪNG tắt hướng dẫn
+}
+function tutTat(){   // tắt lặng lẽ — người chơi không hoàn tất, nên không có lời chúc mừng
+  if (!player) return;
+  player.tutStep = -1; window._tutShown = -99;
+  updateTut(); saveGame();
+}
 function tutTick(dt){
   if (!player || player.tutStep == null || player.tutStep < 0) return;
   const s = TUT_STEPS[player.tutStep];
@@ -26969,10 +27018,19 @@ function tutTick(dt){
   player._tutLX = player.x; player._tutLY = player.y;
   player._tutT = (player._tutT || 0) + dt;
   if (s.xong){ let ok = false; try { ok = !!s.xong(); } catch { ok = false; } if (ok){ tutAdvance(s.key); return; } }
-  if (player._tutT > (s.tran || TUT_TRAN)) tutAdvance(s.key);
+  if (player._tutT > (s.tran || TUT_TRAN)){
+    // Hết giờ ⇒ người chơi không làm theo. Chỉ đẩy tiếp khi bước KẾ làm được ở chỗ này.
+    if (!tutKha(TUT_STEPS[player.tutStep + 1])){ tutTat(); return; }
+    tutAdvance(s.key);
+  }
 }
 function tutAdvance(stepKey){
   if (!player || player.tutStep < 0) return;
+  // ⚠ CHỐT `>= length` LÀ BẮT BUỘC, không phải phòng xa: `tutGhi` nay gọi hàm này từ BỐN chỗ,
+  // trong đó `takeLoot` chạy mỗi lần nhặt đồ. Một save mang `tutStep` ngoài dải (bản khác, save
+  // hỏng) thì `TUT_STEPS[i].key` NÉM — và ném ngay giữa đường nhặt đồ. `updateTut` và `tutTick`
+  // đã có chốt của chúng từ trước; đúng hàm này thì chưa.
+  if (player.tutStep >= TUT_STEPS.length){ player.tutStep = -1; return; }
   if (TUT_STEPS[player.tutStep].key === stepKey){
     player.tutStep++;
     player._tutT = 0;   // bước mới, đồng hồ trần đếm lại từ đầu
@@ -29332,7 +29390,7 @@ function tryTalk(){
     if (u > bu || (u === bu && d < bd)){ bu = u; bd = d; best = n; }
   }
   if (!best) return;
-  tutAdvance('npc');
+  tutGhi('npc');
   questOnTalk(best);
   if (best.talk === 'quest'){ renderQuestNpc(best); return; }
   if (best.talk === 'forge'){ renderBaGua(); return; }
