@@ -277,7 +277,7 @@ Kiểm toàn diện trên bản mới nhất: **`docs/KIEM_TOAN_HIEN_TRANG.md`**
 | tám cú đánh liên tiếp cùng mục tiêu | 8 dòng | **1 dòng** (`×8 — tổng 192 ST`) |
 | năng lượng biên tại quái (A/B cùng khung) | — | **+42%** |
 | chết ở bãi săn, cấp 25 | mất **0** | mất **1.970 EXP**, không tụt cấp |
-| mục tiêu ngày, dải 1 | 1 ô · 10 mạng (~30 giây) | **2 ô** · 45 mạng (~2-3 phút) |
+| mục tiêu ngày, dải 1 | 10 mạng (~30 giây) | **60 mạng** (~2,5-4,3 phút ở nhịp đo được) |
 | hướng dẫn: đứng yên trong thành | trôi đủ 6 bước rồi tự tuyên bố "hoàn tất" ở giây 385 | `npc → map → TAT` ở giây 270 |
 
 **Ba chỗ báo cáo này nói SAI, đã đo lại — ghi ra thay vì sửa lặng:**

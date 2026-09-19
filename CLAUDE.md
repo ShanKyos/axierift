@@ -2344,6 +2344,13 @@ Bốn chỗ miễn, mỗi chỗ một lý do — đừng gộp cho gọn: dướ
 bãi quái · `md.pvp` (**luật đã chốt**: *"Thua một trận đấu không được phép đụng vào bản lưu"*) ·
 `md.dungeon` (Tầng Sâu đã có giá riêng, cộng thêm là phạt hai lần).
 
+⚠ **Khoản phạt đặt SAU hai nhánh hồi sinh** (THIÊN MỆNH `traitRevive` · Bản Nguyên Công
+`tienthiencong`), và đó là đúng: hai cái đó nghĩa là *ngươi không chết thật*, nên không phạt.
+Hệ quả cho bài kiểm: cảnh đo phải **tắt cả hai** trước khi giết, không thì nó đỏ theo xúc xắc —
+`startGame` bốc thiên phú ngẫu nhiên nên cái chết đầu có khi miễn phí, và phép đo ra 0 trong khi
+mã hoàn toàn đúng. `test_ruiro` đỏ 1/5 lượt trước khi thêm ba dòng tắt ấy, và nay nó tự kiểm
+(`hoiSinh`) rồi mới chấm.
+
 ⚠ **Và phải NÓI RA — kể cả khi KHÔNG mất gì, kèm lý do.** Im lặng ở chỗ được miễn thì người chơi
 không phân biệt được *"chỗ này tha"* với *"cơ chế hỏng"*.
 
@@ -2353,13 +2360,22 @@ Nhịp thật (AUTO, 60 giây trong game, đo bằng chính vòng `update`):
 **cấp 5 → 14 mạng/phút · cấp 11 → 24 · cấp 20 → 37 · cấp 30 → 39.**
 ⇒ `kills:10` ở dải 1 tốn **25-43 giây**, `kills:15` ở dải 2 tốn **24 giây** — cả tầng NGÀY là một
 dòng và nó đóng trước khi người chơi kịp ngồi xuống. Nay ô `kills` đặt theo mốc **~3 phút cày**:
-`45 → 90 → 110 → 120 → 130 → 140 → 150`, và dải 1 có **hai** ô thay vì một.
+`60 → 90 → 110 → 120 → 130 → 140 → 150`.
 
 ⚠ **Trên cấp 30 là GIẢ ĐỊNH, không phải số đo** — nói thẳng chứ không giấu. Nhịp phẳng lại ở
 ~39 mạng/phút từ cấp 20→30 nên bốn dải cuối lấy đúng mốc phẳng đó; `tools/do_nhipcap.cjs` hiện
 không chạy được từ cấp 60 trở lên.
 
-**⚠ DẢI 1 THÊM `forge`, TUYỆT ĐỐI KHÔNG THÊM `via` — và đó là một phép đo.** `viaHomNay()` bốc ba
+**⚠⚠ CHỈ NÂNG SỐ LƯỢNG, ĐỪNG THÊM Ô VÀO DẢI 1 — tôi làm sai đúng chỗ này và `test_earlygame`
+bắt được.** Bản đầu tôi cho dải 1 thành `{kills:45, forge:1}` cho "đỡ trống", và thế là dải 1
+(2 ô) **BẰNG** dải 2 (2 ô) — phá đúng tính chất mà bảng này sinh ra để có: **số ô lớn dần theo
+cấp**. Bài kiểm cũ chốt `daily1 === ['kills']` nhìn thì giống một hằng số chép cứng, nhưng nó
+đang gác một thiết kế thật; tôi đọc nhầm nó thành lời nói dối rồi suýt sửa bài kiểm cho vừa ý
+mình. *Trước khi gọi một khẳng định cũ là "chốt cứng đã mục", hỏi xem nó đang gác TÍNH CHẤT gì.*
+Hình dạng thang giữ nguyên (**1 · 2 · 3 · 4 · 5 · 5 · 5** ô); chỉ con số `kills` đổi. Thứ cần
+chữa là ĐỘ DÀI, không phải số dòng.
+
+**⚠ VÀ TUYỆT ĐỐI KHÔNG THÊM `via` VÀO DẢI 1 — đó là một phép đo.** `viaHomNay()` bốc ba
 trong bảy vùng có Dòng; đo một ngày thật ra `trungnut · chungnam · caungam`, giao với map mà nhân
 vật cấp ≤11 tới được (`ardhaven · ngoai · corran · pvp`) là **RỖNG**. Mà thưởng ngày đòi xong HẾT
 ⇒ một ô bất khả là **khoá câm cả phần thưởng**, không lỗi nào báo. Đúng bài học "CỬA CƠ CHẾ MỞ Ở

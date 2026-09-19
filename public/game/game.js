@@ -31454,7 +31454,15 @@ const DAILY_META = {
 // phẳng lại ở ~39 mạng/phút từ cấp 20→30, nên bốn dải cuối lấy đúng cái mốc phẳng đó. Đo lại
 // được thì chỉnh; `tools/do_nhipcap.cjs` hiện KHÔNG chạy được từ cấp 60 trở lên (xem mục nhịp cấp).
 //
-// ⚠ DẢI 1 THÊM `forge`, TUYỆT ĐỐI KHÔNG THÊM `via` — và đây là một phép đo, không phải một
+// ⚠⚠ CHỈ NÂNG SỐ LƯỢNG, ĐỪNG THÊM Ô VÀO DẢI 1 — tôi đã làm sai đúng chỗ này và
+// `test_earlygame` bắt được. Bản đầu tôi cho dải 1 thành `{kills:45, forge:1}` cho "đỡ trống",
+// và thế là dải 1 (2 ô) BẰNG dải 2 (2 ô) — phá đúng cái tính chất mà bảng này sinh ra để có:
+// **số ô lớn dần theo cấp** (cấp 1 < cấp 12 < cấp 120). Bài kiểm cũ chốt `daily1 === ['kills']`
+// nhìn thì giống một hằng số chép cứng, nhưng nó đang gác một thiết kế thật — tôi đọc nhầm nó
+// thành lời nói dối rồi suýt sửa bài kiểm cho vừa ý mình.
+// ⇒ Hình dạng thang giữ nguyên (1 · 2 · 3 · 4 · 5 · 5 · 5 ô); CHỈ con số `kills` đổi.
+//
+// ⚠ VÀ TUYỆT ĐỐI KHÔNG THÊM `via` VÀO DẢI 1 — đây là một phép đo, không phải một
 // linh cảm. `viaHomNay()` bốc ba vùng trong bảy vùng có Dòng; đo một ngày thật ra
 // `trungnut · chungnam · caungam`, giao với map mà nhân vật cấp ≤11 tới được
 // (`ardhaven · ngoai · corran · pvp`) là **RỖNG**. Mà thưởng ngày đòi xong HẾT ⇒ một ô bất khả
@@ -31466,7 +31474,7 @@ const DAILY_META = {
 // ngoài tầm. Đây là lỗi CÓ SẴN, không phải của đợt này; chữa đúng là cho `dailyReset` bốc mục
 // tiêu theo cấp người chơi, và đó là một đợt riêng.
 const DAILY_BANDS = [
-  { max:11,  muc:{ kills:45,  forge:1 },                                thuong:1 },
+  { max:11,  muc:{ kills:60 },                                          thuong:1 },
   { max:24,  muc:{ kills:90,  forge:1 },                                thuong:1.5 },
   { max:39,  muc:{ kills:110, forge:1, dungeon:1 },                     thuong:2.5 },
   { max:59,  muc:{ kills:120, forge:1, dungeon:1, via:1 },              thuong:4 },

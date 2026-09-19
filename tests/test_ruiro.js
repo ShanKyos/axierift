@@ -31,10 +31,16 @@ const pass = m => console.log('PASS ' + m);
       localStorage.clear(); startGame('thieulam', null); player.tutStep = -1;
       player.level = lv; calcDerived(); travelTo(map);
       player.xp = Math.floor(XP_TABLE[lv - 1] * 0.5);
+      // ⚠ TẮT MỌI ĐƯỜNG HỒI SINH TRƯỚC KHI ĐO — bài này đỏ 1/5 lượt trước khi có ba dòng dưới.
+      // `startGame` bốc ngẫu nhiên thiên phú THIÊN MỆNH (`traitRevive`), và `onDeath()` `return`
+      // ở nhánh hồi sinh **trước** chỗ trừ EXP ⇒ cái chết đầu miễn phí, phép đo ra 0 mà mã thì
+      // đúng. Bản Nguyên Công (`tienthiencong`) cũng một cửa như thế.
+      player.traitRevive = false; player.reviveUsed = true; player.vhReviveCd = 999;
       const truoc = player.xp, bao = chetMatXp();
       player.hp = 0; onDeath();
+      const hoiSinh = !dead;   // còn sống sau onDeath ⇒ một nhánh hồi sinh đã nuốt cú chết
       const noi = (document.body.innerText.match(/(Mất [\d.,]+ EXP|Không mất EXP[^.]*)/) || [null])[0];
-      const ra = { lv, map, truoc, bao, sau: player.xp, mat: truoc - player.xp,
+      const ra = { lv, map, truoc, bao, sau: player.xp, mat: truoc - player.xp, hoiSinh,
                    capGiuNguyen: player.level === lv, noi,
                    coBai: (() => { try { return packsOf(map).length; } catch { return -1; } })() };
       if (typeof respawn === 'function') respawn();
@@ -66,7 +72,8 @@ const pass = m => console.log('PASS ' + m);
   const bai = R.canhChet.filter(c => c.coBai > 0 && c.lv >= 10);
   if (!bai.length) fail('① cảnh dựng: không có ca nào vừa đủ cấp vừa đứng trên bãi săn');
   for (const c of bai){
-    if (c.mat <= 0) fail(`① cấp ${c.lv} chết ở ${c.map} (${c.coBai} bãi quái) mất ${c.mat} EXP — chết vẫn không có giá`);
+    if (c.hoiSinh) fail(`① cảnh dựng ${c.map}: một nhánh hồi sinh đã nuốt cú chết, phép đo vô nghĩa`);
+    else if (c.mat <= 0) fail(`① cấp ${c.lv} chết ở ${c.map} (${c.coBai} bãi quái) mất ${c.mat} EXP — chết vẫn không có giá`);
     else if (!c.capGiuNguyen) fail(`① chết ở ${c.map} làm TỤT CẤP — không bao giờ được phép`);
     else if (c.mat !== c.bao) fail(`① số báo trước (${c.bao}) khác số trừ thật (${c.mat}) ở ${c.map}`);
     else pass(`① cấp ${c.lv} · ${c.map}: mất ${c.mat} EXP, giữ nguyên cấp`);
@@ -103,10 +110,19 @@ const pass = m => console.log('PASS ' + m);
   else pass(`④ XP gần 0: kẹp về ${R.san.xp}, giữ cấp ${R.san.cap}`);
 
   // ── ⑤ MỤC TIÊU NGÀY: dải 1 không được là một dòng duy nhất, và phải tăng dần ──
+  // ⚠ MỆNH ĐỀ NÀY TỪNG ĐÒI SAI THỨ. Bản đầu tôi chốt "dải 1 phải có ≥2 ô" rồi nhét `forge` vào
+  // cho đủ — và `test_earlygame` bắt được: làm thế thì dải 1 (2 ô) BẰNG dải 2 (2 ô), tức phá
+  // đúng tính chất mà bảng này sinh ra để có, **số ô lớn dần theo cấp**. Cái cần chữa là ĐỘ DÀI
+  // (30 giây), không phải số dòng. Nay gác cả hai vế cho đúng.
   const d1 = R.dai.find(d => d.lv === 1);
   if (!d1) fail('⑤ cảnh dựng: không đọc được dải cấp 1');
-  else if (d1.soMuc < 2) fail(`⑤ dải 1 chỉ có ${d1.soMuc} mục tiêu — cả tầng NGÀY của người chơi mới là một dòng`);
-  else pass(`⑤ dải 1 có ${d1.soMuc} mục tiêu (${d1.khoa.join(' · ')})`);
+  else {
+    const d12 = R.dai.find(d => d.lv === 20), d120 = R.dai.find(d => d.lv === 100);
+    if (!d12 || !d120) fail('⑤ cảnh dựng: thiếu dải giữa/cuối để so');
+    else if (!(d12.soMuc > d1.soMuc && d120.soMuc > d12.soMuc))
+      fail(`⑤ bảng mục tiêu KHÔNG lớn dần theo cấp: ${d1.soMuc} → ${d12.soMuc} → ${d120.soMuc}`);
+    else pass(`⑤ bảng lớn dần theo cấp: ${d1.soMuc} → ${d12.soMuc} → ${d120.soMuc} ô`);
+  }
   // nhịp đo được: cấp 5 = 14 mạng/phút · cấp 11 = 24 ⇒ dưới 30 mạng là chưa tới 2 phút cày
   if (d1 && d1.kills < 30) fail(`⑤ dải 1 chỉ đòi ${d1.kills} mạng — ở nhịp 14-24 mạng/phút thì xong trong dưới 2 phút`);
   else if (d1) pass(`⑤ dải 1 đòi ${d1.kills} mạng (~2-3 phút ở nhịp đo được)`);
