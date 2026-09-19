@@ -70,7 +70,6 @@ const EXACT = {
 
   // ── NPC trong thành ──
   'Trưởng Làng': 'Village Elder',
-  'Thợ Rèn · Lò Rèn Hoàng Gia': 'Blacksmith · Royal Forge',
   // ⚠ KHÔNG dịch là 'Chaos Goblin' — đó là tên riêng con NPC của MU (Quy tắc số 2). Chữ
   // 'Chaos' thì giữ: game đã ship '● Hỗn Độn Châu' → '● Chaos Pearl' từ lâu.
   'Yêu Tinh Hỗn Độn · Lò Hỗn Độn': 'Goblin Smith · Chaos Forge',

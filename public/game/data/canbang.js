@@ -2077,10 +2077,14 @@ window.NPCS = [
   // đứng ở thành. Lore của bốn người dưới đây viết cho ra chuyện đó: mỗi cái cửa
   // phải nói được vì sao nó tồn tại, không chỉ là một cái nút bấm.
 
-  { id:'thoren', name:'Thợ Rèn · Lò Rèn Hoàng Gia', map:'ardhaven', x:5230, y:990, img:'assets/npcs/thoren_lun.png', talk:'forge', nhan:'Lò Rèn',
-    lore:'"Lò này nhóm lại lần thứ ba rồi. Hai lần trước tắt vì hết than — lần này ta dặn xe than đi hai chuyến một tuần, tắt nữa thì là lỗi của ta."',
-    barks:['"Đợi lò đỏ đã, đừng giục."','"Đồ mẻ thì mang đây, đừng vứt."',
-           '"Búa nhỏ để khảm, búa lớn để nắn. Cầm nhầm là hỏng cả món."','"Nghe tiếng thép là biết đồ thật hay giả."'] },
+  // ⚠ NPC `thoren` (Thợ Rèn · Lò Rèn Hoàng Gia) ĐÃ GỠ KHỎI ARDHAVEN — đừng cắm lại.
+  // Nó trùng chức năng KHÍT với `ah_hondon` ngay bên cạnh: cùng `talk:'forge'`, cùng mở một
+  // bảng, đứng cách nhau 190px. Hai con cho một việc thì con thứ hai chỉ là một cái tên thừa.
+  // Tranh người lùn của nó chuyển sang `binhkhi` (Vũ Khí Phường) theo yêu cầu của chủ dự án —
+  // một thợ rèn cầm búa đứng bán binh khí là đúng vai hơn hẳn hình vector cũ.
+  // ⚠ `thoren_dao` (corran) VẪN CÒN và vẫn dùng tranh ấy, nên đừng xoá `thoren_lun.png`.
+  // Mọi thứ hỏi lò rèn ở Ardhaven vẫn chạy: `forgeNpcHere()` lấy con GẦN NHẤT trên map, và
+  // `NPCS.find(x => x.talk === 'forge')` (mấy bài kiểm dùng) vẫn ra một con có thật.
 
   // ⚠ CON THỨ HAI MANG talk:'forge', VÀ ĐÓ LÀ CHỦ Ý. `forgeNpcHere()` nay trả về con GẦN
   // NHẤT trên map chứ không phải con ĐẦU MẢNG (xem game.js) — nếu không thì thêm con này
@@ -2106,28 +2110,28 @@ window.NPCS = [
     barks:['"Bình đỏ pha sáng nay, còn ấm."','"Ra khỏi cổng thì mang hai lọ, đừng mang một."',
            '"Đừng uống lúc đang chạy, sặc thì phí cả lọ."','"Nút bần bịt kín rồi, nhưng đừng để nghiêng trong túi."'] },
 
-  { id:'binhkhi', name:'Binh Khí Chủ · Vũ Khí Phường', map:'ardhaven', x:5890, y:990, img:'assets/npcs/binhkhi.png', talk:'shop', nhan:'Vũ Khí',
+  { id:'binhkhi', name:'Binh Khí Chủ · Vũ Khí Phường', map:'ardhaven', x:5890, y:990, img:'assets/npcs/thoren_lun.png', talk:'shop', nhan:'Vũ Khí',
     lore:'"Giá gỗ này ta đóng lại tuần trước — cây cũ mọt ăn, gãy làm đôi lúc nửa đêm, đổ hết cả hàng xuống sân. Cầm thử đi, cây nào cũng còn nguyên lưỡi."',
     barks:['"Cầm thử đi, đừng ngắm."','"Cây rìu kia nặng hơn nó nhìn."',
            '"Chuôi quấn da mới, chưa trơn tay đâu."','"Đồ cũ nhưng chưa gãy lần nào."'] },
 
   // talk:'stable' — CỬA ĐẦU TIÊN của hệ Trại Ngựa / Mã Thầu / Khế Ước Ragoon đứng
   // trong tường thành. Trước đây hệ này chỉ có một cửa duy nhất ở Beast Herd Camp.
-  { id:'ah_mucdong', name:'Người Giữ Chuồng', map:'ardhaven', x:2160, y:2450, img:'assets/npcs/traichu.png', talk:'stable', nhan:'Chuồng',
+  { id:'ah_mucdong', name:'Người Giữ Chuồng', map:'ardhaven', x:2160, y:2450, talk:'stable', nhan:'Chuồng',
     lore:'"Chuồng trong thành có bốn ô, mà ngoài đồng thì cả bầy chạy hoang. Ai rượt được con nào thì dắt về đây — ta ghi tên, ta cho ăn, và ta không hỏi trước đó nó thuộc về ai."',
     barks:['"Rượt cho nó mệt, đừng rượt cho mình mệt."','"Con nâu ô ngoài cùng cắn người lạ, nhớ đấy."',
            '"Cỏ ngoài thành ngọt hơn cỏ trong sân, nên chúng nó mới không chịu về."','"Dây thừng ta cho mượn, nhớ trả."'] },
 
   // talk:'trunya' — Truy Nã Lệnh mỗi ngày một tên. ⚠ XEM CHÚ Ý KỸ THUẬT cuối tệp:
   // renderTruyNa() đang tìm CỨNG id 'bodau'.
-  { id:'bodau', name:'Quan Truy Nã', map:'ardhaven', x:4150, y:2100, img:'assets/npcs/bodau.png', talk:'trunya', nhan:'Truy Nã',
+  { id:'bodau', name:'Quan Truy Nã', map:'ardhaven', x:4150, y:2100, img:'assets/npcs/laotuong.png', talk:'trunya', nhan:'Truy Nã',
     lore:'"Vách này mỗi sáng ta dán một tờ, mỗi chiều gỡ một tờ. Trước đây gỡ vì hết hạn. Dạo này thì gỡ vì có người mang việc về xong — ta thích cách gỡ đó hơn."',
     barks:['"Lệnh hôm nay dán rồi đấy."','"Một ngày một tên, không hơn. Ta cũng phải ngủ."',
            '"Tiền thưởng trả bằng Lumen, đếm tại chỗ, đếm xong đừng kêu thiếu."','"Đừng vác nguyên con về sân ta. Kể lại là đủ."'] },
 
   // talk:'vanduyen' — Sảnh Cầu May. Tỉ lệ công khai, không cộng dồn may mắn.
   // ⚠ renderVanDuyen() đang tìm CỨNG id 'thantoan' — xem chú ý kỹ thuật cuối tệp.
-  { id:'thantoan', name:'Chủ Sảnh Cầu May', map:'ardhaven', x:4570, y:990, img:'assets/npcs/thantoan.png', talk:'vanduyen', nhan:'Cầu May',
+  { id:'thantoan', name:'Chủ Sảnh Cầu May', map:'ardhaven', x:4570, y:990, talk:'vanduyen', nhan:'Cầu May',
     lore:'"Tỉ lệ ta dán trên vách, chữ to bằng bàn tay, ai đứng ngoài cửa cũng đọc được. Đọc xong mà vẫn quay thì đó là việc của ngươi, không phải lỗi của ta."',
     barks:['"Tỉ lệ dán trên vách kia kìa, đọc trước đi."','"Ta không hứa gì cả. Ta chỉ quay."',
            '"Người vừa nãy quay chín lượt rồi về tay không. Ngươi vẫn muốn quay chứ?"','"Lumen đặt lên bàn, đừng đưa tận tay ta."'] },
@@ -2212,7 +2216,7 @@ window.NPCS = [
     barks:['"Đuổi kịp cháu thì cháu cho cái này!"','"Chú đừng mách mẹ cháu nhé."',
            '"Chú cao thế, chú nhìn qua nóc nhà kia được không?"'] },
 
-  { id:'ah_linhtuan', name:'Lính Tuần Phố', map:'ardhaven', x:2560, y:1600, img:'assets/npcs/bodau.png', talk:'quest',
+  { id:'ah_linhtuan', name:'Lính Tuần Phố', map:'ardhaven', x:2560, y:1600, img:'assets/npcs/laotuong.png', talk:'quest',
     lore:'"Ta đi từ Cổng Tây sang Cổng Đông rồi quay lại, mỗi vòng đúng một khắc. Việc chán lắm. Nhưng chán là dấu hiệu tốt, ngươi cứ tin ta."',
     barks:['"Trong tường thì yên."','"Ai còn để xe hàng giữa lòng phố nữa là ta thu."',
            '"Đi qua đi lại mỏi chân hơn đánh nhau."'] },
@@ -2232,7 +2236,7 @@ window.NPCS = [
     barks:['"Tránh đường, ta đang vội."','"Lá này để ba ngày rồi, chưa ai tới lấy."',
            '"Ta chạy nhanh hơn ngươi đấy, cá không?"'] },
 
-  { id:'ah_banhoa', name:'Bà Bán Hoa', map:'ardhaven', x:3400, y:1930, img:'assets/npcs/duoclao.png', talk:'quest',
+  { id:'ah_banhoa', name:'Bà Bán Hoa', map:'ardhaven', x:3400, y:1930, talk:'quest',
     lore:'"Hoa của ta trồng ở luống sau nhà, không phải hàng gánh từ ngoài đồng vào. Cành ngắn hơn thật, nhưng cắm trong nhà được bảy ngày."',
     barks:['"Mua một bó về cắm, nhà sáng hẳn ra."','"Cành trắng hết rồi, còn cành đỏ thôi."',
            '"Cắt buổi sáng thì tươi lâu hơn cắt buổi chiều."'] },
@@ -2242,7 +2246,7 @@ window.NPCS = [
     barks:['"Ngồi xuống đi, ghế còn chỗ."','"Trước đây chỗ này là bãi đất trống."',
            '"Cứ đi đi. Ta không giữ ai lại bao giờ."'] },
 
-  { id:'ah_chimera', name:'Người Luyện Chimera', map:'ardhaven', x:2500, y:2100, img:'assets/npcs/traichu.png', talk:'quest',
+  { id:'ah_chimera', name:'Người Luyện Chimera', map:'ardhaven', x:2500, y:2100, talk:'quest',
     lore:'"Con này ta nhặt lúc nó còn nhỏ bằng bàn tay. Nó không hiền đâu — nó chỉ quen ta thôi. Quen với hiền là hai chuyện khác nhau, nhớ cho kỹ."',
     barks:['"Đừng đưa tay ra trước mặt nó."','"Nó ăn hai bữa, sáng và tối. Cho ăn thêm là nó lười."',
            '"Con này nghe tiếng huýt, không nghe tên."'] },

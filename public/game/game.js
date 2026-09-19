@@ -27563,7 +27563,7 @@ NPCS.push(
   // (1050,700) nằm LỌT trong gờ đá tây của Beast Herd Camp ({x:820,y:660,wd:380,ht:110}) —
   // đi thử 4/4 lượt đều khựng lại cách 72px, tức là Trại Ngựa không bao giờ mở được. Dời
   // xuống dưới chân gờ đá, vẫn cùng một khu.
-  { id:'traichu',   name:'Trại Chủ Mục Đồng',      map:'ngoai',      x:2184, y:682,  img:'assets/npcs/traichu.png', talk:'stable',
+  { id:'traichu',   name:'Trại Chủ Mục Đồng',      map:'ngoai',      x:2184, y:682,  talk:'stable',
     lore:'"Tuấn mã hoang ngoài đồng kia đấy — rượt cho nó kiệt sức rồi bấm E mà bắt. Mã Thầu thu được dùng khi thăng giai thú cưỡi!"',
     barks:['"Con nâu kia bướng nhất bầy."','"Rượt cho nó mệt, đừng rượt cho mình mệt."',
            '"Cỏ ngoài này ngọt hơn cỏ trong thành."'] }, // GDD Đợt 2 B5
@@ -29481,6 +29481,38 @@ function npcCoTrongMan(id, im, hop){
   if (qua > 1){ cao /= qua; rong /= qua; }
   return { cao, rong, H };
 }
+// ═══ NPC CHƯA CÓ ART — CHỖ TRỐNG CÓ NHÃN, KHÔNG PHẢI MỘT NGƯỜI GIẢ ═══════════════════════
+//
+// Chủ dự án chốt (2026-09-19): *"loại bỏ hết các bản vẽ NPC bằng vector đi. Mình sẽ cần người
+// thật cơ"*. Năm tệp vector cuối (`binhkhi` · `bodau` · `duoclao` · `thantoan` · `traichu`) đã
+// xoá khỏi kho — nhưng nhánh dự phòng ở đây thì VẼ LẠI ĐÚNG CÁI ẤY bằng mã: một khối ê-líp nâu
+// làm thân cộng một vòng tròn màu da làm đầu. Xoá tệp mà để nguyên nhánh này là đổi một hình
+// vector trong tệp lấy một hình vector trong mã — cùng thứ, chỉ khác chỗ cất.
+//
+// ⚠ VÀ NÓ TỆ HƠN TỆP: một người giả trông "tạm được" thì không ai đi vẽ người thật. Đây chính
+// là lý do `iaChuaArt` của hệ vật phẩm cố ý vẽ THÔ — Quy tắc số 3 gọi nó là "chỗ trống có
+// nhãn", và nói rõ đó KHÔNG phải vẽ vector. Nên chỗ này cũng phải đọc ra là một CHỖ TRỐNG:
+// bệ tối, khung nét đứt, dấu `?`. Nhìn vào là biết ngay art chưa về.
+//
+// ⚠ NHÃN TÊN VÀ DẤU NHIỆM VỤ VẪN CHẠY như cũ (`n._cao` đặt trước khi gọi vào đây), nên NPC
+// chưa có art vẫn bấm được, vẫn mở bảng được, vẫn hiện trên bản đồ thành qua `nhan:`. Chỗ
+// trống là chuyện của MẮT, không phải của cơ chế.
+function veNpcChoArt(n, rong, cao, nb){
+  const w = rong * 0.62, h = cao * 0.86;
+  const x0 = n.x - w/2, y0 = n.y - h + 4 + nb;
+  ctx.save();
+  ctx.fillStyle = 'rgba(14,18,30,.55)';
+  ctx.fillRect(x0, y0, w, h);
+  ctx.setLineDash([5, 4]);
+  ctx.lineWidth = 1.5; ctx.strokeStyle = 'rgba(255,215,106,.75)';
+  ctx.strokeRect(x0, y0, w, h);
+  ctx.setLineDash([]);
+  ctx.fillStyle = 'rgba(255,215,106,.85)';
+  ctx.font = `700 ${Math.round(h * 0.38)}px "Be Vietnam Pro", sans-serif`;
+  ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+  ctx.fillText('?', n.x, y0 + h * 0.5);
+  ctx.restore();
+}
 let _dtBark = 0;
 function drawNpc(){
   _dtBark = Math.min(0.1, (performance.now() - (drawNpc._t || performance.now())) / 1000);
@@ -29515,10 +29547,7 @@ function drawNpc(){
       ctx.drawImage(_anh, H.sx, H.sy, H.sw, H.sh,
                     n.x - _rong/2, n.y - _cao*_neo + 4 + _nb, _rong, _cao);
     } else {
-      ctx.fillStyle = '#5a4a30';
-      ctx.beginPath(); ctx.ellipse(n.x, n.y - _cao*0.34, _rong*0.30, _cao*0.34, 0, 0, 7); ctx.fill();
-      ctx.fillStyle = '#e8cfa8';
-      ctx.beginPath(); ctx.arc(n.x, n.y - _cao*0.79, _cao*0.16, 0, 7); ctx.fill();
+      veNpcChoArt(n, _rong, _cao, _nb);
     }
     _nhanCho.push(n);   // nhãn để LƯỢT SAU đặt — xem chú thích ở đầu hàm
   }
