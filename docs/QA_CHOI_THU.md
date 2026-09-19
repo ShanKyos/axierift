@@ -18,7 +18,7 @@
 | Chỉ đường / user flow | **6,5** | băng-rôn "Đi ngay" tuyệt vời, nhưng nó **tự ẩn đúng lúc cần nhất** |
 | Hướng dẫn tân thủ | **4,5** | bước 2 sai sự thật, bước 3–4 tự trôi qua bằng đồng hồ chứ không bằng hành động |
 | Đọc được trên màn (readability) | **5,0** | quái đọc ra **y hệt đá và bụi**; nhật ký cắt cụt mọi dòng |
-| Bảng & giao diện | **7,5** | bảng Bản Đồ rất tốt; bảng Nhân Vật **cụt đáy**, không cuộn được |
+| Bảng & giao diện | **8,5** | bảng Bản Đồ rất tốt · ~~bảng Nhân Vật cụt đáy~~ **ĐO LẠI: SAI, xem §6** |
 | Nhịp cấp & nội dung | **5,5** | hố **16 cấp** giữa Werebear Woods (20) và Plant Tribe Glade (36) |
 | Rủi ro / sức căng | **3,0** | chết **không mất gì**; mục tiêu ngày xong trong **2 phút** |
 | Trục Axie (Axie Core) | **8,0** | hai trục hiện rõ trên bảng Nhân Vật — nhưng map đầu tiên cho phán quyết **0%** |
@@ -117,11 +117,16 @@ Nhân vật mới rơi xuống `ardhaven (3200,1900)`. Thành có **29 NPC** và
 Cổng **duy nhất** hợp cấp 1 là cổng **xa nhất**. NPC gần nhất cách 467px. Ai không bấm băng-rôn
 mà đi khám phá thì gặp PvP và bốn cửa khoá trước khi gặp bất cứ thứ gì chơi được.
 
-### 🟠 P2 · Bảng Nhân Vật **cụt đáy**, không có thanh cuộn
+### ~~🟠 P2 · Bảng Nhân Vật cụt đáy, không có thanh cuộn~~ — **SAI, ĐÃ ĐO LẠI**
 
-Ở 1440×900, bảng Nhân Vật bị mép dưới cắt ngang dòng `Né Tránh 19%`. Bên dưới đó còn Tốc Đánh,
-Hồi Mana, Bản Năng — đọc được bằng `innerText` nhưng **không nhìn thấy được** và không cuộn tới
-được. Ảnh chân dung nhân vật thì ngược lại: một hình cao ~60px nằm giữa một khoảng trống rất rộng.
+> Mục này **rút lại**. Tôi kết luận từ một ảnh chụp mà không đo, và ảnh chụp chỉ cho thấy mép
+> cắt của vùng cuộn chứ không cho thấy thanh cuộn.
+>
+> Đo lại bằng `getBoundingClientRect()` trên **bốn bảng × ba khung nhìn**
+> (1280×720 · 1440×900 · 1920×1080): **tràn ra ngoài màn = 0 ở cả 12 tổ hợp**, và cả 12 đều
+> cuộn được. Không có gì phải sửa.
+>
+> *Bài học: "nhìn ảnh thấy cụt" là một giả thuyết, không phải một phép đo.*
 
 ### 🟡 P3 · Chết **không mất gì**
 
@@ -243,3 +248,16 @@ dùng, trước khi viết vào báo cáo.*
 | 8 | Một tín hiệu "map này hết XP cho ngươi rồi" | Hố 16 cấp + 143 mạng không lên cấp |
 | 9 | Cho cái chết một cái giá | Hiện tại không có rủi ro ở bất cứ đâu |
 | 10 | Đưa một phán quyết Axie **khác 0** vào 10 phút đầu | 35% barem đang vô hình ở đoạn mở đầu |
+
+---
+
+## ❻ HAI CHỖ BÁO CÁO NÀY NÓI SAI — đã đo lại ở `0ab8a08`
+
+Ghi ra thay vì sửa lặng, để đừng ai đọc bản cũ rồi đi sửa một thứ không hỏng.
+
+| chỗ | bản đầu nói | đo lại |
+|---|---|---|
+| bảng Nhân Vật | *"cụt đáy, không cuộn được"* | **SAI.** 4 bảng × 3 khung nhìn: tràn ngoài màn **0/12**, cuộn được **12/12** |
+| `test_chaos` | *"đỏ do nhiễm trạng thái — Đổi Hệ chạy đúng khi cô lập"* | **nửa sau đúng, nửa đầu SAI.** Chạy riêng vẫn **đỏ 3/3**, tức đỏ tất định. Cơ chế thì đúng là chạy (lái thẳng: Beast → Mech); chỗ hỏng nằm ở `reset()` của bài kiểm, nó không nhả cờ `_loBan` |
+
+Kiểm toàn diện trên bản mới nhất: **`docs/KIEM_TOAN_HIEN_TRANG.md`**.
