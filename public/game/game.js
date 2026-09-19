@@ -3604,7 +3604,7 @@ function gatesHere(){ return GATES.filter(g => g.map === curMap); }
 // NPCS đã dời sang data/canbang.js — sửa cân bằng không phải mở tệp 26k dòng này.
 const NPCS = window.NPCS;
 const NPC_IMGS = {};
-for (const n of NPCS){ const im = new Image(); im.src = n.img; NPC_IMGS[n.id] = im; }
+for (const n of NPCS){ if (!n.img) continue; const im = new Image(); im.src = n.img; NPC_IMGS[n.id] = im; }
 function mapDef(){ return MAPS[curMap]; }
 function zoneType(){ return ZONE_TYPES[mapDef().type]; }
 
@@ -27586,7 +27586,7 @@ NPCS.push(
     lore:'"Phiến thứ bảy lung lay tới đâu, mép vực lở tới đó. Gió biên thuỳ cắt thịt — vận may chỉ dành cho kẻ dám nhảy."',
     barks:['"Gió ở đây cắt được da."','"Nhảy thì nhảy, đừng đứng ngó."'] },
 );
-for (const n of NPCS){ if (!NPC_IMGS[n.id]){ const im = new Image(); im.src = n.img; NPC_IMGS[n.id] = im; } }
+for (const n of NPCS){ if (!n.img || NPC_IMGS[n.id]) continue; const im = new Image(); im.src = n.img; NPC_IMGS[n.id] = im; }
 function npcName(id){ const n = NPCS.find(x => x.id === id); return n ? n.name : 'Trưởng Làng'; }
 
 // ---------- Chính tuyến: ĐÃ GỠ SẠCH ----------
