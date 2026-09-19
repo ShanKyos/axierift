@@ -2927,6 +2927,29 @@ một BẢNG KHAI (`VK_ANH` cho vũ khí, `NV_GIAP` cho giáp, `NV_BO` cho thân
 
 Và KHÔNG ngồi dựng hình bằng `ctx.beginPath()` trong mọi trường hợp.
 
+### 📐 ĐO ART BẰNG MÁY TRƯỚC KHI BÀN VỀ PHONG CÁCH
+
+`python3 tools/do_art.py` quét toàn bộ `public/game/assets` và đo **sáu chỉ số** mỗi tấm, gom
+theo *"thứ người chơi nhìn thấy CẠNH NHAU trong một khung hình"* — không gom theo thư mục.
+Kết quả máy đọc: `docs/DO_ART.json`. Kết luận + danh sách cần sinh: **`docs/KIEM_ART.md`**.
+
+| chỉ số | nó trả lời câu gì |
+|---|---|
+| `sang` | độ sáng trung bình trên điểm ảnh ĐẶC (alpha > 0,78) |
+| `bh` | bão hoà — **chỉ số tách hai ngôn ngữ art rõ nhất** (nền 0,31 vs thân 0,55-0,61) |
+| `lech` | lệch chuẩn độ sáng TRONG thân; dưới ~0,12 là đọc ra một cái bóng ở cỡ nhỏ |
+| `vien` | tỉ lệ điểm ảnh có `L < 0,18` — **chữ ký của nét bao đen** (nền iso = 0,000 tuyệt đối) |
+| `am` | R−B, nóng hay lạnh |
+| `trong` | tỉ lệ điểm trong suốt; **`0` nghĩa là một tấm THẺ ĐỤC, không phải sprite** |
+
+⚠ **Gom nhóm theo CHỖ ĐỨNG, không theo thư mục.** Một viên lát sáng 0,72 đứng cạnh một con quái
+sáng 0,13 là một vấn đề thật; hai icon nằm ở hai bảng khác nhau thì không.
+
+⚠ **`vien` mới là thứ tách được hai ngôn ngữ, `sang` thì không** — cùng bài học đã ghi ở mục art
+tối (*"lệch chuẩn quyết định, không phải sáng trung bình"*). Nền map và vật thể iso đo ra
+`vien` trung vị **0,000**, còn mọi thứ đứng trên nó đo 0,09-0,23. Đó là chỗ gãy lớn nhất của
+toàn bộ art hiện tại, và nó vô hình với mắt cho tới khi đo.
+
 Sandbox KHÔNG gọi được meowa.ai (chặn egress), nên bước sinh ảnh là việc của chủ dự án.
 Nếu có khoá API, truyền qua **biến môi trường** — không bao giờ ghi vào tệp trong repo.
 
