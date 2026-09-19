@@ -47,8 +47,24 @@ for t in ' Qi' 'AoE' 'minimap'; do
 done
 
 muc "③ CHỮ HÁN LỌT VÀO MÃ"
-n=$(python3 -c "import re;print(sum(1 for l in open('public/game/game.js',encoding='utf-8') if re.search(r'[　-〿一-鿿＀-￯゠-ヿ぀-ゟ]',l)))")
-[ "$n" = 0 ] && ok "0 dòng CJK trong game.js" || xau "$n dòng CJK trong game.js"
+# ⚠ ĐẾM RIÊNG MÃ VÀ CHÚ THÍCH. Quy tắc số 1 cấm chữ Hán trong TEXT NGƯỜI CHƠI THẤY; một dòng
+# `//` thì người chơi không thấy bao giờ. Bản cũ đếm gộp, nên hai dòng chú thích ghi tên xương
+# Spine (`背后头发` · `左手持剑` — tên do gói art đặt, không dịch được) làm cửa này ĐỎ VĨNH VIỄN.
+# Một cửa đỏ vĩnh viễn là một cửa không ai đọc nữa, và nó che luôn lần lọt thật tiếp theo.
+# Chỉ bỏ qua dòng BẮT ĐẦU bằng `//` — `glyph:'劍', // ...` thì phần mã vẫn bị bắt.
+eval "$(python3 - <<'PYEOF'
+import re
+CJK = re.compile(r'[　-〿一-鿿＀-￯゠-ヿ぀-ゟ]')
+ma = ct = 0
+for l in open('public/game/game.js', encoding='utf-8'):
+    if not CJK.search(l): continue
+    if l.lstrip().startswith('//'): ct += 1
+    else: ma += 1
+print(f'CJK_MA={ma}; CJK_CT={ct}')
+PYEOF
+)"
+[ "$CJK_MA" = 0 ] && ok "0 dòng CJK trong MÃ game.js" || xau "$CJK_MA dòng CJK trong MÃ game.js"
+[ "$CJK_CT" = 0 ] || printf '  \033[33m!\033[0m %s dòng chú thích có CJK (tên xương Spine — đúng luật, nhưng soi lại nếu con số này nhảy)\n' "$CJK_CT"
 
 muc "④ VỆ SINH COMMIT"
 LAC=$(git diff --name-only "$MOC" 2>/dev/null | grep -vE '^(public|tests|tools|docs|CLAUDE\.md|package)' || true)

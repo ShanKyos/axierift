@@ -23,10 +23,25 @@ const { chromium } = require('playwright');
     // 1150ms) giữa cú bấm và lúc bốc kết quả — cả tiếng động lẫn dòng chữ của công thức đều
     // nổ ra ở NỬA SAU. Bài này đo KẾT QUẢ công thức, không đo hoạt cảnh, nên chỉ cần đợi cho
     // hết nhịp rồi mới đọc. (Phần hoạt cảnh do test_chaosanim.js gác riêng.)
-    // ⚠ 2400ms, KHÔNG PHẢI 1200. Khoá `_loBan` giữ tới khi bảng VẼ LẠI, tức LO_KHUI (1150ms)
-    // cộng thêm 1000ms nữa — tổng ~2150ms. Chờ ngắn hơn thì cú bấm KẾ TIẾP bị khoá nuốt mất,
-    // và bài đọc ra thành "công thức không chạy" trong khi thật ra nó chưa được bấm.
-    const xong = () => new Promise(r2 => setTimeout(r2, 2400));
+    // ⚠ CHỜ ĐÚNG ĐIỀU KIỆN, ĐỪNG CHỜ MỘT CON SỐ. Khoá `_loBan` giữ tới khi bảng vẽ lại, tức
+    // LO_KHUI (1150ms) + 1000ms = ~2150ms. Bản cũ chờ chẵn 2400ms — lề đúng 250ms, và dưới
+    // headless không GPU thì hai hẹn giờ lệch nhau ngần ấy là chuyện thường: cú bấm KẾ TIẾP
+    // bị khoá nuốt mất TRONG IM LẶNG (`doChaos` return ngay dòng đầu), và bài đọc ra thành
+    // "Đổi Hệ không đổi được hệ" — một lỗi CÂN BẰNG hoàn toàn không có thật.
+    // Đo được: nâng lên 4200ms là bài xanh, tức chưa bao giờ có lỗi nào trong game cả.
+    // ⚠ VÀ ĐỪNG CHỮA BẰNG MỘT CON SỐ TO HƠN: nó chỉ dời cái ngưỡng đỏ-theo-tải đi chỗ khác,
+    // và sẽ nói dối lần nữa nếu ai đổi LO_KHUI. Hỏi thẳng khoá qua `window.loDangBan()`.
+    const xong = async () => {
+      // Thiếu cửa đọc thì DỪNG HẲN với một câu nói đúng lý do. Lui về "coi như đã nhả" là
+      // quay lại đúng bài toán chờ mò, chỉ khác là nay chờ có 50ms.
+      if (typeof window.loDangBan !== 'function')
+        throw new Error('thiếu window.loDangBan() — không có cách nào biết Lò đã nhả khoá chưa');
+      for (let i = 0; i < 120; i++){                 // trần 6 giây — quá ngần ấy là hỏng thật
+        await new Promise(r2 => setTimeout(r2, 50));
+        if (!window.loDangBan()) return;
+      }
+      throw new Error('Lò Hỗn Độn không nhả khoá sau 6 giây');
+    };
     const reset = () => {
       applyTestBoost(); calcDerived(); chaosClear(); chaosGroup = 'ren'; chaosPick = null;
       player.forgeBonus = 0; forgeUseCharm = false;

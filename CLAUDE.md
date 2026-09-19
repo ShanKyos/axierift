@@ -9,8 +9,13 @@ Mọi thứ làm mới từ nay trở đi phải theo MU Online. Cụ thể:
 
 **KHÔNG dùng:**
 - Chữ Hán/kanji làm hình ảnh (icon, biểu tượng, glyph trang trí trên UI).
-  Toàn bộ file **hiện không còn ký tự CJK nào** — kiểm tra lại bất cứ lúc nào bằng:
+  Kiểm tra lại bất cứ lúc nào bằng:
   `python3 -c "import re;print(sum(1 for l in open('public/game/game.js',encoding='utf-8') if re.search(r'[　-〿一-鿿＀-￯゠-ヿ぀-ゟ]',l)))"`
+  ⚠ **Câu lệnh trên nay trả `2`, không phải `0` — và cả hai đều ĐÚNG LUẬT.** Chúng là hai dòng
+  **chú thích** ghi tên xương Spine (`背后头发` · `左手持剑`), tức tên do gói art đặt, không phải
+  text người chơi thấy. Câu cũ ở đây ghi "không còn ký tự CJK nào" và nó đã thành lời nói dối
+  lúc nào không ai hay. Việc cần làm khi con số này nhảy là **mở hai dòng ấy ra xem**, không
+  phải xoá mù: con số 2 là mốc, vượt 2 thì có thứ mới lọt vào.
   Dải kiểm nay gồm cả **dấu câu CJK** (`【】《》`) và **ký tự toàn rộng** (`＋`), không chỉ chữ Hán:
   bản cũ chỉ quét U+4E00–U+9FFF nên 9 cặp `【…】` ở nhãn danh hiệu và tên bộ đồ lọt qua suốt
   nhiều đợt, dù chúng hiện thẳng trên HUD.
@@ -1955,7 +1960,7 @@ không ai nói cho họ biết là đổi được thân.
 
 ## Kiến trúc
 
-- Toàn bộ game nằm trong **1 file**: `public/game/game.js` (~12k dòng), kèm `index.html`, `style.css`.
+- Toàn bộ game nằm trong **1 file**: `public/game/game.js` (**~32,5k dòng**), kèm `index.html`, `style.css`.
 - Không build step — mở thẳng file tĩnh. Kiểm tra cú pháp: `node --check public/game/game.js`.
 - Các hằng số lớn: `SECTS` (5 lớp), `VOHOC_DEFS` (chiêu), `SKILL_DEFS`, `MAPS`, `MOBS`, `QUESTS`,
   `SIDE_QUESTS`. Hàm trung tâm: `calcDerived()` (mọi chỉ số), `update(dt)`, `render()`,
@@ -2845,6 +2850,45 @@ hơn một cái nút bật/tắt. `test_nhacnen` **không xoá mệnh đề cho 
 và mạnh lên: mệnh đề cũ chỉ hỏi nút có `.hidden` không (nút chết vẫn xanh), mệnh đề mới **kéo
 thanh trượt thật** rồi đòi `SETTINGS.bgm` phải đổi.
 
+### 🔊 CÔNG TẮC TỔNG ÂM THANH — `SETTINGS.amThanh`, và nó KHÁC hai thanh trượt
+
+> ⚠ Câu ngay trên ("thanh trượt là cửa đầy đủ hơn một cái nút bật/tắt") **chỉ đúng một nửa**, và
+> chủ dự án gọi tên đúng chỗ thiếu: *"game hiện tại chưa có tính năng bật tắt âm thanh"*. Giữ
+> nguyên câu cũ ở trên để thấy suy luận đã hụt ở đâu, thay vì xoá trắng.
+
+Kéo cả hai thanh về 0 thì tắt được tiếng — nhưng **mất luôn hai mức đã chỉnh**, nên bật lại phải
+dò lại từ đầu. Thực tế không ai dùng đường đó; họ tắt loa máy. Công tắc riêng giữ nguyên hai con
+số, và đó là **toàn bộ lý do nó tồn tại** (`test_amthanh §③` gác đúng chỗ đó — bản "ngây thơ"
+zero hai thanh khi tắt sẽ đỏ).
+
+| | |
+|---|---|
+| cờ | `SETTINGS.amThanh` (mặc định **true**) |
+| cửa DUY NHẤT | `window.tatMoAmThanh(bat?)` — nút loa HUD · phím **L** · nút trong Cài Đặt đều gọi nó |
+| cửa đọc DUY NHẤT | `AudioSys.tat()` — `bgmVol` · `sfxVol` · `sfx` · `_startTrack` đều hỏi nó |
+| vẽ nút | `amVeNut()` |
+
+- **⚠ MỘT CỬA, BA CHỖ BẤM.** Ba chỗ tự lật `SETTINGS.amThanh` là ba chỗ phải nhớ *lưu + hãm
+  nhạc + vẽ lại nút + vẽ lại bảng Cài Đặt*; quên một việc ở một chỗ là *"bấm chỗ này thì ăn,
+  bấm chỗ kia thì không"*. Cùng luật với `masteryKhoa` và `knOHopLe`.
+- **⚠ `refreshBgmVol` phải hỏi ÂM LƯỢNG HIỆU DỤNG, đừng hỏi `SETTINGS.bgm`.** Hỏi thanh trượt
+  thì tắt tiếng xong bản nhạc vẫn **quay** ở volume 0: không ai nghe thấy, mà máy vẫn giải mã
+  mp3 suốt phiên — đúng thứ người chơi tắt tiếng để tránh. `_startTrack` cũng không được `play()`
+  khi đang tắt.
+- **⚠ PHÍM L, KHÔNG PHẢI M.** M đã là Bản Đồ. L đọc ra "loa", hợp bản Việt hoá. Thêm phím thì
+  phải thêm vào `HD_BANG` + `strings/vi.js` + `strings/en.js` — một phím không ai biết là một
+  phím không tồn tại.
+- **⚠ SAVE ĐỜI CŨ CÓ HAI ĐƯỜNG HỎNG, KHÔNG MỘT.** Save thiếu khoá được đỡ bởi **giá trị mặc
+  định** trong `Object.assign`; save có khoá mà là rác (`null`/`0`/`""`) được đỡ bởi **dòng di
+  trú** `!== false`. Kiểm mỗi ca "thiếu khoá" thì phép thử ngược trên dòng di trú **im lặng** —
+  vì khi thiếu khoá thì `Object.assign` đã trả `true` và dòng ấy không quyết định gì. Đã dẫm
+  đúng thế một lần, và suýt kết luận là mệnh đề mù trong khi thứ hỏng là **que dò**.
+- Thanh trượt nay **in ra số %**, và `setOpt(..., quiet)` phải tự cập nhật con số đó: `quiet`
+  cố ý không dựng lại DOM (dựng lại thì núm tuột khỏi tay chuột), nên thiếu dòng ấy là kéo mà
+  số đứng im — đúng kiểu "bấm không ăn" mà con số sinh ra để chữa.
+
+Gác: `tests/test_amthanh.js` (8 mục, **10 phép thử ngược đều đỏ**).
+
 ### Ngân Hàng Ngọc: sáu ICON TRANH THẬT, không phải một hình vẽ đổi màu
 
 `NGOC_ANH` → `assets/ui/ngoc_*.webp`, nướng bằng `tools/ui/nuong_ngoc.py` từ kit Axie chính chủ
@@ -2864,6 +2908,103 @@ sửa một cờ, đúng kiểu thừa đã phải dọn ở bảng Nhân Vật.
 
 Chưa có chat người-với-người; ghi nhận chỗ trước để khi làm không phải dời một lần nữa.
 `test_hethong §8` gác: `#combat-log-wrap` phải nằm ở nửa phải màn.
+
+#### ⚠ HAI KHỐI NEO TỪ HAI ĐẦU NGƯỢC NHAU TRONG CÙNG MỘT CỘT — chúng SẼ chồng nhau
+
+`#cot-phai` (bản đồ nhỏ + bảng Nhiệm Vụ) chảy từ **trên** xuống; `#combat-log-wrap` là
+`position:fixed` neo từ **đáy** lên. Cả hai rộng đúng 190px ở cùng một cột — và **không ai kẹp
+chúng lại**. Đo được trước khi sửa, với 20 dòng nhật ký:
+
+| màn | chồng |
+|---|--:|
+| 1920×1080 | 0 (có khe 63px) |
+| 1600×900 | **77px** |
+| 1440×810 | **118px** |
+| 1280×720 | **157px** |
+
+Thứ bị che là **đáy bảng Nhiệm Vụ** — tức mục "Mục Tiêu Hôm Nay", đúng phần nội dung ngày mà cả
+một đợt việc (`DAILY_BANDS`) vừa dựng ra. Không lỗi nào báo.
+
+⇒ Ngân sách của Nhật Ký nay là **BIẾN CSS** (`--nk-day` · `--nk-cao` · `--nk-dau`), và
+`#hud-right` trừ đúng ngần ấy ra khỏi trần chiều cao của mình. Chép tay hai con số ở hai chỗ là
+bảo đảm chúng lệch nhau sau vài đợt sửa — và media query 720px phải ghi đè **BIẾN**, không ghi
+đè thẳng `bottom`/`max-height`, nếu không cột phải vẫn chừa chỗ theo số của bản desktop.
+
+- ⚠ **KHÔNG cần `min-height:0` — và đó là chỗ tôi đã đoán sai.** Phản xạ thường là *"cho một
+  con flex co được thì phải `min-height:0`"*, nên tôi thêm nó ở hai chỗ cộng `flex:0 1 auto`.
+  **Cả ba đều trơ**: `#quest-tracker` vốn có `overflow-y:auto`, mà kích thước tối thiểu tự
+  động của một khối cuộn đã là 0. Gỡ từng cái rồi gỡ cả ba đều ra **đúng cùng một con số**.
+  Thứ duy nhất gánh việc là `max-height`. Đã gỡ cả ba.
+  *Ba dòng CSS trơ mà trông như đang gánh việc thì tệ hơn không có: chúng làm phép thử ngược
+  IM LẶNG (gỡ một dòng, bài vẫn xanh) — tức bộ kiểm không gác được dòng nào, và người sau sẽ
+  sửa nhầm chỗ.* Và chính cái im lặng đó là thứ đã chỉ ra chúng trơ: **một phép thử ngược im
+  lặng phải được TRUY tới cùng, không được ghi nhận là "mệnh đề hơi yếu" rồi bỏ qua.**
+- ⚠ **Chữa chồng lấn bằng cách bóp chết bảng Nhiệm Vụ cũng làm "khe" dương.** Nên mệnh đề gác
+  phải đo **cả hai vế**: khe ≥ 0 **và** bảng Nhiệm Vụ còn ≥90px **và** bản đồ nhỏ còn ≥100px.
+- ⚠ **Đo ở NHIỀU chiều cao màn.** Ở đúng 1920×1080 hai khối *không* chồng nhau — kiểm mỗi cỡ
+  đó là xanh vĩnh viễn trong khi mọi laptop 720p/900p đều hỏng. Cùng bài học với `test_muigio`.
+
+#### ⚠ `text-overflow:ellipsis` TRÊN NHẬT KÝ ĂN ĐÚNG PHẦN THƯỞNG
+
+Cột chữ rộng **168px**, mà một dòng hạ quái thật cần **249px** ⇒ **14/14** dòng thưởng bị cắt,
+và chỗ bị cắt luôn là **ĐUÔI**:
+
+```
+☠ Hạ Axie Heo Rừng — Nhận: +28 EXP +162◈     ← thứ game sinh ra
+☠ Hạ Axie Heo Rừng — Nhận…                   ← thứ người chơi đọc được
+```
+
+Mười dòng liền hiện ra giống hệt nhau. Nới cột thì **không được** — 190px là bề ngang của
+`#cot-phai`, hai khối phải bằng nhau mới đọc ra một cột. Nên cho **xuống dòng**
+(`overflow-wrap:anywhere` + thụt dòng tràn bằng `text-indent` âm, để nhìn ra là nối dòng trên
+chứ không phải một sự kiện mới). *Cắt cụt trong im lặng bao giờ cũng tệ hơn một dòng cao gấp đôi.*
+
+#### ⚠ LỚP KHÔNG KHAI `range` ⇒ BẢNG KỸ NĂNG NÓI DỐI, KHÔNG PHẢI BỎ TRỐNG
+
+`thieulam` · `minhgiao` · `bug` không khai `range`, nên `skillInfo()` lui về `sect.range` = rỗng
+⇒ `skThongSoGon` in `tầm 0`. Mà theo **quy ước của chính game**, `tam: 0` nghĩa là *"ngay tại chỗ
+đứng"* — tức bảng đang bảo Twisting Slash, Rageful Blow, Impale… đều nổ dưới chân người niệm.
+Đo được **24-25 chiêu/lớp** in tầm 0, so với **10-11** ở hai lớp có khai (số 10-11 là thật: đó
+là chiêu diện rộng quanh mình).
+
+⚠ **Chiến đấu KHÔNG hỏng** — `atkRange()` vốn đã có `|| 90`. Nên chữa là **khai đúng 90**, con
+số đang chạy, chứ không phải nghĩ ra một số mới: khai `range` mà đổi luôn tầm đánh thật là một
+thay đổi **cân bằng** lẻn vào sau một bản sửa hiển thị. `test_uxdo §③` gác cả hai vế
+(`SECTS[x].range === atkRange()`).
+
+#### ⚠ TIÊU ĐỀ CHUNG KHÔNG THỂ ĐÚNG CHO CẢ DANH SÁCH
+
+Bảng NPC in `PHỤ TUYẾN — ${MAPS[n.map].name}` — tên vùng của **NGƯỜI GIAO**. Nhưng **11 mục** có
+người giao đứng ở map khác (`vandai` ở Werebear Woods giao việc của Lối Mòn Corran…), nên chúng
+hiện dưới dòng *"PHỤ TUYẾN — WEREBEAR WOODS"* trong khi `sideOnKill` chỉ đếm khi
+`curMap === 'loimon'`. Người chơi nhận việc ở đây, đánh ở đây, và tiến độ **không bao giờ nhúc
+nhích**. Nay tiêu đề bỏ tên vùng, và **từng mục** mang dòng `📍 Làm tại: …` — in ở **mọi** mục,
+kể cả cùng vùng: một cái nhãn chỉ hiện ra lúc "có chuyện" thì lúc nó vắng mặt người chơi không
+đọc ra "cùng vùng", họ chỉ không thấy gì.
+
+#### ⚠ TRẦN THỜI GIAN HƯỚNG DẪN ĐẨY NGƯỜI CHƠI VÀO NGÕ CỤT
+
+`TUT_TRAN = 90` giây cho mọi bước. Đứng yên trong thành thì hộp hướng dẫn tự trôi sang bước
+*"Nhấn SPACE hạ 1 con Axie Heo Rừng"* — mà Ardhaven có **0 bãi quái**. Đo lại: bấm SPACE 90 lần
+trong 67 giây rồi AUTO 3 phút ⇒ `kills 0 · xp 0 · bạc 0`, toạ độ không đổi một pixel.
+
+⇒ Mỗi bước khai thêm `duocO()` — *làm được ở chỗ đang đứng không*. Hết giờ thì **bỏ qua** mọi
+bước bất khả thi, hết bước làm được thì **đóng hẳn** hướng dẫn.
+
+- ⚠ **ĐO THẾ GIỚI, ĐỪNG MÔ HÌNH HOÁ NÓ**: hỏi `mobs.length` (thứ đang có thật trên màn), không
+  tra một bảng "map nào có quái" — bảng đó là bản sao thứ hai của dữ liệu map và sẽ nói dối
+  ngay lần đầu ai đó thêm một bãi mà quên sửa.
+- ⚠ **Chỉ bỏ qua ở đường HẾT GIỜ, không ở đường LÀM XONG.** Người chơi vừa dịch chuyển tới Rẻo
+  Rừng Corran thì `tutAdvance('map')` chạy ngay trong nhịp đó, mà `mobs` rải xong trong đúng
+  nhịp ấy hay chưa là chuyện của `buildWorld` — hỏi `duocO` ở đấy là có ngày bỏ qua **vĩnh
+  viễn** bước `kill` vì một cuộc đua khung hình.
+- Bước 2 còn **nói sai người giao**: nó bảo tìm *Trưởng Lão Rell* để "nhận nhiệm vụ đầu tiên",
+  trong khi `QUESTS[0].npc` là `ah_gac_tay` (**Lính Gác Cổng Tây**) và nhiệm vụ đã `active` từ
+  giây 0. Điều kiện qua bước cũng sai: `level >= 3` là một **cửa ra thứ hai** bên cạnh
+  `tutAdvance('npc')` có sẵn trong `tryTalk()`, và nó tự đánh dấu hoàn tất cho một người chưa
+  từng bấm E. Đã gỡ; bài kiểm nay suy tên NPC **từ `QUESTS[0]`**, không chép cứng.
+
+Gác: `tests/test_uxdo.js` (5 mục, 10 phép thử ngược).
 
 ⚠ **Gỡ một khối HTML thì soát mọi `getElementById` trỏ vào nó.** Gỡ `#mc-drop` để lại
 `document.getElementById('btn-music').addEventListener(...)` không chốt null — nó ném **ngay lúc

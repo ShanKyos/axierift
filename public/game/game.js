@@ -10423,13 +10423,19 @@ function drawBossTele(m){
 // shake: 0 TẮT · 1 NHẸ (mặc định) · 2 ĐẦY. Trước đây là boolean và mặc định `false` để chống
 // chóng mặt — nhưng bật/tắt là quá thô, và hậu quả là TOÀN BỘ 12 chỗ đặt shakeT/shakeMag trong
 // game không ai nhìn thấy. Diablo luôn rung, chỉ là rung rất khẽ và CÓ HƯỚNG.
-const SETTINGS = Object.assign({ bgm:35, sfx:60, lowFx:false, mobName:'gon', minimap:true, shake:1, questTracker:true, combatLog:true, perfHud:false, res:'auto', dmgNum:true, zoom:'xa' },
+// `amThanh` là CÔNG TẮC TỔNG, tách hẳn khỏi hai mức `bgm`/`sfx`. Tắt bằng cách kéo cả hai
+// thanh về 0 thì người chơi MẤT mức đã chỉnh — bật lại phải dò lại từ đầu, nên trong thực tế
+// không ai tắt, họ chỉ tắt loa máy. Công tắc riêng giữ nguyên hai con số.
+const SETTINGS = Object.assign({ bgm:35, sfx:60, amThanh:true, lowFx:false, mobName:'gon', minimap:true, shake:1, questTracker:true, combatLog:true, perfHud:false, res:'auto', dmgNum:true, zoom:'xa' },
   (()=>{ try { return JSON.parse(localStorage.getItem('vlcm_settings') || '{}'); } catch { return {}; } })());
 // Save cũ lưu `shake` là boolean. Không di trú thì Object.assign ghi đè `false` lên mặc định
 // mới và người chơi cũ mắc kẹt ở mức TẮT vĩnh viễn — mà họ chưa từng chọn tắt, đó chỉ là
 // mặc định cũ. `true` (đã tự bật) thì cho lên ĐẦY.
 if (typeof SETTINGS.shake === 'boolean') SETTINGS.shake = SETTINGS.shake ? 2 : 1;
 SETTINGS.shake = clamp(SETTINGS.shake | 0, 0, 2);
+// Save đời trước bản này KHÔNG có khoá `amThanh` ⇒ Object.assign giữ mặc định `true`, tức
+// người chơi cũ mở game lên vẫn có tiếng y như hôm qua. Ép về boolean phòng khoá bị ghi tay.
+SETTINGS.amThanh = SETTINGS.amThanh !== false;
 // Bơm mức zoom đã lưu vào biến riêng (xem ghi chú ở ZOOM_CHON) rồi tính lại VW/VH.
 if (ZOOM_MUC[SETTINGS.zoom]) ZOOM_CHON = SETTINGS.zoom;
 capNhatTamNhin();
@@ -10445,7 +10451,8 @@ function saveSettings(){ try { localStorage.setItem('vlcm_settings', JSON.string
 // Nhạc trong màn chơi vẫn TRỐNG, và để trống có chủ ý: playBgm() thấy tên rỗng là thoát ngay,
 // không phát sinh một yêu cầu mạng nào (trỏ tới tệp không có sẽ thành 404 mỗi lần đổi map).
 // Thêm nhạc mới: bỏ tệp vào assets/music/ rồi điền lại đúng ba hằng số dưới đây, không cần sửa
-// chỗ nào khác. Nút ♪ tự hiện khi có ít nhất một bản (xem uiSyncBgmBtn).
+// chỗ nào khác. (Nút ♪ và `uiSyncBgmBtn` đã GỠ — nay là nút loa 🔊 trên HUD + phím L, và nó
+// tắt CẢ nhạc lẫn hiệu ứng chứ không riêng nhạc: xem `tatMoAmThanh`.)
 // ⚠ ĐÍNH CHÍNH cho khối chú thích ngay bên trên. Commit c8ac08f xoá 13 tệp nhạc với lý do
 // "13 bản nhạc phim kiếm hiệp Hoa ngữ". Kiểm lại thì lý do đó SAI với gần hết số đó: giải mã
 // từng tệp ra mono 8 kHz, dựng đường bao RMS 400 đoạn rồi đối chiếu với 15 bản trong kho
@@ -10493,8 +10500,12 @@ const BGM_INTRO = 'bgm_intro';   // màn mở đầu & chọn nhân vật
 const BGM_BOSS = 'bgm_boss';
 const AudioSys = {
   bgm: null, bgmName: '', started: false, cache: {}, last: {},
-  bgmVol(){ return (SETTINGS.bgm/100) * 0.85; },
-  sfxVol(){ return SETTINGS.sfx/100; },
+  // ⚠ CỬA DUY NHẤT. Mọi thứ phát ra tiếng đều phải đi qua `tat()` — nếu công tắc tổng được
+  // hỏi ở nhiều chỗ thì sớm muộn có một đường quên hỏi, và triệu chứng là "đã tắt tiếng rồi
+  // mà thỉnh thoảng vẫn kêu một cái", thứ không ai mô tả nổi cho ra lỗi.
+  tat(){ return SETTINGS.amThanh === false; },
+  bgmVol(){ return this.tat() ? 0 : (SETTINGS.bgm/100) * 0.85; },
+  sfxVol(){ return this.tat() ? 0 : SETTINGS.sfx/100; },
   playBgm(name){
     if (!name || this.bgmName === name) return;   // name rỗng = chưa có nhạc, im lặng chứ không 404
     this.bgmName = name;
@@ -10513,7 +10524,9 @@ const AudioSys = {
     if (!this.bgmName){ this.bgm = null; return; }
     const a = new Audio('assets/music/' + this.bgmName + '.mp3');
     a.loop = true; a.volume = this.bgmVol();
-    a.play().catch(()=>{ /* autoplay bị chặn — chờ tương tác */ });
+    // Đang tắt tiếng thì GIỮ tên bài (đổi map vẫn ghi nhận) nhưng không phát: tải + giải mã
+    // một tệp mp3 để nghe ở âm lượng 0 là trả tiền cho thứ không ai nhận được.
+    if (!this.tat()) a.play().catch(()=>{ /* autoplay bị chặn — chờ tương tác */ });
     this.bgm = a;
   },
   tryStart(){
@@ -10522,9 +10535,12 @@ const AudioSys = {
     if (!this.bgmName) this.bgmName = BGM_TRACKS[curMap] || null;   // 'bgm_safe' cũng đã xoá
     this._startTrack();
   },
-  refreshBgmVol(){ if (this.bgm){ this.bgm.volume = this.bgmVol(); if (SETTINGS.bgm <= 0) this.bgm.pause(); else this.bgm.play().catch(()=>{}); } },
+  // ⚠ HỎI ÂM LƯỢNG HIỆU DỤNG, đừng hỏi `SETTINGS.bgm`. Hỏi thanh trượt thì tắt công tắc tổng
+  // xong bản nhạc vẫn QUAY ở volume 0: không ai nghe thấy, nhưng máy vẫn giải mã mp3 suốt
+  // phiên — tức đúng thứ người chơi tắt tiếng để tránh.
+  refreshBgmVol(){ if (this.bgm){ const v = this.bgmVol(); this.bgm.volume = v; if (v <= 0) this.bgm.pause(); else this.bgm.play().catch(()=>{}); } },
   sfx(name, vol){
-    if (SETTINGS.sfx <= 0) return;
+    if (this.tat() || SETTINGS.sfx <= 0) return;
     const now = performance.now();
     if (this.last[name] && now - this.last[name] < 70) return; // chống spam âm
     this.last[name] = now;
@@ -10542,25 +10558,53 @@ const AudioSys = {
 // Không thay bằng bộ giọng khác vì chưa có bản thu nào để thay.
 window.addEventListener('pointerdown', ()=>AudioSys.tryStart());
 window.addEventListener('keydown', ()=>AudioSys.tryStart());
-// Nút ♪ chỉ có nghĩa khi có nhạc để tắt/bật. Chưa có bản nào thì ẩn đi — nút bấm không làm gì
-// là thứ người chơi thử đúng một lần rồi mất lòng tin vào cả thanh nút.
-function uiSyncBgmBtn(){
-  const b0 = document.getElementById('btn-music');
-  if (b0) b0.classList.toggle('hidden', Object.keys(BGM_TRACKS).length === 0 && !BGM_INTRO && !BGM_BOSS);
+// ═══════ CÔNG TẮC TỔNG ÂM THANH ═══════
+// Trước bản này game KHÔNG có cách nào tắt tiếng ngoài việc mở Cài Đặt rồi kéo HAI thanh
+// trượt về 0 — và làm thế là MẤT luôn hai mức đã chỉnh. Nút ♪ cũ thì đã gỡ cùng khối
+// `#mc-drop`, và nó cũng chỉ tắt được nhạc nền chứ không tắt được tiếng đánh nhau.
+//
+// ⚠ MỘT CỬA, BA CHỖ BẤM. Nút loa trên HUD · phím L · hàng trong Cài Đặt đều gọi đúng
+// hàm này. Ba chỗ tự lật `SETTINGS.amThanh` là ba chỗ phải nhớ vẽ lại nút + lưu + hãm nhạc,
+// quên một việc ở một chỗ là "bấm chỗ này thì ăn, bấm chỗ kia thì không".
+window.tatMoAmThanh = function(bat){
+  SETTINGS.amThanh = (bat === undefined) ? !SETTINGS.amThanh : !!bat;
+  saveSettings();
+  AudioSys.refreshBgmVol();
+  // Đang tắt mà bật lại giữa chừng: track có thể chưa bao giờ được dựng (xem `_startTrack`),
+  // nên `refreshBgmVol` không có gì để mà mở. Dựng lại từ đầu.
+  if (SETTINGS.amThanh && AudioSys.started && !AudioSys.bgm) AudioSys._startTrack();
+  amVeNut();
+  // Bảng Cài Đặt có thể đang mở ở sau lưng — một công tắc hai cửa mà chỉ một cửa đổi thì
+  // đọc ra là "bấm không ăn" — cùng bài học đã ghi cho bốn công tắc nhặt đồ.
+  const ps = document.getElementById('panel-settings');
+  if (ps && !ps.classList.contains('hidden') && window.setTab !== 'phim') renderSettings();
+  return SETTINGS.amThanh;
+};
+// Vẽ lại nút loa trên HUD. Tách ra riêng vì nó còn được gọi lúc nạp trang để nút khởi
+// hiện sai trạng thái trong một nhịp đầu.
+// ⚠ TRANH THẬT, KHÔNG PHẢI EMOJI. Bản đầu dùng 🔊/🔇 — chúng vẽ theo bộ phông của TỪNG máy
+// (màu rực trên macOS, viền phẳng trên Windows, có máy ra hình vuông rỗng), nên cái nút đứng
+// cạnh khung HUD kim loại đọc ra là một ký tự lạc chứ không ra một nút của bộ giao diện này.
+// Nay là hai tấm cắt từ bộ UI gothic (`tools/ui/nuong_uigothic.py`), 3 KB một cái.
+const AM_ANH = { bat:'assets/ui/gt_loa_bat.webp', tat:'assets/ui/gt_loa_tat.webp' };
+function amVeNut(){
+  const b = document.getElementById('btn-am');
+  if (!b) return;
+  const on = SETTINGS.amThanh !== false;
+  // Đổi `src` chứ không dựng thẻ mới: dựng mới là trình duyệt nháy một khung trắng mỗi lần
+  // bấm, mà cái nút này thì bấm đi bấm lại.
+  let i = b.querySelector('img');
+  if (!i){ b.textContent = ''; i = document.createElement('img'); i.alt = ''; b.appendChild(i); }
+  i.src = on ? AM_ANH.bat : AM_ANH.tat;
+  b.classList.toggle('am-tat', !on);
+  b.title = (on ? 'Tắt âm thanh' : 'Bật âm thanh') + ' (phím L)';
+  b.setAttribute('aria-pressed', on ? 'false' : 'true');
 }
-uiSyncBgmBtn();
-// ⚠ KIỂM NULL. Nút ♪ nằm trong `#mc-drop` — cái thả xuống ĐÃ GỠ khi nút ≡ chuyển sang mở
-// thẳng Menu Hệ Thống. `getElementById(...).addEventListener` trên một phần tử không còn tồn
-// tại ném "Cannot read properties of null" NGAY LÚC NẠP TRANG và giết chết mọi thứ đăng ký
-// phía sau nó — đúng cái bẫy đã ghi ở vòng nối bảng (`btn-inv`). Nhạc nền vẫn chỉnh được:
-// thanh trượt 🎵 trong Cài Đặt là cửa đầy đủ hơn cái nút bật/tắt này.
+window.amVeNut = amVeNut;
 {
-  const bm = document.getElementById('btn-music');
-  if (bm) bm.addEventListener('click', ()=>{
-    SETTINGS.bgm = SETTINGS.bgm > 0 ? 0 : 35;
-    saveSettings(); AudioSys.refreshBgmVol();
-    bm.style.opacity = SETTINGS.bgm > 0 ? '1' : '0.4';
-  });
+  const b = document.getElementById('btn-am');
+  if (b) b.addEventListener('click', ()=>window.tatMoAmThanh());
+  amVeNut();
 }
 
 // ---------- Input ----------
@@ -10605,6 +10649,12 @@ function phimXuong(e){
   if (e.key.toLowerCase()==='p') togglePanel('party');    // Tổ Đội
   if (e.key.toLowerCase()==='h') togglePanel('friend');   // Bạn Bè
   if (e.key.toLowerCase()==='u'){ SETTINGS.minimap = !SETTINGS.minimap; saveSettings(); }
+  // L — LOA. Công tắc tổng âm thanh, cùng họ với U (cả hai lật một cờ, không mở cửa sổ nào).
+  // ⚠ KHÔNG dùng M: M đã là Bản Đồ. Chữ L đọc ra "loa", hợp với bản Việt hoá và chưa ai giữ.
+  if (e.key.toLowerCase()==='l' && !e.ctrlKey && !e.altKey && !e.metaKey){
+    const on = window.tatMoAmThanh();
+    if (player) addFloat(player.x, player.y-40, on ? '🔊 Âm thanh: BẬT' : '🔇 Âm thanh: TẮT', on ? '#a0ffe9' : '#ff9a6a', 13);
+  }
   if (e.key.toLowerCase()==='o') togglePanel('settings');
   // F6 — bảng Hướng Dẫn & Phím Tắt. preventDefault vì F6 mặc định của trình duyệt là nhảy
   // focus sang thanh địa chỉ: không chặn thì bấm một cái là mất luôn bàn phím khỏi game.
@@ -19813,6 +19863,14 @@ window.chaosClear = function(){ forgeTray = []; chaosPick = null; renderForge();
 // Bốc SAU nhịp nín thở chứ không phải trước, vì mọi tiếng động và dòng chữ của công thức đều
 // nổ ra ngay trong `run()`; bốc trước thì tai nghe kết quả xong mắt mới thấy yêu tinh diễn.
 // (Nhịp này KHÔNG đụng tới tỉ lệ — xem ghi chú "canh nhịp là mê tín" ở khối SÂN LÒ.)
+// ⚠ PHƠI KHOÁ RA CHO BÀI KIỂM ĐỌC. `_loBan` giữ từ lúc bấm tới `LO_KHUI + 1000`ms sau, và
+// `doChaos()` thì `return` LẶNG LẼ khi nó còn bật. Bài kiểm nào chờ bằng một con số đoán tay
+// sẽ đỏ theo tải máy chứ không theo lỗi: `test_chaos` chờ 2400ms cho một nhịp 2150ms, tức lề
+// 250ms — dưới headless không GPU thì hai hẹn giờ lệch nhau ngần ấy là chuyện thường, và cú
+// bấm KẾ TIẾP bị khoá nuốt mất trong im lặng. Triệu chứng đọc ra là "công thức không chạy".
+// Có cửa này thì bài kiểm chờ ĐÚNG ĐIỀU KIỆN thay vì chờ một con số — và nó tự đúng nếu sau
+// này ai đổi LO_KHUI.
+window.loDangBan = () => _loBan;
 window.doChaos = function(){
   if (_loBan) return;
   const cur = chaosCurrent();
@@ -26929,12 +26987,28 @@ el('is-skip').addEventListener('click', closeIntro);
 // đó ghi rõ vì sao: nó từng "treo mãi, chơi thử: còn nguyên ở cấp 120". Năm bước kia treo được
 // theo đúng kiểu đó, chỉ là chưa ai đo.
 const TUT_TRAN = 90;   // giây — trần mặc định mỗi bước
+// ⚠ `duocO()` — BƯỚC NÀY CÓ LÀM ĐƯỢC Ở CHỖ ĐANG ĐỨNG KHÔNG. Thiếu nó thì trần thời gian đẩy
+// người chơi vào ngõ cụt: đứng yên trong thành 90 giây là hộp hướng dẫn tự trôi sang bước
+// "Nhấn SPACE hạ 1 con Axie Heo Rừng" — mà Ardhaven có ĐÚNG 0 bãi quái. Đo được: bấm SPACE
+// 90 lần trong 67 giây rồi AUTO 3 phút ⇒ kills 0 · xp 0 · bạc 0, toạ độ không đổi một pixel,
+// và game không nói một câu nào. Một hướng dẫn bảo làm việc không làm được ở đây thì tệ hơn
+// hẳn không có hướng dẫn nào.
+// ⚠ ĐO THẾ GIỚI, ĐỪNG MÔ HÌNH HOÁ NÓ: hỏi `mobs.length` (thứ đang có thật trên màn) chứ không
+// tra một danh sách "map nào có quái" — danh sách đó là bản sao thứ hai của dữ liệu map, và
+// nó sẽ nói dối ngay lần đầu ai đó thêm một bãi quái mà quên sửa.
 const TUT_STEPS = [
   { key:'move',  xong:() => (player.tutDist || 0) > 150 || (player.level || 1) >= 2, txt:'Bấm <b>chuột phải</b> trên nền đất hoặc bấm vào <b>bản đồ thu nhỏ</b> — nhân vật sẽ tự chạy tới đó, hãy thử một lần', },
-  { key:'npc',   xong:() => (player.level || 1) >= 3, txt:'Đến gần <b>Trưởng Lão Rell</b> giữa thành và nhấn <b>E</b> để trò chuyện, nhận nhiệm vụ đầu tiên' },
+  // ⚠ KHÔNG có `xong`, và đó là CHỦ Ý. `tryTalk()` đã gọi `tutAdvance('npc')` khi bắt chuyện
+  // thành công — tức bước này vốn đã có điều kiện đúng. Điều kiện cũ `level >= 3` là một cửa
+  // ra THỨ HAI và nó sai: cấp 3 tới sau vài con quái đầu, nên bước "hãy nói chuyện với ai đó"
+  // tự đánh dấu hoàn tất cho một người chưa từng bấm E.
+  { key:'npc',   duocO:() => NPCS.some(n => n.map === curMap),
+    txt:'Nhiệm vụ đầu đã chạy sẵn rồi — tới gần <b>Lính Gác Cổng Tây</b> (phía tây thành) rồi nhấn <b>E</b> để nghe ông ấy giao việc' },
   { key:'map',   xong:() => curMap !== 'ardhaven', txt:'Bấm <b>Đi ngay</b> trên dải nhiệm vụ giữa màn hình (hoặc <b>🧭 Tới Ngay</b> ở khung nhiệm vụ) để dịch chuyển tới <b>Rẻo Rừng Corran</b>' },
-  { key:'kill',  xong:() => (player.kills || 0) > 0, txt:'Nhấn <b>SPACE</b> — nhân vật tự chạy tới con quái gần nhất và đánh. Hãy hạ 1 con <b>Axie Heo Rừng</b>' },
-  { key:'loot',  xong:() => (player.inv && player.inv.length > 0), txt:'Quái chết có thể rơi đồ hoặc <b>Châu</b> xuống đất — <b>đi ngang qua</b>, bấm <b>J</b> hoặc <b>bấm chuột trúng món</b> để nhặt. Giữ <b>ALT</b> xem tên mọi món trên màn' },
+  { key:'kill',  xong:() => (player.kills || 0) > 0, duocO:() => (typeof mobs !== 'undefined') && mobs.length > 0,
+    txt:'Nhấn <b>SPACE</b> — nhân vật tự chạy tới con quái gần nhất và đánh. Hãy hạ 1 con <b>Axie Heo Rừng</b>' },
+  { key:'loot',  xong:() => (player.inv && player.inv.length > 0), duocO:() => (typeof mobs !== 'undefined') && mobs.length > 0,
+    txt:'Quái chết có thể rơi đồ hoặc <b>Châu</b> xuống đất — <b>đi ngang qua</b>, bấm <b>J</b> hoặc <b>bấm chuột trúng món</b> để nhặt. Giữ <b>ALT</b> xem tên mọi món trên màn' },
   { key:'quest', tran:25, txt:'Làm theo nhiệm vụ ở <b>góc phải màn hình</b> · <b>C</b> nhân vật · <b>K</b> kỹ năng · <b>B</b> túi đồ' },
 ];
 function updateTut(){
@@ -26969,13 +27043,26 @@ function tutTick(dt){
   player._tutLX = player.x; player._tutLY = player.y;
   player._tutT = (player._tutT || 0) + dt;
   if (s.xong){ let ok = false; try { ok = !!s.xong(); } catch { ok = false; } if (ok){ tutAdvance(s.key); return; } }
-  if (player._tutT > (s.tran || TUT_TRAN)) tutAdvance(s.key);
+  if (player._tutT > (s.tran || TUT_TRAN)) tutAdvance(s.key, true);   // true = HẾT GIỜ, không phải làm xong
 }
-function tutAdvance(stepKey){
+// Bước này có làm được ở chỗ đang đứng không. Không khai `duocO` = làm được ở đâu cũng được.
+function tutLamDuoc(s){
+  if (!s || !s.duocO) return true;
+  try { return !!s.duocO(); } catch { return true; }   // đo hỏng thì CHO QUA, đừng khoá người chơi lại
+}
+// ⚠ `hetGio` CHỈ do trần thời gian đặt. Bỏ qua bước bất khả thi chỉ được làm ở đường HẾT GIỜ,
+// không làm ở đường LÀM XONG: người chơi vừa dịch chuyển tới Rẻo Rừng Corran thì `tutAdvance
+// ('map')` chạy ngay trong nhịp đó, mà `mobs` có được rải xong trong đúng nhịp ấy hay chưa là
+// chuyện của `buildWorld` — hỏi `duocO` ở đấy là có ngày bỏ qua VĨNH VIỄN bước 'kill' vì một
+// cuộc đua khung hình. Đường hết giờ thì không có cuộc đua nào: 90 giây sau khi vào map.
+function tutAdvance(stepKey, hetGio){
   if (!player || player.tutStep < 0) return;
   if (TUT_STEPS[player.tutStep].key === stepKey){
     player.tutStep++;
     player._tutT = 0;   // bước mới, đồng hồ trần đếm lại từ đầu
+    // Bỏ qua mọi bước KHÔNG làm được ở chỗ này. Hết bước làm được thì đóng hướng dẫn hẳn —
+    // thà im lặng còn hơn đứng giữa màn hình bảo người ta hạ một con quái không tồn tại.
+    if (hetGio) while (player.tutStep < TUT_STEPS.length && !tutLamDuoc(TUT_STEPS[player.tutStep])) player.tutStep++;
     if (player.tutStep >= TUT_STEPS.length){
       player.tutStep = -1;
       addFloat(player.x, player.y-70, 'Hướng dẫn hoàn tất — chúc hành trình phi nước đại!', '#7ecbff', 14);
@@ -27324,7 +27411,12 @@ window.setTab = 'chung';
 window.setSetTab = function(v){ window.setTab = v; renderSettings(); };
 function renderSettings(){
   const p = el('panel-settings'); if (!p) return;
-  const slider = (key, val) => `<input type="range" min="0" max="100" value="${val}" oninput="setOpt('${key}', this.value, true)" onchange="setOpt('${key}', this.value)">`;
+  // ⚠ THANH TRƯỢT PHẢI IN RA SỐ. Hai hàng âm thanh là hai hàng DUY NHẤT của bảng này không
+  // nói mức hiện tại — mọi hàng khác có nút sáng lên, còn thanh trượt thì chỉ có một cái núm.
+  // Người chơi hạ nhạc xuống rồi quay lại sau một tuần thì không có cách nào biết đang ở đâu.
+  // (Cụm TỰ ĐÁNH bên dưới vốn đã in `40%` / `430px` — hai hàng này chỉ là làm cho đồng nhất.)
+  const slider = (key, val, hau = '%') => `<input type="range" min="0" max="100" value="${val}" oninput="setOpt('${key}', this.value, true)" onchange="setOpt('${key}', this.value)"><span class="set-so">${val}${hau}</span>`;
+  const amOn = SETTINGS.amThanh !== false;
   const tog = (key) => `<button class="mini-btn ${SETTINGS[key] ? '' : 'tat'}" onclick="toggleOpt('${key}')">${SETTINGS[key] ? 'BẬT' : 'TẮT'}</button>`;
   const _acS = (typeof player !== 'undefined' && player && player.autoCfg) ? player.autoCfg : { skill:true, potion:true, potionPct:40, range:430, boss:false };
   const togA = (key) => `<button class="mini-btn ${_acS[key] ? '' : 'tat'}" onclick="toggleAutoCfg('${key}')">${_acS[key] ? 'BẬT' : 'TẮT'}</button>`;
@@ -27341,8 +27433,11 @@ function renderSettings(){
     return;
   }
   p.innerHTML = moBang({ tieu:'Cài Đặt', mat:'⚙', tabs:SET_TABS, chon:'chung', ham:'setSetTab' }) + `
-    <div class="set-row"><span>🎵 Nhạc nền</span>${slider('bgm', SETTINGS.bgm)}</div>
-    <div class="set-row"><span>🔔 Hiệu ứng âm thanh</span>${slider('sfx', SETTINGS.sfx)}</div>
+    <div class="set-row" style="border-bottom:none;justify-content:center"><b style="color:#ffd76a;font-size:12px">— <img class="set-ic" src="${AM_ANH.bat}" alt=""> ÂM THANH —</b></div>
+    <div class="set-row"><span><img class="set-ic" src="${amOn ? AM_ANH.bat : AM_ANH.tat}" alt=""> Toàn bộ âm thanh <i>(phím L · cũng có nút loa cạnh đồng hồ góc trái)</i></span><button class="mini-btn ${amOn ? '' : 'tat'}" onclick="window.tatMoAmThanh()">${amOn ? 'BẬT' : 'TẮT'}</button></div>
+    <div class="set-row${amOn ? '' : ' set-mo'}"><span><img class="set-ic" src="assets/ui/gt_nhac.webp" alt=""> Nhạc nền</span>${slider('bgm', SETTINGS.bgm)}</div>
+    <div class="set-row${amOn ? '' : ' set-mo'}"><span><img class="set-ic" src="${AM_ANH.bat}" alt=""> Hiệu ứng âm thanh</span>${slider('sfx', SETTINGS.sfx)}</div>
+    ${amOn ? '' : '<div style="font-size:10.5px;color:#ff9a6a;margin:-2px 0 8px">Đang tắt tiếng — hai mức trên vẫn được giữ nguyên, bật lại là nghe đúng như cũ.</div>'}
     <div class="set-row"><span>🔭 Tầm nhìn <i>(kéo gần thì mỗi khung hình chứa ít thế giới hơn — map thấy rộng hơn)</i></span><span>${
       [['gan','GẦN'],['vua','VỪA'],['xa','XA']].map(([v,t]) =>
       `<button class="mini-btn ${SETTINGS.zoom === v ? '' : 'tat'}" onclick="setZoom('${v}')">${t}</button>`).join(' ')}</span></div>
@@ -27383,7 +27478,14 @@ window.setOpt = function(key, v, quiet){
   SETTINGS[key] = clamp(parseInt(v, 10) || 0, 0, 100);
   saveSettings();
   if (key === 'bgm') AudioSys.refreshBgmVol();
-  if (!quiet) renderSettings();
+  // ⚠ `quiet` CỐ Ý không vẽ lại cả bảng (kéo núm mà dựng lại DOM thì núm tuột khỏi tay chuột),
+  // nên con số bên cạnh phải tự cập nhật. Thiếu dòng này là kéo thanh trượt mà số đứng im —
+  // đúng kiểu "bấm không ăn" mà cái số này sinh ra để chữa.
+  if (quiet){
+    const sl = document.querySelector(`#panel-settings input[type=range][oninput*="'${key}'"]`);
+    const so = sl && sl.nextElementSibling;
+    if (so && so.classList.contains('set-so')) so.textContent = SETTINGS[key] + '%';
+  } else renderSettings();
 };
 window.toggleOpt = function(key){
   SETTINGS[key] = !SETTINGS[key];
@@ -29163,12 +29265,22 @@ function renderQuestNpc(n){
   // — Phụ tuyến của NPC này —
   const mine = SIDE_QUESTS.filter(sq => sq.npc === n.id);
   if (mine.length){
-    html += `<div style="font-size:11.5px;color:#9aa8d4;margin:6px 0 4px;border-top:1px dashed rgba(76,141,255,.3);padding-top:6px">PHỤ TUYẾN — ${MAPS[n.map].name.toUpperCase()}</div>`;
+    // ⚠ TIÊU ĐỀ KHÔNG ĐƯỢC MANG TÊN MAP. Bản cũ in `MAPS[n.map].name` — tên vùng của NGƯỜI
+    // GIAO, không phải của NHIỆM VỤ. Mười một mục phụ tuyến có người giao đứng ở map khác
+    // (vandai ở Werebear Woods giao việc của Lối Mòn Corran…), nên chúng hiện ra dưới dòng
+    // "PHỤ TUYẾN — WEREBEAR WOODS" trong khi `sideOnKill` chỉ đếm khi `curMap === 'loimon'`:
+    // người chơi nhận việc ở đây, đánh ở đây, và tiến độ không bao giờ nhúc nhích.
+    // Một tiêu đề CHUNG thì không thể đúng cho cả danh sách — chỗ làm phải ghi TỪNG MỤC.
+    html += `<div style="font-size:11.5px;color:#9aa8d4;margin:6px 0 4px;border-top:1px dashed rgba(76,141,255,.3);padding-top:6px">PHỤ TUYẾN</div>`;
     for (const sq of mine){
       const st = sideAvail(sq);
       const sts = sideStates[sq.id];
       const prog = sts ? ` ${sts.prog}/${sq.need}` : '';
       const rew = rewMoTa(sq.rew);
+      // Chỗ làm in ở MỌI mục, không chỉ mục khác vùng: một cái nhãn chỉ hiện ra lúc "có
+      // chuyện" thì lúc nó vắng mặt người chơi không đọc ra "cùng vùng", họ chỉ không thấy gì.
+      const _cungVung = sq.map === n.map;
+      const _noi = `<div style="font-size:10.5px;margin-top:3px;color:${_cungVung ? '#9aa8d4' : '#ffb15c'}">📍 Làm tại: <b>${MAPS[sq.map] ? MAPS[sq.map].name : sq.map}</b>${_cungVung ? '' : ' — khác vùng, phải đi tới đó thì tiến độ mới tính'}</div>`;
       if (st === 'claimed')
         html += `<div class="qd-quest" style="opacity:.55"><div class="q-name" style="color:#8fd18f">✔ ${sq.name}</div>${sq.desc}</div>`;
       else if (st === 'done')
@@ -29176,14 +29288,14 @@ function renderQuestNpc(n){
           <div class="q-rew">Thưởng: ${rew}</div>
           <div style="text-align:center;margin-top:6px"><button class="mini-btn" onclick="turnInSide('${sq.id}')">Nhận Thưởng</button></div></div>`;
       else if (st === 'active')
-        html += `<div class="qd-quest"><div class="q-name">${sq.name}${prog}</div>${sq.desc}
+        html += `<div class="qd-quest"><div class="q-name">${sq.name}${prog}</div>${sq.desc}${_noi}
           <div class="q-rew">Thưởng: ${rew}</div></div>`;
       else if (st === 'avail')
-        html += `<div class="qd-quest"><div class="q-name" style="color:#9fd0ff">◈ ${sq.name}</div>${sq.desc}
+        html += `<div class="qd-quest"><div class="q-name" style="color:#9fd0ff">◈ ${sq.name}</div>${sq.desc}${_noi}
           <div class="q-rew">Thưởng: ${rew}</div>
           <div style="text-align:center;margin-top:6px"><button class="mini-btn" onclick="acceptSide('${sq.id}')">Nhận Nhiệm Vụ</button></div></div>`;
       else if (st === 'full')
-        html += `<div class="qd-quest" style="opacity:.55"><div class="q-name">◈ ${sq.name}</div>${sq.desc}
+        html += `<div class="qd-quest" style="opacity:.55"><div class="q-name">◈ ${sq.name}</div>${sq.desc}${_noi}
           <div class="q-rew">Đang cầm tối đa ${SIDE_TRAN} phụ tuyến — hoàn thành bớt rồi quay lại.</div></div>`;
       else
         // ⚠ NÓI ĐÚNG CÁI ĐANG KHOÁ. Câu cũ in cả hai điều kiện một lúc ("Cần cấp X · Tiến độ
@@ -31140,6 +31252,7 @@ const HD_BANG = [
     ['M',   'help.k.map'],
     ['Q',   'help.k.quest'],
     ['U',   'help.k.minimap'],
+    ['L',   'help.k.amthanh'],
     ['P',   'help.k.party'],
     ['H',   'help.k.friend'],
     ['O',   'help.k.settings'],

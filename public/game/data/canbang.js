@@ -855,6 +855,11 @@ window.NEP_KHAC = [
 window.SECTS = {
   thieulam: { name:'Dark Knight', role:'Chịu Đòn / Liên Đòn cận chiến', element:'Beast', color:'#4c8dff', glow:'#ffe9a0', bonus:{vit:3,def:2,str:1,agi:0,ene:0},
     hpMult:1.18, defMult:1.20, dmgMult:0.95, atkSrc:{str:2.0},
+    // range: KHAI RA CHO ĐÚNG THỨ ĐANG CHẠY. `atkRange()` vốn đọc `.range || 90`, nên ba lớp
+    // cận chiến vẫn luôn đánh ở tầm 90 — chỉ là bảng kỹ năng thì không biết: `skillInfo()`
+    // lui về `sect.range` (rỗng) ⇒ `skThongSoGon` in ra "tầm 0", mà theo quy ước của chính
+    // game thì 0 nghĩa là "nổ ngay dưới chân người niệm". Tức bảng NÓI SAI, không bỏ trống.
+    range:90,
     desc:'Giáp tấm nặng, mũ trụ có sừng, đại kiếm hai tay. Dark Knight đứng mũi chịu sào, nuốt trọn đòn của cả bầy rồi trả lại bằng một nhát bổ chậm mà không gì cản nổi. Tiềm năng: dồn hết vào Lực Lượng.',
     skillA:{ name:'Twisting Slash', type:'cone',  cd:4, qi:20, mult:1.6 },
     tp:{ name:'Death Stab', mult:3.0 } },
@@ -881,6 +886,7 @@ window.SECTS = {
     tp:{ name:'Meteorite', mult:3.2, tam:420 } },   // tam: gọi thiên thạch xuống chỗ bầy quái, không phải dưới chân mình
   minhgiao: { name:'Spellblade', role:'Lai / Bộc phát Hoả', element:'Dusk', color:'#e8552a', glow:'#ffb060', bonus:{vit:1,def:0,str:2,agi:0,ene:2},
     hpMult:1.05, defMult:1.0, dmgMult:1.08, atkSrc:{str:1.1, ene:1.1},
+    range:90,   // xem chú thích ở thieulam.range
     desc:'Nửa giáp nửa vải, một vai để trần, đại đao bản rộng cháy lửa. Spellblade vừa chém như hiệp sĩ vừa niệm như pháp sư — không cần chờ tới cấp 10 để mạnh. Tiềm năng: cân cả Lực Lượng lẫn Linh Lực.',
     skillA:{ name:'Fire Slash', type:'cone', cd:4, qi:22, mult:1.6 },
     tp:{ name:'Flame Strike', mult:3.2 } },
@@ -888,6 +894,7 @@ window.SECTS = {
   // (VOHOC_DEFS): xáp lá cà bằng số đông, không đơn độc.
   bug: { name:'Dark Lord', role:'Chỉ huy / Triệu hồi', element:'Plant', color:'#8a9a3a', glow:'#d0e07a', bonus:{vit:2,def:1,str:1,agi:2,ene:0},
     hpMult:1.12, defMult:1.10, dmgMult:0.92, atkSrc:{str:1.8, agi:0.3},
+    range:90,   // xem chú thích ở thieulam.range
     desc:'Vương miện năm chấu, giáp đen ánh lam, quyền trượng chỉ huy. Dark Lord không bao giờ ra trận một mình — hắn hiệu triệu, và chiến trường tự sạch. Tiềm năng: chủ lực Lực Lượng, dặm thêm Mẫn Tiệp.',
     skillA:{ name:'Force Wave', type:'cone', cd:4, qi:20, mult:1.5 },
     // Trấn Phái: BÃO QUẠ. `tam:320` — chủ dự án chốt "xa hơn skill trấn phái 1". Ô 1 của lớp này
