@@ -16,11 +16,11 @@
 | Khởi động & tạo nhân vật | **9,0** | 537 ms tới `__gameReady`, 8,1 giây từ mở trang tới đứng trong thế giới |
 | Cảm giác chiến đấu | **8,5** | kill đầu tiên ở giây **4,1**, nhiệm vụ đầu xong ở giây **6,9** |
 | Chỉ đường / user flow | **6,5** | băng-rôn "Đi ngay" tuyệt vời, nhưng nó **tự ẩn đúng lúc cần nhất** |
-| Hướng dẫn tân thủ | **4,5** | bước 2 sai sự thật, bước 3–4 tự trôi qua bằng đồng hồ chứ không bằng hành động |
-| Đọc được trên màn (readability) | **5,0** | quái đọc ra **y hệt đá và bụi**; nhật ký cắt cụt mọi dòng |
+| Hướng dẫn tân thủ | ~~**4,5**~~ | **ĐÃ SỬA** — xem §7 |
+| Đọc được trên màn (readability) | ~~**5,0**~~ | **ĐÃ SỬA** — xem §7 (và nguyên nhân báo cáo này nêu cho phần quái là SAI) |
 | Bảng & giao diện | **8,5** | bảng Bản Đồ rất tốt · ~~bảng Nhân Vật cụt đáy~~ **ĐO LẠI: SAI, xem §6** |
 | Nhịp cấp & nội dung | **5,5** | hố **16 cấp** giữa Werebear Woods (20) và Plant Tribe Glade (36) |
-| Rủi ro / sức căng | **3,0** | chết **không mất gì**; mục tiêu ngày xong trong **2 phút** |
+| Rủi ro / sức căng | ~~**3,0**~~ | **ĐÃ SỬA** — xem §7 |
 | Trục Axie (Axie Core) | **8,0** | hai trục hiện rõ trên bảng Nhân Vật — nhưng map đầu tiên cho phán quyết **0%** |
 | Ổn định kỹ thuật | **9,5** | **0 lỗi JS** qua 5 lượt / ~20 phút chơi; chỉ 2 lỗi 404 của API chưa dựng |
 
@@ -261,3 +261,33 @@ Ghi ra thay vì sửa lặng, để đừng ai đọc bản cũ rồi đi sửa 
 | `test_chaos` | *"đỏ do nhiễm trạng thái — Đổi Hệ chạy đúng khi cô lập"* | **nửa sau đúng, nửa đầu SAI.** Chạy riêng vẫn **đỏ 3/3**, tức đỏ tất định. Cơ chế thì đúng là chạy (lái thẳng: Beast → Mech); chỗ hỏng nằm ở `reset()` của bài kiểm, nó không nhả cờ `_loBan` |
 
 Kiểm toàn diện trên bản mới nhất: **`docs/KIEM_TOAN_HIEN_TRANG.md`**.
+
+
+---
+
+## ❼ BA MẢNG THẤP NHẤT ĐÃ SỬA — và số đo sau khi sửa
+
+> Chi tiết cơ chế + mọi cái bẫy đã dẫm: `CLAUDE.md`, mục **🐣 HƯỚNG DẪN TÂN THỦ** và
+> **👁 ĐỌC ĐƯỢC TRÊN MÀN + ☠ RỦI RO**. Gác: `tests/test_tanthu.js` · `tests/test_docduoc.js` ·
+> `tests/test_ruiro.js` — **cả 14 cơ chế đều đã thử ngược và đều đỏ.**
+
+| | trước | sau |
+|---|---|---|
+| dòng nhật ký bị cắt | **30/31** | **0/41** |
+| tám cú đánh liên tiếp cùng mục tiêu | 8 dòng | **1 dòng** (`×8 — tổng 192 ST`) |
+| năng lượng biên tại quái (A/B cùng khung) | — | **+42%** |
+| chết ở bãi săn, cấp 25 | mất **0** | mất **1.970 EXP**, không tụt cấp |
+| mục tiêu ngày, dải 1 | 1 ô · 10 mạng (~30 giây) | **2 ô** · 45 mạng (~2-3 phút) |
+| hướng dẫn: đứng yên trong thành | trôi đủ 6 bước rồi tự tuyên bố "hoàn tất" ở giây 385 | `npc → map → TAT` ở giây 270 |
+
+**Ba chỗ báo cáo này nói SAI, đã đo lại — ghi ra thay vì sửa lặng:**
+
+| chỗ | bản đầu nói | đo lại |
+|---|---|---|
+| bảng Nhân Vật | *"cụt đáy, không cuộn được"* | **SAI** (xem §6) |
+| quái vs decor | *"thanh máu chỉ hiện khi con quái đã bị đánh"* | **SAI** — thanh máu vẽ vô điều kiện, `return` của nhãn nằm SAU nó. Chỗ chìm thật là quái NÂU trên **lối mòn NÂU**, tức chìm vào MẶT ĐẤT chứ không vào hòn đá |
+| mục tiêu ngày | ngụ ý chỉ dải 1 hỏng | dải 2 cũng chỉ tốn **24 giây** ở cấp 20 — cả thang `kills` đều là 25-90 giây, không riêng dải 1 |
+
+**Chưa làm, cố ý** (nằm ngoài ba mảng được giao): mục 5 · 7 · 8 · 10 của bảng §5 — băng-rôn ở
+trạng thái `done`, điểm thả cạnh cổng PvP, tín hiệu "map này hết XP", và phán quyết Axie khác 0
+trong 10 phút đầu.

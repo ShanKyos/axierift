@@ -477,7 +477,12 @@ html,body { width:100%; height:100%; overflow:hidden; background:var(--bg-deep);
 #combat-log.cl-closed { display:none; }
 #combat-log { max-height:22vh; overflow-y:auto; background:rgba(18,20,44,.7); border:1px solid var(--border-faint);
   border-left:3px solid var(--accent); border-radius:var(--r-sm); padding:6px 9px; font-size:11.5px; line-height:1.55; }
-#combat-log .cl-row { white-space:nowrap; overflow:hidden; text-overflow:ellipsis; opacity:.92; }
+/* ⚠ CHO XUỐNG DÒNG — `nowrap` + `text-overflow:ellipsis` ở cột 186px đo được **30/31 dòng bị
+   cắt**, và phần bị cắt LUÔN là phần thưởng: `☠ Hạ Axie Heo Rừng — Nhận: +28 EXP +17◈` cụt
+   đúng ở chữ "Nhận". Nhật ký tồn tại để nói *ngươi vừa được gì*; cắt đúng chỗ đó thì nó chỉ
+   còn là tiếng ồn. `max-height:22vh` + `overflow-y:auto` ở khối cha vốn đã lo phần cao. */
+#combat-log .cl-row { overflow-wrap:anywhere; opacity:.92; }
+#combat-log .cl-row + .cl-row { margin-top:1px; }
 #combat-log .cl-row:first-child { opacity:1; }
 
 /* Panels */

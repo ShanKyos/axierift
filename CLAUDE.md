@@ -2277,6 +2277,118 @@ gác — và nó **không đặt ngưỡng phần trăm**, nó dựng lại chí
 
 Test: `node <scratchpad>/test_feel.js`.
 
+## 👁 ĐỌC ĐƯỢC TRÊN MÀN + ☠ RỦI RO — hai mảng thấp nhất bảng QA, và cả bốn lỗi đều ĐO ĐƯỢC
+
+Gác: **`tests/test_docduoc.js`** (6 mệnh đề) · **`tests/test_ruiro.js`** (13 mệnh đề).
+**Cả tám cơ chế đã thử ngược và đều đỏ.**
+
+### ① Nhật ký cắt cụt ĐÚNG phần thưởng — và ba dòng tần suất cao nuốt phần còn lại
+
+Cột `#combat-log` rộng 186px + `white-space:nowrap` + `text-overflow:ellipsis` ⇒ đo được
+**30/31 dòng bị cắt**, và phần bị cắt LUÔN là phần thưởng:
+`☠ Hạ Axie Heo Rừng — Nhận: +28 EXP +17◈` cụt đúng ở chữ *"Nhận"*. Nhật ký tồn tại để nói
+*ngươi vừa được gì*; cắt đúng chỗ đó thì nó chỉ còn là tiếng ồn. Nay **cho xuống dòng**
+(`overflow-wrap:anywhere`) — `max-height:22vh` + `overflow-y:auto` vốn đã lo phần cao. Đo lại:
+**0/41 dòng bị cắt.**
+
+**`logCombat(text, color, gop)` — GỘP, KHÔNG BỎ.** Cùng khoá với dòng ĐANG ĐỨNG ĐẦU thì cộng dồn
+vào chính nó (`×N · tổng M`). Đo được 8 cú liên tiếp cùng mục tiêu: **8 dòng → 1**.
+
+- ⚠ **CHỈ gộp vào dòng ĐẦU**, đừng đi tìm khắp hộp: gộp vào một dòng nằm giữa là thứ tự thời gian
+  của nhật ký nói dối.
+- ⚠⚠ **GỘP THEO (TIỀN TỐ × MỤC TIÊU), ĐỪNG LOẠI TRỪ ĐÒN ĐẶC BIỆT.** Bản đầu tôi chỉ gộp đòn
+  THƯỜNG và để `KHẮC HỆ`/`HOÀN HẢO`/bạo kích mỗi cú một dòng — nghe hợp lý, và phép đo bắt ngay:
+  ở Rẻo Rừng Corran vũ khí khắc hệ đàn heo nên **8/8 cú đều mang tiền tố** ⇒ phép gộp thành vô
+  dụng đúng ở chỗ nó cần nhất. Tiền tố nằm TRONG khoá (hai loại không trộn) và vẫn nằm trong chữ
+  hiện ra, nên người chơi vẫn đọc được "đòn này khắc hệ" — chỉ là một dòng thay vì tám.
+
+### ② Quái chìm vào ĐẤT — không phải chìm vào hòn đá
+
+`Axie Heo Rừng` là khối NÂU (110,76,58) đứng trên **lối mòn NÂU**; chênh sáng với decor quanh đó
+đo được **29/255**. ⚠ Báo cáo QA đổ cho *"thanh máu chỉ hiện khi đã bị đánh"* — **SAI**: thanh máu
+vẽ vô điều kiện, lệnh `return` của nhãn nằm SAU nó. Kết luận của họ đúng, nguyên nhân họ nêu thì
+không. *Một triệu chứng đọc đúng không bảo đảm cái nguyên nhân đi kèm nó cũng đúng.*
+
+Hai lớp, cả hai **nằm ngoài** đường bao con vật (cùng nguyên lý rìa sáng và viền +N):
+
+| | |
+|---|---|
+| **vòng chân** | một nét tối + một nét theo HỆ, vẽ cho **MỌI con còn sống**. Cây và đá không có vòng nào ⇒ chính cái vòng tách sinh vật khỏi địa hình |
+| **viền tối** | bóng đơn sắc của chính tấm đó vẽ lệch bốn hướng, NẰM DƯỚI thân |
+
+- ⚠ **Vòng chân KHÔNG được gắn vào `mobHe`.** Bản cũ là hào quang hệ `alpha 0.14` (dưới ngưỡng
+  đọc được) và **chỉ vẽ khi con đó có hệ** — con chưa khai hệ mất hẳn tín hiệu.
+- ⚠ **Viền đi qua `tintedImg`** nên trả giá lọc đúng một lần mỗi tấm. **KHÔNG `ctx.filter` trong
+  vòng vẽ, KHÔNG `shadowBlur`** (cả hai đã bị cấm tại chỗ), và **đừng phóng to sprite** — đó là
+  đúng cái đã phải gỡ ở mục Trụ Đá.
+- ⚠ **Viền gác sau `SETTINGS.lowFx`, vòng chân thì không.** Bốn `drawImage` thêm cho mỗi con đo
+  được **69 → 51 FPS** ở headless-CPU (14,4 → 19,7 ms/khung). Vòng chân là một nét ellipse và nó
+  mới là thứ trả lời *"đây là sinh vật"*. Đừng đẻ cờ thứ hai — `lowFx` là công tắc ĐÃ CÓ.
+
+### ③ Chết không mất gì ⇒ nay mất **5% ngân sách XP của chính cấp đang đứng**
+
+Đo một cái chết THẬT rồi `respawn()`: `cấp 5 · 796 XP · 1.588◈ · 15 mạng · túi 2` ⇒ **y hệt,
+không lệch một trường nào.** `chetMatXp()` là cửa DUY NHẤT, nên con số người chơi ĐỌC trên màn bại
+trận và con số máy TRỪ không thể lệch nhau.
+
+Chọn EXP vì ba lẽ: một con số đọc được ngay · **không bao giờ tụt cấp** (kẹp ở `player.xp`) · tự
+nhạt đi khi người chơi mạnh lên.
+
+**⚠⚠ ĐỪNG HỎI `md.type === 'safe'` — tôi viết đúng cái sai ấy trước, và phép đo bắt được:** cấp 25
+chết ở Beast Herd Camp (`ngoai`) mất **0 EXP**. `ngoai` khai `safe` (không PK) nhưng nó là **bãi
+săn 8 bãi**, tức đúng chỗ người chơi cày nhiều nhất lại thành chỗ không có rủi ro. Cùng cái bẫy đã
+ghi nguyên văn hai lần trong tài liệu này (Rương Canh · Axie nhập vào): **cửa duy nhất đúng là CÓ
+BÃI QUÁI**. Thành thật không có bãi nào nên nó tự được miễn, không cần hỏi cờ `safe` lần nào.
+
+Bốn chỗ miễn, mỗi chỗ một lý do — đừng gộp cho gọn: dưới cấp 10 (tân thủ phải tha) · map không có
+bãi quái · `md.pvp` (**luật đã chốt**: *"Thua một trận đấu không được phép đụng vào bản lưu"*) ·
+`md.dungeon` (Tầng Sâu đã có giá riêng, cộng thêm là phạt hai lần).
+
+⚠ **Và phải NÓI RA — kể cả khi KHÔNG mất gì, kèm lý do.** Im lặng ở chỗ được miễn thì người chơi
+không phân biệt được *"chỗ này tha"* với *"cơ chế hỏng"*.
+
+### ④ Mục Tiêu Hôm Nay xong trong 2 phút ⇒ đặt lại theo NHỊP HẠ QUÁI ĐO ĐƯỢC
+
+Nhịp thật (AUTO, 60 giây trong game, đo bằng chính vòng `update`):
+**cấp 5 → 14 mạng/phút · cấp 11 → 24 · cấp 20 → 37 · cấp 30 → 39.**
+⇒ `kills:10` ở dải 1 tốn **25-43 giây**, `kills:15` ở dải 2 tốn **24 giây** — cả tầng NGÀY là một
+dòng và nó đóng trước khi người chơi kịp ngồi xuống. Nay ô `kills` đặt theo mốc **~3 phút cày**:
+`45 → 90 → 110 → 120 → 130 → 140 → 150`, và dải 1 có **hai** ô thay vì một.
+
+⚠ **Trên cấp 30 là GIẢ ĐỊNH, không phải số đo** — nói thẳng chứ không giấu. Nhịp phẳng lại ở
+~39 mạng/phút từ cấp 20→30 nên bốn dải cuối lấy đúng mốc phẳng đó; `tools/do_nhipcap.cjs` hiện
+không chạy được từ cấp 60 trở lên.
+
+**⚠ DẢI 1 THÊM `forge`, TUYỆT ĐỐI KHÔNG THÊM `via` — và đó là một phép đo.** `viaHomNay()` bốc ba
+trong bảy vùng có Dòng; đo một ngày thật ra `trungnut · chungnam · caungam`, giao với map mà nhân
+vật cấp ≤11 tới được (`ardhaven · ngoai · corran · pvp`) là **RỖNG**. Mà thưởng ngày đòi xong HẾT
+⇒ một ô bất khả là **khoá câm cả phần thưởng**, không lỗi nào báo. Đúng bài học "CỬA CƠ CHẾ MỞ Ở
+CẤP NÀO": hỏi *đếm được không* rồi phải hỏi tiếp *ai cũng làm được không*.
+
+**Nợ có sẵn, ghi ra chứ không lặng:** `via` ở dải 4 (cấp 40-59) vẫn dính cửa hẹp của đúng cái bẫy
+đó — cấp 40-59 tới được 4/7 vùng có Dòng, nên ~3% số ngày cả ba vỉa nằm ngoài tầm. Chữa đúng là
+cho `dailyReset` bốc mục tiêu theo cấp người chơi; đó là một đợt riêng.
+
+### ⚠ BỐN LỖI CỦA CHÍNH BÀI KIỂM — cả bốn cho một kết quả trông rất thuyết phục
+
+1. **Lệch chuẩn trong ô 26px là phép đo MÙ cho việc "quái có tách khỏi nền không".** Nó đo tương
+   phản BÊN TRONG con vật, thứ vốn đã cao: **42,1 → 41,6** sau khi sửa, tức nói ngược. Phải đo
+   **năng lượng biên** (`|∇L|` trung bình).
+2. **Rồi so biên-tại-quái với biên-tại-NỀN cũng hỏng, hai lần.** Ô nền chọn cứng thì rơi trúng đồ
+   (map có **102 con quái**); ô "chắc chắn trống" thì vướng đường ghép viên lát. Nền đo ra 1,8 hay
+   4,9 tuỳ chỗ lấy mẫu ⇒ **nó không phải một cái mốc**. Cách đúng: **A/B trên cùng một khung, cùng
+   những điểm ảnh ấy**, bật/tắt chính cơ chế (`SETTINGS.lowFx`) — nền là hằng số nên tự triệt tiêu.
+   Đo được **+42% năng lượng biên**.
+3. **Đếm lời gọi `ctx.ellipse` để kiểm vòng chân là một cái chốt đúng ở MỌI trạng thái** — riêng
+   bóng đổ đã hai ellipse mỗi con. Phép thử ngược **đỏ lặng**. Nay `drawMob` phơi
+   **`window.__vongChan`** (chỉ khi `TEST_MODE`) — cùng lối `__veChet` · `__avaKhoi` · `__veVuKhi`.
+4. **`camera.x` là góc TRÊN-TRÁI, không phải tâm.** `Math.abs(m.x - camera.x) < VW` gom cả con nằm
+   ngoài mép trái rồi đòi chúng phải có vòng ⇒ đỏ 17/21 trên mã ĐÚNG.
+
+⚠ Và một mệnh đề **đỏ theo xúc xắc**: `HOÀN HẢO` bốc ngẫu nhiên mỗi cú nên tám cú tự nhiên bị cắt
+thành hai ba cụm. Ghim `Math.random` trong lúc đo — cái cần gác là *hai cú LIÊN TIẾP CÙNG LOẠI thì
+phải gộp*, không phải xúc xắc.
+
 ## Sự kiện thế giới — neo theo GIỜ THẬT
 
 Lịch Tu Tiên (Can Chi/Tứ Quý/năm tháng) đã gỡ. `gameTimeInfo()` vẫn chạy ngầm cho
