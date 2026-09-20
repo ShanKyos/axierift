@@ -60,6 +60,11 @@ const fs = require('fs');
     if (v.tierChangesArmor < 100) { console.log('FAIL bậc Thần Binh không đổi giáp:', k); bad++; }
   }
   console.log('errors:', JSON.stringify(errs));
-  console.log(bad === 0 && errs.length === 0 ? 'PASS' : 'FAIL(' + bad + ')');
+  const ok = bad === 0 && errs.length === 0;
+  console.log(ok ? 'PASS' : 'FAIL(' + bad + ')');
   await b.close();
+  // ⚠ MÃ THOÁT LÀ THỨ `tools/reg.sh` CHẤM — in "FAIL" mà thoát 0 thì bài được đếm là XANH.
+  // Đã xảy ra thật với test_story và test_mobbalance: chúng đỏ suốt một thời gian dài mà bảng tổng
+  // kết vẫn báo đủ xanh. Bài này cùng họ — nó in phán quyết nên nó phải trả mã thoát.
+  process.exit(ok ? 0 : 1);
 })();

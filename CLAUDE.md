@@ -5641,6 +5641,86 @@ và lỗi báo ra không nhắc gì tới ESM.
 ⚠ Khi nhảy thẳng `player.level` trong test, phải tự gọi `vhAutoLearn()` — game thật gọi nó qua
 `gainXp()` → `unlockNotices()` mỗi lần lên cấp.
 
+### ☠☠ BÀI KIỂM IN "FAIL" MÀ THOÁT 0 — `reg.sh` ĐẾM NÓ LÀ XANH
+
+`tools/reg.sh` chấm đỏ/xanh **bằng MÃ THOÁT** (`rc=$?`). Một bài kết thúc bằng
+`console.log(ok ? 'PASS' : 'FAIL')` rồi hết hàm thì Node thoát **0** — tức nó in ra chữ FAIL
+ở giữa log và bảng tổng kết vẫn đếm nó là XANH. **Hai bài đã sống như thế rất lâu**
+(`test_story` · `test_mobbalance`), và lượt hồi quy gần nhất báo `206/206 xanh` trong khi cả hai
+đang tự nhận là hỏng.
+
+⇒ **Bài nào in ra một PHÁN QUYẾT thì bắt buộc phải `process.exit(ok ? 0 : 1)`.** Đã rà cả bộ
+và vá sáu bài cùng họ: hai bài trên, cộng `test_flinch` · `test_golden` · `test_hero` ·
+`test_moblevels` (bốn bài này đang XANH thật, nhưng chúng sẽ câm đúng kiểu ấy vào ngày chúng đỏ).
+Quét lại bất cứ lúc nào:
+
+```bash
+cd tests && for f in test_*.js; do grep -qE 'process\.exit' "$f" || \
+  grep -lE "'FAIL'|\"FAIL\"|'PASS'" "$f"; done
+```
+
+**Và cái giá thật không nằm ở mã thoát — nó nằm ở chỗ KHÔNG AI ĐỌC LOG CỦA MỘT BÀI XANH.**
+Cả hai bài đều đỏ vì **cảnh dựng đã mục**, không phải vì sản phẩm hỏng, và mỗi thứ mục đi
+một kiểu — đây mới là phần đáng nhớ:
+
+| bài | khẳng định đỏ | nó là gì |
+|---|---|---|
+| `test_story` | `questCount === 35` | chuỗi nay **51** mục — con số chép cứng đã mục |
+| `test_story` | `idsContiguous` (`v === i+1`) | id nay là **chuỗi `c<chương>q<số>`**, không còn là số 1..N |
+| `test_story` | `allHaveText` (`need > 0`) | **LỖI THẬT** — `c8q1` là mục `talk` duy nhất trong 11 mục thiếu `need:1` |
+| `test_mobbalance` | 12 chỗ "gần cổng không hạ được" | **cả 12 đều là lỗi của PHÉP ĐO** — xem ba ý dưới |
+
+**⇒ `questCount === 35` đổi thành SÀN (`>= 40`), không đổi thành 51.** Thay 35 bằng 51 chỉ là
+lên dây lại đúng quả mìn đó: thêm một nhiệm vụ là bài đỏ vì một lý do chẳng liên quan gì tới thứ
+nó định gác. Thứ nó định gác là *chuỗi bị cụt hay rỗng đi trong im lặng* — sàn bắt đúng chuyện
+đó, còn phần "không thủng ở giữa" thì `idsHopLe` gác chặt hơn hẳn một con số tổng: id phải đúng
+khuôn `c<chương>q<số>`, không trùng, số thứ tự trong mỗi chương phải 1..N, chương phải gom
+thành khối và đi 0,1,2,… **và tiền tố `cN` phải khớp con số in trên nhãn chương** (một mục mang
+id `c5q1` mà nhãn ghi "IV · …" là đúng kiểu lỗi chép-dán khi chèn thêm mục, và `reqMain` là CHỈ SỐ
+nên nó trượt theo trong im lặng).
+
+**⇒ `test_mobbalance` đã đo SAI ba thứ cùng lúc**, và mỗi cái là một bài học riêng:
+
+1. **Bảng `CASES` chép cứng cấp map.** Nó ghi `['daohoa', 1]` — đúng hồi Đào Hoa là map khởi đầu.
+   Nay `daohoa` là Plant Tribe Glade `min: 36`, map khởi đầu là `corran`. Tức bài thả một nhân vật
+   **cấp 1 vào giữa bầy quái lv38** rồi kết luận là cân bằng hỏng. Bảng còn bỏ sót 4 map có bãi quái.
+   ⇒ Suy từ `md.min` và từ chính `MAPS`; thêm map mới là tự có mặt.
+2. **Đo NHÂN VẬT TRẦN.** CLAUDE.md đã ghi nguyên văn cho `XP60PLUS_ANCHORS` rằng đo "không trang bị"
+   thì từ cấp 10 trở lên nhân vật chết trước khi giết được con nào — **bài này đang làm đúng cái đó.**
+   Đo lại cả hai lối trên cùng một lượt chạy: trần **6/33** chỗ hỏng, mặc đồ đúng cấp **0/33**.
+3. **`m.hp = def.hp` ĐÈ LÊN MÁU THẬT — nặng nhất.** `def.hp` trong `MOBS` chỉ là **trọng số tương đối**
+   ("con này dày hơn bạn cùng cấp"); máu thật do `mobHp(def)` tính qua cả đường cong cân bằng.
+   Đo ở `bandao`: `def.hp` **1790** vs `mobHp` **744** ⇒ mọi trận dài gấp **2,4 lần** thực tế, và
+   `m.maxHp` thì vẫn 744 nên máu còn lớn hơn máu trần. *Một bài tên là "mobbalance" mà đo những con
+   số hệ cân bằng không dùng tới.* ⇒ Để `spawnMob` quyết máu; nó là cửa duy nhất.
+
+**⚠ VÀ KHI ĐO LẠI CHO ĐÚNG THÌ NHIỄU LỘ RA.** Với một lượt bốc đồ, biên máu còn lại mỏng nhất ra
+48% · 50% · 43% qua ba lượt chạy — chỉ dư 3 điểm trên sàn 40%, tức sẽ đỏ vì xúc xắc. Nhiễu dồn
+vào đúng MỘT cảnh (`Axie Sa Ngã` lv38 ở cửa `daohoa`/`loimon`): cùng cảnh ấy, bảy lượt bốc đồ ra
+dải **17–52%** và thời gian hạ swing 4,2s → 25s, trong khi một cảnh lành chỉ dải 2 điểm.
+Chữa bằng cách **HẠ NHIỄU, không hạ sàn** — lấy trung vị của `LOT` lượt bốc đồ. Đo để chọn `LOT`
+chứ đừng đoán (biên dư trên sàn, ba lượt mỗi mức):
+
+| | dư trên sàn 40% | thời gian |
+|---|---|---|
+| `LOT=1` | 8 · 10 · **3** | 12s |
+| `LOT=3` | **2** · 8 · 5 | 26s |
+| `LOT=5` | 13 · 16 · **6** | 38s |
+| **`LOT=7`** | **13 · 10 · 12** | 50s |
+
+⇒ `LOT = 7`, và bài **in ra biên còn lại** mỗi lượt để thấy nó mỏng đi *trước* khi nó đỏ — một bài
+chỉ nói PASS/FAIL thì không ai biết mình đang đứng cách vực bao xa. 50 giây còn rất xa trần 260s.
+
+**⚠ CẢ HAI BÀI NAY TỰ KIỂM CẢNH DỰNG TRƯỚC KHI CHẤM.** `test_mobbalance` đòi mỗi cảnh phải có bãi
+quái **và đã mặc ≥ 4 ô đồ** — vì cách hỏng dễ nhất là rơi ngược về đúng phép đo "nhân vật trần"
+vừa gỡ. Thử ngược: cho `autoEquipBest` thành no-op ⇒ chốt tự kiểm bắt (`ô đồ đã mặc: 0`), không
+phải một mệnh đề nào đỏ nhầm.
+
+**⚠ `questPanel`/`storyTab` của `test_story` TRƯỚC ĐÂY ĐƯỢC ĐO RỒI VỨT ĐI** — hai biến ấy được
+tính ở trong `evaluate` nhưng không có mặt trong phép tính `ok`, nên bảng Nhật Ký có thể vẽ ra
+**rỗng** mà bài vẫn xanh. Nay tính vào (thử ngược: `renderQlog` vẽ rỗng ⇒ đỏ, `errors: []`).
+*Một con số đo rồi không chấm thì nó không phải một khẳng định, nó là một dòng log.*
+
 ### ⏱ `rc=124` TRONG HỒI QUY LÀ ĐỒNG HỒ CỦA BỘ CHẠY, KHÔNG PHẢI MỘT KHẲNG ĐỊNH ĐỎ
 
 Log của bài dính kiểu này **cụt giữa chừng** với `Target page … has been closed` chứ không có
