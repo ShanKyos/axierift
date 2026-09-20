@@ -196,7 +196,12 @@ async function moBang(p, truoc){
     if (!nut) return { khongNut: true };
     const truoc = curMap;
     nut.click();
-    await new Promise(r => setTimeout(r, 400));
+    // ⚠ CHỜ ĐÚNG ĐIỀU KIỆN, ĐỪNG CHỜ 400ms. Dịch chuyển phải dựng lại cả thế giới
+    // (`buildWorld` rải quái, decor, iso…), nên dưới tải — 227 bài hồi quy chạy nối đuôi trên
+    // một máy không GPU — nó lâu hơn 400ms là chuyện thường. Bài vì thế ĐỎ THEO TẢI chứ không
+    // theo lỗi, và nó tố cáo "nút chết" trong khi cái nút chạy hoàn hảo: chạy riêng thì xanh
+    // 100%. Cùng đúng cái bẫy vừa phải gỡ ở `test_chaos` (chờ 2400ms cho một nhịp 2150ms).
+    for (let i = 0; i < 60 && curMap === truoc; i++) await new Promise(r => setTimeout(r, 50));
     return { truoc, sau: curMap, chu: nut.textContent.trim() };
   });
   if (r7.thieu || r7.khongNut) fail('§7 hàng đang diễn ra không có nút Tham Gia');

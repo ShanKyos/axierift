@@ -5,6 +5,45 @@ sai**. Phần thứ hai mới là thứ có giá trị về sau — nó là danh
 
 ---
 
+
+## 2026-09-20 — Chọn Axie: hai cửa, và một con số commit chép tay đã nói dối
+
+**Chủ dự án chốt cả 16 con, cả hai cửa.** Lưới ở màn tạo nhân vật dựng từ tháng trước rồi
+**cố ý giữ lại** vì nó mâu thuẫn với nền kinh tế lúc đó; nay hỏi lại và được chốt. Mã lấy về
+nguyên vẹn từ nhánh cũ, chỉ nối thêm cửa thứ hai (bảng Khế Ước) và một cửa gác chung.
+
+### Những chỗ đã đoán sai trong phiên này
+
+**Tin một số hiệu commit chép tay trong CLAUDE.md.** Tài liệu ghi mã lưới nằm ở `4568bb1`;
+commit đó là một bản sửa **CLAUDE.md thuần tuý**, không đụng một dòng mã nào. Hai commit thật là
+`abdd62a` (dựng) và `023ad84` (gỡ ra). Mất một vòng `git show` mới biết. *Một số hiệu commit chép
+vào tài liệu là một con số không ai kiểm lại — nó sai trong im lặng, và nó sai theo kiểu làm
+người sau tưởng công việc đã mất.*
+
+**Chốt tự kiểm cảnh dựng dò trên một chuỗi RỖNG.** Mục ⑥ của bài mới gọi thẳng `renderMount()`
+mà không mở bảng, nên `CE()` lui về một div rời và mọi thứ vẽ vào hư không. Chốt tự kiểm thì dò
+câu *"mở khóa ở cấp 6"* — trên chuỗi rỗng nó **không khớp**, tức chốt báo "cảnh dựng ổn" rồi mệnh
+đề đọc ra *"bảng bày 0 con"*, trông y hệt cơ chế hỏng. *Một chốt tự kiểm dò sự VẮNG MẶT của một
+câu thì nó xanh cả khi chẳng có câu nào — phải hỏi sự CÓ MẶT của thứ mình cần (`#char-content`).*
+
+**Tưởng `renderMount` đọc `player.avatar` là vô hại.** Nó vi phạm luật "`avatarId()` là cửa duy
+nhất" từ lâu mà không ai thấy — **chỉ vì con mặc định chưa bao giờ có mặt trong danh sách**. Mở
+danh sách ra là con ĐANG ĐEO mang nút *"Đổi thân"*. *Một chỗ vi phạm luật một-cửa có thể nằm im
+rất lâu vì dữ liệu chưa chạm tới nhánh sai — nó không hiền, nó chỉ chưa tới lượt.*
+
+**Sửa một câu THÔNG BÁO trong bài kiểm và làm chết cả bài.** Thêm dấu huyền quanh
+`player.def = DIEM_KHOI_DAU` bên trong một template literal ⇒ `SyntaxError` lúc nạp mô-đun ⇒
+`reg.sh` chỉ thấy `rc=1`, không một khẳng định nào đỏ, và bài đó thôi gác gì suốt cả một lượt
+hồi quy. Nay `cua_kiem.sh §①` `node --check` mọi tệp trong `tests/`. *Sửa một chuỗi trong bài
+kiểm vẫn là sửa MÃ.*
+
+### Một lỗi THẬT có sẵn, tìm ra bằng cách đọc chứ không bằng cách đoán
+
+`C.co` chỉ được ghi bởi `chiNhan()` (gacha + hai lệnh gỡ rối), nên **con mặc định của lớp không
+bao giờ nằm trong đó**. Cắm một con quay ra rồi thì `player.avatar` rời khỏi `undefined`, mà
+`chiChon(con_mặc_định)` bị `if (!C.co[id]) return` chặn ⇒ **con khởi đầu mất vĩnh viễn**. Không
+lỗi, không thông báo, không bài kiểm nào đỏ. `test_avachon §7` gác, và nó đi đường tự nhiên.
+
 ## 2026-09-16 (b) — Cây vũ khí là một cái nhãn dán, suốt từ lúc nhập gói
 
 Chủ dự án: *"Tư thế cầm cung sai, hãy nghiên cứu và chỉnh lại cách cầm cung cho đúng. Tương tự
@@ -447,3 +486,25 @@ mới biết dáng cần nằm sẵn trong khối đi. Đo trước khi nướng
 - Bốn bảng còn vướng phụ thuộc, chưa tách được (xem trên).
 - Bộ giáp Dark Wizard dạng ảnh phẳng (2 gói `image2godot4_8/9`) chưa mặc lên người được — cần
   Meowa xuất lại dạng gói Spine trên cùng bản mẫu `spine四头身人物模板`.
+
+## 2026-09-20 · `test_uigothic §⑥` — que dò đọc thẳng vào con số máu
+
+**Đoán sai:** khi hồi quy trên `d498ad0` trả về đúng một bài đỏ (`test_uigothic`), phản xạ đầu
+là xếp nó vào nhóm "đỏ theo xúc xắc" rồi đi tiếp. Chạy lại ba lượt thì đúng là 1/3 đỏ — nhưng
+**nguyên nhân truy được, không phải nhiễu thống kê**: mệnh đề lấy đúng MỘT điểm ảnh ở
+`(0,08 · giữa)` của thanh máu, mà `.cd-thanh span` (con số máu) canh giữa dọc và bắt đầu ở 10px
+⇒ điểm đo rơi thẳng vào chữ số, và chữ số đổi theo lượng máu. Ba lượt cùng trạng thái ra
+`{81,10,4}` · `{87,54,51}` · `{118,98,96}`.
+
+⇒ Đọc **đỉnh độ đỏ của cả CỘT** thay cho một điểm: chữ trắng và bóng đen chỉ kéo độ đỏ xuống,
+không bao giờ thắng phần tô. Năm lượt sau khi sửa ra đúng cùng một bộ số.
+
+**Và nó lôi ra một lỗ thật:** cả `style.css` lẫn CLAUDE.md đều ghi rằng §⑥ gác lỗi
+`background-size:100% 100%`. Thử ngược cho thấy **bản cũ chỉ đỏ 1/3 lượt, và đỏ vì đúng cái que
+dò hỏng kia** — mệnh đề "cỡ thanh bất biến" đo hộp `#orb-hp`, trong khi thứ co lại là `.fill`
+bên trong nó. Đo ở 30% thì hai bản gần như trùng nhau (100 vs 90) vì mũi nhọn nén còn ~7px;
+phải đo ở **60%**, nơi màu tắt sớm trước mép phần đã tô — **138 vs 34**. Mệnh đề `§⑥b` mới là
+thứ duy nhất bắt được nó.
+
+*Bài học: một bài đỏ theo xúc xắc vẫn phải TRUY tới nguyên nhân. Lần này "xúc xắc" hoá ra là một
+que dò hỏng, và chính nó đang che một mệnh đề rỗng suốt nhiều phiên.*

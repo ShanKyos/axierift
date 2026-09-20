@@ -18,6 +18,13 @@ muc(){ printf '\n\033[1m%s\033[0m\n' "$1"; }
 muc "① MÁY DỊCH VÀ KIỂU"
 npx eslint public/game/game.js >/dev/null 2>&1 && ok "eslint sạch" || xau "eslint có lỗi"
 node --check public/game/data/canbang.js 2>/dev/null && ok "canbang.js đúng cú pháp" || xau "canbang.js sai cú pháp"
+# ⚠ BÀI KIỂM CŨNG PHẢI ĐÚNG CÚ PHÁP. Một bài sai cú pháp KHÔNG đỏ ở một khẳng định nào — nó chết
+# lúc nạp mô-đun, và `reg.sh` chỉ thấy rc=1 kèm một vết ngăn xếp của Node. Đã ship đúng thế một
+# lần: sửa một câu THÔNG BÁO rồi lỡ để dấu huyền trong một template literal, và bài đó im lặng
+# thôi gác gì suốt cả một lượt hồi quy. Rẻ hơn hẳn việc phát hiện ở phút thứ 40.
+_tsai=$(for f in tests/*.js; do node --check "$f" 2>/dev/null || echo "$f"; done)
+[ -z "$_tsai" ] && ok "$(ls tests/*.js | wc -l) bài kiểm đúng cú pháp" \
+                || xau "bài kiểm sai cú pháp: $(echo $_tsai)"
 npm run check >/dev/null 2>&1 && ok "tsc qua" || xau "tsc đỏ"
 npm test >/dev/null 2>&1 && ok "vitest qua" || xau "vitest đỏ"
 
@@ -47,8 +54,24 @@ for t in ' Qi' 'AoE' 'minimap'; do
 done
 
 muc "③ CHỮ HÁN LỌT VÀO MÃ"
-n=$(python3 -c "import re;print(sum(1 for l in open('public/game/game.js',encoding='utf-8') if re.search(r'[　-〿一-鿿＀-￯゠-ヿ぀-ゟ]',l)))")
-[ "$n" = 0 ] && ok "0 dòng CJK trong game.js" || xau "$n dòng CJK trong game.js"
+# ⚠ ĐẾM RIÊNG MÃ VÀ CHÚ THÍCH. Quy tắc số 1 cấm chữ Hán trong TEXT NGƯỜI CHƠI THẤY; một dòng
+# `//` thì người chơi không thấy bao giờ. Bản cũ đếm gộp, nên hai dòng chú thích ghi tên xương
+# Spine (`背后头发` · `左手持剑` — tên do gói art đặt, không dịch được) làm cửa này ĐỎ VĨNH VIỄN.
+# Một cửa đỏ vĩnh viễn là một cửa không ai đọc nữa, và nó che luôn lần lọt thật tiếp theo.
+# Chỉ bỏ qua dòng BẮT ĐẦU bằng `//` — `glyph:'劍', // ...` thì phần mã vẫn bị bắt.
+eval "$(python3 - <<'PYEOF'
+import re
+CJK = re.compile(r'[　-〿一-鿿＀-￯゠-ヿ぀-ゟ]')
+ma = ct = 0
+for l in open('public/game/game.js', encoding='utf-8'):
+    if not CJK.search(l): continue
+    if l.lstrip().startswith('//'): ct += 1
+    else: ma += 1
+print(f'CJK_MA={ma}; CJK_CT={ct}')
+PYEOF
+)"
+[ "$CJK_MA" = 0 ] && ok "0 dòng CJK trong MÃ game.js" || xau "$CJK_MA dòng CJK trong MÃ game.js"
+[ "$CJK_CT" = 0 ] || printf '  \033[33m!\033[0m %s dòng chú thích có CJK (tên xương Spine — đúng luật, nhưng soi lại nếu con số này nhảy)\n' "$CJK_CT"
 
 muc "④ VỆ SINH COMMIT"
 LAC=$(git diff --name-only "$MOC" 2>/dev/null | grep -vE '^(public|tests|tools|docs|CLAUDE\.md|package)' || true)
@@ -75,7 +98,7 @@ else
   printf '\033[31mCỬA KIỂM: %d MỤC ĐỎ — chưa được commit.\033[0m\n' "$XAU"
 fi
 cat <<'TAY'
-  1. Hồi quy đầy đủ: bash tools/reg.sh /tmp/reg-X  (~90 phút, phải 175/175)
+  1. Hồi quy đầy đủ: bash tools/reg.sh /tmp/reg-X  (~90 phút, MỌI bài rc=0 — nay 228 bài)
   2. Bài kiểm MỚI phải THỬ NGƯỢC: phá mã, bài kiểm phải ĐỎ. Xanh cả hai chiều = xanh giả.
   3. Mọi con số trong commit phải ĐO ĐƯỢC, không phải ước lượng.
   4. Đoán sai chỗ nào thì ghi vào docs/NHAT_KY.md mục "đã đoán sai".
