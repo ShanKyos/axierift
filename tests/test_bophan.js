@@ -232,7 +232,10 @@ const pass = m => console.log('PASS ' + m);
     renderMount();
     const tDs = (typeof CE === 'function' && CE() ? CE().innerText : '') || '';
     return { nvCoCauTao: /Cấu tạo Axie/.test(tNv), nvCoHang: /Thuần\s*6\/6/.test(tNv),
-             dsMoDuoc: /ĐANG CÓ/.test(tDs),
+             // ⚠ HỎI ĐÚNG THỨ MÌNH MUỐN BIẾT — "đã qua được cửa cấp 6 chưa" — chứ đừng
+             // dò một dòng TIÊU ĐỀ. Bản đầu dò chuỗi 'ĐANG CÓ' và nó đỏ ngay khi tiêu đề
+             // được viết lại, tức bài đỏ vì một lý do chẳng liên quan gì tới cấu tạo Axie.
+             dsMoDuoc: !/mở khóa ở/.test(tDs) && /Đổi thân|ĐANG LÀM THÂN/.test(tDs),
              dsCoHang: /Thuần|Tạp|Pha/.test(tDs), dsChepCung: /12%|10%/.test(tDs) };
   });
   console.log('  ⑥', JSON.stringify(r6));

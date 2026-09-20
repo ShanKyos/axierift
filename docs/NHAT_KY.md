@@ -5,6 +5,45 @@ sai**. Phần thứ hai mới là thứ có giá trị về sau — nó là danh
 
 ---
 
+
+## 2026-09-20 — Chọn Axie: hai cửa, và một con số commit chép tay đã nói dối
+
+**Chủ dự án chốt cả 16 con, cả hai cửa.** Lưới ở màn tạo nhân vật dựng từ tháng trước rồi
+**cố ý giữ lại** vì nó mâu thuẫn với nền kinh tế lúc đó; nay hỏi lại và được chốt. Mã lấy về
+nguyên vẹn từ nhánh cũ, chỉ nối thêm cửa thứ hai (bảng Khế Ước) và một cửa gác chung.
+
+### Những chỗ đã đoán sai trong phiên này
+
+**Tin một số hiệu commit chép tay trong CLAUDE.md.** Tài liệu ghi mã lưới nằm ở `4568bb1`;
+commit đó là một bản sửa **CLAUDE.md thuần tuý**, không đụng một dòng mã nào. Hai commit thật là
+`abdd62a` (dựng) và `023ad84` (gỡ ra). Mất một vòng `git show` mới biết. *Một số hiệu commit chép
+vào tài liệu là một con số không ai kiểm lại — nó sai trong im lặng, và nó sai theo kiểu làm
+người sau tưởng công việc đã mất.*
+
+**Chốt tự kiểm cảnh dựng dò trên một chuỗi RỖNG.** Mục ⑥ của bài mới gọi thẳng `renderMount()`
+mà không mở bảng, nên `CE()` lui về một div rời và mọi thứ vẽ vào hư không. Chốt tự kiểm thì dò
+câu *"mở khóa ở cấp 6"* — trên chuỗi rỗng nó **không khớp**, tức chốt báo "cảnh dựng ổn" rồi mệnh
+đề đọc ra *"bảng bày 0 con"*, trông y hệt cơ chế hỏng. *Một chốt tự kiểm dò sự VẮNG MẶT của một
+câu thì nó xanh cả khi chẳng có câu nào — phải hỏi sự CÓ MẶT của thứ mình cần (`#char-content`).*
+
+**Tưởng `renderMount` đọc `player.avatar` là vô hại.** Nó vi phạm luật "`avatarId()` là cửa duy
+nhất" từ lâu mà không ai thấy — **chỉ vì con mặc định chưa bao giờ có mặt trong danh sách**. Mở
+danh sách ra là con ĐANG ĐEO mang nút *"Đổi thân"*. *Một chỗ vi phạm luật một-cửa có thể nằm im
+rất lâu vì dữ liệu chưa chạm tới nhánh sai — nó không hiền, nó chỉ chưa tới lượt.*
+
+**Sửa một câu THÔNG BÁO trong bài kiểm và làm chết cả bài.** Thêm dấu huyền quanh
+`player.def = DIEM_KHOI_DAU` bên trong một template literal ⇒ `SyntaxError` lúc nạp mô-đun ⇒
+`reg.sh` chỉ thấy `rc=1`, không một khẳng định nào đỏ, và bài đó thôi gác gì suốt cả một lượt
+hồi quy. Nay `cua_kiem.sh §①` `node --check` mọi tệp trong `tests/`. *Sửa một chuỗi trong bài
+kiểm vẫn là sửa MÃ.*
+
+### Một lỗi THẬT có sẵn, tìm ra bằng cách đọc chứ không bằng cách đoán
+
+`C.co` chỉ được ghi bởi `chiNhan()` (gacha + hai lệnh gỡ rối), nên **con mặc định của lớp không
+bao giờ nằm trong đó**. Cắm một con quay ra rồi thì `player.avatar` rời khỏi `undefined`, mà
+`chiChon(con_mặc_định)` bị `if (!C.co[id]) return` chặn ⇒ **con khởi đầu mất vĩnh viễn**. Không
+lỗi, không thông báo, không bài kiểm nào đỏ. `test_avachon §7` gác, và nó đi đường tự nhiên.
+
 ## 2026-09-16 (b) — Cây vũ khí là một cái nhãn dán, suốt từ lúc nhập gói
 
 Chủ dự án: *"Tư thế cầm cung sai, hãy nghiên cứu và chỉnh lại cách cầm cung cho đúng. Tương tự

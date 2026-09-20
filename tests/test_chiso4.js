@@ -145,7 +145,7 @@ const CU  = ['Lực Lượng', 'Mẫn Tiệp', 'Phòng Ngự', 'Linh Lực'];
   else {
     if (s5.l1.free !== 207) fail(`hoàn sai: 7 + 200 phải ra 207, đang là ${s5.l1.free}`);
     if (s5.l1.def !== 5) fail(`sau khi hoàn, player.def phải về mức nền 5, đang là ${s5.l1.def}`);
-    if (s5.l2.free !== s5.l1.free) fail(`nạp lần hai hoàn THÊM lần nữa (${s5.l1.free} → ${s5.l2.free}) — cờ _diTruDef không chặn được, đây là in tiền`);
+    if (s5.l2.free !== s5.l1.free) fail(`nạp lần hai hoàn THÊM lần nữa (${s5.l1.free} → ${s5.l2.free}) — đây là in tiền. Thứ giữ tính bất biến là dòng ghim player.def = DIEM_KHOI_DAU, KHÔNG phải một cái cờ`);
     if (bad === 0) ok(`save đời cũ: hoàn 200 điểm, nạp lại lần hai không hoàn thêm`);
   }
 

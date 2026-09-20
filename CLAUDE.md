@@ -3596,31 +3596,75 @@ kiểu đó không ai thấy bằng mắt. `test_taitro §1` đối chiếu từ
 Mẹo ở `TAI_MEO` là **mẹo THẬT**, rút từ cơ chế đang chạy. Một dòng mẹo bịa ở màn tải là thứ
 người chơi thử ngay trong mười phút đầu rồi phát hiện ra là sai.
 
-## 🐾 CHỌN AXIE Ở MÀN TẠO NHÂN VẬT — ĐÃ DỰNG XONG RỒI GIỮ LẠI, đọc trước khi làm lại
+## 🐾 CHỌN AXIE — HAI CỬA, MỌI CON ĐỀU CẮM ĐƯỢC (chủ dự án chốt 2026-09-20)
 
-Một lưới chọn avatar ở màn tạo nhân vật **đã được thi công đầy đủ và có bài kiểm**, rồi
-**cố ý không đưa lên `main`**. Nằm ở nhánh `claude/focused-cannon-k4o6gk` (commit `4568bb1`):
-`#cc-avatar` · `ccAvaRender()` · `ccAvaChon()` · `ccAvaDang()` · `ccAvaKeCo()` ·
-`tests/test_avachon.js` (5 mục, xanh).
+> ⚠ Mục này **trước đây ghi "ĐÃ DỰNG XONG RỒI GIỮ LẠI — đừng tự dựng lại, hỏi chủ dự án chọn
+> hàng nào trước"**. Đã hỏi, đã chốt, đã thi công. Giữ đúng cái tiêu đề cũ trong lịch sử git
+> thôi — đừng đọc câu "đừng dựng lại" ấy như trạng thái hiện tại.
+>
+> ⚠ **Và mục cũ chỉ SAI COMMIT.** Nó bảo mã nằm ở `4568bb1`; commit đó là một bản sửa CLAUDE.md
+> thuần tuý, không đụng một dòng mã nào. Hai commit thật trên nhánh `claude/focused-cannon-k4o6gk`
+> là **`abdd62a`** (dựng lưới) và **`023ad84`** (gỡ lưới ra, kèm lý do). *Một số hiệu commit chép
+> tay vào tài liệu là một con số không ai kiểm lại — và nó sai trong im lặng.*
 
-**Vì sao không đưa lên:** lúc dựng, ghi chú trong kho còn nói *"Khế Ước bán chỉ số + chiêu,
-không bán hình dáng"* — nên lưới cho chọn tự do cả 16 con. Trong lúc đó `main` đã chốt ngược
-lại: *"Bỏ luôn phần Ragoon. Nếu gacha là sẽ gacha nhân vật."* và `chiChon()` gác bằng
-`if (!C.co[id]) return;` — **chỉ con đã quay được mới cắm làm avatar**. Một lưới phát không cả
-16 con ở màn tạo nhân vật là phát không đúng thứ gacha đang bán.
+**Chủ dự án chốt (2026-09-20):** cắm được **cả 16 con**, ở **cả hai** cửa — màn tạo nhân vật
+*và* bảng Khế Ước. Rủi ro đã nêu trước khi hỏi (gacha không còn bán *hình dáng* nữa) và chủ dự
+án vẫn chốt.
 
-**Đây là câu hỏi cho chủ dự án, không phải câu hỏi kỹ thuật.** Không có phiên bản nào vừa có
-ích vừa trung tính với nền kinh tế, vì `avatarId()` đã cho mỗi lớp MỘT con miễn phí
-(`AVA_MAC_DINH`) và gacha bán 15 con còn lại:
+| cửa | ở đâu |
+|---|---|
+| màn tạo nhân vật | `#cc-avatar` · `ccAva` · `ccAvaDang()` · `ccAvaChon()` · `ccAvaRender()` · `ccAvaKeCo()` |
+| bảng Khế Ước (cấp 6+) | `renderMount()` |
+| **cửa DUY NHẤT** | **`avaCamDuoc(id)`** · danh sách chung **`avaDsThan()`** |
 
-| Lưới bày gì | Phát không thêm | Dùng được không |
-|---|---|---|
-| Cả 16 con | 15 con | có, nhưng rỗng ruột gacha |
-| 5 con mặc định của 5 lớp | 4 con | có |
-| Chỉ con mặc định của lớp mình | 0 | không — một lựa chọn duy nhất |
+**Vì sao nó KHÔNG phát không sức mạnh, và đây là số đo chứ không phải lời trấn an:** bất biến ở
+mục **▲▲ SÁU BỘ PHẬN** chứng minh ba hệ số phòng thủ nội suy về chính trung bình của chúng, nên
+**kỳ vọng hệ số của cả 16 con bằng nhau CHÍNH XÁC** (lệch `2,2e-16`). Đổi thân đổi **hình dạng**
+rủi ro, không đổi **tổng**. Thứ Khế Ước còn bán là số **sưu tầm** và **Nguyệt Trần**.
 
-⇒ **Đừng tự dựng lại.** Hỏi chủ dự án chọn hàng nào trước, rồi mở lại mã từ nhánh trên.
+**⚠⚠ ĐỪNG "sửa gọn" bằng cách cắm sẵn cả 16 con vào `C.co` lúc tạo nhân vật.** Nghe thì gọn hơn
+hẳn một hàm gác mới, và nó **giết một cơ chế trong im lặng**: `C.co` là sổ **SƯU TẦM**, và
+`chiNhan()` đọc đúng nó để biết lượt quay này có phải con **MỚI** hay không. Cắm sẵn ⇒ nhánh
+`moi:true` **không bao giờ chạy nữa**, mọi lượt quay đọc ra là trùng, và khoảnh khắc "ra con
+mới" của chính hệ gacha biến mất mà không một lỗi nào báo. **Hai sổ, hai việc:** `C.co` = đã sưu
+tầm · `avaCamDuoc()` = đeo được.
 
+### ⚠ LỖI THẬT ĐÃ TÌM RA: CON KHỞI ĐẦU MẤT VĨNH VIỄN
+
+Đây là lỗi **có sẵn từ trước**, không phải do đợt này, và nó im lặng tuyệt đối. Truy bằng cách
+đọc chứ không đoán — `C.co` chỉ được ghi bởi `chiNhan()`, mà `chiNhan` chỉ được gọi từ gacha và
+hai lệnh gỡ rối ⇒ **con mặc định của lớp không bao giờ nằm trong `C.co`**. Hệ quả:
+
+- nhân vật mới: `dsCo = CHIMERA.filter(c => C.co[c.id])` ra **rỗng** ⇒ bảng Khế Ước không có con
+  nào để chọn, dù người chơi đang nhìn thấy con mặc định chạy trên màn;
+- quay ra một con rồi bấm "Đổi thân" ⇒ `player.avatar` rời khỏi `undefined`, mà
+  `chiChon(con_mặc_định)` thì bị `if (!C.co[id]) return` chặn ⇒ **không lấy lại được nữa, vĩnh
+  viễn**. `chiTatAvatar()` không cứu: nó đặt `null`, tức **tắt hẳn** avatar, khác hẳn.
+
+`test_avachon §7` gác đúng đường đó, và nó đi **đường tự nhiên** (cắm con khác rồi mới đòi con
+khởi đầu về), không nhảy cóc.
+
+### ⚠ `renderMount` TỪNG ĐỌC THẲNG `player.avatar`, và mở danh sách ra mới lộ
+
+CLAUDE.md đã ghi từ lâu: *"`avatarId(p)` là cửa DUY NHẤT — đừng đọc thẳng `p.avatar` ở chỗ
+khác."* Bảng Khế Ước vi phạm ở **hai** chỗ (`dung = player.avatar === c.id` và nhãn nút tắt).
+Vô hại suốt nhiều phiên **chỉ vì con mặc định chưa bao giờ có mặt trong danh sách**; mở danh
+sách ra là con ĐANG ĐEO mang nút *"Đổi thân"* — bảng mời người chơi đổi sang chính thứ họ đang
+mặc, và nút tắt thì ghi *"Đang dùng thân nhân vật"* trong lúc một con Axie đứng ngay trên màn.
+*Một chỗ vi phạm luật "một cửa duy nhất" có thể nằm im rất lâu vì dữ liệu chưa chạm tới nhánh
+sai — nó không hiền, nó chỉ chưa tới lượt.*
+
+Gác: **`tests/test_avachon.js`** (8 mệnh đề, **cả tám đã thử ngược và đều đỏ, không cái nào im
+lặng**). ⑥ **tự kiểm cảnh dựng trước khi chấm** — và chốt tự kiểm đầu của tôi **sai**: nó dò câu
+"mở khóa ở cấp 6" trên một chuỗi RỖNG (bảng chưa mở ⇒ `CE()` lui về một div rời ⇒ `renderMount`
+vẽ vào hư không), nên nó đọc ra *"bảng bày 0 con"* — trông y hệt cơ chế hỏng. Nay hỏi thẳng
+`#char-content` có tồn tại không, rồi mới chấm.
+
+⚠ **VÀ MỘT PHÉP THỬ NGƯỢC IM LẶNG Ở ĐÂY HOÁ RA LÀ `rc=124`.** Lượt chạy đầu của ⑧ in ra `ĐỎ ✓`
+mà **không kèm một dòng `FAIL` nào** — vì bài bị `timeout` giết lúc đang tranh CPU với một lượt
+hồi quy, và `rc` khác 0 thì script đọc thành "đỏ". Chạy lại lúc máy rỗi thì cả hai phép thử đều
+đỏ KÈM dòng `FAIL` thật. ⇒ **Một dòng "ĐỎ" không kèm thông báo của chính bài kiểm thì chưa phải
+một phép thử ngược**, và script thử ngược phải tách `rc=124` ra khỏi `rc=1`.
 
 ## Hai lối vẽ nhân vật — ĐỪNG TRỘN VÀO NHAU
 
@@ -4663,6 +4707,17 @@ NODE_PATH=/opt/node22/lib/node_modules node <test>.js   # playwright cài global
 ```
 Trong test: `window.TEST_MODE = true; startGame('<sect>', null);` rồi gọi thẳng hàm game
 (`calcDerived()`, `castSkill()`, `update(0.1)`...).
+
+⚠ **BÀI KIỂM SAI CÚ PHÁP KHÔNG ĐỎ Ở MỘT KHẲNG ĐỊNH NÀO** — nó chết lúc nạp mô-đun, và `reg.sh`
+chỉ thấy `rc=1` kèm một vết ngăn xếp của Node. Đã ship đúng thế một lần, và nguyên nhân nhỏ đến
+mức buồn cười: sửa một câu **THÔNG BÁO** rồi để dấu huyền quanh `player.def = DIEM_KHOI_DAU`
+trong một template literal. Bài đó thôi gác gì suốt cả một lượt hồi quy 40 phút.
+⇒ `tools/cua_kiem.sh §①` nay `node --check` **mọi** tệp trong `tests/`. Rẻ hơn hẳn việc phát
+hiện ở phút thứ 40. *Sửa một chuỗi trong bài kiểm vẫn là sửa MÃ.*
+
+⚠ Bài kiểm dùng `require()` phải chạy **ngoài cây repo** (`package.json` khai `"type":"module"`).
+`reg.sh` chép chúng sang `$OUT/src/` nên nó không dính; chạy lẻ bằng `node tests/x.js` thì dính,
+và lỗi báo ra không nhắc gì tới ESM.
 
 ⚠ Khi nhảy thẳng `player.level` trong test, phải tự gọi `vhAutoLearn()` — game thật gọi nó qua
 `gainXp()` → `unlockNotices()` mỗi lần lên cấp.

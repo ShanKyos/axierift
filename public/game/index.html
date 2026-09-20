@@ -298,6 +298,13 @@
     <div id="cc-slots-note"></div>
     <div id="cc-classes"></div>
     <div id="cc-detail" class="cc-detail"></div>
+    <!-- CHỌN AXIE ĐẠI DIỆN — dựng bằng JS (ccAvaRender).
+         Cùng với bảng Khế Ước, đây là cửa người chơi thường có để chọn con Axie của mình:
+         trước bản này `player.avatar` chỉ đổi được bằng lệnh gỡ rối `/avatar <id>`, tức mô
+         hình đã chốt của game ("Axie là avatar, 5 lớp là sức mạnh") không có mặt nào ở đây.
+         Avatar mang 0 chỉ số, 0 kỹ năng, 0 trang bị — nên nó TỰ DO, không khoá theo lớp và
+         không khoá theo sở hữu. Cửa chung là avaCamDuoc() trong game.js. -->
+    <div id="cc-avatar"></div>
     <div class="cc-name">
       <label for="inp-char-name">Tên nhân vật</label>
       <input id="inp-char-name" maxlength="24" placeholder="Đặt tên cho nhân vật…" autocomplete="off" spellcheck="false">

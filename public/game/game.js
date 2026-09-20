@@ -6137,10 +6137,30 @@ window.AVA_MAC_DINH = AVA_MAC_DINH;
 //   · `null`      = người chơi ĐÃ TẮT bằng `/avatar off` ⇒ tôn trọng, vẽ lớp nhân vật như cũ.
 // Gộp hai cái thành một phép `!p.avatar` là tắt xong vào lại thấy nó tự bật — tức là cái nút
 // tắt không tắt được gì.
+// Cửa DUY NHẤT hỏi "con này CẮM LÀM THÂN được không". Chủ dự án chốt 2026-09-20: **mọi con
+// đều cắm được**, không phải quay ra mới dùng được.
+//
+// Vì sao nó không phát không sức mạnh: bất biến đã chứng minh ở mục ▲▲ SÁU BỘ PHẬN — ba hệ số
+// phòng thủ nội suy về chính trung bình của chúng, nên **kỳ vọng hệ số của cả 16 con bằng nhau
+// CHÍNH XÁC** (đo được lệch 2,2e-16). Đổi thân đổi HÌNH DẠNG rủi ro, không đổi tổng. Thứ Khế
+// Ước còn bán là số SƯU TẦM và Nguyệt Trần.
+//
+// ⚠⚠ ĐỪNG "sửa gọn" thành cắm sẵn cả 16 con vào `C.co` lúc tạo nhân vật. `C.co` là sổ SƯU TẦM,
+// và `chiNhan()` đọc đúng nó để biết lượt quay này có phải con MỚI hay không — cắm sẵn là nhánh
+// `moi:true` KHÔNG BAO GIỜ chạy nữa, mọi lượt quay đọc ra là trùng. Không lỗi nào báo, và cái
+// hỏng là khoảnh khắc "ra con mới" của chính hệ gacha. Hai sổ, hai việc: `C.co` = đã sưu tầm,
+// hàm này = đeo được.
+//
+// ⚠ VẪN ĐÒI CÓ ART (`CHI_ANH.o`). Bày một con chưa nướng bảng khung là một ô trống trơn, mà
+// người chơi thì không có cách nào biết đó là lỗi hay là chủ ý — cùng luật `ccAvaDS()` đã ghi.
+function avaCamDuoc(id){ return !!(id && CHI_MAP[id] && CHI_ANH.o[id]); }
+// Danh sách thân đeo được, dùng chung cho CẢ HAI cửa (màn tạo nhân vật · bảng Khế Ước). Hai
+// bảng lọc riêng là hai chỗ phải nhớ sửa, và chúng sẽ lệch nhau ngay lần đầu thêm một con.
+function avaDsThan(){ return CHIMERA.filter(c => avaCamDuoc(c.id)); }
 function avatarId(p){
   if (!p) return null;
   const id = p.avatar === undefined ? (AVA_MAC_DINH[p.sect] || null) : p.avatar;
-  return (id && CHI_MAP[id] && CHI_ANH.o[id]) ? id : null;
+  return avaCamDuoc(id) ? id : null;
 }
 function chiVeChay(g, id, i, x, y, thanPx){
   const A = CHI_ANH.o[id], im = chiChayImg(id);
@@ -21001,26 +21021,33 @@ function moHetCong(){
 // ---------- Khế Ước: chọn thân Axie + bốn ô Cốt của người chơi ----------
 function renderMount(){
   if (lvPeak() < 6){
-    CE().innerHTML = `<div class="stat-sec">Chimera Đồng Hành</div>
+    CE().innerHTML = `<div class="stat-sec">Thân Axie</div>
       <div style="padding:14px;font-size:13px">Khế Ước mở khóa ở <b style="color:#7ecbff">cấp 6</b>.</div>`;
     return;
   }
   const C = chiState();
-  const dsCo = CHIMERA.filter(c => C.co[c.id]);
-  let html = `<div class="stat-sec">Chimera Đồng Hành</div>`;
-  html += `<div style="font-size:11.5px;color:#9aa8d4;line-height:1.55;margin-bottom:8px">Thân Axie quay được ở <b>Khế Ước</b>. Con đang cắm là <b>hình dáng của chính bạn</b> — nó không cộng chỉ số và không tự đánh. Sức mạnh nằm ở lớp nhân vật; lúc ra đòn lớp ấy hiện ra rồi tan.</div>`;
+  // Con ĐANG hiện ra trên màn — qua cửa DUY NHẤT, xem avatarId(). `null` = đã tắt bằng
+  // /avatar off; một id = đang đeo con đó (kể cả khi đó là con mặc định chưa ai chọn tay).
+  const _avaNay = avatarId(player);
+  // ⚠ Danh sách là MỌI con đeo được, KHÔNG phải chỉ con đã quay ra — xem avaCamDuoc().
+  // `daCo` chỉ còn để in con số sưu tầm; nó không còn gác gì.
+  const dsThan = avaDsThan(), daCo = dsThan.filter(c => C.co[c.id]).length;
+  let html = `<div class="stat-sec">Thân Axie</div>`;
+  html += `<div style="font-size:11.5px;color:#9aa8d4;line-height:1.55;margin-bottom:8px">Cắm <b>con nào cũng được</b> — không phải quay ra mới dùng được. Con đang cắm là <b>hình dáng của chính bạn</b> — nó không cộng chỉ số và không tự đánh. Sức mạnh nằm ở lớp nhân vật; lúc ra đòn lớp ấy hiện ra rồi tan.</div>`;
   html += `<div class="forge-actions" style="margin-bottom:8px">
       <button class="mini-btn" style="font-size:13px;padding:7px 18px" onclick="closePanels();openKheUoc()">✦ Mở Khế Ước (${(C.ve.gk||0)} Ấn)</button>
-      <button class="mini-btn" onclick="chiTatAvatar()">${player.avatar ? 'Về Thân Nhân Vật (X)' : 'Đang dùng thân nhân vật'}</button></div>`;
-  if (!dsCo.length){
-    html += `<div style="text-align:center;padding:14px;opacity:.7;font-size:13px">Chưa có Chimera nào.<br>Quay ở Khế Ước để nhận con đầu tiên.</div>`;
+      <button class="mini-btn" onclick="chiTatAvatar()">${_avaNay ? 'Về Thân Nhân Vật (X)' : 'Đang dùng thân nhân vật'}</button></div>`;
+  // Nhánh này nay chỉ với tới được khi KHÔNG con nào có bảng khung — tức art chưa tải/chưa
+  // nướng, không phải "chưa quay được con nào". Nói đúng cái đang xảy ra.
+  if (!dsThan.length){
+    html += `<div style="text-align:center;padding:14px;opacity:.7;font-size:13px">Chưa nạp được bảng khung của con nào.<br>Thử tải lại trang.</div>`;
     CE().innerHTML = html; return;
   }
   // ── ~~Bốn ô Cốt~~ — bảng đã gỡ cùng hệ Cốt (chủ dự án chốt gỡ hẳn chỉ số). ──
   // ⚠ Danh sách này KHÔNG in một con số chỉ số nào, và đó là cả thiết kế. Bản cũ in "Cấp N ·
   // Huyết Thống CN · <bị động> · Chiêu <tên> (Ns)" — bốn thứ đó nay đều không tồn tại. In lại
   // bất kỳ cái nào là hứa với người chơi một sức mạnh mà con Axie không còn cho.
-  html += `<div class="stat-sec">ĐANG CÓ — ${dsCo.length}/${CHIMERA.length}</div>`;
+  html += `<div class="stat-sec">THÂN AXIE — ${dsThan.length} con, cắm con nào cũng được <span style="font-weight:400;opacity:.65">· đã sưu tầm ${daCo}/${CHIMERA.length}</span></div>`;
   // ⚠ NÓI RA ĐANG ĐỨNG Ở ĐÂU, ngay trên danh sách. Không có dòng này thì mọi nhãn "ở đất X"
   // bên dưới treo lơ lửng — người chơi không biết X là đất nào và vì sao bảng lại nhắc tới nó.
   {
@@ -21044,13 +21071,18 @@ function renderMount(){
   const _dLoiTap = heThuKet('Plant', 'Beast', BP_SAC_MIN), _dLoiThuan = heThuKet('Plant', 'Beast', BP_SAC_MAX);
   const _pc = m => Math.round(Math.abs(m - 1) * 100);
   html += `<div style="font-size:11px;color:#9aa8d4;margin-bottom:6px;line-height:1.5">Con Axie là <b>thân nhìn thấy</b> của bạn — nó <b>không cộng chỉ số</b> và không tự đánh. Toàn bộ sức mạnh nằm ở lớp nhân vật; lúc ra đòn lớp ấy hiện ra rồi tan.<br>Nhưng <b style="color:#ffd76a">lớp Axie quyết định hệ PHÒNG THỦ</b> của bạn: quái khắc hệ bạn đánh đau hơn <b>${_pc(_dTap.mul)}–${_pc(_dThuan.mul)}%</b>, bạn khắc lại thì nhẹ đi <b>${_pc(_dLoiTap.mul)}–${_pc(_dLoiThuan.mul)}%</b> — rộng hay hẹp là do <b style="color:#ffd76a">cấu tạo sáu bộ phận</b> của chính con đó. Đổi thân là đổi vùng đất nào dễ thở. Hệ đòn đánh vẫn theo <b>vũ khí</b>.<br><span style="opacity:.75">Con <b>thuần</b> là chuyên gia (ăn đòn rất nhẹ ở vùng hợp, rất nặng ở vùng khắc); con <b>tạp</b> là thợ đụng. Trung bình trên cả chín lớp quái thì <b>mọi con bằng nhau</b> — cấu tạo đổi hình dạng rủi ro, không đổi tổng.</span></div>`;
-  for (const c of dsCo){
-    const o = C.co[c.id], con = (o && o.con) || 0, dung = player.avatar === c.id;
+  for (const c of dsThan){
+    // ⚠ HỎI `avatarId()`, ĐỪNG ĐỌC THẲNG `player.avatar`. Con mặc định của lớp hiện ra khi
+    // `player.avatar === undefined`, nên so bằng thô thì đúng con NGƯỜI CHƠI ĐANG ĐEO lại
+    // mang nút "Đổi thân" — bảng mời đổi sang chính thứ đang mặc. Trước đợt này không ai
+    // thấy vì con mặc định không bao giờ có mặt trong danh sách.
+    const o = C.co[c.id], con = (o && o.con) || 0, dung = _avaNay === c.id;
     html += `<div class="skill-row${dung ? '' : ' locked'}" style="align-items:center">
       ${chiO34(c)}
       <span class="sk-info"><b style="color:${c.mau}">${c.ten}</b>
         <span style="font-size:10.5px;color:${CHI_SAO_MAU[c.sao]}"> · ${'★'.repeat(c.sao)} · </span>${lopHuyHieu(c.lop)}<span style="font-size:10.5px;color:${CHI_SAO_MAU[c.sao]}">${c.lop}</span>
-        ${con ? `<span style="font-size:10.5px;color:#ffd76a"> · trùng ×${con}</span>` : ''}
+        ${(o ? (con ? `<span style="font-size:10.5px;color:#ffd76a"> · sưu tầm ×${con + 1}</span>` : '<span style="font-size:10.5px;color:#8fd18f"> · đã sưu tầm</span>')
+             : '<span style="font-size:10.5px;color:#7d86a8"> · chưa sưu tầm</span>')}
         <div class="sk-desc">Thân ${c.lop} — ${c.ten} · phòng thủ lớp <b style="color:${elColor(c.lop)}">${(ELEM[c.lop]||{}).glyph||''} ${elName(c.lop)}</b>${bpDongMoTa(c)}${(() => { const h = axieTaiDay(c); return h ? `<br><b style="color:${h.mau}">${h.txt}</b>` : ''; })()}</div></span>
       ${dung ? '<span style="font-size:11px;color:#8fd18f">ĐANG LÀM THÂN</span>'
            : `<button class="mini-btn" onclick="window.chiChon('${c.id}')">Đổi thân</button>`}</div>`;
@@ -21060,11 +21092,12 @@ function renderMount(){
 // Ô Chimera 34px trong danh sách. Không dùng <img> nữa vì art nay là DẢI 16 khung — trình
 // duyệt chạy nó bằng hai animation steps() lồng nhau (xem .chi-anh trong style.css), nên phải
 // là một khối có background chứ không phải một tấm ảnh.
-function chiO34(c){
-  const A = CHI_ANH.o[c.id], cao = 34, rong = A ? Math.round(cao * A.nhoRong / A.nhoCao) : cao;
-  return `<i class="chi-anh" style="--sh:url(assets/chimera/${c.id}.webp);--w:${rong}px;`
+function chiOAnh(c, cao, lop){
+  const A = CHI_ANH.o[c.id], rong = A ? Math.round(cao * A.nhoRong / A.nhoCao) : cao;
+  return `<i class="chi-anh${lop ? ' ' + lop : ''}" style="--sh:url(assets/chimera/${c.id}.webp);--w:${rong}px;`
        + `--h:${cao}px;border-color:${CHI_SAO_MAU[c.sao]}"></i>`;
 }
+function chiO34(c){ return chiOAnh(c, 34); }
 // Huy hiệu lớp Axie chính chủ, cắt từ dải lop.webp theo đúng thứ tự LOP_DAI.
 function lopHuyHieu(lop){
   const i = LOP_DAI.indexOf(lop);
@@ -21506,7 +21539,7 @@ window.muaShard = function(id){
 // quyết định con thú nào được triệu hồi; nay nó quyết định cái thân nào hiện ra.
 window.chiChon = function(id){
   const C = chiState();
-  if (!C.co[id]) return;                        // chỉ con đã quay được mới cắm làm avatar
+  if (!avaCamDuoc(id)) return;                   // cửa DUY NHẤT — xem avaCamDuoc()
   C.eq = id; player.avatar = id;
   calcDerived(); saveGame(); refreshCharTab('mount');
   addFloat(player.x, player.y - 44, `✦ Đổi thân sang ${CHI_MAP[id].ten}`, CHI_MAP[id].mau, 14);
@@ -21585,6 +21618,11 @@ function startGame(sectKey, quze){
   bungMoiVung();   // A4: bung miền của MỌI map ngay ở đây, xem ghi chú tại bungMoiVung()
   newPlayer(sectKey);
   player.name = (quze && quze.name) || genCharName(); // danh tính phiêu bạt (bước đặt tên)
+  // Axie đại diện chọn ở màn tạo nhân vật. CHỈ ghi khi người chơi thật sự chọn một con hợp lệ:
+  // để trống thì `player.avatar` phải giữ nguyên `undefined`, và đó là cả một cơ chế — `undefined`
+  // nghĩa là "chưa chọn ⇒ lấy con mặc định của lớp", còn `null` nghĩa là "đã tắt bằng /avatar off".
+  // Gán bừa `quze.avatar || null` vào đây là biến mọi nhân vật mới thành đã-tắt-avatar.
+  if (quze && quze.avatar && avaCamDuoc(quze.avatar)) player.avatar = quze.avatar;
   // The Hatching: từ màn roll (người chơi thật) hoặc roll ngầm (quick-start/test)
   if (quze && quze.traits){
     player.traits = quze.traits.slice(0, 3);
@@ -21724,7 +21762,7 @@ function showMainMenu(){
   // Ô này đổi tên thành #cc-classes khi dựng màn tạo nhân vật. Bỏ sót ở đây là NGƯỜI CHƠI CŨ
   // (có save ⇒ đi thẳng vào showMainMenu) đâm vào null ngay lúc mở game.
   { const _cc = el('cc-classes'); if (_cc) _cc.style.display = 'none'; }
-  for (const _id of ['cc-detail','btn-create','cc-back']){ const _e = el(_id); if (_e) _e.style.display = 'none'; }
+  for (const _id of ['cc-detail','cc-avatar','btn-create','cc-back']){ const _e = el(_id); if (_e) _e.style.display = 'none'; }
   { const _n = document.querySelector('#sect-select .cc-name'); if (_n) _n.style.display = 'none'; }
   { const _w = el('cc-name-warn'); if (_w) _w.style.display = 'none'; }
   const mm = el('max-mode'); if (mm) mm.style.display = 'none';
@@ -22359,7 +22397,7 @@ window.cheatExec = function(raw){
         if (t === 'off' || t === 'tat'){
           player.avatar = null; cheatLog('Đã tắt avatar — về lớp nhân vật như cũ.', '#ffd76a'); break;
         }
-        if (!CHI_MAP[t] || !CHI_ANH.o[t]){
+        if (!avaCamDuoc(t)){        // cùng cửa với chiChon/ccAvaChon — xem avaCamDuoc()
           cheatLog(`Không có Axie nào tên "${t}". Gõ /avatar ds để xem danh sách.`, '#ff7a6a'); break;
         }
         player.avatar = t;
@@ -22771,7 +22809,11 @@ window.charTab = 'info';
 // lv = cấp mở khóa — tab khóa sẽ mờ đi, bấm vào chỉ hiện gợi ý (giảm quá tải tân thủ)
 const CHAR_TABS = [
   { id:'info',     name:'Thông Tin',  lv:1 },
-  { id:'mount',    name:'✦ Chimera',  lv:6 },   // id giữ 'mount' — sysUnlocked/refreshCharTab và bài kiểm cũ tra theo mã này
+  // ⚠ NHÃN là 'Thân Axie', KHÔNG phải 'Chimera Đồng Hành'. Ragoon (con thú đi theo) đã gỡ —
+  // con Axie nay LÀ thân nhìn thấy của người chơi, không phải một kẻ đi cạnh. Để nhãn cũ là
+  // tiêu đề bảng nói 'đồng hành' ngay trên một đoạn giải thích rằng đó là chính mình.
+  // ⚠ id giữ 'mount' — sysUnlocked/refreshCharTab và bài kiểm cũ tra theo mã này, không theo nhãn.
+  { id:'mount',    name:'✦ Thân Axie', lv:6 },
   // Tab 'taytuy' (Tái Sinh) đã gỡ — chủ dự án sẽ thiết kế lại. `renderTayTuy()` và
   // `window.doTayTuy()` GIỮ NGUYÊN: `player.resetCount` đang nằm trong mọi bản lưu và còn cộng
   // chỉ số vĩnh viễn trong `calcDerived()`. Trả tab về = thêm lại đúng dòng này.
@@ -26741,6 +26783,13 @@ function ccHeroLop(){
 //
 // `avatarId` trả null khi người chơi đã tắt bằng `/avatar off`; tôn trọng, đừng lấp chỗ bằng
 // con mặc định. Trong màn họ không thấy Axie thì màn chờ cũng không được vẽ thêm một con.
+// ⚠ NHÁNH `CC_AXIE_LOP` Ở ĐÂY KHÔNG BAO GIỜ CHẠY, và đừng "sửa" nó thành đọc `ccAva`.
+// Đã thử đúng thế rồi phải gỡ ra: `ccBoCuc` chỉ gọi hàm này trong nhánh `if (sect)`, mà `sect`
+// tới từ `ccHeroLop()` — vốn trả `null` khi ô đang chọn CHƯA CÓ nhân vật. Nên lúc hàm này chạy
+// thì `pl` luôn khác null và mọi dòng sau `if (pl)` là mã chết. Phép thử ngược đã nói ra điều
+// đó bằng cách IM LẶNG, và cái im lặng ấy là bằng chứng chứ không phải nhiễu.
+// Lúc TẠO nhân vật, sân khấu đi nhánh NĂM LỚP (mỗi lớp một con mặc định) — phản hồi cho lựa
+// chọn trong lưới là con Axie đứng cạnh THẺ LỚP (`.cc-ava-ke`), không phải sân khấu.
 function ccHeroAxie(sect){
   const pl = ccHeroNV();
   return pl ? avatarId(pl) : (CC_AXIE_LOP[sect] || null);
@@ -30265,6 +30314,46 @@ function ccSlotsRender(){
   // lệnh rỗng; ở chế độ giảm chuyển động thì đây là lần vẽ duy nhất.
   titleVeLai();
 }
+// ═══════════ CHỌN AXIE ĐẠI DIỆN — màn tạo nhân vật ═══════════
+//
+// Mô hình đã chốt của game: "Chỉ số tới từ 5 class. Axie chỉ đơn thuần là avatar thôi." Trước
+// bản này mô hình đó KHÔNG CÓ MẶT NÀO ở màn tạo nhân vật — `player.avatar` chỉ đổi được bằng
+// lệnh gỡ rối `/avatar <id>` hoặc bảng Khế Ước (cấp 6).
+//
+// ⚠ TỰ DO, KHÔNG KHOÁ THEO LỚP. Không phải nới lỏng cho vui: avatar mang 0 chỉ số, 0 kỹ năng,
+//   0 trang bị. Thứ khoá một lần lúc tạo nhân vật là LỚP. Khoá cả avatar theo lớp là đặt một
+//   bức tường trước một ô hoàn toàn thẩm mỹ.
+// ⚠ VÀ KHÔNG KHOÁ THEO SỞ HỮU — chủ dự án chốt 2026-09-20. Cửa là `avaCamDuoc()`, dùng CHUNG
+//   với bảng Khế Ước; đừng dựng bảng lọc thứ hai ở đây.
+//
+// `null` ở đây nghĩa là "chưa tự chọn ⇒ theo lớp", trùng đúng quy ước của avatarId().
+let ccAva = null;
+function ccAvaDang(){ return ccAva || (ccSect ? (AVA_MAC_DINH[ccSect] || null) : null); }
+window.ccAvaChon = function(id){
+  if (!avaCamDuoc(id)) return;
+  ccAva = id; AudioSys.sfx('ui', 0.5);
+  ccRender();          // vẽ lại CẢ thẻ lớp: con Axie còn đứng cạnh thẻ đang chọn nữa
+};
+function ccAvaRender(){
+  const box = el('cc-avatar'); if (!box) return;
+  const ds = avaDsThan(), dang = ccAvaDang();
+  // Chưa chọn lớp thì chưa có gì để đứng cạnh — và một lưới 16 ô bày ra trước khi người chơi
+  // biết mình là ai chỉ làm loãng bước quan trọng hơn hẳn ở ngay trên.
+  if (!ccSect || !ds.length){ box.innerHTML = ''; box.style.display = 'none'; return; }
+  box.style.display = '';
+  const c = dang && CHI_MAP[dang];
+  box.innerHTML = `<div class="cc-ava-nhan">Axie đại diện`
+    + (c ? ` — <b style="color:${c.mau}">${c.ten}</b>`
+         + `<span style="color:${CHI_SAO_MAU[c.sao]}"> ${'★'.repeat(c.sao)}</span>`
+         + `<span class="cc-ava-lop">${lopHuyHieu(c.lop)}${c.lop}</span>` : '')
+    + `</div><div class="cc-ava-luoi">`
+    + ds.map(x => `<button type="button" class="cc-ava-o${x.id === dang ? ' sel' : ''}"`
+        + ` title="${x.ten} · ${'★'.repeat(x.sao)} · ${x.lop}"`
+        + ` aria-pressed="${x.id === dang}"`
+        + ` onclick="window.ccAvaChon('${x.id}')">${chiOAnh(x, 38, 'cc-ava-hinh')}</button>`).join('')
+    + `</div><i class="cc-ava-ghi">Chỉ là hình dáng — mọi chỉ số, kỹ năng và trang bị đều tới từ lớp. Đổi lúc nào cũng được ở bảng Khế Ước.</i>`;
+}
+
 function ccRender(){
   const wrap = el('cc-classes'); if (!wrap) return;
   // Cờ cho CSS biết đã có lớp được chọn hay chưa — chưa chọn thì cả năm đứng ngang nhau,
@@ -30279,7 +30368,15 @@ function ccRender(){
     d.tabIndex = 0;
     // Ảnh thẻ là NHÂN VẬT THẬT (ccLopThe), không còn là bộ tranh anh hùng `pick_*`: người chơi
     // chọn cái gì thì phải nhận đúng cái đó. Dải khung chưa tải xong thì tạm lui về art cũ.
-    d.innerHTML = `<img class="cc-art" src="${ccLopThe(k) || heroPickUrl(k)}" alt="">
+    // Con Axie đứng cạnh THẺ ĐANG CHỌN — không có nó thì lưới bên dưới là một lựa chọn mù:
+    // bấm một ô và không thấy gì đổi. Chỉ thẻ đang chọn mới có, vì avatar thuộc về NHÂN VẬT
+    // sắp tạo chứ không phải thuộc về lớp.
+    const avaId = (ccSect === k) ? ccAvaDang() : null;
+    const ava = (avaId && CHI_MAP[avaId]) ? chiOAnh(CHI_MAP[avaId], 1, 'cc-ava-ke') : '';
+    // Con Axie neo trong HỘP TRANH, không trong thẻ: gót của lớp nhân vật nằm ở 85,7% chiều
+    // cao tấm tranh, mà tấm tranh thì co giãn theo bề ngang cột. Neo vào thẻ là neo vào một
+    // con số px cố định, và nó rơi xuống đè lên tên lớp ngay khi cột hẹp lại.
+    d.innerHTML = `<span class="cc-art-o"><img class="cc-art" src="${ccLopThe(k) || heroPickUrl(k)}" alt="">${ava}</span>
       <div class="cc-nm" style="color:${sc.color}">${sc.name}</div>
       <div class="cc-tag">${sc.role || ''}</div>`;
     const pick = () => { ccSect = k; AudioSys.sfx('ui', 0.5); ccRender(); };
@@ -30303,7 +30400,40 @@ function ccRender(){
          <div class="cc-skills">Chiêu chính: <b>${(sc.skillA||{}).name || '—'}</b> · Trấn Phái: <b>${(sc.tp||{}).name || '—'}</b></div>`
       : '<span style="opacity:.6">Chọn một lớp để xem chi tiết.</span>';
   }
+  ccAvaRender();
   ccValidate();
+  // Cỡ con Axie cạnh thẻ phải ĐO, không được chọn tay — xem ccAvaKeCo().
+  requestAnimationFrame(ccAvaKeCo);
+}
+// Con Axie cạnh thẻ lớp: to bằng mấy phần người.
+//
+// ⚠ HỎI `avaCo()` — CÙNG CÁI HÀM MÀ TRONG MÀN DÙNG. Chép một con số px vào đây là dựng bản sao
+//   thứ hai của luật tỉ lệ, và màn tạo nhân vật sẽ hứa một đằng còn trong game ra một nẻo. Đúng
+//   cái lỗi mà cả đợt màn chờ trước sinh ra để sửa (CC_AXIE_LOP hứa Ironshell, game cho Emberjaw).
+//   Luật thật không phải "Axie cao 0,72 lần thân người" mà là "0,72 lần VÀ hộp vẽ ra không quá
+//   0,95 lần theo cả hai chiều" — 16 con có 16 tỉ lệ rộng/cao, nên vế thứ hai có thật sự cắn.
+//
+// Phải ĐO bề cao tấm tranh lúc chạy: `.cc-art` là `width:100%` trong một cột co giãn, nên chiều
+// cao vẽ ra đổi theo bề rộng cửa sổ. Trong tấm tranh thì thân người chiếm đúng 0,80 chiều cao —
+// hằng số của ccLopThe(), không phải số đo bằng mắt.
+const CC_KE_THAN = 0.80;
+// …rồi THU LẠI. Ở đúng tỉ lệ thật, con Axie vẽ ra 170×134 trên một cái thẻ rộng 246 và nó che
+// mất nửa dưới nhân vật — mà lớp mới là lựa chọn quan trọng hơn trên màn này. Nên ô này là
+// HUY HIỆU "con nào", KHÔNG phải mô hình tỉ lệ; chỗ xem tỉ lệ thật là sân khấu màn chờ
+// (ccBoCuc → ccAxieThan), nơi có cả nửa màn hình mà đứng.
+// Vẫn dẫn xuất từ avaCo() chứ không chép một con số px: con bè nhất và con cao nhất phải giữ
+// đúng chênh lệch của chúng, chỉ là cả nhóm nhỏ đi cùng một hệ số.
+const CC_KE_CO = 0.60;
+function ccAvaKeCo(){
+  const ke = document.querySelector('#cc-classes .cc-card.sel .cc-ava-ke'); if (!ke) return;
+  const art = ke.parentNode.querySelector('.cc-art'); if (!art) return;
+  const hArt = art.getBoundingClientRect().height; if (!hArt) return;
+  const id = ccAvaDang(), A = id && CHI_ANH.o[id]; if (!A) return;
+  const thanNguoi = hArt * CC_KE_THAN;                       // thân NGƯỜI vẽ ra trên thẻ
+  const thanAxie  = thanNguoi * (avaCo(id) / NV_THAN_PX) * CC_KE_CO;   // …và thân AXIE, theo đúng luật trong màn
+  const cao = Math.round(thanAxie / A.thanCao);              // thân → HỘP vẽ (chừa sừng, đuôi, chân)
+  ke.style.setProperty('--h', cao + 'px');
+  ke.style.setProperty('--w', Math.round(cao * A.nhoRong / A.nhoCao) + 'px');
 }
 function ccValidate(){
   const inp = el('inp-char-name'), btn = el('btn-create'), warn = el('cc-name-warn');
@@ -30319,6 +30449,9 @@ function ccValidate(){
 let ccOMoi = -1;   // ô sẽ nhận nhân vật vừa tạo
 function openCreate(o){
   ccSect = null;
+  ccAva = null;   // nhân vật MỚI: chưa tự chọn ⇒ theo lớp. Giữ lại lựa chọn của lần tạo trước
+                  // thì người chơi tạo con thứ hai lại nhận con Axie của con thứ nhất mà không
+                  // hiểu vì sao mặc định lại là con đó.
   ccOMoi = (typeof o === 'number' && o >= 0) ? o : oTrongDauTien();
   if (ccOMoi < 0) return;   // đủ năm ô — không còn chỗ nào để tạo
   el('sect-select').classList.remove('hidden'); titleStart();
@@ -30359,7 +30492,7 @@ function openCreate(o){
     activeSlot = o; ccOMoi = -1;
     const nm = sanitizeCharName(el('inp-char-name').value) || genCharName();
     el('sect-select').classList.add('hidden'); titleStop();
-    startGame(ccSect, { name: nm });
+    startGame(ccSect, { name: nm, avatar: ccAva });
     checkTitles();
     AudioSys.sfx('quest', 0.9);
   });

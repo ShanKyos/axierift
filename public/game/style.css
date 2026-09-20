@@ -1249,7 +1249,10 @@ html,body { width:100%; height:100%; overflow:hidden; background:var(--bg-deep);
    animation steps() lồng nhau: một cái nhảy cột trong 0,889s, một cái nhảy hàng ở nhịp chậm gấp
    đôi, nên hết một vòng cột là sang hàng — đúng 16 khung trong 1,778s, khớp CHI_THO_FPS = 9.
    --w/--h do chiO34() ghi vào thẻ vì mỗi con một tỉ lệ ô riêng. */
-.skill-row i.chi-anh {
+/* Ô ảnh Chimera — dải 16 khung chạy bằng hai animation steps() lồng nhau. Dùng ở bảng Khế
+   Ước VÀ ở lưới chọn Axie đại diện (màn tạo nhân vật), nên KHÔNG khoá trong .skill-row:
+   khoá rồi thì chỗ thứ hai phải chép lại nguyên khối, và hai bản sao sẽ lệch nhau. */
+i.chi-anh {
   display:block; flex:0 0 auto; width:var(--w); height:var(--h);
   border:2px solid; border-radius:var(--r-sm);
   background:rgba(18,20,44,.9) var(--sh) no-repeat 0 0;
@@ -1258,7 +1261,7 @@ html,body { width:100%; height:100%; overflow:hidden; background:var(--bg-deep);
 }
 @keyframes chi-tho-x { from { background-position-x:0 } to { background-position-x:calc(var(--w) * -8) } }
 @keyframes chi-tho-y { from { background-position-y:0 } to { background-position-y:calc(var(--h) * -2) } }
-@media (prefers-reduced-motion: reduce) { .skill-row i.chi-anh { animation:none } }
+@media (prefers-reduced-motion: reduce) { i.chi-anh { animation:none } }
 /* Huy hiệu lớp Axie chính chủ — dải 9 ô 48px, thứ tự khớp LOP_DAI trong game.js. */
 .lop-hd { display:inline-block; width:13px; height:13px; vertical-align:-2px; margin-right:3px;
   background:url(assets/ui/lop.webp) no-repeat; background-size:calc(13px * 9) 13px;
@@ -2666,3 +2669,33 @@ html,body { width:100%; height:100%; overflow:hidden; background:var(--bg-deep);
   #chat-wrap { bottom:104px; width:min(240px,52vw); left:8px; font-size:11px; }
   #chat-log { max-height:16vh; }
 }
+
+/* ═══════════ LƯỚI CHỌN AXIE ĐẠI DIỆN (màn tạo nhân vật) ═══════════
+   Song song với lưới chân dung của các game cùng thể loại — khác ở chỗ ô này không phải ảnh
+   trang trí: nó chọn con Axie sẽ LÀ thân nhìn thấy của người chơi suốt hành trình.
+   Ô ảnh dùng chung `i.chi-anh` với bảng Khế Ước, không dựng bản vẽ thứ hai. */
+#cc-avatar { margin:2px auto 10px; max-width:560px; }
+.cc-ava-nhan { font-size:12px; color:var(--text-dim); letter-spacing:.04em; margin-bottom:7px; }
+.cc-ava-nhan b { font-weight:700; }
+.cc-ava-lop { margin-left:8px; font-size:11px; color:var(--text-dimmer); }
+.cc-ava-luoi { display:flex; flex-wrap:wrap; gap:6px; justify-content:center; }
+.cc-ava-o { display:flex; align-items:center; justify-content:center; padding:3px;
+  min-width:52px; height:50px; cursor:pointer;
+  background:linear-gradient(180deg, rgba(28,32,60,.88), rgba(12,14,32,.92));
+  border:1px solid var(--border-faint); border-radius:var(--r-sm);
+  transition:border-color .14s, transform .12s, box-shadow .14s; }
+.cc-ava-o:hover { transform:translateY(-2px); border-color:var(--border-strong); }
+.cc-ava-o.sel { border-color:var(--accent-light); box-shadow:0 0 14px rgba(var(--rgb-vang),.38); }
+/* Ô trong lưới bỏ viền riêng của .chi-anh: viền đang-chọn là của Ô, không phải của con vật —
+   hai đường viền lồng nhau thì không đường nào đọc ra là "đang chọn". */
+.cc-ava-o .cc-ava-hinh { border:none; background-color:transparent; }
+.cc-ava-ghi { display:block; margin-top:8px; font-size:10.5px; color:var(--text-dimmer); font-style:normal; }
+/* Con Axie đứng cạnh thẻ lớp đang chọn.
+   ⚠ NEO TRONG HỘP TRANH (.cc-art-o), KHÔNG trong thẻ. Gót của lớp nhân vật rơi ở 85,7% chiều
+   cao tấm tranh — đo trên bản dựng thật — nên `bottom:16%` đặt gót con Axie ngang gót người
+   ở MỌI bề rộng cột. Bản đầu neo vào thẻ bằng `bottom:52px` và nó tụt xuống đè lên tên lớp. */
+.cc-art-o { position:relative; display:block; }
+.cc-card .cc-ava-ke { position:absolute; right:1%; bottom:16%; z-index:3;
+  border:none; background-color:transparent; pointer-events:none;
+  filter:drop-shadow(0 3px 6px rgba(0,0,0,.55)); }
+@media (max-width:720px){ .cc-card .cc-ava-ke { display:none; } }

@@ -18,6 +18,13 @@ muc(){ printf '\n\033[1m%s\033[0m\n' "$1"; }
 muc "① MÁY DỊCH VÀ KIỂU"
 npx eslint public/game/game.js >/dev/null 2>&1 && ok "eslint sạch" || xau "eslint có lỗi"
 node --check public/game/data/canbang.js 2>/dev/null && ok "canbang.js đúng cú pháp" || xau "canbang.js sai cú pháp"
+# ⚠ BÀI KIỂM CŨNG PHẢI ĐÚNG CÚ PHÁP. Một bài sai cú pháp KHÔNG đỏ ở một khẳng định nào — nó chết
+# lúc nạp mô-đun, và `reg.sh` chỉ thấy rc=1 kèm một vết ngăn xếp của Node. Đã ship đúng thế một
+# lần: sửa một câu THÔNG BÁO rồi lỡ để dấu huyền trong một template literal, và bài đó im lặng
+# thôi gác gì suốt cả một lượt hồi quy. Rẻ hơn hẳn việc phát hiện ở phút thứ 40.
+_tsai=$(for f in tests/*.js; do node --check "$f" 2>/dev/null || echo "$f"; done)
+[ -z "$_tsai" ] && ok "$(ls tests/*.js | wc -l) bài kiểm đúng cú pháp" \
+                || xau "bài kiểm sai cú pháp: $(echo $_tsai)"
 npm run check >/dev/null 2>&1 && ok "tsc qua" || xau "tsc đỏ"
 npm test >/dev/null 2>&1 && ok "vitest qua" || xau "vitest đỏ"
 
@@ -91,7 +98,7 @@ else
   printf '\033[31mCỬA KIỂM: %d MỤC ĐỎ — chưa được commit.\033[0m\n' "$XAU"
 fi
 cat <<'TAY'
-  1. Hồi quy đầy đủ: bash tools/reg.sh /tmp/reg-X  (~90 phút, phải 175/175)
+  1. Hồi quy đầy đủ: bash tools/reg.sh /tmp/reg-X  (~90 phút, MỌI bài rc=0 — nay 228 bài)
   2. Bài kiểm MỚI phải THỬ NGƯỢC: phá mã, bài kiểm phải ĐỎ. Xanh cả hai chiều = xanh giả.
   3. Mọi con số trong commit phải ĐO ĐƯỢC, không phải ước lượng.
   4. Đoán sai chỗ nào thì ghi vào docs/NHAT_KY.md mục "đã đoán sai".
