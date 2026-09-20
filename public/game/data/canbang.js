@@ -1169,7 +1169,26 @@ window.MAPS = {
     // gần như toàn là KHÔNG KHÍ, người chơi phải đi sát được tới thành bể). Miễn trừ bằng
     // một cờ TRONG DỮ LIỆU, đừng bằng một danh sách tên chép trong bài kiểm.
     { img:'ct_dainuoc', x:2991, y:1425, w:418, h:360, thoang:true,
-      can:[[29, 165, 299, 151]],
+      // ⚠⚠ CHÍN HỘP BẬC THANG, KHÔNG PHẢI MỘT — vành bể là một hình ELIP.
+      // Bản một-hộp cũ `[[29,165,299,151]]` chỉ ôm MẶT NƯỚC, đo được **30% thân bể
+      // đi được**: 43px vành TRƯỚC · 13px vành SAU · 12-28px mỗi bên. Chủ dự án chụp
+      // màn hình và bắt đúng nó — nhân vật đứng lọt lên vành phải, chỉ còn nửa người
+      // trên nhô lên khỏi thành bể.
+      //
+      // ⚠ MỘT CHỮ NHẬT KHÔNG BAO GIỜ ÔM ĐƯỢC MỘT HÌNH ELIP: nới cho kín hai bên là
+      // chặn lấn bốn góc (dựng tường vô hình — đúng lỗi NGƯỢC mà `test_vatcan §3`
+      // gác), thu cho chừa góc là hở hai bên. Ba bậc đo ra vẫn 23% hở. Chín bậc
+      // (mỗi bậc 23px, bề ngang = GIAO của mọi hàng trong bậc) ⇒ **9,1% hở · chặn
+      // lấn ĐÚNG 0 px**, và phần hở còn lại là mấy mẩu tam giác ở mép elip.
+      //
+      // ⚠ Sinh bằng máy trên chính tấm art, đừng chấm tay. Và xếp hộp RỘNG NHẤT
+      // TRƯỚC: `test_vatcan §4` đọc `can[0]` để chấm tâm hộp và tỉ lệ khung (5%).
+      //
+      // ⚠ Dải bên phải KHÔNG chặn là CỐ Ý — đó là tia nước bắn ra ngoài thành bể,
+      // tức không khí. Chặn nó là người chơi khựng lại giữa khoảng trống.
+      can:[[3, 244, 352, 23], [5, 221, 349, 23], [5, 198, 348, 23], [7, 267, 344, 23],
+           [19, 175, 321, 23], [26, 290, 306, 23], [48, 152, 262, 23], [61, 313, 236, 23],
+           [162, 336, 33, 23]],
       khung:{ cot:4, hang:3, khung:12, oRong:418, oCao:360, fps:12 } },
   ],
     // ── CHÍN KHỐI CÒN TRỐNG · ĐANG CHỜ ART ───────────────────────────────────
