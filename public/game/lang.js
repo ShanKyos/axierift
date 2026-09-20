@@ -1750,6 +1750,89 @@ RULES.unshift(
     (m, a, b) => `Rifts tear open on every hunting ground — ${a} minutes, kill up to ${b} to take the big Box Kundun!`]
 );
 
+/* ═══ Đợt trộn "Lực Chiến · Nhận Quà · dải trạng thái" ═══
+   Ba bảng này vào main SAU lượt dịch trước, nên chúng mang theo ~55 chuỗi chưa ai dịch.
+   Bắt được bằng cách hỏi thẳng lang.js từng chuỗi mới trong diff — `tr(s) === s` nghĩa là
+   chuỗi ấy rơi thẳng ra màn hình bằng tiếng Việt. Đó là cửa rẻ nhất; `test_dichen` là cửa
+   nói thật nhất, vì nó đo thứ THỰC SỰ vẽ ra. */
+Object.assign(EXACT, {
+  // — nút và tiêu đề —
+  'Đánh Giá Sức Chiến Đấu': 'Combat Power',
+  'Đánh Giá Sức Chiến Đấu — bấm xem phân rã': 'Combat Power — click for the breakdown',
+  'Bấm để xem chi tiết': 'Click for details',
+  'Mốc Lực Chiến': 'Combat Power Milestones',
+  'Nhận Quà': 'Claim',
+  'Đã nhận': 'Claimed',
+  'Chưa đủ': 'Not yet',
+  'Chưa đủ điều kiện!': 'Requirements not met!',
+  'Mở khoá': 'Unlock',
+  'Rồi': 'Done',
+  'Mỗi lần': 'Each',
+  'Cấp': 'Level',
+  'Chưa mặc món nào': 'Nothing equipped',
+  'Chưa có mốc nào nhận được': 'No milestone ready to claim',
+  'chưa có mốc nào': 'no milestone yet',
+  '⚠ Điểm chưa cộng': '⚠ Unspent points',
+  'Điểm Tiềm Năng đã rót': 'Potential points spent',
+  'Điểm đã tiêu': 'Points spent',
+  'Tổng cấp kỹ năng': 'Total skill levels',
+  'Số lần Tái Sinh': 'Resets',
+  'Vòng Tái Sinh': 'Reset cycle',
+  'Mở sau lần Tái Sinh đầu tiên.': 'Opens after your first Reset.',
+  // — các dòng phân rã Lực Chiến —
+  'Lực chiến nhân vật': 'Character power',
+  'Lực chiến trang bị': 'Gear power',
+  'Lực chiến kỹ năng': 'Skill power',
+  'Lực chiến Tái Sinh': 'Reset power',
+  'Lực chiến Đại Thành': 'Mastery power',
+  'Lực chiến Axie': 'Axie power',
+  'Lực chiến thú cưỡi': 'Mount power',
+  'Lực Chiến Thần Binh': 'Divine Arms power',
+  // — mốc thưởng —
+  'Đón Chào Tân Thủ': 'Welcome Aboard',
+  'Thợ Săn Vaeldra': 'Vaeldran Hunter',
+  'Mốc của mười cấp đầu — đi hết chương I là nhận gần đủ.':
+    'The first ten levels — finish Chapter I and you have most of them.',
+  'Cày quái đủ số là có quà — không phải đi đâu, không phải hỏi ai.':
+    'Kill enough and the reward is yours — no trip, no NPC to ask.',
+  'Thưởng theo chính con số trên nút Lực Chiến — mạnh tới đâu nhận tới đó.':
+    'Rewards track the number on the Combat Power button — the stronger you are, the more you get.',
+  // — dải trạng thái nhân vật (buff/debuff) —
+  'Rượu Hổ Cốt': 'Warbrew',
+  'Bùa Chắn Sét': 'Stormward Charm',
+  'Sa Đọa': 'Corruption',
+  'Trúng Độc': 'Poisoned',
+  'Trọng Thương': 'Grievous Wound',
+  'Tê Liệt': 'Paralysed',
+  'Không di chuyển được': 'Cannot move',
+  'Mất máu theo nhịp': 'Losing health over time',
+  'Tăng Sát Thương': 'Damage Up',
+  'Bạo Kích Tuyệt Đối': 'Guaranteed Crit',
+  'Mọi đòn đều bạo kích': 'Every hit crits',
+  'Phản Đòn': 'Riposte',
+  'Dội lại sát thương cho kẻ đánh': 'Reflects damage back at the attacker',
+  'Hút Sinh Lực': 'Lifesteal',
+  'Đánh trúng thì hồi máu': 'Heals you on hit',
+  'Liên Trảm': 'Chain Strike',
+  'Cửa sổ nối đòn còn mở': 'The combo window is still open',
+  'Chiêu đã nâng cấp': 'Skill upgraded',
+  'Vực Thẳm — chưa hồi phục': 'The Abyss — not yet recovered',
+  '−40% sát thương sét': '−40% lightning damage',
+  '+12% Công Kích': '+12% ATK',
+  '+15% Công Kích — ma công': '+15% ATK — dark arts',
+  '+2% Công Kích và Sinh Lực': '+2% ATK and Health',
+});
+
+// Dòng thưởng của bảng Mốc Lực Chiến dựng bằng template, nên chúng KHÔNG bao giờ khớp một
+// khoá EXACT — phải là luật. `unshift` chứ không `push`: luật có sẵn `/^(\d+) (.*)$/` nuốt
+// hết cả ba nếu để sau, đúng cái bẫy đã dẫm hai lần trong đợt dịch trước.
+RULES.unshift(
+  [/^(\d+) Ấn Giao Kết$/,          (m, a) => `${a} Bond Seals`],
+  [/^(\d+) ✦ Ấn Giao Kết$/,        (m, a) => `${a} ✦ Bond Seals`],
+  [/^1 (.+) theo cấp$/,             (m, a) => `1 ${tr(a)} (scaled to level)`]
+);
+Object.assign(EXACT, { 'Lực Chiến': 'Combat Power' });
+
 function tr(s) {
   if (lang !== 'en' || !s || typeof s !== 'string') return s;
   const cached = _trCache.get(s);

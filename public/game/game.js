@@ -25079,10 +25079,15 @@ function lcChiTiet(id, tongDong){
   if (id === 'nv'){
     const s0 = SECTS[player.sect];
     d.push(['Cấp', player.level]);
-    d.push(['Sức Mạnh', player.str + s0.bonus.str + 3]);
-    d.push(['Nhanh Nhẹn', player.agi + s0.bonus.agi + 2]);
-    d.push(['Thể Lực', player.vit + s0.bonus.vit + 3]);
-    d.push(['Linh Lực', player.ene + (s0.bonus.ene || 0)]);
+    // ⚠ TÊN BỐN CHỈ SỐ ĐỌC TỪ `ATTR_INFO`, ĐỪNG CHÉP TAY. Bản đầu chép tay và chép nhầm
+    // luôn một cái tên ĐÃ BỊ GỠ: nó in 'Linh Lực' — một trong năm tên kiếm hiệp mà đợt đổi
+    // sang bốn chỉ số kiểu MU đã thay (`ene` nay là **Năng Lượng**). Bảng Nhân Vật in đúng
+    // tên mới còn bảng này in tên cũ, tức hai bảng cạnh nhau gọi một chỉ số bằng hai tên.
+    // Đọc từ bảng gốc thì đổi tên một lần là mọi chỗ theo, và Quy tắc số 1 không lọt được.
+    d.push([ATTR_INFO.str.name, player.str + s0.bonus.str + 3]);
+    d.push([ATTR_INFO.agi.name, player.agi + s0.bonus.agi + 2]);
+    d.push([ATTR_INFO.vit.name, player.vit + s0.bonus.vit + 3]);
+    d.push([ATTR_INFO.ene.name, player.ene + (s0.bonus.ene || 0)]);
     d.push(['Phòng Thủ', Math.round((player.def + s0.bonus.def + 2) * (s0.defMult || 1))]);
     if ((player.free || 0) > 0) d.push(['⚠ Điểm chưa cộng', player.free]);
   } else if (id === 'do'){
