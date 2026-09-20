@@ -140,7 +140,12 @@ const cho = ms => new Promise(r => setTimeout(r, ms));
   // làm tròn thành 1 hay 0 là tuỳ lượt (đo được cả 0,57→1 lẫn 0,19→0), nên lỗi "suy chết từ máu"
   // cũng chỉ hiện ra tuỳ lượt. Ghim máu ở 0,6 thì nó hiện ra MỌI lượt.
   await B.p.evaluate(() => { player.hp = 0.6; });
-  await cho(400);
+  // ⚠ CHỜ B CHẾT THẬT, ĐỪNG CHỜ 400ms. `dead` bật trong vòng `update()`, mà dưới tải — 227 bài
+  // hồi quy nối đuôi trên máy không GPU — một nhịp khung có thể dài hơn thế nhiều. Bài vì vậy
+  // ĐỎ THEO TẢI chứ không theo lỗi, và nó đỏ ở đúng mệnh đề TỰ KIỂM CẢNH DỰNG, tức báo "cảnh
+  // hỏng" trong khi cơ chế chạy hoàn hảo (chạy riêng: xanh). Cùng bẫy đã gỡ ở `test_chaos`.
+  await B.p.waitForFunction(() => window.dead === true || (typeof dead !== 'undefined' && dead),
+                            null, { timeout: 8000 }).catch(() => {});
   const tuKhai = await B.p.evaluate(() => ({ hp: +player.hp.toFixed(2), dead, map: curMap }));
   // ⚠ HỎI CẢ SỢI DÂY LẪN CHỖ TIÊU THỤ. Bản đầu của mục này chỉ hỏi `n.chet` (thứ đến từ dây), và
   // phép thử ngược cho thấy nó KHÔNG ĐỎ khi tôi trả `drawPlayer` về kiểu suy-chết-từ-máu: dây

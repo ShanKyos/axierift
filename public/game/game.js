@@ -31306,12 +31306,16 @@ function hdNoiDung(){
 //
 // Ba ô đếm tiền ở đầu bảng lấy đúng khuôn hàng WCoinC/WCoinP/GoblintP trong ảnh — và ba loại
 // tiền ở đây đã có sẵn, không bịa thêm cái nào.
+// `anh` là TRANH THẬT cắt từ bộ UI gothic; `mat` giữ lại làm nấc lui khi tệp chưa có.
+// ⚠ Đừng bỏ `mat` đi: `sysMat()` dựa vào nó để một nút mới thêm vẫn hiện được cái gì đó trong
+// lúc chờ art, thay vì hiện ra một ô trống — đúng nếp "ô chờ art" của Quy tắc số 3.
 const SYS_NUT = [
-  { mat:'⚙',  ten:'Cài Đặt',         phim:'O',  lam:"togglePanel('settings')" },
-  { mat:'⏱', ten:'Sự Kiện',          phim:'',   lam:"openEventBoard()" },
-  { mat:'◈',  ten:'Ngân Hàng Ngọc',  phim:'N',  lam:"togglePanel('ngocbank')" },
-  { mat:'✋', ten:'Lệnh Nhặt',        phim:'',   lam:"togglePanel('nhat')" },
+  { anh:'gt_ic_caidat', mat:'⚙',  ten:'Cài Đặt',         phim:'O',  lam:"togglePanel('settings')" },
+  { anh:'gt_ic_laban',  mat:'⏱', ten:'Sự Kiện',          phim:'',   lam:"openEventBoard()" },
+  { anh:'gt_ic_ruong',  mat:'◈',  ten:'Ngân Hàng Ngọc',  phim:'N',  lam:"togglePanel('ngocbank')" },
+  { anh:'gt_ic_tui',    mat:'✋', ten:'Lệnh Nhặt',        phim:'',   lam:"togglePanel('nhat')" },
 ];
+const sysMat = n => n.anh ? `<img src="assets/ui/${n.anh}.webp" alt="">` : n.mat;
 function renderHelpPanel(){
   const p = el('panel-help'); if (!p) return;
   const vi = [
@@ -31320,10 +31324,14 @@ function renderHelpPanel(){
     ['♦', 'Shard',        (player && player.shard) || 0,                          '#7ecbff'],
   ];
   let h = moBang({ tieu:'Menu Hệ Thống', mat:'≡' });
+  // Ba loại tiền ở đây phải dùng ĐÚNG icon của ví trên HUD. Để hai nơi vẽ hai kiểu là người
+  // chơi phải học hai lần cho một thứ — cùng bài học đã ghi cho `NGOC_ANH` / `JEWEL_COLORS`.
+  const VI_ANH = { '◈':'gt_xu_vang', '✦':'gt_xu_bac', '♦':'gt_ngoc_lam' };
   h += `<div class="sys-vi">${vi.map(([g, ten, so, mau]) =>
-      `<span><i style="color:${mau}">${g}</i> ${ten}: <b style="color:${mau}">${so.toLocaleString('vi-VN')}</b></span>`).join('')}</div>`;
+      `<span>${VI_ANH[g] ? `<img class="vi-ic" src="assets/ui/${VI_ANH[g]}.webp" alt="">`
+                         : `<i style="color:${mau}">${g}</i>`} ${ten}: <b style="color:${mau}">${so.toLocaleString('vi-VN')}</b></span>`).join('')}</div>`;
   h += `<div class="sys-luoi">${SYS_NUT.map(n =>
-      `<button class="sys-nut" onclick="${n.lam}"><i>${n.mat}</i><span>${n.ten}</span>${
+      `<button class="sys-nut" onclick="${n.lam}"><i>${sysMat(n)}</i><span>${n.ten}</span>${
         n.phim ? `<kbd>${n.phim}</kbd>` : ''}</button>`).join('')}</div>`;
   p.innerHTML = h;
 }

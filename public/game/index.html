@@ -73,11 +73,11 @@
   <div id="hud-right">
     <div id="hud-vi" role="group" aria-label="Ví">
       <button class="vi-o vi-lumen" title="Lumen — tiền chính: tiệm, rèn, nâng kỹ năng. Bấm mở Túi Đồ · Vật Liệu"
-              onclick="window.moViTien()"><i>◈</i><b id="hud-silver">0</b></button>
+              onclick="window.moViTien()"><img class="vi-ic" src="assets/ui/gt_xu_vang.webp" alt=""><b id="hud-silver">0</b></button>
       <button class="vi-o vi-ve" title="Ấn Giao Kết — vé quay Khế Ước Ragoon. Bấm mở bảng Khế Ước"
-              onclick="window.openKheUoc()"><i>✦</i><b id="hud-ve">0</b></button>
+              onclick="window.openKheUoc()"><img class="vi-ic" src="assets/ui/gt_xu_bac.webp" alt=""><b id="hud-ve">0</b></button>
       <button class="vi-o vi-shard" title="Shard — tiền cao cấp: đổi vé quay, nới túi và kho. Bấm mở Quầy Shard"
-              onclick="window.moQuayShard()"><i>♦</i><b id="hud-shard">0</b></button>
+              onclick="window.moQuayShard()"><img class="vi-ic" src="assets/ui/gt_ngoc_lam.webp" alt=""><b id="hud-shard">0</b></button>
     </div>
     <button id="btn-pk" class="hbtn pk-off hidden" title="Bật/tắt chế độ PK">PK: Tắt</button>
     <button id="btn-auto" class="hbtn auto-off hidden" title="Tự đánh — treo máy: tự đánh quái & tung kỹ năng quanh điểm neo, tối đa 1-2 bãi (Z)">⚔ AUTO</button>
@@ -159,8 +159,8 @@
       <!-- Tổ Đội và Hảo Hữu CHƯA có tranh trong bộ ic_*.png, nên dùng ký hiệu chữ (gold, cùng
            cỡ ô). Đừng mượn tạm một tranh của nút khác: hai nút cùng hình là hai nút không phân
            biệt được, mà nhãn thì chỉ hiện lúc rê chuột. -->
-      <button class="mc-btn mc-chu" id="btn-party"  title="Tổ Đội (P)">⚑<span>Tổ Đội</span></button>
-      <button class="mc-btn mc-chu" id="btn-friend" title="Hảo Hữu (H)">♥<span>Hảo Hữu</span></button>
+      <button class="mc-btn" id="btn-party"  title="Tổ Đội (P)"><img src="assets/ui/gt_ic_todoi.webp" alt=""><span>Tổ Đội</span></button>
+      <button class="mc-btn" id="btn-friend" title="Hảo Hữu (H)"><img src="assets/ui/gt_ic_haohuu.webp" alt=""><span>Hảo Hữu</span></button>
       <button class="mc-btn" id="btn-map"      title="Bản Đồ (M)"><img src="assets/ui/ic_bando.png" alt=""><span>Bản Đồ</span></button>
       <button class="mc-btn" id="btn-settings" title="Cài Đặt (O)"><img src="assets/ui/ic_caidat.png" alt=""><span>Cài Đặt</span></button>
       <!-- ⚠ Ký hiệu là `≡`, KHÔNG phải `☰`. Cái thứ hai trông giống hệt và cũng đọc ra "menu",

@@ -28,10 +28,36 @@ O = 64
 
 # tên tệp → (x, y, rộng, cao) trên tấm gốc
 BANG = [
-    ('gt_loa_bat', (1546, 311, 57, 53)),   # loa có sóng   — âm thanh ĐANG BẬT
-    ('gt_loa_tat', (1643, 311, 56, 53)),   # loa kèm dấu × — âm thanh ĐÃ TẮT
-    ('gt_nhac',    (1747, 306, 52, 60)),   # nốt nhạc      — hàng Nhạc nền trong Cài Đặt
+    # ── âm thanh ──
+    ('gt_loa_bat',   (1546, 311, 57, 53)),   # loa có sóng   — âm thanh ĐANG BẬT
+    ('gt_loa_tat',   (1643, 311, 56, 53)),   # loa kèm dấu × — âm thanh ĐÃ TẮT
+    ('gt_nhac',      (1747, 306, 52, 60)),   # nốt nhạc      — hàng Nhạc nền trong Cài Đặt
+    # ── thanh dưới: hai nút DUY NHẤT còn là ký tự chữ. `CLAUDE.md` ghi thẳng lý do —
+    #    "⚑ và ♥ vẫn là ký tự, không phải tranh: ic_*.png chưa có art cho Tổ Đội / Hảo Hữu".
+    ('gt_ic_todoi',  (1635, 207, 70, 51)),   # ba người  → ⚑ Tổ Đội
+    ('gt_ic_haohuu', (  55,1128, 62, 58)),   # tim đỏ    → ♥ Hảo Hữu
+    # ── ví tiền: ba ô thường trực trên HUD, cả ba đang là ký tự ◈ ✦ ♦ ──
+    # ⚠ CẮT RUỘT, BỎ VÀNH. Ba món này trong tấm gốc là huy hiệu LỤC GIÁC có khung đồng sẵn,
+    #   mà ô ví (`.vi-o`) đã có khung viên thuốc của nó rồi — lồng hai khung vào nhau thì đọc
+    #   ra một cái huy hiệu dán đè lên một cái nút. Toạ độ ruột đo bằng máy (hộp bao vùng
+    #   sáng, chừa 12px vành), không chấm tay.
+    ('gt_xu_vang',   (1621,1654, 68, 78)),   # xu vàng  → ◈ Lumen
+    ('gt_xu_bac',    (1750,1655, 68, 77)),   # xu bạc   → ✦ Ấn Giao Kết
+    ('gt_ngoc_lam',  (1880,1654, 66, 78)),   # ngọc lam → ♦ Shard
+    # ── Menu Hệ Thống (F6): bốn nút, cả bốn đang là ký tự ──
+    ('gt_ic_caidat', (1541,  87, 70, 70)),   # bánh răng → ⚙ Cài Đặt
+    ('gt_ic_laban',  (1839,  88, 72, 72)),   # hoa gió   → ⏱ Sự Kiện
+    ('gt_ic_ruong',  (1835, 200, 70, 61)),   # rương     → ◈ Ngân Hàng Ngọc
+    ('gt_ic_tui',    (1230, 115,109,108)),   # túi tiền  → ✋ Lệnh Nhặt (nút này CÓ SẴN khung
+                                             #   vuông trong tấm gốc — giữ, vì bốn nút F6 vốn
+                                             #   là ô vuông lớn, không phải icon trần)
+    # ── khung bảng, 9 lát ──
+    ('gt_khung_bang',( 728, 280,714,626)),
 ]
+
+# Mấy món cắt NGUYÊN KHUNG (không fit-square vào ô vuông) — khung 9 lát phải giữ đúng tỉ lệ
+# và đúng số điểm ảnh, ép vào ô 64×64 là mất sạch góc.
+NGUYEN = {'gt_khung_bang'}
 
 # ─────────────────────────────────────────────────────────────────────────────────────────
 # ĐÃ ĐO, CHƯA DÙNG — chủ dự án chốt món nào thì dời dòng đó lên BANG rồi chạy lại. Để sẵn ở
@@ -40,15 +66,11 @@ BANG = [
 #   chết, mà kiểu chết đó im lặng — `test_isoneo` từng phải dựng hẳn hai tầng vì chuyện này.
 CHO_DUYET = [
     # ── icon, thay cho ký tự đang dùng trên thanh dưới ──
-    ('gt_ic_caidat',   (1541,  87, 70, 70)),   # bánh răng   → ⚙ Cài Đặt
     ('gt_ic_sach',     (1642,  92, 67, 60)),   # sách        → Kỹ Năng
     ('gt_ic_bando',    (1740,  89, 66, 63)),   # cuộn bản đồ → Bản Đồ
-    ('gt_ic_laban',    (1839,  88, 72, 72)),   # hoa gió     → Nhiệm Vụ
     ('gt_ic_but',      (1944,  85, 56, 76)),   # bút lông    → (chưa có chỗ)
     ('gt_ic_nguoi',    (1546, 200, 58, 59)),   # một người   → Nhân Vật
-    ('gt_ic_todoi',    (1635, 207, 70, 51)),   # ba người    → ⚑ Tổ Đội  ← CLAUDE.md ghi rõ
-    ('gt_ic_vuongmien',(1735, 199, 68, 59)),   #             #   "chưa có art cho Tổ Đội /
-    ('gt_ic_ruong',    (1835, 200, 70, 61)),   # rương       #   Hảo Hữu" — tấm này lấp đúng
+    ('gt_ic_vuongmien',(1735, 199, 68, 59)),   # vương miện  → (chưa có chỗ)
     # ('gt_ic_cup',    (1933, 200, 66, 62)),   # ⚠ CÚP: ĐỪNG CẮT. Game không có bảng xếp hạng
                                                #   và CLAUDE.md cấm dựng nút cho thứ chưa có.
     # ── nút ──
@@ -58,13 +80,67 @@ CHO_DUYET = [
     # ⚠ Cạnh ĐỀU (đo: lệch 0,24–4,65 trên 40px khi lấy mẫu TRÁNH hoạ tiết giữa) ⇒ 9 lát chạy
     #   được. Nhưng viên kim cương giữa cạnh trên thì KHÔNG kéo giãn được — phải cắt rời ra
     #   thành một phần tử riêng, nếu không nó bè ra theo bề ngang bảng.
-    ('gt_khung_bang',  ( 728, 280,714,626)),
     ('gt_chandung',    (  52,  52,642,216)),   # vòng chân dung + 3 thanh
     ('gt_thanh_truot', (1606, 980,356, 58)),   # rãnh trượt + núm kim cương
     ('gt_bang_xanh',   (1601,1340,400, 67)),   # biển tên xanh
     ('gt_bang_do',     (1600,1433,402, 68)),   # biển tên đỏ
 ]
 # ─────────────────────────────────────────────────────────────────────────────────────────
+
+
+# ── KHUNG 9 LÁT ──────────────────────────────────────────────────────────────────────────
+# Đo trước khi cắt, không đoán:
+#   · cạnh trên ở cột SẠCH bắt đầu ở y=40-41; góc thì cao hơn (y=26 ở x=0)
+#   · góc hết hoa văn khoảng x≈90 (lệch so với cột mẫu x=180 tụt từ 47 xuống 3,4)
+#   · giữa cạnh trên có một cụm hoạ tiết + VIÊN KIM CƯƠNG LAM (lõi lam x 336-377, y 17-65;
+#     cả cụm vàng bọc ngoài rộng tới x≈300-420)
+#   · rải rác còn hai cái ngạnh nhỏ ở x≈240 và đối xứng bên phải
+#
+# ⚠ `border-image` KÉO GIÃN lát giữa mỗi cạnh. Để nguyên viên kim cương trong lát ấy là nó bè
+#   ra theo bề ngang bảng — một viên ngọc hình thoi thành một vệt lam. Nên phải TẨY cạnh cho
+#   sạch rồi trả viên ngọc về bằng một phần tử riêng canh giữa.
+#   Tẩy bằng cách lấy ĐÚNG MỘT CỘT sạch (x=180) kéo ngang: rail vốn gần như đều
+#   (lệch 4,65 trên 40px · 10,54 trên 80px), mà `border-image` thì sẽ kéo giãn nó nữa — giữ
+#   lại chút vân đó cũng không ai thấy, còn tẩy sạch thì bảo đảm không có hoạ tiết nào bị bè.
+GOC = 100          # bề rộng góc giữ nguyên, mỗi bên
+COT_SACH = 180     # cột dùng làm mẫu cho cạnh trên/dưới
+HANG_SACH = 313    # hàng dùng làm mẫu cho cạnh trái/phải (giữa khung)
+
+
+def nuong_khung(im, ra):
+    """Tách khung thành HAI tệp: khung 9 lát đã tẩy cạnh, và viên ngọc giữa."""
+    x0, y0, w, h = 728, 280, 714, 626
+    f = im.crop((x0, y0, x0 + w, y0 + h)).copy()
+    px = f.load()
+
+
+    # tẩy cạnh TRÊN và DƯỚI: kéo ngang cột sạch
+    for y in range(h):
+        if y >= GOC and y < h - GOC:
+            continue
+        mau = px[COT_SACH, y]
+        for x in range(GOC, w - GOC):
+            px[x, y] = mau
+    # tẩy cạnh TRÁI và PHẢI: kéo dọc hàng sạch
+    for x in range(w):
+        if x >= GOC and x < w - GOC:
+            continue
+        mau = px[x, HANG_SACH]
+        for y in range(GOC, h - GOC):
+            px[x, y] = mau
+
+    # ⚠ VIÊN NGỌC GIỮA CẠNH TRÊN: ĐÃ CẮT RỒI GỠ ĐI. Tách được nó ra sạch (lấy bản GỐC trừ bản
+    # đã tẩy ⇒ chỗ nào khung vốn có gì thì trong suốt), nhưng KHÔNG CÓ CHỖ ĐẶT: nền vẽ dưới
+    # `border-image`, còn `::after` thì bị `overflow:auto` của `.panel` cắt — kể cả
+    # `position:fixed`, vì `.panel` mang `transform` nên nó là khối chứa của cả con fixed.
+    # Đo hẳn: nhét ô đỏ ở `top:-34px`, đếm điểm ảnh đỏ trên ảnh chụp ⇒ 0/64. Chi tiết ở
+    # chú thích `.panel` trong `style.css`.
+    # Đừng cắt lại: một tệp không ai tham chiếu là tài sản chết, và kiểu chết đó im lặng.
+    p1 = os.path.abspath(os.path.join(ra, 'gt_khung_bang.webp'))
+    f.save(p1, 'WEBP', quality=92, alpha_quality=100, method=6)
+    n1 = os.path.getsize(p1)
+    print(f'  {"gt_khung_bang":16s} {w:3d}x{h:<3d} → 9 lát, góc {GOC}px  {n1/1024:5.1f} KB')
+    return n1
 
 
 def quet(im):
@@ -107,6 +183,9 @@ def main():
     tong = 0
     for ten, (x, y, w, h) in BANG:
         c = im.crop((x, y, x + w, y + h))
+        if ten in NGUYEN:
+            tong += nuong_khung(im, RA)   # khung đi đường riêng: tẩy cạnh + tách viên ngọc
+            continue
         # FIT-SQUARE, không kéo giãn: ba icon này tỉ lệ rộng/cao lệch nhau tới 1,15 lần, ép
         # vuông là cái loa bè ra còn nốt nhạc thì gầy đi. Cùng luật đã ghi ở `nuong_ngoc.py`.
         k = O / max(w, h)

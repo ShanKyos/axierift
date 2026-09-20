@@ -2889,6 +2889,74 @@ zero hai thanh khi tắt sẽ đỏ).
 
 Gác: `tests/test_amthanh.js` (8 mục, **10 phép thử ngược đều đỏ**).
 
+### 🏛 BỘ UI GOTHIC — icon TRANH THẬT thay ký tự chữ, và khung bảng 9 LÁT
+
+Chủ dự án đưa một tấm **2048×2048** (gói Godot 4 của Meowa). Nguồn để ở
+`tools/ui/nguon/ui_gothic_2048.png` — **trong `tools/`, nên không bao giờ tới tay người chơi**;
+`tools/ui/nuong_uigothic.py` cắt ra WebP vài KB.
+
+⚠ **CẮT, ĐỪNG SHIP CẢ TẤM.** Tấm gốc 4,2 MB, mà màn tải có ngân sách đo được (21 tệp /
+1,63 MB — `data/taitro.js`). Đo: 97 mảnh rời trên tấm; 13 mảnh đang dùng cộng lại **59 KB**.
+
+| chỗ | trước | nay |
+|---|---|---|
+| nút loa HUD · 3 hàng Âm Thanh | emoji 🔊 🔇 🎵 | `gt_loa_bat` · `gt_loa_tat` · `gt_nhac` |
+| Tổ Đội · Hảo Hữu (thanh dưới) | ký tự `⚑` `♥` | `gt_ic_todoi` · `gt_ic_haohuu` |
+| ví: Lumen · Ấn Giao Kết · Shard | ký tự `◈` `✦` `♦` | `gt_xu_vang` · `gt_xu_bac` · `gt_ngoc_lam` |
+| Menu Hệ Thống (F6), 4 nút | ký tự `⚙` `⏱` `◈` `✋` | `gt_ic_caidat` · `gt_ic_laban` · `gt_ic_ruong` · `gt_ic_tui` |
+| vành `.panel` | `linear-gradient` 9 điểm dừng + 4 đinh tán `radial-gradient` | `gt_khung_bang` 9 lát |
+
+- ⚠ **Emoji KHÔNG phải tranh.** Chúng vẽ theo bộ phông của **từng máy** — màu rực trên macOS,
+  viền phẳng trên Windows, có máy ra ô vuông rỗng. Đứng cạnh khung HUD kim loại thì đọc ra
+  một ký tự lạc. Cùng tinh thần Quy tắc số 3.
+- ⚠ **Vành cũ tuy công phu vẫn là HÌNH DỰNG BẰNG MÃ** — đúng thứ Quy tắc số 3 nói không.
+- ⚠ **`--khung-lat` và `--khung-day` buộc vào nhau.** Lát là bề rộng GÓC trong tranh (100);
+  dày là bề dày vẽ ra. Tỉ lệ thu = day/lat quyết định mọi thứ: ở **20px (0,2×) sợi chỉ vàng
+  của rail — dày ~4px trong tranh — tụt xuống 0,8px và biến mất**, cả vành đọc ra một dải tối.
+  34px (0,34×) thì còn ~1,4px, nhìn ra kim loại. Đã ship nhầm 20px một lượt, ảnh chụp mới thấy.
+- ⚠ **KHÔNG dùng `fill`** trong `border-image`: lát giữa là nền tối trung tính của bộ kit, để
+  nó tràn vào là thay luôn màu ruột bảng mà mọi màu chữ đã cân theo `--bg-panel-*`.
+- ⚠ **`border-radius` phải về 0** — phần bo cắt đúng vào bốn góc chạm trổ.
+- ⚠ **Vành đi 10px → 34px là ăn thêm 48px bề ngang mỗi bảng.** Kiểm toán @`0ab8a08` đo được
+  *"tràn ra ngoài màn = 0 ở cả 12 tổ hợp"*; `test_uigothic §⑤` giữ tính chất đó bằng phép đo
+  (9 bảng × 3 độ phân giải), không bằng niềm tin.
+
+#### ⚠ VIÊN NGỌC GIỮA CẠNH TRÊN: ĐÃ THỬ, KHÔNG ĐẶT ĐƯỢC — đừng cắt lại
+
+Tấm gốc có một viên ngọc lam giữa cạnh trên. Nó **không đi cùng `border-image` được** vì lát
+giữa mỗi cạnh bị KÉO GIÃN ⇒ viên ngọc hình thoi bè thành một vệt lam. Tách ra thì cả ba đường
+đều tắc, và đã đo từng cái:
+
+| đường | vì sao tắc |
+|---|---|
+| lớp nền | nền vẽ **bên dưới** viền ⇒ `border-image` phủ kín nó |
+| `::before/::after` | `.panel` có `overflow-y:auto`, con bị cắt ở hộp đệm |
+| `::after { position:fixed }` | **vẫn bị cắt** — `.panel` mang `transform` nên nó là khối chứa của cả con `fixed`. Đo: nhét ô đỏ ở `top:-34px`, đếm điểm ảnh đỏ ⇒ **0/64** |
+
+Đường còn lại là tách mọi bảng thành vỏ + ruột-cuộn — sửa ~20 chỗ gọi `innerHTML` để lấy một
+món trang trí. Không đáng, và đúng loại thay đổi lan rộng mà tài liệu này có sẹo (`#mc-drop`).
+⇒ **Đã gỡ luôn tệp**: một tài sản không ai tham chiếu là tài sản chết, và kiểu chết đó im lặng.
+
+#### Bài kiểm gác HAI CHIỀU, và một cái bẫy đo
+
+`tests/test_uigothic.js` (5 mục, **10 phép thử ngược**):
+- **① mã nhắc tệp nào cũng phải có** — họ `ISO_NEO`: sáu map mất sạch cây vì một bước chép tay.
+- **② tệp nào cũng phải có người nhắc** — chiều ngược lại, và nó không bao giờ tự lộ.
+  ⚠ Phải đọc cả chuỗi GHÉP ĐỘNG (`assets/ui/${n.anh}.webp`, tên nằm trong `SYS_NUT`), không
+  thì bốn tệp của Menu Hệ Thống bị báo oan là "chết".
+- **④ 9 lát có chạy thật không**: vẽ cùng một bảng ở **hai bề rộng** rồi so vùng GÓC. Cắt 9 lát
+  thì góc **không đổi** theo bề ngang; kéo giãn cả tấm thì góc bè ra. Hỏi `border-image` có
+  mặt trong CSS là chưa đủ — khai sai `slice` vẫn ra một chuỗi hợp lệ.
+
+⚠ **Hai lần phép đo ④ nói dối, cả hai đều là QUE DÒ hỏng, không phải cơ chế hỏng:**
+1. Bảng trong mờ 90% và thế giới sau lưng thì **động** (mây, cỏ, ánh sáng chạy theo
+   `performance.now()`). Hai lượt chụp cách nhau vài trăm mili giây là hai ảnh khác nhau kể cả
+   khi khung vẽ y hệt. ⇒ phải che canvas + đặt nền đặc trước khi chụp.
+2. `Buffer.compare` trên hai tấm PNG **đỏ ngay khi một điểm lệch 1/255**. Đo lại bằng điểm ảnh:
+   lệch tối đa **1**, lệch TB **0,01**, số điểm lệch quá ngưỡng **0** — tức 9 lát chạy hoàn hảo
+   trong lúc bài báo "đang kéo giãn cả tấm". ⇒ so điểm ảnh CÓ DUNG SAI (giải mã bằng canvas
+   trong trang, không cần thư viện), đừng so byte.
+
 ### Ngân Hàng Ngọc: sáu ICON TRANH THẬT, không phải một hình vẽ đổi màu
 
 `NGOC_ANH` → `assets/ui/ngoc_*.webp`, nướng bằng `tools/ui/nuong_ngoc.py` từ kit Axie chính chủ
