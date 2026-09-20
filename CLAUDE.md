@@ -1146,6 +1146,73 @@ Công cụ: `tools/nuong_khungquai.py` (nhận khung đã render — dải, thư
 — rồi **đo** hộp ô và `neoY`, in ra mục dán thẳng). Bài kiểm: `tests/test_khungquai.js` (28 mục).
 Đặc tả đặt hàng: `docs/DAT_HANG_ART_3_4_5.md` · prompt: `docs/PROMPT_QUAI_VA_TUONGQUAN.md`.
 
+### 🏠 CÔNG TRÌNH CÓ **HAI** LỚP, và chọn nhầm lớp thì lỗi chỉ lộ ở một phía
+
+| | `vatTo` | **`vatSan`** |
+|---|---|---|
+| là gì | nhà, cổng, hàng rào — thứ **CAO** | hồ nước, vũng, mảng nền riêng — thứ **BẸT** |
+| xếp lớp | vào `ents` theo **chân ảnh** (`y + h`) | **không xếp** — vẽ một lượt riêng ngay sau mặt đất, trước mọi thực thể |
+| chặn chân | `VAT_CAN` (sinh bằng `tools/iso/can_vatto.py`) | `can:[[dx,dy,w,h]]` khai ngay trong mục |
+| cửa vẽ | nhánh `case 'vat'` trong vòng `ents` | **`veVatSan()`** |
+| cửa chặn | `vatToObs` | `vatSanObs` — cả hai gộp trong **`canRoi(mapId)`** |
+
+**Vì sao phải tách, chứ không nhét hồ vào `vatTo` cho gọn:** `vatTo` xếp theo chân vì một
+ngôi nhà **cao** — người đứng phía trên (y nhỏ hơn) phải bị mái che. Một cái hồ thì không có
+chiều cao nào để che ai, nên xếp nó theo chân là người đứng ở bờ **BẮC** bị mặt nước vẽ đè
+lên — tức đứng dưới đáy hồ. Và lỗi đó **chỉ lộ ở một phía**: đứng bờ nam thì mọi thứ trông
+hoàn hảo.
+
+⚠ **`canRoi` PHẢI NHỚ LẠI, đừng `concat` mỗi lời gọi.** `inObstacle` chạy cho mọi điểm thử và
+`simulateMovePath` thử tới 200×8 điểm một cú bấm chuột — dựng một mảng mới mỗi lần là rác theo
+nghìn lượt cho một bảng không bao giờ đổi.
+
+⚠ **HỘP `can` PHẢI NHỎ HƠN HẲN TẤM ẢNH** (hồ Ardhaven: 35% khung). Bờ cỏ vẽ liền trong tranh;
+chặn đúng khung ảnh là người chơi khựng lại cách mặt nước cả chục pixel — nhìn ra là "vướng vào
+không khí", không ra một cái bờ. `test_vatcan §4` gác cả hai đầu: **tâm** hộp phải chặn (thử
+ngược: gỡ `vatSanObs` khỏi `canRoi` ⇒ đỏ) và **góc khung ảnh** phải đi được.
+
+⚠ **`khung` là tuỳ chọn, tấm tĩnh thì KHÔNG.** Vật sàn chạy hoạt ảnh được (bảng ở
+`assets/iso/kh/<tên>.webp`, cùng hợp đồng với `MOB_KHUNG`/`NPC_KHUNG`), nhưng bảng khung **nạp
+lười** — thiếu tấm tĩnh lùi là mặt đất thủng một lỗ đúng chỗ đó trong mấy trăm mili giây đầu.
+
+### 🏘 MỖI CÔNG TRÌNH PHẢI CÓ NGƯỜI ĐỨNG TRƯỚC CỬA — và "có NPC ở gần" là cái chốt KHÔNG CHỐT GÌ
+
+Trước đợt chấm lại, cả bảy ngôi nhà của Sapidae Chiefdom **đều đã có** một NPC trong bán kính
+400px. Nên một mệnh đề kiểu *"nhà nào cũng có NPC ở gần"* sẽ **XANH** trong khi `ah_vachgio`
+đứng **480px phía SAU lưng** Chòi Trông Vách và bị chính công trình vẽ đè lên. Cùng bệnh với
+luật `≤60% là kill` và với *"đúng 7 NPC có trang thoại"*: **một cái chốt đúng ở mọi trạng thái
+là một cái chốt không chốt gì.**
+
+⇒ Đo **ĐỘ LỆCH NGANG so với tim nhà** và **đứng trước hay sau**, không đo khoảng cách trần.
+Một luật cho cả bảy, và nó chấm bằng máy:
+
+| hàng | mặt tiền quay đâu | NPC đứng ở |
+|---|---|---|
+| BẮC (`khoi.y` 520) | xuống đại lộ y≈1600 | ( tim nhà , **chân nhà + 130** ) |
+| NAM (`khoi.y` 2340) | ra tường thành | ( tim nhà , **mép trên khối − 130** ) |
+
+Hàng nam cố ý đặt NPC ở phía **BẮC** vì người chơi tới từ đại lộ; đứng đúng mặt tiền thì họ
+khuất sau nhà — đúng cái vừa phải sửa. Sau khi chấm: cả bảy cặp lệch ngang **đúng 0px**.
+
+⚠ **Đẩy một NPC chức năng vào chỗ thì phải QUÉT LẠI chỗ cho con bị đẩy ra**, đừng dịch tay.
+Hai NPC phố (`ah_chimera`, `ah_thonhuom`) rơi vào tầm 200px và phải tìm chỗ mới; ràng buộc là
+trong đa giác sàn · lề ≥60px tới mọi khối và mọi `vatTo` · cách mọi NPC ≥220px · cách cổng
+≥300px.
+
+⚠ **NPC đứng lọt trong một khối `MAP_OBSTACLES` là một cửa hàng đóng VĨNH VIỄN.** Khối là vật
+cản đặc kể cả khi chưa có tấm art nào, nên người chơi không bao giờ tới đủ gần để mở bảng — và
+không một lỗi nào in ra. `test_capnha §3` gác riêng chuyện đó, tách khỏi §2 (bị **hình** công
+trình vẽ đè) vì hai thứ hỏng theo hai kiểu khác nhau.
+
+⚠ **ĐỪNG đòi "NPC chức năng nào cũng phải có nhà"** — art chưa về thì đó là một bài đỏ vĩnh
+viễn, đúng cái ngưỡng bất khả đã ghi ở mục `AXIE_CORE.md`. Đòi thứ kiểm được: con chưa có nhà
+phải **đã đứng đúng khuôn của một khối còn trống**, nên thả tệp ảnh vào là cặp khít ngay, không
+phải dời ai. Hiện còn hai con như vậy: `ah_phapsu` (Quán Sách, khối #1) và `thantoan`
+(Sảnh Cầu May, khối #9).
+
+Gác: **`tests/test_capnha.js`** (6 mệnh đề, cả năm cơ chế đã thử ngược và đều đỏ).
+Đặt hàng art hồ + hàng rào: **`docs/PROMPT_HO_VA_HANGRAO.md`**.
+
 ### 🗺 BẢN SẮC MAP SUY RA TỪ DỮ LIỆU, KHÔNG CHÉP CỨNG
 
 `mapBanSac(id)` tính **loài chủ đạo · hệ trội · Dòng Cốt độc quyền** từ chính `packs`, và

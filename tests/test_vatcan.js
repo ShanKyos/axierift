@@ -88,6 +88,32 @@ let bad = 0; const fail = m => { bad++; console.log('FAIL ' + m); };
     fail(`③ ${r3.length}/${r1.length} công trình chặn cả GÓC TRÊN-TRÁI của khung — đang chặn theo hộp bao chứ không theo hình vẽ: ${r3.join(' ')}`);
   console.log(`③ ${r1.length - r3.length}/${r1.length} công trình để trống góc khung (không dựng tường vô hình)`);
 
+  // ---- 4. VẬT SÀN (`vatSan`) — hồ/vũng phải CHẶN, và hộp chặn phải nhỏ hơn tấm ảnh ----
+  // Vật sàn đi một đường KHÁC HẲN `vatTo`: nó không vào danh sách xếp lớp, nên nếu quên nối
+  // `vatSanObs` vào `obstaclesOf` thì cái hồ vẫn hiện ra đẹp đẽ mà người chơi lội thẳng qua —
+  // không lỗi, không dấu hiệu, và chỉ lộ ra khi ai đó thử đi vào nước.
+  const r4 = await p.evaluate(() => {
+    const ds = MAPS.ardhaven.vatSan || [];
+    const chua = ds.map(v => v.img).filter(i => !MAP_VAT_SRC[i]);
+    const nuoc = ds.filter(v => (v.can || []).length).map(v => {
+      const b = v.can[0];
+      return { img: v.img,
+               // tâm hộp chặn PHẢI chặn
+               giua: inObstacle('ardhaven', v.x + b[0] + b[2] / 2, v.y + b[1] + b[3] / 2, 14),
+               // góc khung ảnh PHẢI đi được — bờ cỏ, không phải nước
+               goc:  inObstacle('ardhaven', v.x + 12, v.y + 12, 14),
+               tiLe: Math.round((b[2] * b[3]) / (v.w * v.h) * 100) };
+    });
+    return { so: ds.length, chua, nuoc };
+  });
+  if (r4.chua.length) fail('④ vatSan khai tên chưa có trong MAP_VAT_SRC: ' + r4.chua.join(' '));
+  for (const o of r4.nuoc){
+    if (!o.giua) fail(`④ ${o.img}: giữa hồ KHÔNG chặn — vatSanObs chưa nối vào obstaclesOf`);
+    if (o.goc)   fail(`④ ${o.img}: góc khung ảnh cũng chặn — đang chặn theo hộp bao chứ không theo mặt nước`);
+    if (o.tiLe > 60) fail(`④ ${o.img}: hộp chặn chiếm ${o.tiLe}% khung — bờ cỏ bị chặn theo`);
+  }
+  console.log(`④ ${r4.so} vật sàn · ${r4.nuoc.map(o => o.img + ' chặn ' + o.tiLe + '% khung').join(', ') || 'chưa mục nào khai can'}`);
+
   if (errs.length) fail('lỗi trang: ' + errs.slice(0,3).join(' | '));
   console.log(bad ? `\n${bad} LỖI` : '\nTẤT CẢ XANH');
   await b.close();
