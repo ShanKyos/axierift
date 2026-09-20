@@ -3,6 +3,16 @@
 // thấy nguyên người đè lên cột. Bản mới cao 179px (~1,9 lần nhân vật) nên sai chiều sâu là
 // nhìn thấy ngay: nhân vật lơ lửng trước một cái vòm cao gấp đôi mình.
 //
+// ⚠ TỪ ĐỢT LỐI RA, BỐN CỔNG RÌA KHÔNG CÒN DỰNG VÒM NỮA — `veLoiRa()` lo phần nhìn thấy. Bộ
+// vòm đá (`gateSprite` · `drawGateStatic`) thì GIỮ LẠI, chỉ ngủ: cổng nào khai `vom:true`
+// mới dựng nó. Nên bài này tự BẬT `vom:true` lên cổng đo rồi mới chấm — bỏ mệnh đề đi cho
+// xanh là để cả bộ vòm còn sống trong mã mà không còn ai gác, và ngày ai đó cắm `vom:true`
+// lại thì lỗi chiều sâu cũ quay về trong im lặng.
+//
+// ⚠ VÀ ĐỪNG DỜI HAI CHỖ ĐỨNG LẠI GẦN CỔNG HƠN. Cả hai cách cổng 72-77px, tức vừa ngoài
+// `LOIRA_TAM` (70) — vào trong là nhân vật TỰ ĐI SANG MAP KHÁC giữa lúc đo, và thứ bài
+// đọc được sẽ là một ô đất của map bên kia.
+//
 // PHÉP ĐO — đếm điểm ảnh HỒNG CÁNH SEN nằm trong đúng cột trụ trái. Bật TEST_TO_PHANG thì
 // heroSprite() tô đè cả hình nhân vật bằng #ff00ff (source-in: bóng dáng giữ nguyên từng điểm ảnh, chỉ màu
 // bị thay). Đứng SAU trụ thì thân người bị trụ che ⇒ 0 điểm hồng. Đứng TRƯỚC trụ thì nửa trên
@@ -44,6 +54,7 @@ const URL = 'http://localhost:8871/index.html';
     FXQ_AUTO = false; FXQ = 2; RES_AUTO = false; SETTINGS.lowFx = false;
     const o = (() => {
       const g = GATES.find(x => x.map === 'ardhaven' && x.to === 'ngoai');
+      g.vom = true;                 // bật lại bộ vòm đá — xem chú thích đầu tệp
       return { gx: g.x, gy: g.y, ph: GATE_PH };
     })();
     // Ô đo = ĐÚNG cột trụ trái: rộng 34px (bằng bề rộng trụ), cao 96px (bằng thân trụ).
@@ -75,12 +86,18 @@ const URL = 'http://localhost:8871/index.html';
     const truoc = await dat(o.gx - o.ph, o.gy + 40);    // TRƯỚC trụ: nửa trên đè lên chính cột đó
     const vang  = await dat(o.gx - o.ph - 260, o.gy + 40);  // không có người trong ô
     return { sau: sau && sau.tim, truoc: truoc && truoc.tim, vang: vang && vang.tim,
-             oDo: sau && sau.tong, lop: player.sect };
+             oDo: sau && sau.tong, lop: player.sect,
+             // tự kiểm cảnh dựng: không bật được vòm thì mọi con số dưới đây vô nghĩa
+             coVom: !!GATES.find(x => x.map === 'ardhaven' && x.to === 'ngoai').vom,
+             oMap: curMap };
   });
 
   console.log(JSON.stringify(out, null, 1));
   let bad = 0; const fail = m => { console.log('FAIL', m); bad++; };
 
+  if (!out.coVom) fail('cảnh dựng sai: không bật được `vom:true` lên cổng đo — bài không gác được gì');
+  if (out.oMap !== 'ardhaven')
+    fail(`cảnh dựng sai: đo xong đã trôi sang map ${out.oMap} — chỗ đứng lọt vào tầm LỐI RA tự đi`);
   if (out.sau == null || out.truoc == null) fail('ô đo rơi ra ngoài canvas — camera không giữ được cổng trong màn');
   // Chốt chặn chống rỗng: đứng TRƯỚC trụ mà không đếm được gì thì phép đo hỏng, không phải game đúng.
   if (out.truoc < 150)

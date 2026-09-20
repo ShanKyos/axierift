@@ -114,36 +114,45 @@ const { chromium } = require('playwright');
   else {
     // Cắt theo KHỐI `ctx.save()` gần nhất, không theo một cửa sổ N ký tự: cửa sổ cố định thì
     // thêm một dòng chú thích vào giữa khối là bài đỏ ở chỗ chẳng liên quan gì tới thứ nó gác.
+    // ⚠ HAI NEO HỢP LỆ, KHÔNG PHẢI MỘT — đừng "dọn" lại thành một. `_avaDx` là chỗ LỚP NHÂN VẬT
+    // đứng; `_tkDx` là chỗ vũ khí đứng khi lớp nhân vật đã NHẬP vào Axie (ngoài thành), lúc ấy
+    // chỗ kia không có ai nên neo vào đó là cây vũ khí trôi lơ lửng cách con Axie một thân người.
+    // CÁNH thì vẫn chỉ được neo `_avaDx`: cánh đeo trên lớp nhân vật, không đeo trên Axie.
     const hong = goi.filter(m => {
       const truoc = src.slice(0, m.index);
       const mo = truoc.lastIndexOf('ctx.save()');
-      // ⚠ HAI TÊN NEO, và đó là chủ ý chứ không phải trùng lặp. Cánh bám `_avaDx/_avaDy`
-      // (chỗ lớp nhân vật đứng); thần khí bám `_tkDx/_tkDy`, vốn BẰNG `_avaDx/_avaDy` lúc chưa
-      // nhập nhưng về 0 khi đã nhập vào Axie — lúc đó lớp nhân vật không có toạ độ nào trên
-      // màn, nên bám theo nó là cây vũ khí hiện lệch hẳn sang một bên cạnh một người vô hình.
-      // Thứ mệnh đề này gác vẫn y nguyên: KHÔNG lời gọi nào được vẽ thẳng ở (p.x, p.y).
-      return mo < 0 || !/ctx\.translate\(p\.x \+ _(ava|tk)Dx/.test(truoc.slice(mo));
+      if (mo < 0) return true;
+      const khoi = truoc.slice(mo);
+      return m[1] === 'Canh' ? !/ctx\.translate\(p\.x \+ _avaDx/.test(khoi)
+                             : !/ctx\.translate\(p\.x \+ _(ava|tk)Dx/.test(khoi);
     });
     if (hong.length)
       fail(`${hong.length}/${goi.length} lời gọi vẽ cánh/thần khí KHÔNG nằm trong phép dời về ` +
-           'neo lớp nhân vật — thứ đó sẽ vẽ đè lên con Axie');
-    else pass(`${goi.length}/${goi.length} lời gọi vẽ cánh + thần khí đều bám neo lớp nhân vật`);
+           'neo lớp nhân vật (hoặc neo vũ khí khi đã nhập) — thứ đó sẽ vẽ đè lên con Axie');
+    else pass(`${goi.length}/${goi.length} lời gọi vẽ cánh + thần khí đều bám một neo hợp lệ`);
   }
-  // ⚠ LUẬT ĐÃ ĐỔI, và mệnh đề này đi theo chứ không bị nới ra. Bản cũ đòi `_tkHien` phải hỏi
-  // `_coAva`/`_lopHien` — nghĩa là *"bật avatar thì vũ khí chỉ hiện lúc ra đòn"*. Từ đợt
-  // "trong thành mang bên vai · ngoài thành vũ khí XUẤT HIỆN lúc ra đòn", luật là:
-  //     _tkHien = _nhap ? (atkK > 0 || castK > 0) : !_coVkLop
-  // tức TRONG THÀNH thì luôn hiện (đó là chỗ khoe đồ), ĐÃ NHẬP thì chỉ lúc ra đòn. Vế cũ chính
-  // là cái lỗi đã phải sửa: Dark Lord và Dark Wizard — hai lớp cố ý không có vũ khí cầm tay —
-  // đứng trong thành TAY KHÔNG.
-  const _tk = src.match(/const _tkHien = ([^;]+);/);
+  // ⚠ LUẬT ĐÃ ĐỔI HAI LẦN, và chuỗi này đi theo CẢ HAI chứ không bị nới ra. Ghi lại vì hai bản
+  // trước đòi hai thứ TRÁI NGƯỢC nhau, và git ghép êm ru cả hai vào cùng một chuỗi:
+  //   · bản đầu đòi `_coAva`/`_lopHien` nằm trong `_tkHien` ⇒ *"bật avatar thì vũ khí CHỈ hiện
+  //     lúc ra đòn"*. Đó chính là cái lỗi phải sửa: Dark Lord và Dark Wizard — hai lớp cố ý
+  //     không có vũ khí cầm tay — đứng TRONG THÀNH tay không.
+  //   · bản sau đòi `atkK`/`castK` ⇒ đúng ý nhưng hỏi sai chỗ: tính chất *"ngoài thành chỉ hiện
+  //     lúc ra đòn"* nay nằm trong `_tkNhap`, không nằm thẳng trong `_tkHien`.
+  // Luật hiện hành:  _tkNhap = _nhap && _lopHien  ·  _tkHien = _tkNhap || (!_nhap && !_coVkLop)
+  // ⇒ chuỗi dưới hỏi CẢ HAI biểu thức, nên nó mạnh hơn từng bản trước: bỏ `_lopHien` khỏi
+  // `_tkNhap` là vũ khí bay theo suốt ngày ngoài thành, và chuỗi cũ nào cũng không bắt được.
+  const _tk  = src.match(/const _tkHien = ([^;]+);/);
+  const _tkN = src.match(/const _tkNhap = ([^;]+);/);
   if (!_tk)
     fail('không thấy cửa `_tkHien` — thần khí sẽ hiện ở mọi trạng thái');
   else if (!/_nhap/.test(_tk[1]))
     fail('cửa `_tkHien` không hỏi `_nhap` — trong thành và ngoài thành sẽ xử như nhau');
-  else if (!/atkK/.test(_tk[1]) || !/castK/.test(_tk[1]))
-    fail('cửa `_tkHien` không hỏi `atkK`/`castK` — đã nhập vào Axie mà vũ khí vẫn bay theo '
-       + 'suốt ngày thì lại thành HAI thân trên màn');
+  else if (!/_tkNhap/.test(_tk[1]))
+    fail('cửa `_tkHien` không có nhánh `_tkNhap` — ngoài thành ra đòn sẽ KHÔNG có vũ khí nào '
+       + '(lớp nhân vật đã nhập nên cây trong tay cũng biến theo)');
+  else if (!_tkN || !/_lopHien/.test(_tkN[1]))
+    fail('`_tkNhap` không hỏi `_lopHien` — ngoài thành vũ khí sẽ bay theo SUỐT NGÀY, lại thành '
+       + 'HAI thân trên màn, tức dựng lại chính cái mà đợt nhập-vào gỡ đi');
   else if (!/_coVkLop/.test(_tk[1]))
     fail('cửa `_tkHien` không hỏi lớp vũ khí — trong thành bộ có kiếm nướng sẵn trong tay '
        + 'sẽ hiện HAI cây');
