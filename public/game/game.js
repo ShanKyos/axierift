@@ -27625,17 +27625,29 @@ let _miniStaticCache = null, _miniStaticKey = null;
 // bấm vào minimap để chạy tới sẽ trỏ sai chỗ theo đúng tỉ lệ bóp ấy.
 // Giữ DIỆN TÍCH gần như cũ rồi chia lại hai cạnh theo tỉ lệ map, nên map 2600x1900 vẫn ra đúng
 // 200x146 như trước — không map cũ nào đổi hình.
+// ⚠⚠ TRẦN BỀ RỘNG PHẢI LÀ BỀ RỘNG CỘT, KHÔNG PHẢI MỘT CON SỐ CHÉP TAY.
+// Bản cũ chốt trần 240px trong khi `#cot-phai` rộng 190px (padding 5 ⇒ lòng **180px**) và mang
+// `overflow:hidden`. Đo được ở CẢ BA độ phân giải (1920 · 1440 · 1280): canvas 240px, cột cắt
+// còn 184px ⇒ **23% bên phải của bản đồ bị xén mất, im lặng**. Đúng cái góc có Lò Hỗn Độn và
+// Vũ Khí — tức phần người chơi mở bản đồ ra để tìm. `style.css` vốn khai đúng
+// (`#minimap { width:180px }`), nhưng style NỘI TUYẾN mà hàm này ghi thì thắng bảng kiểu.
+// ⇒ Hỏi thẳng khối chứa. Chép 180 vào đây là dựng bản sao thứ hai của một con số CSS, và nó sẽ
+// lệch ngay lần đầu ai đó nới cột — đúng họ với `ISO_NEO` và `mapBanSac()`.
 function capNhatKhungMinimap(){
   if (!miniCvs) return;
   const ti = MAP.w / MAP.h;
+  const hop = miniCvs.parentElement;
+  const tran = Math.max(120, (hop && hop.clientWidth) || 180);
   let w = Math.round(Math.sqrt(200 * 146 * ti));
   let h = Math.round(w / ti);
-  if (w > 240){ w = 240; h = Math.round(w / ti); }
+  if (w > tran){ w = tran; h = Math.round(w / ti); }
   if (h > 170){ h = 170; w = Math.round(h * ti); }
   if (miniCvs.width !== w || miniCvs.height !== h){
     miniCvs.width = w; miniCvs.height = h;
-    miniCvs.style.width = w + 'px'; miniCvs.style.height = h + 'px';
   }
+  // Bitmap và bề rộng hiện ra ĐỂ BẰNG NHAU (1:1). Vẽ ở khổ lớn hơn rồi thu bằng CSS thì chữ
+  // 8px cũng thu theo — ở tỉ lệ 0,75 nó ra 6px, tức đọc không nổi đúng thứ vừa thêm vào.
+  miniCvs.style.width = w + 'px'; miniCvs.style.height = h + 'px';
 }
 
 function drawMinimapStatic(mw, mh, sx, sy, md){
@@ -27643,9 +27655,15 @@ function drawMinimapStatic(mw, mh, sx, sy, md){
   if (_miniStaticCache && _miniStaticKey === key) return _miniStaticCache;
   const off = document.createElement('canvas'); off.width = mw; off.height = mh;
   const sc = off.getContext('2d');
-  // nền: ưu tiên ảnh map vẽ tay (thu nhỏ + phủ tối 40%), fallback màu đất phẳng
+  // nền. Map có ĐA GIÁC SÀN (thành) thì vẽ đúng hình cái thành — cùng bộ vẽ với bản đồ lớn,
+  // xem `veNenThanh()`. Trước bản này minimap tô một mảng màu phẳng rồi rải 28 chấm vàng lên,
+  // nên Ardhaven — vốn có sẵn 68 đỉnh sàn, 8 đường phố và 16 khối nhà trong dữ liệu — đọc ra
+  // một đám chấm không có chỗ bám. Chủ dự án gọi đúng tên: *"nhìn rất rối"*.
   const _bg = mapBgOf(curMap);
-  if (_bg && _bg.complete && _bg.naturalWidth > 0){
+  if (md.diTrong && md.diTrong.length > 2){
+    sc.fillStyle = '#12150d'; sc.fillRect(0, 0, mw, mh);
+    veNenThanh(sc, md, curMap, v => v * sx, v => v * sy, 1);
+  } else if (_bg && _bg.complete && _bg.naturalWidth > 0){
     sc.drawImage(_bg, 0, 0, mw, mh);
     sc.fillStyle = 'rgba(22,18,12,.40)';
     sc.fillRect(0, 0, mw, mh);
@@ -27712,12 +27730,13 @@ function drawMinimapStatic(mw, mh, sx, sy, md){
     sc.fillStyle = 'rgba(60,54,44,.65)';
     for (const pt of _rimPts) sc.fillRect(pt.x*sx - 1, pt.y*sy - 1, 2, 2);
   }
+  // Cổng — CHẤM TRÒN cùng màu với bản đồ lớn (`mauCong`), không còn ô vuông cam/tím riêng.
+  // Hai bản đồ vẽ cùng một thứ bằng hai ký hiệu khác nhau thì người chơi phải học hai lần.
   for (const g of GATES){
     if (g.map !== curMap) continue;
-    sc.fillStyle = g.portal ? '#b08ae8' : '#d8963a';
-    sc.fillRect(g.x*sx-3, g.y*sy-3, 6, 6);
-    sc.strokeStyle = 'rgba(0,0,0,.6)'; sc.lineWidth = 1;
-    sc.strokeRect(g.x*sx-3, g.y*sy-3, 6, 6);
+    sc.fillStyle = mauCong(g);
+    sc.strokeStyle = 'rgba(0,0,0,.7)'; sc.lineWidth = 1;
+    sc.beginPath(); sc.arc(g.x*sx, g.y*sy, 3.2, 0, 7); sc.fill(); sc.stroke();
   }
   _miniStaticCache = off; _miniStaticKey = key;
   return off;
@@ -27761,57 +27780,114 @@ function drawMinimap(){
   const qNow = (typeof currentQuest === 'function') ? currentQuest() : null;
   const mapNpcs = NPCS.filter(n => n.map === curMap);
   const placedLabels = []; // chống chồng nhãn khi NPC đứng gần nhau
-  for (const n of mapNpcs){
-    const nx = n.x*sx, ny = n.y*sy;
-    // dấu nhiệm vụ (đồng bộ logic với drawNpc)
-    let mark = '';
-    if (n.talk === 'quest'){
-      if ((qNow && qNow.npc === n.id && questState === 'done') ||
-          (typeof SIDE_QUESTS !== 'undefined' && SIDE_QUESTS.some(sq => sq.npc === n.id && sideStates[sq.id] && sideStates[sq.id].st === 'done')))
-        mark = '!';
-      else if ((qNow && qNow.npc === n.id) ||
-               (typeof SIDE_QUESTS !== 'undefined' && SIDE_QUESTS.some(sq => sq.npc === n.id && (sideAvail(sq) === 'avail' || sideAvail(sq) === 'active'))))
-        mark = '…';
+
+  // Dấu nhiệm vụ của một NPC (đồng bộ logic với drawNpc): ! = trả được · … = đang có việc.
+  const dauNV = n => {
+    if (n.talk !== 'quest') return '';
+    if ((qNow && qNow.npc === n.id && questState === 'done') ||
+        (typeof SIDE_QUESTS !== 'undefined' && SIDE_QUESTS.some(sq => sq.npc === n.id && sideStates[sq.id] && sideStates[sq.id].st === 'done')))
+      return '!';
+    if ((qNow && qNow.npc === n.id) ||
+        (typeof SIDE_QUESTS !== 'undefined' && SIDE_QUESTS.some(sq => sq.npc === n.id && (sideAvail(sq) === 'avail' || sideAvail(sq) === 'active'))))
+      return '…';
+    return '';
+  };
+  const ds = mapNpcs.map(n => ({
+    n, tk: THANH_TALK[n.talk], mark: dauNV(n),
+    ghim: !!(player.beacon && player.beacon.npcId === n.id),
+    x: n.x*sx, y: n.y*sy, d: dist(n.x, n.y, player.x, player.y),
+  }));
+
+  // ── LƯỢT 1: CHẤM. Người có chức năng nổi, người lore mờ ─────────────────────────────
+  // Đo trước khi sửa: Ardhaven có 26 NPC, **17 là người lore** (`talk:'quest'`), và cả 26 vẽ ra
+  // CÙNG một chấm vàng cỡ 3. Tức 2/3 số chấm là nhiễu, và cái Lò Rèn thì không phân biệt nổi
+  // với một người đứng kể chuyện. Bản đồ lớn đã tách hai hạng đó từ lâu (`THANH_TALK`); bản đồ
+  // góc thì chưa, nên hai bản đồ dạy hai thứ khác nhau.
+  // ⚠ CHẤM VẼ HẾT TRƯỚC, NHÃN VẼ SAU. Gộp một vòng thì nhãn của người này bị chấm của người
+  // đứng sau trong mảng vẽ đè lên — không lỗi nào báo, chỉ là một chữ bị khuyết một góc.
+  for (const o of ds){
+    if (o.tk){
+      mc.fillStyle = o.tk.mau;
+      mc.strokeStyle = 'rgba(0,0,0,.7)'; mc.lineWidth = 1;
+      mc.beginPath(); mc.arc(o.x, o.y, 3, 0, 7); mc.fill(); mc.stroke();
+    } else if (o.mark || o.ghim){
+      mc.fillStyle = '#ffd76a';                       // người lore ĐANG có việc: vẫn nổi
+      mc.strokeStyle = 'rgba(0,0,0,.65)'; mc.lineWidth = 1;
+      mc.beginPath(); mc.arc(o.x, o.y, 3, 0, 7); mc.fill(); mc.stroke();
+    } else {
+      mc.fillStyle = 'rgba(255,215,106,.45)';         // người lore rảnh: chấm mờ, cỡ 2
+      mc.beginPath(); mc.arc(o.x, o.y, 2, 0, 7); mc.fill();
     }
-    mc.fillStyle = '#ffd76a';
-    mc.strokeStyle = 'rgba(0,0,0,.65)'; mc.lineWidth = 1;
-    mc.beginPath(); mc.arc(nx, ny, 3, 0, 7); mc.fill(); mc.stroke();
-    // ── NHÃN TÊN: CHỈ CHO NGƯỜI ĐÁNG GỌI TÊN ────────────────────────────────────────────
-    // Ardhaven có 26 NPC nhồi trong ô 150×110: gắn tên cho tất thì ra một mảng chữ đặc, không
-    // đọc nổi CHỮ NÀO — tệ hơn hẳn là không ghi gì. Luật tránh chồng bên dưới vẫn đúng, nó chỉ
-    // bó tay ở mật độ này. Nên lọc trước: chỉ gọi tên người ĐANG có việc (dấu ! hoặc …) và
-    // người đang được đèn hiệu ghim. Còn lại là chấm vàng — rê chuột lên bản đồ vẫn đọc được,
-    // và người chơi tới gần thì nhãn trong màn hiện đủ tên.
-    const dongDuc = mapNpcs.length > 8;
-    const dangGhim = player.beacon && player.beacon.npcId === n.id;
-    if (!dongDuc || mark || dangGhim){
-    mc.font = '8px "Be Vietnam Pro", sans-serif';
-    const lw = mc.measureText(n.name).width;
+  }
+
+  // ── LƯỢT 2: NHÃN, ưu tiên theo KHOẢNG CÁCH TỚI NGƯỜI CHƠI ───────────────────────────
+  // ⚠ NGƯỜI CÓ CHỨC NĂNG LUÔN ĐƯỢC XÉT, kể cả map đông. Luật cũ "map quá 8 NPC thì chỉ gắn tên
+  // cho ai đang có việc" sinh ra để chặn 26 cái tên nhồi vào một ô bé — đúng với người LORE,
+  // nhưng nó nuốt luôn Lò Rèn và Tiệm Thuốc, tức nuốt đúng thứ người chơi mở bản đồ ra để tìm.
+  //
+  // ⚠ VÀ THỨ TỰ LÀ THEO KHOẢNG CÁCH, KHÔNG PHẢI THỨ TỰ MẢNG `NPCS`. Đo ở Ardhaven: 9 người có
+  // chức năng, khổ 180×90, chỉ **7** nhãn đặt lọt — bốn người ở góc trên-phải (Quán Trọ · Cầu
+  // May · Lò Hỗn Độn · Vũ Khí) chen trong ~50px. Ai bị bỏ mà quyết bằng thứ tự khai trong dữ
+  // liệu thì đó là một quyết định ngẫu nhiên; quyết bằng khoảng cách thì kẻ bị bỏ luôn là kẻ
+  // ở XA, và bản đồ góc màn vốn để trả lời *"quanh mình có gì"*.
+  const dsNhan = ds.filter(o => o.tk || o.mark || o.ghim || mapNpcs.length <= 8)
+                   .sort((a, b) => (b.tk ? 1 : 0) - (a.tk ? 1 : 0) || a.d - b.d);
+  mc.font = '7.5px "Be Vietnam Pro", sans-serif';
+  for (const o of dsNhan){
+    // Tên NGẮN (`n.nhan`) trước, đúng lý do đã ghi ở `veBanDoThanh`: ở khổ này "Nhà Giả Kim ·
+    // Tiệm Thuốc" dài gấp ba chỗ có, mà ba người cùng in "Cửa Hàng" thì bằng không gắn nhãn.
+    // ⚠ HAI NẤC TÊN. Đo ở Ardhaven, khổ 180×90: **bảy** người có chức năng nằm gần như cùng
+    // một hàng (y≈27), tổng bề rộng nhãn ~250px trên một hàng rộng 180 — tức không phải thiếu
+    // chỗ thử mà là vật lý. Thử đủ tám hướng vẫn rớt đúng một người, và người rớt là **Lò Hỗn
+    // Độn** (nhãn 42px, chỉ còn 33px tới mép phải).
+    // Nấc hai là tên CHUNG ngắn (`Lò Rèn` 25px). Nó mơ hồ với ba cửa hàng cùng ra "Cửa Hàng" —
+    // đúng cảnh báo đã ghi ở `veBanDoThanh` — nên chỉ dùng khi nấc một KHÔNG lọt: một chấm ghi
+    // "Cửa Hàng" vẫn nói được *ở đây có tiệm*, còn một chấm trần thì không nói gì.
+    const tenDai = (o.tk && (o.n.nhan || o.tk.ten)) || o.n.name;
+    const tenNgan = o.tk ? o.tk.ten : tenDai;
+    for (const ten of (tenDai === tenNgan ? [tenDai] : [tenDai, tenNgan])){
+    const lw = mc.measureText(ten).width;
+    // BỐN hướng, không phải ba — thêm hướng LÊN. Bản cũ chỉ thử phải/trái/xuống, nên hai người
+    // đứng cạnh nhau theo chiều ngang là người thứ hai mất tên dù ngay trên đầu còn trống.
+    // ⚠ Và phải CHỪA MÉP: nhãn tràn ra ngoài canvas bị `overflow:hidden` của cột xén mất đuôi —
+    // đo được "Lò Hỗn Độn" ra "Lò Hỗn Độ". Thà bỏ nhãn còn hơn in một cái tên cụt.
     const spots = [
-      { x: nx + 5, y: ny + 3, align: 'left' },
-      { x: nx - 5, y: ny + 3, align: 'right' },
-      { x: nx, y: ny + 11, align: 'center' },
+      { x: o.x + 5, y: o.y + 3, align: 'left' },
+      { x: o.x - 5, y: o.y + 3, align: 'right' },
+      { x: o.x, y: o.y + 10, align: 'center' },
+      { x: o.x, y: o.y - 6, align: 'center' },
+      // Bốn hướng CHÉO — nấc cuối cho cụm chật. Đo ở Ardhaven: bốn hướng thẳng đặt được 8/9,
+      // và kẻ bị bỏ là **Lò Hỗn Độn** (góc trên-phải, chen với Quán Trọ và Vũ Khí) — tức đúng
+      // cái người chơi mở bản đồ ra để tìm. Thêm chéo là đủ 9/9.
+      { x: o.x + 5, y: o.y - 5, align: 'left' },
+      { x: o.x - 5, y: o.y - 5, align: 'right' },
+      { x: o.x + 5, y: o.y + 10, align: 'left' },
+      { x: o.x - 5, y: o.y + 10, align: 'right' },
     ];
     for (const sp of spots){
       const lx = sp.align === 'left' ? sp.x : sp.align === 'right' ? sp.x - lw : sp.x - lw/2;
-      const hit = placedLabels.some(r => lx < r.x + r.w && lx + lw > r.x && Math.abs(sp.y - 4 - r.y) < 9);
-      if (hit) continue;
-      placedLabels.push({ x: lx, y: sp.y - 4, w: lw });
+      if (lx < 1 || lx + lw > mw - 1 || sp.y < 7 || sp.y > mh - 9) continue;
+      if (placedLabels.some(r => lx < r.x + r.w + 2 && lx + lw + 2 > r.x && Math.abs(sp.y - 4 - r.y) < 8)) continue;
+      placedLabels.push({ x: lx, y: sp.y - 4, w: lw, tk: !!o.tk, ten });
       mc.textAlign = sp.align;
-      mc.strokeStyle = 'rgba(0,0,0,.75)'; mc.lineWidth = 2;
-      mc.strokeText(n.name, sp.x, sp.y);
-      mc.fillStyle = '#ffe9a8';
-      mc.fillText(n.name, sp.x, sp.y);
+      mc.strokeStyle = 'rgba(0,0,0,.85)'; mc.lineWidth = 2.5;
+      mc.strokeText(ten, sp.x, sp.y);
+      mc.fillStyle = o.tk ? o.tk.mau : '#ffe9a8';
+      mc.fillText(ten, sp.x, sp.y);
       break;
     }
+    if (placedLabels.length && placedLabels[placedLabels.length-1].ten === ten) break;
     }
-    if (mark){
-      mc.font = 'bold 11px "Be Vietnam Pro", sans-serif'; mc.textAlign = 'center';
-      mc.fillStyle = mark === '!' ? '#ffd76a' : '#9fd0ff';
-      mc.shadowColor = mc.fillStyle; mc.shadowBlur = 4;
-      mc.fillText(mark, nx, ny - 5);
-      mc.shadowBlur = 0;
-    }
+  }
+
+  // ── LƯỢT 3: DẤU NHIỆM VỤ, vẽ trên cùng ──────────────────────────────────────────────
+  for (const o of ds){
+    if (!o.mark) continue;
+    mc.font = 'bold 11px "Be Vietnam Pro", sans-serif'; mc.textAlign = 'center';
+    mc.fillStyle = o.mark === '!' ? '#ffd76a' : '#9fd0ff';
+    mc.shadowColor = mc.fillStyle; mc.shadowBlur = 4;
+    mc.fillText(o.mark, o.x, o.y - 5);
+    mc.shadowBlur = 0;
   }
   // quái vật — thường đỏ nhỏ, tinh anh cam, boss tím nhấp nháy, Du Hiệp lam viền trắng
   const _blink = Math.sin(performance.now()/260) > 0;
@@ -27845,10 +27921,33 @@ function drawMinimap(){
   mc.moveTo(4.5, 0); mc.lineTo(-3, -2.8); mc.lineTo(-1.5, 0); mc.lineTo(-3, 2.8);
   mc.closePath(); mc.fill();
   mc.restore();
-  // tên map
+  // Cờ cho bài kiểm đọc: đã gắn được mấy nhãn trên tổng số người ĐÁNG gắn. Đo chỉ số, đừng đo
+  // điểm ảnh — cùng lối `__avaKhoi`/`__veChet`, và vì hai lượt vẽ liên tiếp của minimap lệch
+  // nhau theo quái đang chạy nên đếm pixel ở đây là đếm nhiễu.
+  // ⚠ ĐẾM RIÊNG HAI HẠNG. Gộp lại thì một nhãn của người LORE che lấp việc một người CÓ CHỨC
+  // NĂNG bị bỏ — mà chính hạng sau mới là thứ mệnh đề cần gác.
+  if (window.TEST_MODE) window.__miniNhan = {
+    chucNangCan: mapNpcs.filter(n => THANH_TALK[n.talk]).length,
+    chucNangDat: placedLabels.filter(r => r.tk).length,
+    tongNhan: placedLabels.length,
+    ten: placedLabels.filter(r => r.tk).map(r => r.ten),
+    khung: [mw, mh],
+  };
+  // Tên map.
+  // ⚠ PHẢI ĐẶT LẠI `textAlign`. Vòng NPC ngay trên để nó ở `'center'` (dấu nhiệm vụ) hoặc
+  // `'right'`, và canvas thì giữ trạng thái — nên dòng này căn giữa tại x=6 và **mất đầu tên**:
+  // ảnh chụp ra `…Chiefdom` thay vì `Sapidae Chiefdom`. Một thuộc tính canvas rò từ vòng lặp
+  // phía trên không ném lỗi và không ai thấy cho tới khi soi ảnh.
+  mc.textAlign = 'left';
   mc.font = '9px "Be Vietnam Pro", sans-serif';
-  mc.fillStyle = 'rgba(255,240,200,.9)';
+  mc.lineWidth = 3; mc.strokeStyle = 'rgba(0,0,0,.85)';
+  mc.strokeText(md.name, 6, mh - 6);
+  mc.fillStyle = 'rgba(255,240,200,.95)';
   mc.fillText(md.name, 6, mh - 6);
+  if (window.TEST_MODE) window.__miniTen = {
+    ten: md.name, canLe: mc.textAlign, x: 6,
+    rong: Math.round(mc.measureText(md.name).width), khung: mw,
+  };
 }
 
 // ════════════════════════════════════════════════════════════════════════════
@@ -28448,6 +28547,52 @@ const THANH_TALK = {
   vanduyen: { ten:'Cầu May',    mau:'#c07fe0' },
   tenui:    { ten:'Vực Thẳm',   mau:'#7fb8c4' },
 };
+// ═══ NỀN THÀNH — MỘT bộ vẽ, HAI khổ ═══════════════════════════════════════════════
+//
+// ⚠ Mục "KHÔNG dùng lại `drawMinimapStatic()`" ở ngay trên vẫn ĐÚNG với thứ nó nói: bộ vẽ ấy
+// chép cứng cỡ chấm và cỡ chữ theo ô 240×120, phóng lên 560 thì chấm bé như hạt bụi. Nhưng kết
+// luận rút ra hồi đó — *dựng hẳn hai bộ vẽ* — là cái giá phải trả, không phải lời giải. Đo được
+// cái giá ấy: bản đồ lớn vẽ **đa giác sàn + 8 đường phố + 16 khối nhà** của Ardhaven, còn bản đồ
+// góc màn vẽ **không một cái nào** — 28 chấm vàng như nhau rải trên một mảng tối phẳng. Chủ dự
+// án gọi đúng tên: *"nhìn rất rối"*.
+//
+// ⇒ Tách phần KHÔNG phụ thuộc khổ (hình cái thành) ra đây, và mọi con số còn lại thì **suy từ
+// bề rộng khung** thay vì chép cứng. Hai khổ dùng chung một hình, nên chúng không thể nói hai
+// đằng — đúng luật `mapBanSac()` suy từ `packs`.
+//
+// ⚠ ĐỪNG chép ba khối vẽ này sang chỗ thứ hai. Thêm một lớp (ví dụ vỉa hè, quảng trường) mà chỉ
+// sửa một bên là hai bản đồ lệch nhau, và kiểu lệch đó người chơi đọc ra thành "bản đồ sai".
+function veNenThanh(g, md, mid, X, Y, day){
+  // mặt sàn = đúng đa giác đi được, nên hình cái thành đọc ra được ngay
+  g.beginPath();
+  md.diTrong.forEach((pt, i) => i ? g.lineTo(X(pt[0]), Y(pt[1])) : g.moveTo(X(pt[0]), Y(pt[1])));
+  g.closePath();
+  // ⚠ MÀU SÀN LẤY TỪ `md.ground`, ĐỪNG CHÉP MỘT MÃ MÀU. Mọi map nay đều có `diTrong` (cả 12 map
+  // ngoài trời đã lát viên), nên tô cứng một sắc ô-liu là **mười hai vùng ra cùng một màu** —
+  // xoá đúng cái bản sắc mà `mapBanSac()` dựng ra để nói. Ardhaven `#3a4230` gần như trùng sắc
+  // cũ nên bản đồ thành không đổi hình; thứ đổi là Rẻo Rừng, Trũng Nứt, Dusk Marsh…
+  g.fillStyle = md.ground || '#39402c'; g.fill();
+  g.strokeStyle = '#8a8768'; g.lineWidth = Math.max(1, day * 0.9); g.stroke();
+  // phố
+  g.save();
+  g.strokeStyle = 'rgba(120,118,92,.85)'; g.lineCap = 'round';
+  for (const d of (md.isoDuong || [])){
+    g.lineWidth = Math.max(1.5, X(110));
+    g.beginPath(); g.moveTo(X(d[0][0]), Y(d[0][1])); g.lineTo(X(d[1][0]), Y(d[1][1])); g.stroke();
+  }
+  g.restore();
+  // khối nhà
+  g.fillStyle = '#6d6a52'; g.strokeStyle = '#8a8768'; g.lineWidth = Math.max(0.5, day * 0.45);
+  for (const o of ((window.MAP_OBSTACLES || {})[mid] || [])){
+    if (!o.wd) continue;
+    g.fillRect(X(o.x), Y(o.y), X(o.wd), Y(o.ht));
+    g.strokeRect(X(o.x), Y(o.y), X(o.wd), Y(o.ht));
+  }
+}
+// Cổng/dịch chuyển: MÀU phải giống nhau ở hai bản đồ. Tím = cổng dịch chuyển (Tầng Sâu, Lò Khắc,
+// Sàn Đấu), trắng ngà = lối ra đi bộ. Bản đồ lớn trước đây tô trắng cho cả hai nên ba cổng dịch
+// chuyển đọc ra y hệt bốn cổng thành.
+function mauCong(gt){ return gt.portal ? '#c07fe0' : '#e9ebda'; }
 function veBanDoThanh(mid, W0, H0){
   const md = MAPS[mid];
   if (!md || !md.diTrong) return null;
@@ -28458,26 +28603,7 @@ function veBanDoThanh(mid, W0, H0){
   const X = v => v * sx, Y = v => v * sy;
 
   g.fillStyle = '#12150d'; g.fillRect(0, 0, W0, H0);
-  // mặt sàn = đúng đa giác đi được, nên hình cái thành đọc ra được ngay
-  g.beginPath();
-  md.diTrong.forEach((pt, i) => i ? g.lineTo(X(pt[0]), Y(pt[1])) : g.moveTo(X(pt[0]), Y(pt[1])));
-  g.closePath();
-  g.fillStyle = '#39402c'; g.fill();
-  g.strokeStyle = '#8a8768'; g.lineWidth = 2; g.stroke();
-
-  // phố
-  g.strokeStyle = 'rgba(120,118,92,.85)'; g.lineCap = 'round';
-  for (const d of (md.isoDuong || [])){
-    g.lineWidth = Math.max(1.5, X(110));
-    g.beginPath(); g.moveTo(X(d[0][0]), Y(d[0][1])); g.lineTo(X(d[1][0]), Y(d[1][1])); g.stroke();
-  }
-  // khối nhà
-  g.fillStyle = '#6d6a52'; g.strokeStyle = '#8a8768'; g.lineWidth = 1;
-  for (const o of ((window.MAP_OBSTACLES || {})[mid] || [])){
-    if (!o.wd) continue;
-    g.fillRect(X(o.x), Y(o.y), X(o.wd), Y(o.ht));
-    g.strokeRect(X(o.x), Y(o.y), X(o.wd), Y(o.ht));
-  }
+  veNenThanh(g, md, mid, X, Y, 2);
 
   // ── NHÃN: vẽ SAU cùng, và tránh chồng bằng cách thử bốn chỗ quanh chấm ──────────
   const daDat = [];
@@ -28507,10 +28633,10 @@ function veBanDoThanh(mid, W0, H0){
     if (gt.map !== mid || !gt.to) continue;
     const dm = MAPS[gt.to]; if (!dm) continue;
     const px = X(gt.x), py = Y(gt.y);
-    g.fillStyle = '#e9ebda'; g.strokeStyle = 'rgba(0,0,0,.7)'; g.lineWidth = 1.5;
+    g.fillStyle = mauCong(gt); g.strokeStyle = 'rgba(0,0,0,.7)'; g.lineWidth = 1.5;
     g.beginPath(); g.arc(px, py, 5, 0, 7); g.fill(); g.stroke();
     const du = !player || player.level >= (dm.min || 1);
-    nhan(px, py, `${dm.name} · c${dm.min}`, du ? '#e9ebda' : '#9aa07f', 6);
+    nhan(px, py, `${dm.name} · c${dm.min}`, du ? mauCong(gt) : '#9aa07f', 6);
   }
   // NPC có chức năng
   for (const n of NPCS){
@@ -28651,9 +28777,14 @@ let _tgNen = null;
 // thì nó đẹp đúng một hôm và sai từ lần đầu ai đó thêm một cổng — cùng bệnh mà `mapBanSac()`
 // sinh ra để chữa.
 const TG_DAT = {};
-const TG_THU = 0.52;      // tỉ lệ thu chất liệu mặt đất — xem ghi chú ở drawImage trong veTheGioi
-const TG_DAT_MO = 0.55;   // đất lùi về làm NỀN, huy hiệu mới là thứ để đọc
-const TG_HUY = 21;        // bán kính huy hiệu
+// ⚠ ~~`TG_THU` · `TG_DAT_MO`~~ ĐÃ GỠ cùng lớp "mảnh đất kẹp chất liệu". Giữ đúng dòng này để cảnh
+// báo: nền nay là một tấm bản đồ vẽ tay, nên vùng là GHIM chứ không phải thẻ đất — xem khối
+// `từng vùng` trong `veTheGioi`. Cắm lại hai hằng này là dựng lại mười hai tấm thẻ xám dán đè lên tranh.
+// ⚠ 21 → 26 khi nền đổi sang tấm giấy da vẽ tay: huy hiệu nay là thứ DUY NHẤT nói vùng
+// này là sinh cảnh gì (mảnh đất kẹp chất liệu đã bỏ — xem khối `từng vùng` trong `veTheGioi`).
+// Đừng nhích tiếp: 12 huy hiệu đường kính 52px trên khung 660×500 đã bắt đầu chạm nhau ở chỗ ba vùng
+// dồn lại quanh Trũng Nứt Corran.
+const TG_HUY = 26;        // bán kính huy hiệu
 function tgDat(ten){
   let im = TG_DAT[ten];
   if (!im){
@@ -28682,53 +28813,166 @@ function tgChatLieu(md){
   const m = /^nen_([a-z]+?)\d*$/.exec((md.isoCo && md.isoCo[0]) || '');
   return (m && TG_SINH[m[1]]) || 'dongco';
 }
+// ═══════════ SÁU VÙNG CỦA TẤM GIẤY DA — bản đồ thế giới nay có HAI MỨC ═══════════
+//
+// Tấm giấy da do Meowa vẽ là một tấm bản đồ HOÀN CHỈNH: sáu hòn sinh cảnh, sáu con dấu vàng,
+// một toà nhà giữa tấm, và mấy con đường sáng nối chúng. Game thì có MƯỜI HAI bản đồ.
+//
+// ⚠ ĐÃ THỬ HAI LỐI TRƯỚC KHI RA ĐƯỢC LỐI NÀY, ghi lại để đừng ai làm lại:
+//   1. **Rải thẳng 12 ghim lên tranh.** Mỗi cái ghim rơi vào một địa hình nói ngược lại nó —
+//      Bird Tribe Heights (tuyết) đứng trên rừng xanh, Dusk Marsh (đầm) đứng trên núi lửa,
+//      Beast Herd Camp (đồng cỏ) đứng giữa biển. Thêm nữa sáu con dấu vàng của tranh trông y
+//      hệt thứ bấm được mà không bấm được. Hai bộ mốc chồng nhau, không bộ nào đúng.
+//   2. **Gỡ sáu hòn + sáu dấu, chỉ giữ giấy trơn.** Hết nói dối, nhưng vứt đi đúng phần art
+//      đáng giá nhất, và mười hai cái ghim lại nổi trên một tấm giấy trắng.
+//
+// ⇒ Lối đang dùng, chủ dự án chốt: **giữ nguyên tranh, gộp 12 map thành 6 vùng, mỗi vùng 2 map.**
+// Con dấu vàng CỦA CHÍNH TRANH thành cái nút; bấm vào thì tấm bản đồ PHÓNG vào hòn đó và hai
+// map của vùng hiện ra. Nhờ vậy không có mốc nào của ta chồng lên mốc nào của tranh — thứ người
+// chơi bấm chính là thứ hoạ sĩ đã vẽ sẵn ở đó.
+//
+// ⚠ GHÉP ĐÔI THEO **SINH CẢNH + DẢI CẤP**, KHÔNG THEO CỔNG — và đó là chuyện bắt buộc, không
+// phải chuyện lười: đồ thị `GATES` KHÔNG CÓ phép ghép đôi hoàn hảo nào. `corran` và `ngoai` đều
+// chỉ nối đúng một chỗ là `ardhaven`, nên hai cái ấy tranh nhau một bạn và một cái phải đứng
+// lẻ. 5/6 cặp dưới đây vẫn là hai map có cổng nối thẳng; riêng Quần Đảo Thú thì không, và đó là
+// chỗ hở đã biết chứ không phải sót.
+//
+// ⚠ `hon` (tâm hòn, để PHÓNG) khác `dau` (chỗ con dấu, để BẤM) — trên tranh con dấu nằm lệch
+// khỏi tâm hòn khá xa. Gộp hai cái làm một là hoặc nút bấm trượt khỏi con dấu, hoặc phóng vào
+// mất nửa hòn.
+// Toạ độ là TỈ LỆ của chính tấm art (0..1), nên đổi độ phân giải tệp art không phải chấm lại.
+// ⚠ `at` PHẢI CÁCH `dau` ÍT NHẤT ~0,085 (tỉ lệ art). Con dấu vàng là thứ NƯỚNG SẴN trong
+// tranh, gỡ không được — cắm một chtấm của ta đè lên nó thì ở mức 2 hai hình tròn vàng chồng
+// nhau, đọc ra một lỗi vẽ. Đã dẫm một lần với `comoc`.
+// Hộp ĐẶC của tấm cuộn, đo bằng kênh alpha của bản PNG gốc (`A>60`) rồi lùi vào một nhịp.
+const TG_HOP = { u0:.042, u1:.980, v0:.072, v1:.941 };
+// ═══ MÀU NHẤN THEO SINH CẢNH ═══
+// ⚠ KHÓA LÀ `tgChatLieu`, KHÔNG PHẢI `md.ground`. Đo thử lấy màu từ `ground` thì **7/12 map ra
+// gần như cùng một sắc xanh**, và ba map khác hẳn nhau (Rẻo Rừng · Lối Mòn · Trũng Nứt) dùng
+// CHUNG một mã `#2f3324` — tức đúng kiểu "suệ từ dữ liệu" mà kết quả không phân biệt được gì.
+// `tgChatLieu` cho chín sinh cảnh rạch ròi, VÀ đó cũng là khóa mà huy hiệu đang tra ⇒ màu và
+// hình không có cách nào nói hai đằng.
+const TG_MAU_SINH = { rung:'#7fd06a', thanh:'#e8c98a', dongco:'#bcd75e', tuyet:'#9fe0ff',
+                      duong:'#d9b98a', dahoang:'#c49bee', nuoc:'#6fd3e0', tro:'#ff9a5c',
+                      dam:'#79cfa0', bien:'#6fb8e0' };
+function tgMauMap(md){ return TG_MAU_SINH[tgChatLieu(md)] || '#e8d6aa'; }
+function _rgba(hex, a){
+  const h = hex.replace('#', '');
+  return `rgba(${parseInt(h.slice(0,2),16)},${parseInt(h.slice(2,4),16)},${parseInt(h.slice(4,6),16)},${a})`;
+}
+const TG_VUNG = [
+  { id:'corranvanh', ten:'Vành Corran',    mau:'#8fd66a', dau:[.2266,.2832], hon:[.245,.238],
+    mo:'Rẻo rừng nơi Nhát Gọi mở ra, và khu phố đá đi qua nó.',
+    maps:[ { id:'ardhaven',  at:[.175,.185] }, { id:'corran',    at:[.315,.290] } ] },
+  { id:'quandao',    ten:'Quần Đảo Thú',   mau:'#5fd0d8', dau:[.3145,.6982], hon:[.238,.730],
+    mo:'Bãi cạn và rừng thấp — nơi đàn thú còn chưa tan.',
+    maps:[ { id:'ngoai',     at:[.165,.675] }, { id:'chungnam',  at:[.270,.800] } ] },
+  { id:'binhnang',   ten:'Bình Nguyên Nắng', mau:'#f0c05a', dau:[.8232,.5098], hon:[.800,.503],
+    mo:'Luống ấp và con đường mòn vắt qua vùng đất khô.',
+    maps:[ { id:'daohoa',    at:[.720,.440] }, { id:'loimon',    at:[.875,.600] } ] },
+  { id:'vianguot',   ten:'Vỉa Ngọc Nứt',   mau:'#c49bee', dau:[.1855,.5205], hon:[.186,.483],
+    mo:'Đất nứt dưới Nhát Gọi, và những đường hầm ăn sâu vào vỉa.',
+    maps:[ { id:'trungnut',  at:[.140,.428] }, { id:'comoc',     at:[.272,.478] } ] },
+  { id:'songbang',   ten:'Sống Băng',      mau:'#9fe0ff', dau:[.5010,.2490], hon:[.498,.239],
+    mo:'Nhịp đá không nền, rồi dốc tuyết nơi khúc hát chưa tắt.',
+    maps:[ { id:'caungam',   at:[.430,.190] }, { id:'tuyettinh', at:[.578,.300] } ] },
+  { id:'lotro',      ten:'Lò Tro',         mau:'#ff8a4d', dau:[.7520,.2881], hon:[.776,.259],
+    mo:'Lò chưa nguội, và đầm lầy nơi đường về Cây Hồn tắt đèn.',
+    maps:[ { id:'mongco',    at:[.705,.205] }, { id:'nhanmon',   at:[.838,.300] } ] },
+];
+// Tra ngược map → vùng. Dùng cho "đang ở đây" và cho việc mở đúng vùng lúc bật bảng.
+function tgVungCua(mid){
+  for (const v of TG_VUNG) for (const m of v.maps) if (m.id === mid) return v;
+  return null;
+}
+function tgVungTheoId(id){ for (const v of TG_VUNG) if (v.id === id) return v; return null; }
+// ⚠ VÙNG MỞ KHI **CÓ ÍT NHẤT MỘT** MAP VÀO ĐƯỢC, không phải khi cả hai mở. Đòi cả hai thì Vành
+// Corran — vùng người chơi đang đứng ngay từ cấp 1 — đọc ra KHOÁ suốt 12 cấp đầu, vì `corran`
+// mở mà `ardhaven`… cũng mở, nhưng ở những vùng sau thì map thứ hai luôn cao cấp hơn map thứ
+// nhất, nên "cả hai" nghĩa là vùng chỉ sáng lên khi người chơi đã chơi xong nó.
+function tgVungMo(v){ return v.maps.some(m => MAPS[m.id] && mapGate(m.id).ok); }
+// Dải cấp gộp của vùng, suy từ `md.min`/`md.range` thật — đừng chép tay vào bảng trên, sửa một
+// map là bảng nói dối ngay mà không lỗi nào báo (cùng bài học `mapBanSac()`).
+// Vùng kề vùng này, SUY TỪ `tgCanh()` (tức từ `GATES`) rồi gộp lên mức vùng.
+// ⚠ ĐẮP THÊM MỘT BẢNG LÁNG GIỀNG CỦA RIÊNG VÙNG LÀ BẢO ĐẢM NÓ NÓI DỐI: thêm một cổng mà
+// quên sửa bảng thì bản đồ vẫn vẽ đẹp và vẫn sai — cùng bệnh mà `mapBanSac()` sinh ra để chữa.
+// Ở mức vùng thì `tgCanh()` là thứ DUY NHẤT còn nói được "cái gì nằm cạnh cái gì": mức thế giới
+// không vẽ đường nối của ta nữa (tranh đã có đường của nó, chồng hai bộ lên nhau là rối).
+function tgVungKe(v){
+  const ra = [];
+  for (const c of tgCanh()){
+    const va = tgVungCua(c.a), vb = tgVungCua(c.b);
+    if (!va || !vb || va.id === vb.id) continue;
+    const k = va.id === v.id ? vb : vb.id === v.id ? va : null;
+    if (k && !ra.includes(k)) ra.push(k);
+  }
+  return ra;
+}
+function tgVungCap(v){
+  let lo = 1e9, hi = -1e9;
+  for (const m of v.maps){
+    const md = MAPS[m.id]; if (!md || !md.range || md.range === '—') continue;
+    const s = String(md.range).split('-').map(t => parseInt(t, 10));
+    if (s.length === 2 && isFinite(s[0]) && isFinite(s[1])){ lo = Math.min(lo, s[0]); hi = Math.max(hi, s[1]); }
+  }
+  return hi < 0 ? 'Thành · An Toàn' : `cấp ${lo} - ${hi}`;
+}
+// ── MỨC ĐANG XEM + phép phóng ────────────────────────────────────────────────────────────
+// `_tgVung` rỗng = đang nhìn cả thế giới; mang id một vùng = đang nhìn trong vùng đó.
+let _tgVung = null;
+const TG_PHONG = 2.45;            // bội số phóng khi vào một vùng
+// ⚠ PHÓNG PHẢI CÓ ĐÀ, đừng nhảy cóc. Nhảy thẳng từ cả-thế-giới sang một hòn thì người chơi mất
+// dấu mình vừa bấm vào đâu — tấm tranh đổi hẳn trong một khung hình. Trượt có đà là thứ nói cho
+// họ biết hòn này nằm ở chỗ nào của tấm bản đồ, tức nó dạy luôn địa lý.
+let _tgTam = { u:.5, v:.5, k:1 }, _tgDich = { u:.5, v:.5, k:1 };
+function tgNham(v){ _tgDich = v ? { u:v.hon[0], v:v.hon[1], k:TG_PHONG } : { u:.5, v:.5, k:1 }; }
+function tgNhipTam(){
+  const s = 0.16;
+  _tgTam.u += (_tgDich.u - _tgTam.u) * s;
+  _tgTam.v += (_tgDich.v - _tgTam.v) * s;
+  _tgTam.k += (_tgDich.k - _tgTam.k) * s;
+}
+// Hình của tấm art trên canvas theo tâm/bội số ĐANG chạy. Mọi phép đổi toạ độ đi qua đây.
+function tgGiayHinh(){
+  const im = tgDat('giay');
+  if (!im || !im.width) return null;
+  // ⚠ PHỦ (cover), KHÔNG LỌT (contain). Art vuông mà khung 660×500 là 1,32:1 — lọt thì hở hai
+  // dải panel tối hai bên, ra một tấm bản đồ nhỏ kẹp giữa. Phủ thì cắt bớt chiều dọc (mất hai
+  // trục cuộn) nhưng giữ trọn THÂN tranh, tức phần mang thông tin.
+  // ⚠ PHỦ THEO **HỘP ĐẶC**, KHÔNG THEO KHỔ TỆP. Tấm cuộn không chạm mép ảnh: đo alpha
+  // của bản gốc thì giấy chỉ chiếm u .038–.982 · v .069–.943, ngoài đó là trong suốt — mà tệp
+  // webp đã nướng thành RGB nên chỗ trống ấy ra **ĐEN**. Phủ theo khổ tệp thì có hai vệt đen
+  // dọc hai mép bảng ở mức thế giới, và cả một dải đen khi phóng vào hòn sát rìa.
+  const iw = im.width * (TG_HOP.u1 - TG_HOP.u0), ih = im.height * (TG_HOP.v1 - TG_HOP.v0);
+  const co = Math.max(TG_KHUNG.w / iw, TG_KHUNG.h / ih) * _tgTam.k;
+  const w = im.width * co, h = im.height * co;
+  // ⚠ KẸP PHÉP DờI, không để tâm trôi tự do. Hòn ở RÍA tranh (Vỉa Ngọc Nứt sát mép trái,
+  // Lò Tro sát mép phải) thì phóng vào là mép art rời vào trong khung, để hở một **dải đen**
+  // chạy dọc cạnh bảng. Kẹp xong thì hòn ấy nằm hơi lệch tâm khung — đúng, và đó là cái giá
+  // đúng: một tấm bản đồ có mép, kéo tới mép thì phải dừng.
+  // Kẹp vào đúng hộp đặc ấy: cửa sổ nhìn không bao giờ được trôi ra ngoài mặt giấy.
+  const x = clamp(TG_KHUNG.w/2 - _tgTam.u*w, TG_KHUNG.w - TG_HOP.u1*w, -TG_HOP.u0*w);
+  const y = clamp(TG_KHUNG.h/2 - _tgTam.v*h, TG_KHUNG.h - TG_HOP.v1*h, -TG_HOP.v0*h);
+  return { im, w, h, x, y };
+}
+// art-space (0..1) → toạ độ canvas. Trả về cả khi art chưa tải (lùi về khung) để phần vẽ và
+// phần bắt chuột không bao giờ hiểu khác nhau — nếu một bên lùi mà bên kia không thì ghim vẽ
+// một chỗ còn bấm trúng một chỗ khác.
+function tgXY(u, v){
+  const s = tgGiayHinh();
+  if (!s) return { x: u * TG_KHUNG.w, y: v * TG_KHUNG.h, co: 1 };
+  return { x: s.x + u*s.w, y: s.y + v*s.h, co: s.w / 1320 };
+}
 function tgNen(){
   if (_tgNen) return _tgNen;
+  // ⚠ ĐỆM CHỈ CÒN LÀ **Ô GIỮ CHỖ LÚC ART CHƯA VỀ**. Từ lúc bản đồ có phép phóng thì tấm nền
+  // đổi mỗi khung hình, nên không đệm được nữa — `veTheGioi` vẽ thẳng qua `tgGiayHinh()`.
+  // Giữ hàm này để `tgDat()` còn chỗ xoá đệm khi art tải xong (`_tgNen = null`).
   const c = document.createElement('canvas'); c.width = TG_KHUNG.w; c.height = TG_KHUNG.h;
   const g = c.getContext('2d');
-  const gr = g.createLinearGradient(0, 0, TG_KHUNG.w, TG_KHUNG.h);
-  gr.addColorStop(0, '#2a2418'); gr.addColorStop(0.5, '#332b1c'); gr.addColorStop(1, '#241f16');
-  g.fillStyle = gr; g.fillRect(0, 0, TG_KHUNG.w, TG_KHUNG.h);
-  // MẶT BIỂN lát kín phần ngoài mọi vùng. Vẽ trước lớp vân giấy để giấy còn nhuốm được lên nó —
-  // đảo thứ tự thì biển nằm trên và cả tấm mất hẳn chất "bản đồ cũ", chỉ còn một hồ nước.
-  // ⚠ KÉO GIÃN PHỦ KHUNG, ĐỪNG LÁT. Mảng 384px lát vào khung 660×500 chỉ ra 2×2 ô, và mối nối
-  // hiện thành một HÌNH CHỮ THẬP chạy giữa tấm — thấy rõ mồn một vì mặt nước trơn không có gì
-  // che. Kéo một bản phủ kín thì không còn mối nào; nước không có chi tiết nên giãn không lộ.
-  const bien = tgDat('bien');
-  if (bien){
-    g.globalAlpha = 0.88;
-    g.drawImage(bien, 0, 0, TG_KHUNG.w, TG_KHUNG.h);
-    g.globalAlpha = 1;
-  }
-  // vân giấy: nhiễu thưa, hạt CỐ ĐỊNH nên tấm nền không nhấp nháy giữa hai lần mở bảng
-  const ra = _hatRng(_bamChuoi('bandothegioi'));
-  for (let i = 0; i < 2600; i++){
-    g.globalAlpha = 0.02 + ra()*0.05;
-    g.fillStyle = ra() < 0.5 ? '#6b5c3c' : '#171208';
-    g.fillRect(ra()*TG_KHUNG.w, ra()*TG_KHUNG.h, 1 + ra()*2, 1 + ra()*2);
-  }
-  g.globalAlpha = 1;
-  // viền cháy sém quanh mép
-  const vg = g.createRadialGradient(TG_KHUNG.w/2, TG_KHUNG.h/2, TG_KHUNG.h*0.30,
-                                    TG_KHUNG.w/2, TG_KHUNG.h/2, TG_KHUNG.w*0.72);
-  vg.addColorStop(0, 'rgba(0,0,0,0)'); vg.addColorStop(1, 'rgba(10,7,3,.75)');
-  g.fillStyle = vg; g.fillRect(0, 0, TG_KHUNG.w, TG_KHUNG.h);
+  g.fillStyle = '#241f16'; g.fillRect(0, 0, TG_KHUNG.w, TG_KHUNG.h);
   _tgNen = c;
   return c;
-}
-// Màu `ground` viết cho MẶT ĐẤT TRONG MÀN — rất tối (#1d2a1c…#3a4450) vì nó nằm dưới ánh sáng
-// và dưới cả một tấm nền art. Đặt nguyên màu ấy lên giấy da thì mười hai vùng ra mười hai vệt
-// gần như đen như nhau. Nâng sáng và pha ấm cho tách khỏi giấy, nhưng GIỮ NGUYÊN sắc — vùng nào
-// xanh vẫn xanh, vùng nào nâu vẫn nâu, nên bản đồ vẫn nói đúng vùng ấy trông thế nào.
-// (Cùng bài học với `itemPal`: icon nằm trên nền panel TỐI nên cần sàn sáng riêng — một bảng màu
-//  không dùng chung được cho hai chỗ có nền khác nhau.)
-function tgMauVung(md){
-  const h = (md.ground || '#3a4230').replace('#', '');
-  let r = parseInt(h.slice(0,2),16), gg = parseInt(h.slice(2,4),16), b = parseInt(h.slice(4,6),16);
-  const K = 2.05, AM = 26;
-  r = Math.min(255, Math.round(r*K + AM)); gg = Math.min(255, Math.round(gg*K + AM*0.85));
-  b = Math.min(255, Math.round(b*K + AM*0.45));
-  return `rgb(${r},${gg},${b})`;
 }
 // Nhãn sát mép khung thì bị cắt cụt — và cắt cụt một cái TÊN thì người chơi đọc ra một tên khác.
 // Kẹp tâm chữ vào trong khung theo đúng bề rộng chữ đó. Dùng chung cho cả hai tab.
@@ -28740,145 +28984,221 @@ function _nhanVien(g, t, x, y, w){
   const nua = g.measureText(t).width / 2 + 3;
   g.strokeText(t, clamp(x, nua, w - nua), y);
 }
-function veTheGioi(g){
-  const bc = tgBoCuc();
-  g.clearRect(0, 0, TG_KHUNG.w, TG_KHUNG.h);
-  g.drawImage(tgNen(), 0, 0);
-  // ── đường nối, vẽ TRƯỚC vùng để nó chui xuống dưới mép đất ──
-  for (const c of tgCanh()){
-    const A = bc[c.a], B = bc[c.b];
-    const moA = mapGate(c.a).ok, moB = mapGate(c.b).ok;
-    g.strokeStyle = (moA && moB) ? 'rgba(226,196,128,.42)' : 'rgba(120,106,78,.22)';
-    g.lineWidth = 2.4; g.setLineDash([7, 5]);
-    g.beginPath(); g.moveTo(A.cx, A.cy); g.lineTo(B.cx, B.cy); g.stroke();
-    g.setLineDash([]);
-  }
-  // ── từng vùng ──
-  const ids = Object.keys(bc);
-  for (const id of ids){
-    const md = MAPS[id], o = bc[id], cur = id === curMap;
-    const mo = mapGate(id).ok, hv = _tgHover === id;
+// Hai dòng nhãn dưới một cái ghim, viền đen dày cho đọc được trên giấy da sáng.
+function tgNhan(g, ten, phu, x, y, mauTen, mauPhu, dam){
+  g.textAlign = 'center';
+  g.font = `${dam ? 'bold ' : ''}12px "Be Vietnam Pro", sans-serif`;
+  g.lineWidth = 3.6; g.strokeStyle = 'rgba(12,8,3,.94)';
+  _nhanVien(g, ten, x, y, TG_KHUNG.w);
+  g.fillStyle = mauTen; _nhanKep(g, ten, x, y, TG_KHUNG.w);
+  if (!phu) return;
+  g.font = '9.5px "Be Vietnam Pro", sans-serif';
+  g.lineWidth = 3.4; g.strokeStyle = 'rgba(12,8,3,.94)';
+  _nhanVien(g, phu, x, y + 11, TG_KHUNG.w);
+  g.fillStyle = mauPhu; _nhanKep(g, phu, x, y + 11, TG_KHUNG.w);
+}
+// ── MỨC 1: sáu CON DẤU của chính tranh làm nút ───────────────────────────────────────────
+// ⚠ KHÔNG VẼ ĐĨA ĐÈ LÊN CON DẤU. Con dấu đã là một hình tròn vàng vẽ tay rất kỹ; phủ một cái
+// đĩa của ta lên là xoá đúng thứ vừa quyết định giữ. Ta chỉ thêm **vòng sáng quanh nó** và
+// **nhãn bên dưới** — tức trang trí lại thứ hoạ sĩ vẽ sẵn, không thay nó.
+const TG_DAU_R = 0.047;           // bán kính con dấu, tính theo tỉ lệ art
+function tgVeMucVung(g){
+  const cvung = tgVungCua(curMap);
+  const t = performance.now() / 1000;
+  for (const v of TG_VUNG){
+    const mo = tgVungMo(v), hv = _tgHover === v.id, cur = cvung && cvung.id === v.id;
+    const p = tgXY(v.dau[0], v.dau[1]);
+    const R = TG_DAU_R * (p.co * 1320);
+    // vùng khoá: phủ sương LẠNH lên con dấu, không phủ vệt đen — người chơi vẫn phải thấy
+    // được đó là con dấu gì, vì đó là nửa lý do tấm bản đồ này tồn tại.
+    if (!mo){
+      g.save(); g.beginPath(); g.arc(p.x, p.y, R, 0, 7);
+      g.fillStyle = 'rgba(28,36,52,.58)'; g.fill(); g.restore();
+    }
     g.save();
-    g.translate(o.cx, o.cy);
-    if (o.hinh){
-      g.beginPath();
-      for (let i = 0; i < o.hinh.pts.length; i++){
-        const p = o.hinh.pts[i];
-        if (i) g.lineTo(p[0]*o.r*2, p[1]*o.r*2); else g.moveTo(p[0]*o.r*2, p[1]*o.r*2);
-      }
-      g.closePath();
-    } else { g.beginPath(); g.arc(0, 0, o.r, 0, 7); }
-    // bóng đổ nhẹ cho vùng đất nổi lên khỏi mặt giấy
-    g.save(); g.translate(2.5, 3.5); g.fillStyle = 'rgba(10,7,3,.45)'; g.fill(); g.restore();
-    const dat = tgDat(tgChatLieu(md));
-    if (dat){
-      g.save(); g.clip();
-      g.globalAlpha = TG_DAT_MO;   // đất chỉ còn là NỀN — huy hiệu mới là thứ để đọc
-      // Lệch gốc theo hạt của TÊN VÙNG: hai vùng cạnh nhau cùng sinh cảnh mà vẽ cùng một góc
-      // tranh thì đọc ra hai bản sao dán cạnh nhau, chứ không ra hai nơi khác nhau.
-      // ⚠ THU CHẤT LIỆU LẠI. Lý lẽ "vẽ 1:1 cho cây giữ đúng cỡ" nghe hợp lý và SAI ở đây, vì
-      // nó giả định vùng rộng ~160px — đo ra chỉ ~100px. Ở cỡ ấy một mảng 384px vẽ nguyên cỡ
-      // chỉ lọt được một góc cỏ trống, nên mười hai vùng đọc ra mười hai MẢNG MÀU chứ không ra
-      // tranh. Thu còn 0,52 thì mỗi vùng chứa được vài rặng cây — đó mới là thứ mắt đọc thành
-      // "bản đồ vẽ tay". Sửa TG_THU thì chụp lại mà nhìn, đừng chỉnh mò.
-      const h = _bamChuoi('tgdat:' + id), K = TG_THU;
-      g.drawImage(dat, -60 - (h % 150), -60 - ((h >> 9) % 150), dat.width * K, dat.height * K);
-      g.globalAlpha = 1;
-      g.restore();
-      // ⚠ Vùng khoá phải đọc ra SƯƠNG PHỦ, không ra một vệt đen. Lượt đầu để .62 màu gần đen
-      // và bảy vùng khoá thành bảy cái bóng không hình dạng — người chơi mất luôn thông tin
-      // "chỗ đó trông thế nào", mà đó là nửa lý do tấm bản đồ này tồn tại.
-      if (!mo){ g.fillStyle = 'rgba(30,38,52,.52)'; g.fill(); }
-      else if (!hv){ g.fillStyle = 'rgba(28,22,10,.16)'; g.fill(); } // hoà vào tông giấy
-    } else {
-      g.fillStyle = mo ? tgMauVung(md) : '#241f18';
-      g.globalAlpha = mo ? (hv ? 1 : 0.92) : 0.5;
-      g.fill();
+    // ⚠ QUẦNG MÀU NẰM **DƯỚI** VÒNG, VÀ PHẢI TẮT DẦN. Đây là thứ làm màu của vùng đọc được
+    // từ xa — một cái vòng dày 2px thì ở cỡ thật không đủ diện tích để mang một màu. Tô đặc
+    // thì nó thành một cái đĩa đè lên con dấu, tức xoá đúng thứ vừa quyết định giữ.
+    if (mo){
+      const qg = g.createRadialGradient(p.x, p.y, R * 0.75, p.x, p.y, R * 2.05);
+      qg.addColorStop(0, _rgba(v.mau, hv ? .40 : .24));
+      qg.addColorStop(1, _rgba(v.mau, 0));
+      g.fillStyle = qg;
+      g.beginPath(); g.arc(p.x, p.y, R * 2.05, 0, 7); g.fill();
+    }
+    if (cur){
+      const nh = 0.5 + 0.5 * Math.sin(t * 3.2);
+      g.globalAlpha = 0.35 + nh * 0.4;
+      g.beginPath(); g.arc(p.x, p.y, R + 5 + nh * 5, 0, 7);
+      g.strokeStyle = '#8ef0a0'; g.lineWidth = 2.4; g.stroke();
       g.globalAlpha = 1;
     }
-    g.lineWidth = cur ? 2.6 : hv ? 2 : 1.2;
-    g.strokeStyle = cur ? '#8ef0a0' : hv ? '#ffe9a8' : mo ? 'rgba(226,196,128,.55)' : 'rgba(120,106,78,.35)';
+    g.beginPath(); g.arc(p.x, p.y, R + 2.5, 0, 7);
+    g.lineWidth = hv ? 3.2 : 2.4;
+    g.strokeStyle = cur ? 'rgba(142,240,160,.95)' : hv ? '#fff4d2'
+                        : mo ? _rgba(v.mau, .92) : 'rgba(120,132,150,.45)';
     g.stroke();
-    // ── HUY HIỆU: một mảnh tranh CẮT TRÒN của chính sinh cảnh vùng đó ──
-    // ⚠ Không tốn thêm một tệp art nào — nó cắt từ đúng mảng chất liệu đang dùng làm mặt đất.
-    // Vì sao cần: ở cỡ thật, một vùng chỉ rộng ~100px và hình đa giác của nó gần như không mang
-    // thông tin gì (mắt không đọc được "bờ này lõm hơn bờ kia"). Một huy hiệu thì nói ngay đây
-    // là tuyết hay đầm hay đá — tức đổi từ "vẽ đúng hình" sang "nói đúng chỗ này là gì".
-    if (dat){
-      const R = TG_HUY;
-      g.save();
-      g.beginPath(); g.arc(0, 0, R + 2.5, 0, 7);
-      g.fillStyle = 'rgba(12,9,5,.55)'; g.fill();              // bệ tối cho huy hiệu nổi khỏi đất
-      g.beginPath(); g.arc(0, 0, R, 0, 7); g.clip();
-      // Cắt ở GIỮA mảng, không lệch theo hạt: huy hiệu là thứ để nhận ra sinh cảnh, nên nó phải
-      // ổn định. Phần lệch ngẫu nhiên đã dùng ở lớp đất bên dưới rồi.
-      // ⚠ HAI LƯỢT SAI TRƯỚC KHI RA ĐƯỢC CÁI HUY HIỆU PHÂN BIỆT ĐƯỢC:
-      //   1. ép nguyên mảng 384px vào vòng 42px ⇒ mười hai đốm mờ giống hệt nhau;
-      //   2. cắt đúng TÂM mảng ở cỡ đọc được ⇒ SÁU vùng ra cùng một cái cây, vì tâm của mảng cỏ,
-      //      mảng vườn và mảng rừng đều rơi vào một khoảng cỏ có một cây.
-      // Nay bộ nướng dò bằng PHƯƠNG SAI và xuất tệp riêng: ô lệch sáng nhiều nhất là ô có vật
-      // thể (rặng cây, vách đá, lá súng), chứ không phải một khoảng nền trơn.
-      // Huy hiệu dùng TỆP RIÊNG (`tg_ic_*`) — ô đặc sắc nhất của mảng, do bộ nướng dò bằng phương
-      // sai. Chưa tải xong thì lùi về cắt giữa mảng gốc, chứ không để trống một cái vòng.
-      const ic = tgDat('ic_' + tgChatLieu(md)) || dat;
-      g.drawImage(ic, -R, -R, R * 2, R * 2);
-      if (!mo){ g.fillStyle = 'rgba(30,38,52,.55)'; g.fillRect(-R, -R, R*2, R*2); }
-      g.restore();
-      g.beginPath(); g.arc(0, 0, R, 0, 7);
-      g.lineWidth = cur ? 2.6 : 1.8;
-      g.strokeStyle = cur ? '#8ef0a0' : mo ? 'rgba(240,226,189,.82)' : 'rgba(150,134,104,.55)';
-      g.stroke();
-    }
     g.restore();
-    // nhãn: tên + dải cấp, đặt DƯỚI vùng
-    const ten = mo ? md.name : md.name;
-    g.font = `${cur ? 'bold ' : ''}11.5px "Be Vietnam Pro", sans-serif`;
-    g.textAlign = 'center';
-    g.lineWidth = 3; g.strokeStyle = 'rgba(12,8,3,.9)';
-    _nhanVien(g, ten, o.cx, o.cy + o.r + 13, TG_KHUNG.w);
-    g.fillStyle = cur ? '#8ef0a0' : mo ? '#f0e2bd' : '#8a8275';
-    _nhanKep(g, ten, o.cx, o.cy + o.r + 13, TG_KHUNG.w);
-    // Thành khai `range:'—'`; in ra "cấp —" thì trông như dữ liệu thiếu chứ không ra "chỗ này
-    // không có quái". Gọi đúng tên nó.
-    const phu = !mo ? `🔒 cấp ${md.min}` : (!md.range || md.range === '—') ? 'Thành · An Toàn' : `cấp ${md.range}`;
-    g.font = '9.5px "Be Vietnam Pro", sans-serif';
-    g.lineWidth = 3; g.strokeStyle = 'rgba(12,8,3,.9)';
-    _nhanVien(g, phu, o.cx, o.cy + o.r + 24, TG_KHUNG.w);
-    g.fillStyle = mo ? 'rgba(226,196,128,.75)' : 'rgba(138,130,117,.8)';
-    _nhanKep(g, phu, o.cx, o.cy + o.r + 24, TG_KHUNG.w);
-  }
-  // ── ĐANG Ở ĐÂY: lá cờ nhấp nháy, vẽ SAU CÙNG để không vùng nào che ──
-  const cur = bc[curMap];
-  if (cur){
-    const t = performance.now() / 1000;
-    const nh = 0.5 + 0.5 * Math.sin(t * 3.2);
-    g.save();
-    g.globalAlpha = 0.30 + nh * 0.35;
-    g.beginPath(); g.arc(cur.cx, cur.cy, cur.r + 6 + nh * 5, 0, 7);
-    g.strokeStyle = '#8ef0a0'; g.lineWidth = 2; g.stroke();
-    g.globalAlpha = 1;
-    // cán cờ + lá cờ
-    const fy = cur.cy - cur.r - 4;
-    g.strokeStyle = '#e8f5ea'; g.lineWidth = 2;
-    g.beginPath(); g.moveTo(cur.cx, fy); g.lineTo(cur.cx, fy - 20); g.stroke();
-    g.fillStyle = '#57d97a';
-    g.beginPath(); g.moveTo(cur.cx, fy - 20); g.lineTo(cur.cx + 14, fy - 15.5);
-    g.lineTo(cur.cx, fy - 11); g.closePath(); g.fill();
-    g.restore();
+    const kh = mo ? '' : '🔒 ';
+    tgNhan(g, kh + v.ten, mo ? tgVungCap(v) : `cần cấp ${Math.min(...v.maps.map(m => (MAPS[m.id]||{}).min || 1))}`,
+           p.x, p.y + R + 15,
+           cur ? '#8ef0a0' : mo ? v.mau : '#9aa2b0',
+           mo ? _rgba(v.mau, .80) : 'rgba(150,158,172,.82)', cur || hv);
   }
 }
+// ── MỨC 2: hai map của một vùng ──────────────────────────────────────────────────────────
+function tgVeMucMap(g, v){
+  const t = performance.now() / 1000;
+  // đường nối giữa hai map, CHỈ khi chúng thật sự có cổng nối nhau. Năm trong sáu vùng có;
+  // Quần Đảo Thú thì không, và ở đó không vẽ gì là đúng — vẽ một con đường không tồn tại thì
+  // tấm bản đồ nói dối đúng cái điều nó sinh ra để nói.
+  const [a, b] = v.maps;
+  const noi = GATES.some(gt => (gt.map === a.id && gt.to === b.id) || (gt.map === b.id && gt.to === a.id));
+  if (noi){
+    const pa = tgXY(a.at[0], a.at[1]), pb = tgXY(b.at[0], b.at[1]);
+    g.lineCap = 'round';
+    g.strokeStyle = 'rgba(46,30,12,.55)'; g.lineWidth = 5;
+    g.beginPath(); g.moveTo(pa.x, pa.y); g.lineTo(pb.x, pb.y); g.stroke();
+    g.strokeStyle = 'rgba(255,238,196,.85)'; g.lineWidth = 2.1; g.setLineDash([7, 6]);
+    g.beginPath(); g.moveTo(pa.x, pa.y); g.lineTo(pb.x, pb.y); g.stroke();
+    g.setLineDash([]); g.lineCap = 'butt';
+  }
+  for (const m of v.maps){
+    const md = MAPS[m.id]; if (!md) continue;
+    const mo = mapGate(m.id).ok, hv = _tgHover === m.id, cur = m.id === curMap;
+    const mau = tgMauMap(md);
+    const p = tgXY(m.at[0], m.at[1]);
+    const R = TG_HUY;
+    g.save();
+    g.beginPath(); g.arc(p.x, p.y + 3, R + 3, 0, 7);
+    g.fillStyle = 'rgba(10,7,3,.45)'; g.fill();
+    g.beginPath(); g.arc(p.x, p.y, R + 2.5, 0, 7);
+    g.fillStyle = 'rgba(18,13,7,.92)'; g.fill();
+    // quầng màu sinh cảnh, cùng luật với mức 1 — hai mức phải đọc ra cùng một ngôn ngữ màu.
+    if (mo){
+      const qg = g.createRadialGradient(p.x, p.y, R * 0.8, p.x, p.y, R * 1.95);
+      qg.addColorStop(0, _rgba(mau, hv ? .42 : .26));
+      qg.addColorStop(1, _rgba(mau, 0));
+      g.fillStyle = qg;
+      g.beginPath(); g.arc(p.x, p.y, R * 1.95, 0, 7); g.fill();
+    }
+    // ⚠ HUY HIỆU cắt từ ĐÚNG mảng chất liệu sinh cảnh của map đó — không tốn thêm tệp art nào,
+    // và không có cách nào nói sai, vì nó đọc cùng nguồn mà mặt đất trong màn đọc.
+    const dat = tgDat(tgChatLieu(md));
+    if (dat){
+      g.save();
+      g.beginPath(); g.arc(p.x, p.y, R, 0, 7); g.clip();
+      const ic = tgDat('ic_' + tgChatLieu(md)) || dat;
+      g.drawImage(ic, p.x - R, p.y - R, R * 2, R * 2);
+      if (!mo){ g.fillStyle = 'rgba(30,38,52,.55)'; g.fillRect(p.x - R, p.y - R, R*2, R*2); }
+      g.restore();
+    }
+    if (cur){
+      const nh = 0.5 + 0.5 * Math.sin(t * 3.2);
+      g.globalAlpha = 0.30 + nh * 0.35;
+      g.beginPath(); g.arc(p.x, p.y, R + 6 + nh * 5, 0, 7);
+      g.strokeStyle = '#8ef0a0'; g.lineWidth = 2; g.stroke();
+      g.globalAlpha = 1;
+    }
+    g.beginPath(); g.arc(p.x, p.y, R, 0, 7);
+    g.lineWidth = cur ? 2.8 : 2.2;
+    g.strokeStyle = cur ? '#8ef0a0' : hv ? '#fff4d2'
+                        : mo ? _rgba(mau, .95) : 'rgba(150,134,104,.6)';
+    g.stroke();
+    g.restore();
+    const phu = !mo ? `🔒 cấp ${md.min}`
+              : (!md.range || md.range === '—') ? 'Thành · An Toàn' : `cấp ${md.range}`;
+    tgNhan(g, md.name, phu, p.x, p.y + R + 15,
+           cur ? '#8ef0a0' : mo ? mau : '#9a9184',
+           mo ? _rgba(mau, .80) : 'rgba(146,138,124,.85)', cur || hv);
+  }
+}
+// Nút lùi ở góc trên-trái khung. Toạ độ cố định ⇒ phần vẽ và phần bắt chuột dùng chung hằng này.
+const TG_LUI = { x: 10, y: 10, w: 96, h: 26 };
+function tgVeNutLui(g, v){
+  const b = TG_LUI, hv = _tgHover === '<lui>';
+  g.save();
+  g.beginPath(); g.roundRect(b.x, b.y, b.w, b.h, 6);
+  g.fillStyle = hv ? 'rgba(48,34,14,.95)' : 'rgba(26,18,8,.86)'; g.fill();
+  g.lineWidth = 1.4; g.strokeStyle = hv ? '#ffe9a8' : 'rgba(226,196,128,.6)'; g.stroke();
+  g.font = 'bold 11.5px "Be Vietnam Pro", sans-serif'; g.textAlign = 'left';
+  g.fillStyle = hv ? '#ffe9a8' : '#e8d6aa';
+  g.fillText('◀  Thế Giới', b.x + 10, b.y + 17);
+  g.restore();
+  g.textAlign = 'center';
+  g.font = 'bold 13px "Be Vietnam Pro", sans-serif';
+  g.lineWidth = 4; g.strokeStyle = 'rgba(12,8,3,.95)';
+  g.strokeText(v.ten, TG_KHUNG.w / 2, 26); g.fillStyle = v.mau;
+  g.fillText(v.ten, TG_KHUNG.w / 2, 26);
+  g.font = '10px "Be Vietnam Pro", sans-serif';
+  g.lineWidth = 3.4; g.strokeStyle = 'rgba(12,8,3,.95)';
+  g.strokeText(v.mo, TG_KHUNG.w / 2, 40); g.fillStyle = 'rgba(238,214,160,.9)';
+  g.fillText(v.mo, TG_KHUNG.w / 2, 40);
+  // Dòng láng giềng: tên vùng kề được TÔ ĐÚNG MÀU CỦA NÓ, nên đọc một dòng chữ là biết phải
+  // quay lại bấm con dấu màu gì ở mức thế giới.
+  const ke = tgVungKe(v);
+  if (ke.length){
+    g.font = '10px "Be Vietnam Pro", sans-serif';
+    const nhan = ke.map(k => k.ten);
+    let be = g.measureText('K\u1ec1: ').width;
+    for (let i = 0; i < nhan.length; i++) be += g.measureText(nhan[i] + (i < nhan.length-1 ? ' \u00b7 ' : '')).width;
+    let x = TG_KHUNG.w / 2 - be / 2;
+    const ve = (t, mau) => {
+      g.lineWidth = 3.4; g.strokeStyle = 'rgba(12,8,3,.95)';
+      g.textAlign = 'left'; g.strokeText(t, x, 54);
+      g.fillStyle = mau; g.fillText(t, x, 54);
+      x += g.measureText(t).width;
+    };
+    ve('K\u1ec1: ', 'rgba(210,192,150,.8)');
+    for (let i = 0; i < ke.length; i++){
+      ve(ke[i].ten, tgVungMo(ke[i]) ? ke[i].mau : 'rgba(150,158,172,.8)');
+      if (i < ke.length - 1) ve(' \u00b7 ', 'rgba(210,192,150,.6)');
+    }
+    g.textAlign = 'center';
+  }
+}
+function veTheGioi(g){
+  tgNhipTam();
+  g.clearRect(0, 0, TG_KHUNG.w, TG_KHUNG.h);
+  const s = tgGiayHinh();
+  if (!s){ g.drawImage(tgNen(), 0, 0); return; }
+  g.drawImage(s.im, s.x, s.y, s.w, s.h);
+  // ⚠ NHUỐM TỐI NHẸ, KHÔNG TÔ ĐÈ. Giấy da sáng ~200/255 ở giữa tấm, mà nhãn thì trắng và vàng —
+  // chữ chìm nghỉm. Một lớp nâu sẫm kéo giấy xuống đủ để chữ nổi mà vẫn đọc ra giấy cũ; đậm hơn
+  // là mất luôn cái chất art vừa thay vào.
+  g.fillStyle = 'rgba(26,18,8,.20)'; g.fillRect(0, 0, TG_KHUNG.w, TG_KHUNG.h);
+  const vg = g.createRadialGradient(TG_KHUNG.w/2, TG_KHUNG.h/2, TG_KHUNG.h*0.34,
+                                    TG_KHUNG.w/2, TG_KHUNG.h/2, TG_KHUNG.w*0.74);
+  vg.addColorStop(0, 'rgba(0,0,0,0)'); vg.addColorStop(1, 'rgba(12,8,3,.55)');
+  g.fillStyle = vg; g.fillRect(0, 0, TG_KHUNG.w, TG_KHUNG.h);
+  const v = _tgVung && tgVungTheoId(_tgVung);
+  if (v){ tgVeMucMap(g, v); tgVeNutLui(g, v); }
+  else tgVeMucVung(g);
+}
+// ⚠ BẮT CHUỘT PHẢI ĐỌC ĐÚNG MỨC ĐANG XEM. Một hàm trả về "id" cho cả hai mức thì gọn, nhưng id
+// của mức 1 là id VÙNG còn của mức 2 là id MAP — nơi dùng phải biết nó đang cầm cái nào, nên
+// đừng "gọn" bằng cách tra cả hai bảng rồi lấy cái nào khớp trước.
 function tgTaiDiem(mx, my){
-  const bc = tgBoCuc();
+  const v = _tgVung && tgVungTheoId(_tgVung);
+  if (v){
+    const b = TG_LUI;
+    if (mx >= b.x && mx <= b.x + b.w && my >= b.y && my <= b.y + b.h) return '<lui>';
+    let tot = null, totD = 1e9;
+    for (const m of v.maps){
+      const p = tgXY(m.at[0], m.at[1]), d = Math.hypot(mx - p.x, my - p.y);
+      if (d < TG_HUY * 1.5 && d < totD){ tot = m.id; totD = d; }
+    }
+    return tot;
+  }
   let tot = null, totD = 1e9;
-  for (const id in bc){
-    const o = bc[id], d = Math.hypot(mx - o.cx, my - o.cy);
-    // Bắt theo KHOẢNG CÁCH TỚI TÂM chứ không theo đa giác: đa giác của vùng có eo và vịnh, bấm
-    // trúng một cái vịnh thì hụt — mà người chơi đang bấm vào "vùng đất này", không bấm vào
-    // đúng một điểm ảnh của bờ biển.
-    if (d < o.r * 1.12 && d < totD){ tot = id; totD = d; }
+  for (const vv of TG_VUNG){
+    const p = tgXY(vv.dau[0], vv.dau[1]), d = Math.hypot(mx - p.x, my - p.y);
+    const R = TG_DAU_R * (p.co * 1320);
+    if (d < R * 1.45 && d < totD){ tot = vv.id; totD = d; }
   }
   return tot;
 }
+
 // ═══════════ BẢNG BẢN ĐỒ — HAI TAB: HIỆN TẠI · THẾ GIỚI ═══════════
 // Khuôn lấy từ bảng bản đồ của dòng MMO nhìn xuống (Võ Lâm / Ragnarok): tab đầu là vùng ĐANG
 // đứng có đủ mốc và bộ lọc, tab sau là cả thế giới có chấm "mình đang ở đây".
@@ -29070,7 +29390,25 @@ window.tgReBanDo = function(ev){
 };
 // MỘT cửa duy nhất cho "bấm vào một vùng", dùng chung cho cả chấm trên bản đồ lẫn nút trong
 // danh sách — nếu tách hai đường thì sớm muộn hai bên cho phép hai thứ khác nhau.
-window.tgChon = function(id){ window.ttMo(id); };
+// MỘT cửa duy nhất cho "bấm vào một ô trên bản đồ", dùng chung cho cả chấm trên tranh lẫn nút
+// trong danh sách. ⚠ `id` mang NGHĨA KHÁC NHAU theo mức đang xem — xem `tgTaiDiem`.
+window.tgChon = function(id){
+  if (id === '<lui>'){ window.tgVaoVung(null); return; }
+  if (!_tgVung){
+    // đang ở mức thế giới: `id` có thể là một VÙNG (bấm trên tranh) hoặc một MAP (bấm trong
+    // danh sách bên phải). Danh sách vẫn liệt kê từng map nên phải nhận cả hai.
+    const v = tgVungTheoId(id);
+    if (v){ window.tgVaoVung(v.id); return; }
+  }
+  window.ttMo(id);
+};
+// Vào / ra một vùng. ⚠ ĐẶT `_tgHover = null` — con trỏ đang đậu trên một con dấu, mà sau khi
+// đổi mức thì id ấy thuộc bảng khác; để nguyên là một cái ghim sáng lên vì trùng tên với thứ vừa rời đi.
+window.tgVaoVung = function(id){
+  _tgVung = id || null; _tgHover = null;
+  tgNham(_tgVung ? tgVungTheoId(_tgVung) : null);
+  AudioSys.sfx('ui', 0.5);
+};
 function tgDanhSachHtml(){
   let html = '';
   // GDD Đợt 2 B2: badge mục tiêu NV trên từng vùng
@@ -29411,6 +29749,11 @@ function renderPartyPanel(){
 }
 
 function renderMapPanel(){
+  // ⚠ MỖI LẦN DỰNG LẠI BẢNG LÀ VỀ MỨC THẾ GIỚI. Thiếu dòng này thì đóng bảng lúc đang phóng
+  // vào một vùng rồi mở lại sẽ rơi thẳng vào vùng cũ — người chơi bấm M để xem cả thế giới mà
+  // nhận đúng một hòn đảo, và không có gì nói cho họ biết vì sao.
+  _tgVung = null; _tgHover = null; tgNham(null);
+  _tgTam = { u:.5, v:.5, k:1 };
   const zt = zoneType();
   const tabs = [{ id:'ht', ten:'Hiện Tại' }, { id:'tg', ten:'Thế Giới' }];
   let html = moBang({ tieu:'Bản Đồ Lunacia', dong: mapDef().name, tabs, chon:_banDoTab, ham:'banDoTab' });
@@ -29424,7 +29767,7 @@ function renderMapPanel(){
       <div class="bd-trai">
         <canvas id="bd-tg" width="${TG_KHUNG.w}" height="${TG_KHUNG.h}"
                 onclick="tgBamBanDo(event)" onmousemove="tgReBanDo(event)"
-                onmouseleave="_tgHover=null" title="Bấm vào một vùng để dịch chuyển"></canvas>
+                onmouseleave="_tgHover=null" title="Bấm vào một con dấu để mở vùng đó"></canvas>
         <div class="bd-chu">Đường nối là lối ĐI BỘ thật giữa hai vùng — suy thẳng từ cổng trong game.</div>
       </div>
       <div class="bd-phai bd-cuon">` + tgDanhSachHtml() + `</div></div>`;

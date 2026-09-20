@@ -65,18 +65,27 @@ async function moGame(b, w, h){
       const nk = document.getElementById('combat-log-wrap').getBoundingClientRect();
       const qt = document.getElementById('quest-tracker');
       const mm = document.getElementById('minimap').getBoundingClientRect();
+      const cotR = document.getElementById('cot-phai').getBoundingClientRect();
       return { khe: Math.round(nk.top - cp.bottom), cpĐáy: Math.round(cp.bottom), nkĐỉnh: Math.round(nk.top),
                nkĐáyNgoàiMàn: Math.round(nk.bottom - vh),
                nvCòn: qt ? Math.round(qt.clientHeight) : 0,
                nvĐọcHết: qt ? (qt.scrollHeight <= qt.clientHeight + 1 || qt.scrollHeight > qt.clientHeight) : false,
-               mmCòn: Math.round(mm.height) };
+               mmCòn: Math.round(mm.height), mmRộng: Math.round(mm.width),
+               // ⚠ THỨ PHẢI GÁC LÀ "CÓ BỊ XÉN KHÔNG", KHÔNG PHẢI MỘT CHIỀU CAO.
+               // `#cot-phai` mang `overflow:hidden`, nên một bản đồ rộng hơn cột bị cắt cụt
+               // trong IM LẶNG — đo được: canvas 240px trong cột lòng 180px ⇒ mất 23% bên
+               // phải, đúng góc có Lò Hỗn Độn. Chiều cao thì suy từ TỈ LỆ MAP (Ardhaven 2:1
+               // ⇒ 180×90), nên chốt cứng ≥100px là đòi một thứ phụ thuộc map nào đang đứng.
+               mmTran: Math.round(mm.right - cotR.right),
+               mmDienTich: Math.round(mm.width * mm.height) };
     }, h);
     console.log(`② ${w}x${h}:`, JSON.stringify(r));
     if (r.khe < 0) fail(`${w}x${h}: cột phải CHỒNG Nhật Ký ${-r.khe}px — đáy bảng Nhiệm Vụ bị che`);
     if (r.nkĐáyNgoàiMàn > 0) fail(`${w}x${h}: Nhật Ký tụt ${r.nkĐáyNgoàiMàn}px ra ngoài màn`);
     // Kẹp cột phải lại thì phải kẹp CHO ĐÚNG: bóp bảng nhiệm vụ về 0 cũng làm khe dương.
     if (r.nvCòn < 90) fail(`${w}x${h}: bảng Nhiệm Vụ chỉ còn ${r.nvCòn}px — chữa chồng lấn bằng cách bóp chết nó`);
-    if (r.mmCòn < 100) fail(`${w}x${h}: bản đồ nhỏ bị bóp còn ${r.mmCòn}px`);
+    if (r.mmTran > 0) fail(`${w}x${h}: bản đồ nhỏ TRÀN ${r.mmTran}px ra ngoài cột — cột có overflow:hidden nên phần ấy bị xén mất, im lặng`);
+    if (r.mmDienTich < 12000) fail(`${w}x${h}: bản đồ nhỏ bị bóp còn ${r.mmRộng}×${r.mmCòn} = ${r.mmDienTich}px²`);
     await p2.close();
   }
 

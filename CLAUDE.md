@@ -3496,7 +3496,20 @@ dung của bộ kit. Cơ chế: **`background-size: auto 100%`** — ảnh thu t
 
 - ⚠ **Khai nhầm thành `100% 100%` thì ảnh co theo `.fill`**: ở 30% máu cả cái mũi nhọn cũng co
   lại và nằm ở 30% — thanh máu vơi đi bằng cách **NHỎ LẠI**. Nhìn qua vẫn ra "thanh đang vơi",
-  nên phải đo mới thấy. `test_uigothic §⑥` đo: cỡ thanh phải bất biến, đầu phải phải tối đi.
+  nên phải đo mới thấy.
+
+  ⚠⚠ **VÀ CÂU Ở ĐÂY TỪNG GHI LÀ `test_uigothic §⑥` GÁC NÓ — SAI, nó chưa bao giờ gác.** Mệnh đề
+  *"cỡ thanh phải bất biến"* lấy hộp của **`#orb-hp`**, mà thứ co lại là `.fill` **bên trong** nó;
+  `#orb-hp` thì không bao giờ đổi cỡ, nên mệnh đề ấy đúng ở cả hai bản. Thử ngược bản cũ ra
+  **đỏ 1/3 lượt** — và đúng lượt đỏ là lượt que dò rơi trúng chữ số, tức bắt vì MAY. *Một mệnh
+  đề đúng ở mọi trạng thái là một mệnh đề không chốt gì*, và tài liệu ghi rằng nó chốt thì tệ hơn
+  không ghi.
+
+  ⚠ **ĐO Ở 60%, ĐỪNG ĐO Ở 30%.** Nén cả tấm xuống 30% thì mũi nhọn chỉ còn ~7px, khử răng cưa
+  nuốt mất — đo được hai bản **gần như trùng nhau** (tại 0,30 của thanh: 100 vs 90). Ở 60% mũi
+  nhọn còn ~12px và lề trong suốt bên phải của tấm art cũng nén theo, nên màu **tắt sớm** trước
+  mép phần đã tô: **138 (đúng) vs 34 (sai)**, hơn ba lần. `§⑥b` gác đúng chỗ đó và là mệnh đề
+  DUY NHẤT bắt được phép đột biến ấy.
 - ⚠ **Chiều cao là số DUY NHẤT đặt tay; bề rộng suy từ tỉ lệ ĐO ĐƯỢC** của tấm art (402/54 =
   7,444 · 402/38 = 10,579). Đặt tay cả hai là có ngày chúng lệch, mà lệch thì cái mũi nhọn bị
   kéo bè — thứ duy nhất của một thanh vát chéo mà mắt bắt được ngay.
@@ -3522,6 +3535,14 @@ dung của bộ kit. Cơ chế: **`background-size: auto 100%`** — ảnh thu t
   thì góc **không đổi** theo bề ngang; kéo giãn cả tấm thì góc bè ra. Hỏi `border-image` có
   mặt trong CSS là chưa đủ — khai sai `slice` vẫn ra một chuỗi hợp lệ.
 
+⚠ **QUE DÒ CỦA ⑥ ĐỌC ĐÚNG MỘT ĐIỂM Ở GIỮA THANH — tức đọc thẳng vào CON SỐ MÁU.**
+`.cd-thanh span` canh giữa DỌC và bắt đầu ở 10px, nên điểm `(0,08 · giữa)` rơi vào chữ số, mà
+chữ số thì đổi theo lượng máu (`22194 / 22194` → `7313 / 22194`). Ba lượt liên tiếp ở CÙNG một
+trạng thái ra `{81,10,4}` · `{87,54,51}` · `{118,98,96}` ⇒ **đỏ 1/3 lượt**, và đỏ vì một thứ
+chẳng liên quan gì tới cơ chế tô đầy. Nay đọc **đỉnh độ đỏ của cả CỘT**: chữ trắng và bóng đen
+đều kéo độ đỏ XUỐNG nên không bao giờ thắng được phần tô. Sau khi sửa, năm lượt ra đúng cùng
+một bộ số (`trai` 115-117 · `phai` 184↔46).
+
 ⚠ **Hai lần phép đo ④ nói dối, cả hai đều là QUE DÒ hỏng, không phải cơ chế hỏng:**
 1. Bảng trong mờ 90% và thế giới sau lưng thì **động** (mây, cỏ, ánh sáng chạy theo
    `performance.now()`). Hai lượt chụp cách nhau vài trăm mili giây là hai ảnh khác nhau kể cả
@@ -3530,6 +3551,73 @@ dung của bộ kit. Cơ chế: **`background-size: auto 100%`** — ảnh thu t
    lệch tối đa **1**, lệch TB **0,01**, số điểm lệch quá ngưỡng **0** — tức 9 lát chạy hoàn hảo
    trong lúc bài báo "đang kéo giãn cả tấm". ⇒ so điểm ảnh CÓ DUNG SAI (giải mã bằng canvas
    trong trang, không cần thư viện), đừng so byte.
+
+### 🗺 BẢN ĐỒ GÓC MÀN — MỘT bộ vẽ cho HAI khổ, và nó từng bị XÉN MẤT 23%
+
+Chủ dự án mở bản đồ lên và nói đúng một câu: *"nhìn rất rối"*, kèm yêu cầu cho nó giống tấm bản
+đồ thành và **đồng nhất** với nó. Đo ra **ba lỗi chồng lên nhau**, không lỗi nào in ra một dòng:
+
+| | đo được |
+|---|---|
+| **tràn cột, bị xén** | `capNhatKhungMinimap()` chốt trần bề rộng **240px chép tay**, trong khi `#cot-phai` rộng 190 (lòng **180**) và mang `overflow:hidden` ⇒ **mất 23% bên phải ở CẢ BA độ phân giải** — đúng góc có Lò Hỗn Độn và Vũ Khí |
+| **không vẽ hình cái thành** | Ardhaven có sẵn **68 đỉnh `diTrong` · 8 đường phố · 16 khối nhà**; bản đồ LỚN vẽ hết, bản đồ GÓC vẽ **0** — một mảng màu phẳng rồi rải 28 chấm lên |
+| **26 NPC một màu** | 17 trong số đó là người lore, nhưng cả 26 ra cùng một chấm vàng cỡ 3 ⇒ Lò Rèn không phân biệt nổi với một người đứng kể chuyện |
+
+**⚠ `style.css` VỐN KHAI ĐÚNG** (`#minimap { width:180px }`) — thứ phá nó là **style NỘI TUYẾN**
+mà `capNhatKhungMinimap()` ghi đè lên. *Một bảng kiểu đúng không cứu được gì khi có mã ghi thẳng
+`style.width`; và kiểu hỏng ấy không hiện trong CSS, phải đo trong DOM mới thấy.*
+
+**⇒ `veNenThanh()` là bộ vẽ DUY NHẤT của hình cái thành** (đa giác sàn · phố · khối nhà), dùng
+chung cho cả `drawMinimapStatic()` lẫn `veBanDoThanh()`; `mauCong()` là cửa duy nhất cho màu cổng.
+
+> ⚠ Mục cũ ghi *"KHÔNG dùng lại `drawMinimapStatic()`"* và nó **vẫn đúng với thứ nó nói** — bộ vẽ
+> ấy chép cứng cỡ chấm/cỡ chữ theo ô 240×120. Nhưng kết luận rút ra hồi đó — *dựng hẳn hai bộ vẽ*
+> — là cái GIÁ phải trả, không phải lời giải. Cách đúng là tách phần **không phụ thuộc khổ** ra
+> dùng chung, và cho mọi con số còn lại **suy từ bề rộng khung**.
+
+**⚠ MÀU SÀN LẤY TỪ `md.ground`.** Nay **mọi** map đều có `diTrong` (12 map ngoài trời đã lát viên),
+nên tô cứng một sắc ô-liu là mười hai vùng ra cùng một màu — xoá đúng bản sắc mà `mapBanSac()`
+dựng ra để nói.
+
+**⚠ CHẤM VẼ HẾT TRƯỚC, NHÃN VẼ SAU, DẤU NHIỆM VỤ SAU CÙNG — ba lượt.** Gộp một vòng thì nhãn của
+người này bị chấm của người đứng sau trong mảng vẽ đè lên: không lỗi, chỉ là một chữ khuyết góc.
+
+**⚠ NHÃN XẾP THEO KHOẢNG CÁCH TỚI NGƯỜI CHƠI, không theo thứ tự mảng `NPCS`.** Đo ở Ardhaven khổ
+180×90: **bảy** người có chức năng nằm gần như cùng một hàng (y≈27), tổng bề rộng nhãn **~250px
+trên một hàng rộng 180** — tức không phải thiếu chỗ thử mà là vật lý. Ai bị bỏ mà quyết bằng thứ
+tự khai trong dữ liệu thì đó là quyết định ngẫu nhiên; quyết bằng khoảng cách thì kẻ bị bỏ luôn
+là kẻ ở XA, và bản đồ góc màn vốn để trả lời *"quanh mình có gì"*.
+
+**⚠ HAI NẤC TÊN.** Tám hướng đặt nhãn vẫn rớt đúng một người, và người rớt là **Lò Hỗn Độn**
+(nhãn 42px, còn 33px tới mép). Nấc hai là tên CHUNG ngắn (`Lò Rèn`, 25px) ⇒ đủ **9/9**. Nó mơ hồ
+khi ba cửa hàng cùng ra "Cửa Hàng" — đúng cảnh báo đã ghi ở `veBanDoThanh` — nên **chỉ dùng khi
+nấc một không lọt**: một chấm ghi "Cửa Hàng" vẫn nói được *ở đây có tiệm*, chấm trần thì không.
+
+**Sửa cái xén cũng vá luôn một chỗ chồng lấn sát nút:** khe giữa bảng Nhiệm Vụ và Nhật Ký ở
+1280×720 đi từ **−1 lên +29** (minimap 120 → 90px cao).
+
+**Cố ý KHÔNG làm: nhãn tên CỔNG trên bản đồ góc.** `Bird Tribe Heights · c60` dài 96px trên khung
+180px; bốn cổng thành là hết chỗ của cả tấm. Cổng vẫn là chấm đúng màu, tên thì ở bản đồ lớn.
+
+Gác: **`tests/test_bandonho.js`** (5 mệnh đề, **cả năm đã thử ngược và đều đỏ**) — ① không tràn cột
+(đo ở BA bề rộng) · ② có vẽ khối nhà và phố (đếm điểm ảnh) · ③ mọi người có chức năng được gọi tên
+· ④ `textAlign` không rò · ⑤ hai bản đồ cùng bảng màu. Và `test_uxdo §②` đổi mệnh đề *"bản đồ nhỏ
+≥100px cao"* — một con số phụ thuộc TỈ LỆ MAP đang đứng — sang *"không tràn khỏi cột"* + sàn DIỆN
+TÍCH, tức gác đúng cái lỗi mà bản cũ mù.
+
+#### ⚠ BA LẦN QUE DÒ SAI Ở MỆNH ĐỀ ⑤ — cùng một họ, ghi lại
+
+1. **Đọc đúng MỘT điểm ảnh ở tâm mỗi NPC** ⇒ báo 6/9 lệch màu. Sai: nhãn chữ (nét viền đen
+   2,5px), chấm người đứng cạnh, khung nhìn camera và dấu nhiệm vụ đều vẽ **đè** lên tâm ấy — phép
+   đo bắt lớp TRÊN CÙNG chứ không bắt cái chấm.
+2. **Đọc mảng 9×9 quanh tâm** ⇒ còn 3/9 lệch. Vẫn sai, và lần này vì THIẾT KẾ chứ không vì lỗi:
+   ở khổ này nhãn của người bên cạnh phủ kín cả chấm 6px, mà nhãn thì **tô đúng cùng màu ấy** —
+   thông tin không mất, chỉ phép đo mất.
+3. **Đếm màu trên TOÀN khung** ⇒ đúng. Mệnh đề muốn biết *hai bản đồ có dùng chung một bảng màu
+   không*, nên hỏi "màu của hạng này có XUẤT HIỆN ở cả hai không" là miễn nhiễm với chuyện ai vẽ
+   đè lên ai.
+
+*Luật chung: trước khi tin một phép đo điểm ảnh, hỏi đã có ai vẽ đè lên chỗ mình đang đọc chưa.*
 
 ### Ngân Hàng Ngọc: sáu ICON TRANH THẬT, không phải một hình vẽ đổi màu
 
@@ -5273,7 +5361,7 @@ trước mỗi lượt đo — tức dời người chơi ra xa đúng con quái
 suýt kết luận "giả thuyết sai". Bỏ hai dòng đặt lại ấy thì ra `quaiGan: 2, gần nhất 8px`.
 | `test_canbanglop §2` | *"chênh ST cao/thấp 4,42× > trần 3,6×"* | **xanh 3/3 trên cây đang làm VÀ 3/3 trên cây trước** — tức xúc xắc, không phải commit nào. Đo TB 3 lượt ra **2,63×** (cây nay) và **2,32×** (cây trước), đều sâu trong trần. Gốc: đồ rơi NGẪU NHIÊN + số lần chết là hàm bậc thang (mỗi lần chết `buildWorld()` hồi đầy cả bãi), nên ST tuy "trơn" hơn số mạng vẫn thừa hưởng phi tuyến ấy. Lượt đỏ bốc trúng DK 88.385 (dải thường 53-58k) và DW 19.999 ⇒ 4,42×. Chính đầu tệp bài ấy đã ghi ±22% tản — con số đó đo khi chưa ai chết 11 lần |
 | `test_sandat` (nhanmon) | *"sau 3600 khung đuổi, 1 con nằm ngoài sàn: Cao Thủ Lang Thang — nhánh di chuyển nào đó thiếu collideObstacles"* | ⚠ **ĐÂY KHÔNG PHẢI NHIỄU, đây là một LỖI THẬT bắn thưa.** Xanh 3/3 chạy riêng · xanh ở lượt hồi quy liền trước ⇒ rất dễ đọc nhầm là xúc xắc rồi bỏ qua. Nhưng chính mệnh đề ấy sinh ra để bắt *một nhánh dời chỗ quái quên gọi `collideObstacles`*, và nó chỉ nổ khi hình học truy đuổi rơi đúng chỗ. Cần một đợt riêng: quét NĂM nhánh dời quái trong `update()` (xem cảnh báo `mobDoBuoc()`) rồi đối chiếu nhánh nào thiếu. Đừng nới ngưỡng, và đừng ghi nó vào đây rồi quên |
-| `test_uigothic ⑥` | *"ở 30% máu, đầu TRÁI thanh cũng tối theo (đỏ 35 vs 74)"* | **đỏ 1/3 trên cây đang làm VÀ 1/3 trên `origin/main`** ⇒ không phải của commit nào. Gốc: mẫu **"đầy"** ở đầu trái TỰ NÓ đổi giữa các lượt — `(81,10,4)` · `(87,54,51)` · `(87,54,51)` — tức thanh máu có thành phần đập theo thời gian, nên lấy MỘT mẫu ở một khoảnh khắc là đo nhiễu, và bài so hai mục tiêu đều đang động. Chữa dứt điểm: ghìm hoạt cảnh (hoặc lấy **trung vị** nhiều mẫu, lối `test_dongbodo` đã làm), đừng nới ngưỡng |
+| ~~`test_uigothic ⑥`~~ | *"ở 30% máu, đầu TRÁI thanh cũng tối theo"* | ✅ **ĐÃ SỬA TẬN GỐC, không còn trong bảng này.** Dòng cũ ghi *"thanh máu có thành phần đập theo thời gian"* — **sai**: thanh không đập. Mẫu "đầy" đổi giữa các lượt vì `applyTestBoost()` bốc đồ NGẪU NHIÊN ⇒ `maxHp` khác ⇒ **chữ số khác**, mà que dò đọc đúng một điểm ở `(0,08 · giữa)` — tức đọc thẳng vào con số máu do `.cd-thanh span` vẽ đè. Nay đọc **đỉnh độ đỏ của cả CỘT** (chữ trắng và bóng đen chỉ kéo độ đỏ xuống) ⇒ năm lượt ra đúng cùng một bộ số. Xem mục thanh máu/mana ở khối UI Gothic. *Một bài đỏ theo xúc xắc vẫn phải TRUY tới nguyên nhân — lần này "xúc xắc" là một que dò hỏng, và chính nó che một mệnh đề rỗng suốt nhiều phiên.* |
 | `test_gearlook` | *"cache chân dung không đổi khi thay đồ"* (`cache_doiTheoDo: false`) | **xanh 13/13 lượt chạy lẻ** — 3 trên cây này · 3 trên cây trước · 3 trên chính BẢN ĐÓNG BĂNG của lượt hồi quy đã đỏ · 4 lượt nữa dưới tải CPU giả (6 vòng bận trên 4 lõi) — mà chỉ đỏ **bên trong** một lượt hồi quy đầy đủ. Xanh ở `reg-mg`(236 bài) và `reg-now`. Nó là một cuộc đua TẢI ART: hai thẻ so nhau là *đủ giáp giai 7* với *trần trụi giai 1*, và nếu lớp giáp giai 7 chưa về kịp thì cả hai cùng vẽ ra thân trần ⇒ hai data-URL trùng khít. **Chưa dựng lại được cảnh đỏ**, nên đừng chép câu này như một kết luận đã đóng; thứ đã chứng minh được là nó không đến từ một diff chỉ chạm `MOBS`/`vung` |
 | `test_qablock` | *"dựng cảnh sai: người chơi không ăn đòn nào"* rồi kéo theo 2 FAIL nữa | **xanh 8/8 lượt liên tiếp** khi chạy riêng · chính chú thích trong bài đã ghi nó nhạy với mạch ngẫu nhiên (*"từng xanh chỉ vì may"*) — con quái phải kịp đánh trúng trong 40 khung, máy bận là trượt. Phân biệt bằng `git diff -U0 … | grep '^@@'`: nếu diff không chạm `update`/`hurtPlayer`/`swingFeel`/`shakeDir` thì nó không thể là của mình |
 
