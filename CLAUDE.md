@@ -4622,6 +4622,7 @@ bằng 0) — bỏ bước dọn ra thì chốt tự kiểm đỏ ngay, đã th�
 ⚠ **Và đừng tin phép đo đầu tiên của chính mình.** Lượt dò đầu tôi đặt lại `player.x/y` về giữa map
 trước mỗi lượt đo — tức dời người chơi ra xa đúng con quái cần quan sát, rồi đọc ra `quaiGan: 0` và
 suýt kết luận "giả thuyết sai". Bỏ hai dòng đặt lại ấy thì ra `quaiGan: 2, gần nhất 8px`.
+| `test_sandat` (nhanmon) | *"sau 3600 khung đuổi, 1 con nằm ngoài sàn: Cao Thủ Lang Thang — nhánh di chuyển nào đó thiếu collideObstacles"* | ⚠ **ĐÂY KHÔNG PHẢI NHIỄU, đây là một LỖI THẬT bắn thưa.** Xanh 3/3 chạy riêng · xanh ở lượt hồi quy liền trước ⇒ rất dễ đọc nhầm là xúc xắc rồi bỏ qua. Nhưng chính mệnh đề ấy sinh ra để bắt *một nhánh dời chỗ quái quên gọi `collideObstacles`*, và nó chỉ nổ khi hình học truy đuổi rơi đúng chỗ. Cần một đợt riêng: quét NĂM nhánh dời quái trong `update()` (xem cảnh báo `mobDoBuoc()`) rồi đối chiếu nhánh nào thiếu. Đừng nới ngưỡng, và đừng ghi nó vào đây rồi quên |
 | `test_qablock` | *"dựng cảnh sai: người chơi không ăn đòn nào"* rồi kéo theo 2 FAIL nữa | **xanh 8/8 lượt liên tiếp** khi chạy riêng · chính chú thích trong bài đã ghi nó nhạy với mạch ngẫu nhiên (*"từng xanh chỉ vì may"*) — con quái phải kịp đánh trúng trong 40 khung, máy bận là trượt. Phân biệt bằng `git diff -U0 … | grep '^@@'`: nếu diff không chạm `update`/`hurtPlayer`/`swingFeel`/`shakeDir` thì nó không thể là của mình |
 
 **Cách phân biệt "đỏ do mình" với "đỏ do xúc xắc", làm theo thứ tự này:** chạy riêng bài đó
