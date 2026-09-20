@@ -647,10 +647,10 @@ nhưng để flex được bộ giáp thì hãy làm cho nó đi theo ở trong 
 VÀO** con Axie khi ra khỏi thành ⇒ lúc đánh trên màn chỉ còn **MỘT** thân, tức ngược hẳn với thứ
 luật cũ cấm.
 
-| | lớp nhân vật | con Axie |
-|---|---|---|
-| **trong thành** | HIỆN, đi theo, cỡ `AVA_THANH_CO` **1,00** | khối GỒNG như cũ |
-| **ngoài thành** | **nhập vào** — không vẽ | **ra đòn của LỚP mình** |
+| | lớp nhân vật | con Axie | cây vũ khí |
+|---|---|---|---|
+| **trong thành** | HIỆN, đi theo, cỡ `AVA_THANH_CO` **1,00** | khối GỒNG như cũ | **mang bên vai, LUÔN hiện** |
+| **ngoài thành** | **nhập vào** — không vẽ | **ra đòn của LỚP mình** | **CHỈ hiện lúc ra đòn** |
 
 **⚠ LUẬT THEO MAP, KHÔNG THEO "ĐANG ĐÁNH NHAU" — cố ý.** Gắn vào trạng thái đánh nhau thì AUTO
 cày liên tục ⇒ người chơi ở dạng đã-nhập gần như **100% thời gian**, và bộ giáp vẫn không ai
@@ -734,10 +734,42 @@ tổ hợp dòng×giai đều dựng được nguồn · ④ tay không thì kh�
 ⚠ ① **tự kiểm cảnh dựng trước khi chấm** — đòi cả 5 lớp THẬT SỰ `nhap` ở map đo, nếu không nó
 đang đo một cảnh khác hẳn cảnh nó định đo và xanh vô nghĩa.
 
+#### ⚔ VÀ NỬA CÒN LẠI: **TRONG THÀNH VŨ KHÍ HIỆN LÚC ĐỨNG YÊN**
+
+Chủ dự án chốt (nguyên văn): *"thôi dễ nhất là khi ở trong thành, cho vũ khí khoác lên vai (kiểu
+khu an toàn). Sau đó khi nhân vật ra đòn ở bãi quái thì chỉ cần xuất hiện vũ khí thôi."* Nửa
+**ngoài thành** là mục ngay trên. Nửa **trong thành** là tư thế mang của bộ nướng (`VK_XOAY` ·
+`VK_MANG`) **cộng** một vế trong chính cửa `_tkHien`.
+
+```js
+const _tkNhap = _nhap && _lopHien;
+const _tkHien = _tkNhap || (!_nhap && !_coVkLop);
+```
+
+**⚠ VẾ `(!_coAva || _lopHien)` ĐÃ GỠ, và nó là một LỖI CÓ SẴN chứ không phải một vế bị mất.**
+Với vế ấy thì bật avatar lên là cây trượng bay **chỉ hiện lúc ra đòn**. Đo được: Dark Lord và
+Dark Wizard — hai lớp **cố ý** không có vũ khí cầm tay — đứng trong thành **tay không**, tức
+đúng hai trong năm lớp không khoe được thứ to nhất trên bóng dáng mình. Ba lớp kia có lớp `vk`
+nướng sẵn nên không ai để ý. Khoác lên vai thì phải thấy lúc **ĐỨNG**, không phải lúc vung.
+
+| ca | thần khí |
+|---|---|
+| đã nhập (ngoài thành), đang ra đòn | **HIỆN** — `_tkNhap`, cố ý bỏ qua `_coVkLop` |
+| đã nhập, đứng yên | **TẮT** — bỏ vế này là một cây kiếm bay theo suốt ngày cạnh con Axie |
+| trong thành · hoặc `/avatar off` | **HIỆN**, trừ khi cây đã nằm sẵn trong tay (`_coVkLop`) |
+
+**⚠⚠ HAI NỬA NÀY SINH RA Ở HAI NHÁNH KHÁC NHAU VÀ `git merge` GHÉP ÊM RU CẢ HAI CHUỖI KHẲNG
+ĐỊNH TRÁI NGƯỢC NHAU VÀO `test_hopve`.** Một bên đòi `_tkHien` phải chứa `_coAva`/`_lopHien`
+(luật cũ), bên kia đòi nó phải chứa `atkK`/`castK` (luật của nhánh kia) — mã đã hoà thì **không
+thoả cái nào**, mà `node --check` vẫn xanh. Chuỗi nay hỏi **cả hai biểu thức**: `_tkHien` phải
+có `_nhap` · `_tkNhap` · `_coVkLop`, và **`_tkNhap` phải hỏi `_lopHien`** — vế cuối là thứ giữ
+"ngoài thành đứng yên thì tắt", và **không chuỗi cũ nào bắt được nó**. *Cùng vết sẹo đã ghi ở
+mục màn chờ: bản đã trộn là mã mà chưa bên nào từng kiểm.*
+
 `get-buff` (khối GỒNG) **vẫn dùng**, hai chỗ: trong thành, và làm nấc lui khi bảng đòn chưa tải
 xong — nhờ vậy cú đánh đầu phiên vẫn có cái để vẽ thay vì rơi thẳng về khối đứng yên.
 
-Gác: `tests/test_axiedanh.js` (5 mục). Hai phép thử ngược đều đỏ: bỏ cửa `avaNhap()` ⇒ ② đỏ
+Gác: `tests/test_axiedanh.js` (6 mục). Hai phép thử ngược đều đỏ: bỏ cửa `avaNhap()` ⇒ ② đỏ
 (*"TRONG THÀNH Axie không được ra đòn"*); cho 5 lớp chung một bảng ⇒ ④ đỏ (lệch **0**).
 ⚠ Mục ④ **tự kiểm cảnh dựng trước khi chấm** — đòi cả năm lớp THẬT SỰ vào khối `'danh'`, nếu
 không nó đang so năm khối thở với nhau và xanh vô nghĩa. Đã dẫm đúng thế một lần: bài chạy ở
@@ -4521,6 +4553,153 @@ hồi quy, và `rc` khác 0 thì script đọc thành "đỏ". Chạy lại lúc
 đỏ KÈM dòng `FAIL` thật. ⇒ **Một dòng "ĐỎ" không kèm thông báo của chính bài kiểm thì chưa phải
 một phép thử ngược**, và script thử ngược phải tách `rc=124` ra khỏi `rc=1`.
 
+## 🎬 PHIM MỞ ĐẦU KHẾ ƯỚC — nhịp 0, và **HAI ĐUÔI LÀ BẮT BUỘC**
+
+Hoạt ảnh quay vốn có sáu nhịp vẽ bằng canvas (`comet · no · hien · the · luoi`). Nay có thêm
+**nhịp 0: `phim`** — một clip 10,7 giây dựng bằng Veo, đứng TRƯỚC sao băng, có tiếng.
+
+| | |
+|---|---|
+| Tệp | `public/game/assets/video/summon_mo_dau.{webm,mp4}` |
+| Bảng | `KU_PHIM` (bậc → tên tệp, không đuôi) · `KU_PHIM_DUOI` · `KU_PHIM_NEN` 0,22 · `KU_PHIM_TRAN` 16s |
+| Máy | `kuPhimNap()` · `kuPhimChay()` · `kuPhimXong()` · nhánh `'phim'` ở đầu `kuVe` |
+| Gác | `tests/test_kuphim.js` (6 mệnh đề, **bốn phép thử ngược đều đỏ**) |
+
+**⚠⚠ `.gitignore` ĐÃ TỪNG NUỐT MẤT MỘT VIDEO, và lần đó không ai biết.** Dòng
+`public/game/assets/video/` chặn cả cụm, mà production là `git reset --hard origin/main` trên
+VPS — nên thứ không có trong kho **không bao giờ tới được máy người chơi**, và triệu chứng là
+một thẻ `<video>` 404 trong im lặng. Chú thích `sect_intro.mp4` trong `game.js` chính là cái xác
+của lần đó. Nay dòng ấy là `video/*` + hai dòng `!` cho đúng hai tệp này (git **không** mở lại
+được một tệp nằm trong thư mục đã bị loại — phải loại theo `thư mục/*` thì phép phủ định mới ăn).
+⚠ MP4/WebM **không nén delta được**: mỗi lần nướng lại là thêm một bản ĐẦY ĐỦ vào lịch sử, vĩnh
+viễn — đúng cái giá 222 MB đã trả cho `qa_shots/`. Nướng thử thì nướng ở scratchpad.
+
+**⚠ PHẢI CÓ CẢ WebM LẪN MP4, và đây là một phép ĐO chứ không phải phòng xa.** Chromium bản mã
+nguồn mở — tức đúng cái trình duyệt mà **cả 177 bài kiểm** chạy trên đó — **không giải được
+H.264**. Đo trên `/opt/pw-browsers/chromium`:
+
+| hỏi | trả |
+|---|---|
+| `canPlayType('video/mp4; codecs="avc1.42E01E"')` | **`''`** — không chạy được |
+| `canPlayType('video/mp4')` **trơn** | **`'maybe'`** |
+| `canPlayType('video/webm; codecs="vp9,opus"')` | `'probably'` |
+
+⇒ **ĐỪNG chốt bằng `canPlayType('video/mp4')` trơn**: nó trả `'maybe'` ở đúng cái trình duyệt
+KHÔNG giải được, nên một cái chốt viết như thế **xanh ở chỗ nó cần đỏ**. Cửa đúng là để hai thẻ
+`<source>` tự chọn (WebM đứng trước), rồi bắt ca hỏng bằng `v.error` **và** một trần cứng.
+Tiện thể WebM VP9 còn nhẹ hơn một nửa: **1,39 MB** so với 2,78 MB.
+
+**⚠ HAI CHỐT CANH, THIẾU MỘT LÀ TREO ĐEN CẢ CÚ QUAY.** `v.error` bắt 404/hỏng mã; `KU_PHIM_TRAN`
+bắt ca **nghẽn mạng** — mạng chậm thì không ném lỗi nào, nó chỉ đứng im. Và nhịp `'phim'` hỏi
+**TRẠNG THÁI** `v.ended` mỗi khung chứ không nghe sự kiện `'ended'`: nghe sự kiện thì phải gỡ
+tay, mà một lần gắn sót là cú quay sau chạy hoạt ảnh hai lần.
+
+**⚠ `window.TEST_MODE` PHẢI TẮT PHIM.** 177 bài lái thẳng `kheUocQuay`; thiếu cửa đó là mỗi cú
+quay trong bộ kiểm chờ 10,7 giây.
+
+**⚠ BỎ QUA LÚC ĐANG CHIẾU thì CHỈ bỏ PHIM.** Nhịp báo phẩm và cái thẻ mới là thứ người chơi trả
+vé để xem; nuốt luôn cả hai vì một cú bấm sốt ruột ở giây đầu là lấy mất đúng thứ họ mua. Bấm
+tiếp lần nữa mới bỏ nốt.
+
+**⚠ HẠ NHẠC NỀN THÌ PHẢI TRẢ LẠI.** `kuPhimXong()` gọi `refreshBgmVol()`; quên vế đó là nhạc nền
+câm hẳn từ cú quay đầu tiên tới hết phiên, và không lỗi nào báo.
+
+**⚠ BA BẬC TRONG `KU_PHIM` HIỆN CÙNG TRỎ MỘT TỆP** — đó là sự thật (mới nướng được bản CẤP CAO),
+không phải sơ suất. **Đừng "dọn" thành một hằng số**: bảng này là chỗ clip Thường/Hiếm sẽ cắm
+vào, gộp lại là lần sau phải dựng lại chính nó.
+
+**Hai bẫy của chính BÀI KIỂM, cả hai cho ra một kết quả sai mà trông rất thuyết phục:**
+1. **`currentTime = …` BỊ BỎ QUA TRONG IM LẶNG** trên máy chủ tĩnh của bộ kiểm —
+   `python3 -m http.server` không trả HTTP Range, nên phép tua không ăn và clip cứ chạy tiếp từ
+   đầu. Mục ⑤ báo *"phim không tự tắt"* trong khi cái chốt `v.ended` hoàn toàn đúng. Tua bằng
+   **`playbackRate`**, thứ không cần Range.
+2. **Một mẫu ở một mốc cố định thì đỏ theo xúc xắc.** Chốt *"sau 1,8 giây phải chạy được 0,3
+   giây"* đã đỏ thật ở một bản mã **không hề đụng tới đường chạy phim** — khung đầu mất tới
+   ~1,6 giây mới giải xong ở máy bận. Thứ cần chứng minh là clip có NHÍCH hay không, nên **chờ
+   tới khi nó nhích**, có hạn.
+
+**Nướng clip** (giữ nguyên hai lệnh này, tiếng đã cân khớp hai nguồn — đỉnh −5,0 dB):
+`ffmpeg` ghép intro + mở đầu bằng `concat` có cả `v` lẫn `a`, cắt watermark Gemini bằng
+`crop=1120:630:0:0` **neo ở y=0** (đường vàng Nhát Gọi nằm ở MÉP TRÊN, cắt lệch là mất nó), rồi
+`libvpx-vp9 -crf 32 -row-mt 1 -cpu-used 2` + `libopus -b:a 96k` ra bản WebM.
+
+
+## 🖼 BANNER NHÂN VẬT (Khế Ước) — key art kiểu Genshin/Honkai
+
+Bảng Khế Ước trước bản này là một khối CHỮ: tên con 5★, một dòng mô tả, danh sách 4★, bộ đếm bảo
+đảm. Đúng thông tin, nhưng nó không trả lời được câu mà một banner sinh ra để trả lời — *"thứ
+đang bày bán trông NHƯ THẾ NÀO"*.
+
+| | |
+|---|---|
+| Bảng | **`KU_BANNER`** — chỉ khai `{ lop, giai, ren }`, mỗi banner một mục |
+| Máy | `kbTin()` · `kbThan()` · `kbVe()` / `kbVeMot()` · `kbHtml()` · `kbXoaNho()` |
+| Khung | `.ku-key` + `canvas.ku-art` trong `style.css` |
+| Gác | **`tests/test_kubanner.js`** (6 mệnh đề, **bốn phép thử ngược đều đỏ**) |
+
+**⚠ MỌI THỨ SUY TỪ DỮ LIỆU.** Bảng chỉ khai *ai* được bày; tên bộ giáp ← `heroSet()`, tên Trấn
+Phái ← `SECTS[].tp`, màu ← `ELEM[]`, tranh chiêu ← `CHIEU_TRANH['sx_<lop>_c']`. Chép tên bộ vào
+bảng banner là nó nói dối ngay lần đầu ai đó đổi `HERO_SETS` — cùng lý do `mapBanSac()` suy từ
+`packs`.
+
+**⚠⚠ TUYỆT ĐỐI KHÔNG ĐỤNG VÀO `player` ĐỂ DỰNG THÂN MẪU.** Cách "dễ" là tráo `player.equip` /
+`player.sect` rồi trả lại; một lần ném lỗi giữa chừng là người chơi **mất sạch đồ**, và kiểu hỏng
+đó không có đường nào lần ra. `kbThan()` dựng một đối tượng RIÊNG qua **`netApTrangBi()`** — đúng
+cái cửa mà thân người từ xa đi qua, tức một đường đã có người gác sẵn.
+
+**⚠ `ccArtSan()` LÀ CÁI VAN, ĐỪNG GỠ.** `heroSprite()` **luôn** trả về một canvas: chưa có art
+thì nó dựng hình bằng ĐƯỜNG — hiệp sĩ xám, mũ sừng, áo choàng đỏ. Ở màn chờ đó đã là lỗi; ở
+banner còn nặng hơn, vì **banner là chỗ HỨA HẸN** — hứa bằng một hình không phải thứ người chơi
+sẽ nhận. Chưa tải xong thì để trống một nhịp, và `openKheUoc()` xin art từ lúc MỞ MÀN.
+
+**⚠ MỎ NEO CỦA ATLAS LÀ MỎ NEO *CHIẾN ĐẤU*, KHÔNG DÙNG ĐƯỢC Ở BANNER.** `anchorX/anchorY` tồn
+tại để hiệu ứng khớp với chỗ người niệm đứng trong màn; banner **không có người niệm**. Đo được:
+`death_stab` neo ở `anchorX 46/384` — sát mép trái — nên gọi `veVfxAtlas()` là toàn bộ thân hiệu
+ứng đổ sang phải và chạy ra khỏi khung. Ở đây phải **căn GIỮA khung atlas** và tự vẽ.
+Gói khai `xoay:true` (*tranh có hướng*) thì nghiêng chéo — để ngang nó đọc ra một cái ống; gói
+không có hướng (mưa thiên thạch) phải để nguyên, xoay một cái hố rơi xuống đất là nghiêng cả
+vạch nền.
+
+**⚠ VÒNG rAF PHẢI TỰ TẮT KHI BẢNG ĐÓNG.** `kbVe()` lọc canvas theo `offsetParent` và `return`
+khi rỗng. Thiếu vế đó là mở Khế Ước một lần rồi vòng vẽ quay tới hết phiên — không lỗi nào báo,
+chỉ ăn CPU. Cùng bẫy đã ghi cho `titleAlive()`. Và `kbChay()` phải gọi **SAU** `remove('hidden')`:
+phần tử trong bảng còn `display:none` có `offsetParent` là `null` ⇒ vòng tự tắt ngay khung đầu.
+
+**Chọn lớp bày ra bằng ẢNH CHỤP, không bằng cảm tính** — dựng đủ cả năm rồi nhìn:
+`toanchan` Ngũ Tiễn (quạt tên vàng) và `baidasan` Meteorite (vầng tím) đọc ra ngay ở cỡ 150px;
+`thieulam` Death Stab là **một mũi thương XÁM nằm ngang** — nghiêng chéo rồi vẫn ra một cái ống,
+đây là **giới hạn của ART, không sửa được bằng mã**; `minhgiao` Flame Strike **chưa có tranh Trấn
+Phái nào**.
+
+**⚠ ẢNH THU NHỎ KHÔNG PHẢI MỘT PHÉP ĐO.** Năm thân nhìn thoáng qua thì hao hao nhau vì cùng nướng
+từ một bản mẫu bốn-đầu-thân. Tôi đã đọc nhầm một tấm sheet và tưởng **bốn banner dùng chung một
+bộ giáp**; đo pixel thì cả **mười cặp lệch 33-55%**. Cơ chế vẫn đúng từ đầu.
+
+### ⚠ BỐN LỖI CỦA CHÍNH BÀI KIỂM — cả bốn cho một bài XANH VÌ LÝ DO SAI
+
+Phép thử ngược lôi ra cả bốn. Ghi lại vì mỗi cái là một họ riêng:
+
+1. **Que dò đếm SAI THỨ.** Bộ đếm đặt trong `kbVeMot` (số lượt VẼ) thì sau khi đóng bảng danh
+   sách canvas rỗng ⇒ thân vòng không chạy ⇒ bộ đếm **đứng im y hệt lúc vòng đã tắt**. Nó mù với
+   đúng cái rò nó sinh ra để bắt. Phải đếm **nhịp rAF** (`window.__kbVong`), đặt trong `kbVe`.
+2. **Chụp ảnh SAU khi ô nhiễm đã xảy ra.** Mục "không đụng `player`" chụp `player` sau khi bước
+   dựng cảnh đã gọi `kbThan` một lượt — nên nếu hàm ấy làm bẩn `player` thì nó **bẩn sẵn từ lúc
+   chụp**, hai ảnh trùng nhau, bài xanh. Phải `startGame` lại rồi mới chụp.
+3. **Mỏ neo của phép thử ngược là VĂN XUÔI, không phải MÃ.** Mục gác cái van `ccArtSan` `grep`
+   chữ `ccArtSan(` trong thân `kbVeMot` — và nó xanh cả khi đã gỡ hẳn cái van, vì chuỗi ấy còn
+   nằm trong một dòng **chú thích** ngay trên. Nay đo HÀNH VI: chặn `**/assets/nv/**` ở tầng
+   mạng rồi đòi chỗ nhân vật phải TRỐNG.
+4. **Đo được một thứ ĐỔI, nhưng đổi vì lý do khác.** Mục "đổi lớp thì key art đổi" đo cả khung —
+   mà nền và tranh Trấn Phái cũng đổi theo lớp, nên một mình chúng đã vượt ngưỡng. Thu về vùng
+   THÂN thì lại vướng **nhịp thở**: hai lần đo rơi vào hai khung khác nhau. ⇒ Seam `__kbChiThan`
+   (chỉ `TEST_MODE`) tắt nền + tranh chiêu **và ghim khung thở về 0**.
+
+⚠ **Và hai phép thử ngược ĐẦU của tôi cũng sai**, ghi lại vì chúng tốn hai vòng: ghim
+`heroSprite('thieulam', …)` **không đổi được thân** — bộ giáp lớp-rời vẽ theo `gv.oLop`, không
+theo tham số lớp; còn `kbThan('cx')` dựng một trạng thái **không có thật** (lớp A đeo trang bị
+lớp B). Phép thử ngược ĐÚNG là kiểu hỏng thật sẽ xảy ra: **nhớ lại ảnh đã vẽ** (một "tối ưu" rất
+dễ ai đó thêm vào) ⇒ `lechMau` về **0** và mục ③ đỏ.
+
 ## Hai lối vẽ nhân vật — ĐỪNG TRỘN VÀO NHAU
 
 Game có **ba** bộ dựng nhân vật, mỗi bộ một việc. Nhầm chỗ là ra hình lạc quẻ.
@@ -4608,30 +4787,79 @@ phình gần bằng cả ô — `dkph1` 240×279, `sbsm1` 240×300. Tệp tăng 
 sau giải nén của lớp vũ khí tăng chừng 20 MB **cho đúng bộ đang mặc** (nạp theo nhu cầu). Muốn
 gọn lại thì phải cắt hộp THEO TỪNG KHỐI, không phải một hộp chung — chưa làm.
 
-### 🏹 BẢN MẪU CẦM MỌI CÂY NHƯ CẦM KIẾM — cung phải VẶN LẠI (`VK_XOAY`)
+### 🏹 ~~cung phải VẶN LẠI~~ → **TƯ THẾ MANG TRONG THÀNH** (`VK_XOAY` · `VK_MANG`)
 
-Chủ dự án nhìn ảnh chụp và nói đúng một câu: *"cung thì không cầm vậy được"*. Đúng — và đây
-KHÔNG phải lỗi của ràng buộc biến hình, nó chạy đúng. Vấn đề là bản mẫu chỉ có **MỘT tư thế
-mang**: chuôi ở bàn tay, thân chĩa chéo xuống trước. Với kiếm thì đó là dáng xách kiếm; với
-cung thì nó đọc ra **một cây kích nằm ngang ống chân**.
+> ⚠ Giữ tiêu đề gạch ngang để cảnh báo: `VK_XOAY` **đã đổi hẳn ngữ nghĩa lẫn giá trị**. Bản cũ
+> là cặp `(số độ, những hoạt cảnh BỎ QUA)` và chỉ khai `elnb1: −40` cho riêng cây cung. Đọc
+> lịch sử git rồi tưởng luật cũ còn là sai cả hai nửa.
 
-**Số đo:** trên khung đứng, trục chính của cây cung lệch **44,8°** so với phương dọc, và xương
-`武器` nằm ở ĐẦU cây chứ không ở giữa. Vặn thêm **−40°** đưa nó về gần dọc — cung buông xuống
-dọc theo chân, dây quay vào người.
+Bản mẫu bốn-đầu-thân chỉ có **MỘT tư thế mang**: chuôi ở bàn tay, thân chĩa chéo xuống trước.
+Đo lại trên khung ĐỨNG bằng cách **đếm điểm ảnh của riêng lớp `vk`** — lưới mesh của bản mẫu
+**giống hệt nhau ở cả bốn gói**, chỉ ART bên trong khác, nên đo lưới thì bốn gói ra cùng một
+con số và không phát hiện được gì:
 
-⚠ **Chốt bằng ảnh A/B, không bằng một con số đẹp.** Dựng 0 · −32 · −40 · −48 trên cả ba khối
-(đứng · đi · chạy) rồi mới chọn: `0` là cây kích, `−48` thì mũi cung quặt ra sau.
+| gói | trục lệch DỌC | dài | mũi cây rơi ở đâu |
+|---|---|---|---|
+| Dark Knight | 52,0° | 971 | **dưới mặt đất** |
+| Fairy Elf | 44,8° | 898 | **dưới mặt đất** |
+| Magic Gladiator | 52,1° | 1100 | **dưới mặt đất** |
+| Dark Lord | 58,7° | 1018 | **dưới mặt đất** |
 
-⚠ **BỎ QUA `10_ArcheryAttack`.** Ở khối đó rig đã đổi sang mảnh cung GIƯƠNG và dựng đúng tư thế
-bắn — vặn thêm là phá chính cái khối duy nhất đang đúng. `VK_XOAY` vì thế là cặp
-`(số độ, những hoạt cảnh bỏ qua)`.
+Chủ dự án chốt: *"trong thành cho vũ khí khoác lên vai (kiểu khu an toàn)"*. Và từ đợt **nhập
+vào Axie**, khối đi-đứng của lớp nhân vật **chỉ còn hiện trong thành** — nên tư thế mang là thứ
+duy nhất người chơi nhìn thấy lâu, mà nó đang là một cây kiếm cắm xuống đất.
+
+**⚠ KHÔNG KHOÁC CHÉO SAU LƯNG ĐƯỢC, và đó là một phép ĐO chứ không phải một ý thích.** Cây dài
+898–1100 trên một thân cao 1166, tức **77–94% chiều cao người**. Đã dựng ảnh cho cả hai họ tư
+thế: chéo 25° ⇒ mũi ở y=27 trong khi gót ở y=−44 (cắm đất) *và* cán đè lên **MẶT**; chỉ tư thế
+**gần DỌC** là sạch cả hai đầu. Nên thứ chốt được là "dựng cây bên vai", không phải "đeo sau
+lưng" — và cũng vì thế **không phải đổi thứ tự lớp** (`vk` vẫn nằm giữa `a` và `t2`).
+
+⚠ **Xương `武器` nằm ở ĐẦU cây (chỗ nắm)**, nên vặn quanh nó ≈ vặn quanh bàn tay: cây vẫn dính
+tay. Thêm phép DỜI thì cây rời khỏi tay — đã dựng ảnh, nhìn ra đồ bay chứ không ra đồ đeo.
+
+| bộ | vặn | đo được sau khi vặn (đáy cây trong ô 240×300, **gót ở 252**) |
+|---|--:|--:|
+| `dkph1` | **+147°** | 197 |
+| `sbsm1` | **+147°** | 197 |
+| `elnb1` | **+139°** | 200 |
+
+⚠ **Chốt bằng ảnh A/B (0 · ±15° quanh giá trị tính ra), không bằng một con số đẹp.**
+
+⚠ **`VK_MANG` là danh sách "ÁP VÀO", KHÔNG phải "bỏ qua".** Bản cũ khai những hoạt cảnh bỏ qua,
+nghĩa là mọi khối MỚI thêm vào `KHUNG`/`KHUNG2` đều **tự động bị vặn** — kể cả một khối ra đòn,
+và nó hỏng trong im lặng. Đảo lại thì quên một dòng chỉ làm khối đó giữ tư thế cũ, chứ không phá
+một khối đang đúng. Mọi khối ra đòn vắng mặt là CỐ Ý: ở đó rig đã dựng đúng tư thế đánh.
+
+⚠ **`03_Hurt` · `02_Death` · `04_Jump*` cũng vắng mặt, và đó là phép ĐO.** Từ lúc nhập vào Axie,
+ba khối đó không còn cửa nào hiện ra (trong thành không ai đánh được ai; bay thì đọc khối ĐI —
+`BAY_KHUNG` ghim vào một khung trong đó — chứ không đọc `04_Jumpping`). Thử đưa chúng vào thì
+hộp cắt bảng hai của `dkph1` phình **55,2% → 86,6%** một tấm thân liền.
 
 ⚠ **Chỉ vặn khi đang nướng CHÍNH lớp `vk`.** Các lớp thân không có xương `武器` trong bộ khe của
 chúng nên vặn ở đấy không đổi gì, chỉ tốn một lượt dựng lại nhánh con mỗi khung.
 
+#### ⚠ VÀ RIG CẤT VŨ KHÍ Ở **BỐN** KHỐI, `VK_HIEN` chỉ vá một
+
+Đã biết `00_Run` đặt một khoá attachment RỖNG lên khe `左手武器`. Đo lại cả 20 hoạt cảnh: ba khối
+nữa làm y hệt — **`09_Interactive`** (bắt chuyện NPC / mở rương) · `07_StatusEffect` · `01_Dance`.
+Cả ba là dáng **đứng trong thành**, tức đúng chỗ duy nhất lớp nhân vật còn hiện ra.
+
+Và `VK_HIEN` chỉ được tra ở **bảng MỘT**, còn ba khối kia nằm ở bảng hai — nơi cột `doi` đang
+dùng để đổi KHUÔN MẶT. Hai việc khác nhau trên cùng một tham số, nên chúng phải **gộp**
+(`{...VK_HIEN, ...doi}`, cột `doi` thắng khi trùng khoá). Đo được trước khi vá: lớp `vk` của
+`n`/`t`/`e` **không có một điểm ảnh nào** — nói chuyện với một NPC là cây kiếm biến mất khỏi tay.
+
+⚠ **Và `test_vklop` KHÔNG hề đo bốn khối mang ở bảng hai** (`q` Ngồi · `n` Bắt chuyện ·
+`t` Dính buff · `e` Nhảy múa) — mệnh đề ① *"không khối nào có khung TRỐNG"* nghe như phủ hết,
+nhưng danh sách khối của nó chỉ có tám cái. *Một mệnh đề phủ "mọi khối" mà danh sách khối do
+chính bài kiểm chép tay thì nó chỉ phủ đúng cái danh sách ấy.*
+
 Máy: `xoay_xuong()` trong `hoatcanh.py` (ghi thẳng ma trận thế giới rồi `tinh_cay`, cùng cấm kỵ
-với `ap_bien_hinh`: sau nó đừng gọi `tt.tinh()`) · bảng `VK_XOAY` trong `nuong_nv.py`.
-Kiếm của Dark Knight và Spellblade **không** vặn — chúng vốn là kiếm, dáng xách kiếm là đúng.
+với `ap_bien_hinh`: sau nó đừng gọi `tt.tinh()`) · `VK_XOAY` + `VK_MANG` + `VK_HIEN` trong
+`nuong_nv.py` · cờ **`--chilop <tên,tên>`** nướng lại đúng mấy lớp được gọi tên (hộp cắt của một
+lớp không phụ thuộc lớp nào khác, nên nướng lẻ ra đúng bằng nướng cả bộ — 3 giây thay vì cả bộ).
+Gác: `tests/test_vklop.js` ① (bốn khối mới) và ④ (đáy cây phải trên gót); cả hai đã thử ngược.
 
 ### ⚠ LỚP NÀO ĐÃ CÓ CÂY CẦM TAY THÌ CẦM CHO **MỌI** MÓN — `NV_VK_LOP_LOP`
 
@@ -5760,6 +5988,82 @@ Hỏng thì **sửa trước khi push**, đừng push rồi sửa sau — ngư�
 
 `http://14.225.204.107/` (thêm `?test=1` để mở chế độ thử: đi map tự do + tick cấp 60).
 Log deploy nằm ở VPS, người dùng xem giúp — sandbox không tới được.
+
+## 🔀 XONG LÀ PUSH — và ĐỪNG ĐỂ NHÁNH TRÔI XA `main`
+
+Chủ dự án chốt (nguyên văn): *"xong thì push đi, và làm sao cho các nhánh đừng xung đột với
+nhau nữa"*. Đây là luật vận hành, không phải lời khuyên — nó rút ra từ một phiên phải trộn
+`main` **BA LẦN** cho cùng một đợt việc.
+
+**Số đo của phiên đó, vì nó nói rõ cái giá:** giữ 11 commit trên một nhánh phụ trong lúc `main`
+đi tiếp **27 → 10 → 10** commit. Mỗi lần trộn là một lượt hồi quy đầy đủ (~1 giờ) phải chạy
+LẠI, vì *bản đã trộn là mã mà chưa bên nào từng kiểm*. Ba tiếng hồi quy cho một đợt việc, và
+hai trong ba lần trộn để lại một bài kiểm tự mâu thuẫn mà `node --check` vẫn xanh.
+
+### ① XONG MỘT MẢNG VIỆC LÀ PUSH, đừng gom
+
+Một mảng việc xanh đủ bốn cổng thì đẩy luôn. **Đừng** gom ba bốn đợt rồi push một thể: nhánh
+càng sống lâu thì cửa sổ đụng độ càng rộng, và nó rộng theo cấp số chứ không theo tuyến tính —
+mỗi commit mới của `main` nhân với mỗi commit của mình. Nhánh sống nửa ngày là nhánh chắc chắn
+phải trộn.
+
+### ② TRỘN `main` VÀO **TRƯỚC**, KHÔNG PHẢI SAU
+
+```bash
+git -C /home/user/axiewuxia fetch origin main --quiet && git -C /home/user/axiewuxia merge origin/main --no-edit
+```
+
+Chạy **trước khi bắt đầu** một mảng việc và **trước mỗi commit** — không phải một lần lúc sắp
+push. Trộn sớm thì xung đột nhỏ, nằm đúng chỗ mình vừa sửa, và còn nhớ vì sao mình sửa thế.
+Trộn muộn thì phải đọc lại hai bên như người ngoài.
+
+### ③ BA CHỖ LUÔN ĐỤNG NHAU — CHÈN Ở CUỐI, ĐỪNG CHÈN GIỮA
+
+| tệp | vì sao | cách tránh |
+|---|---|---|
+| `CLAUDE.md` | ai cũng thêm một mục mới | chèn ngay TRÊN một tiêu đề ỔN ĐỊNH, đừng chèn giữa một mục đang có |
+| `docs/NHAT_KY.md` | ai cũng thêm một mục cùng ngày ở **cùng một chỗ** | thêm vào CUỐI. Đụng nhau thì giữ **CẢ HAI** mục, không cái nào thay cái nào |
+| `tests/test_*.js` | hai nhánh cùng sửa một bài đỏ-theo-tải | xem ④ — đây mới là chỗ đắt |
+
+### ④ ⚠⚠ PHÉP TRỘN NGUY HIỂM LÀ PHÉP TRỘN **KHÔNG KÊU**
+
+Cái làm git báo xung đột thì nhìn thấy được và sửa được. Cái đắt là cái git ghép **êm ru** rồi
+để lại mã mà chưa bên nào từng chạy. Ba lần trong một phiên, cùng một hình dạng:
+
+1. **`test_hopve` nhận CẢ HAI chuỗi khẳng định.** Một bên đòi `_tkHien` phải chứa
+   `_coAva`/`_lopHien` (luật cũ), bên kia đòi `atkK`/`castK`. Mã đã hoà **không thoả cái nào**,
+   và `node --check` xanh. Hai chuỗi nằm ở hai khối khác nhau nên git không thấy gì để hỏi.
+2. **`test_chaos` nhận thân hàm MỚI của một bên và chỗ ĐỌC biến của bên kia.** Chỗ đọc nằm
+   **ngoài** khối xung đột ⇒ không ai được hỏi. Nổ `ReferenceError: soKetKhoa is not defined`
+   giữa `page.evaluate`, **ở phút thứ 40 của một lượt hồi quy một tiếng**.
+3. **`_tkHien` — hai nhánh sửa HAI NỬA của cùng một lỗi** (ngoài thành / trong thành). Ghép
+   lại thì nửa này đè nửa kia, và mỗi bên đều có bài kiểm xanh chứng minh nửa của mình.
+
+⇒ **Trộn xong thì đừng tin `node --check`.** Đếm lại từng hàm mà mã mới dựa vào, và đọc lại
+chính những bài kiểm mà phép trộn vừa chạm — hai nhánh cùng sửa một bài thì rất có thể chúng
+sửa theo hai hướng khác nhau.
+
+### ⑤ CỬA CHẶN NHANH: `bash tools/sau_tron.sh`
+
+Chạy **ngay sau mỗi `git merge`**, trước khi bỏ một tiếng cho cả bộ. Nó lấy danh sách tệp phép
+trộn vừa chạm rồi: kiểm cú pháp mọi `.js` trong đó · quét mỏ neo xung đột còn sót · **chạy đúng
+những `tests/test_*.js` nằm trong danh sách**. Cả ba lỗi ở ④ đều có bài kiểm liên quan nằm sẵn
+trong danh sách ấy — `soKetKhoa` sẽ chết trong **30 giây** thay vì 40 phút.
+
+**⚠ NÓ KHÔNG THAY BỘ HỒI QUY.** Nó chỉ bắt lớp lỗi SINH RA TỪ PHÉP TRỘN. Push lên `main` vẫn
+phải đủ bốn cổng.
+
+**⚠ VÀ ĐỪNG CHẠY NÓ TRONG LÚC `reg.sh` ĐANG CHẠY.** Đã dẫm ngay trong phiên viết nó: sáu bài
+Playwright cộng một máy chủ tĩnh nữa tranh CPU với lượt hồi quy đang chạy, và `test_autopack`
+hết giờ 260 giây rồi phải chạy lại. Máy này không có GPU nên Playwright ăn CPU thật; hai bộ
+chạy song song là **một bộ làm bộ kia đỏ theo tải** — đúng cái lớp `rc=124` mà tài liệu này đã
+mất bốn lượt để truy. Cửa sau-trộn chạy TRƯỚC, hồi quy chạy SAU, không chồng nhau.
+
+**⚠ VÀ VÌ SAO KHÔNG CHỮA BẰNG LINT:** `tests/**/*.js` **không được ESLint ngó tới** — đo được
+trong `eslint.config.js`, chỉ có `**/*.{ts,tsx}` · `src/components/ui/**` · `api/**/*.ts` ·
+`public/game/game.js`. Nên `no-undef` không bao giờ chạy ở đó, và đúng lớp lỗi "biến mồ côi sau
+khi trộn" không có cửa nào bắt ngoài việc CHẠY bài. Bật `no-undef` cho `tests/` thì phải khai
+hàng trăm hàm của game (bài gọi chúng trong `p.evaluate`), nên cửa đúng là chạy bài.
 
 ## Git — CHỈ CÓ `main`, không có nhánh nào phải đồng bộ
 

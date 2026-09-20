@@ -47,8 +47,14 @@ const { chromium } = require('playwright');
     const bo = [...new Set(Object.values(NV_VK_LOP))];
     for (const t of bo){ nvTai(t + '_vk', 'webp'); nvTai(t + '_vk2', 'webp'); }
     await new Promise(r => setTimeout(r, 3000));
+    // ⚠ BỐN KHỐI MANG Ở BẢNG HAI (`q` Ngồi · `n` Bắt chuyện · `t` Dính buff · `e` Nhảy múa)
+    // TRƯỚC ĐÂY KHÔNG AI ĐO. Rig cất vũ khí ở `09_Interactive`/`07_StatusEffect`/`01_Dance`
+    // đúng như nó cất ở `00_Run`, mà `VK_HIEN` thì chỉ được tra ở bảng MỘT — nên bắt chuyện
+    // với một NPC là cây kiếm biến mất khỏi tay, ở đúng chỗ duy nhất người chơi còn thấy lớp
+    // nhân vật. Đo được trước khi vá: lớp `vk` của `n`/`t`/`e` KHÔNG CÓ MỘT ĐIỂM ẢNH NÀO.
     const khoi = [['i', false], ['w', false], ['r', false], ['a', false], ['c', false],
-                  ['s', true], ['p', true], ['h', true]];
+                  ['s', true], ['p', true], ['h', true],
+                  ['q', true], ['n', true], ['t', true], ['e', true]];
     const res = {};
     for (const t of bo){
       res[t] = {};
@@ -58,10 +64,11 @@ const { chromium } = require('playwright');
         const im = nvTai(t + '_vk' + (b2 ? '2' : ''), 'webp');
         if (!im){ res[t][kind] = { loi: 'chưa nạp được bảng' }; continue; }
         const w = H[b2 ? 6 : 2], h = H[b2 ? 7 : 3];
+        const oyH = H[b2 ? 5 : 1];               // gốc cắt của lớp trong ô 240x300
         const n = nvSoKhung(t, kind), moc = nvMoc(kind);
         const c = document.createElement('canvas'); c.width = w; c.height = h;
         const g = c.getContext('2d');
-        const bbs = []; let trong = 0;
+        const bbs = []; let trong = 0, day = -1;
         for (let i = 0; i < n; i++){
           const k = moc + i;
           g.clearRect(0, 0, w, h);
@@ -72,9 +79,11 @@ const { chromium } = require('playwright');
             if (x < x0) x0 = x; if (x > x1) x1 = x;
             if (y < y0) y0 = y; if (y > y1) y1 = y;
           }
-          if (x1 < 0) trong++; else bbs.push(x0 + ',' + y0 + ',' + x1 + ',' + y1);
+          if (x1 < 0) trong++;
+          else { bbs.push(x0 + ',' + y0 + ',' + x1 + ',' + y1);
+                 if (oyH + y1 > day) day = oyH + y1; }   // đáy cây, trong hệ ô 240x300
         }
-        res[t][kind] = { n, trong, khac: new Set(bbs).size };
+        res[t][kind] = { n, trong, khac: new Set(bbs).size, day };
       }
     }
     return res;
@@ -102,6 +111,35 @@ const { chromium } = require('playwright');
   else if (!bad) pass(`${soBo} bộ có lớp vũ khí cầm tay, mọi khối đều đủ khung và có chuyển động`);
   for (const t in ra) if (typeof ra[t] !== 'string')
     console.log('  ' + t + ': ' + BANG1.map(k => `${k}=${ra[t][k].khac}/${ra[t][k].n}`).join(' '));
+
+  // ── ④ TƯ THẾ MANG KHÔNG ĐƯỢC CẮM XUỐNG ĐẤT ─────────────────────────────────────────────
+  // Bản mẫu bốn-đầu-thân chỉ có MỘT tư thế mang: chuôi ở bàn tay, thân chĩa chéo xuống trước.
+  // Đo được trên cả bốn gói (trục lệch dọc 44,8°–58,7°, cây dài 898–1100 trên thân cao 1166):
+  // mũi cây rơi XUỐNG DƯỚI GÓT ở mọi bộ. Chủ dự án chốt *"trong thành cho vũ khí khoác lên
+  // vai (kiểu khu an toàn)"*, và `VK_XOAY` dựng cây lên (xem tools/spine/nuong_nv.py).
+  //
+  // ⚠ Và từ đợt NHẬP-VÀO-AXIE thì đây là chỗ DUY NHẤT người chơi còn thấy lớp nhân vật: ngoài
+  // thành nó đã nhập vào con Axie, nên ba khối đi-đứng này là toàn bộ thời gian nó có mặt.
+  //
+  // Gót nằm ở y=252 trong ô 240x300 (bộ nướng chốt: gốc bộ xương (80,212) → (120,252)).
+  // Chỉ chấm ba khối ĐI-ĐỨNG: khối ra đòn thì rig tự dựng và cây quét xuống là ĐÚNG, còn
+  // `q` (ngồi) thì bàn tay vốn đã sát đất. Đo được sau khi vặn: 191–200, tức còn hơn 50px hở.
+  const GOT_O = 252, MANG = ['i', 'w', 'r'];
+  const sau = [];
+  for (const t in ra){
+    if (typeof ra[t] === 'string') continue;
+    for (const k of MANG){
+      const v = ra[t][k];
+      if (!v || v.day == null || v.day < 0) continue;
+      if (v.day > GOT_O) sau.push(`${t}/${k} đáy y=${v.day} > gót ${GOT_O}`);
+    }
+  }
+  if (sau.length)
+    fail('④ vũ khí CẮM XUỐNG ĐẤT ở tư thế mang: ' + sau.join(' · ') +
+         ' — xem VK_XOAY/VK_MANG trong tools/spine/nuong_nv.py');
+  else pass('④ tư thế mang: ' + Object.keys(ra).filter(t => typeof ra[t] !== 'string')
+              .map(t => `${t} đáy ${Math.max(...MANG.map(k => ra[t][k].day))}`).join(' · ')
+            + ` (gót ${GOT_O})`);
 
   // ── ③ không lớp nào rơi lại về thần khí ────────────────────────────────────────────────
   const r3 = await p.evaluate(() => {

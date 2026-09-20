@@ -131,23 +131,34 @@ const { chromium } = require('playwright');
            'neo lớp nhân vật (hoặc neo vũ khí khi đã nhập) — thứ đó sẽ vẽ đè lên con Axie');
     else pass(`${goi.length}/${goi.length} lời gọi vẽ cánh + thần khí đều bám một neo hợp lệ`);
   }
-  // Vũ khí phải TẮT lúc đi theo sau — nửa còn lại của "xuất hiện đằng trước kèm vũ khí".
-  const _tk = src.match(/const _tkHien = ([^;]+);/);
+  // ⚠ LUẬT ĐÃ ĐỔI HAI LẦN, và chuỗi này đi theo CẢ HAI chứ không bị nới ra. Ghi lại vì hai bản
+  // trước đòi hai thứ TRÁI NGƯỢC nhau, và git ghép êm ru cả hai vào cùng một chuỗi:
+  //   · bản đầu đòi `_coAva`/`_lopHien` nằm trong `_tkHien` ⇒ *"bật avatar thì vũ khí CHỈ hiện
+  //     lúc ra đòn"*. Đó chính là cái lỗi phải sửa: Dark Lord và Dark Wizard — hai lớp cố ý
+  //     không có vũ khí cầm tay — đứng TRONG THÀNH tay không.
+  //   · bản sau đòi `atkK`/`castK` ⇒ đúng ý nhưng hỏi sai chỗ: tính chất *"ngoài thành chỉ hiện
+  //     lúc ra đòn"* nay nằm trong `_tkNhap`, không nằm thẳng trong `_tkHien`.
+  // Luật hiện hành:  _tkNhap = _nhap && _lopHien  ·  _tkHien = _tkNhap || (!_nhap && !_coVkLop)
+  // ⇒ chuỗi dưới hỏi CẢ HAI biểu thức, nên nó mạnh hơn từng bản trước: bỏ `_lopHien` khỏi
+  // `_tkNhap` là vũ khí bay theo suốt ngày ngoài thành, và chuỗi cũ nào cũng không bắt được.
+  const _tk  = src.match(/const _tkHien = ([^;]+);/);
+  const _tkN = src.match(/const _tkNhap = ([^;]+);/);
   if (!_tk)
-    fail('không thấy cửa `_tkHien` — thần khí sẽ hiện cả lúc đang đi theo sau');
-  else if (!/_lopHien/.test(_tk[1]) || !/_coAva/.test(_tk[1]))
-    fail('cửa `_tkHien` không còn hỏi `_coAva`/`_lopHien` — thần khí sẽ hiện lúc đi theo sau');
+    fail('không thấy cửa `_tkHien` — thần khí sẽ hiện ở mọi trạng thái');
+  else if (!/_nhap/.test(_tk[1]))
+    fail('cửa `_tkHien` không hỏi `_nhap` — trong thành và ngoài thành sẽ xử như nhau');
+  else if (!/_tkNhap/.test(_tk[1]))
+    fail('cửa `_tkHien` không có nhánh `_tkNhap` — ngoài thành ra đòn sẽ KHÔNG có vũ khí nào '
+       + '(lớp nhân vật đã nhập nên cây trong tay cũng biến theo)');
+  else if (!_tkN || !/_lopHien/.test(_tkN[1]))
+    fail('`_tkNhap` không hỏi `_lopHien` — ngoài thành vũ khí sẽ bay theo SUỐT NGÀY, lại thành '
+       + 'HAI thân trên màn, tức dựng lại chính cái mà đợt nhập-vào gỡ đi');
   else if (!/_coVkLop/.test(_tk[1]))
-    fail('cửa `_tkHien` không hỏi lớp vũ khí — bộ có kiếm nướng sẵn trong tay sẽ hiện HAI cây');
+    fail('cửa `_tkHien` không hỏi lớp vũ khí — trong thành bộ có kiếm nướng sẵn trong tay '
+       + 'sẽ hiện HAI cây');
   else if (!/_tk && !_tk\.truoc && _tkHien/.test(src) || !/_tk && _tk\.truoc && _tkHien/.test(src))
     fail('một trong hai lớp thần khí (trước/sau thân) chưa đi qua cửa `_tkHien`');
-  // ⚠ VÀ CỬA ẤY PHẢI CÓ NHÁNH "ĐÃ NHẬP". Chủ dự án chốt: *"nhân vật có thể không hiện nhưng
-  // vũ khí sẽ LUÔN xuất hiện để đồng bộ được skill"*. Không có `_tkNhap` thì ngoài thành ba lớp
-  // cầm vũ khí (DK · Spellblade · Sylvan Ranger) ra đòn mà trên màn không có cây vũ khí nào —
-  // `!_nhap` tắt thần khí, còn cây trong tay thì nằm trong lớp thân người đã nhập.
-  else if (!/_tkNhap/.test(_tk[1]))
-    fail('cửa `_tkHien` không có nhánh `_tkNhap` — ngoài thành ra đòn sẽ KHÔNG có vũ khí nào');
-  else pass('thần khí hiện khi lớp nhân vật ra trước, VÀ khi đã nhập vào Axie — cả hai lớp vẽ đều qua cửa');
+  else pass('thần khí: trong thành luôn hiện · đã nhập thì chỉ lúc ra đòn — cả hai lớp vẽ qua cửa');
 
   // ── ④ Cánh phải NGỒI TRÊN VAI ở mọi cỡ thu ────────────────────────────────────────────
   // Không đo bằng điểm ảnh, và cũng không chép lại phép biến hình sang đây: game tự đưa hai

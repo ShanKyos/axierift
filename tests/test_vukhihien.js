@@ -9,7 +9,8 @@
 //
 // Bốn mệnh đề:
 //   ① ngoài thành (đã nhập) · cả 5 lớp · đang ra đòn ⇒ PHẢI có vũ khí trên màn
-//   ② trong thành · đang ĐI THEO (không ra đòn) ⇒ vũ khí vẫn phải TẮT (luật cũ, đừng phá)
+//   ② trong thành · đang ĐI THEO (không ra đòn) ⇒ vũ khí phải tắt VỚI BA LỚP CÓ CÂY CẦM TAY,
+//      và phải BẬT với hai lớp không có. Hai chiều, xem ghi chú dài ngay trên chỗ chấm.
 //   ③ mọi tổ hợp (dòng × giai) của mọi lớp đều dựng được nguồn vũ khí — 48/98 tổ hợp vốn
 //      KHÔNG có tranh riêng, nấc lùi theo lớp phải bịt hết
 //   ④ TAY KHÔNG thì vẫn không có vũ khí — nấc lùi không được phát vũ khí cho người cởi trần
@@ -64,10 +65,35 @@ const LOP = ['thieulam', 'minhgiao', 'toanchan', 'baidasan', 'bug'];
       fail(`① ${hong.length}/5 lớp ra đòn ngoài thành mà KHÔNG có vũ khí trên màn: ${hong.join(' · ')}`);
     else pass(`① cả 5 lớp ra đòn ngoài thành đều có vũ khí hiện ra (lớp nhân vật thì không)`);
   }
-  const hong2 = LOP.filter(l => !r1[l].oThanh || (r1[l].thanh && r1[l].thanh.hien));
-  if (hong2.length)
-    fail(`② trong thành lúc ĐI THEO mà vũ khí vẫn hiện: ${hong2.join(' · ')} — luật cũ bị phá`);
-  else pass('② trong thành, lúc đi theo thì vũ khí vẫn tắt như cũ');
+  // ⚠⚠ MỆNH ĐỀ NÀY ĐÃ NỚI TỪ MỘT CHIỀU SANG HAI CHIỀU, và đây là một quyết định về SẢN PHẨM
+  // chứ không phải về mã — ghi rõ để chủ dự án lật lại bằng một dòng nếu tôi đọc sai ý.
+  //
+  // Bản cũ chốt "trong thành lúc đi theo thì vũ khí LUÔN tắt (luật cũ, đừng phá)". Luật ấy sinh
+  // ra ở thời lớp nhân vật đi theo sau con Axie **ngoài** bãi quái, nơi bật vũ khí lên là thành
+  // HAI thân trên màn. Trong thành thì lý do đó không còn: lớp nhân vật CÓ mặt, đang đi, và cả
+  // điểm của việc hiện nó ra trong thành là để KHOE ĐỒ.
+  //
+  // Chủ dự án chốt (nguyên văn): *"thôi dễ nhất là khi ở trong thành, cho vũ khí khoác lên vai
+  // (kiểu khu an toàn)."* Khoác lên vai thì phải thấy lúc ĐỨNG. Ba lớp `dkph1`/`sbsm1`/`elnb1`
+  // thoả câu đó bằng LỚP `vk` NƯỚNG SẴN (xem `VK_XOAY` · `VK_MANG`) — với chúng thần khí phải
+  // tắt, không thì HAI cây trên màn. Hai lớp còn lại — Dark Wizard và Dark Lord — **cố ý không
+  // có vũ khí cầm tay**, cây trượng bay LÀ vũ khí của chúng; bắt nó tắt là đúng hai trong năm
+  // lớp đứng trong thành TAY KHÔNG, tức mất sạch thứ to nhất trên bóng dáng mình.
+  //
+  // ⇒ Hai chiều, và nó mạnh hơn bản một chiều: bản cũ không bắt được ca "hai lớp mất trắng vũ
+  // khí", còn bản này bắt cả hai kiểu hỏng. `test_axiedanh §5` gác đúng cùng ba ca ấy — hai bài
+  // sinh ra ở hai nhánh và từng nói ngược nhau; nay chúng nói một điều.
+  const thua2 = LOP.filter(l => !r1[l].oThanh);
+  const hong2 = LOP.filter(l => r1[l].thanh &&  r1[l].thanh.vkLop && r1[l].thanh.hien);
+  const mat2  = LOP.filter(l => r1[l].thanh && !r1[l].thanh.vkLop && !r1[l].thanh.hien);
+  if (thua2.length)
+    fail(`② dựng cảnh hỏng — ${thua2.join(' · ')} không ở trạng thái "trong thành, đi theo"`);
+  else if (hong2.length)
+    fail(`② trong thành: ${hong2.join(' · ')} có CẢ cây cầm tay LẪN thần khí — hai cây trên màn`);
+  else if (mat2.length)
+    fail(`② trong thành: ${mat2.join(' · ')} đứng TAY KHÔNG — hai lớp này không có vũ khí cầm `
+       + `tay, cây trượng bay chính LÀ vũ khí của chúng`);
+  else pass('② trong thành: ba lớp cầm tay thì thần khí tắt · hai lớp còn lại thì bật');
 
   // ── ③ nấc lùi bịt hết mọi dòng ───────────────────────────────────────────────────────
   const r3 = await p.evaluate(() => {

@@ -1,0 +1,159 @@
+// PHIM MỞ ĐẦU KHẾ ƯỚC — nhịp 0 của hoạt ảnh quay, một clip Veo 10,7 giây có tiếng.
+//
+// Sáu mệnh đề, và năm trong sáu gác những thứ KHÔNG ném lỗi và KHÔNG hiện ra:
+//
+//  ① Tệp phải TẢI ĐƯỢC qua HTTP. `public/game/assets/video/` nằm trong `.gitignore` từ trước,
+//     và production là `git reset --hard` trên VPS — nên một tệp bị chặn ở đó sẽ 404 trên máy
+//     người chơi trong im lặng, đúng như ghi chú `sect_intro.mp4` trong game.js đã ghi lại một
+//     lần rồi. Mục này là thứ DUY NHẤT bắt được chuyện ai đó siết lại dòng gitignore.
+//  ② TEST_MODE thì KHÔNG chiếu. Thiếu cửa đó là 177 bài hồi quy đứng chờ 10,7 giây mỗi cú quay.
+//  ③ Không TEST_MODE thì PHẢI chiếu, và phải chiếu THẬT (currentTime chạy tới) — hỏi
+//     `_kuPha === 'phim'` là chưa đủ, một thẻ video 404 vẫn vào đúng nhịp đó rồi đứng im.
+//  ④ Bấm bỏ qua lúc đang chiếu thì CHỈ bỏ phim: lớp phủ còn đó, cú quay chạy tiếp sang 'comet'.
+//     Nuốt luôn cả cú quay là lấy mất đúng thứ người chơi trả vé để xem.
+//  ⑤ Phim hết thì TỰ sang 'comet' — không có nó thì lớp phủ treo đen vĩnh viễn, mất cả cú quay.
+//  ⑥ Tiếng đi qua SETTINGS.sfx, và nhạc nền được hạ xuống rồi TRẢ LẠI. Quên vế trả lại là nhạc
+//     nền câm hẳn từ cú quay đầu tiên tới hết phiên.
+const { chromium } = require('playwright');
+const PORT = process.argv[2] || '8853';
+const SRC = ['assets/video/summon_mo_dau.webm', 'assets/video/summon_mo_dau.mp4'];
+(async () => {
+  const b = await chromium.launch({ executablePath:'/opt/pw-browsers/chromium' });
+  const p = await b.newPage({ viewport:{ width:1100, height:800 } });
+  const errs = []; p.on('pageerror', e => errs.push(String(e).split('\n')[0]));
+  await p.goto('http://localhost:' + PORT + '/index.html');
+  await p.waitForFunction(() => window.__gameReady).catch(()=>{});
+  await p.waitForTimeout(500);
+  let bad = 0; const fail = m => { console.log('FAIL', m); bad++; };
+  const pass = m => console.log('PASS', m);
+
+  // ── ① tệp tải được ───────────────────────────────────────────────────────
+  const r1 = await p.evaluate(async srcs => {
+    const out = [];
+    for (const src of srcs){
+      try { const r = await fetch(src, { method:'HEAD' });
+        out.push({ src, ok:r.ok, st:r.status, co:+(r.headers.get('content-length') || 0) }); }
+      catch(e){ out.push({ src, ok:false, st:0, co:0 }); }
+    }
+    return out;
+  }, SRC);
+  console.log('①', JSON.stringify(r1));
+  // CẢ HAI đuôi đều phải có. Thiếu webm là không trình duyệt mã nguồn mở nào chạy được (và mọi
+  // bài kiểm mù); thiếu mp4 là Safari không chạy được. Một đuôi thì không bao giờ đủ.
+  const thieu = r1.filter(x => !x.ok || x.co < 300000);
+  if (thieu.length) fail(`không tải được ${thieu.map(x => x.src + ' (HTTP ' + x.st + ', ' + x.co + 'B)').join(' · ')} — kiểm .gitignore, thư mục video từng bị chặn cả cụm`);
+  else pass(`cả hai đuôi tải được: ${r1.map(x => x.src.split('.').pop() + ' ' + (x.co/1048576).toFixed(2) + ' MB').join(' · ')}`);
+
+  // ── ② TEST_MODE: không chiếu ─────────────────────────────────────────────
+  const r2 = await p.evaluate(() => {
+    window.TEST_MODE = true; startGame('thieulam', null);
+    player.level = 20; player.lvPeak = 20; calcDerived();
+    chiState().ve.gk = 50; window.kheUocQuay('gk', 1);
+    const v = document.getElementById('ku-phim');
+    return { an: !v || v.classList.contains('hidden'),
+             // tự kiểm cảnh dựng: không có cú quay nào thì "không chiếu phim" là xanh vô nghĩa
+             phu: !document.getElementById('gacha-wrap').classList.contains('hidden') };
+  });
+  await p.evaluate(() => { try { kuBoQua(); kuBoQua(); } catch(e){} });
+  console.log('②', JSON.stringify(r2));
+  if (!r2.phu) fail('dựng cảnh ② hỏng: kheUocQuay không mở được lớp phủ, nên mục này không gác gì');
+  else if (!r2.an) fail('TEST_MODE mà vẫn chiếu phim — 177 bài hồi quy sẽ phải chờ 10,7 giây mỗi cú quay');
+  else pass('TEST_MODE: có quay, không chiếu phim');
+
+  // ── ③ không TEST_MODE: chiếu thật ────────────────────────────────────────
+  await p.reload();
+  await p.waitForFunction(() => window.__gameReady).catch(()=>{});
+  await p.waitForTimeout(400);
+  await p.evaluate(() => {
+    window.TEST_MODE = false; startGame('thieulam', null);
+    player.level = 20; player.lvPeak = 20; calcDerived();
+    chiState().ve.gk = 50;
+  });
+  // Cú bấm THẬT trên trang: vài trình duyệt đòi một cử chỉ người dùng mới cho chạy có tiếng.
+  await p.mouse.click(5, 5);
+  await p.evaluate(() => { window.kheUocQuay('gk', 1); });
+  // ⚠ ĐỪNG lấy MỘT mẫu ở một mốc cố định. Đo được: khung đầu của clip mất tới ~1,6 giây mới
+  // giải xong ở máy bận, nên chốt "sau 1,8s phải chạy được 0,3s" đỏ theo xúc xắc — và nó đã đỏ
+  // thật một lần trong lúc thử ngược, ở đúng một bản mã KHÔNG hề đụng tới đường chạy phim. Thứ
+  // cần chứng minh là clip có NHÍCH hay không, nên chờ tới khi nó nhích, có hạn.
+  const r3 = await p.evaluate(async () => {
+    const v = document.getElementById('ku-phim');
+    const het = Date.now() + 8000;
+    while (Date.now() < het && !(v && (v.error || v.currentTime > 0.25)))
+      await new Promise(r => setTimeout(r, 120));
+    return { hien: !!v && !v.classList.contains('hidden'),
+             dung: v ? (v.currentSrc || '').split('/').pop() : '',
+             t: v ? +v.currentTime.toFixed(2) : -1,
+             loi: v && v.error ? v.error.code : 0,
+             dai: v ? +(v.duration || 0).toFixed(2) : 0,
+             tat: v ? v.muted : null, vol: v ? +v.volume.toFixed(2) : -1,
+             phu: !document.getElementById('gacha-wrap').classList.contains('hidden') };
+  });
+  console.log('③', JSON.stringify(r3));
+  if (r3.loi) fail(`thẻ video báo lỗi mã ${r3.loi} — tệp không tới nơi hoặc trình duyệt không giải được`);
+  else if (!r3.hien || !r3.phu) fail('bấm Quay mà phim không hiện');
+  else if (r3.t <= 0.25) fail(`phim vào đúng nhịp nhưng ĐỨNG IM (currentTime ${r3.t}s sau 8 giây chờ)`);
+  else if (r3.dai < 9) fail(`phim chỉ dài ${r3.dai}s — nghi là tệp cụt`);
+  else pass(`phim chạy thật: ${r3.t}s / ${r3.dai}s, vol ${r3.vol}, muted ${r3.tat}`);
+
+  // ── ⑥a nhạc nền bị hạ trong lúc chiếu ────────────────────────────────────
+  const r6a = await p.evaluate(() => AudioSys.bgm
+    ? { co:true, giam: AudioSys.bgm.volume < AudioSys.bgmVol() - 1e-6,
+        v:+AudioSys.bgm.volume.toFixed(3), day:+AudioSys.bgmVol().toFixed(3) }
+    : { co:false });
+
+  // ── ④ bấm bỏ qua: chỉ bỏ PHIM ────────────────────────────────────────────
+  await p.keyboard.press('Space');
+  await p.waitForTimeout(150);
+  const r4 = await p.evaluate(() => {
+    const v = document.getElementById('ku-phim');
+    return { anPhim: !v || v.classList.contains('hidden'),
+             conPhu: !document.getElementById('gacha-wrap').classList.contains('hidden'),
+             dung: !v || v.paused };
+  });
+  console.log('④', JSON.stringify(r4));
+  if (!r4.anPhim || !r4.dung) fail('bấm bỏ qua mà phim vẫn chạy');
+  else if (!r4.conPhu) fail('bấm bỏ qua lúc đang chiếu lại nuốt luôn cả cú quay — phải chỉ bỏ phim');
+  else pass('bỏ qua lúc đang chiếu: tắt phim, cú quay vẫn chạy tiếp');
+
+  // ── ⑥b nhạc nền được TRẢ LẠI ─────────────────────────────────────────────
+  const r6b = await p.evaluate(() => AudioSys.bgm
+    ? { tra: Math.abs(AudioSys.bgm.volume - AudioSys.bgmVol()) < 1e-6,
+        v:+AudioSys.bgm.volume.toFixed(3) } : { tra:null });
+  console.log('⑥', JSON.stringify({ ...r6a, ...r6b }));
+  if (!r6a.co) console.log('    (bỏ qua ⑥: không có nhạc nền đang phát trong cảnh dựng)');
+  else if (!r6a.giam) fail(`chiếu phim mà nhạc nền không hạ (${r6a.v} / ${r6a.day})`);
+  else if (!r6b.tra) fail(`hết phim mà nhạc nền không trả lại (${r6b.v} / ${r6a.day}) — câm hết phiên`);
+  else pass(`nhạc nền hạ ${r6a.v} rồi trả lại ${r6b.v}`);
+
+  // ── ⑤ phim hết thì TỰ sang 'comet' ───────────────────────────────────────
+  await p.evaluate(() => { try { kuBoQua(); kuBoQua(); } catch(e){} });
+  await p.waitForTimeout(300);
+  await p.evaluate(() => { chiState().ve.gk = 50; window.kheUocQuay('gk', 1); });
+  await p.waitForTimeout(600);
+  // Chạy nhanh 16× thay vì chờ 10,7 giây thật, và ⚠ KHÔNG tua bằng currentTime: máy chủ tĩnh
+  // của bộ kiểm (python3 -m http.server) không trả HTTP Range, nên phép gán currentTime bị bỏ
+  // qua TRONG IM LẶNG — đo được là clip cứ chạy tiếp từ đầu, và mục này đỏ vì một lý do chẳng
+  // liên quan gì tới thứ nó định gác. playbackRate thì không cần Range, và vẫn đi đúng đường
+  // 'ended' thật.
+  const r5 = await p.evaluate(async () => {
+    const v = document.getElementById('ku-phim');
+    if (!v || v.classList.contains('hidden')) return { dungCanh:false };
+    v.muted = true; v.playbackRate = 16;
+    const het = Date.now() + 9000;
+    while (Date.now() < het && !v.classList.contains('hidden')) await new Promise(r => setTimeout(r, 120));
+    return { dungCanh:true, ended: v.ended, t:+v.currentTime.toFixed(2),
+             anPhim: v.classList.contains('hidden'),
+             conPhu: !document.getElementById('gacha-wrap').classList.contains('hidden') };
+  });
+  console.log('⑤', JSON.stringify(r5));
+  if (!r5.dungCanh) fail('dựng cảnh ⑤ hỏng: cú quay thứ hai không vào nhịp phim');
+  else if (!r5.anPhim) fail('phim chạy hết mà không tự tắt — lớp phủ treo đen, mất cả cú quay');
+  else if (!r5.conPhu) fail('phim hết mà lớp phủ đóng luôn — phải sang nhịp báo phẩm');
+  else pass('phim chạy hết thì tự sang nhịp sau');
+
+  await p.evaluate(() => { try { kuBoQua(); kuBoQua(); } catch(e){} });
+  if (errs.length) { console.log('LỖI TRANG:', errs.slice(0,5).join(' | ')); bad++; }
+  console.log(bad ? `\n✖ ${bad} lỗi` : '\n✔ tất cả xanh');
+  await b.close(); process.exit(bad ? 1 : 0);
+})();
