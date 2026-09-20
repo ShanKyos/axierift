@@ -47,6 +47,13 @@
          ⚠ GIỮ NGUYÊN id `orb-hp` / `bar-hp` / `txt-hp` (và bộ qi) dù nay chúng là THANH chứ
          không còn là viên cầu: hai bài kiểm và sáu chỗ trong updateHud() gọi thẳng mấy id đó.
          Đổi tên id chỉ để cho "đúng chữ" là trả một cái giá thật để mua một thứ không ai thấy. -->
+    <!-- HÀNG ĐẦU HUD: chân dung ⇄ khung Lực Chiến. Chủ dự án chốt "cho nó ra ngoài hẳn 1 UI
+         kế bên thanh máu" — trước đó nút nằm TRONG `#cd-phai`, tức chen vào cùng cột với hai
+         thanh máu/mana và ăn mất chiều cao của chúng. Nay là một khung RIÊNG, có vành đồng
+         của chính nó, đứng cạnh chứ không lồng vào.
+         ⚠ Bọc bằng `#hud-dau` chứ đừng cho `#lc-khung` nổi tự do bằng toạ độ tuyệt đối: khung
+         chân dung co theo `40vw`, nên một con số px cố định sẽ rời khỏi nó ở màn hẹp. -->
+    <div id="hud-dau">
     <div id="chan-dung">
       <div id="cd-khung">
         <canvas id="cd-ava" width="128" height="128"></canvas>
@@ -54,20 +61,19 @@
       </div>
       <div id="cd-phai">
         <div id="cd-dau"><div id="hud-name">—</div><b id="hud-lv">LV.1</b></div>
-        <!-- NÚT LỰC CHIẾN nằm NGAY TRÊN thanh máu, sát mép trái của nó — chủ dự án chốt
-             "gần bên trái thanh máu". Đặt trong `#cd-phai` chứ không nổi tự do: nó phải trôi
-             theo khung chân dung khi khung đổi cỡ, chứ không neo vào một toạ độ px.
-             Nút quà bám ngay cạnh vì hai thứ đọc chung một câu — "mình mạnh tới đâu" và
-             "có gì để nhận" — và chấm đỏ trên nó là cửa DUY NHẤT báo có quà. -->
-        <div id="cd-nut">
-          <button id="btn-lc" title="Đánh Giá Sức Chiến Đấu — bấm xem phân rã" onclick="moLucChien()">
-            <i>◉</i><b id="lc-so-hud">0</b></button>
-          <button id="btn-qua" title="Nhận Quà" onclick="togglePanel('qua')">
-            <i>🎁</i><b id="lc-cham-qua" class="hidden">0</b></button>
-        </div>
         <div class="cd-thanh cd-hp" id="orb-hp" title="Sinh Lực"><i class="fill" id="bar-hp"></i><span id="txt-hp"></span></div>
         <div class="cd-thanh cd-qi" id="orb-qi" title="Mana"><i class="fill" id="bar-qi"></i><span id="txt-qi"></span></div>
       </div>
+    </div>
+    <!-- KHUNG LỰC CHIẾN — một UI riêng, không phải một cái chip nhét vào khung chân dung.
+         Nút Quà ở chung khung vì hai thứ trả lời hai nửa của cùng một câu: "mình mạnh tới đâu"
+         và "có gì để nhận". Chấm đỏ trên nút Quà là cửa DUY NHẤT báo có mốc đang chờ. -->
+    <div id="lc-khung">
+      <button id="btn-lc" title="Đánh Giá Sức Chiến Đấu — bấm xem phân rã" onclick="moLucChien()">
+        <i>◉</i><span>Lực Chiến</span><b id="lc-so-hud">0</b></button>
+      <button id="btn-qua" title="Nhận Quà — bấm xem các mốc đang chờ" onclick="togglePanel('qua')">
+        <i>🎁</i><span>Nhận Quà</span><b id="lc-cham-qua" class="hidden">0</b></button>
+    </div>
     </div>
     <!-- Số Bình Thuốc đã dời xuống ô thuốc trong thanh chiến đấu (#sk-thuoc) — cùng một con
          số bày hai chỗ thì chỗ nào cũng bị liếc qua, mà không chỗ nào được tin. -->

@@ -3759,15 +3759,40 @@ phép thử ngược phải DUY NHẤT**, và phải đếm số lần xuất hi
 ## ⚔ LỰC CHIẾN · 🎁 NHẬN QUÀ · ✹ DẢI TRẠNG THÁI
 
 Ba thứ ship cùng một đợt theo ảnh mẫu chủ dự án đưa. Gác chung: **`tests/test_lucchien.js`**
-(9 mệnh đề, ba phép thử ngược đều đỏ).
+(10 mệnh đề, sáu phép thử ngược đều đỏ).
 
 | | ở đâu |
 |---|---|
 | Công thức | `LC_HE` + **`lucChien(p)`** — cửa DUY NHẤT |
 | Phân rã | `LC_NGUON` + **`lcPhanRa()`** · chi tiết `lcChiTiet(id, tongDong)` |
-| Bảng | `renderLucChien()` → `#panel-lucchien` · nút HUD `#btn-lc` trong `#cd-nut` |
+| Bảng | `renderLucChien()` → `#panel-lucchien` · nút HUD `#btn-lc` trong **`#lc-khung`** |
 | Quà | `QUA_DK` · `QUA_SK` · `renderQua()` → `#panel-qua` · `quaNhanMoc()` · `quaNhanHet()` |
 | Trạng thái | **`TT_DINH`** + `capNhatTrangThai()` → `#trang-thai` (cột PHẢI, trên bản đồ nhỏ) |
+
+### ⌗ KHUNG LỰC CHIẾN LÀ MỘT UI RIÊNG, KHÔNG PHẢI MỘT CHIP NHÉT VÀO KHUNG CHÂN DUNG
+
+Bản đầu đặt hai nút trong `#cd-nut`, nằm bên trong `#cd-phai` — tức cùng một cột với hai thanh
+máu/mana. Chủ dự án nhìn ảnh chụp và chốt: *"cho nó ra ngoài hẳn 1 UI kế bên thanh máu đi"*.
+Nay `#lc-khung` là một khung riêng — vành đồng và nền lấy **đúng công thức của `#chan-dung`** —
+và cả hai nằm trong một hàng `#hud-dau`.
+
+⚠ **`width:min(238px,40vw)` DỜI TỪ `#hud-left` XUỐNG `#chan-dung`.** Cột trái nay chứa cả một
+hàng rộng hơn khung chân dung; khoá bề rộng ở cột là khung Lực Chiến bị bóp hoặc tràn. Con số
+giữ nguyên, chỉ đổi chỗ nó bám vào ⇒ hai thanh máu/mana không đổi lấy một điểm ảnh nào.
+
+⚠ **`margin-bottom` CỦA MỘT KHỐI TÍNH VÀO CHIỀU CAO HÀNG.** `#chan-dung` giữ `margin-bottom:5px`
+thì `align-items:stretch` kéo khung bên cạnh cao thêm đúng 5px — đo được **83 vs 88**, hai mép
+dưới lệch nhau. Lề ngoài phải nằm trên `#hud-dau`. *Lề của một khối không được là thứ quyết định
+chiều cao khối bên cạnh nó.*
+
+⚠ **ĐO BỀ RỘNG BẰNG NHÃN DÀI NHẤT, ĐỪNG ĐO BẰNG NHÃN ĐẦU TIÊN.** Ở 106px thì "LỰC CHIẾN" vừa,
+còn "NHẬN QUÀ" — sau khi chừa 13px cho chấm đỏ — đọc thành **"NHẬN …"**. Nay 120px.
+`test_lucchien §6b` hỏi `scrollWidth > clientWidth` chứ không nhìn ảnh chụp.
+
+⚠ **`§6` giữ BA VẾ, bỏ vế nào cũng lọt một kiểu hỏng:** không lồng trong `#chan-dung` (hỏi cây
+DOM, không suy từ toạ độ) · không đè lên khung chân dung · cao bằng nó. Ba phép thử ngược đều đỏ.
+
+Màn hẹp (≤820px) thì bỏ nhãn chữ, khung tụt về 58px — để không đẩy chân dung ra khỏi mép trái.
 
 ### ⚠ NĂM DÒNG PHÂN RÃ SUY TỪ HỆ ĐANG CHẠY, KHÔNG CHÉP TỪ ẢNH MẪU
 
