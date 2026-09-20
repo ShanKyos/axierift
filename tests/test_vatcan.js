@@ -25,7 +25,9 @@ let bad = 0; const fail = m => { bad++; console.log('FAIL ' + m); };
   const r0 = await p.evaluate(() => ({
     coBang: !!window.VAT_CAN,
     soAnh: Object.keys(window.VAT_CAN || {}).length,
-    thieu: ((MAPS.ardhaven.vatTo) || []).map(v => v.img).filter(i => !(window.VAT_CAN || {})[i]),
+    // `can` khai ngay trong mục cũng tính — đó là cách một hình đơn (bể tròn) khai vật cản
+    // mà không cần máy sinh bảng từ art.
+    thieu: ((MAPS.ardhaven.vatTo) || []).filter(v => !(v.can || []).length && !(window.VAT_CAN || {})[v.img]).map(v => v.img),
     soVatCan: obstaclesOf('ardhaven').length,
     soKhoi: (MAP_OBSTACLES.ardhaven || []).length,
   }));
@@ -39,7 +41,9 @@ let bad = 0; const fail = m => { bad++; console.log('FAIL ' + m); };
   // Ngưỡng ĐO chứ không đoán: sau khi sửa, phần đi được còn lại chỉ là GÓC TRONG SUỐT của khung
   // sprite (hình thoi isometric nằm trong khung chữ nhật). Đo ra 0-17% toàn hình, 0-12% nửa
   // dưới. Đặt trần 25%/20% — nới đủ cho art mới, vẫn bắt được bản hỏng cũ (35% / 100%).
-  const r1 = await p.evaluate(() => (MAPS.ardhaven.vatTo || []).map(v => {
+  // ⚠ Bỏ qua mục khai `thoang` — xem chú thích tại chỗ trong data/canbang.js. Một đài phun
+  // nước gần như toàn KHÔNG KHÍ; đòi nó chặn 75% khung là đòi một bức tường vô hình.
+  const r1 = await p.evaluate(() => (MAPS.ardhaven.vatTo || []).filter(v => !v.thoang).map(v => {
     let di = 0, tong = 0, diD = 0, tongD = 0;
     for (let y = v.y; y < v.y + v.h; y += 8)
       for (let x = v.x; x < v.x + v.w; x += 8){
@@ -88,31 +92,30 @@ let bad = 0; const fail = m => { bad++; console.log('FAIL ' + m); };
     fail(`③ ${r3.length}/${r1.length} công trình chặn cả GÓC TRÊN-TRÁI của khung — đang chặn theo hộp bao chứ không theo hình vẽ: ${r3.join(' ')}`);
   console.log(`③ ${r1.length - r3.length}/${r1.length} công trình để trống góc khung (không dựng tường vô hình)`);
 
-  // ---- 4. VẬT SÀN (`vatSan`) — hồ/vũng phải CHẶN, và hộp chặn phải nhỏ hơn tấm ảnh ----
-  // Vật sàn đi một đường KHÁC HẲN `vatTo`: nó không vào danh sách xếp lớp, nên nếu quên nối
-  // `vatSanObs` vào `obstaclesOf` thì cái hồ vẫn hiện ra đẹp đẽ mà người chơi lội thẳng qua —
-  // không lỗi, không dấu hiệu, và chỉ lộ ra khi ai đó thử đi vào nước.
-  const r4 = await p.evaluate(() => {
-    const ds = MAPS.ardhaven.vatSan || [];
-    const chua = ds.map(v => v.img).filter(i => !MAP_VAT_SRC[i]);
-    const nuoc = ds.filter(v => (v.can || []).length).map(v => {
-      const b = v.can[0];
-      return { img: v.img,
-               // tâm hộp chặn PHẢI chặn
-               giua: inObstacle('ardhaven', v.x + b[0] + b[2] / 2, v.y + b[1] + b[3] / 2, 14),
-               // góc khung ảnh PHẢI đi được — bờ cỏ, không phải nước
-               goc:  inObstacle('ardhaven', v.x + 12, v.y + 12, 14),
-               tiLe: Math.round((b[2] * b[3]) / (v.w * v.h) * 100) };
-    });
-    return { so: ds.length, chua, nuoc };
-  });
-  if (r4.chua.length) fail('④ vatSan khai tên chưa có trong MAP_VAT_SRC: ' + r4.chua.join(' '));
-  for (const o of r4.nuoc){
-    if (!o.giua) fail(`④ ${o.img}: giữa hồ KHÔNG chặn — vatSanObs chưa nối vào obstaclesOf`);
-    if (o.goc)   fail(`④ ${o.img}: góc khung ảnh cũng chặn — đang chặn theo hộp bao chứ không theo mặt nước`);
-    if (o.tiLe > 60) fail(`④ ${o.img}: hộp chặn chiếm ${o.tiLe}% khung — bờ cỏ bị chặn theo`);
+  // ---- 4. MỤC `thoang` — chặn CHỖ NÓ CHIẾM, và KHÔNG chặn chỗ nó không chiếm ----
+  // Đài phun nước đi chung đường `vatTo` với nhà, nhưng vật cản của nó khai ngay trong mục thay
+  // vì tra bảng `VAT_CAN`. Quên nối nhánh đó là cái bể hiện ra đẹp đẽ mà người chơi lội thẳng
+  // qua — không lỗi, không dấu hiệu, và chỉ lộ khi có ai thử đi vào giữa nó.
+  const r4 = await p.evaluate(() => (MAPS.ardhaven.vatTo || []).filter(v => v.thoang).map(v => {
+    const b = (v.can || [])[0] || [0,0,0,0];
+    return { img: v.img,
+             coCan: !!(v.can || []).length,
+             // tâm hộp `can` PHẢI chặn
+             giua: inObstacle('ardhaven', v.x + b[0] + b[2]/2, v.y + b[1] + b[3]/2, 14),
+             // góc trên-trái khung ảnh PHẢI đi được — chỗ đó là không khí
+             goc:  inObstacle('ardhaven', v.x + 12, v.y + 12, 14),
+             tiLe: Math.round(b[2]*b[3] / (v.w*v.h) * 100),
+             // khai `khung` thì phải có bảng; chưa khai thì vẽ tấm tĩnh, cũng hợp lệ
+             khung: !!v.khung };
+  }));
+  if (!r4.length) fail('④ không có mục `thoang` nào để đo — cảnh dựng sai, §4 không gác được gì');
+  for (const o of r4){
+    if (!o.coCan) fail(`④ ${o.img}: không khai \`can\` — người chơi đi xuyên qua nó`);
+    if (!o.giua)  fail(`④ ${o.img}: giữa hộp can KHÔNG chặn — vatToObs chưa đọc \`can\` khai trong mục`);
+    if (o.goc)    fail(`④ ${o.img}: góc khung ảnh cũng chặn — đang chặn theo hộp bao, không theo hình`);
+    if (o.tiLe > 60) fail(`④ ${o.img}: hộp can chiếm ${o.tiLe}% khung — chặn cả phần không khí`);
   }
-  console.log(`④ ${r4.so} vật sàn · ${r4.nuoc.map(o => o.img + ' chặn ' + o.tiLe + '% khung').join(', ') || 'chưa mục nào khai can'}`);
+  console.log(`④ ${r4.map(o => o.img + ' chặn ' + o.tiLe + '% khung' + (o.khung ? ' · có bảng khung' : '')).join(', ')}`);
 
   if (errs.length) fail('lỗi trang: ' + errs.slice(0,3).join(' | '));
   console.log(bad ? `\n${bad} LỖI` : '\nTẤT CẢ XANH');

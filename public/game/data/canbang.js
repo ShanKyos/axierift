@@ -1099,6 +1099,40 @@ window.MAPS = {
     { img:'ct_thapvach',  x:2234, y:388,  w:511, h:472 },  // Chòi Trông Vách — khối #3  (2260, 520) · hàng BẮC
     { img:'ct_saanhlenh', x:3654, y:2293, w:512, h:387 },  // Sảnh Lệnh       — khối #12 (3680,2340) · hàng NAM
     { img:'ct_chuong',    x:2260, y:2286, w:460, h:394 },  // Dãy Chuồng      — khối #7  (2260,2340) · hàng NAM
+
+    // ── ĐÀI PHUN NƯỚC ATIA · ĐANG CHỜ ART ────────────────────────────────────
+    // ⚠ NÓ ĐI `vatTo`, KHÔNG ĐI MỘT LỚP PHẲNG. Cột nước bắn lên rồi toả ra là thứ CÓ CHIỀU
+    // CAO, nên người đứng phía BẮC nó phải bị che — đúng việc mà phép xếp theo chân ảnh
+    // (`y + h`) của `vatTo` làm. Đã thử một lớp "vật sàn" vẽ trước mọi thực thể và đã gỡ:
+    // ở đó người chơi sẽ vẽ ĐÈ LÊN cột nước ngay cả khi đang đứng sau nó.
+    //
+    // Chỗ đặt QUÉT BẰNG MÁY: bốn góc + tim bể trong đa giác sàn · lề ≥50px tới mọi khối nhà
+    // và mọi `vatTo` · không nuốt NPC nào (lề 90, vì `test_capnha §2` cấm NPC lọt trong hình)
+    // · cách mọi cổng/portal ≥220px · không đè điểm thả · không chắn ngang `isoDuong` nào.
+    // Cả thành có 1.094 ô thoả ở khổ 384×360; lấy ô GẦN ĐIỂM THẢ NHẤT (681px) vì một đài phun
+    // nước là mốc định hướng của quảng trường — chôn nó ở góc map là phí đúng cái nó giỏi.
+    //
+    // ⚠⚠ QUÉT PHẢI ĐỌC `NPCS` LÚC CHẠY, ĐỪNG ĐỌC TỆP. NPC của ardhaven khai ở HAI nơi — bảng
+    // trong tệp này VÀ hai lượt `NPCS.push(...)` trong game.js (9 con, trong đó có `monkhach`
+    // ở 2870,2100). Bộ quét đầu của tôi chỉ đọc tệp này ⇒ thấy 19/28 con, và nó chấm đài phun
+    // nước đè thẳng lên `monkhach`. `test_capnha §2` bắt được, nhưng bài học thì lớn hơn:
+    // *một phép quét đọc tệp khi dữ liệu thật được ghép từ hai tệp là một phép quét mù.*
+    //
+    // ⚠ `can` là CÁI BỂ, không phải khung ảnh. Cột nước và tia bắn nằm TRÊN cao, không chặn
+    // chân ai; chặn đúng khung 384×360 là người chơi khựng lại giữa không khí cách bể cả gang.
+    // Bể chiếm 41% khung — `test_vatcan §4` gác cả hai đầu (tâm bể phải chặn, góc khung ảnh
+    // phải đi được).
+    //
+    // ⚠ KHI CÓ VIDEO: `tools/nuong_video.py` in ra mục `{cot,hang,khung,oRong,oCao,fps}` —
+    // dán vào trường `khung:` dưới đây, bảng đặt ở assets/iso/kh/ct_dainuoc.webp. TẤM TĨNH
+    // ct_dainuoc.png VẪN BẮT BUỘC (bảng khung nạp lười; thiếu tấm lùi là giữa quảng trường
+    // thủng một lỗ trong mấy trăm mili giây đầu).
+    // ⚠ `thoang:true` — KHÔNG phải một ngôi nhà. Hai bài kiểm đọc cờ này: `test_capnha §1`
+    // (mọi công trình phải có NPC chức năng đứng trước cửa — đài phun nước thì không bán
+    // gì) và `test_vatcan §1` (≤25% diện tích hình được phép đi vào — một đài phun nước
+    // gần như toàn là KHÔNG KHÍ, người chơi phải đi sát được tới thành bể). Miễn trừ bằng
+    // một cờ TRONG DỮ LIỆU, đừng bằng một danh sách tên chép trong bài kiểm.
+    { img:'ct_dainuoc', x:3300, y:1020, w:384, h:360, thoang:true, can:[[70, 170, 244, 170]] },
   ],
     // ── CHÍN KHỐI CÒN TRỐNG · ĐANG CHỜ ART ───────────────────────────────────
     // 16 khối, nay 7 có ảnh (ct_cong dùng hết cho bốn cuống cổng). Khuôn đặt cho mọi khối
@@ -1115,28 +1149,6 @@ window.MAPS = {
     //   #0 (280,520)  #1 (940,520)              hàng bắc, đầu tây
     //   #4 (280,2340) #5 (940,2340) #6 (1600,2340)   hàng nam, đầu tây
     //   #13 (4340,2340) #14 (5000,2340) #15 (5660,2340)  hàng nam, đầu đông
-  // ── VẬT SÀN — HỒ NƯỚC · ĐANG CHỜ ART ─────────────────────────────────────
-  // Nằm BẸT trên đất nên KHÔNG đi vào `vatTo`: `vatTo` xếp lớp theo chân ảnh, và một cái hồ
-  // xếp theo chân thì người đứng ở bờ BẮC bị mặt nước vẽ đè lên — tức đứng dưới đáy hồ. Xem
-  // `veVatSan()` trong game.js: vật sàn vẽ ở lượt riêng, ngay sau mặt đất, trước mọi thực thể.
-  //
-  // Chỗ đặt QUÉT BẰNG MÁY, không chấm tay. Ràng buộc: bốn góc + tâm đều trong đa giác sàn ·
-  // lề ≥60px tới mọi khối nhà và mọi `vatTo` · không nuốt NPC nào (lề 120) · cách mọi cổng và
-  // portal ≥200px · cách điểm thả ≥260px · KHÔNG chắn ngang một đoạn `isoDuong` nào. Cả thành
-  // chỉ còn 106 ô thoả ở khổ 640×360, và cụm duy nhất nằm ở góc ĐÔNG-NAM — khoảng trống giữa
-  // đại lộ (y1600), đường dọc x4900 và hàng nhà nam. Muốn dời thì quét lại, đừng dịch tay.
-  //
-  // ⚠ `can` NHỎ HƠN HẲN TẤM ẢNH (420×190 trong khung 640×360). Bờ cỏ vẽ liền trong tranh; chặn
-  // đúng khung ảnh là người chơi khựng lại cách mặt nước cả chục pixel — nhìn ra là "vướng vào
-  // không khí", không ra một cái bờ.
-  //
-  // ⚠ KHI CÓ VIDEO: `tools/nuong_video.py` in ra mục `khung:{cot,hang,khung,oRong,oCao,fps}` —
-  // dán thêm vào đúng mục này, bảng khung đặt ở assets/iso/kh/san_ho.webp. TẤM TĨNH
-  // assets/iso/san_ho.png VẪN BẮT BUỘC (bảng khung nạp lười; thiếu tấm lùi là mặt đất thủng
-  // một lỗ đúng chỗ cái hồ trong mấy trăm mili giây đầu).
-  vatSan: [
-    { img:'san_ho', x:5020, y:1760, w:640, h:360, can:[[110, 85, 420, 190]] },
-  ],
     packs: [], duhiep: null },
   ngoai: { name:'Beast Herd Camp', bdNen:'dongco', min:10, range:'14 - 24', type:'safe', ground:'#2d3526', patch:'#6a7a52',
     // ⚠ MAP NÀY DỰNG LẠI TỪ TRANH NHÌN NGANG — xem docs/DUNG_LAI_BON_MAP.md.

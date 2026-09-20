@@ -26,7 +26,10 @@ const TRUOC_MIN = 80, TRUOC_MAX = 200;   // px từ mặt đứng tới NPC
   const r = await page.evaluate(({ LECH_TRAN, TRUOC_MIN, TRUOC_MAX }) => {
     const ra = []; const ok = (t, c, ghi) => ra.push({ t, ok: !!c, ghi });
     const md = MAPS.ardhaven;
-    const nha = (md.vatTo || []).filter(v => v.img !== 'ct_cong');
+    // Bỏ cổng thành (bốn cái, không phải nhà) và mọi mục khai `thoang` (đài phun nước — nó
+    // không bán gì nên không có NPC nào đứng cửa). Miễn trừ đọc từ DỮ LIỆU, không phải một
+    // danh sách tên chép trong bài kiểm — danh sách chép tay là thứ sẽ âm thầm nuốt mục sau.
+    const nha = (md.vatTo || []).filter(v => v.img !== 'ct_cong' && !v.thoang);
     const khoi = MAP_OBSTACLES.ardhaven;
     const npc = NPCS.filter(n => n.map === 'ardhaven');
     const CHUC_NANG = ['forge', 'shop', 'stable', 'trunya', 'vanduyen', 'tenui'];

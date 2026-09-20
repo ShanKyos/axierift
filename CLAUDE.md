@@ -1146,34 +1146,57 @@ Công cụ: `tools/nuong_khungquai.py` (nhận khung đã render — dải, thư
 — rồi **đo** hộp ô và `neoY`, in ra mục dán thẳng). Bài kiểm: `tests/test_khungquai.js` (28 mục).
 Đặc tả đặt hàng: `docs/DAT_HANG_ART_3_4_5.md` · prompt: `docs/PROMPT_QUAI_VA_TUONGQUAN.md`.
 
-### 🏠 CÔNG TRÌNH CÓ **HAI** LỚP, và chọn nhầm lớp thì lỗi chỉ lộ ở một phía
+### ⛲ ~~LỚP "VẬT SÀN" RIÊNG CHO NƯỚC~~ — ĐÃ DỰNG RỒI GỠ TRONG CÙNG MỘT ĐỢT
 
-| | `vatTo` | **`vatSan`** |
-|---|---|---|
-| là gì | nhà, cổng, hàng rào — thứ **CAO** | hồ nước, vũng, mảng nền riêng — thứ **BẸT** |
-| xếp lớp | vào `ents` theo **chân ảnh** (`y + h`) | **không xếp** — vẽ một lượt riêng ngay sau mặt đất, trước mọi thực thể |
-| chặn chân | `VAT_CAN` (sinh bằng `tools/iso/can_vatto.py`) | `can:[[dx,dy,w,h]]` khai ngay trong mục |
-| cửa vẽ | nhánh `case 'vat'` trong vòng `ents` | **`veVatSan()`** |
-| cửa chặn | `vatToObs` | `vatSanObs` — cả hai gộp trong **`canRoi(mapId)`** |
+> ⚠ Giữ đúng cái tiêu đề gạch ngang này để cảnh báo, thay vì xoá trắng rồi để người sau đọc
+> `veVatSan` trong lịch sử git mà tưởng nó còn. Cùng kiểu bẫy đã ghi ở mục "~~Khắc Ấn~~".
 
-**Vì sao phải tách, chứ không nhét hồ vào `vatTo` cho gọn:** `vatTo` xếp theo chân vì một
-ngôi nhà **cao** — người đứng phía trên (y nhỏ hơn) phải bị mái che. Một cái hồ thì không có
-chiều cao nào để che ai, nên xếp nó theo chân là người đứng ở bờ **BẮC** bị mặt nước vẽ đè
-lên — tức đứng dưới đáy hồ. Và lỗi đó **chỉ lộ ở một phía**: đứng bờ nam thì mọi thứ trông
-hoàn hảo.
+Yêu cầu ban đầu nghe là *"một cái hồ nước"*, nên tôi dựng hẳn một lớp `vatSan`: vẽ ngay sau mặt
+đất, **trước** mọi thực thể, không xếp lớp. Lý do đúng cho một thứ BẸT — một vũng nước không có
+chiều cao nào để che ai, nên xếp nó theo chân ảnh là người đứng ở bờ **BẮC** bị mặt nước vẽ đè
+lên, tức đứng dưới đáy hồ.
 
-⚠ **`canRoi` PHẢI NHỚ LẠI, đừng `concat` mỗi lời gọi.** `inObstacle` chạy cho mọi điểm thử và
-`simulateMovePath` thử tới 200×8 điểm một cú bấm chuột — dựng một mảng mới mỗi lần là rác theo
-nghìn lượt cho một bảng không bao giờ đổi.
+Rồi chủ dự án nói rõ hơn: *"nước có khả năng bắn lên không trung rồi toả ra các hướng khác
+nhau"* — tức một **ĐÀI PHUN NƯỚC**. Cột nước là thứ **CÓ CHIỀU CAO**, nên người đứng phía bắc
+nó phải bị che, và lớp phẳng kia làm đúng điều NGƯỢC LẠI. `vatSan` vì thế đã gỡ hẳn, và cái
+đài đi chung đường `vatTo` với nhà cửa.
 
-⚠ **HỘP `can` PHẢI NHỎ HƠN HẲN TẤM ẢNH** (hồ Ardhaven: 35% khung). Bờ cỏ vẽ liền trong tranh;
-chặn đúng khung ảnh là người chơi khựng lại cách mặt nước cả chục pixel — nhìn ra là "vướng vào
-không khí", không ra một cái bờ. `test_vatcan §4` gác cả hai đầu: **tâm** hộp phải chặn (thử
-ngược: gỡ `vatSanObs` khỏi `canRoi` ⇒ đỏ) và **góc khung ảnh** phải đi được.
+**Đừng dựng lại lớp phẳng ấy cho nước.** Cửa quyết định là một câu: *"đứng sau nó thì có bị nó
+che không?"* — có thì `vatTo`, và `vatTo` là thứ duy nhất đang có.
 
-⚠ **`khung` là tuỳ chọn, tấm tĩnh thì KHÔNG.** Vật sàn chạy hoạt ảnh được (bảng ở
-`assets/iso/kh/<tên>.webp`, cùng hợp đồng với `MOB_KHUNG`/`NPC_KHUNG`), nhưng bảng khung **nạp
-lười** — thiếu tấm tĩnh lùi là mặt đất thủng một lỗ đúng chỗ đó trong mấy trăm mili giây đầu.
+Hai thứ giữ lại từ đợt đó, vì chúng đúng cho MỌI công trình:
+
+| | |
+|---|---|
+| **`vatKhung(v)` + `veVatTo(v)`** | mục `vatTo` khai thêm `khung:{cot,hang,khung,oRong,oCao,fps}` là chạy hoạt ảnh từ `assets/iso/kh/<tên>.webp` — **cùng hợp đồng với `MOB_KHUNG`/`NPC_KHUNG`**, nên một đường nướng video phục vụ cả ba |
+| **`can:[[dx,dy,w,h]]` khai ngay trong mục** | thắng bảng `VAT_CAN`. Bảng kia do `tools/iso/can_vatto.py` sinh ra từ chính tấm art (mái, tường, hiên — hình thù không mô tả tay nổi); một cái bể tròn thì đúng một hộp, và chờ art về mới có vật cản là để người chơi đi xuyên qua nó suốt thời gian chờ |
+
+⚠ **TẤM TĨNH VẪN BẮT BUỘC** kể cả khi khai `khung`. Bảng khung nạp lười; thiếu tấm lùi là chỗ
+đó **thủng một lỗ** giữa map trong mấy trăm mili giây đầu — và vì nó tự hết sau một nhịp nên
+rất dễ nghiệm thu nhầm là xong.
+
+⚠ **HỘP `can` PHẢI NHỎ HƠN HẲN TẤM ẢNH** (đài phun nước: **30% khung**). Cột nước và tia bắn
+nằm trên cao, không chặn chân ai; chặn đúng khung ảnh là người chơi khựng lại giữa không khí
+cách thành bể cả gang tay. `test_vatcan §4` gác cả hai đầu — **tâm** hộp phải chặn (thử ngược:
+cho `vatToObs` quên đọc `v.can` ⇒ đỏ) và **góc khung ảnh** phải đi được.
+
+⚠ **`thoang:true` LÀ MIỄN TRỪ KHAI TRONG DỮ LIỆU, không phải một danh sách tên trong bài kiểm.**
+Đài phun nước không bán gì (nên `test_capnha §1` không đòi NPC đứng cửa) và gần như toàn là
+KHÔNG KHÍ (nên `test_vatcan §1` không đòi nó chặn ≥75% khung). Hai bài đọc CÙNG một cờ; chép
+một danh sách tên vào bài kiểm là thứ sẽ âm thầm nuốt mục thứ hai thêm sau.
+
+### ⚠⚠ NPC CỦA ARDHAVEN KHAI Ở **HAI** TỆP — mọi phép quét đọc tệp đều MÙ
+
+`window.NPCS` dựng trong `data/canbang.js`, rồi `game.js` **`NPCS.push(...)` hai lượt nữa**
+(9 con của ardhaven, trong đó có `monkhach` ở `2870,2100`). Bộ quét chấm chỗ đặt đài phun nước
+của tôi đọc thẳng `canbang.js` ⇒ nó thấy **19 trên 28 con**, và nó chấm cái đài **đè thẳng lên
+`monkhach`**. `test_capnha §2` bắt được vì bài kiểm đọc `NPCS` LÚC CHẠY.
+
+⇒ **Quét chỗ đặt thì lái trong trình duyệt và đọc `NPCS`/`MAPS`/`GATES` thật**, đừng `vm.runInContext`
+một tệp rồi tin kết quả. Cùng một luật với *"màn chờ phải hỏi cùng cái hàm mà trong màn dùng"*,
+và cùng họ với bẫy `QUESTS` khai hai nơi đã ghi ở trên — chỉ khác là lần này nạn nhân là một
+**phép đo**, không phải một tính năng. *Một phép quét đọc tệp, khi dữ liệu thật được ghép từ hai
+tệp, là một phép quét mù — và nó trả về những con số trông hoàn toàn bình thường.*
 
 ### 🏘 MỖI CÔNG TRÌNH PHẢI CÓ NGƯỜI ĐỨNG TRƯỚC CỬA — và "có NPC ở gần" là cái chốt KHÔNG CHỐT GÌ
 
@@ -1211,7 +1234,7 @@ phải dời ai. Hiện còn hai con như vậy: `ah_phapsu` (Quán Sách, khố
 (Sảnh Cầu May, khối #9).
 
 Gác: **`tests/test_capnha.js`** (6 mệnh đề, cả năm cơ chế đã thử ngược và đều đỏ).
-Đặt hàng art hồ + hàng rào: **`docs/PROMPT_HO_VA_HANGRAO.md`**.
+Đặt hàng art đài phun nước + hàng rào: **`docs/PROMPT_DAINUOC_VA_HANGRAO.md`**.
 
 ### 🗺 BẢN SẮC MAP SUY RA TỪ DỮ LIỆU, KHÔNG CHÉP CỨNG
 

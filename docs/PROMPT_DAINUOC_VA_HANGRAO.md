@@ -1,4 +1,4 @@
-# Đặt hàng art — HỒ NƯỚC và HÀNG RÀO cho Sapidae Chiefdom
+# Đặt hàng art — ĐÀI PHUN NƯỚC và HÀNG RÀO cho Sapidae Chiefdom
 
 > Dán thẳng vào Gemini. Khối kỹ thuật §1 là **bản sao nguyên văn** của
 > `docs/PROMPT_DAT_RIENG_ART.md §1` — đừng viết lại bằng lời của mình, hai bản lệch nhau một
@@ -8,19 +8,25 @@
 
 ---
 
-## §0 — Hai món này đi hai ĐƯỜNG KHÁC NHAU trong máy, và đó là chỗ dễ nhầm nhất
+## §0 — Cả hai món đi CHUNG một đường: `vatTo`
 
-|  | hồ nước | hàng rào |
+Đài phun nước **không** đi một lớp phẳng, và đây là chỗ tôi đã làm sai một lần rồi sửa: yêu cầu
+đầu nghe là "một cái hồ nước" nên tôi dựng hẳn một lớp vẽ-trước-mọi-thực-thể cho nó. Nhưng cột
+nước bắn lên rồi toả ra là thứ **CÓ CHIỀU CAO** — người đứng phía BẮC nó phải bị che, mà lớp
+phẳng kia làm đúng điều ngược lại (vẽ người đè lên cột nước).
+
+**Cửa quyết định là một câu:** *đứng sau nó thì có bị nó che không?* Có ⇒ `vatTo`, và `vatTo`
+là lớp duy nhất đang có. Nó xếp theo **chân ảnh** (`y + h`), nên hợp đồng neo cho cả hai món
+dưới đây là như nhau:
+
+> **mép DƯỚI ảnh = đường chân · tim ngang ảnh = tim vật.**
+
+| | đài phun nước | hàng rào |
 |---|---|---|
-| khai ở | **`vatSan`** | **`vatTo`** |
-| xếp lớp | **không xếp** — vẽ ngay sau mặt đất, trước mọi thực thể | theo **chân ảnh** (`y + h`) |
-| vì sao | một cái hồ **không có chiều cao** để che ai. Xếp nó theo chân thì người đứng ở bờ BẮC bị mặt nước vẽ đè lên — tức đứng dưới đáy hồ | hàng rào **cao**. Người đứng sau nó phải bị nó che, đúng chiều sâu tranh isometric |
-| chặn chân | `can:[[dx,dy,w,h]]` khai ngay trong mục | `VAT_CAN` sinh bằng `tools/iso/can_vatto.py` |
-
-⇒ **Đừng khai hồ vào `vatTo`.** Đó là lỗi duy nhất của đợt này mà nhìn ảnh chụp không ra ngay:
-nó chỉ lộ khi có người đứng ở bờ bắc.
-
----
+| tệp | `assets/iso/ct_dainuoc.png` | `assets/iso/rao_a.png` · `rao_b.png` · `rao_goc.png` |
+| khổ | **384 × 360** | 256×220 · 256×220 · 170×240 |
+| chặn chân | `can:[[70,170,244,170]]` — **30% khung**, chỉ cái BỂ | `VAT_CAN` sinh bằng `tools/iso/can_vatto.py` |
+| hoạt ảnh | **có** (`khung:` → `assets/iso/kh/ct_dainuoc.webp`) | không |
 
 ## §1 — Khối kỹ thuật, DÁN NGUYÊN VĂN vào **mọi** prompt dưới đây
 
@@ -56,46 +62,52 @@ sen không xuất hiện ở đất, gỗ, nước hay hoa.
 
 ---
 
-## §2 — HỒ NƯỚC · `san_ho`
+## §2 — ĐÀI PHUN NƯỚC · `ct_dainuoc`
 
 ### Khổ và chỗ đứng — đã chốt trong mã, đừng đổi khi vẽ
 
 | | |
 |---|---|
-| tệp | `assets/iso/san_ho.png` |
-| khổ đích | **640 × 360** (máy vẽ 1:1, không co giãn) |
-| chỗ đặt | `ardhaven (5020, 1760)` — góc đông-nam, giữa đại lộ y1600 và hàng nhà nam |
-| mặt nước chặn | `can:[[110, 85, 420, 190]]` — **35% khung**, phần còn lại là bờ cỏ đi được |
+| tệp | `assets/iso/ct_dainuoc.png` (+ `assets/iso/kh/ct_dainuoc.webp` khi có video) |
+| khổ đích | **384 × 360** (máy vẽ 1:1, không co giãn) |
+| chỗ đặt | `ardhaven (3300, 1020)` — rìa đông Quảng Trường Atia, bắc đại lộ |
+| bể chặn chân | `can:[[70, 170, 244, 170]]` — **30% khung**; phần trên là KHÔNG KHÍ, đi sát được |
 
-Chỗ đặt **quét bằng máy**, không chấm tay: bốn góc + tâm trong đa giác sàn · lề ≥60px tới mọi
-khối nhà và mọi `vatTo` · không nuốt NPC nào (lề 120) · cách mọi cổng/portal ≥200px · cách điểm
-thả ≥260px · không chắn ngang một đoạn `isoDuong` nào. Cả thành **chỉ còn 106 ô thoả ở khổ
-640×360**, và cụm duy nhất nằm đúng ở góc đông-nam. Muốn dời thì quét lại.
+Chỗ đặt **quét bằng máy**, và quét **trong trình duyệt** chứ không đọc tệp: NPC của ardhaven
+khai ở HAI nơi (`data/canbang.js` *và* hai lượt `NPCS.push` trong `game.js`), nên bộ quét đọc
+tệp chỉ thấy 19/28 con — lượt đầu nó đã chấm cái đài đè thẳng lên `monkhach`. Ràng buộc: bốn
+góc + tim bể trong đa giác sàn · lề ≥50px tới mọi khối nhà và `vatTo` · không nuốt NPC nào
+(lề 90) · cách mọi cổng/portal ≥220px · không đè điểm thả · không chắn ngang `isoDuong`.
+**1.094 ô thoả**; lấy ô gần điểm thả nhất (681px) vì đài phun nước là mốc định hướng của quảng
+trường.
 
 ### Prompt (dán §1 trước, rồi đoạn này)
 
 ```
-SUBJECT: a small town pond, seen from above at an isometric angle. Wide and shallow, about
-twice as wide as it is deep on screen.
+SUBJECT: an ornamental town fountain, seen from above at an isometric angle. It stands alone
+on nothing — no ground, no paving, no grass around it.
 
-The water is a rounded, slightly irregular oval — not a perfect ellipse, the bank bulges in
-and out gently. Bright turquoise at the rim where the bottom shows through, deepening to a
-rich teal in the middle. A few soft crescent highlight ripples catch the sun near the centre.
-The surface is calm; no waves, no foam, no waterfall.
+The basin is a wide, shallow, round stone bowl, low to the ground, built of smooth pale
+limestone blocks with softly rounded edges — chunky and toy-like, not sharp, not weathered,
+not grey. Its rim is a single thick ring you could sit on. The bowl is filled with bright
+turquoise water, deepening to teal at the centre, with a few soft crescent highlights.
 
-Around the water is a bank of short bright grass, sloping down to the waterline. Set into the
-bank, low and partly sunk, is a loose kerb of smooth river stones in mixed warm greys and soft
-tans — rounded, chunky, one course high, with gaps where grass and a little moss push through.
-The kerb does not go all the way round: it is heavier on the near side and thins out at the
-back.
+Rising from the middle of the basin is a short, sturdy carved pedestal of the same pale stone
+— a stepped column with a simple rounded moulding, no statue, no figure, no animal, no face.
 
-On the bank: three or four clumps of tall slender reeds, a couple of flat lily pads floating
-near one edge (one with a small pink bloom), and two or three larger rounded boulders resting
-half in the grass. Nothing else — no fish, no boat, no jetty, no bucket, no bridge, no people.
+From the top of the pedestal a jet of water SHOOTS STRAIGHT UP into the air, then arcs OUTWARD
+IN ALL DIRECTIONS in several separate curved ribbons, falling back into the basin around the
+whole circle — a classic tiered fountain plume. The water is bright and translucent, catching
+the sun, with small round droplets and a light mist where the ribbons break. The plume is the
+tallest part of the object: it rises roughly as high above the rim as the basin is wide across
+its radius.
 
-HEIGHT: this object is FLAT. Nothing in it stands up except the reeds and the boulders, and
-even those are low — no taller than a quarter of the pond's width. It must read as a hole in
-the ground filled with water, seen from above, not as a raised basin.
+Nothing else in the frame — no coins, no fish, no lamp posts, no benches, no plants, no birds,
+no people, no railings.
+
+PROPORTION: the basin occupies the bottom of the frame and the water plume fills the upper
+half. Everything above the basin rim is water and air — the object must read as mostly open,
+not as a solid tower.
 ```
 
 ### ⚠ Và nếu định LÀM VIDEO từ tấm này — đọc trước khi bấm render
@@ -108,34 +120,45 @@ chỗ này. Bốn điều kiện, thiếu một là tấm nướng ra hỏng:
    (`min(R,B) − G`), nên một nền "được vẽ thêm mây/ánh sáng cho đẹp" là mất sạch đường cắt.
 2. **Máy quay ĐỨNG YÊN TUYỆT ĐỐI.** Không zoom, không pan, không rung. Mọi khung cắt vào **một
    hộp chung**; máy quay trôi là con vật nhảy chỗ mỗi khung.
-3. **Cái hồ không được đổi cỡ, đổi chỗ hay đổi hình bờ.** Chỉ MẶT NƯỚC và LÁ SẬY động.
-4. **Lặp liền mạch** — khung cuối phải nối được vào khung đầu. Hồ nước là thứ chạy 100% thời
-   gian trên màn; một cú giật mỗi vòng lặp thì mắt bắt ngay.
+3. **ĐÁ KHÔNG ĐƯỢC ĐỘNG.** Bể, thành bể và cái bệ giữa phải đứng im từng điểm ảnh — không đổi
+   cỡ, không dời chỗ, không vẽ lại. Chỉ **NƯỚC** động.
+4. **Lặp liền mạch** — khung cuối phải nối được vào khung đầu. Đài phun nước chạy 100% thời gian
+   trên màn giữa quảng trường; một cú giật mỗi vòng lặp thì mắt bắt ngay.
 
 Câu lệnh cho công cụ làm video:
 
 ```
-Animate ONLY the water surface and the reeds. Locked-off camera: no zoom, no pan, no camera
-shake, no parallax. The pond, the stones, the grass bank and the boulders must stay pixel-for
--pixel identical in every frame — do not redraw them, do not move them, do not change their
-size. The magenta background must stay flat #FF00FF and must not be animated, lit or clouded.
-Gentle slow ripples spread across the water, the highlights drift, the reeds sway a little in
-the breeze. Seamless loop: the last frame must flow back into the first. 2-3 seconds.
+Animate ONLY the water. Locked-off camera: no zoom, no pan, no camera shake, no parallax.
+The stone basin, its rim and the central pedestal must stay pixel-for-pixel identical in every
+frame — do not redraw them, do not move them, do not change their size. The magenta background
+must stay flat #FF00FF and must not be animated, lit or clouded.
+
+The jet rises from the pedestal, arcs outward in all directions and falls back into the basin
+in a continuous steady plume — the shape of the plume stays the same, only the water flows
+through it. Droplets travel down the falling ribbons, a light mist drifts where they break, and
+small concentric ripples spread across the basin where the water lands. The flow is calm and
+even: no surging, no splashing bursts, no change in height.
+
+Seamless loop: the last frame must flow back into the first. 2-3 seconds.
 ```
+
+⚠ **Mạch nước phải ĐỀU.** Một cú phụt mạnh rồi yếu trông rất hay trong 3 giây, nhưng bảng khung
+lặp vô hạn — chu kì càng "có cao trào" thì càng lộ ra là một đoạn băng đang tua lại.
 
 Nhận video xong:
 
 ```bash
 python3 tools/nuong_video.py <video.mp4> --do                       # ĐO TRƯỚC — đừng bỏ bước này
 python3 tools/nuong_video.py <video.mp4> \
-        public/game/assets/iso/kh/san_ho.webp --ten san_ho
+        public/game/assets/iso/kh/ct_dainuoc.webp --ten ct_dainuoc
 ```
 
-⚠ Công cụ in ra dòng *"dán vào **NPC_KHUNG**"* — với cái hồ thì **KHÔNG** dán vào đó. Lấy đúng
-phần `{ cot, hang, khung, oRong, oCao, fps }` (bỏ `neoY`, vật sàn không neo chân) rồi dán thành
-trường `khung:` của mục `san_ho` trong `vatSan` của `data/canbang.js`. **Tấm tĩnh `san_ho.png` vẫn bắt buộc**: bảng khung nạp
-lười, thiếu tấm lùi là mặt đất thủng một lỗ đúng chỗ cái hồ trong mấy trăm mili giây đầu — cùng
-hợp đồng với `MOB_KHUNG` và `NPC_KHUNG`.
+⚠ Công cụ in ra dòng *"dán vào **NPC_KHUNG**"* — với cái đài thì **KHÔNG** dán vào đó. Lấy đúng
+phần `{ cot, hang, khung, oRong, oCao, fps }` (bỏ `neoY` — `vatTo` neo bằng `y + h` của chính
+mục, không bằng một tỉ lệ) rồi dán thành trường `khung:` của mục `ct_dainuoc` trong `vatTo` của
+`data/canbang.js`. **Tấm tĩnh `ct_dainuoc.png` vẫn bắt buộc**: bảng khung nạp lười, thiếu tấm lùi
+là giữa quảng trường thủng một lỗ trong mấy trăm mili giây đầu — cùng hợp đồng với `MOB_KHUNG`
+và `NPC_KHUNG`.
 
 ---
 
@@ -220,18 +243,18 @@ Nothing else in the frame.
 
 ```bash
 pip install scipy pillow numpy                                   # máy sạch KHÔNG có sẵn scipy
-python3 tools/iso/cat_congtrinh.py <ảnh gốc> san_ho --o 2.5      # cắt nền tím, ép 2:1
+python3 tools/iso/cat_congtrinh.py <ảnh gốc> ct_dainuoc --o 1.5  # cắt nền tím, ép 2:1
 python3 tools/iso/cat_congtrinh.py <ảnh gốc> rao_a  --o 1
 ```
 
 `--o` là **chân đế chiếm mấy ô đất** (1 ô = 256px), tức nó quyết cỡ ảnh ra — không phải một
-tuỳ chọn trang trí. Hồ rộng 640px ⇒ `2.5`; một đoạn rào 256px ⇒ `1`.
+tuỳ chọn trang trí. Đài rộng 384px ⇒ `1.5`; một đoạn rào 256px ⇒ `1`.
 
 Rồi đúng hai bước, không sửa một dòng mã nào:
 
 1. thả tệp vào `public/game/assets/iso/`;
 2. **xoá tên khỏi `MAP_VAT_CHO`** trong `game.js` (hàng rào thì thêm tên vào `MAP_VAT_SRC` như
-   `san_ho` đã có sẵn).
+   `ct_dainuoc` đã có sẵn).
 
-Kiểm ngay sau đó: `bash tools/reg.sh` — `test_vatcan §4` gác chuyện mặt nước có thật sự chặn
-chân và hộp chặn có nhỏ hơn tấm ảnh không; `test_capnha` gác cặp nhà↔NPC.
+Kiểm ngay sau đó: `bash tools/reg.sh` — `test_vatcan §4` gác chuyện cái BỂ có thật sự chặn chân
+và hộp chặn có nhỏ hơn tấm ảnh không; `test_capnha` gác cặp nhà↔NPC.

@@ -1274,8 +1274,8 @@ const MAP_VAT_SRC = {
   cong_bac:          'assets/iso/cong_bac.png',            // 720×700 · Cổng Bắc
   cong_nam:          'assets/iso/cong_nam.png',            // 720×700 · Cổng Nam
   cong_doc:          'assets/iso/cong_doc.png',            // 400×960 · Cổng Tây, lật cho Đông
-  // ── VẬT SÀN · ĐANG CHỜ ART ────────────────────────────────────────────────
-  san_ho:            'assets/iso/san_ho.png',              // 640×360 · hồ nước Ardhaven (xem veVatSan)
+  // ── ĐÀI PHUN NƯỚC · ĐANG CHỜ ART ──────────────────────────────────────────
+  ct_dainuoc:        'assets/iso/ct_dainuoc.png',           // 384×360 · Đài Phun Nước Atia (có `khung`)
 };
 // ⚠ DANH SÁCH "CHƯA VỀ". Khai tên trong MAP_VAT_SRC mà tệp chưa có thì trình duyệt nạp hụt và
 // ném 404 — bảy dòng đỏ trong devtools trên BẢN PHÁT HÀNH, cho một thứ cố ý chưa tồn tại.
@@ -1286,7 +1286,7 @@ const MAP_VAT_SRC = {
 const MAP_VAT_CHO = new Set([
   'tuong_ngang_trong', 'tuong_ngang_ngoai', 'tuong_doc', 'tuong_goc',
   'cong_bac', 'cong_nam', 'cong_doc',
-  'san_ho',
+  'ct_dainuoc',
 ]);
 const _vatIm = {};
 function vatTai(ten){
@@ -1297,35 +1297,32 @@ function vatTai(ten){
   if (!im){ im = _vatIm[ten] = new Image(); im.src = src; }
   return (im.complete && im.naturalWidth) ? im : null;
 }
-// ── VẬT SÀN — thứ NẰM BẸT TRÊN MẶT ĐẤT (hồ nước, vũng, mảng nền riêng) ───────────────────
-// Khác `vatTo` ở ĐÚNG MỘT CHỖ, và chỗ đó quyết định cả cách vẽ: `vatTo` vào danh sách xếp lớp
-// theo CHÂN ảnh (y = v.y + v.h) vì nó CAO — người đứng phía trên phải bị mái che. Một cái hồ
-// thì không có chiều cao nào để che ai, nên xếp nó theo chân là người đứng ở bờ BẮC bị mặt
-// nước vẽ đè lên, tức đứng dưới đáy hồ. Vật sàn vì thế vẽ ở LƯỢT RIÊNG, ngay sau mặt đất và
-// TRƯỚC mọi thực thể — đúng chỗ của một thứ phẳng, và không tốn một phép sắp xếp nào.
+// ── CÔNG TRÌNH CHẠY HOẠT ẢNH — bảng khung cho một mục `vatTo` ────────────────────────────
+// Mặc định một công trình là MỘT tấm tĩnh. Khai thêm `khung:{cot,hang,khung,oRong,oCao,fps}`
+// là mục đó chạy hoạt ảnh từ `assets/iso/kh/<tên>.webp` — cùng hợp đồng với `MOB_KHUNG` và
+// `NPC_KHUNG`, nên một đường nướng video duy nhất phục vụ cả ba.
 //
-// `khung` là tuỳ chọn. Khai thì hình chạy hoạt ảnh từ bảng `assets/iso/kh/<tên>.webp` (cùng
-// hợp đồng với MOB_KHUNG/NPC_KHUNG: cột × hàng, cắt theo oRong×oCao, fps riêng); không khai
-// thì vẽ tấm tĩnh. ⚠ TẤM TĨNH LUÔN BẮT BUỘC — bảng khung nạp lười, thiếu tấm lùi là mấy trăm
-// mili giây đầu mặt đất thủng một lỗ đúng chỗ cái hồ.
-const _vatSanKh = {};
-function vatSanKhung(v){
+// ⚠ TẤM TĨNH VẪN BẮT BUỘC. Bảng khung nạp lười; thiếu tấm lùi là mấy trăm mili giây đầu chỗ
+// đó THỦNG một lỗ giữa map — và vì nó tự hết sau một nhịp nên rất dễ nghiệm thu nhầm là xong.
+//
+// ⚠ ĐỪNG DỰNG MỘT LỚP "VẬT SÀN" RIÊNG CHO NƯỚC. Đã thử và đã gỡ: một lớp vẽ trước mọi thực
+// thể thì đúng cho thứ BẸT TUYỆT ĐỐI, mà đài phun nước thì CAO — người đứng phía bắc nó phải
+// bị cột nước che. `vatTo` xếp theo chân ảnh nên nó lo đúng chuyện đó; lớp phẳng kia sẽ vẽ
+// người đè lên cột nước, tức đứng trước một thứ mình đang đứng sau.
+const _vatKh = {};
+function vatKhung(v){
   if (!v.khung) return null;
-  let im = _vatSanKh[v.img];
-  if (im === undefined){ im = _vatSanKh[v.img] = new Image(); im.src = 'assets/iso/kh/' + v.img + '.webp'; }
+  let im = _vatKh[v.img];
+  if (im === undefined){ im = _vatKh[v.img] = new Image(); im.src = 'assets/iso/kh/' + v.img + '.webp'; }
   if (!(im.complete && im.naturalWidth)) return null;
   const K = v.khung, tong = K.khung || (K.cot * K.hang);
   const i = Math.floor(performance.now() / 1000 * (K.fps || 8)) % tong;
   return { im, sx:(i % K.cot) * K.oRong, sy:((i / K.cot) | 0) * K.oCao, sw:K.oRong, sh:K.oCao };
 }
-function veVatSan(){
-  const ds = (mapDef().vatSan) || [];
-  for (const v of ds){
-    if (v.x > camera.x + VW || v.x + v.w < camera.x || v.y > camera.y + VH || v.y + v.h < camera.y) continue;
-    const kh = vatSanKhung(v);
-    if (kh) ctx.drawImage(kh.im, kh.sx, kh.sy, kh.sw, kh.sh, v.x, v.y, v.w, v.h);
-    else { const im = vatTai(v.img); if (im) ctx.drawImage(im, v.x, v.y, v.w, v.h); }
-  }
+function veVatTo(v){
+  const kh = vatKhung(v);
+  if (kh){ ctx.drawImage(kh.im, kh.sx, kh.sy, kh.sw, kh.sh, v.x, v.y, v.w, v.h); return; }
+  const im = vatTai(v.img); if (im) ctx.drawImage(im, v.x, v.y, v.w, v.h);
 }
 // Nạp NỀN THEO NHU CẦU. Trước đây nạp cả 15 mục ngay khi tải trang — 3,2 MB ảnh nền cho 15 bản
 // đồ mà người chơi mới chỉ đứng ở đúng MỘT. Nay chỉ nạp map đang vào (và nạp trước những map đi
@@ -3007,38 +3004,18 @@ function vatToObs(mapId){
   const md = MAPS[mapId], B = window.VAT_CAN || {};
   const ra = [];
   for (const v of (md && md.vatTo) || []){
-    for (const b of B[v.img] || [])
+    // `can` khai NGAY TRONG MỤC thắng bảng `VAT_CAN`. Bảng kia do máy sinh ra từ chính tấm
+    // art (mái, tường, hiên — hình thù không mô tả bằng tay nổi); một cái bể tròn thì đúng một
+    // hộp, và chờ art về mới có vật cản là để người chơi đi xuyên qua nó suốt thời gian chờ.
+    for (const b of v.can || B[v.img] || [])
       ra.push({ x: v.x + b[0], y: v.y + b[1], wd: b[2], ht: b[3] });
   }
   return (_vatCanNho[mapId] = ra);
 }
-// VẬT CẢN CỦA VẬT SÀN (`vatSan`) — hồ nước, vũng lầy: nhìn thì bẹt, nhưng vẫn phải chặn chân.
-// Khai `can:[[dx,dy,w,h], …]` ngay trong mục, không cần bảng riêng: một cái hồ là một hai hộp,
-// trong khi `VAT_CAN` của công trình phải bám theo mái và tường nên mới cần máy sinh ra.
-//
-// ⚠ HỘP CHẶN PHẢI NHỎ HƠN HẲN TẤM ẢNH. Mép hồ là bờ cỏ thoai thoải vẽ liền trong tranh; chặn
-// đúng khung ảnh là người chơi khựng lại cách mặt nước cả chục pixel, mà nhìn ra thì đó là
-// "vướng vào không khí" chứ không ra một cái bờ.
-const _vatSanCanNho = {};
-function vatSanObs(mapId){
-  if (_vatSanCanNho[mapId]) return _vatSanCanNho[mapId];
-  const md = MAPS[mapId], ra = [];
-  for (const v of (md && md.vatSan) || [])
-    for (const b of v.can || []) ra.push({ x: v.x + b[0], y: v.y + b[1], wd: b[2], ht: b[3] });
-  return (_vatSanCanNho[mapId] = ra);
-}
-// ⚠ GỘP RỒI NHỚ LẠI, đừng `concat` mỗi lời gọi. `inObstacle` chạy cho MỌI điểm thử và
-// `simulateMovePath` thử tới 200×8 điểm một cú bấm chuột — dựng một mảng mới mỗi lần là rác
-// theo nghìn lượt cho một bảng không bao giờ đổi.
-const _canRoiNho = {};
-function canRoi(mapId){
-  if (_canRoiNho[mapId]) return _canRoiNho[mapId];
-  return (_canRoiNho[mapId] = vatToObs(mapId).concat(vatSanObs(mapId)));
-}
 function obstaclesOf(mapId){
   const md = MAPS[mapId];
   if (md && md.dungeon) return DGN_OBSTACLES.concat(dgnWallObs());
-  const _vt = canRoi(mapId);
+  const _vt = vatToObs(mapId);
   const base = _vt.length ? (MAP_OBSTACLES[mapId] || []).concat(_vt) : (MAP_OBSTACLES[mapId] || []);
   // decor chỉ tồn tại cho map đang đứng — map khác thì chỉ có vật cản tĩnh
   return mapId === curMap && decorObs.length ? base.concat(decorObs) : base;
@@ -13725,7 +13702,6 @@ function render(){
   if (md.village) drawCalligraphy('Sapwood Hamlet', 430, 340, '#6a5836', 18);
   // cổng KHÔNG vẽ ở đây nữa — nó đi vào danh sách sắp theo y bên dưới (xem drawOneGate)
 
-  veVatSan();          // hồ/vũng nằm bẹt: sau mặt đất, TRƯỚC mọi thực thể (xem veVatSan)
   drawObstacleRim();   // hàng đá dọc mép vùng chặn — vẽ trước decor để cây/đá rải phủ lên tự nhiên
 
   // decor (behind entities)
@@ -13811,7 +13787,7 @@ function render(){
 
   for (const e of ents){
     switch (e.kind){
-      case 'vat': { const im = vatTai(e.v.img); if (im) ctx.drawImage(im, e.v.x, e.v.y, e.v.w, e.v.h); break; }
+      case 'vat': veVatTo(e.v); break;   // tấm tĩnh, hoặc bảng khung nếu mục khai `khung`
       case 'tuong': veTuongVien(e.t); break;   // chỉ CỔNG tới đây; đoạn tường vẽ ở lượt riêng trên kia
       case 'iso': veVatIso(e.d); break;
       case 'mob': drawMob(e.m); break;
