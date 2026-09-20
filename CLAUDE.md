@@ -5644,6 +5644,82 @@ Hỏng thì **sửa trước khi push**, đừng push rồi sửa sau — ngư�
 `http://14.225.204.107/` (thêm `?test=1` để mở chế độ thử: đi map tự do + tick cấp 60).
 Log deploy nằm ở VPS, người dùng xem giúp — sandbox không tới được.
 
+## 🔀 XONG LÀ PUSH — và ĐỪNG ĐỂ NHÁNH TRÔI XA `main`
+
+Chủ dự án chốt (nguyên văn): *"xong thì push đi, và làm sao cho các nhánh đừng xung đột với
+nhau nữa"*. Đây là luật vận hành, không phải lời khuyên — nó rút ra từ một phiên phải trộn
+`main` **BA LẦN** cho cùng một đợt việc.
+
+**Số đo của phiên đó, vì nó nói rõ cái giá:** giữ 11 commit trên một nhánh phụ trong lúc `main`
+đi tiếp **27 → 10 → 10** commit. Mỗi lần trộn là một lượt hồi quy đầy đủ (~1 giờ) phải chạy
+LẠI, vì *bản đã trộn là mã mà chưa bên nào từng kiểm*. Ba tiếng hồi quy cho một đợt việc, và
+hai trong ba lần trộn để lại một bài kiểm tự mâu thuẫn mà `node --check` vẫn xanh.
+
+### ① XONG MỘT MẢNG VIỆC LÀ PUSH, đừng gom
+
+Một mảng việc xanh đủ bốn cổng thì đẩy luôn. **Đừng** gom ba bốn đợt rồi push một thể: nhánh
+càng sống lâu thì cửa sổ đụng độ càng rộng, và nó rộng theo cấp số chứ không theo tuyến tính —
+mỗi commit mới của `main` nhân với mỗi commit của mình. Nhánh sống nửa ngày là nhánh chắc chắn
+phải trộn.
+
+### ② TRỘN `main` VÀO **TRƯỚC**, KHÔNG PHẢI SAU
+
+```bash
+git -C /home/user/axiewuxia fetch origin main --quiet && git -C /home/user/axiewuxia merge origin/main --no-edit
+```
+
+Chạy **trước khi bắt đầu** một mảng việc và **trước mỗi commit** — không phải một lần lúc sắp
+push. Trộn sớm thì xung đột nhỏ, nằm đúng chỗ mình vừa sửa, và còn nhớ vì sao mình sửa thế.
+Trộn muộn thì phải đọc lại hai bên như người ngoài.
+
+### ③ BA CHỖ LUÔN ĐỤNG NHAU — CHÈN Ở CUỐI, ĐỪNG CHÈN GIỮA
+
+| tệp | vì sao | cách tránh |
+|---|---|---|
+| `CLAUDE.md` | ai cũng thêm một mục mới | chèn ngay TRÊN một tiêu đề ỔN ĐỊNH, đừng chèn giữa một mục đang có |
+| `docs/NHAT_KY.md` | ai cũng thêm một mục cùng ngày ở **cùng một chỗ** | thêm vào CUỐI. Đụng nhau thì giữ **CẢ HAI** mục, không cái nào thay cái nào |
+| `tests/test_*.js` | hai nhánh cùng sửa một bài đỏ-theo-tải | xem ④ — đây mới là chỗ đắt |
+
+### ④ ⚠⚠ PHÉP TRỘN NGUY HIỂM LÀ PHÉP TRỘN **KHÔNG KÊU**
+
+Cái làm git báo xung đột thì nhìn thấy được và sửa được. Cái đắt là cái git ghép **êm ru** rồi
+để lại mã mà chưa bên nào từng chạy. Ba lần trong một phiên, cùng một hình dạng:
+
+1. **`test_hopve` nhận CẢ HAI chuỗi khẳng định.** Một bên đòi `_tkHien` phải chứa
+   `_coAva`/`_lopHien` (luật cũ), bên kia đòi `atkK`/`castK`. Mã đã hoà **không thoả cái nào**,
+   và `node --check` xanh. Hai chuỗi nằm ở hai khối khác nhau nên git không thấy gì để hỏi.
+2. **`test_chaos` nhận thân hàm MỚI của một bên và chỗ ĐỌC biến của bên kia.** Chỗ đọc nằm
+   **ngoài** khối xung đột ⇒ không ai được hỏi. Nổ `ReferenceError: soKetKhoa is not defined`
+   giữa `page.evaluate`, **ở phút thứ 40 của một lượt hồi quy một tiếng**.
+3. **`_tkHien` — hai nhánh sửa HAI NỬA của cùng một lỗi** (ngoài thành / trong thành). Ghép
+   lại thì nửa này đè nửa kia, và mỗi bên đều có bài kiểm xanh chứng minh nửa của mình.
+
+⇒ **Trộn xong thì đừng tin `node --check`.** Đếm lại từng hàm mà mã mới dựa vào, và đọc lại
+chính những bài kiểm mà phép trộn vừa chạm — hai nhánh cùng sửa một bài thì rất có thể chúng
+sửa theo hai hướng khác nhau.
+
+### ⑤ CỬA CHẶN NHANH: `bash tools/sau_tron.sh`
+
+Chạy **ngay sau mỗi `git merge`**, trước khi bỏ một tiếng cho cả bộ. Nó lấy danh sách tệp phép
+trộn vừa chạm rồi: kiểm cú pháp mọi `.js` trong đó · quét mỏ neo xung đột còn sót · **chạy đúng
+những `tests/test_*.js` nằm trong danh sách**. Cả ba lỗi ở ④ đều có bài kiểm liên quan nằm sẵn
+trong danh sách ấy — `soKetKhoa` sẽ chết trong **30 giây** thay vì 40 phút.
+
+**⚠ NÓ KHÔNG THAY BỘ HỒI QUY.** Nó chỉ bắt lớp lỗi SINH RA TỪ PHÉP TRỘN. Push lên `main` vẫn
+phải đủ bốn cổng.
+
+**⚠ VÀ ĐỪNG CHẠY NÓ TRONG LÚC `reg.sh` ĐANG CHẠY.** Đã dẫm ngay trong phiên viết nó: sáu bài
+Playwright cộng một máy chủ tĩnh nữa tranh CPU với lượt hồi quy đang chạy, và `test_autopack`
+hết giờ 260 giây rồi phải chạy lại. Máy này không có GPU nên Playwright ăn CPU thật; hai bộ
+chạy song song là **một bộ làm bộ kia đỏ theo tải** — đúng cái lớp `rc=124` mà tài liệu này đã
+mất bốn lượt để truy. Cửa sau-trộn chạy TRƯỚC, hồi quy chạy SAU, không chồng nhau.
+
+**⚠ VÀ VÌ SAO KHÔNG CHỮA BẰNG LINT:** `tests/**/*.js` **không được ESLint ngó tới** — đo được
+trong `eslint.config.js`, chỉ có `**/*.{ts,tsx}` · `src/components/ui/**` · `api/**/*.ts` ·
+`public/game/game.js`. Nên `no-undef` không bao giờ chạy ở đó, và đúng lớp lỗi "biến mồ côi sau
+khi trộn" không có cửa nào bắt ngoài việc CHẠY bài. Bật `no-undef` cho `tests/` thì phải khai
+hàng trăm hàm của game (bài gọi chúng trong `p.evaluate`), nên cửa đúng là chạy bài.
+
 ## Git — CHỈ CÓ `main`, không có nhánh nào phải đồng bộ
 
 Phát triển trên `main`, push thẳng lên `main`. Hết. Không nhánh phụ, không PR, không mirror.
