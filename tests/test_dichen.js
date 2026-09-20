@@ -85,6 +85,54 @@ const BANG = ['char','inv','bag','skill','quest','qlog','map','settings','help',
   if (tong > TRAN_DOM) fail('③ DOM còn ' + tong + ' dòng tiếng Việt (trần ' + TRAN_DOM + '): ' + chiTiet.slice(0, 6).join(' ‖ '));
   else pass('③ DOM: ' + tong + ' dòng tiếng Việt trên ' + Object.keys(kq.dom).length + ' bảng');
 
+
+  // ── ④ TẦNG KỂ CHUYỆN — bơm kho chữ qua ĐÚNG bộ dịch thật rồi đọc lại ──────────────────
+  // Cách duy nhất chạy cả kho chữ qua `lang.js` mà không phải mở từng bảng: tạo text-node
+  // rời, chờ MutationObserver, đọc lại. ⚠ Trang dẫn truyện phải bơm bằng `innerHTML` rồi
+  // duyệt TỪNG node — bơm bằng `textContent` là đưa cả chuỗi HTML vào một node, nó không
+  // bao giờ khớp mục nào và bài sẽ báo 4/4 còn tiếng Việt trong khi thật ra đã dịch xong.
+  const lore = await p.evaluate(async () => {
+    const nghi = ms => new Promise(r => setTimeout(r, ms));
+    const VN = /[àáâãèéêìíòóôõùúăđĩũơưƯĂĐĨŨƠẠ-ỹÀÁÂÃÈÉÊÌÍÒÓÔÕÙÚ]/;
+    const hop = document.createElement('div');
+    hop.style.cssText = 'position:fixed;left:-99999px;top:0';
+    document.body.appendChild(hop);
+    const dem = async (ds) => {
+      const u = [...new Set(ds.filter(x => typeof x === 'string' && x.trim()))];
+      hop.innerHTML = '';
+      const nodes = u.map(x => { const d = document.createElement('div'); d.textContent = x; hop.appendChild(d); return d; });
+      await nghi(260);
+      return { tong: u.length, con: nodes.filter(d => VN.test(d.textContent)).length };
+    };
+    const kq = {};
+    kq.chieu_mota = await dem(Object.values(window.VOHOC_DEFS || {}).map(v => v.desc));
+    kq.nhiemvu    = await dem([].concat(...(window.QUESTS || []).map(q => [q.name, q.desc])));
+    kq.phutuyen   = await dem([].concat(...(window.SIDE_QUESTS || []).map(q => [q.name, q.desc])));
+    kq.npc_ten    = await dem((window.NPCS || []).map(n => n.name));
+    kq.lop_mota   = await dem(Object.values(window.SECTS || {}).map(x => x.desc));
+    // dẫn truyện: bơm HTML rồi duyệt node, không bơm nguyên chuỗi
+    let dt = 0, dtT = 0;
+    for (const pg of (window.INTRO_PAGES || [])) {
+      hop.innerHTML = (typeof pg === 'string') ? pg : (pg.text || pg.body || pg.t || '');
+      await nghi(260);
+      const w = document.createTreeWalker(hop, NodeFilter.SHOW_TEXT); let x;
+      while (x = w.nextNode()) { const v = x.nodeValue; if (v && v.trim()) { dtT++; if (VN.test(v)) dt++; } }
+    }
+    kq.dantruyen = { tong: dtT, con: dt };
+    hop.remove();
+    return kq;
+  });
+  // Trần đặt bằng ĐÚNG số đo hôm nay, không phải một số tròn — mỗi lần dịch thêm thì hạ nó
+  // xuống. Bốn mặt dưới đã về 0 và phải Ở LẠI 0.
+  const TRAN = { chieu_mota: 43, nhiemvu: 81, phutuyen: 64, npc_ten: 2, lop_mota: 0, dantruyen: 0 };
+  let no = 0;
+  for (const [k, v] of Object.entries(lore)) {
+    no += v.con;
+    if (v.con > TRAN[k]) fail(`④ ${k}: ${v.con}/${v.tong} còn tiếng Việt — vượt trần ${TRAN[k]}`);
+  }
+  if (bad === 0) pass(`④ tầng kể chuyện: nợ ${no} chuỗi, đúng trần đã ghi ` +
+    Object.entries(lore).map(([k, v]) => `${k} ${v.con}/${v.tong}`).join(' · '));
+
   console.log('errors:', JSON.stringify(errs));
   console.log(bad === 0 && errs.length === 0 ? 'PASS' : 'FAIL(' + (bad + errs.length) + ')');
   await b.close();

@@ -1623,6 +1623,133 @@ Object.assign(EXACT, {
 // RULES quét theo THỨ TỰ và cái khớp đầu tiên thắng: thêm vào cuối là thêm một luật chết.
 RULES.unshift([/^×(\d+) trong túi$/, (m, a) => `×${a} in bag`]);
 
+
+/* ═══ TRANG DẪN TRUYỆN + MÔ TẢ 5 LỚP — hai mặt giám khảo đọc TRƯỚC TIÊN ═══════════════════
+   ⚠ Trang dẫn truyện đặt bằng `innerHTML`, nên nó vỡ thành 44 text-node; và `trCompute` còn
+   tách tiếp theo đoạn (`\n\s*\n`). Khoá vì thế là từng ĐOẠN đã trim, không phải cả trang.
+   Chép cả trang làm một khoá là một mục từ điển không bao giờ bắn. */
+Object.assign(EXACT, {
+  // ── trang 1: NẾP KHẮC VỪA ──
+  'NẾP KHẮC VỪA': 'THE MEASURED CUT',
+  'Lunacia sinh ra dưới ánh sáng của Atia. Một thế giới cổ, nơi mọi loài từng sống hoà với đất — cho tới khi Chimera tới áp lấy biên giới.':
+    'Lunacia was born under the light of Atia. An old world, where every kind once lived in step with the land — until the Chimera came and pressed in on the borders.',
+  'Thứ giữ cho Lunacia còn ở được không phải quân đội. Là':
+    'What keeps Lunacia liveable is not an army. It is',
+  'Bug axie khắc Rune lên': 'Bug axies carve Runes into',
+  'đá': 'stone',
+  'Một phiến Rune dựng ở một nơi thì': 'A Rune slab set in a place',
+  // ⚠ Node thật mang cả dấu chấm của câu trước — `trCompute` chỉ trim KHOẢNG TRẮNG,
+  // không trim dấu câu. Khoá thiếu '. ' ở đầu là một mục từ điển không bao giờ bắn.
+  '. Một phiến Rune dựng ở một nơi thì': '. A Rune slab set in a place',
+  'giữ một cái luật': 'holds one law',
+  'ở nơi đó: đàn không tan khi hoảng, rừng không lấn qua bờ, lò không nguội qua đêm.':
+    'in that place: herds do not scatter when startled, the forest does not cross the line, the forge does not go cold overnight.',
+  'Giáo lý của nghề chỉ có một câu —': 'The craft has exactly one creed —',
+  ': khắc vừa đúng cái mà phiến đá gánh nổi, và đừng bao giờ khắc một cái luật phải giữ mãi mãi.':
+    ': carve only what the slab can carry, and never carve a law that must hold forever.',
+
+  // ── trang 2: NHÁT GỌI ──
+  'NHÁT GỌI': 'THE SUMMONING CUT',
+  'Có': 'There are',
+  'bảy phiến Rune Cổ': 'seven Elder Runes',
+  'cắm khắp Lunacia, mỗi vùng một phiến. Chimera không phá nổi một Rune — nhưng chúng':
+    'set across Lunacia, one to a region. The Chimera cannot break a Rune — but they',
+  'mài': 'grind',
+  'nó. Bảy trăm năm mài thì đá mỏng dần.': 'at it. Seven hundred years of grinding wears stone thin.',
+  'Và người biết khắc sâu thì hết. Kho Rune ở tầng sâu nhất hang Bug axie đã im tiếng từ lâu.':
+    'And the carvers who cut deep are gone. The Rune vault in the lowest Bug axie burrow fell silent long ago.',
+  'Nên có kẻ làm đúng cái việc giáo lý cấm:': 'So someone did the one thing the creed forbids:',
+  'khắc một Rune lên trời': 'carved a Rune into the sky',
+  '— xin một người thợ biết làm Rune bền hơn đá.':
+    '— asking for a craftsman who could make a Rune that outlasts stone.',
+  'Rune đó chạy. Nó mở một nhát cắt trên bầu trời, và người ta gọi nhát cắt ấy là':
+    'The Rune worked. It opened a cut across the sky, and that cut is called',
+  'Thứ đi qua không phải một vị thần. Là nguyên':
+    'What came through was not a god. It was an entire',
+  'một con phố': 'street',
+  ': đá lát, lò rèn, quán rượu — khu phố':
+    ': flagstones, a forge, a tavern — the district of',
+  'của một thế giới tên': 'from a world called',
+  ', cùng những người đang đứng trong đó. Người Lunacia dựng tường quanh nó và gọi chỗ này là':
+    ', and the people standing in it. Lunacians walled it round and named the place',
+
+  // ── trang 3: KẺ KHÔNG NHỚ VÌ SAO MÌNH TỚI ──
+  'KẺ KHÔNG NHỚ VÌ SAO MÌNH TỚI': 'THE ONE WHO DOES NOT REMEMBER WHY',
+  'Bảy người lính đi qua Nhát Gọi. Ngươi là một trong bảy.':
+    'Seven soldiers came through the Summoning Cut. You are one of the seven.',
+  'Rune đòi trả bằng chính thứ nó dịch chuyển. Cuộc vượt qua lấy của ngươi tên tuổi, ký ức, gương mặt đồng đội —':
+    'A Rune is paid in the very thing it moves. The crossing took your name, your memory, the faces of your company —',
+  'tất cả, trừ nghề': 'everything but the craft',
+  '. Nghề khắc sâu hơn ký ức, nên nghề sẽ quay lại theo từng cấp.':
+    '. The craft is cut deeper than memory, so it comes back to you level by level.',
+  'Ngươi thuộc một trong': 'You are one of',
+  'năm lớp chiến binh của Vaeldra': 'the five warrior classes of Vaeldra',
+  '▲ — hãy chọn lại con đường ấy.': '▲ — choose that road again.',
+  'Vaeldra không khắc Rune lên đá. Nó khắc': 'Vaeldra does not carve Runes into stone. It carves',
+  'vào thép': 'into steel',
+  '— và thép giữ một Rune lâu hơn đá rất nhiều. Đó là toàn bộ lý do Lunacia cần cái lò, và là lý do mỗi lần ngươi đập một món trang bị lên bậc là một lần ngươi khắc Rune.':
+    '— and steel holds a Rune far longer than stone. That is the whole reason Lunacia needed the forge, and the reason every time you push a piece of gear up a tier you are carving a Rune.',
+  'Hệ nguyên tố chạy theo': 'The element system runs on',
+  'hai chiều, hai nguồn': 'two directions, two sources',
+  '. Đòn ngươi đánh ra lấy hệ của': '. The blow you land takes the element of your',
+  'VŨ KHÍ': 'WEAPON',
+  '— khắc hệ thì': '— a favourable matchup is',
+  '. Còn đòn giáng xuống ngươi thì lấy hệ của': '. The blow that lands on you takes the element of',
+  'CÁI THÂN ngươi đang đeo': 'THE BODY you are wearing',
+  ': mỗi vùng đất là đất của một tộc Axie, và cái thân hợp với đất đó chịu đòn nhẹ hơn hẳn. Đổi thân không cộng cho ngươi một điểm chỉ số nào — nó đổi':
+    ': every region belongs to one Axie tribe, and a body that suits that ground takes noticeably less. Swapping bodies grants you no stat at all — it changes',
+  'vùng đất nào dễ thở': 'which ground goes easy on you',
+
+  // ── trang 4: BẢY RUNE CỔ ──
+  'BẢY RUNE CỔ': 'THE SEVEN ELDER RUNES',
+  'Bảy phiến đá đang mỏng dần, và cái lò trong thành khắc lại được chúng vào thép để chúng bền thêm nghìn năm.':
+    'Seven slabs are wearing thin, and the forge inside the walls can re-cut them into steel to last another thousand years.',
+  'Nhưng': 'But',
+  'trong lúc phiến đá nằm trong lò, cái luật nó giữ thì trống':
+    'while a slab sits in the forge, the law it holds stands empty',
+  '"Từ Rẻo Rừng Corran ra Beast Herd Camp, vào Werebear Woods, qua Plant Tribe Glade, xuống Bug Tribe Tunnels, lên Bird Tribe Heights, ra Reptile Sunstone Flats — cho tới Dusk Marsh, nơi phiến thứ bảy thắp đường về Cây Hồn."':
+    '"From Corran Woodstrip out to Beast Herd Camp, into Werebear Woods, across Plant Tribe Glade, down into Bug Tribe Tunnels, up to Bird Tribe Heights, out to Reptile Sunstone Flats — and on to Dusk Marsh, where the seventh slab lights the road to the Soul Tree."',
+  'Rune thứ bảy là thứ chỉ đường cho hồn quay về. Gỡ nó ra thì suốt thời gian đó, không một hồn nào ở Lunacia tìm được đường.':
+    'The seventh Rune is what shows the dead the way home. Take it out, and for as long as it is gone not one soul in Lunacia can find the road.',
+  'Những Axie ở đây không gọi ngươi tới để chứng kiến chuyện đó.':
+    'The Axies here did not call you across to watch that happen.',
+  'Hãy cứu lấy chúng.': 'Save them.',
+
+  // ── mô tả 5 lớp (màn chọn nhân vật — không có thẻ HTML nên một khoá là đủ) ──
+  'Giáp tấm nặng, mũ trụ có sừng, đại kiếm hai tay. Dark Knight đứng mũi chịu sào, nuốt trọn đòn của cả bầy rồi trả lại bằng một nhát bổ chậm mà không gì cản nổi. Tiềm năng: sát thương từ Sức Mạnh, và Nhanh Nhẹn để đứng vững.':
+    'Heavy plate, a horned helm, a two-handed greatsword. The Dark Knight stands at the front, swallows a whole pack’s worth of punishment and answers with one slow cleave nothing stops. Potential: damage from Strength, and Agility to stay standing.',
+  'Cung dài, giáp da nhẹ, chân bước không thành tiếng. Sylvan Ranger rót tên từ ngoài tầm với, đồng thời phủ phù trợ lên cả đội — vừa là sát thủ vừa là chỗ dựa. Tiềm năng: Nhanh Nhẹn lo cả sát thương lẫn phòng thủ — một dòng là đủ.':
+    'A longbow, light leather, footsteps that make no sound. The Sylvan Ranger pours arrows in from beyond reach while laying buffs over the whole party — killer and backbone at once. Potential: Agility carries both damage and defense — one stat is enough.',
+  'Áo thụng trùm kín, quyền trượng nạm ngọc, thân thể mỏng như giấy. Dark Wizard đứng xa nhất chiến trường và gọi độc tố cùng thiên thạch xuống thay mình. Tiềm năng: sát thương từ Năng Lượng, và Nhanh Nhẹn để khỏi vỡ.':
+    'A deep hood, a jewelled staff, a body thin as paper. The Dark Wizard stands furthest back on the field and calls down venom and meteors in his place. Potential: damage from Energy, and Agility so you do not shatter.',
+  'Nửa giáp nửa vải, một vai để trần, đại đao bản rộng cháy lửa. Spellblade vừa chém như hiệp sĩ vừa niệm như pháp sư — không cần chờ tới cấp 10 để mạnh. Tiềm năng: sát thương chính từ Nhanh Nhẹn, Sức Mạnh chỉ là dòng phụ.':
+    'Half plate, half cloth, one shoulder bare, a broad burning blade. The Spellblade cuts like a knight and casts like a mage — no waiting until level 10 to matter. Potential: damage mainly from Agility, with Strength as the secondary stat.',
+  'Vương miện năm chấu, giáp đen ánh lam, quyền trượng chỉ huy. Dark Lord không bao giờ ra trận một mình — hắn hiệu triệu, và chiến trường tự sạch. Tiềm năng: sát thương từ Năng Lượng, dặm Nhanh Nhẹn cho phòng thủ.':
+    'A five-pointed crown, black armour with a blue sheen, a staff of command. The Dark Lord never takes the field alone — he summons, and the field clears itself. Potential: damage from Energy, with some Agility for defense.',
+});
+
+
+/* ⚠ BĂNG-RÔN SỰ KIỆN THEO GIỜ THẬT — nguồn RÒ THEO ĐỒNG HỒ, không theo thao tác.
+   Hai chuỗi Vực Nứt chỉ hiện trong cửa sổ 15 phút trước mốc giờ, nên bài kiểm chạy lúc
+   khác thì không thấy chúng — tức nó XANH vì may, rồi đỏ vào đúng một khung giờ. Dịch là
+   cách duy nhất làm bài kiểm hết phụ thuộc vào lúc chạy. */
+Object.assign(EXACT, {
+  '✹ VỰC NỨT SẮP TOÁC MỞ': '✹ THE RIFT IS ABOUT TO TEAR OPEN',
+  '✹ CHÚA TỂ VỰC NỨT GIÁNG THẾ': '✹ THE RIFT LORD DESCENDS',
+  '✹ Vực nứt đã khép': '✹ The rift has closed',
+  'Chúa Tể rút về bên kia vết nứt cùng chiến lợi phẩm.':
+    'The Lord withdrew through the tear, spoils and all.',
+});
+// ⚠ `unshift`, KHÔNG `push` — luật có sẵn `/^(\d+) phút (.*)$/` khớp trước và trả về
+// "15 min: nữa — …", tức nuốt mất luật viết sau. Đây là lần THỨ HAI cùng cái bẫy trong đợt
+// này: RULES quét theo thứ tự, cái khớp đầu tiên thắng.
+RULES.unshift(
+  [/^(\d+) phút nữa — Chúa Tể Vực Nứt giáng xuống MỌI bãi săn \(cần cấp (\d+)\+\)\. Vá giáp, nạp thuốc!$/,
+    (m, a, b) => `${a} minutes out — the Rift Lord drops on EVERY hunting ground (level ${b}+ required). Patch your armour, stock potions!`],
+  [/^Vực nứt toác ở mọi bãi săn — (\d+) phút, hạ tối đa (\d+) con để cướp Box Kundun lớn!$/,
+    (m, a, b) => `Rifts tear open on every hunting ground — ${a} minutes, kill up to ${b} to take the big Box Kundun!`]
+);
+
 function tr(s) {
   if (lang !== 'en' || !s || typeof s !== 'string') return s;
   const cached = _trCache.get(s);
