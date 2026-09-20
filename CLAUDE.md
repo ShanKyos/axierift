@@ -3372,6 +3372,145 @@ mặc định và mệnh đề xanh kể cả khi `loadGame` ép lại thanh).
 ⚠ Dòng chân khung chi tiết phải nói đúng: nó từng viết *"Không nằm trên thanh chiêu (4 ô cố
 định)"*. Câu đó nay là lời nói dối ngay ở ô mà người chơi vừa tự kéo vào.
 
+## ✦ KHẮC THÂN — sáu ĐƯỜNG KHẮC, và vì sao nó KHÔNG phải "kinh mạch"
+
+Chủ dự án đưa ảnh mẫu bảng mạch của một game kiếm hiệp và chốt: *"Văn hoá phương Tây cũng có
+kinh mạch nên sử dụng được. Tuy nhiên thay vì 8 mốc như trong hình thì nó hơi kiếm hiệp, hãy
+dựng layout tính năng của phần này trước rồi mình sẽ fill art vào sau."*
+
+**CƠ CHẾ mượn được, TỪ VỰNG thì không.** Bộ từ của ảnh mẫu nằm nguyên trong danh sách cấm của
+Quy tắc số 1. Nên hệ này neo vào canon ĐÃ CÓ chứ không bịa một danh từ nào:
+
+> Vaeldra khắc Rune vào **thép** — mỗi lần rèn là một lần khắc.
+> DRUE không khắc vào đá, không khắc vào thép: **hắn khắc vào chính mình**.
+
+Người chơi qua Nhát Gọi mất ký ức chứ không mất **nghề**, nên họ biết khắc. Khắc lên thân là đi
+đúng đường DRUE đã đi — vừa là lý do nó mạnh, vừa là lý do nó có giá, và nó nối thẳng vào kẻ thù
+chính của chuỗi nhiệm vụ. ⚠ **Đừng "Việt hoá cho sát ảnh mẫu"**: mỗi chữ kéo về là kéo cả hệ về
+lại kiếm hiệp.
+
+**SÁU, KHÔNG PHẢI TÁM** — tám cái tên trong ảnh là một khái niệm y học Trung Hoa. Sáu Đường Khắc
+ở đây là sáu **vùng thân** mà một thợ khắc phương Tây sẽ khắc lên. Giải phẫu, không phải huyền học.
+
+| Đường Khắc | vùng | thuộc tính | trọn đường |
+|---|---|---|--:|
+| Sống Lưng | lưng | `hpPct` Sinh Lực | +12% |
+| Nắm Tay | tay phải | `atkPct` Công Kích | +12% |
+| Gân Chân | chân | `aspdPct` Tốc Đánh | +8% |
+| Lồng Ngực | ngực | `dmgred` Giảm Sát Thương | +5 |
+| Vầng Trán | đầu | `critDmg` Sát Thương Bạo | +15% |
+| Lòng Tay | tay trái | `pierce` Xuyên Giáp | +10% |
+
+**⚠ KHÔNG DÙNG `crit` VÀ `eva` LÀM PHẦN THƯỞNG.** Cả hai là tỉ lệ CÓ TRẦN (0,65 / 0,45) và ở full
+BiS đã kịch trần từ trang bị — đo được trong phiên dựng hệ này: `crit 0,650 · eva 0,450`. Cộng
+thêm ở đó là cộng vào 0, tức dựng lại đúng "nợ đã biết" của `ps_defrate`/`ps_crit`. Vầng Trán vì
+thế trả `critDmg` (không trần).
+
+**⚠ MỌI KHOÁ PHẢI NẰM TRONG SỔ `P` của `calcDerived`.** `khacAgg()` đổ sổ đúng lối `masteryAgg()`
+(`for (const k in KZ) if (k in P) P[k] += KZ[k]`), mà vòng đó **bỏ qua khoá lạ trong im lặng** —
+y như `applyLine()`. Khai một khoá ngoài sổ là bảng hiện "+12% Công Kích" mà chẳng có tác dụng gì.
+
+### Ngân sách suy từ SỐ ĐO, không từ cảm giác
+
+Đo trong phiên này (Dark Knight, `traits` rỗng, `personality` trung tính):
+
+| | atk | máu |
+|---|--:|--:|
+| cấp 120 tay không | 81 | 2.299 |
+| cấp 120 full BiS | 1.717 | 28.845 |
+
+Tức trang bị là **×21 công · ×12,5 máu**. Khắc trọn cả sáu cho **+12,3% công · +12,0% máu** —
+ngang một bậc trang bị: đáng cày, không thay được trang bị. Cùng luật đã ghi cho mastery: hệ
+nuôi-lớn **khuếch đại** trang bị chứ không dựng một trục song song nuốt nó.
+
+Trọn bộ 72 Dấu Khắc tốn **2.868.974 Lumen + 111.974 Bản Năng**, cấp yêu cầu trải **25 → 119**.
+Đó là chỗ lấp "99 cấp sau không có hệ thống nào mở ra" của mục chẩn đoán gốc.
+
+**Số suy bằng công thức, TÊN viết tay.** `khacGiaTriNut`/`khacCapNut`/`khacGiaNut` dẫn ra 72 con
+số; khai tay là 72 chỗ để lệch. Ngược lại tên từng Dấu Khắc thì phải viết tay — sinh bằng máy
+("Dấu Khắc 7") thì cả bảng đọc ra một cái bảng tính.
+
+### Bốn luật của cơ chế
+
+- **`khacCan(id)` là CỬA DUY NHẤT** hỏi "khắc được chưa" — nút bấm và phần vẽ cùng gọi nó, nên
+  lý do người chơi ĐỌC và luật máy THỰC THI không lệch được. Cùng lối `masteryKhoa` · `knOHopLe`.
+- **MỘT CHIỀU, KHÔNG CÓ NÚT TẨY.** Mastery có `masteryRespec` vì ở đó có HƯỚNG để chọn sai (hai
+  nhánh loại trừ). Ở đây không có: rồi ai cũng khắc trọn cả sáu, thứ duy nhất người chơi quyết là
+  THỨ TỰ. Thêm nút tẩy vào một hệ không có lựa chọn sai là thêm một nút không ai bấm — và canon
+  nói thẳng: nét khắc trên thân không gỡ ra được.
+- **`lvPeak()`, KHÔNG phải `player.level`.** Tái Sinh kéo `level` về 1; khoá theo `level` là cướp
+  lại thứ người chơi đã trả tiền.
+- **`player.khi` (Bản Năng) là SỐ THỰC** — nó hồi liên tục nên gần như lúc nào cũng có phần lẻ.
+  Đọc thẳng thì bảng in ra `5.000.000,05 Bản Năng`, đúng rác dấu phẩy động mà ô Thể Lực đã phơi
+  ra một lần. `khacBanNang()` làm tròn XUỐNG ở **cửa đọc**, không ở từng chỗ in: làm ở chỗ in thì
+  con số người chơi THẤY và con số máy TRỪ lệch nhau đúng một nấc.
+
+### ⚠ TAB HIỆN Ở CẤP 6, CƠ CHẾ MỞ Ở CẤP 25 — hai con số khác nhau, cố ý
+
+Bản đầu tôi để `CHAR_TABS.lv = KHAC_LV`. Chụp ra thì `renderCharPanel` **đá tab về Thông Tin**
+(nó tự hạ tab đang chọn khi `sysUnlocked` sai), nên cái chip `🔒 ✦ Khắc Thân` là một **nút bấm
+vào không ra gì** — đúng vết sẹo `openEvoPanel` của `test_cayky`. Và nhánh "chưa mở" trong
+`renderKhacThan` khi ấy là **mã chết**: không đường nào tới được nó.
+
+⇒ Tab hiện từ cấp 6 (bằng Thân Axie, nên cấp mở của cả nhóm KHÔNG đổi), nội dung mới gác ở
+`khacMo()`. Người chơi đọc được hệ này tồn tại và mở ở đâu từ rất sớm — đúng thứ mục "HAI TRỤC
+AXIE PHẢI ĐƯỢC DẠY" đòi. `test_khacthan ⑧` gác cả hai con số.
+
+### Layout — ART CHƯA CÓ THÌ VẼ Ô CHỜ CÓ NHÃN
+
+```
+┌ đầu bảng: tiến độ N/72 · ví Lumen · ví Bản Năng ───────────────────┐
+├─ rail ──────┬─ sợi Dấu Khắc (zigzag) ──────┬─ bóng thân (ô chờ art)┤
+│ Toàn Bộ     │      ○──                     │   ┌──────────┐        │
+│ Sống Lưng ✓ │        ╲                     │   │  <art>   │        │
+│ Nắm Tay   + │         ──○                  │   └──────────┘        │
+├─────────────┴──────────────────────────────┴───────────────────────┤
+│ khung đọc: Dấu Khắc kế tiếp · thuộc tính · giá · [ KHẮC ]           │
+└────────────────────────────────────────────────────────────────────┘
+```
+
+- **Ô chờ art**: `assets/ui/khac_<id>.webp`, mỗi Đường một tấm. Thả tệp vào là ảnh tự đè lên
+  (`onerror` ẩn thẻ `img` để lộ ô chờ) — **không sửa một dòng mã nào**. Ô chờ cố ý vẽ thô (gạch
+  chéo + nhãn) để không ai tưởng là art thật rồi để nguyên, đúng lối `iaChuaArt`.
+- **Chấm và nét nối KHÔNG phải art** — chúng là khung giao diện, cùng loại với mũi tên SVG của
+  cây kỹ năng đang chạy. Quy tắc số 3 nói về art (trang bị, nhân vật, cảnh vật), không về đường
+  kẻ của một bảng.
+- **Bề rộng/cao SUY TỪ HÌNH** (`khacKho()`), đừng chép cứng: đổi `KHAC_MOI_DUONG` là khung tự
+  giãn. Chép cứng thì thêm hai Dấu Khắc là hai ô cuối rơi ra ngoài SVG và biến mất không một lỗi.
+- **Cột giữa phải `minmax(0,1fr)`** — thiếu nó thì SVG đẩy cả hàng tràn ra ngoài bảng rồi bị
+  `overflow:hidden` xén, đúng lỗi bản đồ góc màn đã dẫm. `test_khacthan ⑦` đo ở BA bề rộng.
+- **Dấu `+` xanh ở rail = khắc được NGAY**, cùng quy ước với dấu `+` của cây kỹ năng — không phải
+  một ký hiệu mới người chơi phải học. Đường đã trọn thì ghi `✓ trọn` chứ không chỉ đổi MÀU: ở
+  cỡ 11px một sắc vàng nhạt trên nền tối gần như không phân biệt được với chữ thường.
+
+### ⚠ CỐ Ý KHÔNG LÀM: đổi Bản Năng lấy EXP theo lượt mỗi ngày
+
+Ảnh mẫu có dòng *"Mỗi ngày có 24 lần nhận kinh nghiệm, hiện còn 1253 lần"*. Không bê sang: đó là
+một hệ lặp mỗi ngày THỨ TƯ đứng cạnh Truy Nã + Vỉa + ba sự kiện theo giờ thật, tức đúng bệnh nhân
+bản ở đầu tài liệu này. Thưởng "trọn cả sáu" vì thế là **+5% EXP vĩnh viễn** — một lần, không
+phải một nhịp ngày mới.
+
+Gác: **`tests/test_khacthan.js`** (8 mệnh đề, **cả tám đã thử ngược và đều đỏ**) — ① không một chữ
+tu tiên nào trong 8 trang đã vẽ + toàn bộ bảng dữ liệu · ② chỉ số THẬT đổi theo (đo `player.atk`,
+không đọc sổ) · ③ một chiều · trừ đúng · từ chối thì không trừ gì · ④ thưởng trọn đường và trọn
+cả sáu, thiếu một nét là mất · ⑤ save đời trước · ⑥ save rác bị kẹp · ⑦ không tràn bảng ở ba bề
+rộng · ⑧ cấp yêu cầu với tới được.
+
+#### ⚠ HAI QUE DÒ HỎNG CỦA CHÍNH BÀI KIỂM — cả hai cho một mệnh đề XANH VÌ LÝ DO SAI
+
+1. **Hạ `player.level` mà quên `player.lvPeak`.** `khacCan` hỏi `lvPeak()` — mốc DÍNH — nên cảnh
+   "cấp thấp" chưa bao giờ dựng được, và bài báo *"khắc được nét chưa tới cấp"* trên mã hoàn toàn
+   đúng. Nay hạ cả hai, và có chốt tự kiểm đòi `lvPeak()` phải thật sự tụt trước khi chấm.
+2. **`delete raw.khac` Ở GỐC BẢN LƯU.** Bản lưu có NHIỀU Ô NHÂN VẬT: dữ liệu nằm ở
+   `slots[active].player`. Phép xoá vì thế xoá một thứ chưa bao giờ ở đó, và mệnh đề "save đời
+   trước" **XANH trong khi nó chưa dựng được cảnh lấy một lần**. Chốt `daXoa` là thứ bắt được —
+   *trước khi tin một mệnh đề xanh, hỏi xem phép dựng cảnh của nó có chạm đúng chỗ không.*
+
+⚠ **Và `test_nowuxia2` mục D quét cả CHÚ THÍCH, không chỉ chuỗi người chơi thấy.** Khối chú thích
+đầu tiên của tôi giải thích luật bằng cách **nêu đích danh** mấy từ bị cấm ⇒ đỏ 3 chỗ. Sửa bằng
+cách đi theo bài kiểm, không nới nó: trỏ về danh sách ở CLAUDE.md thay vì chép lại. Chép lại vốn
+cũng là một bản sao thứ hai sẽ lệch — đúng thứ tài liệu này cảnh báo khắp nơi.
+
 ## ≡ THANH DƯỚI CHIA BA CỤM · F6 LÀ **SẢNH**, KHÔNG PHẢI BẢNG PHÍM TẮT
 
 Chủ dự án đưa ảnh mẫu MU và chốt bố cục. Hai đợt việc, ghi chung vì chúng dùng chung một luật.
@@ -3791,15 +3930,40 @@ phép thử ngược phải DUY NHẤT**, và phải đếm số lần xuất hi
 ## ⚔ LỰC CHIẾN · 🎁 NHẬN QUÀ · ✹ DẢI TRẠNG THÁI
 
 Ba thứ ship cùng một đợt theo ảnh mẫu chủ dự án đưa. Gác chung: **`tests/test_lucchien.js`**
-(9 mệnh đề, ba phép thử ngược đều đỏ).
+(10 mệnh đề, sáu phép thử ngược đều đỏ).
 
 | | ở đâu |
 |---|---|
 | Công thức | `LC_HE` + **`lucChien(p)`** — cửa DUY NHẤT |
 | Phân rã | `LC_NGUON` + **`lcPhanRa()`** · chi tiết `lcChiTiet(id, tongDong)` |
-| Bảng | `renderLucChien()` → `#panel-lucchien` · nút HUD `#btn-lc` trong `#cd-nut` |
+| Bảng | `renderLucChien()` → `#panel-lucchien` · nút HUD `#btn-lc` trong **`#lc-khung`** |
 | Quà | `QUA_DK` · `QUA_SK` · `renderQua()` → `#panel-qua` · `quaNhanMoc()` · `quaNhanHet()` |
 | Trạng thái | **`TT_DINH`** + `capNhatTrangThai()` → `#trang-thai` (cột PHẢI, trên bản đồ nhỏ) |
+
+### ⌗ KHUNG LỰC CHIẾN LÀ MỘT UI RIÊNG, KHÔNG PHẢI MỘT CHIP NHÉT VÀO KHUNG CHÂN DUNG
+
+Bản đầu đặt hai nút trong `#cd-nut`, nằm bên trong `#cd-phai` — tức cùng một cột với hai thanh
+máu/mana. Chủ dự án nhìn ảnh chụp và chốt: *"cho nó ra ngoài hẳn 1 UI kế bên thanh máu đi"*.
+Nay `#lc-khung` là một khung riêng — vành đồng và nền lấy **đúng công thức của `#chan-dung`** —
+và cả hai nằm trong một hàng `#hud-dau`.
+
+⚠ **`width:min(238px,40vw)` DỜI TỪ `#hud-left` XUỐNG `#chan-dung`.** Cột trái nay chứa cả một
+hàng rộng hơn khung chân dung; khoá bề rộng ở cột là khung Lực Chiến bị bóp hoặc tràn. Con số
+giữ nguyên, chỉ đổi chỗ nó bám vào ⇒ hai thanh máu/mana không đổi lấy một điểm ảnh nào.
+
+⚠ **`margin-bottom` CỦA MỘT KHỐI TÍNH VÀO CHIỀU CAO HÀNG.** `#chan-dung` giữ `margin-bottom:5px`
+thì `align-items:stretch` kéo khung bên cạnh cao thêm đúng 5px — đo được **83 vs 88**, hai mép
+dưới lệch nhau. Lề ngoài phải nằm trên `#hud-dau`. *Lề của một khối không được là thứ quyết định
+chiều cao khối bên cạnh nó.*
+
+⚠ **ĐO BỀ RỘNG BẰNG NHÃN DÀI NHẤT, ĐỪNG ĐO BẰNG NHÃN ĐẦU TIÊN.** Ở 106px thì "LỰC CHIẾN" vừa,
+còn "NHẬN QUÀ" — sau khi chừa 13px cho chấm đỏ — đọc thành **"NHẬN …"**. Nay 120px.
+`test_lucchien §6b` hỏi `scrollWidth > clientWidth` chứ không nhìn ảnh chụp.
+
+⚠ **`§6` giữ BA VẾ, bỏ vế nào cũng lọt một kiểu hỏng:** không lồng trong `#chan-dung` (hỏi cây
+DOM, không suy từ toạ độ) · không đè lên khung chân dung · cao bằng nó. Ba phép thử ngược đều đỏ.
+
+Màn hẹp (≤820px) thì bỏ nhãn chữ, khung tụt về 58px — để không đẩy chân dung ra khỏi mép trái.
 
 ### ⚠ NĂM DÒNG PHÂN RÃ SUY TỪ HỆ ĐANG CHẠY, KHÔNG CHÉP TỪ ẢNH MẪU
 
@@ -5790,6 +5954,7 @@ suýt kết luận "giả thuyết sai". Bỏ hai dòng đặt lại ấy thì r
 | ~~`test_uigothic ⑥`~~ | *"ở 30% máu, đầu TRÁI thanh cũng tối theo"* | ✅ **ĐÃ SỬA TẬN GỐC, không còn trong bảng này.** Dòng cũ ghi *"thanh máu có thành phần đập theo thời gian"* — **sai**: thanh không đập. Mẫu "đầy" đổi giữa các lượt vì `applyTestBoost()` bốc đồ NGẪU NHIÊN ⇒ `maxHp` khác ⇒ **chữ số khác**, mà que dò đọc đúng một điểm ở `(0,08 · giữa)` — tức đọc thẳng vào con số máu do `.cd-thanh span` vẽ đè. Nay đọc **đỉnh độ đỏ của cả CỘT** (chữ trắng và bóng đen chỉ kéo độ đỏ xuống) ⇒ năm lượt ra đúng cùng một bộ số. Xem mục thanh máu/mana ở khối UI Gothic. *Một bài đỏ theo xúc xắc vẫn phải TRUY tới nguyên nhân — lần này "xúc xắc" là một que dò hỏng, và chính nó che một mệnh đề rỗng suốt nhiều phiên.* |
 | `test_gearlook` | *"cache chân dung không đổi khi thay đồ"* (`cache_doiTheoDo: false`) | **xanh 13/13 lượt chạy lẻ** — 3 trên cây này · 3 trên cây trước · 3 trên chính BẢN ĐÓNG BĂNG của lượt hồi quy đã đỏ · 4 lượt nữa dưới tải CPU giả (6 vòng bận trên 4 lõi) — mà chỉ đỏ **bên trong** một lượt hồi quy đầy đủ. Xanh ở `reg-mg`(236 bài) và `reg-now`. Nó là một cuộc đua TẢI ART: hai thẻ so nhau là *đủ giáp giai 7* với *trần trụi giai 1*, và nếu lớp giáp giai 7 chưa về kịp thì cả hai cùng vẽ ra thân trần ⇒ hai data-URL trùng khít. **Chưa dựng lại được cảnh đỏ**, nên đừng chép câu này như một kết luận đã đóng; thứ đã chứng minh được là nó không đến từ một diff chỉ chạm `MOBS`/`vung` |
 | `test_qablock` | *"dựng cảnh sai: người chơi không ăn đòn nào"* rồi kéo theo 2 FAIL nữa | **xanh 8/8 lượt liên tiếp** khi chạy riêng · chính chú thích trong bài đã ghi nó nhạy với mạch ngẫu nhiên (*"từng xanh chỉ vì may"*) — con quái phải kịp đánh trúng trong 40 khung, máy bận là trượt. Phân biệt bằng `git diff -U0 … | grep '^@@'`: nếu diff không chạm `update`/`hurtPlayer`/`swingFeel`/`shakeDir` thì nó không thể là của mình |
+| `test_canbanglop` | *"chênh ST cao/thấp 3.63× > trần 3.6× (Dark Knight vs Dark Wizard)"* | **đỏ 2/10 trên CẢ HAI cây** trong một phép A/B ghép đôi: cùng một `game.js` byte-cho-byte, chỉ khác layout HUD ⇒ không phải của ai cả. Giá trị đo trải **2,26 – 4,27×** quanh một cái trần đặt ở **3,6** — tức ngưỡng nằm GIỮA dải nhiễu, nên nó đỏ theo xúc xắc vĩnh viễn. Đỉnh tệ nhất (4,27) rơi vào cây ĐỐI CHỨNG. Muốn dứt điểm thì cộng dồn nhiều lượt rồi lấy trung vị (lối `test_hethu §2`), đừng nới trần — nới trần là bỏ luôn thứ nó gác |
 
 ⚠ **VÀ QUE DÒ CỦA CHÍNH PHÉP PHÂN BIỆT ẤY CŨNG HỎNG ĐƯỢC — tôi vừa dẫm.** Nhiều bài đọc `../public/game/game.js` bằng đường dẫn TƯƠNG ĐỐI, nên chạy chúng từ một thư mục không có `public/` bên cạnh là chết `ENOENT` **trước khi một khẳng định nào chạy** — mà `rc=1`, nên nó đọc ra đúng như *"đỏ 3/3, tất định"*. Tôi đã suýt kết luận ngược hẳn. Dựng cảnh cho đúng: một thư mục có `tests/` **và** `public/` cạnh nhau — nhưng ⚠ **`tests/` phải là BẢN CHÉP THẬT, symlink thì không được**: Node phân giải đường thật rồi gặp `package.json` khai `"type":"module"` ⇒ chết ở `require is not defined` **trước khi một khẳng định nào chạy**, và `rc=1` lại đọc ra y hệt *"đỏ 3/3 trên cả hai cây"*. Đã dẫm đúng thế và suýt tuyên bố hai bài là đỏ-có-sẵn mà không có một bằng chứng nào. (`public/` thì symlink được — nó chỉ bị đọc bằng `fs` và qua HTTP, không dính phép tra `package.json`.) ⇒ **Chốt tự kiểm bắt buộc cho mọi phép chạy lẻ: đếm số dòng khẳng định trong log; bằng 0 thì đó là QUE DÒ hỏng, không phải bài đỏ.** Cùng luật với ba bài chép cứng cổng ở trên: *trước khi tin một lượt chạy lẻ, hỏi log xem nó có tới được trang không.*
 

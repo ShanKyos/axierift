@@ -119,26 +119,52 @@ const PORT = process.argv[2] || '8853';
     if (ok) pass(`§5 bốn trục đều có sợi dây: đồ ${r.day.do} · kỹ năng ${r.day.kn} · Đại Thành ${r.day.dt} · Tái Sinh ${r.day.ts}`);
   }
 
-  // ── §6 NÚT HUD: có thật, và số trên nút = lucChien() ───────────────────────────────
+  // ── §6 KHUNG HUD: là một UI RIÊNG kế bên thanh máu, không lồng vào khung chân dung ──
+  // Chủ dự án chốt "cho nó ra ngoài hẳn 1 UI kế bên thanh máu". Bản đầu nhét nút vào `#cd-phai`
+  // — tức cùng cột với hai thanh máu/mana — nên mệnh đề cũ gác "nút nằm TRÊN thanh máu". Nay
+  // gác đúng hợp đồng mới: khung đứng RIÊNG, ở BÊN PHẢI thanh máu, KHÔNG đè lên khung chân
+  // dung, và cao bằng nó. Ba vế, vì bỏ vế nào cũng lọt một kiểu hỏng: thiếu "không đè" thì
+  // khung chồng lên thanh máu vẫn xanh; thiếu "cao bằng" thì hai khối lệch mép dưới.
   {
     const r = await p.evaluate(() => {
       closePanels(); updateHud();
       const b2 = document.getElementById('lc-so-hud');
-      if (!b2) return { thieu:true };
+      const khung = document.getElementById('lc-khung');
+      if (!b2 || !khung) return { thieu:true };
       const soNut = Number(b2.textContent.replace(/\D/g, ''));
+      const k = khung.getBoundingClientRect();
+      const cd = document.getElementById('chan-dung').getBoundingClientRect();
+      const hp = document.getElementById('orb-hp').getBoundingClientRect();
       const nut = document.getElementById('btn-lc');
-      const hop = nut.getBoundingClientRect();
-      const thanhMau = document.getElementById('orb-hp').getBoundingClientRect();
+      // KHÔNG lồng trong khung chân dung — hỏi cây DOM, không suy từ toạ độ
+      const long = document.getElementById('chan-dung').contains(khung);
       nut.click();                        // bấm THẬT — không gọi hàm
       const mo = !document.getElementById('panel-lucchien').classList.contains('hidden');
-      return { soNut, that: lucChien(player), mo,
-               trai: hop.left <= thanhMau.left + 40, gan: Math.abs(hop.bottom - thanhMau.top) < 30 };
+      return { soNut, that: lucChien(player), mo, long,
+               keBen: k.left >= hp.right - 2,
+               khongDe: k.left >= cd.right - 1,
+               cungCao: Math.abs(k.height - cd.height) <= 2,
+               k: Math.round(k.left), cdR: Math.round(cd.right) };
     });
-    if (r.thieu) fail('§6 không có nút Lực Chiến trên HUD');
-    else if (r.soNut !== r.that) fail(`§6 số trên nút ${r.soNut} ≠ lucChien() ${r.that}`);
+    if (r.thieu) fail('§6 không có khung Lực Chiến trên HUD');
+    else if (r.long) fail('§6 khung Lực Chiến vẫn LỒNG trong #chan-dung — phải là UI riêng');
+    else if (r.soNut !== r.that) fail(`§6 số trên khung ${r.soNut} ≠ lucChien() ${r.that}`);
     else if (!r.mo) fail('§6 bấm nút Lực Chiến không mở được bảng — nút chết');
-    else if (!r.trai || !r.gan) fail(`§6 nút không nằm sát bên trái/trên thanh máu (trái=${r.trai} gần=${r.gan})`);
-    else pass(`§6 nút HUD: ${r.soNut}, bấm mở được bảng, nằm sát thanh máu`);
+    else if (!r.keBen) fail('§6 khung không nằm kế BÊN PHẢI thanh máu');
+    else if (!r.khongDe) fail(`§6 khung đè lên khung chân dung (trái ${r.k} < phải ${r.cdR})`);
+    else if (!r.cungCao) fail('§6 khung không cao bằng khung chân dung — hai mép dưới lệch nhau');
+    else pass(`§6 khung riêng ở x=${r.k}, kế thanh máu, cao bằng chân dung, số ${r.soNut}, bấm mở được bảng`);
+  }
+  // ── §6b nhãn trong khung KHÔNG được bị cắt cụt ────────────────────────────────────
+  // Khung rộng cố định mà nhãn là chữ Việt có dấu, nên "NHẬN QUÀ" rất dễ thành "NHẬN …" sau
+  // khi chừa chỗ cho chấm đỏ — đã xảy ra ở 106px. Hỏi scrollWidth, đừng nhìn ảnh chụp.
+  {
+    const r = await p.evaluate(() => [...document.querySelectorAll('#lc-khung > button > span')]
+      .map(e => ({ txt:e.textContent, cut: e.scrollWidth > e.clientWidth + 1 })));
+    const cut = r.filter(x => x.cut);
+    if (!r.length) fail('§6b không thấy nhãn nào trong khung Lực Chiến');
+    else if (cut.length) fail(`§6b nhãn bị cắt cụt: ${cut.map(x => x.txt).join(', ')}`);
+    else pass(`§6b ${r.length} nhãn đủ chỗ: ${r.map(x => x.txt).join(' · ')}`);
   }
 
   // ── §7 NHẬN QUÀ: bấm nút thật → đồ vào túi, cờ vào save, nút mờ đi ────────────────
