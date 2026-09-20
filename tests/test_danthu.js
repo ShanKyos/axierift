@@ -74,7 +74,7 @@ let bad = 0; const fail = m => { bad++; console.log('FAIL ' + m); };
       const loai = MAPS[mid].thu.loai;
       return { mid, doiNgay: !(a && b2 && a.x === b2.x && a.y === b2.y),
         doiLuot: !(a && b3 && a.x === b3.x && a.y === b3.y),
-        ganNhat: gan[0], trongCan: inObstacle(mid, bai.x, bai.y, 60),
+        ganNhat: gan[0], soBai: gan.length, trongCan: inObstacle(mid, bai.x, bai.y, 60),
         n: thuDan.length, khai: MAPS[mid].thu.dan,
         trongMobs: thuDan.filter(t => mobs.includes(t)).length,
         coMau: thuDan.filter(t => t.hp != null || t.maxHp != null || t.def).length,
@@ -84,12 +84,20 @@ let bad = 0; const fail = m => { bad++; console.log('FAIL ' + m); };
         chuDao: loai[0], demChuDao: dem[loai[0]] || 0,
         demKhac: Math.max(0, ...loai.slice(1).map(x => dem[x] || 0)) };
     }, MID);
-    console.log(`   ${r.mid.padEnd(10)} ${r.n}/${r.khai} con · ${r.soLoai} loài · chủ đạo ${r.chuDao} ${r.demChuDao} vs ${r.demKhac} · bãi cách quái ${r.ganNhat}px`);
+    console.log(`   ${r.mid.padEnd(10)} ${r.n}/${r.khai} con · ${r.soLoai} loài · chủ đạo ${r.chuDao} ${r.demChuDao} vs ${r.demKhac} · bãi cách quái ${r.soBai ? r.ganNhat + 'px' : '— không bãi quái nào'}`);
     if (r.doiNgay) fail(`① [${r.mid}] bãi cỏ ĐỔI CHỖ theo ngày — nó là mốc định hướng, chỉ Vỉa Cốt được đổi theo ngày`);
     if (r.doiLuot) fail(`① [${r.mid}] bãi cỏ đổi chỗ giữa hai lần bốc trong CÙNG một ngày — hạt không bốc từ tên map`);
     // Nới 90px: chỗ đặt tự nới khi map chật (`noi = 90` sau 450 lượt thử), nên đòi đúng ngưỡng là
     // đòi một thứ chính mã đã nói rõ là có thể nhượng bộ.
-    if (!(r.ganNhat >= 300 - 90))
+    // ⚠ MAP KHÔNG CÓ BÃI QUÁI THÌ MỆNH ĐỀ NÀY RỖNG NGHĨA — và nó ĐỎ chứ không xanh, vì
+    // `packsOf` trả mảng rỗng ⇒ `gan[0]` là `undefined` ⇒ `undefined >= 210` là false. Ardhaven
+    // (thành, `packs` rỗng) vừa dẫm đúng thế: bài báo "thú mọc ngay chỗ đánh nhau" ở một nơi
+    // không có một con quái nào. Suy từ DỮ LIỆU (`soBai`), đừng miễn trừ bằng một danh sách tên
+    // map chép trong bài kiểm — thứ đó sẽ âm thầm nuốt map thứ hai thêm sau.
+    // ⚠ VÀ PHẢI IN RA, đừng bỏ qua im lặng: nếu `packsOf` hỏng ở một map hoang dã thì nó cũng
+    // trả rỗng, và một phép bỏ qua câm sẽ biến đúng cái lỗi đó thành một dòng xanh.
+    if (!r.soBai) console.log(`   ${r.mid}: KHÔNG bãi quái nào ⇒ mệnh đề ② không áp dụng`);
+    else if (!(r.ganNhat >= 300 - 90))
       fail(`② [${r.mid}] bãi cỏ chỉ cách bãi quái gần nhất ${r.ganNhat}px — thú mọc ngay chỗ đánh nhau`);
     if (r.trongCan) fail(`② [${r.mid}] bãi cỏ nằm trong vật cản`);
     if (!(r.n >= 6)) fail(`③ [${r.mid}] chỉ dựng được ${r.n}/${r.khai} con — một "đàn" dưới 6 con đọc ra là mấy con lạc`);
