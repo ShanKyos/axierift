@@ -89,8 +89,8 @@ function vong(ten, cho){
 H1('5 · VÒNG TIẾP TẾ (cổng Nam → mua bán → cổng Nam)');
 const veNam = { x:3200, y:3080 };                     // spawnFrom.ngoai
 const by = id => NP.find(n => n.id === id);
-const nay = vong('nay:', [veNam, by('duoclao'), by('thoren'), by('binhkhi'), veNam]);
-const tiem = ['duoclao','thoren','binhkhi'].map(by);
+const tiem = NP.filter(n => n.talk === 'shop' || n.talk === 'forge').sort((a,b) => a.x - b.x);
+const nay = vong('nay:', [veNam, ...tiem, veNam]);
 const trai = Math.max(...tiem.map(t => t.x)) - Math.min(...tiem.map(t => t.x));
 console.log(`  ba tiệm trải ${trai}px = ${(trai/MAN[0]).toFixed(1)}× khung hình ⇒ ${trai < MAN[0] ? 'lọt' : 'KHÔNG lọt'} một màn hình`);
 

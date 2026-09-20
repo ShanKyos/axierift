@@ -35,6 +35,7 @@ const TERMS = [
   ['Bạo Kích','Crit'],['bạo kích','crit'],['bạo','crit'],
   ['bạc rơi','silver drops'],['đồng rơi','coin drops'],['đồng','coins'],
   ['Sinh Lực Tối Đa','Max HP'],['Sinh Lực','HP'],['sinh lực','HP'],
+  ['Sức Mạnh','Strength'],['Nhanh Nhẹn','Agility'],['Thể Lực','Vitality'],['Năng Lượng','Energy'],
   ['Mana Tối Đa','Max Mana'],['Mana','Mana'],['mana','mana'],
   ['Mana','Mana'],
   ['tốc chạy','move speed'],['Tốc Chạy','Move Speed'],
@@ -70,7 +71,6 @@ const EXACT = {
 
   // ── NPC trong thành ──
   'Trưởng Làng': 'Village Elder',
-  'Thợ Rèn · Lò Rèn Hoàng Gia': 'Blacksmith · Royal Forge',
   // ⚠ KHÔNG dịch là 'Chaos Goblin' — đó là tên riêng con NPC của MU (Quy tắc số 2). Chữ
   // 'Chaos' thì giữ: game đã ship '● Hỗn Độn Châu' → '● Chaos Pearl' từ lâu.
   'Yêu Tinh Hỗn Độn · Lò Hỗn Độn': 'Goblin Smith · Chaos Forge',
@@ -236,6 +236,7 @@ const EXACT = {
   'Phòng Ngự': 'Defense', 'Phòng Thủ': 'Defense', 'Tốc Độ Đánh': 'Atk Speed',
   'Né Tránh': 'Dodge', 'Tránh Đòn': 'Dodge', 'Bạo Kích': 'Crit', 'Bạo Kích %': 'Crit %',
   'Thân Pháp': 'Agility', 'Lực Lượng': 'Strength', 'Mẫn Tiệp': 'Dexterity',
+  'Sức Mạnh': 'Strength', 'Nhanh Nhẹn': 'Agility', 'Thể Lực': 'Vitality', 'Năng Lượng': 'Energy',
   'Giảm Sát Thương': 'Damage Reduction', 'Phản Sát Thương': 'Reflect Damage',
   'Thêm Sát Thương': 'Bonus Damage', 'Hút Sinh Lực': 'Life Steal', 'Hút Mana': 'Mana Steal',
   'Đồng Rơi Thêm': 'Bonus Coin Drops', 'EXP Thêm': 'Bonus EXP', 'Toàn Thuộc Tính': 'All Attributes',

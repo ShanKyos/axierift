@@ -1,5 +1,5 @@
 #!/bin/bash
-# Hồi quy trình duyệt cho AXIE RIFT — 170 bài Playwright.
+# Hồi quy trình duyệt cho AXIE RIFT — 227 bài Playwright (đếm lại: `ls tests/test_*.js | wc -l`).
 #
 #   bash tools/reg.sh [thư-mục-kết-quả]
 #

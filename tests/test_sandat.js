@@ -116,11 +116,22 @@ const HANH_LANG_HEP_NHAT = 340;
       // tám lượt đi thử ở ③ kéo nhân vật cấp 1 xuyên qua 53 con C38-C48 suốt 3840 khung: nó chết
       // giữa chừng, và ⑤ đi tiếp không nhúc nhích được — bài báo "đa giác cắt sàn làm hai" trong
       // khi đa giác hoàn toàn liền. Ghim máu để phép đo hỏi đúng câu nó định hỏi.
+      // ⚠ TRẢ VỀ `false` KHI ĐÃ ĐI XUYÊN QUA MỘT LỐI RA. Từ đợt LỐI RA, đi tới trong
+      // `LOIRA_TAM` của một cổng rìa là nhân vật TỰ SANG MAP KHÁC — đi tiếp sau đó là đang đo
+      // hình học của một map hoàn toàn khác map mình định đo, mà `player.x/y` thì vẫn là số
+      // hợp lệ nên không có gì báo. Trước khi sửa: 16 mục ⑤ đỏ với "đa giác cắt sàn làm hai"
+      // trong khi đa giác hoàn toàn lành — nhân vật TỚI ĐƯỢC cổng, tới nơi rồi đi luôn.
       const diThu = (tx, ty, khung) => {
         moveTarget = { x: tx, y: ty };
-        for (let i = 0; i < khung; i++){ player.hp = player.maxHp; update(1/60); }
+        const m0 = curMap;
+        for (let i = 0; i < khung; i++){
+          player.hp = player.maxHp; update(1/60);
+          if (curMap !== m0) return false;
+        }
         player.hp = player.maxHp;
+        return true;
       };
+      const veLai = (m) => { if (curMap !== m){ travelTo(m); player.hp = player.maxHp; } };
 
       // Nhân vật cấp 1 đi xuyên 53 con C38-C48 thì chết, mà cờ `dead` khoá update() vĩnh viễn —
       // mọi lượt đi sau đó đứng im. Nâng cấp trước khi đo hình học: bài này không đo sống sót.
@@ -133,7 +144,9 @@ const HANH_LANG_HEP_NHAT = 340;
         for (const [tx, ty] of [[120,120],[MAP.w-120,120],[MAP.w-120,MAP.h-120],[120,MAP.h-120],
                                 [MAP.w/2,60],[MAP.w/2,MAP.h-60],[60,MAP.h/2],[MAP.w-60,MAP.h/2]]){
           player.x = sp.x; player.y = sp.y;
-          diThu(tx, ty, 480);
+          // Đi trúng một lối ra rồi sang map khác KHÔNG phải "lọt ra ngoài sàn" — đó là cái
+          // cổng làm đúng việc của nó. Bỏ qua hướng ấy và dựng lại cảnh cho hướng sau.
+          if (!diThu(tx, ty, 480)){ veLai(key); continue; }
           // LỀ VIỀN 8px. Đo được: đi về góc tây sân cũ thì nhân vật dừng ở (563,1019),
           // cách viền đúng 2,73px — nó bị chặn và đứng khít lên mép, không phải "đi lọt ra
           // ngoài sàn". Không có lề thì bài đỏ ngẫu nhiên tuỳ nhịp khung: cấp thấp đi chậm nên
@@ -151,8 +164,11 @@ const HANH_LANG_HEP_NHAT = 340;
       o.soCong = cong.length;
       if (sp && cong.length){
         player.x = sp.x; player.y = sp.y;
-        diThu(cong[0].x, cong[0].y, 1200);
-        if (dist(player.x, player.y, cong[0].x, cong[0].y) >= 90)
+        // Tới nơi thì TỰ ĐI RA (cổng rìa) — `diThu` trả false, và đó chính là BẰNG CHỨNG
+        // mạnh nhất rằng đi bộ tới được: không chỉ tới gần, mà đã bước qua.
+        const oLai = diThu(cong[0].x, cong[0].y, 1200);
+        if (!oLai) veLai(key);
+        else if (dist(player.x, player.y, cong[0].x, cong[0].y) >= 90)
           o.loi.push(`đi bộ từ điểm thả KHÔNG tới được cổng "${cong[0].name}" — đa giác cắt sàn làm hai`);
       }
 

@@ -30,6 +30,7 @@ window.I18N_VI = {
   'help.k.map': 'Bản Đồ',
   'help.k.quest': 'Nhật Ký Nhiệm Vụ',
   'help.k.minimap': 'Ẩn/hiện bản đồ thu nhỏ',
+  'help.k.amthanh': 'Bật/tắt toàn bộ âm thanh — nhạc nền và hiệu ứng',
   'help.k.party': 'Tổ Đội',
   'help.k.friend': 'Bạn Bè',
   'help.k.settings': 'Cài Đặt',

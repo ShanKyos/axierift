@@ -757,3 +757,66 @@ cảnh đang trôi lệch nhau hàng nghìn điểm ảnh (bài học đã trả
 Đó là luật cũ đang làm đúng việc của nó (nó sinh ra để chặn năm NPC thú Axie rộng hơn cao),
 không phải lỗi — nhưng biết trước thì đừng ngạc nhiên khi một tấm nhiều hiệu ứng ra nhỏ hơn
 tấm thân trần.
+
+---
+
+## ⛔ VECTOR ĐÃ GỠ HẾT — 5 NPC đang là Ô TRỐNG CÓ NHÃN, đây là đơn đặt cho chúng
+
+Chủ dự án chốt (2026-09-19): *"loại bỏ hết các bản vẽ NPC bằng vector đi. Mình sẽ cần người
+thật cơ"*. Năm tệp cuối cùng đã xoá khỏi kho: `binhkhi.png` · `bodau.png` · `duoclao.png` ·
+`thantoan.png` · `traichu.png` (cả năm là hình phẳng 128×192, ~7 KB).
+
+⚠ **XOÁ TỆP KHÔNG ĐỦ.** Nhánh dự phòng trong `drawNpc()` vẽ lại ĐÚNG cái đó bằng mã — một khối
+ê-líp nâu làm thân cộng một vòng tròn màu da làm đầu. Giữ nguyên nó là đổi hình vector trong
+TỆP lấy hình vector trong MÃ. Nay nhánh ấy gọi `veNpcChoArt()`: bệ tối, khung nét đứt, dấu `?`.
+Nhìn vào là biết art chưa về — đúng lối `iaChuaArt` của hệ vật phẩm mà Quy tắc số 3 gọi là
+*"chỗ trống có nhãn"*, và nó KHÔNG phải vẽ vector.
+
+*Một người giả trông "tạm được" thì không ai đi vẽ người thật.* Đó là cả lý do của ô trống này.
+
+### Ba con đã có chỗ ở mới, không cần art
+
+| NPC | trước | nay |
+|---|---|---|
+| `binhkhi` Binh Khí Chủ · Vũ Khí Phường | `binhkhi.png` (vector) | **`thoren_lun.png`** — ông thợ rèn lùn có búa và đe, đúng vai người bán binh khí |
+| `bodau` Quan Truy Nã | `bodau.png` (vector) | `laotuong.png` — cùng tranh với bốn Lính Gác Cổng, và đó là ĐÚNG: cùng một nghề |
+| `ah_linhtuan` Lính Tuần Phố | `bodau.png` (vector) | `laotuong.png` — như trên |
+
+⚠ **NPC `thoren` (Thợ Rèn · Lò Rèn Hoàng Gia) ĐÃ GỠ khỏi Ardhaven.** Nó trùng chức năng KHÍT
+với `ah_hondon` đứng cách 190px — cùng `talk:'forge'`, cùng mở một bảng. Tranh người lùn của
+nó chuyển sang Vũ Khí Phường theo đúng yêu cầu, nên giữ lại là một cái tên thừa không có mặt.
+`thoren_dao` (corran) **vẫn còn** và vẫn dùng `thoren_lun.png` — đừng xoá tệp ấy.
+
+### Năm con đang chờ art
+
+| NPC | vai | map · toạ độ |
+|---|---|---|
+| `thantoan` Chủ Sảnh Cầu May | quay thưởng, tỉ lệ dán công khai | `ardhaven` (4570, 990) |
+| `ah_mucdong` Người Giữ Chuồng | cửa vào hệ Trại Ngựa / Khế Ước | `ardhaven` (2160, 2450) |
+| `traichu` Trại Chủ Mục Đồng | cùng hệ, ở vùng chăn thả | `ngoai` (2184, 682) |
+| `ah_banhoa` Bà Bán Hoa | lore, không cơ chế | `ardhaven` (3400, 1930) |
+| `ah_chimera` Người Luyện Chimera | lore, không cơ chế | `ardhaven` (2500, 2100) |
+
+Đơn dán cho lò sinh ảnh — **dùng chung khuôn đã chạy được với năm NPC đợt trước** (xem mục
+"VIDEO → HOẠT ẢNH NPC" về nền chroma), khác mỗi phần mô tả nhân vật:
+
+> Nền **magenta phẳng `#FF00FF`**, không hậu cảnh, không bóng đổ xuống nền, không hạt lấp lánh.
+> **Toàn thân, thấy rõ bàn chân**, đứng thẳng nhìn thẳng, hai vai ngang, hai chân khép.
+> Không vành mũ rộng che mặt, không mũ trùm, không sừng, không mào cao. Nét viền đen rõ, màu
+> no, chất dark-fantasy phương Tây kiểu MU/Diablo — **không** chữ Hán, **không** motif kiếm hiệp.
+
+| NPC | mô tả nhân vật |
+|---|---|
+| `thantoan` | Người quản sảnh cầu may: áo nhung sẫm viền chỉ vàng, tay cầm một cặp xúc xắc xương, thắt lưng treo túi tiền nặng, nụ cười của kẻ biết tỉ lệ nghiêng về phía mình |
+| `ah_mucdong` | Người giữ chuồng: áo da thô, tạp dề bạc màu, tay cầm dây cương và bàn chải lông, ủng dính rơm |
+| `traichu` | Trại chủ chăn thả: áo choàng len dày kiểu đồng cỏ, gậy lùa đàn, đeo còi sừng, dáng đứng của người quen nhìn xa |
+| `ah_banhoa` | Bà bán hoa già: khăn trùm đầu, giỏ hoa đan tay ôm trước bụng, váy vải thô nhiều lớp, lưng hơi còng |
+| `ah_chimera` | Người luyện Chimera: áo khoác da có nhiều đai và móc treo dụng cụ, găng tay dày, một bên vai đeo lồng sắt nhỏ |
+
+Về rồi thì cắt nền bằng `python3 tools/cat_magenta.py <ảnh> public/game/assets/npcs/<tên>.png
+--cao 256`, rồi trỏ `img:` của NPC vào tệp đó. **Hết** — không sửa một dòng máy nào, vì nhánh
+ô trống tự tắt khi `img` tra được.
+
+⚠ **ĐẶT TÊN TỆP MỚI, đừng dùng lại năm tên vừa xoá.** nginx đặt `max-age=604800` cho ảnh: thay
+nội dung dưới cùng một tên là người chơi cũ nhìn bản cũ suốt bảy ngày. Cùng bài học đã ghi ở
+`deploy/nginx-axiewuxia.conf`.
