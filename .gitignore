@@ -7,8 +7,17 @@ node_modules
 dist/
 .vercel/
 
-# Video nặng (không đưa lên repo)
-public/game/assets/video/
+# Video nặng — mặc định KHÔNG đưa lên repo
+public/game/assets/video/*
+# …TRỪ phim mở đầu Khế Ước. Nó BẮT BUỘC phải nằm trong git: production là `git reset --hard
+# origin/main` trên VPS, nên thứ không có trong kho thì không bao giờ tới được máy người chơi —
+# và triệu chứng là một thẻ <video> 404 trong im lặng. Đã xảy ra đúng một lần rồi: xem ghi chú
+# `sect_intro.mp4` ở game.js, một video giới thiệu lớp bị chính dòng này nuốt mất.
+# ⚠ MP4 KHÔNG nén delta được. Mỗi lần nướng lại là thêm một bản ĐẦY ĐỦ vào lịch sử, vĩnh viễn —
+# đúng cái giá 222 MB đã trả cho `qa_shots/` ngay dưới. Nướng thử thì nướng ở scratchpad; chỉ
+# chép vào đây khi đã chốt.
+!public/game/assets/video/summon_mo_dau.webm
+!public/game/assets/video/summon_mo_dau.mp4
 tools/__pycache__/
 tools/**/__pycache__/
 

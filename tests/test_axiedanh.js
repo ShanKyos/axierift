@@ -132,6 +132,56 @@ const LOP = ['thieulam', 'baidasan', 'toanchan', 'minhgiao', 'bug'];
     fail(`có hai lớp ra ĐÒN GIỐNG NHAU (lệch ${thap} điểm ảnh): `
        + don.cap.filter(c => c[1] < 400).map(c => c[0]).join(', '));
 
+  // ── 5. NGOÀI THÀNH: VŨ KHÍ HIỆN RA ĐÚNG LÚC RA ĐÒN, và CHỈ lúc đó ───────────────────────
+  // Chủ dự án chốt: *"trong thành cho vũ khí khoác lên vai (kiểu khu an toàn); khi nhân vật ra
+  // đòn ở bãi quái thì chỉ cần XUẤT HIỆN VŨ KHÍ thôi"*. Lớp nhân vật đã nhập vào Axie nên ngoài
+  // thành không còn bàn tay nào để cầm — hỏng chỗ này là cả game đánh nhau TAY KHÔNG, và không
+  // một lỗi nào báo.
+  //
+  // ⚠ Ca thứ ba là ca dễ mất nhất và nó KHÔNG hiển nhiên: cửa cũ có `&& !_coVkLop`, tức đúng ba
+  // lớp CÓ lớp vũ khí cầm tay (dkph1 · elnb1 · sbsm1) là ba lớp ra đòn tay không — mà đó lại là
+  // ba lớp có art vũ khí đẹp nhất. Nên mục này đòi cả năm lớp, không đòi một lớp mẫu.
+  //
+  // ⚠ Và nó gác CẢ CHIỀU NGƯỢC LẠI (`ngoaiNghi` phải TẮT): bỏ vế đó thì "cho thần khí bật suốt
+  // ngày ngoài thành" cũng xanh — mà đó chính là hai-thân-trên-màn mà cả đợt nhập-vào gỡ đi.
+  const vk5 = await p.evaluate(async (LS) => {
+    const r = {};
+    for (const l of LS){
+      localStorage.clear();
+      startGame(l, null);
+      phatDoKhoiDau();                 // TEST_MODE cố ý không phát bộ chơi thử — phải xin tay
+      const doc = () => (window.__veChet && window.__veChet.ta) || {};
+      const mot = (mid, danh) => {
+        travelTo(mid);
+        player.x = MAPS[mid].spawn.x; player.y = MAPS[mid].spawn.y;
+        player.atkAnim = danh ? NV_DANH_GIAY * 0.5 : 0; player.castT = 0; player.hurtT = 0;
+        window.__veChet = {}; render();
+        const d = doc();
+        return { tk: !!d.tk, nhap: !!d.nhap, lopHien: !!d.lopHien };
+      };
+      r[l] = { ngoaiDanh: mot('corran', true), ngoaiNghi: mot('corran', false),
+               thanhNghi: mot('ardhaven', false), coVkLop: !!nvVkLop(player) };
+    }
+    return r;
+  }, LOP);
+  console.log('5 ·', LOP.map(l => `${l} đòn=${vk5[l].ngoaiDanh.tk ? 1 : 0}`
+                                + ` nghỉ=${vk5[l].ngoaiNghi.tk ? 1 : 0}`
+                                + ` thành=${vk5[l].thanhNghi.tk ? 1 : 0}`
+                                + `${vk5[l].coVkLop ? ' (cầm tay)' : ''}`).join(' · '));
+  for (const l of LOP){
+    const v = vk5[l];
+    if (!v.ngoaiDanh.nhap) { fail(`cảnh dựng hỏng — ${l} ở corran phải NHẬP, mục này vô nghĩa`); continue; }
+    if (!v.ngoaiDanh.tk)
+      fail(`${l}: ngoài thành RA ĐÒN mà không hiện vũ khí — đánh nhau tay không`
+         + (v.coVkLop ? ' (lớp có vũ khí cầm tay, đúng ca mà cửa `!_coVkLop` từng nuốt)' : ''));
+    if (v.ngoaiNghi.tk)
+      fail(`${l}: ngoài thành ĐỨNG YÊN mà vũ khí vẫn bay theo — lại thành hai thân trên màn`);
+    // Trong thành: lớp nào có vũ khí CẦM TAY thì thần khí phải tắt (không thì HAI cây trên màn);
+    // hai lớp còn lại (Dark Lord · Dark Wizard) cố ý cầm trượng bay, nên phải BẬT.
+    if (v.coVkLop && v.thanhNghi.tk) fail(`${l}: trong thành có cả vũ khí cầm tay LẪN thần khí — hai cây`);
+    if (!v.coVkLop && !v.thanhNghi.tk) fail(`${l}: trong thành mất luôn cây trượng bay`);
+  }
+
   if (errs.length) fail('lỗi trang: ' + errs.slice(0, 3).join(' | '));
   console.log(bad ? `FAIL(${bad})` : 'OK test_axiedanh');
   await b.close();

@@ -44,6 +44,72 @@ bao giờ nằm trong đó**. Cắm một con quay ra rồi thì `player.avatar`
 `chiChon(con_mặc_định)` bị `if (!C.co[id]) return` chặn ⇒ **con khởi đầu mất vĩnh viễn**. Không
 lỗi, không thông báo, không bài kiểm nào đỏ. `test_avachon §7` gác, và nó đi đường tự nhiên.
 
+---
+
+## 2026-09-17 — Trong thành mang bên vai · ngoài thành vũ khí XUẤT HIỆN lúc ra đòn
+
+Chủ dự án: *"thôi dễ nhất là khi ở trong thành, cho vũ khí khoác lên vai (kiểu khu an toàn).
+Sau đó khi nhân vật ra đòn ở bãi quái thì chỉ cần xuất hiện vũ khí thôi."*
+
+### Đo trước khi làm — và phép đo ĐẦU TIÊN của tôi mù
+
+Đo trục cây vũ khí bằng **lưới mesh** của bản mẫu ⇒ cả **bốn** gói ra **y hệt nhau** (lệch dọc
+72,8°, dài 1230, hộp bao trùng khít). Lưới là của bản mẫu, chỉ ART bên trong khác — nên nó
+không đo được cái cần đo. Đếm **điểm ảnh của riêng lớp `vk`** thì ra bốn số khác nhau, và
+chúng **khớp con số đã ghi trong CLAUDE.md** (44,8° cho cây cung), tức phép đo đã tự kiểm được:
+
+| gói | trục lệch DỌC | dài | mũi cây |
+|---|---|---|---|
+| Dark Knight | 52,0° | 971 | **dưới mặt đất** |
+| Fairy Elf | 44,8° | 898 | **dưới mặt đất** |
+| Magic Gladiator | 52,1° | 1100 | **dưới mặt đất** |
+| Dark Lord | 58,7° | 1018 | **dưới mặt đất** |
+
+### "Khoác chéo sau lưng" là BẤT KHẢ, và đó là số chứ không phải ý thích
+
+Cây dài 898–1100 trên thân cao 1166 (**77–94%**). Dựng ảnh cho tư thế chéo 25°: mũi ở y=27
+trong khi gót ở y=−44 ⇒ **cắm đất**, và cán thì **đè lên mặt**. Chỉ tư thế gần DỌC sạch cả hai
+đầu. Nên chốt là **dựng cây bên vai** — và nhờ vậy **không phải đổi thứ tự lớp** (`vk` vẫn nằm
+giữa `a` và `t2`), thứ mà `test_lopdo §1` đang gác và CLAUDE.md bắt phải khớp với bộ nướng.
+
+Vặn: `dkph1` **+147°** · `sbsm1` **+147°** · `elnb1` **+139°**. Đáy cây trong ô 240×300 từ
+271–289 (dưới gót 252) về **197–200**.
+
+### Lỗi CÓ SẴN mà đợt này lôi ra — ba khối nữa bị rig cất vũ khí
+
+`00_Run` đặt khoá attachment RỖNG lên khe `左手武器` — đã biết và đã vá bằng `VK_HIEN`. Đo lại
+cả 20 hoạt cảnh: **`09_Interactive`** · `07_StatusEffect` · `01_Dance` làm y hệt. Và `VK_HIEN`
+chỉ được tra ở **bảng MỘT**, ba khối kia ở bảng hai ⇒ lớp `vk` của chúng **không có một điểm
+ảnh nào**. Tức **bắt chuyện với một NPC là cây kiếm biến mất khỏi tay**, ở đúng chỗ duy nhất
+lớp nhân vật còn hiện ra sau đợt nhập-vào-Axie.
+
+`test_vklop ①` nghe như phủ hết (*"không khối nào có khung TRỐNG"*) nhưng danh sách khối của nó
+chép tay tám cái, thiếu đúng bốn khối mang ở bảng hai. *Một mệnh đề phủ "mọi khối" mà danh sách
+khối do chính bài kiểm chép tay thì nó chỉ phủ đúng cái danh sách ấy.*
+
+### Lỗi CÓ SẴN thứ hai — hai lớp đứng trong thành TAY KHÔNG
+
+Cửa cũ `_tkHien = (!_coAva || _lopHien) && !_coVkLop && !_nhap` nghĩa là: bật avatar lên thì
+cây trượng bay **chỉ hiện lúc ra đòn**. Dark Lord và Dark Wizard cố ý không có vũ khí cầm tay
+⇒ hai trong năm lớp đứng trong thành không cầm gì. Ba lớp kia có lớp `vk` nên không ai để ý.
+
+### Nửa "ngoài thành" là một biểu thức
+
+```js
+const _tkHien = _nhap ? (atkK > 0 || castK > 0) : !_coVkLop;
+```
+
+`_coVkLop` **không được chặn ở nhánh đã nhập**: lớp `vk` biến mất cùng lớp nhân vật, nên giữ
+cửa cũ là đúng ba lớp có art vũ khí đẹp nhất ra đòn **tay không**. Ba phép thử ngược đều đỏ
+(cắm lại `!_coVkLop` ⇒ 3 FAIL · bật suốt ⇒ 5 FAIL · giữ cửa thành cũ ⇒ 2 FAIL).
+
+### Công cụ
+
+`nuong_nv.py --chilop vk` nướng lại đúng lớp được gọi tên — **3 giây** thay vì cả bộ. Hộp cắt
+của một lớp không phụ thuộc lớp nào khác nên nướng lẻ ra đúng bằng nướng cả bộ.
+
+---
+
 ## 2026-09-16 (b) — Cây vũ khí là một cái nhãn dán, suốt từ lúc nhập gói
 
 Chủ dự án: *"Tư thế cầm cung sai, hãy nghiên cứu và chỉnh lại cách cầm cung cho đúng. Tương tự

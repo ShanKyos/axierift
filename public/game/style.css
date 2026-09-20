@@ -2046,11 +2046,32 @@ i.chi-anh {
 #gacha-wrap { position:fixed; inset:0; z-index:200; background:#04040a; }
 #gacha-wrap.hidden { display:none; }
 #gacha-cv { display:block; width:100%; height:100%; }
-#gacha-skip { position:absolute; right:16px; bottom:14px; font-size:11.5px; color:var(--text-dim);
+/* Phim mở đầu nằm ĐÈ lên canvas (position:absolute thì vẽ trên phần tử không định vị), nên
+   nhịp 'phim' không phải xoá canvas — nhưng vẫn tô đen một lần cho chắc. object-fit:cover để
+   khung 16:9 của Veo phủ kín mọi tỉ lệ màn mà không có dải đen hai bên. */
+#ku-phim { position:absolute; inset:0; width:100%; height:100%; object-fit:cover;
+  background:#000; z-index:1; }
+#ku-phim.hidden { display:none; }
+#gacha-skip { z-index:3; position:absolute; right:16px; bottom:14px; font-size:11.5px; color:var(--text-dim);
   background:rgba(8,9,22,.72); border:1px solid var(--border); border-radius:999px; padding:4px 12px;
   pointer-events:none; }
 .ku-banner { border:1px solid var(--border-strong); border-radius:6px; padding:12px 14px; margin-bottom:10px;
   background:linear-gradient(180deg, rgba(var(--rgb-da),.9), rgba(18,20,44,.9)); }
+/* ═══ Key art banner — kiểu Genshin/Honkai: tranh to, chữ đè lên mép trái ═══
+   Canvas nằm DƯỚI, chữ là DOM đè lên: canvas không xuống dòng được, không chọn để chép được,
+   và không theo cỡ chữ của trình duyệt. `pointer-events:none` ở lớp chữ để nút Quay bên dưới
+   không bị một khối trong suốt nuốt mất cú bấm. */
+.ku-key { position:relative; height:208px; margin:-12px -14px 10px; overflow:hidden;
+  border-bottom:1px solid var(--border); background:#070812; }
+.ku-key canvas.ku-art { display:block; width:100%; height:100%; }
+.ku-key-chu { position:absolute; left:14px; top:0; bottom:0; width:56%;
+  display:flex; flex-direction:column; justify-content:center; gap:3px; pointer-events:none; }
+.ku-key-sao { font-size:13px; letter-spacing:2px; }
+.ku-key-bo { font-family:var(--font-display); font-size:23px; line-height:1.1; color:#f2ecff;
+  text-shadow:0 2px 10px rgba(0,0,0,.9); }
+.ku-key-lop { font-size:12px; color:#c8d0ea; text-shadow:0 1px 6px rgba(0,0,0,.9); }
+.ku-key-tp { margin-top:5px; font-size:12.5px; color:#e6ddff; text-shadow:0 1px 6px rgba(0,0,0,.9); }
+.ku-key-tp span { font-weight:700; margin-right:5px; }
 .ku-banner h4 { margin:0 0 4px; font-size:16px; color:var(--gold);
   font-family:var(--font-chi); letter-spacing:.2px; }
 .ku-bd { font-size:11.5px; color:var(--text-dim); margin-top:6px; line-height:1.6; }
