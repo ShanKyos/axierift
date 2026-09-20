@@ -1018,6 +1018,40 @@ window.MAPS = {
     // mặc định của nó là w*h/3e4 = 683 cho khổ này, quá dày cho một mặt phố lát đá — hạ về 260,
     // đủ để mặt lát không trơ mà không biến quảng trường thành bãi cỏ.
     isoCay:200, isoNho:260,
+    // ⚠ MAP `sanIso` DUY NHẤT TỪNG KHÔNG KHAI BỘ VẬT RIÊNG — nên 260 vật trong phố bốc từ
+    // `ISO_NHO`, tức bộ CỎ DẠI HOANG DÃ: 105 túm cỏ, 92 bụi cây, 63 hòn đá, rải trên mặt phố
+    // lát đá phiến. Chụp ra thì thấy mấy tảng đá rời nằm giữa lòng đường và một vạt rêu mọc
+    // chính giữa ngõ — không phải "thiếu chi tiết", mà là chi tiết SAI NỘI DUNG.
+    //
+    // ⚠ VÀ PHÉP ĐO ĐÃ DỰ ĐOÁN SAI, ghi lại vì nó đúng luật đã ghi cho gói art tối. Đo chênh
+    // sáng với mặt sàn thì `da1-3` ra 0,07 (sàn 0,642 · đá 0,548-0,570) ⇒ tôi kết luận "63 hòn
+    // đá gần như tàng hình". Ảnh chụp nói ngược: chúng HIỆN RÕ, vì `lech` của chúng là
+    // 0,110-0,133 — tương phản NỘI TẠI trong từng hòn đủ để mắt bám, đúng như con kỵ sĩ
+    // `tq_daohoa` đã chứng minh một lần. *Chênh sáng trung bình không quyết định một mình.*
+    //
+    // Bộ mới: `nho_san1-3` (sang 0,340 trên sàn 0,642 ⇒ chênh 0,302) vốn nướng cho Sàn Đấu,
+    // nội dung đúng là VẾT SỨT trên đá phiến. Giữ lại hai túm cỏ — cỏ mọc kẽ đá là thật, chỉ
+    // là không phải 105 túm. Bỏ hẳn bụi cây và đá rời: không ai để một tảng đá giữa phố.
+    // ⚠ DANH SÁCH NÀY LÀ BẢNG TRỌNG SỐ, KHÔNG PHẢI TẬP HỢP — xem chú thích của `ISO_NHO`.
+    isoNhoBo:['nho_san1','nho_san1','nho_san2','nho_san2','nho_san3','co1','co2'],
+    // ⚠ ĐÀN THÚ TRONG THÀNH — Ardhaven là map có người ở DUY NHẤT không có gì chuyển động:
+    // `packs` rỗng (không quái), 28 NPC là ảnh tĩnh. Đúng cái chẩn đoán đã ghi cho đàn thú
+    // hoang, chỉ đảo đầu: ngoài kia mọi thứ cựa quậy đều muốn giết người chơi, trong này
+    // không gì cựa quậy cả.
+    //
+    // ⚠ DÙNG LẠI LOÀI ĐÃ NƯỚNG, KHÔNG ĐẶT ART MỚI — và đây là kết luận ĐO ĐƯỢC, không phải
+    // tiết kiệm. Kit còn 8 rig Summoner (`sparrow` `littlerobin` `clover` `trunk` `mavis`
+    // `mushroom` `fruitsloth` `truefanhermitcrab`) nghe rất hợp làm bồ câu quảng trường, mà
+    // xương của chúng chỉ GIAO với hoạt cảnh axie đúng một cái `@pivot-main`. Nướng thử cả
+    // tám: **7/8 ra ba dáng LỆCH ĐÚNG 0** — một con chim đứng hình. Còn 19 rig `-1` thì 17 đã
+    // thành đàn hoang và 2 hỏng; 19 rig gốc là 16 avatar, dùng lại là thú ngoài đồng trông y
+    // hệt con đang đi cạnh người chơi.
+    //
+    // Ba loài chọn theo thứ THÀNH NÀY ĐÃ HỨA mà chưa có: `ct_chuong` (Dãy Chuồng) và NPC
+    // `ah_mucdong` (Mục Đồng) đứng đó từ lâu mà không một con gia súc nào. Cừu chủ đạo, bò
+    // đốm thứ hai, chim hồng thứ ba — trùng loài với Beast Herd Camp ngay ngoài cổng là CỐ Ý,
+    // cùng lý do đã ghi cho rêu xanh có mặt ở ba map.
+    thu: { loai:['cuu_bong','bo_dom','chim_hong'], dan: 12 },
     // LƯỚI PHỐ. Map rộng thì luật "đường mòn = dải xa mép nhất" biến cả thành một bãi sỏi
     // mênh mông, nên phải khai đường thật. Hai đại lộ nối thẳng bốn cổng, bốn ngõ dọc rơi
     // đúng khe 200px giữa các khối nhà, hai phố vòng chạy men dãy nhà bắc và nam.
