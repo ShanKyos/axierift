@@ -3249,7 +3249,20 @@ dung của bộ kit. Cơ chế: **`background-size: auto 100%`** — ảnh thu t
 
 - ⚠ **Khai nhầm thành `100% 100%` thì ảnh co theo `.fill`**: ở 30% máu cả cái mũi nhọn cũng co
   lại và nằm ở 30% — thanh máu vơi đi bằng cách **NHỎ LẠI**. Nhìn qua vẫn ra "thanh đang vơi",
-  nên phải đo mới thấy. `test_uigothic §⑥` đo: cỡ thanh phải bất biến, đầu phải phải tối đi.
+  nên phải đo mới thấy.
+
+  ⚠⚠ **VÀ CÂU Ở ĐÂY TỪNG GHI LÀ `test_uigothic §⑥` GÁC NÓ — SAI, nó chưa bao giờ gác.** Mệnh đề
+  *"cỡ thanh phải bất biến"* lấy hộp của **`#orb-hp`**, mà thứ co lại là `.fill` **bên trong** nó;
+  `#orb-hp` thì không bao giờ đổi cỡ, nên mệnh đề ấy đúng ở cả hai bản. Thử ngược bản cũ ra
+  **đỏ 1/3 lượt** — và đúng lượt đỏ là lượt que dò rơi trúng chữ số, tức bắt vì MAY. *Một mệnh
+  đề đúng ở mọi trạng thái là một mệnh đề không chốt gì*, và tài liệu ghi rằng nó chốt thì tệ hơn
+  không ghi.
+
+  ⚠ **ĐO Ở 60%, ĐỪNG ĐO Ở 30%.** Nén cả tấm xuống 30% thì mũi nhọn chỉ còn ~7px, khử răng cưa
+  nuốt mất — đo được hai bản **gần như trùng nhau** (tại 0,30 của thanh: 100 vs 90). Ở 60% mũi
+  nhọn còn ~12px và lề trong suốt bên phải của tấm art cũng nén theo, nên màu **tắt sớm** trước
+  mép phần đã tô: **138 (đúng) vs 34 (sai)**, hơn ba lần. `§⑥b` gác đúng chỗ đó và là mệnh đề
+  DUY NHẤT bắt được phép đột biến ấy.
 - ⚠ **Chiều cao là số DUY NHẤT đặt tay; bề rộng suy từ tỉ lệ ĐO ĐƯỢC** của tấm art (402/54 =
   7,444 · 402/38 = 10,579). Đặt tay cả hai là có ngày chúng lệch, mà lệch thì cái mũi nhọn bị
   kéo bè — thứ duy nhất của một thanh vát chéo mà mắt bắt được ngay.
@@ -3274,6 +3287,14 @@ dung của bộ kit. Cơ chế: **`background-size: auto 100%`** — ảnh thu t
 - **④ 9 lát có chạy thật không**: vẽ cùng một bảng ở **hai bề rộng** rồi so vùng GÓC. Cắt 9 lát
   thì góc **không đổi** theo bề ngang; kéo giãn cả tấm thì góc bè ra. Hỏi `border-image` có
   mặt trong CSS là chưa đủ — khai sai `slice` vẫn ra một chuỗi hợp lệ.
+
+⚠ **QUE DÒ CỦA ⑥ ĐỌC ĐÚNG MỘT ĐIỂM Ở GIỮA THANH — tức đọc thẳng vào CON SỐ MÁU.**
+`.cd-thanh span` canh giữa DỌC và bắt đầu ở 10px, nên điểm `(0,08 · giữa)` rơi vào chữ số, mà
+chữ số thì đổi theo lượng máu (`22194 / 22194` → `7313 / 22194`). Ba lượt liên tiếp ở CÙNG một
+trạng thái ra `{81,10,4}` · `{87,54,51}` · `{118,98,96}` ⇒ **đỏ 1/3 lượt**, và đỏ vì một thứ
+chẳng liên quan gì tới cơ chế tô đầy. Nay đọc **đỉnh độ đỏ của cả CỘT**: chữ trắng và bóng đen
+đều kéo độ đỏ XUỐNG nên không bao giờ thắng được phần tô. Sau khi sửa, năm lượt ra đúng cùng
+một bộ số (`trai` 115-117 · `phai` 184↔46).
 
 ⚠ **Hai lần phép đo ④ nói dối, cả hai đều là QUE DÒ hỏng, không phải cơ chế hỏng:**
 1. Bảng trong mờ 90% và thế giới sau lưng thì **động** (mây, cỏ, ánh sáng chạy theo
