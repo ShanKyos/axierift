@@ -1264,19 +1264,6 @@ window.MAPS = {
     // ở đây không cướp bản sắc map nào. `reu_xanh` · `cuu_bong` là loài chia sẻ — trùng loài
     // giữa hai map là CỐ Ý (sinh cảnh chồng nhau thật hơn bảy tập loài rời tăm tắp).
     thu: { loai:['soc_hat','reu_xanh','cuu_bong'], dan: 14 },
-    // XÓM SAPWOOD. `md.village` khiến game vẽ dòng chữ "Sapwood Hamlet" lên mặt đất ở
-    // (430,340) — mà `vatTo` thì RỖNG, tức ba NPC đứng giữa bãi cỏ dưới tên một ngôi làng
-    // không tồn tại. Ba cái chòi này là chỗ ở của đúng ba NPC ấy.
-    //
-    // ⚠ CHỖ ĐẶT QUÉT BẰNG MÁY, đừng dịch tay: điều kiện là ô đi được hoàn toàn, không trùm
-    // lên NPC nào (lề 25px), cách suối ≥ SPRING.r+150, cách điểm thả và cổng về ≥260, không
-    // chồng nhau, và NPC phải đứng PHÍA NAM nhà (mặt tiền sprite isometric luôn quay xuống).
-    // `vatTo` vào `ents` theo y = v.y + v.h nên một NPC lọt trong hình là bị nhà vẽ đè.
-    vatTo: [
-      { img:'ct_xom_loren',  x:590, y:395, w:256, h:255 },  // lò rèn — thoren_dao đứng cách 199px
-      { img:'ct_xom_nha',    x:530, y:150, w:243, h:242 },  // nhà Trưởng Làng — cách 283px
-      { img:'ct_xom_chuong', x:410, y:730, w:255, h:219 },  // chuồng, rìa nam xóm
-    ],
     spawnFrom:{ ardhaven:{ x:311, y:973 } },
     spawn:{ x:506, y:1158 }, village:true, spring:true, herbs:true, boss:true, trees:0, rocks:0,
     desc:'Khoảnh rừng có người giữ riêng — bãi săn của người mới. Chimera yếu, đồ rơi nhập môn, chỗ hiền lành để học cách chơi. Không phiến Rune nào cắm ở đây: rễ Cây Hồn chạy ngầm dưới đất này, và không ai dám khắc đá lên rễ.',

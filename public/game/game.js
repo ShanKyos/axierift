@@ -1176,13 +1176,6 @@ const MAP_VAT_SRC = {
   ct_thapvach:  'assets/iso/ct_thapvach.png',    // Chòi Trông Vách — NPC `ah_vachgio`
   ct_saanhlenh: 'assets/iso/ct_saanhlenh.png',   // Sảnh Lệnh       — NPC `bodau`
   ct_chuong:    'assets/iso/ct_chuong.png',      // Dãy Chuồng      — NPC `ah_mucdong`
-  // XÓM SAPWOOD (corran) — cùng nguồn art với ba cái trên nhưng CẮT Ở CỠ CHÒI
-  // (`--o 1.0` thay vì 2.0) ⇒ ~250px = 1,6-1,8 lần thân người. Nhà thành 500px đặt vào
-  // một cái xóm mà ba NPC chỉ trải trong 200px thì nuốt trọn cả xóm — đo được: cỡ thật
-  // chỉ còn ĐÚNG MỘT chỗ hợp lệ cạnh xóm, cỡ chòi thì có 416.
-  ct_xom_loren:  'assets/iso/ct_xom_loren.png',   // lò rèn xóm — NPC `thoren_dao`
-  ct_xom_nha:    'assets/iso/ct_xom_nha.png',     // nhà Trưởng Làng — NPC `truonglang`
-  ct_xom_chuong: 'assets/iso/ct_xom_chuong.png',  // chuồng/kho của xóm
 };
 const _vatIm = {};
 function vatTai(ten){
