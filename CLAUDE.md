@@ -1372,6 +1372,67 @@ phải dời ai. Hiện còn hai con như vậy: `ah_phapsu` (Quán Sách, khố
 Gác: **`tests/test_capnha.js`** (6 mệnh đề, cả năm cơ chế đã thử ngược và đều đỏ).
 Đặt hàng art đài phun nước + hàng rào: **`docs/PROMPT_DAINUOC_VA_HANGRAO.md`**.
 
+### 🧟 THẢ MỘT CON QUÁI MỚI VÀO GAME — đường đi, và ba chỗ phải ĐO chứ đừng đoán
+
+Con đầu tiên đi đủ đường này là **`omden` — Kẻ Ôm Đèn Tro Tàn** (cấp 88, Reptile Sunstone Flats).
+Giữ nó làm khuôn: thêm con sau là **một dòng `MOBS` + một miền `vung`**, không sửa một dòng máy nào.
+
+| bước | việc |
+|---|---|
+| art | một tấm tĩnh ở `assets/mobs/<mã>.png` là ĐỦ — không khai `MOB_KHUNG` thì vẽ y như mọi con khác |
+| chỉ số | một dòng trong `MOBS` (`game.js`) |
+| chỗ đứng | một miền trong `vung` của map (`data/canbang.js`) |
+| gác | **`tests/test_anhquai.js`** (4 mệnh đề, **cả bốn đã thử ngược và đều đỏ**) |
+
+**⚠ CHỈ SỐ NỘI SUY GIỮA HAI HÀNG XÓM, ĐừNG BẮT ĐẦU TỪ MỘT CON SỐ ĐẸP.** `test_moblevels` đòi
+**XP không được tụt theo cấp** và **cấp phải tăng dần theo khoảng cách tới điểm thả**, còn `range`
+của map phải khớp đúng cấp quái nhỏ nhất/lớn nhất. `omden` vì thế lấy hp **8070** đúng bằng cả hai
+hàng xóm (không đẻ dip mới trong thang), atk 252 và xp 7300 nằm giữa.
+
+**⚠ CHÈN MỘT MIỀN LÀ GIÃN LẠI CẢ DÃY.** `dai` không được chồng nhau (`test_vung §2`), mà vị trí
+cụm = `t × voi` — nên cấp 88 phải nằm giữa 84 và 92 thì **bốn miền sau nó đều phải lùi ra**. Sửa
+một dòng rồi tưởng xong là gradient tụt.
+
+**⚠ KHAI `he` CỦA MIỀN NẾU MAP ĐANG THUẦN MỘT HỆ.** `MOBS[].el` là lớp nền, `vung.he` thắng — nên
+một con `el:'Dusk'` thả vào Reptile Sunstone Flats mà quên `he:'Reptile'` là map thôi **thuần 100%**,
+một tính chất đã chốt ở mục tam giác, và nó hỏng trong im lặng.
+
+**Ba phép đo đã làm, và phép thứ hai bác bỏ chính linh cảm ban đầu của tôi:**
+
+1. **Art tối có đọc được không.** Tấm này **sáng 0,246** — tối hơn cả 24/24 tấm quái hiện có
+   (trung vị 0,514). Nhưng **lệch chuẩn 0,226** nằm trên hẳn ngưỡng 0,12, tức đúng ca "kỵ sĩ 0,209
+   đọc rõ từng chi tiết" chứ không phải ca "bóng ma 0,092 thành đốm mực" ⇒ **không nâng sáng**.
+2. **Và đừng dừng ở đó — đo THẬT trên map đích.** Năng lượng biên trong một ô quanh con quái, A/B
+   trên cùng một khung (có con / không con): **+22,1%** so với nền trống, trong khi `thamtu` — con
+   đã ship sẵn trên chính map đó — chỉ **+18,2%**. Tức tấm tối này đọc ra RÕ HƠN một con đang chạy.
+   *Một ngưỡng chung cho "art tối" không thay được một phép đo trên đúng cái nền nó sẽ đứng.*
+3. **Cân bằng: `test_mobbalance` KHÔNG ĐO CON NÀY.** Nó chỉ đo bãi **gần cổng nhất** và **xa nhất**,
+   mà con mới nằm giữa ⇒ thêm một loài vào khoảng giữa là thêm một loài **không ai gác cân bằng**.
+   Phải tự đo: ở cấp 88, dồn điểm theo build của lớp, Sylvan Ranger hạ thamtu/omden/cungthu trong
+   **4,1s / 4,1s / 4,4s** ⇒ nằm đúng trên đường cong.
+
+**⚠ `def` ĐÃ BÃO HOÀ Ở DẢI CẤP NÀY — đừng chỉnh nó để "cho có cảm giác trâu".** Thử 68 rồi đo lại:
+thời gian hạ của cả ba lớp **không đổi** (16,0s → 17,3s, nằm trong nhiễu). Thứ thật sự đổi hồ sơ
+là `atkCd` và `speed`.
+
+#### ⚠ ĐƯỜNG DẪN ẢNH QUÁI GÕ SAI LÀ MỘT LỖI IM LẶNG — trước `test_anhquai` không ai gác
+
+Con quái vẫn spawn, vẫn đánh, vẫn rơi đồ — chỉ là **không vẽ ra gì**, kèm một dòng 404 không ai đọc.
+Đúng họ với vết sẹo `ISO_NEO` đã xoá sạch cây của sáu map. Bài mới gác bốn chiều, và ④ là tầng
+**HÀNH VI** — tầng duy nhất bắt được ca *"tệp có trên đĩa mà trình duyệt vẫn không tải nổi"*.
+
+**⚠ HAI QUE DÒ CỦA CHÍNH BÀI ẤY ĐÃ HỎNG TRƯỚC KHI ĐÚNG**, ghi lại vì cả hai đều cho một kết quả
+trông rất thuyết phục:
+- `MOB_IMGS` **khoá theo MÃ LOÀI**, không theo đường dẫn. Khoá nhầm ra **32/32 loài đều "không tải
+  được" trong khi 0 lượt 404** — hai con số ấy mâu thuẫn nhau, và chính chỗ mâu thuẫn là bằng chứng
+  que dò hỏng chứ không phải game hỏng.
+- Khoá `MOB_KHUNG` **không có đuôi** (đường dẫn dựng thành `assets/mobs/kh/<tên>.png`), nên kiểm
+  thẳng chuỗi khoá là báo thiếu hai tệp đang có thật.
+
+**⚠ VÀ ④ PHẢI LOẠI LOÀI KHAI `skel`.** Năm loài khai CẢ `skel` LẪN `img` và CỐ Ý hiện bằng khung
+xương, nên đường nạp ảnh bỏ qua chúng — đòi chúng tải ảnh là đòi một thứ thiết kế nói không.
+① vẫn gác chuyện tệp lùi ấy có thật.
+
 ### 🗺 BẢN SẮC MAP SUY RA TỪ DỮ LIỆU, KHÔNG CHÉP CỨNG
 
 `mapBanSac(id)` tính **loài chủ đạo · hệ trội · Dòng Cốt độc quyền** từ chính `packs`, và
@@ -5482,8 +5543,8 @@ gặp `rc=124` thì **chạy lại đúng một lần**, ghi tên vào `chaylai.
 `ĐÃ CHẠY LẠI`. Lượt hai vẫn 124 thì vẫn tính đỏ. *Một bộ kiểm im lặng nuốt lỗi thì tệ hơn một
 bộ kiểm nói ra là nó đã phải chạy lại.*
 
-⚠ **BA BÀI CHÉP CỨNG CỔNG, chạy lẻ ngoài `reg.sh` là ĐỎ GIẢ.** `test_phutdau` (8861) ·
-`test_nowuxia2` (8861) · `test_bonho` (8871) mở thẳng `http://localhost:<cổng>/index.html` và
+⚠ **BỐN BÀI CHÉP CỨNG CỔNG, chạy lẻ ngoài `reg.sh` là ĐỎ GIẢ.** `test_phutdau` (8861) ·
+`test_nowuxia2` (8861) · `test_bonho` (8871) · **`test_gearlook` (8853)** mở thẳng `http://localhost:<cổng>/index.html` và
 **không đọc argv**. Chạy riêng mà quên dựng server đúng cổng thì lỗi báo ra là
 `ERR_CONNECTION_REFUSED` ở dòng `page.goto` — trông y như bài hỏng, mà thực ra chưa một khẳng
 định nào chạy. Đã mất một vòng chẩn đoán vì chuyện này: tôi đọc "3/3 đỏ" rồi suýt kết luận là
@@ -5529,9 +5590,10 @@ suýt kết luận "giả thuyết sai". Bỏ hai dòng đặt lại ấy thì r
 | `test_canbanglop §2` | *"chênh ST cao/thấp 4,42× > trần 3,6×"* | **xanh 3/3 trên cây đang làm VÀ 3/3 trên cây trước** — tức xúc xắc, không phải commit nào. Đo TB 3 lượt ra **2,63×** (cây nay) và **2,32×** (cây trước), đều sâu trong trần. Gốc: đồ rơi NGẪU NHIÊN + số lần chết là hàm bậc thang (mỗi lần chết `buildWorld()` hồi đầy cả bãi), nên ST tuy "trơn" hơn số mạng vẫn thừa hưởng phi tuyến ấy. Lượt đỏ bốc trúng DK 88.385 (dải thường 53-58k) và DW 19.999 ⇒ 4,42×. Chính đầu tệp bài ấy đã ghi ±22% tản — con số đó đo khi chưa ai chết 11 lần |
 | `test_sandat` (nhanmon) | *"sau 3600 khung đuổi, 1 con nằm ngoài sàn: Cao Thủ Lang Thang — nhánh di chuyển nào đó thiếu collideObstacles"* | ⚠ **ĐÂY KHÔNG PHẢI NHIỄU, đây là một LỖI THẬT bắn thưa.** Xanh 3/3 chạy riêng · xanh ở lượt hồi quy liền trước ⇒ rất dễ đọc nhầm là xúc xắc rồi bỏ qua. Nhưng chính mệnh đề ấy sinh ra để bắt *một nhánh dời chỗ quái quên gọi `collideObstacles`*, và nó chỉ nổ khi hình học truy đuổi rơi đúng chỗ. Cần một đợt riêng: quét NĂM nhánh dời quái trong `update()` (xem cảnh báo `mobDoBuoc()`) rồi đối chiếu nhánh nào thiếu. Đừng nới ngưỡng, và đừng ghi nó vào đây rồi quên |
 | ~~`test_uigothic ⑥`~~ | *"ở 30% máu, đầu TRÁI thanh cũng tối theo"* | ✅ **ĐÃ SỬA TẬN GỐC, không còn trong bảng này.** Dòng cũ ghi *"thanh máu có thành phần đập theo thời gian"* — **sai**: thanh không đập. Mẫu "đầy" đổi giữa các lượt vì `applyTestBoost()` bốc đồ NGẪU NHIÊN ⇒ `maxHp` khác ⇒ **chữ số khác**, mà que dò đọc đúng một điểm ở `(0,08 · giữa)` — tức đọc thẳng vào con số máu do `.cd-thanh span` vẽ đè. Nay đọc **đỉnh độ đỏ của cả CỘT** (chữ trắng và bóng đen chỉ kéo độ đỏ xuống) ⇒ năm lượt ra đúng cùng một bộ số. Xem mục thanh máu/mana ở khối UI Gothic. *Một bài đỏ theo xúc xắc vẫn phải TRUY tới nguyên nhân — lần này "xúc xắc" là một que dò hỏng, và chính nó che một mệnh đề rỗng suốt nhiều phiên.* |
+| `test_gearlook` | *"cache chân dung không đổi khi thay đồ"* (`cache_doiTheoDo: false`) | **xanh 13/13 lượt chạy lẻ** — 3 trên cây này · 3 trên cây trước · 3 trên chính BẢN ĐÓNG BĂNG của lượt hồi quy đã đỏ · 4 lượt nữa dưới tải CPU giả (6 vòng bận trên 4 lõi) — mà chỉ đỏ **bên trong** một lượt hồi quy đầy đủ. Xanh ở `reg-mg`(236 bài) và `reg-now`. Nó là một cuộc đua TẢI ART: hai thẻ so nhau là *đủ giáp giai 7* với *trần trụi giai 1*, và nếu lớp giáp giai 7 chưa về kịp thì cả hai cùng vẽ ra thân trần ⇒ hai data-URL trùng khít. **Chưa dựng lại được cảnh đỏ**, nên đừng chép câu này như một kết luận đã đóng; thứ đã chứng minh được là nó không đến từ một diff chỉ chạm `MOBS`/`vung` |
 | `test_qablock` | *"dựng cảnh sai: người chơi không ăn đòn nào"* rồi kéo theo 2 FAIL nữa | **xanh 8/8 lượt liên tiếp** khi chạy riêng · chính chú thích trong bài đã ghi nó nhạy với mạch ngẫu nhiên (*"từng xanh chỉ vì may"*) — con quái phải kịp đánh trúng trong 40 khung, máy bận là trượt. Phân biệt bằng `git diff -U0 … | grep '^@@'`: nếu diff không chạm `update`/`hurtPlayer`/`swingFeel`/`shakeDir` thì nó không thể là của mình |
 
-⚠ **VÀ QUE DÒ CỦA CHÍNH PHÉP PHÂN BIỆT ẤY CŨNG HỎNG ĐƯỢC — tôi vừa dẫm.** Nhiều bài đọc `../public/game/game.js` bằng đường dẫn TƯƠNG ĐỐI, nên chạy chúng từ một thư mục không có `public/` bên cạnh là chết `ENOENT` **trước khi một khẳng định nào chạy** — mà `rc=1`, nên nó đọc ra đúng như *"đỏ 3/3, tất định"*. Tôi đã suýt kết luận ngược hẳn. Dựng cảnh cho đúng: một thư mục có `tests/` **và** `public/` (symlink là đủ) cạnh nhau. Cùng luật với ba bài chép cứng cổng ở trên: *trước khi tin một lượt chạy lẻ, hỏi log xem nó có tới được trang không.*
+⚠ **VÀ QUE DÒ CỦA CHÍNH PHÉP PHÂN BIỆT ẤY CŨNG HỎNG ĐƯỢC — tôi vừa dẫm.** Nhiều bài đọc `../public/game/game.js` bằng đường dẫn TƯƠNG ĐỐI, nên chạy chúng từ một thư mục không có `public/` bên cạnh là chết `ENOENT` **trước khi một khẳng định nào chạy** — mà `rc=1`, nên nó đọc ra đúng như *"đỏ 3/3, tất định"*. Tôi đã suýt kết luận ngược hẳn. Dựng cảnh cho đúng: một thư mục có `tests/` **và** `public/` cạnh nhau — nhưng ⚠ **`tests/` phải là BẢN CHÉP THẬT, symlink thì không được**: Node phân giải đường thật rồi gặp `package.json` khai `"type":"module"` ⇒ chết ở `require is not defined` **trước khi một khẳng định nào chạy**, và `rc=1` lại đọc ra y hệt *"đỏ 3/3 trên cả hai cây"*. Đã dẫm đúng thế và suýt tuyên bố hai bài là đỏ-có-sẵn mà không có một bằng chứng nào. (`public/` thì symlink được — nó chỉ bị đọc bằng `fs` và qua HTTP, không dính phép tra `package.json`.) ⇒ **Chốt tự kiểm bắt buộc cho mọi phép chạy lẻ: đếm số dòng khẳng định trong log; bằng 0 thì đó là QUE DÒ hỏng, không phải bài đỏ.** Cùng luật với ba bài chép cứng cổng ở trên: *trước khi tin một lượt chạy lẻ, hỏi log xem nó có tới được trang không.*
 
 **Cách phân biệt "đỏ do mình" với "đỏ do xúc xắc", làm theo thứ tự này:** chạy riêng bài đó
 **3 lượt** trên cây của mình → rồi chạy trên cây **trước commit của mình** (`git worktree add`).

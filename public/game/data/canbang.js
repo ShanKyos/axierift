@@ -1018,6 +1018,40 @@ window.MAPS = {
     // mặc định của nó là w*h/3e4 = 683 cho khổ này, quá dày cho một mặt phố lát đá — hạ về 260,
     // đủ để mặt lát không trơ mà không biến quảng trường thành bãi cỏ.
     isoCay:200, isoNho:260,
+    // ⚠ MAP `sanIso` DUY NHẤT TỪNG KHÔNG KHAI BỘ VẬT RIÊNG — nên 260 vật trong phố bốc từ
+    // `ISO_NHO`, tức bộ CỎ DẠI HOANG DÃ: 105 túm cỏ, 92 bụi cây, 63 hòn đá, rải trên mặt phố
+    // lát đá phiến. Chụp ra thì thấy mấy tảng đá rời nằm giữa lòng đường và một vạt rêu mọc
+    // chính giữa ngõ — không phải "thiếu chi tiết", mà là chi tiết SAI NỘI DUNG.
+    //
+    // ⚠ VÀ PHÉP ĐO ĐÃ DỰ ĐOÁN SAI, ghi lại vì nó đúng luật đã ghi cho gói art tối. Đo chênh
+    // sáng với mặt sàn thì `da1-3` ra 0,07 (sàn 0,642 · đá 0,548-0,570) ⇒ tôi kết luận "63 hòn
+    // đá gần như tàng hình". Ảnh chụp nói ngược: chúng HIỆN RÕ, vì `lech` của chúng là
+    // 0,110-0,133 — tương phản NỘI TẠI trong từng hòn đủ để mắt bám, đúng như con kỵ sĩ
+    // `tq_daohoa` đã chứng minh một lần. *Chênh sáng trung bình không quyết định một mình.*
+    //
+    // Bộ mới: `nho_san1-3` (sang 0,340 trên sàn 0,642 ⇒ chênh 0,302) vốn nướng cho Sàn Đấu,
+    // nội dung đúng là VẾT SỨT trên đá phiến. Giữ lại hai túm cỏ — cỏ mọc kẽ đá là thật, chỉ
+    // là không phải 105 túm. Bỏ hẳn bụi cây và đá rời: không ai để một tảng đá giữa phố.
+    // ⚠ DANH SÁCH NÀY LÀ BẢNG TRỌNG SỐ, KHÔNG PHẢI TẬP HỢP — xem chú thích của `ISO_NHO`.
+    isoNhoBo:['nho_san1','nho_san1','nho_san2','nho_san2','nho_san3','co1','co2'],
+    // ⚠ ĐÀN THÚ TRONG THÀNH — Ardhaven là map có người ở DUY NHẤT không có gì chuyển động:
+    // `packs` rỗng (không quái), 28 NPC là ảnh tĩnh. Đúng cái chẩn đoán đã ghi cho đàn thú
+    // hoang, chỉ đảo đầu: ngoài kia mọi thứ cựa quậy đều muốn giết người chơi, trong này
+    // không gì cựa quậy cả.
+    //
+    // ⚠ DÙNG LẠI LOÀI ĐÃ NƯỚNG, KHÔNG ĐẶT ART MỚI — và đây là kết luận ĐO ĐƯỢC, không phải
+    // tiết kiệm. Kit còn 8 rig Summoner (`sparrow` `littlerobin` `clover` `trunk` `mavis`
+    // `mushroom` `fruitsloth` `truefanhermitcrab`) nghe rất hợp làm bồ câu quảng trường, mà
+    // xương của chúng chỉ GIAO với hoạt cảnh axie đúng một cái `@pivot-main`. Nướng thử cả
+    // tám: **7/8 ra ba dáng LỆCH ĐÚNG 0** — một con chim đứng hình. Còn 19 rig `-1` thì 17 đã
+    // thành đàn hoang và 2 hỏng; 19 rig gốc là 16 avatar, dùng lại là thú ngoài đồng trông y
+    // hệt con đang đi cạnh người chơi.
+    //
+    // Ba loài chọn theo thứ THÀNH NÀY ĐÃ HỨA mà chưa có: `ct_chuong` (Dãy Chuồng) và NPC
+    // `ah_mucdong` (Mục Đồng) đứng đó từ lâu mà không một con gia súc nào. Cừu chủ đạo, bò
+    // đốm thứ hai, chim hồng thứ ba — trùng loài với Beast Herd Camp ngay ngoài cổng là CỐ Ý,
+    // cùng lý do đã ghi cho rêu xanh có mặt ở ba map.
+    thu: { loai:['cuu_bong','bo_dom','chim_hong'], dan: 12 },
     // LƯỚI PHỐ. Map rộng thì luật "đường mòn = dải xa mép nhất" biến cả thành một bãi sỏi
     // mênh mông, nên phải khai đường thật. Hai đại lộ nối thẳng bốn cổng, bốn ngõ dọc rơi
     // đúng khe 200px giữa các khối nhà, hai phố vòng chạy men dãy nhà bắc và nam.
@@ -1498,6 +1532,14 @@ window.MAPS = {
     // Ba lối rìa cũ (Werebear Woods · Lối Mòn · Trũng Nứt) đã theo dải cấp sang Plant Tribe
     // Glade. Còn đúng MỘT cửa: Cổng Tây của thành. Điểm tới dùng lại chỗ (311,973) mà bộ sinh
     // đã dò cho cổng tây cũ — nó nằm trong đa giác sàn và cách cổng 127px.
+    // ĐÀN THÚ HOANG. Corran là map hoang DUY NHẤT không có đàn — mà nó lại là map ĐẦU TIÊN,
+    // tức ấn tượng đầu tiên về cả thế giới là "một cái sân có mấy bầy địch". Đúng cái mà khối
+    // ĐÀN THÚ HOANG sinh ra để chữa; corran bị bỏ sót khi làm 7 map kia.
+    //
+    // ⚠ Loài CHỦ ĐẠO phải riêng: `soc_hat` đang là loài THỨ BA của `ngoai` nên lấy làm chủ đạo
+    // ở đây không cướp bản sắc map nào. `reu_xanh` · `cuu_bong` là loài chia sẻ — trùng loài
+    // giữa hai map là CỐ Ý (sinh cảnh chồng nhau thật hơn bảy tập loài rời tăm tắp).
+    thu: { loai:['soc_hat','reu_xanh','cuu_bong'], dan: 14 },
     spawnFrom:{ ardhaven:{ x:311, y:973 } },
     spawn:{ x:506, y:1158 }, village:true, spring:true, herbs:true, boss:true, trees:0, rocks:0,
     desc:'Khoảnh rừng có người giữ riêng — bãi săn của người mới. Chimera yếu, đồ rơi nhập môn, chỗ hiền lành để học cách chơi. Không phiến Rune nào cắm ở đây: rễ Cây Hồn chạy ngầm dưới đất này, và không ai dám khắc đá lên rễ.',
@@ -1898,15 +1940,24 @@ window.MAPS = {
     vung: [
       { id:'thamtu', ten:'Bãi Thám Tử Tro Tàn', dai:[0.12,0.22], cung:[-115,-10], cum:[3,3], tiep:true,
         dan:[{ mob:'thamtu', n:18, vai:['can','phap'] }] },
-      { id:'thamtu_nang', ten:'Luỹ Đá Nung', dai:[0.25,0.35], cung:[-108,-5], cum:[3,3], tiep:true,
+      { id:'thamtu_nang', ten:'Luỹ Đá Nung', dai:[0.25,0.34], cung:[-108,-5], cum:[3,3], tiep:true,
         dan:[{ mob:'thamtu', n:15, vai:['nang','can'] }] },
-      { id:'cungthu', ten:'Trường Bắn Tro Tàn', dai:[0.38,0.49], cung:[-115,-10], cum:[3,3], tiep:true,
+      // ⚠ CHÈN MỘT MIỀN LÀ GIÃN LẠI CẢ DÃY, không phải thêm một dòng. `dai` là TỈ LỆ của `voi` và
+      // **tuyệt đối không được chồng nhau** (test_vung §2): vị trí cụm = `t × voi`, nên dải không chồng
+      // mới bảo đảm được "cấp tăng dần theo khoảng cách" mà `test_moblevels §2` đòi. Cấp 88 phải
+      // nằm GIỮA 84 và 92 nên bốn miền sau nó đều phải lùi ra.
+      // ⚠ `he:'Reptile'` khai TƯỜNG MINH dù `MOBS.omden.el` là Dusk — đúng kiến trúc hai tầng:
+      // `MOBS[].el` là lớp nền, `vung.he` thắng. Thiếu dòng này là Reptile Sunstone Flats thôi
+      // **thuần 100%** — một tính chất đã chốt trong CLAUDE.md, và nó hỏng trong im lặng.
+      { id:'omden', he:'Reptile', ten:'Dãy Lò Tắt Lửa', dai:[0.37,0.45], cung:[-112,-8], cum:[3,3], tiep:true,
+        dan:[{ mob:'omden', n:15, vai:['nang','can'] }] },
+      { id:'cungthu', ten:'Trường Bắn Tro Tàn', dai:[0.48,0.57], cung:[-115,-10], cum:[3,3], tiep:true,
         dan:[{ mob:'cungthu', n:18 }] },
-      { id:'cungthu_phap', ten:'Đài Gọi Nắng', dai:[0.52,0.62], cung:[-105,-5], cum:[3,3], tiep:true,
+      { id:'cungthu_phap', ten:'Đài Gọi Nắng', dai:[0.60,0.69], cung:[-105,-5], cum:[3,3], tiep:true,
         dan:[{ mob:'cungthu', n:15, vai:['xa','phap'] }] },
-      { id:'kybinh', ten:'Bãi Ngựa Tro Tàn', dai:[0.65,0.80], cung:[-115,-10], cum:[3,3], tiep:true,
+      { id:'kybinh', ten:'Bãi Ngựa Tro Tàn', dai:[0.72,0.84], cung:[-115,-10], cum:[3,3], tiep:true,
         dan:[{ mob:'kybinh', n:15, vai:['can','bay'] }] },
-      { id:'kybinh_nang', ten:'Trại Giáp Nặng', dai:[0.83,1.0], cung:[-105,-5], cum:[3,3], tiep:true,
+      { id:'kybinh_nang', ten:'Trại Giáp Nặng', dai:[0.87,1.0], cung:[-105,-5], cum:[3,3], tiep:true,
         dan:[{ mob:'kybinh', n:12, vai:['nang','bay'] }] },
     ],
     diTrong: [
