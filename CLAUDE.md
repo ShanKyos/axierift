@@ -1845,6 +1845,94 @@ vảy rồng → hắc nguyệt**. Bộ tên cũ mượn thẳng binh khí kiế
 Lăng Ba Hài, Chí Tôn Long Giáp, Thiên Tôn Miện…) — vi phạm Quy tắc số 1. Tên mới phải là
 danh từ trang bị thuần, đừng mượn tên chiêu thức hay bảo vật tiểu thuyết.
 
+## 💪 BỐN CHỈ SỐ KIỂU MU — Sức Mạnh · Nhanh Nhẹn · Thể Lực · Năng Lượng
+
+Trước bản này là **NĂM**, mang tên kiếm hiệp: *Lực Lượng · Mẫn Tiệp · Phòng Ngự · Sinh Lực ·
+Linh Lực*. Chúng sống sót qua cả đợt chuyển sang MU vì không ai đọc lại `ATTR_INFO`.
+
+**⚠ "Sinh Lực" KHÔNG biến mất khỏi game** — nó vẫn là tên của MÁU ("Sinh Lực Tối Đa", "Hút
+Sinh Lực", thanh máu). Thứ đổi tên là **chỉ số đẻ ra máu** → **Thể Lực**. Tương tự "Mana" vẫn
+là tên tài nguyên, chỉ số đẻ ra nó là **Năng Lượng**. Đừng đổi nhầm nhóm.
+
+### ⚠ Ô "PHÒNG NGỰ" ĐÃ GỠ — và lý do là SỐ ĐO, không phải cho gọn
+
+`defRed = def/(def+60)` chạm trần chung `DEFRED_TRAN` (**0,55**) từ khoảng **60 điểm**. Mọi
+điểm sau đó là **số chết** — chính chú thích ở `DEFRED_TRAN` đã ghi đúng điều đó từ trước.
+Một ô chỉ số mà sau 60 điểm không còn tác dụng gì thì nó không phải một lựa chọn, nó là một
+khoản thuế. Nay phòng thủ suy từ **Nhanh Nhẹn** (`AGI_SANG_THU`).
+
+**⚠ CHỖ TÔI ƯỚC LƯỢNG SAI RỒI PHẢI ĐO LẠI** — ghi lại vì con số đầu nghe rất hợp lý. Tôi tính
+*"trần ở `s.def` ≈ 74, nền ~10, vậy hệ số 0,35 ⇒ cần ~190 điểm"*. Đo thật:
+
+| lớp | thủ ở 0 điểm | chạm trần 55% tại |
+|---|--:|--:|
+| Dark Knight | 51,8% | **50** |
+| Dark Lord | 44,9% | **50** |
+| Sylvan Ranger · Dark Wizard · Spellblade | 37% | **100** |
+
+Lý do: `defRed` đã ở **37-52% trước khi có một điểm nào** (cấp 120 tự cộng), nên phần còn lại
+tới trần rất mỏng. ⇒ **Đừng mô tả Nhanh Nhẹn là "hố đổ điểm vô tận".** Nó là: bỏ ~50-100 điểm
+cho cứng người, phần còn lại dồn vào dòng sát thương của lớp. Nâng hệ số cũng không kéo dài
+được đường cong — thứ chặn nó là cái TRẦN, và 0,55 là quyết định đã cân của chủ dự án.
+
+### Dòng sát thương từng lớp (chủ dự án chốt)
+
+| lớp | `atkSrc` | dòng chính |
+|---|---|---|
+| Dark Knight | `{str:2.0}` | Sức Mạnh |
+| Sylvan Ranger | `{agi:2.0}` | Nhanh Nhẹn |
+| Dark Wizard | `{ene:2.2}` | Năng Lượng |
+| Spellblade | `{agi:1.5, str:0.7}` | Nhanh Nhẹn · **Sức Mạnh là dòng PHỤ** |
+| Dark Lord | `{ene:2.1}` | Năng Lượng |
+
+**⚠ ĐO BẰNG CÁCH SWAP `atkSrc` TRONG CÙNG MỘT LƯỢT CHẠY.** Lượt đo đầu của tôi so hai lần chạy
+khác nhau và ra kết quả vô nghĩa — *"máu Dark Lord tụt 10%"* hoá ra chỉ là `startGame` bốc
+trúng bộ `traits`/`personality` khác, mà cả hai đều cộng chỉ số trong `calcDerived`. Phải
+`player.traits = []; player.personality = 'trung'` rồi mới đo. Kết quả đã khử nhiễu:
+
+| lớp | dồn hết dòng chính | nửa dòng chính / nửa Nhanh Nhẹn |
+|---|--:|--:|
+| Dark Knight · Sylvan Ranger | **±0,0%** | ±0,0% |
+| Dark Wizard | +5,0% | −1,4% |
+| Dark Lord | +2,1% | −1,3% |
+| **Spellblade** | **+8,6%** | **+8,7%** |
+
+**⚠ Spellblade +8,6% là CÓ CHỦ Ý, và nó KHÔNG phải một cú buff lén.** Bản cũ `{str:1.1,
+ene:1.1}` là một thế chia đều, mà công thức dùng **căn bậc hai** (`sqrt(_ptSum)`) nên chia đều
+là thế **bị phạt**: Spellblade vì thế là lớp có đỉnh công **thấp nhất** trong năm. Cho nó một
+dòng chính rõ ràng kéo nó về gần giữa — đo được: chênh lệch đỉnh công giữa năm lớp đi từ
+**1,59×** xuống **1,54×**. Đã thử hạ trọng số để về đúng 0%: không về được, vì `_ptNen` (vạch
+xuất phát) cũng tính theo tổng trọng số nên hai tác dụng triệt tiêu nhau — muốn 0% thì phải
+quay lại thế chia đều, tức bỏ chính cái đặc tả.
+
+### Di trú: HOÀN điểm, đừng xoá trắng
+
+`loadGame()` trả `player.def − 5` về `player.free`, ghim `player.def` về mức nền, đặt cờ
+`player._diTruDef`. Ba thứ bắt buộc, đúng nếp đã ghi cho `cotDiTru`:
+- ⚠ **Hoàn, không xoá** — người chơi cũ có thể đã đổ hàng trăm điểm vào đó.
+- ⚠ **KHÔNG cần cờ `_diTru*` ở đây** — và đây là chỗ tôi thêm thừa rồi phải gỡ. Phản xạ là
+  "phải có cờ chặn hoàn hai lần", nhưng phép hoàn này **tự bất biến**: thứ giữ nó là dòng
+  **ghim `def` về mức nền**, nên lần nạp sau `_hoan` ra 0. Thêm cờ rồi thử ngược bằng cách gỡ
+  cờ ⇒ bài kiểm **IM LẶNG**. *Một cái cờ mà gỡ đi không làm đỏ được bài nào là một cái cờ
+  không gác gì — nó chỉ trông như đang gác.* (`cotDiTru` thì đúng là cần cờ, vì nó KHÔNG ghim
+  nguồn về 0: nó đọc `lv`/`hoa` rồi xoá.)
+- ⚠ **Phải BÁO ra một dòng đọc được**, và báo ở chỗ vào game chứ không trong `loadGame()`:
+  lúc ấy thế giới chưa dựng, `addFloat` chưa có chỗ bám. Dùng biến `_diTruDefBao`.
+
+⚠ **`addAttr` phải từ chối khoá lạ** (`if (!ATTR_INFO[k]) return`). Không chốt thì một lời gọi
+cũ — bảng còn trong đệm, lệnh gỡ rối, một nút sót — vẫn đổ điểm vào ô **không còn ai đọc**:
+người chơi mất điểm vĩnh viễn, không lỗi nào báo.
+
+⚠ **`def` vẫn còn là DÒNG PHỤ TRÊN TRANG BỊ.** Gỡ ô chỉ số không có nghĩa là gỡ `applyLine`
+nhánh `def` — giáp vẫn cộng thẳng vào phòng thủ. Hai thứ khác nhau, trùng tên.
+
+⚠ **Bảng in số phải LÀM TRÒN.** Bị động Thể Lực cộng một số thập phân vào `s.vit`, nên ô này
+từng in ra `54.1 (50+4.100000000000001)` — rác dấu phẩy động phơi thẳng ra mặt bảng.
+
+Gác: `tests/test_chiso4.js` (5 mục, 10 phép thử ngược). §③ **rót điểm thật rồi đo `player.atk`**
+chứ không đọc bảng `atkSrc` — đọc bảng thì một lỗi trong `calcDerived` (nhầm khoá, quên một
+nhánh) vẫn xanh.
+
 ## Cốt truyện (canon) — **NHÁT GỌI · BẢY RUNE CỔ**
 
 > Canon đầy đủ, kèm hợp đồng thi công: **`docs/LORE_RUNE.md`**.
@@ -2937,9 +3025,33 @@ giữa mỗi cạnh bị KÉO GIÃN ⇒ viên ngọc hình thoi bè thành một
 món trang trí. Không đáng, và đúng loại thay đổi lan rộng mà tài liệu này có sẹo (`#mc-drop`).
 ⇒ **Đã gỡ luôn tệp**: một tài sản không ai tham chiếu là tài sản chết, và kiểu chết đó im lặng.
 
+#### Thanh máu / mana: TÔ ĐẦY PHẢI VƠI, KHÔNG PHẢI CO LẠI
+
+Hai cái rãnh bo góc tô `linear-gradient` nay là art vát chéo có mũi nhọn, cắt từ khối chân
+dung của bộ kit. Cơ chế: **`background-size: auto 100%`** — ảnh thu theo CHIỀU CAO nên vẽ ra
+đúng một cỡ bất kể `.fill` rộng bao nhiêu; `.fill` chỉ việc cắt bớt bằng hộp của mình. Nhờ thế
+**`updateHud()` không phải đổi một dòng nào**, nó vẫn đặt `bar-hp.style.width = N%`.
+
+- ⚠ **Khai nhầm thành `100% 100%` thì ảnh co theo `.fill`**: ở 30% máu cả cái mũi nhọn cũng co
+  lại và nằm ở 30% — thanh máu vơi đi bằng cách **NHỎ LẠI**. Nhìn qua vẫn ra "thanh đang vơi",
+  nên phải đo mới thấy. `test_uigothic §⑥` đo: cỡ thanh phải bất biến, đầu phải phải tối đi.
+- ⚠ **Chiều cao là số DUY NHẤT đặt tay; bề rộng suy từ tỉ lệ ĐO ĐƯỢC** của tấm art (402/54 =
+  7,444 · 402/38 = 10,579). Đặt tay cả hai là có ngày chúng lệch, mà lệch thì cái mũi nhọn bị
+  kéo bè — thứ duy nhất của một thanh vát chéo mà mắt bắt được ngay.
+- ⚠ **Bản RỖNG chỉ dìm PHẦN MÀU, khung vàng giữ nguyên.** Dìm cả tấm thì ở nửa máu cái khung
+  cũng tối đi nửa chừng — đọc ra "thanh bị hỏng" chứ không ra "thanh vơi một nửa".
+- ⚠ **KHÔNG lấy thanh thứ ba (lục) làm EXP.** Chủ dự án đã chốt kéo thanh EXP xuống cho bằng
+  ngang dải icon ở thanh dưới; bày EXP hai chỗ là đúng cái lỗi *"cùng một con số bày hai chỗ
+  thì chỗ nào cũng bị liếc qua, mà không chỗ nào được tin"*. Mà để một rãnh lục rỗng vĩnh viễn
+  thì còn tệ hơn. Nên cắt hai, bỏ một.
+- ⚠ **VÒNG CHÂN DUNG tròn của tấm art thì KHÔNG dùng** — `#cd-khung` cố ý là ô VUÔNG, lý do đã
+  đo hẳn hoi trong `style.css`: *"16 con Axie có tỉ lệ rộng/cao 1,07–1,52 nên khuôn tròn cắt
+  mất tai/sừng/càng — đúng phần làm người ta nhận ra con vật của mình"*. Thanh cắt từ x=240 để
+  thoát khỏi vòng; mép trái phẳng lại hợp hơn vì nó ghé sát khung vuông.
+
 #### Bài kiểm gác HAI CHIỀU, và một cái bẫy đo
 
-`tests/test_uigothic.js` (5 mục, **10 phép thử ngược**):
+`tests/test_uigothic.js` (6 mục, **10 phép thử ngược**):
 - **① mã nhắc tệp nào cũng phải có** — họ `ISO_NEO`: sáu map mất sạch cây vì một bước chép tay.
 - **② tệp nào cũng phải có người nhắc** — chiều ngược lại, và nó không bao giờ tự lộ.
   ⚠ Phải đọc cả chuỗi GHÉP ĐỘNG (`assets/ui/${n.anh}.webp`, tên nằm trong `SYS_NUT`), không

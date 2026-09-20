@@ -55,6 +55,49 @@ BANG = [
     ('gt_khung_bang',( 728, 280,714,626)),
 ]
 
+# ── THANH MÁU / MANA ─────────────────────────────────────────────────────────────────────
+# Khối chân dung của tấm gốc ở (52,52,642,216): vòng tròn bên trái + BA thanh vát chéo.
+# Đo hồ sơ màu theo cột (x=400 và x=500) để tìm ranh giới, không chấm tay:
+#   rail vàng 46-54 · ĐỎ 55-87 · vách 88-96 · LAM 97-125 · vách 126-135 · LỤC 136-161
+#
+# ⚠ CHỈ LẤY HAI THANH. Thanh LỤC (thứ ba) không cắt: game có Máu và Mana, còn EXP thì chủ dự
+#   án đã chốt kéo xuống cho bằng ngang dải icon ở thanh dưới. Bày EXP hai chỗ là "cùng một
+#   con số bày hai chỗ thì chỗ nào cũng bị liếc qua, mà không chỗ nào được tin" — đúng câu
+#   CLAUDE.md đã ghi cho số Bình Thuốc. Mà để một rãnh LỤC rỗng vĩnh viễn thì còn tệ hơn.
+#
+# ⚠ CẮT TỪ x=240. Bên trái mốc đó hai thanh chui sau VÒNG CHÂN DUNG của tấm gốc — mà vòng ấy
+#   KHÔNG dùng được: `#cd-khung` cố ý là Ô VUÔNG, và lý do đã đo hẳn hoi trong style.css
+#   ("16 con Axie có tỉ lệ rộng/cao 1,07–1,52 nên khuôn tròn cắt mất tai/sừng/càng — đúng phần
+#   làm người ta nhận ra con vật của mình"). Mép trái phẳng lại hợp hơn: nó ghé sát khung vuông.
+THANH = [
+    ('gt_thanh_hp', (240, 42, 402, 54)),   # đỏ  — tính trong hệ toạ độ của khối chân dung
+    ('gt_thanh_mp', (240, 96, 402, 38)),   # lam
+]
+CD = (52, 52)   # gốc khối chân dung trên tấm lớn
+
+
+def nuong_thanh(im, ra):
+    """Mỗi thanh ra HAI tệp: bản SÁNG (phần đã đầy) và bản RỖNG (rãnh chưa đầy)."""
+    import numpy as np
+    tong = 0
+    for ten, (x, y, w, h) in THANH:
+        c = im.crop((CD[0] + x, CD[1] + y, CD[0] + x + w, CD[1] + y + h))
+        p1 = os.path.abspath(os.path.join(ra, ten + '.webp'))
+        c.save(p1, 'WEBP', quality=92, alpha_quality=100, method=6)
+        # ⚠ CHỈ DÌM PHẦN MÀU, GIỮ NGUYÊN KHUNG VÀNG. Dìm cả tấm thì ở 50% máu cái khung vàng
+        # cũng tối đi nửa chừng — đọc ra "thanh bị hỏng" chứ không ra "thanh vơi một nửa".
+        a = np.array(c).astype(int)
+        r, g, b = a[:, :, 0], a[:, :, 1], a[:, :, 2]
+        mau = ((r > g + 35) & (r > b + 35)) | ((b > r + 30) & (b > g + 15))   # đỏ hoặc lam
+        d = a.copy()
+        for k in range(3):
+            d[:, :, k] = np.where(mau, (a[:, :, k] * 0.26).astype(int), a[:, :, k])
+        p2 = os.path.abspath(os.path.join(ra, ten + '_rong.webp'))
+        Image.fromarray(d.astype('uint8'), 'RGBA').save(p2, 'WEBP', quality=92, alpha_quality=100, method=6)
+        n = os.path.getsize(p1) + os.path.getsize(p2); tong += n
+        print(f'  {ten:16s} {w:3d}x{h:<3d} → sáng + rỗng   {n/1024:5.1f} KB   (tỉ lệ {w/h:.3f})')
+    return tong
+
 # Mấy món cắt NGUYÊN KHUNG (không fit-square vào ô vuông) — khung 9 lát phải giữ đúng tỉ lệ
 # và đúng số điểm ảnh, ép vào ô 64×64 là mất sạch góc.
 NGUYEN = {'gt_khung_bang'}
@@ -180,7 +223,7 @@ def main():
     if '--quet' in sys.argv:
         quet(im); return
     os.makedirs(RA, exist_ok=True)
-    tong = 0
+    tong = nuong_thanh(im, RA)
     for ten, (x, y, w, h) in BANG:
         c = im.crop((x, y, x + w, y + h))
         if ten in NGUYEN:

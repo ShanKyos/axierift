@@ -69,7 +69,10 @@ const { chromium } = require('playwright');
       calcDerived();
       togglePanel('char');
       const html = document.getElementById('panel-char').innerHTML;
-      return { hasEneRow: html.includes('Linh Lực'), hasHint: html.includes('Công Kích từ'), len: html.length };
+      // ⚠ TÊN CHỈ SỐ ĐÃ ĐỔI: Linh Lực → Năng Lượng (bốn chỉ số kiểu MU). Đi theo nội dung
+      // sang tên mới, đừng bỏ mệnh đề — và LẤY TỪ `ATTR_INFO` chứ đừng chép cứng tên, vì
+      // chép cứng chính là thứ đã làm dòng này nói dối suốt mà không ai biết.
+      return { hasEneRow: html.includes(ATTR_INFO.ene.name), hasHint: html.includes('Công Kích từ'), len: html.length };
     }
     return { elf: checkPanel('toanchan'), dw: checkPanel('baidasan') };
   });
@@ -77,11 +80,17 @@ const { chromium } = require('playwright');
 
   // 6) legacy save without `ene` field gets safely backfilled on load, no NaN cascade
   const r6 = await page.evaluate(() => {
+    // ⚠ DÙNG `saveGame()` RỒI BÓC KHOÁ, đừng tự dựng hình dạng save bằng tay. Bản cũ ghi
+    // thẳng `{player, curMap, sideStates, ts}` vào `vlcm_save` — mà định dạng thật nay là
+    // `{v, slots:[...], active}`, nên `docSave()` coi đó là save quá cũ, XOÁ ĐI và trả null:
+    // `loadGame()` ra false suốt. Bài không khẳng định gì nên chuyện đó im lặng nhiều đợt.
+    // Đi qua chính `saveGame()` thì que dò không thể lệch khỏi định dạng thật được nữa.
     startGame('baidasan', null);
     player.level = 40; calcDerived();
-    const saved = JSON.parse(JSON.stringify(player));
-    delete saved.ene; // simulate an old save predating this stat
-    localStorage.setItem('vlcm_save', JSON.stringify({ player: saved, curMap, sideStates, ts: Date.now() }));
+    saveGame();
+    const doc = JSON.parse(localStorage.getItem('vlcm_save'));
+    for (const sl of doc.slots) if (sl && sl.player) delete sl.player.ene;  // save đời trước khi có `ene`
+    localStorage.setItem('vlcm_save', JSON.stringify(doc));
     const ok = loadGame();
     calcDerived();
     return { loadOk: ok, ene: player.ene, atkIsFinite: Number.isFinite(player.atk), maxQiIsFinite: Number.isFinite(player.maxQi) };
@@ -89,5 +98,20 @@ const { chromium } = require('playwright');
   console.log('6) legacy save missing `ene` backfills safely, no NaN:', JSON.stringify(r6));
 
   console.log('errors:', JSON.stringify(errors.slice(0, 20)));
+
+  // ⚠ BÀI NÀY TRƯỚC ĐÂY CHỈ IN, KHÔNG KHẲNG ĐỊNH GÌ — tức nó không bao giờ đỏ được.
+  // Hệ quả đã xảy ra thật: mục 5 dò chuỗi 'Linh Lực', tên chỉ số đổi từ lâu, và nó vẫn "xanh"
+  // trong khi in ra `hasEneRow:false`. Một bài kiểm không có khẳng định là một dòng log đắt tiền.
+  let bad = 0; const fail = m => { bad++; console.log('FAIL ' + m); };
+  for (const [ten, v] of Object.entries({ 'Sylvan Ranger': r5.elf, 'Dark Wizard': r5.dw })){
+    if (!v.hasEneRow) fail(`bảng Nhân Vật của ${ten} không có hàng ${'Năng Lượng'}`);
+    if (!v.hasHint) fail(`bảng Nhân Vật của ${ten} mất dòng gợi ý build`);
+  }
+  if (!r6.loadOk) fail('save cũ thiếu khoá `ene` không nạp được');
+  if (r6.ene == null) fail('save cũ thiếu `ene` không được vá');
+  if (!r6.atkIsFinite || !r6.maxQiIsFinite) fail('save cũ thiếu `ene` làm chỉ số ra NaN');
+  if (errors.length) fail(`${errors.length} lỗi JS lúc chạy`);
+  console.log(bad === 0 ? 'PASS' : 'FAIL(' + bad + ')');
   await browser.close();
+  process.exit(bad === 0 ? 0 : 1);
 })();

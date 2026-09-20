@@ -850,7 +850,7 @@ window.NEP_KHAC = [
 // bù bằng sát thương cao hơn, đặc biệt Dark Wizard (range 420, xa nhất) là glass cannon rõ rệt nhất.
 // atkSrc: điểm tiềm năng nào quy đổi ra Công Kích, đúng lối build đặc trưng từng lớp kiểu MU Online —
 // str/agi/ene nhân theo trọng số riêng (xem calcDerived()), KHÔNG còn chung 1 công thức "str×2" như
-// trước. VD: Sylvan Ranger chỉ cần dồn Mẫn Tiệp (agi) là đủ mạnh; Dark Wizard cần cả Mẫn Tiệp lẫn Linh
+// trước. Nay: Dark Knight ra công từ Sức Mạnh · Sylvan Ranger và Spellblade từ Nhanh Nhẹn ·
 // Lực (ene). Tổng điểm bonus của mỗi phái GIỮ NGUYÊN so với bản cân bằng trước, chỉ đổi chỗ ghi điểm.
 window.SECTS = {
   thieulam: { name:'Dark Knight', role:'Chịu Đòn / Liên Đòn cận chiến', element:'Beast', color:'#4c8dff', glow:'#ffe9a0', bonus:{vit:3,def:2,str:1,agi:0,ene:0},
@@ -860,14 +860,14 @@ window.SECTS = {
     // lui về `sect.range` (rỗng) ⇒ `skThongSoGon` in ra "tầm 0", mà theo quy ước của chính
     // game thì 0 nghĩa là "nổ ngay dưới chân người niệm". Tức bảng NÓI SAI, không bỏ trống.
     range:90,
-    desc:'Giáp tấm nặng, mũ trụ có sừng, đại kiếm hai tay. Dark Knight đứng mũi chịu sào, nuốt trọn đòn của cả bầy rồi trả lại bằng một nhát bổ chậm mà không gì cản nổi. Tiềm năng: dồn hết vào Lực Lượng.',
+    desc:'Giáp tấm nặng, mũ trụ có sừng, đại kiếm hai tay. Dark Knight đứng mũi chịu sào, nuốt trọn đòn của cả bầy rồi trả lại bằng một nhát bổ chậm mà không gì cản nổi. Tiềm năng: sát thương từ Sức Mạnh, và Nhanh Nhẹn để đứng vững.',
     skillA:{ name:'Twisting Slash', type:'cone',  cd:4, qi:20, mult:1.6 },
     tp:{ name:'Death Stab', mult:3.0 } },
   // range/basicProj: Sylvan Ranger & Dark Wizard là 2 lớp tầm xa thật (cung/phép) — đòn thường của họ bắn
   // đạn ở khoảng cách này thay vì vung cận chiến như Dark Knight/Spellblade/Dark Lord (xem doBasic()).
   toanchan: { name:'Sylvan Ranger', role:'Tầm xa / Hỗ trợ', element:'Bird', color:'#3a9d8b', glow:'#a0ffe9', bonus:{vit:0,def:0,str:0,agi:4,ene:0},
     hpMult:0.90, defMult:0.85, dmgMult:1.05, atkSrc:{agi:2.0},
-    desc:'Cung dài, giáp da nhẹ, chân bước không thành tiếng. Sylvan Ranger rót tên từ ngoài tầm với, đồng thời phủ phù trợ lên cả đội — vừa là sát thủ vừa là chỗ dựa. Tiềm năng: chỉ cần dồn Mẫn Tiệp là đủ mạnh.',
+    desc:'Cung dài, giáp da nhẹ, chân bước không thành tiếng. Sylvan Ranger rót tên từ ngoài tầm với, đồng thời phủ phù trợ lên cả đội — vừa là sát thủ vừa là chỗ dựa. Tiềm năng: Nhanh Nhẹn lo cả sát thương lẫn phòng thủ — một dòng là đủ.',
     range:380, basicProj:'arrow',
     // 3 mũi × 2.5 = tổng sát thương y hệt bản cũ (5 × 1.5), chỉ đổi cho khớp tên MU:
     // Triple Shot bắn BA mũi, Five Shot (di sản) mới là năm. Mỗi bậc Tiến Hóa +1 mũi.
@@ -879,23 +879,23 @@ window.SECTS = {
     // trùng tên trong cùng một lớp.
     tp:{ name:'Ngũ Tiễn', mult:2.8 } },
   baidasan: { name:'Dark Wizard', role:'Pháp thuật / Độc tố', element:'Aquatic', color:'#7ec850', glow:'#c8ffa0', bonus:{vit:1,def:0,str:0,agi:1,ene:3},
-    hpMult:0.72, defMult:0.65, dmgMult:1.30, atkSrc:{ene:1.6, agi:0.6},
-    desc:'Áo thụng trùm kín, quyền trượng nạm ngọc, thân thể mỏng như giấy. Dark Wizard đứng xa nhất chiến trường và gọi độc tố cùng thiên thạch xuống thay mình. Tiềm năng: cần cả Mẫn Tiệp lẫn Linh Lực.',
+    hpMult:0.72, defMult:0.65, dmgMult:1.30, atkSrc:{ene:2.2},
+    desc:'Áo thụng trùm kín, quyền trượng nạm ngọc, thân thể mỏng như giấy. Dark Wizard đứng xa nhất chiến trường và gọi độc tố cùng thiên thạch xuống thay mình. Tiềm năng: sát thương từ Năng Lượng, và Nhanh Nhẹn để khỏi vỡ.',
     range:420, basicProj:'orb',
     skillA:{ name:'Poison', type:'proj', cd:4, qi:20, mult:1.5 },
     tp:{ name:'Meteorite', mult:3.2, tam:420 } },   // tam: gọi thiên thạch xuống chỗ bầy quái, không phải dưới chân mình
   minhgiao: { name:'Spellblade', role:'Lai / Bộc phát Hoả', element:'Dusk', color:'#e8552a', glow:'#ffb060', bonus:{vit:1,def:0,str:2,agi:0,ene:2},
-    hpMult:1.05, defMult:1.0, dmgMult:1.08, atkSrc:{str:1.1, ene:1.1},
+    hpMult:1.05, defMult:1.0, dmgMult:1.08, atkSrc:{agi:1.5, str:0.7},
     range:90,   // xem chú thích ở thieulam.range
-    desc:'Nửa giáp nửa vải, một vai để trần, đại đao bản rộng cháy lửa. Spellblade vừa chém như hiệp sĩ vừa niệm như pháp sư — không cần chờ tới cấp 10 để mạnh. Tiềm năng: cân cả Lực Lượng lẫn Linh Lực.',
+    desc:'Nửa giáp nửa vải, một vai để trần, đại đao bản rộng cháy lửa. Spellblade vừa chém như hiệp sĩ vừa niệm như pháp sư — không cần chờ tới cấp 10 để mạnh. Tiềm năng: sát thương chính từ Nhanh Nhẹn, Sức Mạnh chỉ là dòng phụ.',
     skillA:{ name:'Fire Slash', type:'cone', cd:4, qi:22, mult:1.6 },
     tp:{ name:'Flame Strike', mult:3.2 } },
   // Dark Lord: lớp chỉ huy/triệu hồi — đánh bằng quân triệu ra chứ không bằng tay mình
   // (VOHOC_DEFS): xáp lá cà bằng số đông, không đơn độc.
   bug: { name:'Dark Lord', role:'Chỉ huy / Triệu hồi', element:'Plant', color:'#8a9a3a', glow:'#d0e07a', bonus:{vit:2,def:1,str:1,agi:2,ene:0},
-    hpMult:1.12, defMult:1.10, dmgMult:0.92, atkSrc:{str:1.8, agi:0.3},
+    hpMult:1.12, defMult:1.10, dmgMult:0.92, atkSrc:{ene:2.1},
     range:90,   // xem chú thích ở thieulam.range
-    desc:'Vương miện năm chấu, giáp đen ánh lam, quyền trượng chỉ huy. Dark Lord không bao giờ ra trận một mình — hắn hiệu triệu, và chiến trường tự sạch. Tiềm năng: chủ lực Lực Lượng, dặm thêm Mẫn Tiệp.',
+    desc:'Vương miện năm chấu, giáp đen ánh lam, quyền trượng chỉ huy. Dark Lord không bao giờ ra trận một mình — hắn hiệu triệu, và chiến trường tự sạch. Tiềm năng: sát thương từ Năng Lượng, dặm Nhanh Nhẹn cho phòng thủ.',
     skillA:{ name:'Force Wave', type:'cone', cd:4, qi:20, mult:1.5 },
     // Trấn Phái: BÃO QUẠ. `tam:320` — chủ dự án chốt "xa hơn skill trấn phái 1". Ô 1 của lớp này
     // là `skillA` kiểu `cone` không khai `tam` ⇒ lấy mặc định cone = **130**. 320 nằm đúng dải

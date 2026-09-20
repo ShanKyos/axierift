@@ -159,17 +159,44 @@ html,body { width:100%; height:100%; overflow:hidden; background:var(--bg-deep);
   font-weight:700; letter-spacing:.4px; text-shadow:0 1px 3px #000; }
 /* Hai thanh: nền TỐI ĐỤC + vạch chia, không phải khối màu trơn. Vạch chia cho mắt đọc ra
    "còn mấy phần" mà không cần đọc số — đúng việc mà một thanh máu phải làm trong lúc đánh. */
-.cd-thanh { position:relative; height:11px; border-radius:3px; overflow:hidden;
-  background:rgba(8,6,4,.82); border:1px solid rgba(0,0,0,.65);
-  box-shadow:inset 0 1px 2px rgba(0,0,0,.7), 0 1px 0 rgba(255,231,180,.07); }
-.cd-thanh .fill { display:block; height:100%; width:100%; transition:width .18s; }
-.cd-thanh span { position:absolute; inset:0; text-align:center; line-height:11px;
-  font-size:9px; font-weight:700; color:#fff; text-shadow:0 1px 2px #000, 0 0 5px rgba(0,0,0,.9);
+/* ═══ THANH MÁU / MANA — TRANH THẬT ═══
+   Trước bản này là hai cái rãnh bo góc 3px tô `linear-gradient`, cộng một lớp vạch chia
+   `repeating-linear-gradient` — vẫn là hình dựng bằng mã. Nay là art vát chéo có mũi nhọn,
+   cắt từ khối chân dung của bộ UI gothic (`tools/ui/nuong_uigothic.py`).
+
+   ⚠ CHIỀU CAO LÀ SỐ DUY NHẤT ĐẶT TAY; bề rộng SUY RA từ tỉ lệ ĐO ĐƯỢC của chính tấm art
+   (402/54 = 7,444 · 402/38 = 10,579). Đặt tay cả hai là một ngày nào đó chúng lệch nhau, mà
+   lệch thì cái mũi nhọn ở đầu thanh bị kéo bè — thứ duy nhất của một thanh vát chéo mà mắt
+   bắt được ngay.
+
+   ⚠ CƠ CHẾ TÔ ĐẦY: `background-size: auto 100%`. Ảnh thu theo CHIỀU CAO, nên nó vẽ ra đúng
+   một cỡ bất kể `.fill` rộng bao nhiêu — `.fill` chỉ việc cắt bớt bằng hộp của mình. Nhờ thế
+   `updateHud()` KHÔNG phải đổi một dòng nào: nó vẫn đặt `bar-hp.style.width = N%` như cũ.
+   (Dùng `background-size:100% 100%` là ảnh co theo `.fill` ⇒ ở 30% máu thì cả cái mũi nhọn
+   cũng co lại và nằm ở 30% — thanh máu vơi đi bằng cách NHỎ LẠI, không phải bằng cách vơi.)
+
+   ⚠ Bản RỖNG chỉ dìm PHẦN MÀU, khung vàng giữ nguyên. Dìm cả tấm thì ở nửa máu cái khung
+   cũng tối đi nửa chừng — đọc ra "thanh bị hỏng" chứ không ra "thanh vơi một nửa". */
+:root { --cd-hp-cao:23px; --cd-mp-cao:16px;
+        --cd-hp-rong:calc(var(--cd-hp-cao) * 7.444);
+        --cd-mp-rong:calc(var(--cd-mp-cao) * 10.579); }
+.cd-thanh { position:relative; overflow:hidden; border:none; box-shadow:none; border-radius:0;
+  background-repeat:no-repeat; background-position:left center; background-size:auto 100%; }
+#orb-hp { height:var(--cd-hp-cao); width:var(--cd-hp-rong);
+  background-image:url(assets/ui/gt_thanh_hp_rong.webp); }
+#orb-qi { height:var(--cd-mp-cao); width:var(--cd-mp-rong);
+  background-image:url(assets/ui/gt_thanh_mp_rong.webp); }
+.cd-thanh .fill { display:block; position:absolute; left:0; top:0; height:100%; width:100%;
+  transition:width .18s;
+  background-repeat:no-repeat; background-position:left center; background-size:auto 100%; }
+#bar-hp { background-image:url(assets/ui/gt_thanh_hp.webp); }
+#bar-qi { background-image:url(assets/ui/gt_thanh_mp.webp); }
+/* Chữ lùi khỏi cái mũi nhọn ở đầu phải: canh giữa thì số đè lên viên kim cương. */
+.cd-thanh span { position:absolute; inset:0 26px 0 10px; text-align:left;
+  display:flex; align-items:center;
+  font-size:10px; font-weight:700; color:#fff; text-shadow:0 1px 2px #000, 0 0 5px rgba(0,0,0,.9);
   font-variant-numeric:tabular-nums; letter-spacing:.2px; }
-.cd-thanh::after { content:''; position:absolute; inset:0; pointer-events:none;
-  background:repeating-linear-gradient(90deg, transparent 0 24%, rgba(0,0,0,.42) 24% calc(24% + 1px)); }
-.cd-hp .fill { background:linear-gradient(180deg,#ff8fa0,#e8324f 55%,#8a1226); }
-.cd-qi .fill { background:linear-gradient(180deg,#9ed4ff,#2f6fe0 55%,#122f72); }
+#orb-qi span { font-size:9px; }
 .bar { position:relative; height:16px; margin-bottom:4px; background:rgba(10,10,26,.72);
   border:1px solid rgba(229,211,186,.4); border-radius:999px; overflow:hidden; }
 .bar .fill { height:100%; width:100%; transition:width .18s; }

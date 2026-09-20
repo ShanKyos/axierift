@@ -652,16 +652,46 @@ function rerollItemTier(it){
   it.subs = rollSubs(it.slot, it.perfect, it.tier, it.luck);
   assignDef(it, player && player.sect);
 }
-// str/agi/ene mỗi phái quy đổi ra Công Kích theo TRỌNG SỐ RIÊNG (SECTS[x].atkSrc) — không còn dùng
-// chung 1 công thức "str × 2" cho mọi phái. VD: Sylvan Ranger chỉ cần dồn Mẫn Tiệp là đủ mạnh, Dark Wizard
-// cần cả Mẫn Tiệp lẫn Linh Lực — đúng lối build đặc trưng từng lớp nhân vật kiểu MU Online.
+// BỐN CHỈ SỐ, đúng bộ của MU Online: Sức Mạnh · Nhanh Nhẹn · Thể Lực · Năng Lượng.
+//
+// ⚠ TÊN CŨ LÀ TỪ KIẾM HIỆP — Lực Lượng · Mẫn Tiệp · Phòng Ngự · Sinh Lực · Linh Lực. Chúng
+// sống sót qua cả đợt chuyển sang MU vì không ai đọc lại bảng này. Quy tắc số 1.
+//
+// ⚠ VÀ CHỈ CÒN BỐN: ô "Phòng Ngự" đã GỠ, phòng thủ nay đến từ Nhanh Nhẹn. Lý do đo được chứ
+// không phải cho gọn: `defRed = def/(def+60)` chạm trần chung `DEFRED_TRAN` (0,55) từ khoảng
+// **60 điểm** — mọi điểm Phòng Ngự sau đó là SỐ CHẾT, đúng như chú thích ở `DEFRED_TRAN` đã
+// ghi. Một ô chỉ số mà sau 60 điểm không còn tác dụng gì thì nó không phải một lựa chọn, nó
+// là một khoản thuế. Gộp vào Nhanh Nhẹn thì cái trục ấy có nghĩa trở lại.
+//
+// ⚠ "Sinh Lực" KHÔNG biến mất khỏi game — nó vẫn là tên của MÁU (thanh máu, "Sinh Lực Tối Đa",
+// "Hút Sinh Lực"). Thứ đổi tên là CHỈ SỐ đẻ ra máu: nay gọi là Thể Lực. Tương tự, "Mana" vẫn
+// là tên của tài nguyên, còn chỉ số đẻ ra nó là Năng Lượng.
 const ATTR_INFO = {
-  str:{ name:'Lực Lượng', desc:'Công kích (tùy lớp), sát thương phi tiêu' },
-  agi:{ name:'Mẫn Tiệp',  desc:'Tốc đánh, bạo kích, né tránh + Công kích (tùy phái)' },
-  def:{ name:'Phòng Ngự', desc:'Giảm sát thương nhận vào' },
-  vit:{ name:'Sinh Lực',  desc:'Máu tối đa và tốc hồi phục' },
-  ene:{ name:'Linh Lực',  desc:'Mana tối đa + Công kích (tùy lớp)' },
+  str:{ name:'Sức Mạnh',   desc:'Công kích (tùy lớp), sát thương phi tiêu' },
+  agi:{ name:'Nhanh Nhẹn', desc:'Phòng thủ, tốc đánh, bạo kích, né tránh + Công kích (tùy lớp)',
+        meo:'<b>Nhanh Nhẹn</b> thì lớp nào cũng cần — khoảng 50-100 điểm là phòng thủ chạm trần, phần còn lại dồn vào dòng sát thương.' },
+  vit:{ name:'Thể Lực',    desc:'Máu tối đa và tốc hồi phục' },
+  ene:{ name:'Năng Lượng', desc:'Mana tối đa + Công kích (tùy lớp)' },
 };
+// Nhanh Nhẹn quy ra Phòng Thủ.
+//
+// ⚠ ĐÂY LÀ CHỖ TÔI ƯỚC LƯỢNG SAI RỒI PHẢI ĐO LẠI — ghi lại vì con số đầu nghe rất hợp lý.
+// Tôi tính "trục phòng thủ chạm trần khi `s.def` ≈ 74, nền ~10, vậy 0,35 ⇒ cần ~190 điểm".
+// Đo thật thì **50-100 điểm là đã chạm trần** ở cả năm lớp:
+//     thieulam 51,8% ở 0 điểm → trần 55% ở  50 điểm
+//     bug      44,9%          → trần ở  50
+//     toanchan · baidasan · minhgiao 37%  → trần ở 100
+// Lý do: `defRed` đã ở 37-52% TỪ TRƯỚC KHI có một điểm nào (cấp 120 tự cộng), nên phần còn
+// lại tới trần `DEFRED_TRAN` (0,55) rất mỏng.
+//
+// ⇒ Giữ 0,35, và đó là lựa chọn CÓ Ý: ô Phòng Ngự cũ cũng chỉ cần ~60 điểm là hết tác dụng
+// (chú thích ở `DEFRED_TRAN` đã ghi đúng điều đó). Nên đây là đổi chỗ ghi điểm, KHÔNG phải
+// đổi giá. Nâng hệ số lên cũng không kéo dài được đường cong — thứ chặn nó là cái TRẦN, và
+// trần 0,55 là quyết định đã cân của chủ dự án, không phải chỗ để lách.
+//
+// ⚠ Vì vậy đừng mô tả Nhanh Nhẹn là "hố đổ điểm vô tận". Nó là: bỏ ~50-100 điểm cho cứng
+// người, phần còn lại dồn vào dòng sát thương của lớp. Đó mới là thứ đang thật sự xảy ra.
+const AGI_SANG_THU = 0.35;
 // Phụ phẩm theo GDD: Trang bị giáp & Nhẫn (thường/hoàn hảo)
 const ARMOR_SUBS = [
   { k:'dmgred',    name:'Giảm Sát Thương',  min:1,  max:DMGRED_MOI_MON },
@@ -687,7 +717,7 @@ const AWAKENED = [
   { k:'atk',  v:25, name:'Công Kích +25' },
   { k:'hp',   v:200,name:'Sinh Lực +200' },
   { k:'qireg',v:3,  name:'Hồi Mana +3' },
-  { k:'str',  v:8,  name:'Lực Lượng +8' },
+  { k:'str',  v:8,  name:'Sức Mạnh +8' },
 ];
 
 // 12 ô trang bị theo GDD (base tính theo CẤP trang bị t=1..10, mỗi 10 level = 1 cấp)
@@ -999,7 +1029,7 @@ function hasElem(it){ return !!(it && !it.special && it.slot === 'vukhi' && ELEM
 // bù bằng sát thương cao hơn, đặc biệt Dark Wizard (range 420, xa nhất) là glass cannon rõ rệt nhất.
 // atkSrc: điểm tiềm năng nào quy đổi ra Công Kích, đúng lối build đặc trưng từng lớp kiểu MU Online —
 // str/agi/ene nhân theo trọng số riêng (xem calcDerived()), KHÔNG còn chung 1 công thức "str×2" như
-// trước. VD: Sylvan Ranger chỉ cần dồn Mẫn Tiệp (agi) là đủ mạnh; Dark Wizard cần cả Mẫn Tiệp lẫn Linh
+// trước. Nay: DK ra công từ Sức Mạnh · Sylvan Ranger + Spellblade từ Nhanh Nhẹn · DW + Dark Lord
 // Lực (ene). Tổng điểm bonus của mỗi phái GIỮ NGUYÊN so với bản cân bằng trước, chỉ đổi chỗ ghi điểm.
 // SECTS đã dời sang data/canbang.js — sửa cân bằng không phải mở tệp 26k dòng này.
 const SECTS = window.SECTS;
@@ -7869,8 +7899,11 @@ function giapHp(t, phan){
   return Math.round((GIAP_HP_GOC + (clamp(t || 1, 1, GIAI_MAX) - 1) * GIAP_HP_BUOC) * phan);
 }
 function mainName(k){
-  return { atk:'Công Kích', def:'Phòng Ngự', vit:'Sinh Lực', str:'Lực Lượng',
-           agi:'Mẫn Tiệp', hp:'Sinh Lực tối đa', crit:'Bạo Kích %', qireg:'Hồi Mana' }[k] || k;
+  // ⚠ `def` ở đây là DÒNG PHỤ TRÊN TRANG BỊ ("Phòng Thủ"), không phải ô chỉ số đã gỡ — đồ
+  // vẫn cộng thẳng vào phòng thủ. `vit`/`str`/`agi`/`ene` thì dùng ĐÚNG tên trong `ATTR_INFO`,
+  // đừng chép lại: hai bảng cùng đặt tên cho một thứ là bảo đảm chúng lệch nhau.
+  return { atk:'Công Kích', def:'Phòng Thủ', hp:'Sinh Lực tối đa', crit:'Bạo Kích %',
+           qireg:'Hồi Mana', ...Object.fromEntries(Object.entries(ATTR_INFO).map(([a,v]) => [a, v.name])) }[k] || k;
 }
 // ═══════════ SO SÁNH TRANG BỊ — nửa còn lại của bài học Loot 2.0 ═══════════
 // Với 15 dòng phụ đều là % thuần, người chơi KHÔNG có cách nào tự nhìn ra món vừa nhặt hơn
@@ -8258,7 +8291,13 @@ function calcDerived(){
   try { nvBoTruoc(player.sect, heroTier(player), gearVisual(player)); } catch { /* chưa dựng xong */ }
   const sect0 = SECTS[player.sect];
   const b = sect0.bonus;
-  const s = { str:player.str+b.str, agi:player.agi+b.agi, def:Math.round((player.def+b.def)*(sect0.defMult||1)), vit:player.vit+b.vit, ene:player.ene+(b.ene||0) };
+  // ⚠ `def` KHÔNG còn là một ô rót điểm — nó SUY RA từ Nhanh Nhẹn (xem `AGI_SANG_THU`).
+  // `player.def` vẫn còn trong save của người chơi cũ; `loadGame()` hoàn số điểm đã đổ vào đó
+  // về `player.free` rồi ghim lại mức nền, nên ở đây nó chỉ còn đúng vai "mức nền của lớp".
+  const _agi0 = player.agi + b.agi;
+  const s = { str:player.str+b.str, agi:_agi0,
+    def:Math.round((DIEM_KHOI_DAU + b.def + _agi0 * AGI_SANG_THU) * (sect0.defMult||1)),
+    vit:player.vit+b.vit, ene:player.ene+(b.ene||0) };
   // NỀN THẦN BINH. Thần Binh đã gỡ, nhưng tầng 1 của nó (+3 Lực · +2 Mẫn · +2 Cốt · +3 Thể)
   // là quà mọi nhân vật có SẴN từ cấp 1 — `newPlayer` khởi tạo `thanbinh:{tier:1}`, không ai
   // phải cày để có. Bảng vàng chỉ số trong test_lvpower được viết KÈM khoản đó, nên gỡ hệ mà
@@ -8338,7 +8377,7 @@ function calcDerived(){
   if (P.excAtkLv) P.atk += P.excAtkLv;
   player.atk = Math.round((P.atk + rawAtk) * (1 + LP.mult) * (sect0.dmgMult || 1));
   player.maxHp = Math.round((100 + player.level*PWR.hpPerLv + s.vit*PWR.hpPerVit + P.hp) * (1 + LP.mult) * (sect0.hpMult || 1));
-  player.maxQi = 50 + player.level*5 + Math.round(s.ene*1.5); // Linh Lực: mỗi điểm +1.5 mana tối đa (mọi lớp)
+  player.maxQi = 50 + player.level*5 + Math.round(s.ene*1.5); // Năng Lượng: mỗi điểm +1.5 mana tối đa (mọi lớp)
   player.crit = Math.min(0.45, s.agi*0.003 + P.crit/100);
   // Instinct Channels — cũng tự mở theo cấp độ (không cần tự tay khai thông từng nấc nữa),
   // đều nhau cả 8 mạch, chạm mức tối đa (20 đốt/mạch) ở cấp 120
@@ -8721,6 +8760,9 @@ function xoaNhanVat(i){
   ghiDoc(doc);
   return true;
 }
+// Số điểm Phòng Ngự vừa hoàn cho save đời cũ — `loadGame()` đặt, chỗ vào game đọc rồi in ra.
+// Tách ra một biến vì lúc `loadGame()` chạy thì thế giới chưa dựng: `addFloat` chưa có chỗ bám.
+let _diTruDefBao = 0;
 function loadGame(idx){
   try {
     const doc = docSave();
@@ -9128,7 +9170,28 @@ function loadGame(idx){
     const _mHoan = masteryRaSoat();
     if (_mHoan) setTimeout(() => { if (player) addFloat(player.x, player.y - 70,
       `↺ Hoàn ${_mHoan} điểm ${MASTERY_NAME} — bảng nay đi theo nhánh`, '#7ecbff', 14); }, 1200);
-    if (player.ene == null) player.ene = 5; // Linh Lực (stat mới) backfill (save cũ chưa có) — mức khởi điểm giống str/agi/def/vit
+    if (player.ene == null) player.ene = 5; // Năng Lượng backfill (save cũ chưa có) — mức khởi điểm giống str/agi/vit
+    // ⚠ HOÀN ĐIỂM PHÒNG NGỰ, ĐỪNG XOÁ TRẮNG. Ô "Phòng Ngự" đã gỡ (phòng thủ nay từ Nhanh
+    // Nhẹn), nhưng người chơi cũ có thể đã đổ hàng trăm điểm vào đó. Xoá thẳng là lấy mất của
+    // họ đúng ngần ấy điểm mà không một dòng nào báo — đúng kiểu mất trắng mà nếp di trú của
+    // dự án này cấm (xem `cotDiTru`). Trả về `free` để họ rót lại chỗ khác.
+    // ⚠ KHÔNG CẦN CỜ CHẶN HOÀN HAI LẦN, và đây là chỗ ghi lại vì sao — để đừng ai thêm vào.
+    // Phản xạ thông thường (và `cotDiTru` thì đúng là cần) là một cờ `_diTru*`. Ở đây thì
+    // KHÔNG: phép hoàn tự bất biến, vì thứ giữ nó là dòng GHIM `def` về mức nền ngay bên dưới
+    // — lần nạp sau `def` đã bằng nền nên `_hoan` ra 0.
+    // Đã thử thêm cờ rồi thử ngược bằng cách gỡ cờ: bài kiểm IM LẶNG. Một cái cờ mà gỡ đi
+    // không làm đỏ được bài nào là một cái cờ không gác gì — nó chỉ trông như đang gác.
+    // (`cotDiTru` cần cờ vì nó KHÔNG ghim nguồn về 0, nó đọc `lv`/`hoa` rồi xoá.)
+    {
+      const _hoan = Math.max(0, Math.round((player.def || DIEM_KHOI_DAU) - DIEM_KHOI_DAU));
+      player.def = DIEM_KHOI_DAU;   // ← dòng này mới là thứ làm phép hoàn bất biến
+      if (_hoan > 0){
+        player.free = (player.free || 0) + _hoan;
+        // ⚠ PHẢI BÁO RA MỘT DÒNG ĐỌC ĐƯỢC. Một khoản hoàn không ai thấy thì với người chơi
+        // không khác gì mất trắng.
+        _diTruDefBao = _hoan;
+      }
+    }
     migrateGiai14();                                      // 10 giai → 14 giai, xem hàm để biết vì sao
     migrateGiai7();                                       // 14 giai → 7 giai, phải chạy SAU bước trên
     migrateBoPham();                                      // gỡ hệ phẩm — xem hàm để biết vì sao không đền bù
@@ -19189,18 +19252,27 @@ function renderChar(){
   html += `<div style="font-size:12px;color:#9aa8d4;margin-bottom:8px">Điểm tiềm năng còn: <b style="color:#7ecbff">${p.free}</b> (mỗi cấp +5) — cộng chỉ số bên dưới, hoặc rót vào chiêu ở bảng Kỹ Năng (<b>K</b>, trần ${SK_TN_TRAN} điểm mỗi chiêu)</div>`;
   // Gợi ý build: điểm nào quy đổi ra Công Kích cho ĐÚNG phái này (xem SECTS[x].atkSrc trong calcDerived())
   const _atkSrc = sect.atkSrc || { str:2.0 };
-  const _dmgStatNames = Object.keys(_atkSrc).map(k => ATTR_INFO[k].name);
-  html += `<div style="font-size:11.5px;color:#ffd76a;margin-bottom:10px;padding:6px 10px;border:1px dashed rgba(255,215,106,.4);border-radius:6px">💡 ${sect.name} ra Công Kích từ <b>${_dmgStatNames.join(' + ')}</b> — dồn điểm tiềm năng vào đây là hiệu quả nhất.</div>`;
-  const base = { str:p.str, agi:p.agi, def:p.def, vit:p.vit, ene:p.ene };
-  const drv = { str:p.dStr, agi:p.dAgi, def:p.dDef, vit:p.dVit, ene:p.dEne };
-  for (const k of ['str','agi','def','vit','ene']){
+  // ⚠ NÓI RÕ DÒNG CHÍNH VÀ DÒNG PHỤ, đừng liệt kê phẳng. Spellblade ra công từ Nhanh Nhẹn
+  // 1,5 và Sức Mạnh 0,7 — in "Nhanh Nhẹn + Sức Mạnh" thì người chơi đọc ra hai dòng ngang
+  // nhau và chia đôi điểm, tức làm đúng cái việc kém hiệu quả nhất.
+  const _dmgSort = Object.entries(_atkSrc).sort((a, b) => b[1] - a[1]);
+  const _dmgTxt = _dmgSort.length > 1
+    ? `<b>${ATTR_INFO[_dmgSort[0][0]].name}</b> (dòng chính) + <b>${_dmgSort.slice(1).map(([k]) => ATTR_INFO[k].name).join(' · ')}</b> (dòng phụ)`
+    : `<b>${ATTR_INFO[_dmgSort[0][0]].name}</b>`;
+  html += `<div style="font-size:11.5px;color:#ffd76a;margin-bottom:10px;padding:6px 10px;border:1px dashed rgba(255,215,106,.4);border-radius:6px">💡 ${sect.name} ra Công Kích từ ${_dmgTxt} — dồn điểm vào đó là hiệu quả nhất.<br><span style="color:#a0ffe9">${ATTR_INFO.agi.meo}</span></div>`;
+  const base = { str:p.str, agi:p.agi, vit:p.vit, ene:p.ene };
+  const drv = { str:p.dStr, agi:p.dAgi, vit:p.dVit, ene:p.dEne };
+  // ⚠ LÀM TRÒN TRƯỚC KHI IN. Bị động Thể Lực cộng một số thập phân vào `s.vit`, nên ô này
+  // từng in ra `54.1 (50+4.100000000000001)` — rác dấu phẩy động phơi thẳng ra mặt bảng.
+  const lt = v => Math.round((Number(v) || 0) * 10) / 10;
+  for (const k of ['str','agi','vit','ene']){
     const a = ATTR_INFO[k];
     const isDmgStat = !!_atkSrc[k];
     // Hai NỬA có vai rõ ràng: nửa trái co giãn và được phép xuống dòng, nửa phải KHÔNG co và
     // KHÔNG xuống dòng. Trước đây cả hai đều là <span> trơn, nên mô tả dài một chút là cụm
     // ô-số/+/Max bị đẩy vỡ thành mấy dòng so le. Xem .attr-ten / .attr-dieu trong style.css.
     html += `<div class="attr-row"><span class="attr-ten">${a.name}${isDmgStat?' <span class="attr-sao">★</span>':''} <span class="attr-mo">(${a.desc})</span></span>
-      <span class="attr-dieu"><span class="attr-gt"><b class="attr-so">${drv[k]}</b>${drv[k]!==base[k]?`<span class="attr-them">(${base[k]}+${drv[k]-base[k]})</span>`:''}</span>
+      <span class="attr-dieu"><span class="attr-gt"><b class="attr-so">${lt(drv[k])}</b>${lt(drv[k])!==lt(base[k])?`<span class="attr-them">(${lt(base[k])}+${lt(drv[k]-base[k])})</span>`:''}</span>
       <input type="number" class="attr-qty" id="qty-${k}" min="1" max="${p.free||1}" value="${Math.min(10, p.free||1)||1}" ${p.free<=0?'disabled':''}>
       <button class="plus-btn" onclick="addAttr('${k}', qtyOf('${k}'))" ${p.free<=0?'disabled':''} title="Cộng theo ô số">+</button>
       <button class="plus-btn max-btn" onclick="addAttr('${k}', player.free)" ${p.free<=0?'disabled':''} title="Dồn hết điểm còn lại">Max</button></span></div>`;
@@ -19266,6 +19338,10 @@ window.qtyOf = function(k){
   return (!n || n < 1) ? 1 : n;
 };
 window.addAttr = function(k, n){
+  // ⚠ CHẶN KHOÁ LẠ. `def` đã thôi là ô rót điểm; không chốt ở đây thì một lời gọi cũ (bảng
+  // cache, lệnh gỡ rối, hay một nút sót) vẫn đổ điểm vào một ô KHÔNG CÒN AI ĐỌC — người chơi
+  // mất điểm vĩnh viễn mà không có lỗi nào báo.
+  if (!ATTR_INFO[k]) return;
   if (player.free <= 0) return;
   n = Math.max(1, Math.min(Math.floor(n) || 1, player.free)); // ô cộng điểm nhanh: gõ số hoặc bấm Max thay vì bấm tay từng điểm
   player.free -= n; player[k] += n;
@@ -21848,6 +21924,13 @@ setTimeout(() => {
       fxLoad();
       snapCamera(); // tiếp tục hành trình: camera đặt thẳng vào nhân vật
       AudioSys.nhacMap(curMap); // chuyển từ nhạc intro sang nhạc map
+      // Báo khoản hoàn điểm Phòng Ngự — xem `_diTruDefBao`. In ở ĐÂY chứ không trong
+      // `loadGame()` vì tới lúc này thế giới mới dựng xong và nhật ký mới có chỗ ghi.
+      if (_diTruDefBao > 0){
+        const _n = _diTruDefBao; _diTruDefBao = 0;
+        logCombat(`💠 Ô Phòng Ngự đã gỡ — phòng thủ nay đến từ Nhanh Nhẹn. Hoàn lại <b>${_n}</b> điểm tiềm năng, bấm <b>C</b> để rót lại.`, '#7ecbff');
+        if (player) addFloat(player.x, player.y - 60, `💠 Hoàn ${_n} điểm tiềm năng`, '#7ecbff', 14);
+      }
     }
   });
 }

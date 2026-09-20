@@ -222,6 +222,65 @@ const errs = [];
     await p2.close();
   }
 
+  // ══ ⑥ THANH MÁU / MANA: TÔ ĐẦY PHẢI VƠI, KHÔNG PHẢI CO LẠI ═══════════════════════════
+  // Cơ chế là `background-size: auto 100%` — ảnh thu theo CHIỀU CAO nên vẽ ra đúng một cỡ bất
+  // kể `.fill` rộng bao nhiêu. Khai nhầm thành `100% 100%` thì ảnh co theo `.fill`: ở 30% máu
+  // cả cái mũi nhọn cũng co lại và nằm ở 30% — thanh máu vơi đi bằng cách NHỎ LẠI. Nhìn qua
+  // vẫn ra "thanh máu đang vơi", nên phải đo mới thấy.
+  const p3 = await b.newPage({ viewport: { width: 1600, height: 900 }, deviceScaleFactor: 1 });
+  p3.on('pageerror', e => errs.push(String(e)));
+  await p3.goto(URL);
+  await p3.waitForFunction(() => window.__gameReady).catch(() => {});
+  await p3.evaluate(() => localStorage.clear());
+  await p3.reload();
+  await p3.waitForFunction(() => window.__gameReady).catch(() => {});
+  await p3.waitForTimeout(500);
+  await p3.evaluate(() => { window.TEST_MODE = true; startGame('thieulam', { name: 'Ui' });
+    applyTestBoost(); player.tutStep = -1; });
+  await p3.waitForTimeout(500);
+
+  const doThanh = async (tyLe) => {
+    await p3.evaluate((t) => { player.hp = player.maxHp * t; updateHud(); }, tyLe);
+    await p3.waitForTimeout(280);          // `.fill` có transition .18s
+    const bb = await p3.locator('#orb-hp').boundingBox();
+    const anh = await p3.screenshot({ clip: { x: Math.round(bb.x), y: Math.round(bb.y),
+                                              width: Math.round(bb.width), height: Math.round(bb.height) } });
+    return p3.evaluate(async (a64) => {
+      const im = await new Promise(r => { const i = new Image(); i.onload = () => r(i); i.src = 'data:image/png;base64,' + a64; });
+      const cv = document.createElement('canvas'); cv.width = im.width; cv.height = im.height;
+      const g = cv.getContext('2d', { willReadFrequently: true });
+      g.drawImage(im, 0, 0);
+      const d = g.getImageData(0, 0, cv.width, cv.height).data;
+      const lay = (fx, fy) => { const x = Math.round(cv.width * fx), y = Math.round(cv.height * fy);
+        const i = (y * cv.width + x) * 4; return { r: d[i], g: d[i+1], b: d[i+2] }; };
+      const giua = cv.height / 2 / cv.height;
+      return { rong: cv.width, cao: cv.height,
+               trai: lay(0.08, giua), phai: lay(0.82, giua),
+               // rail vàng ở mép TRÊN, lấy ở cùng chỗ x với `phai`
+               rail: lay(0.82, 0.06) };
+    }, anh.toString('base64'));
+  };
+  const day = await doThanh(1), vua = await doThanh(0.3);
+  const do_ = c => c.r - (c.g + c.b) / 2;          // độ "đỏ"
+  const sang = c => (c.r + c.g + c.b) / 3;
+  console.log('⑥ đầy :', JSON.stringify(day));
+  console.log('⑥ 30% :', JSON.stringify(vua));
+  if (day.rong !== vua.rong || day.cao !== vua.cao)
+    fail(`thanh máu ĐỔI CỠ theo lượng máu (${day.rong}×${day.cao} → ${vua.rong}×${vua.cao}) — nó phải vơi, không phải co lại`);
+  if (do_(day.phai) < 40)
+    fail(`máu ĐẦY mà đầu phải thanh không đỏ (đỏ=${do_(day.phai).toFixed(0)}) — cảnh dựng hỏng hoặc thanh không tô tới nơi`);
+  if (do_(vua.phai) >= do_(day.phai) * 0.55)
+    fail(`ở 30% máu, đầu phải thanh vẫn sáng như lúc đầy (đỏ ${do_(vua.phai).toFixed(0)} vs ${do_(day.phai).toFixed(0)}) — phần vơi không hiện ra`);
+  if (do_(vua.trai) < do_(day.trai) * 0.6)
+    fail(`ở 30% máu, đầu TRÁI thanh cũng tối theo (đỏ ${do_(vua.trai).toFixed(0)} vs ${do_(day.trai).toFixed(0)}) — phần còn máu phải giữ nguyên màu`);
+  // ⚠ KHUNG VÀNG KHÔNG ĐƯỢC DÌM THEO. Đây là chỗ bản "dìm cả tấm" sẽ đỏ: nó làm khung tối đi
+  // nửa chừng ⇒ đọc ra "thanh bị hỏng" chứ không ra "thanh vơi một nửa".
+  const rDay = sang(day.rail), rVua = sang(vua.rail);
+  if (rVua < rDay * 0.62)
+    fail(`khung vàng TỐI THEO lượng máu (sáng ${rVua.toFixed(0)} vs ${rDay.toFixed(0)}) — bản rỗng phải chỉ dìm PHẦN MÀU, giữ nguyên khung`);
+  else ok(`thanh vơi đúng kiểu: đầu phải ${do_(day.phai).toFixed(0)}→${do_(vua.phai).toFixed(0)}, khung vàng giữ nguyên ${rDay.toFixed(0)}→${rVua.toFixed(0)}`);
+  await p3.close();
+
   console.log('errors:', JSON.stringify(errs));
   console.log(bad === 0 && errs.length === 0 ? 'PASS' : 'FAIL(' + (bad + errs.length) + ')');
   await b.close();
