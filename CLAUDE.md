@@ -3250,6 +3250,77 @@ lại: *"Bỏ luôn phần Ragoon. Nếu gacha là sẽ gacha nhân vật."* và
 ⇒ **Đừng tự dựng lại.** Hỏi chủ dự án chọn hàng nào trước, rồi mở lại mã từ nhánh trên.
 
 
+## 🎬 PHIM MỞ ĐẦU KHẾ ƯỚC — nhịp 0, và **HAI ĐUÔI LÀ BẮT BUỘC**
+
+Hoạt ảnh quay vốn có sáu nhịp vẽ bằng canvas (`comet · no · hien · the · luoi`). Nay có thêm
+**nhịp 0: `phim`** — một clip 10,7 giây dựng bằng Veo, đứng TRƯỚC sao băng, có tiếng.
+
+| | |
+|---|---|
+| Tệp | `public/game/assets/video/summon_mo_dau.{webm,mp4}` |
+| Bảng | `KU_PHIM` (bậc → tên tệp, không đuôi) · `KU_PHIM_DUOI` · `KU_PHIM_NEN` 0,22 · `KU_PHIM_TRAN` 16s |
+| Máy | `kuPhimNap()` · `kuPhimChay()` · `kuPhimXong()` · nhánh `'phim'` ở đầu `kuVe` |
+| Gác | `tests/test_kuphim.js` (6 mệnh đề, **bốn phép thử ngược đều đỏ**) |
+
+**⚠⚠ `.gitignore` ĐÃ TỪNG NUỐT MẤT MỘT VIDEO, và lần đó không ai biết.** Dòng
+`public/game/assets/video/` chặn cả cụm, mà production là `git reset --hard origin/main` trên
+VPS — nên thứ không có trong kho **không bao giờ tới được máy người chơi**, và triệu chứng là
+một thẻ `<video>` 404 trong im lặng. Chú thích `sect_intro.mp4` trong `game.js` chính là cái xác
+của lần đó. Nay dòng ấy là `video/*` + hai dòng `!` cho đúng hai tệp này (git **không** mở lại
+được một tệp nằm trong thư mục đã bị loại — phải loại theo `thư mục/*` thì phép phủ định mới ăn).
+⚠ MP4/WebM **không nén delta được**: mỗi lần nướng lại là thêm một bản ĐẦY ĐỦ vào lịch sử, vĩnh
+viễn — đúng cái giá 222 MB đã trả cho `qa_shots/`. Nướng thử thì nướng ở scratchpad.
+
+**⚠ PHẢI CÓ CẢ WebM LẪN MP4, và đây là một phép ĐO chứ không phải phòng xa.** Chromium bản mã
+nguồn mở — tức đúng cái trình duyệt mà **cả 177 bài kiểm** chạy trên đó — **không giải được
+H.264**. Đo trên `/opt/pw-browsers/chromium`:
+
+| hỏi | trả |
+|---|---|
+| `canPlayType('video/mp4; codecs="avc1.42E01E"')` | **`''`** — không chạy được |
+| `canPlayType('video/mp4')` **trơn** | **`'maybe'`** |
+| `canPlayType('video/webm; codecs="vp9,opus"')` | `'probably'` |
+
+⇒ **ĐỪNG chốt bằng `canPlayType('video/mp4')` trơn**: nó trả `'maybe'` ở đúng cái trình duyệt
+KHÔNG giải được, nên một cái chốt viết như thế **xanh ở chỗ nó cần đỏ**. Cửa đúng là để hai thẻ
+`<source>` tự chọn (WebM đứng trước), rồi bắt ca hỏng bằng `v.error` **và** một trần cứng.
+Tiện thể WebM VP9 còn nhẹ hơn một nửa: **1,39 MB** so với 2,78 MB.
+
+**⚠ HAI CHỐT CANH, THIẾU MỘT LÀ TREO ĐEN CẢ CÚ QUAY.** `v.error` bắt 404/hỏng mã; `KU_PHIM_TRAN`
+bắt ca **nghẽn mạng** — mạng chậm thì không ném lỗi nào, nó chỉ đứng im. Và nhịp `'phim'` hỏi
+**TRẠNG THÁI** `v.ended` mỗi khung chứ không nghe sự kiện `'ended'`: nghe sự kiện thì phải gỡ
+tay, mà một lần gắn sót là cú quay sau chạy hoạt ảnh hai lần.
+
+**⚠ `window.TEST_MODE` PHẢI TẮT PHIM.** 177 bài lái thẳng `kheUocQuay`; thiếu cửa đó là mỗi cú
+quay trong bộ kiểm chờ 10,7 giây.
+
+**⚠ BỎ QUA LÚC ĐANG CHIẾU thì CHỈ bỏ PHIM.** Nhịp báo phẩm và cái thẻ mới là thứ người chơi trả
+vé để xem; nuốt luôn cả hai vì một cú bấm sốt ruột ở giây đầu là lấy mất đúng thứ họ mua. Bấm
+tiếp lần nữa mới bỏ nốt.
+
+**⚠ HẠ NHẠC NỀN THÌ PHẢI TRẢ LẠI.** `kuPhimXong()` gọi `refreshBgmVol()`; quên vế đó là nhạc nền
+câm hẳn từ cú quay đầu tiên tới hết phiên, và không lỗi nào báo.
+
+**⚠ BA BẬC TRONG `KU_PHIM` HIỆN CÙNG TRỎ MỘT TỆP** — đó là sự thật (mới nướng được bản CẤP CAO),
+không phải sơ suất. **Đừng "dọn" thành một hằng số**: bảng này là chỗ clip Thường/Hiếm sẽ cắm
+vào, gộp lại là lần sau phải dựng lại chính nó.
+
+**Hai bẫy của chính BÀI KIỂM, cả hai cho ra một kết quả sai mà trông rất thuyết phục:**
+1. **`currentTime = …` BỊ BỎ QUA TRONG IM LẶNG** trên máy chủ tĩnh của bộ kiểm —
+   `python3 -m http.server` không trả HTTP Range, nên phép tua không ăn và clip cứ chạy tiếp từ
+   đầu. Mục ⑤ báo *"phim không tự tắt"* trong khi cái chốt `v.ended` hoàn toàn đúng. Tua bằng
+   **`playbackRate`**, thứ không cần Range.
+2. **Một mẫu ở một mốc cố định thì đỏ theo xúc xắc.** Chốt *"sau 1,8 giây phải chạy được 0,3
+   giây"* đã đỏ thật ở một bản mã **không hề đụng tới đường chạy phim** — khung đầu mất tới
+   ~1,6 giây mới giải xong ở máy bận. Thứ cần chứng minh là clip có NHÍCH hay không, nên **chờ
+   tới khi nó nhích**, có hạn.
+
+**Nướng clip** (giữ nguyên hai lệnh này, tiếng đã cân khớp hai nguồn — đỉnh −5,0 dB):
+`ffmpeg` ghép intro + mở đầu bằng `concat` có cả `v` lẫn `a`, cắt watermark Gemini bằng
+`crop=1120:630:0:0` **neo ở y=0** (đường vàng Nhát Gọi nằm ở MÉP TRÊN, cắt lệch là mất nó), rồi
+`libvpx-vp9 -crf 32 -row-mt 1 -cpu-used 2` + `libopus -b:a 96k` ra bản WebM.
+
+
 ## Hai lối vẽ nhân vật — ĐỪNG TRỘN VÀO NHAU
 
 Game có **ba** bộ dựng nhân vật, mỗi bộ một việc. Nhầm chỗ là ra hình lạc quẻ.

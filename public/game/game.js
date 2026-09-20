@@ -20721,6 +20721,78 @@ function kuFit(){
   const g2 = cv.getContext('2d'); g2.setTransform(d, 0, 0, d, 0, 0);
   return { g:g2, W:w, H:h };
 }
+// ── PHIM MỞ ĐẦU (Veo) — nhịp 0, đứng TRƯỚC sao băng ──────────────────────────
+// Bảng theo BẬC CAO NHẤT của lượt quay, tức đúng cái trục telegraph mà nhịp 'comet' đã dùng
+// (màu đuôi + bề dày nét). Máy chạy theo dữ liệu: có clip mới thì đổi đúng một dòng ở đây.
+// ⚠ BA BẬC HIỆN CÙNG TRỎ MỘT TỆP, và đó là sự thật chứ không phải sơ suất: mới nướng được
+// đúng bản CẤP CAO. Đừng "dọn" thành một hằng số duy nhất — bảng này là chỗ ba clip kia sẽ
+// cắm vào, gộp lại là lần sau phải dựng lại chính nó.
+const KU_PHIM = { 3:'summon_mo_dau', 4:'summon_mo_dau', 5:'summon_mo_dau' };
+const KU_PHIM_THU = 'assets/video/';
+// HAI đuôi, WebM ĐỨNG TRƯỚC, và cả hai đều bắt buộc — đây không phải phòng xa:
+//   · WebM VP9+Opus  — nhẹ hơn một nửa (1,39 MB vs 2,78 MB), và là đuôi DUY NHẤT mà Chromium
+//     bản mã nguồn mở đọc được. Không có nó thì không bài kiểm nào chấm được phim này: H.264
+//     là mã đóng, Chromium của Playwright trả canPlayType('video/mp4; codecs="avc1.42E01E"')
+//     ra chuỗi RỖNG.
+//   · MP4 H.264+AAC — nấc lui cho Safari và mọi thứ chưa đọc được VP9.
+// ⚠ ĐỪNG chốt bằng canPlayType('video/mp4') trơn: nó trả 'maybe' ở đúng cái trình duyệt KHÔNG
+// giải được H.264, nên một cái chốt viết như thế xanh ở chỗ nó cần đỏ. Để <source> tự chọn,
+// rồi bắt ca hỏng bằng v.error + trần cứng ở nhịp 'phim'.
+const KU_PHIM_DUOI = [['webm', 'video/webm'], ['mp4', 'video/mp4']];
+const KU_PHIM_NEN = 0.22;    // nhạc nền hạ xuống còn ngần này trong lúc chiếu
+const KU_PHIM_TRAN = 16;     // giây — trần cứng, xem ghi chú ở nhịp 'phim' trong kuVe
+function kuPhimEl(){ return document.getElementById('ku-phim'); }
+// Gán src (⇒ trình duyệt bắt đầu tải vì thẻ khai preload="auto"). Gọi được nhiều lần: gán lại
+// cùng một src là nạp lại từ đầu, nên phải so trước.
+function kuPhimNap(sao){
+  const v = kuPhimEl(), ten = KU_PHIM[sao] || KU_PHIM[5];
+  if (!v || !ten) return null;
+  if (v.dataset.ten === ten) return v;           // gán lại cùng tệp là nạp lại từ đầu
+  v.dataset.ten = ten;
+  v.innerHTML = '';
+  for (const [d, mime] of KU_PHIM_DUOI){
+    const sc = document.createElement('source');
+    sc.src = KU_PHIM_THU + ten + '.' + d; sc.type = mime;
+    v.appendChild(sc);
+  }
+  v.load();
+  return v;
+}
+// Trả false khi KHÔNG chạy được — chỗ gọi phải tự lui về nhịp 'comet'. Một cú quay đứng im chờ
+// một tệp không tới là mất luôn cả cú quay, mà vé quay thì không hoàn lại được.
+function kuPhimChay(){
+  if (window.TEST_MODE) return false;   // 177 bài hồi quy lái thẳng kheUocQuay, đừng bắt chúng chờ 10,7 giây
+  const v = kuPhimNap(kuPhamCao());
+  if (!v) return false;
+  v.classList.remove('hidden');
+  // Gán currentTime lúc thẻ chưa có metadata thì ném InvalidStateError — nuốt, vì lát nữa
+  // load xong nó tự bắt đầu từ 0.
+  try { v.currentTime = 0; } catch { /* chưa có metadata, không sao */ }
+  v.volume = Math.min(1, AudioSys.sfxVol());
+  v.muted = SETTINGS.sfx <= 0;
+  if (AudioSys.bgm) AudioSys.bgm.volume = AudioSys.bgmVol() * KU_PHIM_NEN;
+  const sk = document.getElementById('gacha-skip');
+  if (sk) sk.textContent = 'Bấm phím bất kỳ để bỏ qua phim';
+  const pr = v.play();
+  if (pr && pr.catch) pr.catch(() => {
+    // Trình duyệt chặn tự chạy CÓ TIẾNG — dù cú bấm nút Quay đã là một cử chỉ người dùng, vài
+    // trình duyệt vẫn đòi tương tác với chính thẻ video. Lui về CÂM rồi mới bỏ hẳn: bỏ ngay ở
+    // lần trượt đầu là mất phim ở đúng mấy trình duyệt khó tính nhất.
+    v.muted = true;
+    const pr2 = v.play();
+    if (pr2 && pr2.catch) pr2.catch(() => kuPhimXong());
+  });
+  kuPha('phim');
+  return true;
+}
+function kuPhimXong(){
+  const v = kuPhimEl();
+  if (v){ try { v.pause(); } catch { /* chưa chạy thì không có gì để dừng */ } v.classList.add('hidden'); }
+  const sk = document.getElementById('gacha-skip');
+  if (sk) sk.textContent = 'Bấm phím bất kỳ để bỏ qua';
+  AudioSys.refreshBgmVol && AudioSys.refreshBgmVol();
+  if (_kuChay && _kuPha === 'phim') kuPha('comet');
+}
 function kuPha(x){ _kuPha = x; _kuT0 = performance.now(); if (x === 'the') _kuSao = 0; }
 function kuPhamCao(){ return Math.max(..._kuKq.map(k => k.sao)); }
 function kuHet(){
@@ -20739,6 +20811,10 @@ function kuTiep(){
 }
 function kuBoQua(){
   if (!_kuChay) return;
+  // Bỏ qua lúc đang chiếu phim thì CHỈ bỏ phim, không bỏ cả cú quay. Nhịp báo phẩm và cái thẻ
+  // mới là thứ người chơi bấm nút Quay để xem; nuốt luôn cả hai vì một cú bấm sốt ruột ở giây
+  // đầu là lấy mất đúng thứ họ trả vé để có. Bấm tiếp lần nữa mới bỏ nốt.
+  if (_kuPha === 'phim'){ kuPhimXong(); return; }
   if (_kuKq.length > 1){ _kuI = _kuKq.length; kuPha('luoi'); }
   else { _kuI = 0; kuPha('the'); _kuSao = 9; }
 }
@@ -20813,6 +20889,19 @@ function kuVeChi(g2, x, y, s, c, bong, khung){
 function kuVe(){
   const F = kuFit(); if (!F){ _kuRaf = requestAnimationFrame(kuVe); return; }
   const g2 = F.g, W2 = F.W, H2 = F.H, now = performance.now(), e = (now - _kuT0)/1000;
+  if (_kuPha === 'phim'){
+    // Phim che kín canvas nên không vẽ gì thêm — và cũng ĐỪNG vẽ: nền gradient cộng 90 ngôi sao
+    // nhấp nháy mỗi khung suốt 10,7 giây là trả tiền cho một thứ không ai nhìn thấy.
+    g2.fillStyle = '#000'; g2.fillRect(0, 0, W2, H2);
+    // Hỏi TRẠNG THÁI thẻ video thay vì nghe sự kiện 'ended'. Nghe sự kiện thì phải gỡ tay, và
+    // một lần gắn sót là cú quay sau chạy hai lần. Trễ một khung (~16ms) thì không ai đo được.
+    // Hai cái chốt dưới là cho ca tệp không tới: 'error' bắt được 404/hỏng mã, còn TRẦN CỨNG bắt
+    // ca nghẽn mạng — cả hai đều phải có, vì mạng chậm thì không ném lỗi nào, nó chỉ đứng im.
+    const v = kuPhimEl();
+    if (!v || v.error || v.ended || e > KU_PHIM_TRAN) kuPhimXong();
+    _kuRaf = requestAnimationFrame(kuVe);
+    return;
+  }
   const gr0 = g2.createRadialGradient(W2*0.5, H2*0.42, 0, W2*0.5, H2*0.42, Math.max(W2,H2)*0.75);
   gr0.addColorStop(0, '#141834'); gr0.addColorStop(1, '#04040a');
   g2.fillStyle = gr0; g2.fillRect(0, 0, W2, H2);
@@ -21001,11 +21090,16 @@ window.kheUocQuay = function(banner, n){
   getVfxAtlasImg('summon_on_cast'); if (kuPhamCao() === 5) getVfxAtlasImg('power_awaken');
   closePanels();
   const w = document.getElementById('gacha-wrap'); if (w) w.classList.remove('hidden');
-  kuFit(); kuPha('comet');
+  kuFit();
+  if (!kuPhimChay()) kuPha('comet');
   if (!_kuRaf) _kuRaf = requestAnimationFrame(kuVe);
 };
 addEventListener('keydown', e2 => { if (_kuChay){ e2.preventDefault(); e2.stopPropagation(); kuBoQua(); } }, true);
-document.addEventListener('click', () => { if (_kuChay && _kuPha === 'the') kuTiep(); });
+document.addEventListener('click', () => {
+  if (!_kuChay) return;
+  if (_kuPha === 'phim') kuPhimXong();
+  else if (_kuPha === 'the') kuTiep();
+});
 
 // ── Màn Khế Ước ──────────────────────────────────────────────────────────────
 function renderKheUoc(){
@@ -21055,6 +21149,9 @@ window.openKheUoc = function(){
   // mà pha 'nổ' bắt đầu 1,2 giây sau cú bấm. Đợi tới đó mới xin tệp là lượt quay đầu tiên
   // chắc chắn không kịp thấy hiệu ứng — đo rồi, không phải phòng xa.
   getVfxAtlasImg('summon_on_cast'); getVfxAtlasImg('power_awaken');
+  // Phim mở đầu 2,9 MB — cùng lý do với hai atlas trên, chỉ nặng hơn hẳn. Xin từ lúc mở màn thì
+  // người chơi còn đọc tỉ lệ công khai vài giây trước khi bấm Quay, đủ để tải xong.
+  kuPhimNap(5);
   if (document.fonts && document.fonts.load) document.fonts.load('700 27px "Baloo 2"');
   renderKheUoc();
 };
