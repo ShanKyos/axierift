@@ -118,7 +118,10 @@ const pass = m => console.log('PASS ' + m);
                conOn: hang[1] ? [...hang[1].querySelectorAll('.bang-tab.on')].map(x => x.textContent.trim()) : null,
                than: (document.getElementById('char-content') || {}).innerHTML?.length || 0 };
     };
-    return { info: doc('info'), chi: doc('mount'), dt: doc('mastery'), ts: doc('taytuy') };
+    const GO = ['taytuy', 'thuanthuc'];   // hai tab chủ dự án đã cho gỡ — không được quay lại
+    return { info: doc('info'), chi: doc('mount'), dt: doc('mastery'), ts: doc('taytuy'),
+      nhom: CHAR_NHOM.slice(),
+      daGo: GO.filter(id => CHAR_NHOM.includes(id) || CHAR_TABS.some(t => t.id === id)) };
   });
   console.log('nhân vật:', JSON.stringify(nv.info.cha), '· trong nhóm:', JSON.stringify(nv.chi.con));
   // 3 → 2: tab 'taytuy' (Tái Sinh) đã gỡ theo yêu cầu chủ dự án — sẽ thiết kế lại. Máy Tái
@@ -128,10 +131,16 @@ const pass = m => console.log('PASS ' + m);
   if (nv.info.hang !== 1 || nv.ts.hang !== 1)
     fail('hàng tab con hiện cả khi KHÔNG ở trong nhóm — bốn nút thừa trên mọi trang khác');
   else pass('hàng tab con chỉ hiện khi đang ở trong nhóm');
-  // HAI tab con, không phải ba: nhánh Thuần Thục đã gỡ theo yêu cầu chủ dự án, CHAR_NHOM còn
-  // ['mount', 'mastery'] (Chimera·Linh Thú và Đại Thành).
-  if (!nv.chi.con || nv.chi.con.length !== 2) fail(`nhóm có ${nv.chi.con ? nv.chi.con.length : 0} tab con, phải là 2`);
-  else pass('nhóm có 2 tab con: ' + nv.chi.con.join(' · '));
+  // ⚠ SUY TỪ `CHAR_NHOM`, ĐỪNG ĐẾM MỘT CON SỐ. Chốt cũ ghi thẳng "phải là 2" để gác việc nhánh
+  // Thuần Thục đã gỡ thì đừng quay lại — nhưng con số đếm chỉ là ĐẠI DIỆN cho chuyện đó, nên
+  // thêm một tab con hợp lệ (Khắc Thân) là bài đỏ oan, mà gỡ một tab rồi để Thuần Thục quay
+  // lại thì nó vẫn XANH. Hỏi đúng thứ cần hỏi: hàng tab con phải khớp CHAR_NHOM, và hai tab đã
+  // gỡ phải vắng mặt. Cùng vết sẹo `test_cottruyen` ("đúng 7 NPC có trang thoại").
+  if (!nv.chi.con) fail('không có hàng tab con nào');
+  else if (nv.chi.con.length !== nv.nhom.length)
+    fail(`hàng tab con vẽ ${nv.chi.con.length} mục nhưng CHAR_NHOM khai ${nv.nhom.length}`);
+  else if (nv.daGo.length) fail(`tab đã gỡ quay lại: ${nv.daGo.join(', ')}`);
+  else pass(`nhóm có ${nv.chi.con.length} tab con khớp CHAR_NHOM: ` + nv.chi.con.join(' · '));
   for (const [ten, o] of [['Chimera', nv.chi], ['Đại Thành', nv.dt]]){
     if (!o.chaOn.some(x => /Nâng Cấp/.test(x))) fail(`${ten}: tab mẹ không sáng`);
     if (!o.conOn || o.conOn.length !== 1) fail(`${ten}: tab con sáng ${o.conOn ? o.conOn.length : 0} mục, phải đúng 1`);
