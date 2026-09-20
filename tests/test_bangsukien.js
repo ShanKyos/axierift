@@ -227,7 +227,15 @@ async function moBang(p, truoc){
       const n = h.querySelector('.sk-di'); if (!n) return null;
       const truoc = curMap, nF = floats.length;      // ⚠ `floats` là `let`, KHÔNG có trên window
       n.click();
-      await new Promise(r => setTimeout(r, 400));
+      // ⚠ CHỜ ĐÚNG ĐIỀU KIỆN, ĐỪNG CHỜ 400ms — bản cũ chờ chẵn, và dưới tải (228 bài nối đuôi
+      // trên một máy không GPU) `buildWorld` rải quái/decor/iso lâu hơn ngần ấy là chuyện
+      // thường ⇒ bài ĐỎ THEO TẢI và tố cáo "nút chết" trong khi cái nút chạy hoàn hảo.
+      // Hai nhánh có hai dấu hiệu KẾT THÚC khác nhau, nên phải chờ cả hai: đi được thì `curMap`
+      // đổi, bị từ chối thì một dòng chữ bay hiện ra. Chờ đúng một cái là nhánh kia luôn ngốn
+      // trọn trần thời gian.
+      for (let i = 0; i < 80 && curMap === truoc && floats.length === nF; i++)
+        await new Promise(r => setTimeout(r, 50));
+      await new Promise(r => setTimeout(r, 80));     // cho chữ bay thứ hai kịp ra
       return { truoc, sau: curMap, bao: floats.slice(nF).map(f => f.text) };
     };
 
@@ -246,8 +254,7 @@ async function moBang(p, truoc){
     // ② nhánh ĐI THẬT. Làm SAU vì nó đổi `curMap`.
     ra.cong = mapGate(id);
     ra.di = await bam();
-    return ra;
-  });
+    return ra;  });
   if (r7.thieu || r7.khongNut) fail('§7 hàng đang diễn ra không có nút Tham Gia');
   else if (r7.khongDich) fail(`§7 nút không trỏ tới map nào: onclick="${r7.oc}"`);
   else {

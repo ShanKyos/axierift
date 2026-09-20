@@ -217,6 +217,31 @@ dòng đầu khi `_loBan` còn bật.
 
 ⇒ Việc cần làm nằm ở **`tests/test_chaos.js`**, không ở `game.js`.
 
+> ### ⚠ ĐÍNH CHÍNH (2026-09-19) — kết luận "`_loBan`" ĐÚNG, cách chữa đề ra thì SAI
+>
+> Đã đo lại và **thử cách chữa ghi ở trên: nó không chạy.** Chèn `openForgePanel()` ngay trước
+> `doChaos()` trong §3b ⇒ bài **vẫn đỏ**, và jewel vẫn không bị trừ (`ngocTru: 0`). Lý do:
+> §3a chạy `goRoyal(false)` đẩy người chơi ra xa Thợ Rèn 4000px, mà `openForgePanel()` từ xa
+> thì **đi tới thợ rèn chứ không mở bảng** (xem `CLAUDE.md`) — nên nó không bao giờ tới được
+> dòng đặt `_loBan = false`.
+>
+> **Nguyên nhân thật là LỀ THỜI GIAN, không phải `reset()` thiếu một dòng.** `_loBan` nhả ở
+> `LO_KHUI` (1150ms) **+ 1000ms** = ~2150ms, còn `xong()` chờ chẵn **2400ms** ⇒ lề đúng
+> **250ms**. Dưới headless không GPU thì hai hẹn giờ lệch ngần ấy là chuyện thường, nên cú bấm
+> kế tiếp bị khoá nuốt **trong im lặng**. Bằng chứng: nâng `xong()` lên 4200ms ⇒ **bài xanh,
+> không sửa một dòng nào trong `game.js`**. Mạch đo từng 100ms cho thấy `#lo-loi` không bao giờ
+> đổi sang *"Yêu tinh chộp lấy…"*, tức `doChaos()` thoát ngay dòng đầu.
+>
+> Vì sao §3c vẫn xanh: §3b bị khoá nuốt nên nó **không đặt khoá mới**, và khoá của §3a nhả
+> trong lúc §3b chờ — §3c vì thế gặp một cỗ máy đã sạch. Đó cũng là lý do bài đỏ **tất định**
+> ở đúng một mục chứ không rải rác.
+>
+> ⇒ **Đã sửa**, và không sửa bằng một con số to hơn (số to hơn chỉ dời cái ngưỡng đỏ-theo-tải
+> đi chỗ khác, và sẽ nói dối lần nữa nếu ai đổi `LO_KHUI`). `game.js` phơi
+> `window.loDangBan()`, `xong()` **chờ đúng điều kiện** với trần 6 giây.
+> *Bài học: một bài kiểm chờ bằng con số đoán tay thì đỏ theo TẢI MÁY chứ không theo lỗi — và
+> nó tố cáo một lỗi cân bằng hoàn toàn không có thật.*
+
 > ⚠ **Đây là chỗ sửa lại báo cáo trước.** `docs/QA_CHOI_THU.md` từng ghi `test_chaos` đỏ vì
 > *"nhiễm trạng thái từ mục trước — Đổi Hệ chạy đúng khi cô lập"*. Nửa sau đúng (cơ chế chạy),
 > **nửa đầu sai**: chạy riêng bài đó **đỏ 3/3 lượt**, tức nó đỏ tất định.
@@ -273,7 +298,7 @@ Dark Knight 1.808 thấp nhất) · chênh Máu **2,01×** (ngược lại). Đ�
 |--:|---|---|
 | 1 | Cho `#combat-log .cl-row` xuống dòng, hoặc rút ngắn câu thưởng | `style.css:480` |
 | 2 | Khai `range` cho `thieulam` · `minhgiao` · `bug` (hoặc `\|\| 90` ở dòng 5347) | `game.js` |
-| 3 | Sửa `reset()` của `test_chaos` để nhả `_loBan` | `tests/test_chaos.js` |
+| 3 | ~~Sửa `reset()` để nhả `_loBan`~~ → **ĐÃ SỬA**: `xong()` chờ `window.loDangBan()` thay vì chờ 2400ms | `tests/test_chaos.js` · `game.js` |
 | 4 | Viết lại bước 2 hướng dẫn cho đúng NPC + đúng điều kiện | `game.js:26934` |
 | 5 | Bước hướng dẫn hết giờ thì DỪNG, đừng nhảy sang bước bất khả thi tại map hiện tại | `game.js` `updateTut` |
 | 6 | Tiêu đề phụ tuyến lấy `MAPS[q.map]`, không lấy `MAPS[n.map]` | `game.js:29166` |

@@ -30,6 +30,7 @@ window.I18N_EN = {
   'help.k.map': 'World Map',
   'help.k.quest': 'Quest Log',
   'help.k.minimap': 'Show/hide the small map',
+  'help.k.amthanh': 'Mute/unmute all sound — music and effects',
   'help.k.party': 'Party',
   'help.k.friend': 'Friends',
   'help.k.settings': 'Settings',

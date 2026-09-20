@@ -23,20 +23,24 @@ const { chromium } = require('playwright');
     // 1150ms) giữa cú bấm và lúc bốc kết quả — cả tiếng động lẫn dòng chữ của công thức đều
     // nổ ra ở NỬA SAU. Bài này đo KẾT QUẢ công thức, không đo hoạt cảnh, nên chỉ cần đợi cho
     // hết nhịp rồi mới đọc. (Phần hoạt cảnh do test_chaosanim.js gác riêng.)
-    // ⚠ CHỜ ĐÚNG CÁI CỜ, ĐỪNG NGỦ MỘT KHOẢNG CỐ ĐỊNH. Khoá `_loBan` giữ từ lúc bấm tới khi
-    // bảng VẼ LẠI — LO_KHUI (1150ms) cộng 1000ms nữa, tổng ~2150ms — và `doChaos()` `return`
-    // NGAY nếu khoá còn. Bản cũ ngủ 2400ms, nhìn thì dư 250ms, nhưng đo được: tới bước 3b
-    // khoá VẪN còn `true` (4/5 lượt, cả khi chạy một mình), nên `run()` của công thức Đổi Hệ
-    // **không được gọi một lần nào** và bài in ra "Đổi Hệ không đổi được hệ (Beast → Beast)".
-    // Một lỗi GIẢ, và nó đổ tội cho công thức trong khi chỗ hỏng là cảnh dựng — chính cái bẫy
-    // mà chú thích cũ ngay đây đã mô tả, chỉ là chữa bằng một con số thay vì bằng một điều kiện.
-    // `soKetKhoa` đếm số lần phải chờ thêm; in ra ở cuối để không ai tưởng chỗ này miễn phí.
-    let soKetKhoa = 0;
+    // ⚠ CHỜ ĐÚNG ĐIỀU KIỆN, ĐỪNG CHỜ MỘT CON SỐ. Khoá `_loBan` giữ tới khi bảng vẽ lại, tức
+    // LO_KHUI (1150ms) + 1000ms = ~2150ms. Bản cũ chờ chẵn 2400ms — lề đúng 250ms, và dưới
+    // headless không GPU thì hai hẹn giờ lệch nhau ngần ấy là chuyện thường: cú bấm KẾ TIẾP
+    // bị khoá nuốt mất TRONG IM LẶNG (`doChaos` return ngay dòng đầu), và bài đọc ra thành
+    // "Đổi Hệ không đổi được hệ" — một lỗi CÂN BẰNG hoàn toàn không có thật.
+    // Đo được: nâng lên 4200ms là bài xanh, tức chưa bao giờ có lỗi nào trong game cả.
+    // ⚠ VÀ ĐỪNG CHỮA BẰNG MỘT CON SỐ TO HƠN: nó chỉ dời cái ngưỡng đỏ-theo-tải đi chỗ khác,
+    // và sẽ nói dối lần nữa nếu ai đổi LO_KHUI. Hỏi thẳng khoá qua `window.loDangBan()`.
     const xong = async () => {
-      if (_loBan) soKetKhoa++;
-      for (let i = 0; i < 200 && _loBan; i++) await new Promise(r2 => setTimeout(r2, 40));
-      await new Promise(r2 => setTimeout(r2, 120));   // cho renderForge vẽ nốt
-      if (_loBan) o.__khoaKet = (o.__khoaKet || 0) + 1;   // vẫn khoá sau 8 giây — nói ra
+      // Thiếu cửa đọc thì DỪNG HẲN với một câu nói đúng lý do. Lui về "coi như đã nhả" là
+      // quay lại đúng bài toán chờ mò, chỉ khác là nay chờ có 50ms.
+      if (typeof window.loDangBan !== 'function')
+        throw new Error('thiếu window.loDangBan() — không có cách nào biết Lò đã nhả khoá chưa');
+      for (let i = 0; i < 120; i++){                 // trần 6 giây — quá ngần ấy là hỏng thật
+        await new Promise(r2 => setTimeout(r2, 50));
+        if (!window.loDangBan()) return;
+      }
+      throw new Error('Lò Hỗn Độn không nhả khoá sau 6 giây');
     };
     const reset = () => {
       applyTestBoost(); calcDerived(); chaosClear(); chaosGroup = 'ren'; chaosPick = null;

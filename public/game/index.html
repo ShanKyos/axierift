@@ -62,17 +62,22 @@
          số bày hai chỗ thì chỗ nào cũng bị liếc qua, mà không chỗ nào được tin. -->
     <div id="hud-buff" title="Rượu Hổ Cốt — tạm thời +12% công lực" style="display:none">🍶</div>
     <div id="hud-loidon" title="Bùa Chắn Sét — giảm 40% sát thương sét" style="display:none">⚡</div>
-    <div id="hud-time" title="Đồng Hồ Thế Giới — bấm mở Bảng Sự Kiện" onclick="openEventBoard()" style="cursor:pointer">⏱ --:--</div>
+    <!-- Đồng hồ và nút loa đứng CÙNG MỘT HÀNG: cả hai là chip trạng thái nền (giờ thế giới ·
+         có tiếng hay không), và xếp ngang thì không tốn thêm một dòng chiều cao nào của HUD. -->
+    <div id="hud-chip">
+      <div id="hud-time" title="Đồng Hồ Thế Giới — bấm mở Bảng Sự Kiện" onclick="openEventBoard()" style="cursor:pointer">⏱ --:--</div>
+      <button id="btn-am" type="button" aria-pressed="false" title="Tắt âm thanh (phím L)">🔊</button>
+    </div>
   </div>
   <div id="hud-map"></div>
   <div id="hud-right">
     <div id="hud-vi" role="group" aria-label="Ví">
       <button class="vi-o vi-lumen" title="Lumen — tiền chính: tiệm, rèn, nâng kỹ năng. Bấm mở Túi Đồ · Vật Liệu"
-              onclick="window.moViTien()"><i>◈</i><b id="hud-silver">0</b></button>
+              onclick="window.moViTien()"><img class="vi-ic" src="assets/ui/gt_xu_vang.webp" alt=""><b id="hud-silver">0</b></button>
       <button class="vi-o vi-ve" title="Ấn Giao Kết — vé quay Khế Ước Ragoon. Bấm mở bảng Khế Ước"
-              onclick="window.openKheUoc()"><i>✦</i><b id="hud-ve">0</b></button>
+              onclick="window.openKheUoc()"><img class="vi-ic" src="assets/ui/gt_xu_bac.webp" alt=""><b id="hud-ve">0</b></button>
       <button class="vi-o vi-shard" title="Shard — tiền cao cấp: đổi vé quay, nới túi và kho. Bấm mở Quầy Shard"
-              onclick="window.moQuayShard()"><i>♦</i><b id="hud-shard">0</b></button>
+              onclick="window.moQuayShard()"><img class="vi-ic" src="assets/ui/gt_ngoc_lam.webp" alt=""><b id="hud-shard">0</b></button>
     </div>
     <button id="btn-pk" class="hbtn pk-off hidden" title="Bật/tắt chế độ PK">PK: Tắt</button>
     <button id="btn-auto" class="hbtn auto-off hidden" title="Tự đánh — treo máy: tự đánh quái & tung kỹ năng quanh điểm neo, tối đa 1-2 bãi (Z)">⚔ AUTO</button>
@@ -154,8 +159,8 @@
       <!-- Tổ Đội và Hảo Hữu CHƯA có tranh trong bộ ic_*.png, nên dùng ký hiệu chữ (gold, cùng
            cỡ ô). Đừng mượn tạm một tranh của nút khác: hai nút cùng hình là hai nút không phân
            biệt được, mà nhãn thì chỉ hiện lúc rê chuột. -->
-      <button class="mc-btn mc-chu" id="btn-party"  title="Tổ Đội (P)">⚑<span>Tổ Đội</span></button>
-      <button class="mc-btn mc-chu" id="btn-friend" title="Hảo Hữu (H)">♥<span>Hảo Hữu</span></button>
+      <button class="mc-btn" id="btn-party"  title="Tổ Đội (P)"><img src="assets/ui/gt_ic_todoi.webp" alt=""><span>Tổ Đội</span></button>
+      <button class="mc-btn" id="btn-friend" title="Hảo Hữu (H)"><img src="assets/ui/gt_ic_haohuu.webp" alt=""><span>Hảo Hữu</span></button>
       <button class="mc-btn" id="btn-map"      title="Bản Đồ (M)"><img src="assets/ui/ic_bando.png" alt=""><span>Bản Đồ</span></button>
       <button class="mc-btn" id="btn-settings" title="Cài Đặt (O)"><img src="assets/ui/ic_caidat.png" alt=""><span>Cài Đặt</span></button>
       <!-- ⚠ Ký hiệu là `≡`, KHÔNG phải `☰`. Cái thứ hai trông giống hệt và cũng đọc ra "menu",
@@ -294,6 +299,13 @@
     <div id="cc-slots-note"></div>
     <div id="cc-classes"></div>
     <div id="cc-detail" class="cc-detail"></div>
+    <!-- CHỌN AXIE ĐẠI DIỆN — dựng bằng JS (ccAvaRender).
+         Cùng với bảng Khế Ước, đây là cửa người chơi thường có để chọn con Axie của mình:
+         trước bản này `player.avatar` chỉ đổi được bằng lệnh gỡ rối `/avatar <id>`, tức mô
+         hình đã chốt của game ("Axie là avatar, 5 lớp là sức mạnh") không có mặt nào ở đây.
+         Avatar mang 0 chỉ số, 0 kỹ năng, 0 trang bị — nên nó TỰ DO, không khoá theo lớp và
+         không khoá theo sở hữu. Cửa chung là avaCamDuoc() trong game.js. -->
+    <div id="cc-avatar"></div>
     <div class="cc-name">
       <label for="inp-char-name">Tên nhân vật</label>
       <input id="inp-char-name" maxlength="24" placeholder="Đặt tên cho nhân vật…" autocomplete="off" spellcheck="false">
