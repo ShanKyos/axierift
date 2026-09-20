@@ -222,6 +222,107 @@ let bad = 0; const fail = m => { bad++; console.log('FAIL ' + m); };
   if (!r9.coMin) fail('⑨ thẻ không in đúng `md.min` làm giới hạn cấp');
   if (!r9.coRange) fail('⑨ thẻ không in đúng `md.range` làm dải cấp quái');
 
+  // ---- 10. HAI MỨC: mọi map phải thuộc ĐÚNG MỘT vùng ----
+  // Thêm một map vào `MAPS` + `THE_GIOI` mà quên `TG_VUNG` thì map ấy KHÔNG CÒN CỬA NÀO trên
+  // bản đồ thế giới — danh sách bên phải vẫn có nó nên không ai thấy thiếu. Im lặng tuyệt đối.
+  const r10 = await p.evaluate(() => {
+    const thuoc = {}, trung = [];
+    for (const v of TG_VUNG) for (const m of v.maps){
+      if (thuoc[m.id]) trung.push(m.id + ' (' + thuoc[m.id] + '+' + v.id + ')');
+      thuoc[m.id] = v.id;
+    }
+    return { soVung: TG_VUNG.length,
+      thieu: Object.keys(THE_GIOI).filter(k => MAPS[k] && !thuoc[k]),
+      trung, ma: Object.keys(thuoc).filter(k => !MAPS[k]),
+      leLoi: TG_VUNG.filter(v => v.maps.length !== 2).map(v => v.id + ':' + v.maps.length) };
+  });
+  console.log('10) 6 vùng × 2 map:', JSON.stringify(r10));
+  if (r10.thieu.length) fail(`⑩ ${r10.thieu.length} map không thuộc vùng nào ⇒ không có cửa nào vào từ bản đồ: ${r10.thieu.join(', ')}`);
+  if (r10.trung.length) fail(`⑩ map nằm trong hai vùng: ${r10.trung.join(', ')}`);
+  if (r10.ma.length) fail(`⑩ TG_VUNG trỏ tới map không tồn tại: ${r10.ma.join(', ')}`);
+  if (r10.leLoi.length) fail(`⑩ vùng không đủ đúng 2 map: ${r10.leLoi.join(', ')}`);
+
+  // ---- 11. VẼ MỘT CHỖ, BẤM MỘT CHỖ ----
+  // Phần vẽ và phần bắt chuột đều đi qua `tgXY`, nhưng hai bên tự nhân bán kính riêng. Lệch
+  // nhau thì cái ghim hiện ra ở đây mà bấm vào lại không ăn — người chơi đọc ra "bảng bị đơ".
+  const r11 = await p.evaluate(() => {
+    const ra = { muc1: [], muc2: [] };
+    window.tgVaoVung(null);
+    for (let i = 0; i < 40; i++) veTheGioi(document.createElement('canvas').getContext('2d'));
+    for (const v of TG_VUNG){
+      const q = tgXY(v.dau[0], v.dau[1]);
+      ra.muc1.push({ id: v.id, bat: tgTaiDiem(q.x, q.y) });
+    }
+    for (const v of TG_VUNG){
+      window.tgVaoVung(v.id);
+      for (let i = 0; i < 60; i++) veTheGioi(document.createElement('canvas').getContext('2d'));
+      for (const m of v.maps){
+        const q = tgXY(m.at[0], m.at[1]);
+        ra.muc2.push({ id: m.id, vung: v.id, bat: tgTaiDiem(q.x, q.y),
+          trongKhung: q.x > 4 && q.x < TG_KHUNG.w - 4 && q.y > 4 && q.y < TG_KHUNG.h - 40,
+          // khoảng cách tới CON DẤU nướng sẵn trong tranh, tính theo tỉ lệ art
+          xaDau: Math.hypot(m.at[0] - v.dau[0], m.at[1] - v.dau[1]) });
+      }
+    }
+    window.tgVaoVung(null);
+    return ra;
+  });
+  console.log('11) vẽ ↔ bấm:', JSON.stringify(r11.muc2.map(o => o.id + ':' + o.bat + (o.trongKhung?'':'!KHUNG') + ':' + o.xaDau.toFixed(3))));
+  for (const o of r11.muc1) if (o.bat !== o.id) fail(`⑪ mức 1: vẽ con dấu '${o.id}' ở một chỗ mà bấm đúng chỗ đó ra '${o.bat}'`);
+  for (const o of r11.muc2){
+    if (o.bat !== o.id) fail(`⑪ mức 2: vẽ ghim '${o.id}' ở một chỗ mà bấm đúng chỗ đó ra '${o.bat}'`);
+    if (!o.trongKhung) fail(`⑪ ghim '${o.id}' rơi ra ngoài khung khi mở vùng '${o.vung}' — người chơi không thấy nó`);
+    // 0,085 là ngưỡng đã đo: bán kính con dấu (~0,047) + bán kính huy hiệu quy về tỉ lệ art + lề
+    if (o.xaDau < 0.085) fail(`⑪ ghim '${o.id}' cắm ĐÈ lên con dấu nướng sẵn của tranh (cách ${o.xaDau.toFixed(3)}, cần ≥0,085)`);
+  }
+
+  // ---- 12. BẤM CON DẤU = VÀO VÙNG, không nhảy thẳng sang map ----
+  const r12 = await p.evaluate(() => {
+    window.TEST_MODE = false;
+    travelTo('ardhaven'); player.level = 1; player.wpUnlocked = { ardhaven:1 };
+    const truoc = curMap;
+    tgChon('lotro');                       // bấm con dấu của một vùng KHOÁ
+    const sauBam = curMap, moVung = _tgVung;
+    tgChon('<lui>');
+    const sauLui = _tgVung;
+    window.TEST_MODE = true;
+    return { truoc, sauBam, moVung, sauLui };
+  });
+  console.log('12) bấm con dấu:', JSON.stringify(r12));
+  if (r12.sauBam !== r12.truoc) fail(`⑫ bấm một VÙNG mà dịch chuyển thẳng (${r12.truoc} → ${r12.sauBam})`);
+  if (r12.moVung !== 'lotro') fail(`⑫ bấm con dấu mà không mở vùng (đang mở: ${r12.moVung})`);
+  if (r12.sauLui !== null) fail(`⑫ bấm nút lùi mà không về mức thế giới (còn: ${r12.sauLui})`);
+
+  // ---- 13. TRANH PHẢI PHỦ KÍN KHUNG Ở CẢ HAI MỨC ----
+  // Tấm cuộn không chạm mép tệp, mà tệp webp là RGB nên chỗ trống ra ĐEN. Phủ theo khổ tệp thì
+  // có vệt đen dọc mép bảng, và phóng vào hòn sát rìa thì hở hẳn một dải. Đo bốn góc + bốn mép.
+  const r13 = await p.evaluate(() => {
+    const c = document.createElement('canvas');
+    c.width = TG_KHUNG.w; c.height = TG_KHUNG.h;
+    const g = c.getContext('2d');
+    const doMot = () => {
+      for (let i = 0; i < 80; i++) veTheGioi(g);
+      const d = g.getImageData(0, 0, c.width, c.height).data;
+      const diem = [];
+      for (const [x, y] of [[1,1],[c.width-2,1],[1,c.height-2],[c.width-2,c.height-2],
+                            [c.width>>1,1],[c.width>>1,c.height-2],[1,c.height>>1],[c.width-2,c.height>>1]]){
+        const i = (y*c.width + x)*4;
+        diem.push(d[i] + d[i+1] + d[i+2]);
+      }
+      return Math.min(...diem);
+    };
+    window.tgVaoVung(null);
+    const ra = { thegioi: doMot(), vung: {} };
+    for (const v of TG_VUNG){ window.tgVaoVung(v.id); ra.vung[v.id] = doMot(); }
+    window.tgVaoVung(null);
+    return ra;
+  });
+  console.log('13) mép tối nhất (tổng RGB):', JSON.stringify(r13));
+  // Viền tối của chính tấm art + lớp vignette kéo mép xuống, nhưng ĐEN TUYỀN (≈0) chỉ có thể là
+  // chỗ không có art. Ngưỡng 24 đo được: mép art thật ra 40-160, chỗ hở ra 0-3.
+  if (r13.thegioi < 24) fail(`⑬ mức thế giới hở mép (tổng RGB ${r13.thegioi}) — tranh không phủ kín khung`);
+  for (const k in r13.vung) if (r13.vung[k] < 24) fail(`⑬ mở vùng '${k}' thì hở mép (tổng RGB ${r13.vung[k]})`);
+
   if (errs.length) fail('lỗi trang: ' + errs.slice(0,3).join(' | '));
   console.log(bad ? `\n${bad} LỖI` : '\nTẤT CẢ XANH');
   await b.close();
