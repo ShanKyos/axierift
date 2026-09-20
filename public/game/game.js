@@ -23605,7 +23605,8 @@ function togglePanel(which){
   // ⚠ KHÔNG có khoá 'qlog' ở đây: Nhật Ký thôi là cửa sổ nổi (xem `.bang-cam`). Cắm lại vào
   // bảng này là mở Túi Đồ thì một mảnh HUD biến mất.
   const map = { char:'panel-char', inv:'panel-inv', bag:'panel-bag', skill:'panel-skill', map:'panel-map', settings:'panel-settings', help:'panel-help',
-                party:'panel-party', friend:'panel-friend', ngocbank:'panel-ngocbank', nhat:'panel-nhat' };
+                party:'panel-party', friend:'panel-friend', ngocbank:'panel-ngocbank', nhat:'panel-nhat',
+                lucchien:'panel-lucchien', qua:'panel-qua' };
   const id = map[which];
   const p = el(id);
   if (!p) return;                     // khoá lạ thì im lặng bỏ qua, không ném lỗi giữa lượt chơi
@@ -23671,7 +23672,11 @@ function togglePanel(which){
 // 'xh' (Tổ Đội + Bạn Bè) là một nhóm của main, giữ nguyên. 'qlog' không còn ở đây vì Nhật Ký
 // đã cắm vào cột phải.
 const BANG_NHOM = { char:'nv', inv:'do', bag:'do', skill:'kn', map:'bd', settings:'cd', help:'hd',
-                    party:'xh', friend:'xh', ngocbank:'ng', nhat:'ln' };
+                    party:'xh', friend:'xh', ngocbank:'ng', nhat:'ln',
+                    // Mỗi bảng một nhóm riêng ⇒ mở cái này là cái kia đóng, đúng như Bản Đồ và
+                    // Kỹ Năng. Lực Chiến là một bảng ĐỌC (không thao tác gì) nên để nó ở chung
+                    // với Túi Đồ chỉ tổ chiếm màn hình mà không giúp so sánh được gì.
+                    lucchien:'lc', qua:'qa' };
 // Nhóm được phép ở chung màn hình với nhóm khác. 'do' là hai NỬA của một cửa sổ nên nó tự
 // mở kèm nhau qua BANG_NHOM; không khai ở đây, nếu không mở Túi Đồ là bảng Bản Đồ nằm lại.
 const BANG_SONG = {};
@@ -23689,6 +23694,8 @@ function renderPanel(which){
   if (which==='help'){ renderHelpPanel(); return; }
   if (which==='ngocbank'){ renderNgocBank(); return; }
   if (which==='nhat'){ renderLenhNhat(); return; }
+  if (which==='lucchien'){ renderLucChien(); return; }
+  if (which==='qua'){ renderQua(); return; }
   if (which==='char'){ window.charTab = 'info'; renderCharPanel(); }
   else if (which==='inv') renderInv();
   else if (which==='bag') renderBag();
@@ -23705,7 +23712,7 @@ let _bangChong = [];
 // nó đã thành khối cắm trong cột phải. Cắm lại vào đây là ESC đóng mất một mảnh HUD.
 const _MOI_BANG = ['panel-char','panel-inv','panel-bag','panel-skill','panel-map','panel-quest',
                    'panel-settings','panel-stage','panel-forge','panel-help','panel-ngocbank','panel-nhat',
-                   'panel-party','panel-friend'];
+                   'panel-party','panel-friend','panel-lucchien','panel-qua'];
 function bangDangMo(){ return _MOI_BANG.filter(id => { const e2 = el(id); return e2 && !e2.classList.contains('hidden'); }); }
 function bangGhiChong(id){
   _bangChong = _bangChong.filter(x => x !== id);
@@ -25280,6 +25287,527 @@ function renderLenhNhat(){
   p.innerHTML = h;
 }
 
+// ═══════════════════════════════════════════════════════════════════════════════════════
+// ⚔ LỰC CHIẾN — một con số trả lời "mình mạnh tới đâu", và nó phải ĐO ĐƯỢC
+// ═══════════════════════════════════════════════════════════════════════════════════════
+// ⚠ NĂM DÒNG PHÂN RÃ SUY TỪ HỆ ĐANG CHẠY, KHÔNG CHÉP TỪ ẢNH MẪU. Ảnh mẫu (một game kiếm
+// hiệp) có "Lực chiến thú cưỡi" và "Lực Chiến Thần Binh" — dự án này KHÔNG có cái nào:
+//   · thú cưỡi — Ragoon đã gỡ, và con Axie thay chỗ nó thì luật Đổi Vai nói thẳng là
+//     **0 chỉ số**. Trục sức mạnh từ phía Axie đã bị tháo BA lần và lần nào cũng quay lại
+//     dưới dạng "chỉ vài dòng nhỏ thôi"; một dòng "Lực chiến Axie" trên bảng này là lần
+//     thứ tư, chỉ khác tên.
+//   · Thần Binh — đã gỡ. Chỉ còn khoản NỀN tầng 1 (+3 Lực +2 Mẫn +2 Cốt +3 Thể) mà mọi
+//     nhân vật có sẵn từ cấp 1, nên nó thuộc dòng CƠ BẢN, không phải một hệ riêng.
+// Năm nguồn THẬT: cấp+chỉ số · trang bị · kỹ năng · Đại Thành · Tái Sinh.
+//
+// ⚠ HỆ SỐ ĐẶT THEO SỐ ĐO, không theo cảm giác — xem `tools/do_lucchien.cjs`. Mỗi hệ số trả
+// lời đúng một câu: "một điểm của trục này đáng mấy điểm Công Kích?". Công Kích là đơn vị
+// gốc (hệ số 1,0) vì nó là thứ duy nhất người chơi đọc được thẳng trên bảng Nhân Vật.
+const LC_HE = {
+  atk:     1.00,   // đơn vị gốc
+  hp:      0.09,   // 1 máu ≈ 0,09 — cấp 60 có ~11k máu so với ~1k công, nên phải nhỏ
+  qi:      0.06,
+  defRed:  800,    // 0…~0,6 (giảm thẳng % sát thương nhận) ⇒ tối đa ~480
+  crit:    620,    // 0…0,65
+  critDmg: 240,    // phần VƯỢT ×2 của critDmgMult
+  eva:     520,    // 0…0,45
+  dmgred:  7,      // đơn vị PHẦN TRĂM (0…DMGRED_TRAN), khác defRed vốn là tỉ lệ
+  pierce:  360,    // 0…1
+  aspd:    760,    // phần NHANH HƠN mốc gốc 0,85 giây/đòn
+};
+// ⚠ CẤP KỸ NĂNG VÀ ĐIỂM TIỀM NĂNG **KHÔNG ĐI QUA `calcDerived()`** — và đo mới biết. Hai trục
+// ấy nhân vào sát thương ở TRONG `castSkill()` (`skLvMult` × `skTnMult`), nên nếu chỉ đo các
+// trường trên `player` thì dòng "Lực chiến kỹ năng" ra **đúng 0** kể cả với người đã rót 40 cấp
+// vào cả bốn ô — đo được, và một dòng luôn bằng 0 thì tệ hơn không có dòng đó.
+//
+// ⚠ ĐƯA THẲNG VÀO CÔNG THỨC TỔNG, ĐỪNG CỘNG RIÊNG CHO DÒNG ẤY. Cách sai là tính riêng một con
+// số cho dòng kỹ năng rồi trừ ra khỏi phần dư — làm thế là dán nhãn lại phần sức mạnh CƠ BẢN
+// chứ không đo thêm được gì. Cho nó vào `lucChien()` thì phép phân rã bằng cách TẮT nguồn tự
+// đo được nó, y hệt bốn dòng kia, không cần một nhánh đặc biệt nào.
+//
+// Trung bình trên các ô ĐANG CẮM chứ không trên mọi chiêu đã học: một chiêu không nằm trên
+// thanh thì không bấm được, nên nâng cấp nó không làm người chơi mạnh hơn trong trận.
+function lcSkMul(){
+  const bar = (typeof player !== 'undefined' && player && player.skillBar) || [];
+  let n = 0, t = 0;
+  for (const id of bar){ if (!id) continue; n++; t += skLvMult(id) * skTnMult(id); }
+  return n ? t / n : 1;
+}
+// ⚠ CỬA DUY NHẤT. Mọi chỗ in ra Lực Chiến — nút HUD, bảng phân rã, mốc quà — đều gọi hàm
+// này. Chép công thức ra chỗ thứ hai là hai chỗ nói hai con số, và người chơi sẽ tin con số
+// to hơn.
+function lucChien(p){
+  p = p || (typeof player !== 'undefined' ? player : null);
+  if (!p) return 0;
+  const nhanh = Math.max(0, 0.85 - (p.aspd != null ? p.aspd : 0.85));
+  return Math.round(
+      (p.atk    || 0) * LC_HE.atk
+    + (p.maxHp  || 0) * LC_HE.hp
+    + (p.maxQi  || 0) * LC_HE.qi
+    + (p.defRed || 0) * LC_HE.defRed
+    + (p.crit   || 0) * LC_HE.crit
+    + Math.max(0, (p.critDmgMult || 2) - 2) * LC_HE.critDmg
+    + (p.eva    || 0) * LC_HE.eva
+    + (p.dmgred || 0) * LC_HE.dmgred
+    + (p.pierce || 0) * LC_HE.pierce
+    + nhanh           * LC_HE.aspd
+    // Chỉ tính cho NGƯỜI CHƠI NÀY: `skLvMult`/`skTnMult` đọc `player` toàn cục, nên áp cho
+    // một đối tượng khác (thân người từ xa chẳng hạn) là gán nhầm cấp chiêu của mình cho họ.
+    + ((typeof player !== 'undefined' && p === player)
+        ? (p.atk || 0) * Math.max(0, lcSkMul() - 1) * LC_HE.atk : 0));
+}
+window.lucChien = lucChien;
+
+// ⚠ PHÂN RÃ BẰNG PHÉP ĐO, KHÔNG BẰNG PHÉP CỘNG RIÊNG. Cách sai (và hấp dẫn) là viết một
+// công thức thứ hai cho từng nguồn rồi cộng lại: hai công thức thì bảo đảm chúng lệch nhau
+// sau vài đợt cân bằng, và tổng các dòng sẽ không bằng con số to in ở trên — thứ người chơi
+// thấy ngay. Nay mỗi dòng đo bằng cách TẮT nguồn ấy đi rồi chạy lại `calcDerived()`, nên nó
+// đọc đúng cái dây chuyền nhân thật, kể cả những chỗ nhân chồng nhau (Đại Thành nhân vào
+// trang bị, Tái Sinh nhân vào tổng…).
+//
+// ⚠ `tat()` TRẢ VỀ HÀM BẬT LẠI. Đừng ghi trạng thái cũ vào một biến ngoài — thêm nguồn thứ
+// sáu mà quên khôi phục một trường là người chơi mất trang bị THẬT ngay lúc mở bảng.
+const LC_NGUON = [
+  { id:'nv',  ten:'Lực chiến nhân vật', mau:'#ffd76a', du:true },   // phần DƯ, xem cuối hàm
+  { id:'do',  ten:'Lực chiến trang bị', mau:'#7ecbff',
+    tat(){ const g = player.equip; player.equip = {}; return () => { player.equip = g; }; } },
+  { id:'kn',  ten:'Lực chiến kỹ năng',  mau:'#a0ffe9',
+    tat(){ const a = player.skillLv, b = player.skillTn;
+           player.skillLv = {}; player.skillTn = {};
+           return () => { player.skillLv = a; player.skillTn = b; }; } },
+  { id:'dt',  ten:'Lực chiến Đại Thành', mau:'#c07fe0',
+    tat(){ const m = player.mastery; player.mastery = {}; return () => { player.mastery = m; }; } },
+  { id:'ts',  ten:'Lực chiến Tái Sinh',  mau:'#ff9a4d',
+    tat(){ const r = player.resetCount; player.resetCount = 0; return () => { player.resetCount = r; }; } },
+];
+// ⚠ `calcDerived()` KẸP `player.hp` XUỐNG `maxHp` (dòng ~8532). Tắt trang bị là máu trần tụt
+// hàng nghìn ⇒ máu hiện tại bị kẹp theo, và nếu không cất đi thì **mở bảng Lực Chiến là mất
+// máu thật** — im lặng, không lỗi nào. Cất `hp`/`qi` trước, trả lại SAU lượt `calcDerived()`
+// cuối cùng.
+function lcPhanRa(){
+  if (typeof player === 'undefined' || !player) return null;
+  const tong = lucChien(player);
+  const hp0 = player.hp, qi0 = player.qi;
+  const dau = LC_NGUON.filter(n => n.tat);
+  // ① NỀN — tắt CẢ BỐN nguồn đầu tư cùng lúc rồi đo. Đây là dòng "Lực chiến nhân vật", và nó
+  //    là một con số ĐO ĐƯỢC chứ không phải phần dư của một phép trừ.
+  const batAll = dau.map(n => n.tat());
+  let nen;
+  try { calcDerived(); nen = lucChien(player); }
+  finally { for (const f of batAll) f(); }
+  // ② Đóng góp THÔ của từng nguồn — tắt riêng từng cái.
+  const tho = {};
+  for (const n of dau){
+    const bat = n.tat();
+    try { calcDerived(); tho[n.id] = Math.max(0, tong - lucChien(player)); }
+    finally { bat(); }
+  }
+  calcDerived();                                   // ⚠ DÒNG BẮT BUỘC — trả lại nguyên trạng
+  player.hp = Math.min(hp0, player.maxHp);
+  player.qi = Math.min(qi0, player.maxQi);
+  // ③ ⚠ TỔNG BỐN PHẦN THÔ **LỚN HƠN** PHẦN CÒN LẠI, và đó không phải lỗi — bốn nguồn NHÂN vào
+  //    nhau: Đại Thành nhân vào trang bị, Tái Sinh nhân vào tổng, cấp kỹ năng nhân vào Công
+  //    Kích vốn đã được trang bị đẩy lên. Tắt riêng từng cái thì phần GIAO THOA bị đếm nhiều
+  //    lần. Đo được lệch −133 trên một nhân vật cấp 120 đã đầu tư cả bốn trục.
+  //    Cách sai (và bản đầu của tôi làm đúng thế) là để phần dư `max(0, tong − Σ)` nuốt chỗ
+  //    lệch: nó kẹp về 0 và **mất trắng 133 điểm** khỏi bảng, tức năm dòng không còn cộng đúng
+  //    tổng — thứ người chơi cộng nhẩm ra ngay.
+  //    Cách đúng: chia phần giao thoa cho bốn trục THEO TỈ LỆ đóng góp thô của chúng. `nen` giữ
+  //    nguyên (nó đo trực tiếp), và bốn dòng kia chia nhau đúng `tong − nen`.
+  const conLai = Math.max(0, tong - nen);
+  let sTho = 0; for (const k in tho) sTho += tho[k];
+  const ra = { nv: nen };
+  let da = 0, lonNhat = null, lonV = -1;
+  for (const n of dau){
+    const v = sTho > 0 ? Math.round(conLai * tho[n.id] / sTho) : 0;
+    ra[n.id] = v; da += v;
+    if (tho[n.id] > lonV){ lonV = tho[n.id]; lonNhat = n.id; }
+  }
+  // Sai số làm tròn dồn vào dòng lớn nhất ⇒ năm dòng cộng đúng bằng tổng, KHÔNG xấp xỉ.
+  if (lonNhat) ra[lonNhat] += conLai - da;
+  return { tong, ra, nen, giaoThoa: sTho - conLai };
+}
+window.lcPhanRa = lcPhanRa;
+
+// Chi tiết từng dòng — mở ra bằng mũi tên ▼. Đọc THẲNG từ trạng thái người chơi, không nhớ
+// lại: một bảng chi tiết nhớ số cũ thì nó nói dối ngay lần thay đồ kế tiếp.
+function lcChiTiet(id, tongDong){
+  const d = [];
+  if (id === 'nv'){
+    const s0 = SECTS[player.sect];
+    d.push(['Cấp', player.level]);
+    d.push(['Sức Mạnh', player.str + s0.bonus.str + 3]);
+    d.push(['Nhanh Nhẹn', player.agi + s0.bonus.agi + 2]);
+    d.push(['Thể Lực', player.vit + s0.bonus.vit + 3]);
+    d.push(['Linh Lực', player.ene + (s0.bonus.ene || 0)]);
+    d.push(['Phòng Thủ', Math.round((player.def + s0.bonus.def + 2) * (s0.defMult || 1))]);
+    if ((player.free || 0) > 0) d.push(['⚠ Điểm chưa cộng', player.free]);
+  } else if (id === 'do'){
+    // ⚠ ĐO TỪNG Ô BẰNG ĐÚNG PHÉP ĐO CỦA DÒNG TỔNG, ĐỪNG IN `itemPower()`. Hai cái là hai ĐƠN
+    // VỊ khác nhau: `itemPower` là thang nội bộ dùng để xếp hạng món trong túi (mũi ▲, tự mặc
+    // đồ), còn dòng trên bảng này là Lực Chiến. Bản đầu in `itemPower` và chụp ra thì đọc như
+    // nói dối: dòng tổng ghi 6.499 trong khi mười ô bên dưới cộng lại hơn 43.000.
+    // Mười một lượt `calcDerived()` chỉ chạy lúc BUNG dòng này ra, không chạy mỗi khung.
+    const co = SLOTS.filter(sl => player.equip[sl.id]);
+    if (!co.length){ d.push(['Chưa mặc món nào', '—']); }
+    else {
+      const hp0 = player.hp, qi0 = player.qi, goc = lucChien(player);
+      const dong = [];
+      for (const sl of co){
+        const it = player.equip[sl.id];
+        delete player.equip[sl.id];
+        try { calcDerived(); dong.push([`${sl.name}${it.plus ? ` +${it.plus}` : ''}`, Math.max(0, goc - lucChien(player))]); }
+        finally { player.equip[sl.id] = it; }
+      }
+      calcDerived();                                  // ⚠ trả lại nguyên trạng
+      player.hp = Math.min(hp0, player.maxHp);
+      player.qi = Math.min(qi0, player.maxQi);
+      // ⚠ CHIA LẠI THEO TỈ LỆ, y như `lcPhanRa()` — và vì ĐÚNG một lý do. Mười một món cũng
+      // nhân vào nhau (Đại Thành nhân vũ khí, %Công Kích của món này nhân chỉ số gốc mà món
+      // kia cộng vào), nên tháo riêng từng món rồi cộng lại ra 10.590 trong khi dòng tổng ghi
+      // 5.815 — đo được trên chính ảnh chụp. Một bảng chi tiết cộng ra số khác dòng nó đang
+      // mở là một bảng nói dối, và người chơi cộng nhẩm ra ngay.
+      let st = 0; for (const [, v] of dong) st += v;
+      const muc = (tongDong != null && st > 0) ? tongDong / st : 1;
+      let da = 0, iMax = 0;
+      for (let i = 0; i < dong.length; i++){
+        dong[i][1] = Math.round(dong[i][1] * muc); da += dong[i][1];
+        if (dong[i][1] > dong[iMax][1]) iMax = i;
+      }
+      if (tongDong != null && dong.length) dong[iMax][1] += tongDong - da;   // dồn sai số làm tròn
+      for (const [a, v] of dong) d.push([a, v.toLocaleString('vi-VN')]);
+    }
+  } else if (id === 'kn'){
+    let n = 0, tongLv = 0;
+    for (const k in (player.skillLv || {})){ n++; tongLv += player.skillLv[k]; }
+    let tn = 0; for (const k in (player.skillTn || {})) tn += player.skillTn[k];
+    d.push(['Chiêu đã nâng cấp', n]);
+    d.push(['Tổng cấp kỹ năng', tongLv]);
+    d.push(['Điểm Tiềm Năng đã rót', tn]);
+  } else if (id === 'dt'){
+    let diem = 0; for (const k in (player.mastery || {})) diem += player.mastery[k];
+    d.push(['Mở khoá', masteryOpen() ? 'Rồi' : `Chưa — cấp ${MASTERY_LV} + xong chính tuyến`]);
+    d.push(['Điểm đã tiêu', diem]);
+  } else if (id === 'ts'){
+    d.push(['Số lần Tái Sinh', player.resetCount || 0]);
+    d.push(['Mỗi lần', '+2% Công Kích và Sinh Lực']);
+  }
+  return d;
+}
+
+window.lcMo = {};        // dòng nào đang bung — nhớ theo phiên, không lưu vào save
+window.lcBung = function(id){ window.lcMo[id] = !window.lcMo[id]; renderLucChien(); };
+
+function renderLucChien(){
+  const p = el('panel-lucchien'); if (!p) return;
+  const r = lcPhanRa(); if (!r) return;
+  // Chân dung dùng lại `ccLopIcon()` — CÙNG cái hàm màn chờ dùng, nên bảng này không thể
+  // vẽ ra một nhân vật khác với nhân vật người chơi sẽ thấy. Chưa có art thì trả chuỗi rỗng
+  // và khung để trống: thà trống còn hơn một hình dựng bằng đường lạc hẳn phong cách.
+  let _ic = ''; try { _ic = ccLopIcon(player.sect) || ''; } catch { _ic = ''; }
+  // ⚠ `◉` CHỨ KHÔNG PHẢI `⚔`. Đã dựng bảng thử glyph ở đúng năm cỡ đang dùng (11·13·15·17·19px)
+  // và chụp ra: `⚔` (U+2694, hai thanh kiếm bắt chéo) đọc ra **đúng một dấu ✕** ở CẢ NĂM cỡ —
+  // hai nét chéo mảnh dính vào nhau. Ở 30px thì nó rõ, nên đọc bảng ký hiệu trong CLAUDE.md
+  // mà không thử ở cỡ thật là chọn nhầm. Ký hiệu ĐẶC (◉ ★ ◆ ▲ ●) rõ từ 11px.
+  let h = moBang({ tieu:'Đánh Giá Sức Chiến Đấu', mat:'◉' });
+  h += `<div class="lc-than">`;
+  // Cột trái: chân dung + danh tính. Dùng lại đúng dải khung của màn chờ (ccLopAnh) chứ
+  // không dựng một đường vẽ thứ hai — xem luật "màn chờ phải hỏi cùng cái hàm mà trong màn
+  // dùng"; ở đây cũng vậy, một bảng vẽ nhân vật kiểu riêng là một nhân vật khác.
+  h += `<div class="lc-trai">
+    <div class="lc-cd">${_ic ? `<img src="${_ic}" alt="">` : ''}</div>
+    <div class="lc-ten">
+      <div><i>Tên:</i> <b>${player.name || SECTS[player.sect].name}</b></div>
+      <div><i>Cấp:</i> <b>${player.level}</b></div>
+      <div><i>Lớp:</i> <b>${SECTS[player.sect].name}</b></div>
+      <div><i>Tái Sinh:</i> <b>${player.resetCount || 0}</b></div>
+    </div>
+  </div>`;
+  h += `<div class="lc-phai">
+    <div class="lc-tong"><span>Đánh giá tổng lực</span><b>${r.tong.toLocaleString('vi-VN')}</b></div>`;
+  for (const n of LC_NGUON){
+    const v = r.ra[n.id] || 0, mo = !!window.lcMo[n.id];
+    h += `<div class="lc-hang${mo ? ' mo' : ''}">
+      <button class="lc-dong" onclick="lcBung('${n.id}')" title="Bấm để xem chi tiết">
+        <span class="lc-nhan" style="color:${n.mau}">${n.ten}:</span>
+        <b class="lc-so">${v.toLocaleString('vi-VN')}</b>
+        <i class="lc-mui">\u25bc</i>
+      </button>`;
+    if (mo){
+      h += `<div class="lc-ct">${lcChiTiet(n.id, v).map(([a, b]) =>
+        `<div><span>${a}</span><b>${b}</b></div>`).join('')}</div>`;
+    }
+    h += `</div>`;
+  }
+  h += `<div class="lc-ghi">Lực Chiến gộp Công Kích \u00b7 Sinh Lực \u00b7 Phòng Thủ \u00b7 Bạo Kích \u00b7
+        Né Tránh \u00b7 Tốc Đánh thành một con số. Mỗi dòng đo bằng cách TẮT đúng nguồn đó rồi tính
+        lại, nên năm dòng luôn cộng đúng bằng tổng.</div>`;
+  h += `</div></div>`;
+  p.innerHTML = h;
+}
+window.renderLucChien = renderLucChien;
+window.moLucChien = function(){ togglePanel('lucchien'); };
+
+// Nút trên HUD: chỉ VẼ LẠI con số, không dựng lại bảng. updateHud() chạy mỗi khung.
+function capNhatNutLC(){
+  const b = el('lc-so-hud'); if (!b) return;
+  const v = lucChien(player);
+  if (window._lcCu !== v){ window._lcCu = v; b.textContent = v.toLocaleString('vi-VN'); }
+}
+
+// ═══════════════════════════════════════════════════════════════════════════════════════
+// 🎁 NHẬN QUÀ — bảng sự kiện có MỐC và nút Nhận
+// ═══════════════════════════════════════════════════════════════════════════════════════
+// Chủ dự án chốt: *"quà gì thì mình chưa biết, cứ có UI/UX trước đã"*. Nên phần thưởng dưới
+// đây là TẠM và có nhãn nói rõ thế — nhưng cái MÁY thì thật: bấm Nhận là nhận được đồ, cờ
+// lưu vào save, mở lại thì nút đã mờ. Một bảng đẹp mà nút bấm không ra gì là đúng cái lỗi
+// `openEvoPanel` đã ghi trong CLAUDE.md — nút chết tệ hơn hẳn không có nút.
+//
+// ⚠ TRAO QUÀ ĐI QUA `traoThuong(rew)`, KHÔNG CỘNG TAY. Đó là cửa DUY NHẤT của cả chính tuyến
+// lẫn phụ tuyến, và nó đã lo đủ bốn nhánh (item vào túi / rơi xuống đất khi chật, Bản Năng,
+// ngọc, vé Khế Ước). Cộng thẳng `player.silver += …` ở đây là đường thứ hai, và đường thứ hai
+// sẽ quên mất bước "túi chật thì thả xuống đất" ngay lần đầu ai đó thêm một mốc có vật phẩm.
+//
+// ⚠ ĐIỀU KIỆN ĐẾM TỪ TRẠNG THÁI, KHÔNG TỪ SỰ KIỆN — cùng luật đã ghi cho `MOC_NV.dem()`.
+// Móc vào "vừa lên cấp" thì người chơi đã ở cấp đó trước khi bảng ra đời sẽ không bao giờ
+// nhận được, và họ không có cách nào biết vì sao.
+const QUA_DK = {
+  lv:   { ten:n => `Đạt cấp ${n}`,                    dem: () => player.level || 1 },
+  lc:   { ten:n => `Đạt ${n.toLocaleString('vi-VN')} Lực Chiến`, dem: () => lucChien(player) },
+  kill: { ten:n => `Hạ ${n.toLocaleString('vi-VN')} quái`,       dem: () => player.kills || 0 },
+  nv:   { ten:n => `Xong ${n} nhiệm vụ chính`,        dem: () => questIdx || 0 },
+  ts:   { ten:n => `Tái Sinh ${n} lần`,               dem: () => player.resetCount || 0 },
+};
+// ⚠ `tam:true` = phần thưởng CHƯA CHỐT. Nhãn "tạm" hiện thẳng trên bảng, nên không ai —
+// kể cả người viết đợt sau — đọc nhầm mấy con số này thành số đã cân.
+const QUA_SK = [
+  { id:'tanthu', ten:'Đón Chào Tân Thủ', mat:'★',
+    mo:'Mốc của mười cấp đầu — đi hết chương I là nhận gần đủ.',
+    moc:[
+      { id:'t1', dk:'lv', can:5,  rew:{ silver:2000,  xp:400 } },
+      { id:'t2', dk:'lv', can:10, rew:{ silver:6000,  khi:300, xp:1200 } },
+      { id:'t3', dk:'nv', can:6,  rew:{ silver:12000, khi:600, ngoc:{ chucPhuc:2 } } },
+      { id:'t4', dk:'lv', can:20, rew:{ silver:25000, khi:1200, item:'vukhi' } },
+    ] },
+  { id:'lucchien', ten:'Mốc Lực Chiến', mat:'◉',
+    mo:'Thưởng theo chính con số trên nút Lực Chiến — mạnh tới đâu nhận tới đó.',
+    moc:[
+      { id:'l1', dk:'lc', can:2000,  rew:{ silver:15000,  khi:500 } },
+      { id:'l2', dk:'lc', can:5000,  rew:{ silver:40000,  khi:1500, ngoc:{ linhHon:2 } } },
+      { id:'l3', dk:'lc', can:12000, rew:{ silver:90000,  khi:4000, gk:1 } },
+      { id:'l4', dk:'lc', can:30000, rew:{ silver:200000, khi:9000, item:'ao' } },
+    ] },
+  { id:'sanboi', ten:'Thợ Săn Vaeldra', mat:'▲',
+    mo:'Cày quái đủ số là có quà — không phải đi đâu, không phải hỏi ai.',
+    moc:[
+      { id:'s1', dk:'kill', can:200,   rew:{ silver:8000,   khi:400 } },
+      { id:'s2', dk:'kill', can:1000,  rew:{ silver:30000,  khi:1500 } },
+      { id:'s3', dk:'kill', can:5000,  rew:{ silver:120000, khi:5000, ngoc:{ sinhMenh:2 } } },
+      { id:'s4', dk:'kill', can:20000, rew:{ silver:400000, khi:15000, gk:2 } },
+    ] },
+  { id:'taisinh', ten:'Vòng Tái Sinh', mat:'●',
+    mo:'Mở sau lần Tái Sinh đầu tiên.',
+    moc:[
+      { id:'r1', dk:'ts', can:1, rew:{ silver:100000, khi:5000, gk:1 } },
+      { id:'r2', dk:'ts', can:3, rew:{ silver:300000, khi:15000, gk:3 } },
+      { id:'r3', dk:'ts', can:5, rew:{ silver:600000, khi:30000, ngoc:{ honDon:1 } } },
+    ] },
+];
+window.quaSkChon = QUA_SK[0].id;
+function quaKho(){ if (!player.quaNhan) player.quaNhan = {}; return player.quaNhan; }
+function quaDaNhan(sk, m){ return !!quaKho()[sk + ':' + m]; }
+function quaDuDk(m){ const d = QUA_DK[m.dk]; return d ? d.dem() >= m.can : false; }
+// Số mốc đang nhận được NGAY — dùng cho chấm đỏ trên nút HUD. Đếm từ trạng thái nên nó tự
+// đúng, kể cả với người chơi đã vượt mốc từ lâu trước khi bảng này ra đời.
+function quaChoNhan(){
+  let n = 0;
+  for (const sk of QUA_SK) for (const m of sk.moc)
+    if (!quaDaNhan(sk.id, m.id) && quaDuDk(m)) n++;
+  return n;
+}
+window.quaChoNhan = quaChoNhan;
+window.quaChonSk = function(id){ window.quaSkChon = id; renderQua(); };
+window.quaNhanMoc = function(skId, mocId){
+  const sk = QUA_SK.find(x => x.id === skId); if (!sk) return;
+  const m = sk.moc.find(x => x.id === mocId);  if (!m) return;
+  if (quaDaNhan(skId, mocId)) return;
+  if (!quaDuDk(m)){
+    addFloat(player.x, player.y - 40, 'Chưa đủ điều kiện!', '#ff7a6a', 13);
+    AudioSys.sfx('ui', 0.4); return;
+  }
+  quaKho()[skId + ':' + mocId] = 1;
+  traoThuong(m.rew);
+  AudioSys.sfx('quest', 0.9);
+  saveGame(); renderQua(); capNhatNutLC();
+};
+// Nhận hết những mốc đang đủ điều kiện. Có nút này vì người chơi quay lại sau một đợt cày dài
+// sẽ có cả chục mốc mở cùng lúc, và bắt họ bấm mười lần là bắt họ làm việc của cái máy.
+window.quaNhanHet = function(){
+  let n = 0;
+  for (const sk of QUA_SK) for (const m of sk.moc)
+    if (!quaDaNhan(sk.id, m.id) && quaDuDk(m)){ quaKho()[sk.id + ':' + m.id] = 1; traoThuong(m.rew); n++; }
+  if (!n){ addFloat(player.x, player.y - 40, 'Chưa có mốc nào nhận được', '#ffb15c', 13); AudioSys.sfx('ui', 0.4); return; }
+  addFloat(player.x, player.y - 56, `🎁 Đã nhận ${n} mốc!`, '#ffd76a', 15);
+  AudioSys.sfx('quest', 0.9);
+  saveGame(); renderQua(); capNhatNutLC();
+};
+
+function renderQua(){
+  const p = el('panel-qua'); if (!p) return;
+  const cho = quaChoNhan();
+  let h = moBang({ tieu:'Nhận Quà', mat:'🎁', dong: cho ? `${cho} mốc đang chờ` : 'chưa có mốc nào' });
+  h += `<div class="qa-than">`;
+  // Cột trái: danh sách sự kiện. Số chờ nhận in ngay trên tab — không có nó thì người chơi
+  // phải bấm qua từng tab mới biết chỗ nào có quà, mà đó là việc cái bảng phải làm hộ.
+  h += `<div class="qa-trai"><div class="qa-tieu">danh sách sự kiện</div>`;
+  for (const sk of QUA_SK){
+    const n = sk.moc.filter(m => !quaDaNhan(sk.id, m.id) && quaDuDk(m)).length;
+    h += `<button class="qa-tab${sk.id === window.quaSkChon ? ' on' : ''}" onclick="quaChonSk('${sk.id}')">
+      <i>${sk.mat}</i><span>${sk.ten}</span>${n ? `<b class="qa-cham">${n}</b>` : ''}</button>`;
+  }
+  h += `</div>`;
+  const sk = QUA_SK.find(x => x.id === window.quaSkChon) || QUA_SK[0];
+  h += `<div class="qa-phai">
+    <div class="qa-dau"><b>${sk.mat} ${sk.ten}</b><span>${sk.mo}</span></div>
+    <div class="qa-tam">⚠ Phần thưởng dưới đây là <b>TẠM</b> — chủ dự án chưa chốt. Máy nhận quà
+      thì đã chạy thật: bấm Nhận là vào túi, và cờ lưu vào save.</div>
+    <div class="qa-ds">`;
+  for (const m of sk.moc){
+    const d = QUA_DK[m.dk], dem = d.dem(), du = dem >= m.can, xong = quaDaNhan(sk.id, m.id);
+    const pct = Math.min(100, Math.round(100 * dem / m.can));
+    h += `<div class="qa-moc${xong ? ' xong' : (du ? ' du' : '')}">
+      <div class="qa-dk">
+        <div class="qa-dkt">${d.ten(m.can)}</div>
+        <div class="qa-tt"><i style="width:${pct}%"></i><span>${Math.min(dem, m.can).toLocaleString('vi-VN')} / ${m.can.toLocaleString('vi-VN')}</span></div>
+      </div>
+      <div class="qa-thuong">${quaOHtml(m.rew)}</div>
+      <button class="qa-nhan" ${xong || !du ? 'disabled' : ''} onclick="quaNhanMoc('${sk.id}','${m.id}')">
+        ${xong ? 'Đã nhận' : (du ? 'Nhận' : 'Chưa đủ')}</button>
+    </div>`;
+  }
+  h += `</div>
+    <div class="qa-chan">
+      <span>${sk.moc.filter(m => quaDaNhan(sk.id, m.id)).length}/${sk.moc.length} mốc đã nhận</span>
+      <button class="mini-btn" ${cho ? '' : 'disabled'} onclick="quaNhanHet()">🎁 Nhận hết (${cho})</button>
+    </div>
+  </div></div>`;
+  p.innerHTML = h;
+}
+window.renderQua = renderQua;
+// Ô quà: mỗi khoản một ô vuông có TRANH, đúng khuôn ảnh mẫu. Tranh lấy từ hệ đang chạy
+// (`NGOC_ANH` cho ngọc, `consumArtUrl` cho thứ vẽ bằng canvas) — đừng vẽ một bộ icon thứ hai
+// cho riêng bảng này, hai bộ icon cho cùng một món là hai chỗ phải nhớ sửa.
+function quaOHtml(rew){
+  if (!rew) return '';
+  const o = [];
+  const nhet = (src, ky, so, ten, mau) => o.push(
+    `<div class="qa-o" title="${ten}">${src ? `<img src="${src}" alt="">` : `<i style="color:${mau || '#ffd76a'}">${ky}</i>`}
+      <b>${so}</b></div>`);
+  if (rew.xp)     nhet(null, '✦', rew.xp.toLocaleString('vi-VN'), `${rew.xp.toLocaleString('vi-VN')} EXP`, '#a0ffe9');
+  if (rew.silver) nhet(null, '◈', rew.silver >= 1000 ? Math.round(rew.silver/1000) + 'k' : rew.silver,
+                       `${rew.silver.toLocaleString('vi-VN')} Lumen`, '#ffd76a');
+  if (rew.khi)    nhet(null, '✧', rew.khi >= 1000 ? Math.round(rew.khi/1000) + 'k' : rew.khi,
+                       `${rew.khi.toLocaleString('vi-VN')} Bản Năng`, '#7fd8e0');
+  if (rew.gk)     nhet(null, '✦', rew.gk, `${rew.gk} Ấn Giao Kết`, '#c07fe0');
+  if (rew.ngoc) for (const k in rew.ngoc)
+    nhet((typeof NGOC_ANH !== 'undefined' && NGOC_ANH[k]) || null, '◆', rew.ngoc[k],
+         `${rew.ngoc[k]} ${(typeof JEWEL_NAMES !== 'undefined' && JEWEL_NAMES[k]) || k}`,
+         (typeof JEWEL_COLORS !== 'undefined' && JEWEL_COLORS[k]) || '#b08ae8');
+  if (rew.item){ const sl = SLOTS.find(x => x.id === rew.item);
+    nhet(null, '◆', '1', `1 ${sl ? sl.name : rew.item} theo cấp`, '#9fd0ff'); }
+  return o.join('');
+}
+
+// ═══════════════════════════════════════════════════════════════════════════════════════
+// ✹ DẢI TRẠNG THÁI — buff và debuff hiện ở cột PHẢI, ngay trên bản đồ nhỏ
+// ═══════════════════════════════════════════════════════════════════════════════════════
+// Trước bản này chỉ có ĐÚNG HAI trạng thái nhìn thấy được, và cả hai là `<div>` chép cứng
+// trong index.html ở góc TRÁI: `#hud-buff` (🍶 Rượu Hổ Cốt) và `#hud-loidon` (⚡ Bùa Chắn Sét).
+// Mười một trạng thái còn lại — trúng độc, tê liệt, trọng thương, sáu buff của chiêu, cửa sổ
+// Liên Trảm, Sa Đọa — **không có một cửa nào nói ra**. Người chơi đứng yên mất máu mà không
+// biết mình trúng độc; bị khoá chân thì đọc ra "game lag".
+//
+// ⚠ BẢNG DỮ LIỆU, KHÔNG PHẢI MƯỜI HAI KHỐI `if`. Thêm một trạng thái = thêm một dòng ở đây.
+// Chép một khối `if` thứ mười ba là bảo đảm cái thứ mười bốn bị quên — đúng bệnh mà hai cái
+// `<div>` chép cứng kia đã mắc.
+//
+// ⚠ KÝ HIỆU LẤY TỪ BỘ PHƯƠNG TÂY ĐÃ DUYỆT trong CLAUDE.md (`⚔ ✚ ✦ ✧ ✹ ◆ ♣ ▲ ❄ ☼ ⚡ ☾ ☠ ⚑ ★ ◉ ♦ ✽ ● ◑`).
+// Không emoji: 🍶 của bản cũ là một cái bình rượu vẽ theo phong cách khác hẳn HUD, và nó là
+// tàn dư kiếm hiệp — Quy tắc số 1.
+//
+// ⚠ `con(p)` TRẢ SỐ GIÂY CÒN LẠI, và mỗi đồng hồ một đơn vị khác nhau. `poisonT`/`dinhT`/
+// `buffAtkT`… đếm NGƯỢC bằng giây; `tenuiTT` là một MỐC `Date.now()` — đọc thẳng nó ra giây
+// thì được một con số 1,7 nghìn tỉ. Quy đổi tại chỗ khai, đừng để chỗ vẽ phải biết.
+const TT_DINH = [
+  // — XẤU —
+  { id:'doc',    ten:'Trúng Độc',     ky:'☠', mau:'#8fe07a', xau:true,
+    mo:'Mất máu theo nhịp', con:p => p.poisonT || 0 },
+  { id:'teliet', ten:'Tê Liệt',       ky:'❄', mau:'#ff7a6a', xau:true,
+    mo:'Không di chuyển được', con:p => p.dinhT || 0 },
+  { id:'trthuong', ten:'Trọng Thương', ky:'✚', mau:'#ff9a4d', xau:true,
+    mo:'Vực Thẳm — chưa hồi phục',
+    con:p => Math.max(0, ((p.tenuiTT || 0) - Date.now()) / 1000) },
+  // — TỐT —
+  { id:'ruou',   ten:'Rượu Hổ Cốt',   ky:'✦', mau:'#ffb15c', xau:false,
+    mo:'+12% Công Kích', con:p => p.buffAtkT || 0 },
+  { id:'chanset', ten:'Bùa Chắn Sét', ky:'⚡', mau:'#ffd76a', xau:false,
+    mo:'−40% sát thương sét', con:p => p.loidonT || 0 },
+  { id:'tangst', ten:'Tăng Sát Thương', ky:'✹', mau:'#ff9a4d', xau:false,
+    mo:p => `+${p.vhDmgPct || 0}% sát thương`, con:p => p.vhDmgT || 0 },
+  { id:'baokich', ten:'Bạo Kích Tuyệt Đối', ky:'★', mau:'#ffd76a', xau:false,
+    mo:'Mọi đòn đều bạo kích', con:p => p.vhCritT || 0 },
+  { id:'netranh', ten:'Né Tránh',     ky:'✧', mau:'#9ef2ff', xau:false,
+    mo:p => `+${p.vhEvaPct || 0}% né tránh`, con:p => p.vhEvaT || 0 },
+  { id:'tocdanh', ten:'Tốc Đánh',     ky:'▲', mau:'#9ef2ff', xau:false,
+    mo:p => `−${p.vhAspdPct || 0}% thời gian ra đòn`, con:p => p.vhAspdT || 0 },
+  { id:'hutmau', ten:'Hút Sinh Lực',  ky:'♦', mau:'#ff6a8a', xau:false,
+    mo:'Đánh trúng thì hồi máu', con:p => p.vhLeechT || 0 },
+  { id:'phandon', ten:'Phản Đòn',     ky:'◆', mau:'#c07fe0', xau:false,
+    mo:'Dội lại sát thương cho kẻ đánh', con:p => p.vhReflT || 0 },
+  { id:'lientram', ten:'Liên Trảm',   ky:'✦', mau:'#ffd76a', xau:false,
+    mo:'Cửa sổ nối đòn còn mở', con:p => p.ltT || 0 },
+  // Sa Đọa KHÔNG có đồng hồ — nó là một trạng thái bật/tắt. `con` trả `Infinity` để ô hiện ra
+  // mà không in số giây; `vinh:true` là cờ nói ra chuyện đó cho chỗ vẽ.
+  { id:'sadoa',  ten:'Sa Đọa',        ky:'☾', mau:'#b08ae8', xau:false, vinh:true,
+    mo:'+15% Công Kích — ma công', con:p => (p.maDao ? Infinity : 0) },
+];
+// Dựng ô một lần rồi chỉ ghi lại phần đổi. `updateHud()` chạy MỖI KHUNG, nên viết lại cả
+// `innerHTML` của dải này là 60 lượt dựng DOM mỗi giây cho một thứ đổi vài giây một lần —
+// cùng lý do mà `_lastHudName` ở trên tồn tại.
+let _ttCu = '';
+function capNhatTrangThai(){
+  const box = el('trang-thai'); if (!box || typeof player === 'undefined' || !player) return;
+  const song = [];
+  for (const t of TT_DINH){
+    const c = t.con(player);
+    if (c > 0) song.push([t, c]);
+  }
+  // Khoá so sánh: id + số giây LÀM TRÒN. Làm tròn tới giây là đủ để đếm ngược chạy mượt mà
+  // không dựng lại DOM 60 lần/giây; bỏ làm tròn đi thì khoá đổi mỗi khung và cả tối ưu này
+  // thành vô nghĩa.
+  const khoa = song.map(([t, c]) => t.id + (c === Infinity ? '' : '|' + Math.ceil(c))).join(',');
+  if (khoa === _ttCu) return;
+  _ttCu = khoa;
+  if (!song.length){ box.innerHTML = ''; box.classList.add('trong'); return; }
+  box.classList.remove('trong');
+  box.innerHTML = song.map(([t, c]) => {
+    const mo = typeof t.mo === 'function' ? t.mo(player) : t.mo;
+    const giay = c === Infinity ? '' : (c >= 60
+      ? `${Math.floor(c/60)}:${String(Math.floor(c%60)).padStart(2,'0')}`
+      : `${Math.ceil(c)}s`);
+    return `<div class="tt-o ${t.xau ? 'tt-xau' : 'tt-tot'}" title="${t.ten} — ${mo}">
+      <i style="color:${t.mau}">${t.ky}</i>${giay ? `<b>${giay}</b>` : ''}</div>`;
+  }).join('');
+}
+window.capNhatTrangThai = capNhatTrangThai;
+// Cờ cho bài kiểm đọc được — hỏi QUYẾT ĐỊNH chứ không đếm điểm ảnh. Cùng lối `__veChet` /
+// `__avaKhoi`: một dải icon 22px thì đo điểm ảnh ra sàn nhiễu lớn hơn tín hiệu.
+function ttDangCo(){
+  if (typeof player === 'undefined' || !player) return [];
+  return TT_DINH.filter(t => t.con(player) > 0).map(t => t.id);
+}
+window.ttDangCo = ttDangCo;
+
 window.khoDeposit = function(i){
   const it = player.inv[i];
   if (!it) return;
@@ -26585,20 +27113,32 @@ function updateHud(){
          el('txt-xp').textContent = `${Math.floor(player.xp)} / ${XP_TABLE[player.level-1]} EXP`; }
   const potEl = el('hud-potion');
   if (potEl){ potEl.textContent = `🧪 x${player.potions || 0} (R)${player.potionCd > 0 ? ` · ${Math.ceil(player.potionCd)}s` : ''}`; potEl.style.opacity = (player.potions > 0 && player.potionCd <= 0) ? 1 : 0.45; }
-  const buffEl = el('hud-buff');
-  if (buffEl){
-    if ((player.buffAtkT || 0) > 0){
-      buffEl.style.display = '';
-      buffEl.textContent = `🍶 +12% công · ${Math.floor(player.buffAtkT/60)}:${String(Math.floor(player.buffAtkT%60)).padStart(2,'0')}`;
-    } else buffEl.style.display = 'none';
-  }
-  const loiEl = el('hud-loidon');
-  if (loiEl){
-    if ((player.loidonT || 0) > 0){
-      loiEl.style.display = '';
-      loiEl.textContent = `⚡ -40% lôi · ${Math.floor(player.loidonT/60)}:${String(Math.floor(player.loidonT%60)).padStart(2,'0')}`;
-    } else loiEl.style.display = 'none';
-  }
+  // ⚠ `#hud-buff` và `#hud-loidon` ĐÃ GỠ. Hai `<div>` chép cứng ở góc TRÁI ấy nói ra đúng hai
+  // trong mười ba trạng thái, và mười một cái còn lại thì câm — xem `TT_DINH`. Nay cả mười ba
+  // đi qua một dải duy nhất ở cột PHẢI, ngay trên bản đồ nhỏ.
+  capNhatTrangThai();
+  capNhatNutLC();
+  // ⚠ CHẤM QUÀ CÓ HÃM NHỊP. `quaChoNhan()` quét 4 sự kiện × 4 mốc và mỗi mốc gọi `dem()`,
+  // trong đó mốc Lực Chiến gọi lại `lucChien()` — tức bốn lượt tính thừa MỖI KHUNG cho một con
+  // số đổi vài phút một lần. Nửa giây một lượt là đủ nhanh để người chơi không thấy độ trễ.
+  // ⚠ `Date.now()` chứ không mượn `_now` — biến ấy khai trong khối Đồng Hồ Thế Giới ở DƯỚI
+  // đây, nên tham chiếu tới nó từ chỗ này ném ReferenceError MỖI KHUNG. `node --check` không
+  // bắt được (cú pháp vẫn đúng); chỉ mở trang mới thấy. Cùng vết sẹo `NV_CAO` trong CLAUDE.md.
+  { const _tnay = Date.now();
+    if (_tnay - (window._quaDo || 0) > 500){
+    window._quaDo = _tnay;
+    const _q = el('lc-cham-qua');
+    if (_q){
+      const n = quaChoNhan();
+      _q.textContent = n > 9 ? '9+' : String(n); _q.classList.toggle('hidden', !n);
+      // Bảng Quà đang mở thì vẽ lại khi số mốc chờ ĐỔI — lên cấp hay hạ đủ quái giữa lúc mở
+      // bảng thì thanh tiến độ phải nhúc nhích, không thì người chơi đóng/mở lại mới thấy và
+      // đọc ra là "bảng không cập nhật". Chỉ vẽ khi số ĐỔI, không vẽ mỗi nửa giây.
+      const _bq = el('panel-qua');
+      if (_bq && !_bq.classList.contains('hidden') && window._quaCu !== n){ window._quaCu = n; renderQua(); }
+      else window._quaCu = n;
+    }
+  } }
   { const _ve = el('hud-ve'); if (_ve) _ve.textContent = ((player.chimera && player.chimera.ve && player.chimera.ve.gk) || 0).toLocaleString('vi-VN'); }
   { const _sh = el('hud-shard'); if (_sh) _sh.textContent = shardCo().toLocaleString('vi-VN'); }
   el('hud-silver').textContent = Math.floor(player.silver).toLocaleString('vi-VN');   // Tụ Linh cộng số lẻ mỗi khung — HUD từng in 3114.5463199999385 (ký hiệu ◈ nằm trong index.html)
