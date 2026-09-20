@@ -1245,6 +1245,21 @@ Object.assign(MOBS, {
   docyeu:   { name:'Chimera Cầu Gai', lv:70, hp:5390, atk:166, def:41, xp:4025, silver:[242,378], speed:74, aggro:220, range:38, atkCd:1.3, size:18, color:'#4a7a2a', eye:'#7ec850', drop:0.34, el:'Aquatic', poisonHit:true, img:'assets/mobs/docyeu.png'},
   satthuhy: { name:'Sát Thủ Sương Mù', lv:78, hp:6800, atk:200, def:48, xp:5200, silver:[300,400], speed:100, aggro:240, range:34, atkCd:1.0, size:16, color:'#16121e', eye:'#c07fe0', elite:true, drop:0.45, el:'Bird', img:'assets/mobs/assassin.png' },
   thamtu:   { name:'Trinh Sát Tro Tàn', lv:84, hp:8070, atk:227, def:54, xp:6680, silver:[325,504], speed:96, aggro:230, range:33, atkCd:1.05, size:15, color:'#4a4238', eye:'#ffd76a', drop:0.34, el:'Reptile', img:'assets/mobs/thamtu.png'},
+  // Khấu độ 84 → 92 trước đây không có gì ở giữa, và Reptile Sunstone Flats là map cấp 80-100 mà
+  // chỉ có ĐÚNG BA loài — đúng cái bệnh "7 → 3 loài khi lên cấp" ở đầu CLAUDE.md.
+  // Chỉ số NỘI SUY giữa hai hàng xóm, không bịa: hp giữ đúng 8070 của cả hai (không đẻ dip mới
+  // trong thang của `test_moblevels ⑤`), atk 252 và xp 7300 nằm giữa 227/271 và 6680/7920.
+  // Cái KHÁC là hồ sơ chứ không phải sức mạnh: nó TRÔI chứ không chạy (speed 58, thấp nhất dải) và
+  // vung chậm (atkCd 1,35) ⇒ DPS 187/giây vẫn nằm giữa 216 của thamtu và 169 của cungthu.
+  // ⚠ `def` 58 là cao nhất dải (52-54) nhưng ĐỪNG ĐẨY NỮA: đã thử 68 và đo lại — thời gian
+  // hạ của cả ba lớp **không đổi** (16,0s → 17,3s, nằm trong nhiễu). Phép trừ thẳng ở dải cấp
+  // này đã bão hoà, nên nâng `def` chỉ là một con số đẹp trên bảng chứ không đổi gì trên màn.
+  // Đo ở cấp 88, dồn hết điểm theo build của lớp, Sylvan Ranger: **4,1s / 4,1s / 4,4s** cho
+  // thamtu / omden / cungthu ⇒ con mới nằm đúng trên đường cong. (DK và DW chết trước cả BA
+  // con — nợ cân bằng lớp CÓ SẴN ở dải này, không phải do con này sinh ra.)
+  // Canon: chính `desc` của map đã viết sẵn chỗ cho nó — *"mỏ nào cũng tắt lửa qua đêm"*. Đây là
+  // kẻ mang lửa đi, và ngọn lửa trong đèn nó ôm vẫn chưa tắt.
+  omden:    { name:'Kẻ Ôm Đèn Tro Tàn', lv:88, hp:8070, atk:252, def:58, xp:7300, silver:[347,535], speed:58, aggro:250, range:34, atkCd:1.35, size:16, color:'#2b3a42', eye:'#4ad089', drop:0.35, el:'Dusk', img:'assets/mobs/omden.png'},
   cungthu:  { name:'Cung Thủ Tro Tàn', lv:92, hp:8070, atk:271, def:52, xp:7920, silver:[369,567], speed:70, aggro:260, range:230, atkCd:1.6, size:15, color:'#7a5a30', eye:'#ffe9a0', drop:0.36, el:'Reptile', ranged:true, img:'assets/mobs/cungthu.png'},
   kybinh:   { name:'Kỵ Sĩ Tro Tàn', lv:100, hp:10300, atk:277, def:77, xp:8820, silver:[406,626], speed:90, aggro:220, range:40, atkCd:1.3, size:21, color:'#1c1c24', eye:'#ff6a5a', elite:true, drop:0.5, el:'Reptile', skel:'knight', skelPal:{main:'#6a6f80',dark:'#43485a',trim:'#c8a84a',cloth:'#7a2a30',glow:'#ffb15c'}, img:'assets/mobs/kybinh.png'},
   kylan:    { name:'Chó Ngao Lửa', lv:112, hp:14480, atk:332, def:88, xp:13450, silver:[494,758], speed:94, aggro:240, range:42, atkCd:1.2, size:22, color:'#8a1a10', eye:'#ffd76a', elite:true, drop:0.55, el:'Beast', skel:'hound', skelPal:{main:'#8a3a2a',dark:'#5a2418',trim:'#ffb15c',glow:'#ff6a3a',bone:'#e8d0b0'}, img:'assets/mobs/kylan.png'},

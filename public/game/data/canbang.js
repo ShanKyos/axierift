@@ -1898,15 +1898,24 @@ window.MAPS = {
     vung: [
       { id:'thamtu', ten:'Bãi Thám Tử Tro Tàn', dai:[0.12,0.22], cung:[-115,-10], cum:[3,3], tiep:true,
         dan:[{ mob:'thamtu', n:18, vai:['can','phap'] }] },
-      { id:'thamtu_nang', ten:'Luỹ Đá Nung', dai:[0.25,0.35], cung:[-108,-5], cum:[3,3], tiep:true,
+      { id:'thamtu_nang', ten:'Luỹ Đá Nung', dai:[0.25,0.34], cung:[-108,-5], cum:[3,3], tiep:true,
         dan:[{ mob:'thamtu', n:15, vai:['nang','can'] }] },
-      { id:'cungthu', ten:'Trường Bắn Tro Tàn', dai:[0.38,0.49], cung:[-115,-10], cum:[3,3], tiep:true,
+      // ⚠ CHÈN MỘT MIỀN LÀ GIÃN LẠI CẢ DÃY, không phải thêm một dòng. `dai` là TỈ LỆ của `voi` và
+      // **tuyệt đối không được chồng nhau** (test_vung §2): vị trí cụm = `t × voi`, nên dải không chồng
+      // mới bảo đảm được "cấp tăng dần theo khoảng cách" mà `test_moblevels §2` đòi. Cấp 88 phải
+      // nằm GIỮA 84 và 92 nên bốn miền sau nó đều phải lùi ra.
+      // ⚠ `he:'Reptile'` khai TƯỜNG MINH dù `MOBS.omden.el` là Dusk — đúng kiến trúc hai tầng:
+      // `MOBS[].el` là lớp nền, `vung.he` thắng. Thiếu dòng này là Reptile Sunstone Flats thôi
+      // **thuần 100%** — một tính chất đã chốt trong CLAUDE.md, và nó hỏng trong im lặng.
+      { id:'omden', he:'Reptile', ten:'Dãy Lò Tắt Lửa', dai:[0.37,0.45], cung:[-112,-8], cum:[3,3], tiep:true,
+        dan:[{ mob:'omden', n:15, vai:['nang','can'] }] },
+      { id:'cungthu', ten:'Trường Bắn Tro Tàn', dai:[0.48,0.57], cung:[-115,-10], cum:[3,3], tiep:true,
         dan:[{ mob:'cungthu', n:18 }] },
-      { id:'cungthu_phap', ten:'Đài Gọi Nắng', dai:[0.52,0.62], cung:[-105,-5], cum:[3,3], tiep:true,
+      { id:'cungthu_phap', ten:'Đài Gọi Nắng', dai:[0.60,0.69], cung:[-105,-5], cum:[3,3], tiep:true,
         dan:[{ mob:'cungthu', n:15, vai:['xa','phap'] }] },
-      { id:'kybinh', ten:'Bãi Ngựa Tro Tàn', dai:[0.65,0.80], cung:[-115,-10], cum:[3,3], tiep:true,
+      { id:'kybinh', ten:'Bãi Ngựa Tro Tàn', dai:[0.72,0.84], cung:[-115,-10], cum:[3,3], tiep:true,
         dan:[{ mob:'kybinh', n:15, vai:['can','bay'] }] },
-      { id:'kybinh_nang', ten:'Trại Giáp Nặng', dai:[0.83,1.0], cung:[-105,-5], cum:[3,3], tiep:true,
+      { id:'kybinh_nang', ten:'Trại Giáp Nặng', dai:[0.87,1.0], cung:[-105,-5], cum:[3,3], tiep:true,
         dan:[{ mob:'kybinh', n:12, vai:['nang','bay'] }] },
     ],
     diTrong: [

@@ -1340,6 +1340,67 @@ phải dời ai. Hiện còn hai con như vậy: `ah_phapsu` (Quán Sách, khố
 Gác: **`tests/test_capnha.js`** (6 mệnh đề, cả năm cơ chế đã thử ngược và đều đỏ).
 Đặt hàng art đài phun nước + hàng rào: **`docs/PROMPT_DAINUOC_VA_HANGRAO.md`**.
 
+### 🧟 THẢ MỘT CON QUÁI MỚI VÀO GAME — đường đi, và ba chỗ phải ĐO chứ đừng đoán
+
+Con đầu tiên đi đủ đường này là **`omden` — Kẻ Ôm Đèn Tro Tàn** (cấp 88, Reptile Sunstone Flats).
+Giữ nó làm khuôn: thêm con sau là **một dòng `MOBS` + một miền `vung`**, không sửa một dòng máy nào.
+
+| bước | việc |
+|---|---|
+| art | một tấm tĩnh ở `assets/mobs/<mã>.png` là ĐỦ — không khai `MOB_KHUNG` thì vẽ y như mọi con khác |
+| chỉ số | một dòng trong `MOBS` (`game.js`) |
+| chỗ đứng | một miền trong `vung` của map (`data/canbang.js`) |
+| gác | **`tests/test_anhquai.js`** (4 mệnh đề, **cả bốn đã thử ngược và đều đỏ**) |
+
+**⚠ CHỈ SỐ NỘI SUY GIỮA HAI HÀNG XÓM, ĐừNG BẮT ĐẦU TỪ MỘT CON SỐ ĐẸP.** `test_moblevels` đòi
+**XP không được tụt theo cấp** và **cấp phải tăng dần theo khoảng cách tới điểm thả**, còn `range`
+của map phải khớp đúng cấp quái nhỏ nhất/lớn nhất. `omden` vì thế lấy hp **8070** đúng bằng cả hai
+hàng xóm (không đẻ dip mới trong thang), atk 252 và xp 7300 nằm giữa.
+
+**⚠ CHÈN MỘT MIỀN LÀ GIÃN LẠI CẢ DÃY.** `dai` không được chồng nhau (`test_vung §2`), mà vị trí
+cụm = `t × voi` — nên cấp 88 phải nằm giữa 84 và 92 thì **bốn miền sau nó đều phải lùi ra**. Sửa
+một dòng rồi tưởng xong là gradient tụt.
+
+**⚠ KHAI `he` CỦA MIỀN NẾU MAP ĐANG THUẦN MỘT HỆ.** `MOBS[].el` là lớp nền, `vung.he` thắng — nên
+một con `el:'Dusk'` thả vào Reptile Sunstone Flats mà quên `he:'Reptile'` là map thôi **thuần 100%**,
+một tính chất đã chốt ở mục tam giác, và nó hỏng trong im lặng.
+
+**Ba phép đo đã làm, và phép thứ hai bác bỏ chính linh cảm ban đầu của tôi:**
+
+1. **Art tối có đọc được không.** Tấm này **sáng 0,246** — tối hơn cả 24/24 tấm quái hiện có
+   (trung vị 0,514). Nhưng **lệch chuẩn 0,226** nằm trên hẳn ngưỡng 0,12, tức đúng ca "kỵ sĩ 0,209
+   đọc rõ từng chi tiết" chứ không phải ca "bóng ma 0,092 thành đốm mực" ⇒ **không nâng sáng**.
+2. **Và đừng dừng ở đó — đo THẬT trên map đích.** Năng lượng biên trong một ô quanh con quái, A/B
+   trên cùng một khung (có con / không con): **+22,1%** so với nền trống, trong khi `thamtu` — con
+   đã ship sẵn trên chính map đó — chỉ **+18,2%**. Tức tấm tối này đọc ra RÕ HƠN một con đang chạy.
+   *Một ngưỡng chung cho "art tối" không thay được một phép đo trên đúng cái nền nó sẽ đứng.*
+3. **Cân bằng: `test_mobbalance` KHÔNG ĐO CON NÀY.** Nó chỉ đo bãi **gần cổng nhất** và **xa nhất**,
+   mà con mới nằm giữa ⇒ thêm một loài vào khoảng giữa là thêm một loài **không ai gác cân bằng**.
+   Phải tự đo: ở cấp 88, dồn điểm theo build của lớp, Sylvan Ranger hạ thamtu/omden/cungthu trong
+   **4,1s / 4,1s / 4,4s** ⇒ nằm đúng trên đường cong.
+
+**⚠ `def` ĐÃ BÃO HOÀ Ở DẢI CẤP NÀY — đừng chỉnh nó để "cho có cảm giác trâu".** Thử 68 rồi đo lại:
+thời gian hạ của cả ba lớp **không đổi** (16,0s → 17,3s, nằm trong nhiễu). Thứ thật sự đổi hồ sơ
+là `atkCd` và `speed`.
+
+#### ⚠ ĐƯỜNG DẪN ẢNH QUÁI GÕ SAI LÀ MỘT LỖI IM LẶNG — trước `test_anhquai` không ai gác
+
+Con quái vẫn spawn, vẫn đánh, vẫn rơi đồ — chỉ là **không vẽ ra gì**, kèm một dòng 404 không ai đọc.
+Đúng họ với vết sẹo `ISO_NEO` đã xoá sạch cây của sáu map. Bài mới gác bốn chiều, và ④ là tầng
+**HÀNH VI** — tầng duy nhất bắt được ca *"tệp có trên đĩa mà trình duyệt vẫn không tải nổi"*.
+
+**⚠ HAI QUE DÒ CỦA CHÍNH BÀI ẤY ĐÃ HỎNG TRƯỚC KHI ĐÚNG**, ghi lại vì cả hai đều cho một kết quả
+trông rất thuyết phục:
+- `MOB_IMGS` **khoá theo MÃ LOÀI**, không theo đường dẫn. Khoá nhầm ra **32/32 loài đều "không tải
+  được" trong khi 0 lượt 404** — hai con số ấy mâu thuẫn nhau, và chính chỗ mâu thuẫn là bằng chứng
+  que dò hỏng chứ không phải game hỏng.
+- Khoá `MOB_KHUNG` **không có đuôi** (đường dẫn dựng thành `assets/mobs/kh/<tên>.png`), nên kiểm
+  thẳng chuỗi khoá là báo thiếu hai tệp đang có thật.
+
+**⚠ VÀ ④ PHẢI LOẠI LOÀI KHAI `skel`.** Năm loài khai CẢ `skel` LẪN `img` và CỐ Ý hiện bằng khung
+xương, nên đường nạp ảnh bỏ qua chúng — đòi chúng tải ảnh là đòi một thứ thiết kế nói không.
+① vẫn gác chuyện tệp lùi ấy có thật.
+
 ### 🗺 BẢN SẮC MAP SUY RA TỪ DỮ LIỆU, KHÔNG CHÉP CỨNG
 
 `mapBanSac(id)` tính **loài chủ đạo · hệ trội · Dòng Cốt độc quyền** từ chính `packs`, và
