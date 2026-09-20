@@ -23,10 +23,25 @@ const { chromium } = require('playwright');
     // 1150ms) giữa cú bấm và lúc bốc kết quả — cả tiếng động lẫn dòng chữ của công thức đều
     // nổ ra ở NỬA SAU. Bài này đo KẾT QUẢ công thức, không đo hoạt cảnh, nên chỉ cần đợi cho
     // hết nhịp rồi mới đọc. (Phần hoạt cảnh do test_chaosanim.js gác riêng.)
-    // ⚠ 2400ms, KHÔNG PHẢI 1200. Khoá `_loBan` giữ tới khi bảng VẼ LẠI, tức LO_KHUI (1150ms)
-    // cộng thêm 1000ms nữa — tổng ~2150ms. Chờ ngắn hơn thì cú bấm KẾ TIẾP bị khoá nuốt mất,
-    // và bài đọc ra thành "công thức không chạy" trong khi thật ra nó chưa được bấm.
-    const xong = () => new Promise(r2 => setTimeout(r2, 2400));
+    // ⚠ CHỜ ĐÚNG ĐIỀU KIỆN, ĐỪNG CHỜ MỘT CON SỐ. Khoá `_loBan` giữ tới khi bảng vẽ lại, tức
+    // LO_KHUI (1150ms) + 1000ms = ~2150ms. Bản cũ chờ chẵn 2400ms — lề đúng 250ms, và dưới
+    // headless không GPU thì hai hẹn giờ lệch nhau ngần ấy là chuyện thường: cú bấm KẾ TIẾP
+    // bị khoá nuốt mất TRONG IM LẶNG (`doChaos` return ngay dòng đầu), và bài đọc ra thành
+    // "Đổi Hệ không đổi được hệ" — một lỗi CÂN BẰNG hoàn toàn không có thật.
+    // Đo được: nâng lên 4200ms là bài xanh, tức chưa bao giờ có lỗi nào trong game cả.
+    // ⚠ VÀ ĐỪNG CHỮA BẰNG MỘT CON SỐ TO HƠN: nó chỉ dời cái ngưỡng đỏ-theo-tải đi chỗ khác,
+    // và sẽ nói dối lần nữa nếu ai đổi LO_KHUI. Hỏi thẳng khoá qua `window.loDangBan()`.
+    const xong = async () => {
+      // Thiếu cửa đọc thì DỪNG HẲN với một câu nói đúng lý do. Lui về "coi như đã nhả" là
+      // quay lại đúng bài toán chờ mò, chỉ khác là nay chờ có 50ms.
+      if (typeof window.loDangBan !== 'function')
+        throw new Error('thiếu window.loDangBan() — không có cách nào biết Lò đã nhả khoá chưa');
+      for (let i = 0; i < 120; i++){                 // trần 6 giây — quá ngần ấy là hỏng thật
+        await new Promise(r2 => setTimeout(r2, 50));
+        if (!window.loDangBan()) return;
+      }
+      throw new Error('Lò Hỗn Độn không nhả khoá sau 6 giây');
+    };
     const reset = () => {
       applyTestBoost(); calcDerived(); chaosClear(); chaosGroup = 'ren'; chaosPick = null;
       player.forgeBonus = 0; forgeUseCharm = false;
@@ -87,17 +102,39 @@ const { chromium } = require('playwright');
       chaosAddItem(it.uid); chaosAddJewel('sinhMenh'); chaosPickRecipe('life');
       const rate = chaosCurrent().p.rate; doChaos(); await xong();
       o.sinhMenh = { rate, bac: it.life }; }
-    // 3d Rèn thường: Huyền Thiết đã gỡ, phí rèn nay TRỌN VẸN bằng Lumen (xem GO_HUYENTHIET)
+    // 3d "Rèn Thường" ĐÃ GỠ — đoạn +1→+9 nay CHỈ ép ngọc. Gác chiều ngược lại: món +0 bỏ vào
+    // khay thì KHÔNG ra công thức leo +N nào của Lò, và forgeRule phải TỪ CHỐI mọi mốc ≤9 thay
+    // vì trả một luật gần đúng.
     reset();
-    { const it = player.equip.tay; it.plus = 0; const s0 = player.silver;
-      chaosAddItem(it.uid); chaosPickRecipe('ren'); doChaos(); await xong();
-      o.renThuong = { plus: it.plus, truBac: s0 - player.silver > 0 }; }
+    { const it = player.equip.tay; it.plus = 0;
+      chaosAddItem(it.uid);
+      let neRule = null;
+      try { forgeRule(5); neRule = 'KHONG NEM'; } catch { neRule = 'nem'; }
+      // `bless`/`soul`/`life` VẪN PHẢI CÒN — chúng là MẶT TIỀN của epNgoc trong lò (luật ở
+      // NGOC_EP, dùng chung với đường ép thẳng trong túi), không phải đường rèn thứ hai.
+      o.renDaGo = { khop: chaosMatches().map(x => x.rec.id), forgeRule5: neRule }; }
+    // 3d' Trần mới là +12: món +11 tại Lò Rèn Hoàng Gia phải vào được Phá Thiên Kiếp.
+    reset(); goRoyal(true);
+    { const it = player.equip.tay; it.plus = 11;
+      chaosAddItem(it.uid);
+      for (let i = 0; i < 4; i++) chaosAddJewel('chucPhuc');
+      for (let i = 0; i < 4; i++) chaosAddJewel('linhHon');
+      chaosAddJewel('honDon');
+      o.plus11 = !!chaosMatches().find(x => x.rec.id === 'phathien');
+      const it12 = player.equip.tay; it12.plus = 12; chaosClear(); chaosAddItem(it12.uid);
+      o.plus12Dung = !chaosMatches().some(x => x.rec.id === 'phathien'); }
+    goRoyal(false);
     // (3e Tấn Phẩm đã gỡ cùng công thức.)
-    // 3f Kế Thừa
+    // 3f KẾ THỪA ĐÃ GỠ — trục THỨ HAI trên cùng món đồ, cùng đường với Tấn Phẩm và hệ Phẩm.
     reset();
     { const it = player.inv.find(x => !x.special && x.tier != null && x.tier < GIAI_MAX);
-      if (it){ const t0 = it.tier; chaosAddItem(it.uid); chaosPickRecipe('kethua'); doChaos(); await xong();
-        o.keThua = { tu: t0, den: it.tier }; } else o.keThua = '(không có đồ dưới giai X)'; }
+      chaosAddItem(it.uid);
+      o.keThua = {
+        khop: chaosMatches().map(x => x.rec.id),
+        conHam: typeof window.doKeThua,
+        conCongThuc: CHAOS_RECIPES.some(r => r.id === 'kethua'),
+        conMats: !!(player.mats && ('manh' in player.mats || 'tichMa' in player.mats)),
+      }; }
     // 3g Lò Hỗn Loạn: 3 món cùng phẩm phải BIẾN MẤT dù thành hay bại
     reset();
     { const three = [];
@@ -130,6 +167,7 @@ const { chromium } = require('playwright');
 
   console.log(JSON.stringify(r, null, 1));
   let bad = 0; const fail = m => { console.log('FAIL', m); bad++; };
+  const pass_ = m => console.log('PASS', m);
   if (r.tenDinhKiemHiep.length) fail(`còn tên kiếm hiệp: ${r.tenDinhKiemHiep.join(', ')}`);
   // 8 chứ không 40: hệ phẩm đã gỡ nên ITEM_NAMES còn ĐÚNG MỘT tên lui mỗi ô, không phải năm
   // tên chọn theo phẩm. (Trước đó là 40 = 8 ô × 5 phẩm; trước nữa là 45 khi còn ô Quần.)
@@ -138,7 +176,7 @@ const { chromium } = require('playwright');
   // nghĩa chủ dự án chốt: Cánh CHÍNH LÀ áo choàng của Dark Lord). Gác ngược lại: nó phải BIẾN MẤT.
   if (r.khayTrong.includes('cloak'))
     fail(`công thức 'cloak' vẫn còn trong Lò Hỗn Độn: ${JSON.stringify(r.khayTrong)}`);
-  if (!r.motMon_plus3.includes('ren')) fail('1 món +3 trong khay mà không ra Rèn Thường');
+  if (r.motMon_plus3.includes('ren')) fail(`'Rèn Thường' sống lại — đoạn +1→+9 phải CHỈ ép ngọc: ${JSON.stringify(r.motMon_plus3)}`);
   if (!r.themChucPhuc.includes('bless')) fail('bỏ Chúc Phúc vào khay mà công thức bless chưa đủ');
   if (!r.plus9_ngoaiLoRen.includes('phathien(khoá)'))
     fail(`ngoài Lò Rèn Hoàng Gia mà Phá Thiên không bị khoá: ${JSON.stringify(r.plus9_ngoaiLoRen)}`);
@@ -152,9 +190,17 @@ const { chromium } = require('playwright');
   // 50% PHẲNG mọi bậc, dùng chung con số với đường ép thẳng trong túi (NGOC_EP.sinhMenh.rate).
   // Bản cũ giảm dần 75→27 nên cùng một viên ngọc mà lò và túi lại hai tỉ lệ khác nhau.
   if (r.sinhMenh.rate !== 50) fail(`Sinh Mệnh mọi bậc phải 50%, đo ${r.sinhMenh.rate}`);
-  if (r.renThuong.plus !== 1) fail(`Rèn Thường +0→+1 hỏng (ra +${r.renThuong.plus})`);
-  if (!r.renThuong.truBac) fail('Rèn Thường không trừ Lumen');
-  if (r.keThua.den !== r.keThua.tu + 1) fail(`Kế Thừa: giai ${r.keThua.tu} → ${r.keThua.den}`);
+  if (r.renDaGo.khop.includes('ren')) fail(`món +0 vẫn khớp 'Rèn Thường': ${JSON.stringify(r.renDaGo.khop)}`);
+  else pass_(`món +0 chỉ còn đường ngọc: ${JSON.stringify(r.renDaGo.khop)}`);
+  if (r.renDaGo.forgeRule5 !== 'nem') fail('forgeRule(5) không ném lỗi — mốc ≤9 phải bị từ chối, không trả luật gần đúng');
+  if (!r.plus11) fail('món +11 tại Lò Rèn Hoàng Gia không vào được Phá Thiên Kiếp — trần +12 chưa mở');
+  if (!r.plus12Dung) fail('món +12 vẫn rèn tiếp được — trần phải dừng ở +12');
+  if (r.keThua.conCongThuc) fail("công thức 'kethua' sống lại — món đồ chỉ được có MỘT trục (+N bằng ngọc)");
+  if (r.keThua.conHam !== 'undefined') fail('window.doKeThua sống lại');
+  if (r.keThua.khop.includes('kethua')) fail(`món dưới giai đỉnh vẫn ra Kế Thừa: ${JSON.stringify(r.keThua.khop)}`);
+  if (r.keThua.conMats) fail('player.mats vẫn còn manh/tichMa — di trú chưa delete');
+  if (!r.keThua.conCongThuc && r.keThua.conHam === 'undefined' && !r.keThua.conMats)
+    pass_('Kế Thừa đã gỡ sạch (công thức · hàm · hai ô đếm)');
   if (!r.honLoan.co) fail('không nhận ra công thức Lò Hỗn Loạn');
   if (r.honLoan.conLai !== 0) fail(`Lò Hỗn Loạn còn sót ${r.honLoan.conLai} món hiến tế`);
   if (r.honLoan.khaySach !== 0) fail('Lò Hỗn Loạn không dọn khay');

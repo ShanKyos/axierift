@@ -69,6 +69,10 @@ const { chromium } = require('playwright');
       coInstinct: /Bản Năng|Instinct/.test(txt), coHeDon: /Hệ đòn đánh/.test(txt),
       soKhoiThuocTinh: (pan.innerHTML.match(/THUỘC TÍNH CHIẾN ĐẤU/g) || []).length,
       soDongAttr: pan.querySelectorAll('.attr-row').length,
+      // ⚠ SUY TỪ `ATTR_INFO`, ĐỪNG CHÉP MỘT CON SỐ. Bản cũ chốt cứng 5 và nó thành lời nói
+      // dối lúc chủ dự án rút xuống BỐN chỉ số kiểu MU — bài đỏ ở một chỗ chẳng liên quan
+      // gì tới HUD, thứ mà nó sinh ra để gác. Cùng vết sẹo `test_ngamchuot` chép `chanDy`.
+      soOMong: Object.keys(ATTR_INFO).length,
       nutCong: [...pan.querySelectorAll('.attr-row')].map(r2 => r2.querySelectorAll('.plus-btn').length),
       rong: Math.round(pan.getBoundingClientRect().width) };
   });
@@ -80,7 +84,7 @@ const { chromium } = require('playwright');
   if (!v.coInstinct) fail('thiếu Bản Năng (thứ vừa gỡ khỏi HUD)');
   if (!v.coHeDon) fail('thiếu Hệ đòn đánh');
   if (v.soKhoiThuocTinh !== 1) fail(`THUỘC TÍNH CHIẾN ĐẤU in ${v.soKhoiThuocTinh} lần, phải đúng 1`);
-  if (v.soDongAttr !== 5) fail(`có ${v.soDongAttr} dòng thuộc tính, cần 5`);
+  if (v.soDongAttr !== v.soOMong) fail(`có ${v.soDongAttr} dòng thuộc tính, cần ${v.soOMong} (theo ATTR_INFO)`);
   if (!v.nutCong.every(x => x === 2)) fail(`dòng thuộc tính thiếu nút +/Max: ${JSON.stringify(v.nutCong)}`);
 
   // cộng điểm phải cập nhật ngay chính bảng đang mở

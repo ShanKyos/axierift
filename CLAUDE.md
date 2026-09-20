@@ -9,8 +9,13 @@ Mọi thứ làm mới từ nay trở đi phải theo MU Online. Cụ thể:
 
 **KHÔNG dùng:**
 - Chữ Hán/kanji làm hình ảnh (icon, biểu tượng, glyph trang trí trên UI).
-  Toàn bộ file **hiện không còn ký tự CJK nào** — kiểm tra lại bất cứ lúc nào bằng:
+  Kiểm tra lại bất cứ lúc nào bằng:
   `python3 -c "import re;print(sum(1 for l in open('public/game/game.js',encoding='utf-8') if re.search(r'[　-〿一-鿿＀-￯゠-ヿ぀-ゟ]',l)))"`
+  ⚠ **Câu lệnh trên nay trả `2`, không phải `0` — và cả hai đều ĐÚNG LUẬT.** Chúng là hai dòng
+  **chú thích** ghi tên xương Spine (`背后头发` · `左手持剑`), tức tên do gói art đặt, không phải
+  text người chơi thấy. Câu cũ ở đây ghi "không còn ký tự CJK nào" và nó đã thành lời nói dối
+  lúc nào không ai hay. Việc cần làm khi con số này nhảy là **mở hai dòng ấy ra xem**, không
+  phải xoá mù: con số 2 là mốc, vượt 2 thì có thứ mới lọt vào.
   Dải kiểm nay gồm cả **dấu câu CJK** (`【】《》`) và **ký tự toàn rộng** (`＋`), không chỉ chữ Hán:
   bản cũ chỉ quét U+4E00–U+9FFF nên 9 cặp `【…】` ở nhãn danh hiệu và tên bộ đồ lọt qua suốt
   nhiều đợt, dù chúng hiện thẳng trên HUD.
@@ -82,7 +87,7 @@ khi tấn công thì ví dụ Dark Wizard sẽ xuất hiện và tung chiêu."*
 
 | | |
 |---|---|
-| **Axie** | thân NHÌN THẤY. **0 chỉ số, 0 kỹ năng, 0 trang bị.** Là ô để cắm NFT. |
+| **Axie** | thân NHÌN THẤY. **0 chỉ số, 0 kỹ năng, 0 trang bị.** Là ô để cắm NFT. Nhưng lớp Axie quyết định **hệ PHÒNG THỦ** — xem mục ⚔ ngay dưới. |
 | **5 lớp** | nơi chứa **toàn bộ** chỉ số, trang bị, kỹ năng, Tiến Hoá, Di Sản |
 | **Lúc đánh** | lớp nhân vật **vật chất hoá KẾ BÊN Axie**, tung chiêu, rồi tan. Axie **không** biến mất — nhân vật đi theo bảo kê. |
 
@@ -91,6 +96,354 @@ trên màn là **một** người, không phải hai — đọc ảnh chụp mà
 tầng mạng: đồng bộ một người chơi là đồng bộ **cả cặp**, và mọi phép đo "có mấy người trong
 khung" phải đếm theo cặp.
 | **Khoá lớp** | chọn một lần lúc tạo nhân vật. **Avatar thì tự do** — mọi NFT đều cắm được. |
+
+### ⚔ LỚP AXIE QUYẾT ĐỊNH HỆ PHÒNG THỦ — quan hệ, KHÔNG phải nấc thang
+
+Thể lệ Vibeathon chấm **Axie Core 35%** với đúng một câu: *"a meaningful interpretation of the
+theme that **affects the game**"*, và luật nói thẳng *"rather than appear only as a cosmetic
+skin"*. Đo trước khi làm: lái cả 16 con qua `calcDerived()` ở cấp 60 ⇒ **0 con làm đổi một điểm
+chỉ số nào**, tắt hẳn avatar cũng đổi 0. Tức con Axie đúng nghĩa đen là một cái skin.
+
+⇒ `SECTS[sect].element` — vốn là **hằng số**, chọn lớp xong là khoá cứng cả đời — nay do con
+Axie đang đeo quyết định. **`heThu(p)` là cửa DUY NHẤT**.
+
+> ⚠ Mục này viết cho **chặng 1**, hồi vòng khắc còn là NGŨ GIÁC năm hệ và có bảng `AXIE_HE` gộp
+> 9 lớp Axie xuống 5. Chặng 2+3 đã đổi hẳn sang **tam giác chín lớp** và **gỡ `AXIE_HE`** — xem
+> mục ngay dưới. Giữ lại phần này vì luật hai-chiều-hai-nguồn và luật "không cộng chỉ số" thì
+> không đổi; chỉ mấy con số và bảng ánh xạ là đã cũ, và chúng được đánh dấu tại chỗ.
+
+| chiều | hệ lấy từ đâu | hệ số |
+|---|---|---|
+| người → quái | **VŨ KHÍ** (`atkElem`) | ×1,20 / ×0,88 |
+| quái → người | **AXIE** (`heThu`) | ×1,12 / ×0,90 |
+
+**⚠ KHÔNG CỘNG MỘT CHỈ SỐ NÀO, và đó là cả điểm.** Hai hệ số kia đã chạy sẵn; đổi Axie chỉ đổi
+NHÁNH nào được chọn. Luật *"Axie 0 chỉ số"* còn nguyên — đây là một **quan hệ**, không phải một
+nấc thang. Trục sức mạnh từ phía Axie đã bị tháo **ba lần** (bị động `thu` · cấp Chimera · bốn ô
+Cốt) và lần nào cũng quay lại dưới dạng *"chỉ vài dòng chỉ số nhỏ thôi"*. **Đừng "cải tiến" nó
+thành +% kháng.** `tests/test_hethu.js §4` gác đúng chiều đó: đổi qua cả 16 con phải đổi 0 điểm.
+
+**⚠ ĐỪNG ĐỤNG CHIỀU TẤN CÔNG.** Luật bất đối xứng *"đổi vũ khí không bao giờ làm ngươi ăn đòn
+nặng hơn"* đã chốt từ trước và có chú thích tại chỗ. Hai nguồn cho hai CHIỀU thì đọc ra được; ba
+nguồn là ba thứ phải nhớ.
+
+**Đo được sau khi làm** (cùng một con quái hệ Ember, cấp 40, chỉ đổi Axie):
+
+| Axie | hệ | máu mất |
+|---|---|--:|
+| `coghound` Mech | Steel — bị Ember khắc | **675** |
+| `emberjaw` Beast | Ember — trung tính | 608 |
+| `tidewarden` Aquatic | Frost — khắc lại Ember | **510** |
+
+Chênh **32,4%**, lớn hơn 24% lý thuyết vì giáp trừ thẳng khuếch đại — cùng cơ chế đã ghi ở mục
+hố XP. Đây cũng là **lý do chơi để sở hữu nhiều hơn một con Axie**, thứ mà gacha Khế Ước đang
+bán mà trước nay không có.
+
+> ⚠ **CON SỐ 32,4% LÀ MỘT CON SỐ KHÔNG ĐẠI DIỆN, và tôi đã suýt đem nó đi báo cáo.** Nó đo
+> trên MỘT con quái tự tay chọn. Tính lại trên **đàn quái thật của từng vùng** thì chênh giữa
+> con Axie hợp nhất và con tệ nhất chỉ **7,9%** — vì không vùng nào thuần hệ, mỗi map trộn 3-5
+> hệ nên lợi và hại triệt tiêu nhau. *Đo một mẫu tự chọn rồi gọi nó là kết quả thì lúc nào cũng
+> ra con số mình muốn.* Đó chính là lý do chặng 3 tồn tại.
+
+> ⚠ Đo một đòn thì không đo được gì: mỗi đòn quái mang `rnd(0.85, 1.15)`, tản ±15%, trong khi
+> tín hiệu cần bắt là ±12%/−10%. Bảng trên đo một đòn và ra đúng chiều vì MAY. `test_hethu §2`
+> nay cộng dồn **900 nhịp** và ghim lại người chơi lẫn con quái mỗi nhịp — cùng bài học đã ghi
+> cho `test_elem §4`.
+
+**⚠ HAI LỚP ĐỔI HỆ MẶC ĐỊNH, biết và chấp nhận:** vì nhân vật mới nào cũng có Axie mặc định
+(`AVA_MAC_DINH`), hệ phòng thủ mặc định suy từ con đó chứ không từ `SECTS`. Dark Knight
+Steel → **Ember**, Dark Lord Stone → **Verdant**; ba lớp còn lại trùng khít hệ cũ. Với 11 map
+(hệ trội: Verdant 4 · Stone 3 · Frost 3 · Ember 1 · Steel 0) thì Dark Knight bất lợi ở nhiều map
+hơn trước, Dark Lord thì ít đi. Muốn giữ y hệt bản cũ thì đổi `AVA_MAC_DINH` — nhưng bảng đó
+chọn theo **hình dáng cho dễ phân biệt ngoài đường**, đổi nó là trả giá bên kia.
+
+**⚠ `heThu` KHÔNG BAO GIỜ được trả rỗng.** Nhánh khắc hệ đọc `if (mobEl && sectEl2)`, nên trả
+`null` là **tắt câm** cả cơ chế mà không một lỗi nào in ra. Chưa có avatar thì lui về hệ của lớp.
+
+**⚠ Đây là bước GỘP 9 → 5, không phải tam giác chính chủ của Axie.** Vòng khắc ở đây là **ngũ
+giác 5 cạnh**, không chứa nổi một tam giác 3 nhóm (①Beast·Bug·Mech ▶ ②Plant·Reptile·Dusk ▶
+③Aquatic·Bird·Dawn ▶ ①). Đổi hẳn sang tam giác là đợt việc RIÊNG và nó **đổi cân bằng** — tỉ lệ
+khắc nhau 20% → 33%. Bước này cố ý không đụng một cạnh nào.
+
+**⚠ Hai dòng hệ phải nằm TRÊN trong bảng Nhân Vật, đừng đẩy xuống cuối mảng `stats`.** Bản đầu
+tôi `push` vào cuối; chụp ra nhìn thì chúng rơi khỏi vùng thấy được và phải cuộn mới gặp. Mà đó
+là hai dòng **duy nhất** trong cả khối người chơi đổi được bằng một lựa chọn — còn lại đều là kết
+quả của cấp và trang bị. *Một cơ chế bị chôn dưới đáy danh sách cuộn thì với người chơi không
+khác gì không tồn tại.*
+
+**Còn treo:** chỗ đổi Axie hiện **tự do ở mọi nơi**. Chủ dự án chưa chốt — ba lựa chọn là (a) mặc
+kệ, coi như chọn build · (b) chỉ đổi trong thành (MU thuần) · (c) tự do nhưng có hồi chiêu. Hiện
+đang là (a) vì đó là hành vi sẵn có, thêm chốt sau là một dòng trong `chiChon()`.
+
+### ▲ TAM GIÁC CHÍN LỚP AXIE (chặng 2) + VÙNG MANG LỚP CỦA TỘC NÓ (chặng 3)
+
+Chặng 2 thay **ngũ giác năm hệ** (Steel · Verdant · Stone · Frost · Ember — thừa kế từ đời game
+kiếm hiệp) bằng **tam giác chín lớp Axie chính chủ**:
+
+```
+  ① Beast · Bug · Mech   ▶   ② Plant · Reptile · Dusk   ▶   ③ Aquatic · Bird · Dawn   ▶   ①
+```
+
+Chặng 3 gán cho mỗi vùng lớp của **tộc mang tên nó**, để con Axie đang đeo có nghĩa KHÁC NHAU ở
+những nơi khác nhau.
+
+**⚠ HAI CHẶNG PHẢI ĐI CÙNG NHAU — thử ngược đã chứng minh, không phải suy.** Gỡ riêng chặng 3
+ra (để hệ khoá theo LOÀI như cũ, giữ nguyên tam giác) rồi đo lại:
+
+| | chỉ chặng 2 | chặng 2 + 3 |
+|---|---|---|
+| chênh tốt nhất / tệ nhất trong một vùng | **2,1% – 13,6%** | **24,4% ở cả 10 vùng** |
+| lớp trội chiếm bao nhiêu dân số | 34% – 48% | **65% – 100%** |
+| một nhóm Axie tối ưu ở mấy vùng | **6/11** | **4/11** (sàn toán học) |
+
+Lý do: **loài dùng lại qua nhiều map** — `thinu` có mặt ở bốn map, `mocnhan` bốn, `bandao` bốn,
+`huyetbat` hai. Hệ khoá theo loài thì Bug Tribe Tunnels và Plant Tribe Glade **bắt buộc** trùng
+hệ, và cả cơ chế "chọn Axie theo nơi sắp đi cày" mất nghĩa.
+
+**Kiến trúc: HAI TẦNG, y hệt vai trò.** `MOB_ROLE` là lớp nền, `pk.vai` của bãi thì thắng — ở
+đây `MOBS[].el` là lớp nền, `vung.he` của miền dân số thì thắng. Cửa đọc duy nhất là **`mobHe(m)`**.
+
+| ở đâu | việc |
+|---|---|
+| `ELEM` + `nhom` 0/1/2 + **`heKhac(a,b)`** | bảng và cửa DUY NHẤT hỏi "a có khắc b không" |
+| `ELEMENTS = Object.keys(ELEM)` | suy từ bảng — vũ khí bốc Rune từ đây |
+| `vung: [{ id, he:'Plant', … }]` trong `data/canbang.js` | lớp của miền dân số |
+| `banRaiVung` → `pk.he` → `spawnMob(…, {he})` → **`m.he`** | sợi dây từ dữ liệu tới con quái |
+| `mobHe(m)` = `m.he || m.def.el` | cửa đọc, dùng ở cả tính sát thương lẫn mọi chỗ hiện ra |
+| `heKhacLai(he)` → `banSacHtml` | dòng "mang X · Y · Z tới" trên bảng Bản Đồ |
+
+**⚠ KHÔNG CÒN TRƯỜNG `beats`.** Ngũ giác khắc một-đối-một nên `beats` là một CHUỖI và mã so
+bằng `===`. Tam giác khắc ba-đối-ba; giữ `beats` thành mảng rồi `.includes()` là chép cùng một
+quan hệ ra chín chỗ. `nhom` là nguồn duy nhất.
+
+**⚠⚠ TUYỆT ĐỐI KHÔNG GHI HỆ VÀO `m.def.el`.** `def` thường LÀ chính đối tượng trong `MOBS` —
+`spawnMob` chỉ clone khi vai có hệ số khác 1 — nên ghi vào đó là đổi hệ của loài ấy ở **mọi
+map** cho tới khi tải lại trang. Cùng vết sẹo mà `goldify()` đã ghi.
+
+**⚠ VÀ BÀI KIỂM DẪM ĐÚNG BẪY ĐÓ.** `test_elem` đặt `m.def = {...m.def, el: mobEl}` rồi đo — ra
+**đúng 923 cho cả năm cột**, vì `spawnMob` đã điền `m.he` lúc sinh và `mobHe` đọc nó trước.
+Trông y hệt "khắc hệ chết hẳn". Bài kiểm nào chỉnh hệ của một con quái thì phải chỉnh `m.he`.
+
+**⚠ CHỌN BA CON AXIE Ở BA NHÓM KHÁC NHAU, đừng chọn theo tên lớp.** Tam giác gom chín lớp thành
+**ba** nhóm, nên Mech và Beast — hai tên khác hẳn nhau — là **trung tính với nhau**. `test_hethu`
+bản đầu dùng Mech vs Beast và đo ra 455.613 vs 459.144, tức không chênh gì, đúng như luật nói.
+
+**⚠ NGƯỠNG "không lớp nào tối ưu quá 3/11 vùng" trong `docs/AXIE_CORE.md` là một ngưỡng KHÔNG
+TỒN TẠI** — nó viết hồi vòng khắc còn năm phía. Tam giác chỉ có BA nhóm, nên 11 vùng chia ba
+nhóm thì nhóm đông nhất tối thiểu là `ceil(11/3)` = **4**. Đã sửa cả đặc tả lẫn bài kiểm, và
+ghi lý do tại chỗ. *Một ngưỡng chép từ đặc tả cũ mà không kiểm lại là một bài kiểm đỏ vĩnh viễn
+vì đòi một thứ bất khả.*
+
+**Lớp của vùng — suy từ tên vùng, không bịa:**
+
+| vùng | lớp | | vùng | lớp |
+|---|---|---|---|---|
+| Beast Herd Camp | Beast | | Bird Tribe Heights | Bird |
+| Werebear Woods | Beast | | Reptile Sunstone Flats | Reptile (thuần 100%) |
+| Plant Tribe Glade | Plant | | Dusk Marsh | Dusk (thuần 100%) |
+| Bug Tribe Tunnels | Bug | | Rẻo Rừng Corran | Dawn — rễ Cây Hồn |
+| Aquatic Tribe Causeway | Aquatic | | Trũng Nứt Corran | Mech — đất ngay dưới Nhát Gọi |
+| **Lối Mòn Corran** | **TRỘN, cố ý** — một lối mòn không phải một nơi, không Rune nào cắm ở đó | | | |
+
+`loimon` chênh **11,7%** và là vùng phẳng nhất. Đó là thứ đáng giữ, không phải lỗi: nó là chỗ
+duy nhất không Axie nào hợp hơn Axie nào. `test_tamgiac.js` miễn trừ nó **có nêu tên và lý do** —
+đừng miễn trừ bằng một danh sách không giải thích.
+
+**Nhịp cấp: đổi ~+1%, và con số đó suy được chứ không cần đoán.** Vũ khí bốc hệ đều tay, nên tỉ
+lệ ăn hệ số đổi từ (20% khắc · 20% bị khắc) sang (33% · 33%) ⇒ hệ số nhân trung bình
+`0,2×1,20 + 0,2×0,88 + 0,6×1,0 = 1,016` → `⅓×1,20 + ⅓×0,88 + ⅓×1,0 = 1,0267`, tức **+1,05%**.
+Nằm sâu trong nhiễu của `tools/do_nhipcap.cjs` (chính nó có đỉnh 50% do bốc trúng bộ đồ ngon),
+nên `XP_TABLE` **không chỉnh**. ⚠ Phân bố hệ của quái **không** ảnh hưởng con số này: với một
+con quái bất kỳ, xác suất vũ khí bốc đúng hệ khắc luôn là 3/9.
+
+#### 📢 VẾ PHÒNG THỦ PHẢI NÓI RA — và nửa CÓ LỢI của nó từng câm tuyệt đối
+
+Chiều quái → người là thứ gánh tiêu chí Axie Core, nhưng nó chỉ có đúng **một** cửa hiện ra:
+một dòng `logCombat` trong hộp nhật ký 260px ở góc dưới-trái — trôi quá nhanh để đọc giữa lúc
+đánh nhau — **và chỉ in ở nhánh bất lợi**, vì cờ `mobCounter` không bao giờ bật ở nhánh ×0,90.
+Tức nửa có lợi, cũng là nửa trả lời cho *"vì sao phải có nhiều hơn một con Axie"*, chưa từng
+hiện ra một lần nào. Đối chiếu: chiều TẤN CÔNG thì có hẳn một số bay trên đầu quái với bốn tiền
+tố riêng (`HOÀN HẢO` · `KHẮC HỆ` · `bị khắc` · `(chống)`). *Cơ chế vô hình là cơ chế không tồn tại.*
+
+**`heThuKet(mobEl, axieEl)` là cửa DUY NHẤT** cho mọi chỗ nói ra vế đó, và nó mang luôn **hai hệ
+số** nên đường sát thương cũng đọc từ đấy — chép `1.12`/`0.9` ra thêm một chỗ là thêm một chỗ
+nói dối được.
+
+| kênh | trả lời câu gì | ở đâu |
+|---|---|---|
+| số bay trên đầu người chơi, mỗi đòn trúng | *đang xảy ra chuyện gì* | cạnh `logCombat` trong `hurtPlayer` |
+| một mệnh đề trên băng-rôn lúc vào map | *nên cầm con nào TỚI đây* | `travelTo`, suy từ `mapBanSac` |
+
+**⚠ HAI KÊNH, ĐỪNG GỘP.** Băng-rôn bắn một lần lúc vào map nên đổi Axie giữa map là nó thành
+một câu đã cũ; số bay thì không bao giờ nói được nên cầm con nào **trước khi đi**.
+
+**⚠ `heThuKet` TRẢ CẢ TRẠNG THÁI TRUNG TÍNH (`ket:0`), đừng trả `null` cho nó.** Im lặng ở nhánh
+trung tính thì người chơi không phân biệt được *"con này không khắc gì ở đây"* với *"cơ chế
+không chạy"* — đúng cái kiểu bỏ sót vừa phải sửa. Số bay thì cố ý bỏ qua nhánh 0 (trung tính là
+mặc định, bắn mỗi đòn là nhiễu), băng-rôn thì nói.
+
+**⚠ SỐ BAY PHẢI CÓ HỒI** (`HE_FLOAT_HOI` 2,6 giây, mốc để ngoài `player` cho khỏi chui vào save).
+Bắn một cái mỗi đòn thì một trận đông quái đẩy tràn mảng `floats` (trần 70) và nuốt mất mọi
+thông báo khác — chữa một chỗ mù bằng cách làm mù chỗ khác.
+
+**⚠ HAI LỖI CỦA CHÍNH BÀI KIỂM, ghi lại vì cả hai cho ra một bài xanh/đỏ vì lý do sai:**
+1. **Đọc `floats` SAU vòng lặp là đọc quá muộn.** 600 nhịp `update(1/60)` là **10 giây trong
+   game**, mà một số bay chỉ sống ~1 giây — đo được `soFloat: 0` trong khi `tongFloat: 11`, tức
+   bài báo "không hiện gì" trong lúc nó đã hiện đúng. Phải hứng **ngay trong vòng**, và gom theo
+   ĐỐI TƯỢNG chứ không theo chữ (gom theo chữ thì không đếm được số lần bắn).
+2. **Ghim hệ cho MỘT con quái là chấm một cảnh khác hẳn cảnh mình tưởng đã dựng.** Số bay bắn
+   theo con vừa đánh trúng, mà map có nhiều bãi — lượt đầu bắt được `⚠ Dusk khắc Aquatic` của
+   một con khác. Phải ghim cả map, và bài nay **tự kiểm cảnh dựng** (đòi chữ bắt được phải nhắc
+   đúng tên con quái đã ghim) trước khi chấm.
+
+### 📣 HAI TRỤC AXIE PHẢI ĐƯỢC **DẠY**, và đo mới biết là chưa
+
+Cơ chế chạy đúng và có bài gác từ lâu (`test_hethu` · `test_bophan`). Nhưng đếm lại các cửa nói ra
+nó thì ra **sáu kênh, không kênh nào là nhiệm vụ** — `grep` toàn bộ 50 nhiệm vụ chính + 32 phụ cho
+**0** chỗ nhắc tới hệ phòng thủ, đổi thân hay cấu tạo. Với người chơi mới, một cơ chế chiếm 35%
+barem mà chuỗi hướng dẫn không trỏ tới lấy một lần thì nó ngang với không tồn tại.
+
+**⚠ VÀ CHỖ GIẢI THÍCH BẰNG LỜI DUY NHẤT TRONG CẢ GAME ĐANG DẠY SAI.** Trang dẫn truyện — thứ
+người chơi đọc ĐẦU TIÊN — viết *"Mỗi lớp mang một **hệ nguyên tố** — khắc hệ +20% sát thương"*.
+Sai cả hai nửa kể từ đợt tam giác: hệ đòn đánh lấy từ **vũ khí** (`atkElem`, lớp chỉ là đường lui),
+còn hệ phòng thủ — đúng cái trục gánh Axie Core — **không được nhắc một chữ**. Câu đó sống sót qua
+cả đợt tam giác lẫn đợt sáu bộ phận vì **không bài kiểm nào đọc văn xuôi**.
+
+| kênh | trục | ai thấy | nó trả lời câu gì |
+|---|---|---|---|
+| số bay trên đầu mỗi đòn trúng | 1 | mọi người | *đang xảy ra chuyện gì* |
+| băng-rôn lúc vào map | 1 | mọi người | *nên cầm con nào TỚI đây* + **chỗ đổi (phím C)** |
+| `mang X · Y · Z tới` — bảng Bản Đồ | 1 | ai mở M | hệ của **đất** |
+| hai dòng hệ — bảng Nhân Vật | 1 | ai mở C | hệ của **mình** |
+| `Cấu tạo Axie — Thuần 6/6` — bảng Nhân Vật | 2 | ai mở C | hạng của con đang đeo |
+| danh sách Khế Ước | 1+2 | cấp 6+ | chỗ **duy nhất** thấy đủ sáu bộ phận |
+| **`axieTaiDay(c)` — phán quyết TẠI CHỖ** | 1+2 | cấp 6+ | ***nên cắm con nào BÂY GIỜ*** |
+| **`c1q4` Thân Nào Cho Đất Nào** (cấp 19) | 1 | mọi người | *cơ chế này có tồn tại* |
+
+**`axieTaiDay(c, mapId)` là cửa DUY NHẤT** hỏi "con này ở đất đang đứng thì thế nào". Bảng Khế Ước
+trước đây giải thích cơ chế rất kỹ nhưng **không biết người chơi đang đứng ở đâu**, nên nó bắt người
+đọc tự làm phép so sánh trong đầu — đúng cái mà hệ trang bị đã học một lần rồi và chữa bằng
+`itemCompareHtml`. ⚠ Nó đi qua `heThuKet` + `bpSac(bpCung(c))`, **đừng tự nhân hệ số**.
+
+**⚠ TRẢ `null` KHI ĐẤT KHÔNG CÓ HỆ TRỘI** (trong thành, hành lang trộn hệ). In "trung tính" ở đó là
+nói dối theo chiều ngược lại: người chơi tưởng đã hỏi và đã được trả lời, trong khi chỗ đó vốn không
+có câu trả lời nào. Và dòng đầu bảng in kèm **tỉ lệ** (`tyLeHe%`) — không có nó thì Lối Mòn Corran,
+vùng **cố ý trộn hệ**, đọc ra mạnh y như một vùng thuần 100% trong khi chênh ở đó chỉ 11,7%.
+
+**⚠ `MOC_NV.than` CỐ Ý KHÔNG ĐÒI "đang đeo thân KHẮC LẠI đất này".** Nghe mạnh hơn hẳn, nhưng thân
+là thứ bốc từ gacha: người xui có thể không sở hữu con nào thuộc nhóm cần, mà chính tuyến là chuỗi
+**THẲNG** — một ô không qua được là cả game dừng. Đo được: 16 con chia **4 · 7 · 5** cho ba nhóm,
+nên xác suất cả ba lượt quay của `c1q3` rơi cùng một nhóm lên tới ~8%. Cùng bài học ở mục "CỬA CƠ
+CHẾ MỞ Ở CẤP NÀO": hỏi *đếm được không* rồi phải hỏi tiếp *ai cũng làm được không*. Nhiệm vụ mở
+cửa; **cái bảng mới là thứ dạy**.
+
+**⚠ `player.avatar !== undefined`, KHÔNG phải `!player.avatar`.** `undefined` là chưa từng chạm,
+`null` là đã tắt bằng `/avatar off` — cũng là một lựa chọn hẳn hoi. Gộp hai cái là người bấm nút tắt
+kẹt nhiệm vụ vĩnh viễn, và không lỗi nào báo. Cùng luật ba-trạng-thái đã ghi ở mục `avatarId`.
+
+**⚠ CHÈN MỘT NHIỆM VỤ CHÍNH LÀ MỌI `reqMain` TRƯỢT.** `c1q4` chèn ở **chỉ số 11**, nên 8 mốc
+`reqMain` ≥ 11 đã +1 (`12·16·17·20·24·27·33·39` → `13·17·18·21·25·28·34·40`). Sửa bằng máy, đừng
+sửa tay từng dòng — và `test_daythan §1` gác chiều đó (`reqMain` phải trỏ vào trong chuỗi).
+
+Gác: **`tests/test_daythan.js`** (6 mệnh đề, **cả sáu đã thử ngược và đều đỏ**). ④ đo ở **HAI map**
+— một bảng hỏi ở đúng một chỗ thì mọi cách cài đều xanh, kể cả cài chết cứng một hệ; phải đổi map
+rồi đòi phán quyết ĐỔI THEO. ⚠ Phép thử ngược của ⑤ lần đầu **im lặng** vì mỏ neo có **hai** chỗ
+(hai nhánh của `heThuKet`) — đúng vết sẹo đã ghi ở `test_hethong`: *mỏ neo của phép thử ngược phải
+DUY NHẤT, và phải đếm số lần xuất hiện trước khi thay.*
+
+### ▲▲ SÁU BỘ PHẬN AXIE — trục THỨ HAI, và nó chứng minh được là KHÔNG bán sức mạnh
+
+`axie-hinh-hoa §1` chốt: một con Axie luôn dựng từ **đúng sáu bộ phận** — Mắt · Tai · Sừng ·
+Miệng · Lưng · Đuôi. Trước đợt này game **không đọc một bộ phận nào**: con Axie chỉ có MỘT trục
+là `lop` (hệ phòng thủ). Đó là hai khoản trừ còn lại của tiêu chí Axie Core, và một cơ chế đóng
+cả hai.
+
+**Đếm `cung`** = mấy bộ phận thuộc **cùng nhóm tam giác** với `lop` của chính con đó (0..6). Nó
+điều khiển **ĐỘ SẮC**, không điều khiển sức mạnh:
+
+| | |
+|---|---|
+| `cung` 6 → **thuần** | chuyên gia: rất nhẹ đòn ở vùng hợp, rất nặng ở vùng khắc |
+| `cung` 0 → **tạp** | thợ đụng: không bao giờ tệ, không bao giờ xuất sắc |
+
+| ở đâu | việc |
+|---|---|
+| `bp:{ mat, tai, sung, mieng, lung, duoi }` trong `data/canbang.js` | 16 × 6 = 96 ô, **tự khai theo chính `moTa` đã có** |
+| **`docs/BANG_BOPHAN.md`** | bảng đủ 96 ô + độ thuần + độ sắc — **sinh bằng `node tools/bang_bophan.cjs`, đừng sửa tay** |
+| `bpCung(c)` | đếm — `null` khi chưa khai, và `null` ≠ 0 (0 là *tạp nhất có thể*, một phán quyết hẳn hoi) |
+| `bpSac(cung)` → `BP_SAC_MIN` 0,45 … `BP_SAC_MAX` 1,50 | độ sắc |
+| **`axieSac(p)`** | cửa DUY NHẤT hỏi "người này sắc tới đâu"; lui về 1 khi thiếu dữ liệu ⇒ save cũ không phải di trú |
+| `heThuKet(mobEl, axieEl, sac)` | tham số thứ ba, mặc định 1 ⇒ mọi lời gọi hai tham số cũ ra đúng số cũ |
+
+**⚠⚠ BẤT BIẾN LÀ THỨ GIỮ LỜI HỨA, và nó giữ bằng PHÉP DỰNG chứ không bằng một con số chọn khéo.**
+Ba hệ số được nội suy về chính **trung bình** của chúng: `mul(sac) = HE_TB + (mul_gốc − HE_TB)·sac`.
+Tổng ba nhánh vì thế không đổi theo `sac` — đạo hàm đúng bằng 0. Trên phân bố đều chín lớp quái
+(mỗi nhóm 3 lớp ⇒ 3 nhánh đều nhau) thì **kỳ vọng hệ số phòng thủ của cả 16 con bằng nhau CHÍNH
+XÁC** — đo được lệch `2,2e-16`, tức đúng nhiễu dấu phẩy động. Đổi Axie đổi **hình dạng** rủi ro,
+không đổi **tổng**.
+
+**⚠ ĐỪNG "sửa gọn" thành `mul = 1 + (mul_gốc − 1)·sac`.** Nhìn sạch hơn, nhưng `HE_THIET` (+0,12)
+và `HE_LOI` (−0,10) **không đối xứng quanh 1**, nên cách đó cho trung bình `1 + 0,00667·sac`:
+con càng thuần càng ăn đòn nặng hơn trên tổng thể. Đó vẫn là một nấc thang, chỉ là nấc đi xuống.
+Thử ngược đúng phép ấy ⇒ `test_bophan §2` đỏ với lệch `7,0e-3`.
+
+⚠ Công cụ sinh bảng **đọc `ELEM` và hai hằng độ sắc THẲNG TỪ `game.js`** bằng regex và **dừng
+hẳn** khi không khớp. Chép một bảng nhóm tam giác thứ hai vào công cụ là đúng cái thứ nó sinh ra
+để tránh — và regex trượt rồi im lặng sinh ra một bảng khác là vết sẹo đã ghi ở `test_taitro §2`.
+
+**⚠ ĐỪNG CHO NGƯỜI CHƠI TỰ CHỌN BỘ PHẬN.** Bộ phận thuộc về con Axie và cố định. Cho chọn là dựng
+lại đúng cái trục đã bị tháo BA lần, chỉ khác tên.
+
+**⚠ ĐỘ THUẦN CỐ Ý KHÔNG ĐI THEO SỐ SAO.** Một trong hai con thuần nhất là `hexmite` — **4★**. Nếu
+5★ nào cũng thuần hơn thì người chơi đọc ra "5★ mạnh hơn", mà đó đúng là thứ gacha không được bán.
+`test_bophan §1` gác.
+
+**Số đo sau khi làm** (chênh giữa vùng dễ thở nhất và ngặt nhất, trên **đàn quái thật** của 11
+vùng — không phải trên chín lớp đều tay):
+
+| | chênh vùng dễ / vùng ngặt |
+|---|--:|
+| `ironshell` · `hexmite` — thuần 6/6 | **39,0%** |
+| trung bình nhóm thuần (≥5/6) | 36,3% |
+| trung bình nhóm tạp (≤2/6) | 16,5% |
+| `coghound` — tạp 0/6 | **10,3%** |
+
+Tổng `cung` = 52/16 con ⇒ trung bình **3,25** ⇒ sắc trung bình **1,019**, tức gần khít mốc 1,00
+của bản trước bộ phận. `test_bophan §1` kẹp trong [0,95 – 1,05] để không ai lặng lẽ thổi cả bảng.
+
+**⚠ HAI MỆNH ĐỀ KẸP HAI ĐẦU, thiếu một là bỏ lọt một nửa.** §2 (bất biến) **xanh y hệt khi cơ chế
+tắt hẳn** — mọi hệ số bằng 1 thì trung bình cũng bằng nhau. §3 là vế kia: con thuần phải dao động
+mạnh hơn hẳn con tạp. Và §4 là vế thứ ba — **sợi dây**: thử ngược bằng cách gỡ `axieSac(player)`
+khỏi `hurtPlayer` thì §3 **vẫn xanh** (nó hỏi thẳng `heThuKet`) còn §4 đỏ.
+
+**⚠ BA LỖI CỦA CHÍNH BÀI KIỂM, ghi lại vì cả ba đều cho một kết quả SAI mà trông rất thuyết phục:**
+1. **Dựng nhánh BẤT LỢI rồi chấm như nhánh có lợi.** `heKhacLai(heThu(player))[0]` là lớp **khắc**
+   người chơi, không phải lớp người chơi khắc. Bài báo *"đường sát thương không đọc cấu tạo"*
+   trong khi nó đọc hoàn hảo. Nay đo **cả hai chiều** — một lỗi DẤU thì đúng một vế đỏ.
+2. **Chọn cặp Axie quá gần nhau.** netherfang 3/6 vs inkmane 1/6 chênh lý thuyết ~4%, trong khi
+   mỗi đòn mang `rnd(0.85,1.15)` ⇒ **đỏ 1/3 lượt**. Nay dùng cặp xa nhất cùng lớp: `ironshell`
+   6/6 vs `ridgehorn` 2/6 ⇒ ~8%, và **giữ đúng MỘT nguồn sát thương** (`mobs.length = 1` mỗi
+   nhịp) vì cả bãi quái đứng chỗ bốc lại mỗi lần `travelTo` là một nguồn nhiễu không kiểm soát được.
+3. **`renderMount` khoá dưới cấp 6.** Nhân vật vừa tạo là cấp 1 nên mục ⑥ đo trên đúng cái câu
+   *"Khế Ước mở khóa ở cấp 6"* rồi báo "danh sách không nói cấu tạo". Nay tự kiểm cảnh dựng trước.
+
+#### ⚠ VÀ BÀI KIỂM TÌM RA MỘT LỖI THẬT: **2,6 GIÂY ĐẦU CỦA MỌI PHIÊN BỊ CÂM**
+
+Mốc hồi của số bay khắc hệ so `performance.now()` với `_heFloatMs`, và nó từng khởi tạo bằng **0**.
+`performance.now()` đếm từ lúc **nạp trang**, nên `now − 0 > 2600` **sai suốt 2,6 giây đầu đời của
+trang**: ai vừa vào game mà ăn đòn ngay thì không thấy gì — và cái không-thấy đó đọc ra y hệt
+*"cơ chế không chạy"*. Nó cũng làm `test_hethu §7a` phụ thuộc vào trang nạp nhanh hay chậm, và khi
+đợt bộ phận làm trang nặng thêm một chút thì mục đó **đỏ 3/3 lượt** trong khi `heThuKet` trả về
+hoàn toàn đúng. Nay `-Infinity` ⇒ đòn ĐẦU TIÊN luôn nói ra rồi mới vào nhịp hồi; `test_hethu §7d`
+đo trên một **trang mới tinh** vì đó là cảnh duy nhất dựng lại được lỗi.
+
+*Luật chung: một mốc so với `performance.now()` mà khởi tạo bằng 0 thì nó không phải "chưa từng
+xảy ra" — nó là "vừa xảy ra lúc trang mở".*
+
+Gác: **`tests/test_bophan.js`** (7 mệnh đề, ba phép thử ngược đều đỏ) · **`tests/test_tamgiac.js`** (8 mệnh đề) — hình dạng tam giác · mọi quái/trùm ra lớp hợp lệ
+· **cùng một loài ở hai map phải ra hai lớp** (mệnh đề bắt đúng chuyện chặng 3 có tác dụng hay
+không) · chênh ≥15% mỗi vùng · lớp trội ≥50% · ba nhóm chia nhau 11 vùng · hệ số vẫn đúng
+×1,20/×0,88 · bảng Bản Đồ có nói ra. Thử ngược (gỡ `pk.he`) làm đỏ 4 trong 8.
 
 ### ⇒ Đây KHÔNG phải đổi kiến trúc. Là đổi LỚP VẼ.
 
@@ -200,13 +553,251 @@ ngang người. Quên bước này là Axie to ra rồi nuốt luôn kẻ hộ t
    Đừng chép công thức biến hình sang bài kiểm — đó là dựng bản sao thứ hai của một luật đang
    sống, sửa một bên là hai bên lệch mà bài vẫn xanh.
 
+### 🪶 CÁNH NHẤC LỚP NHÂN VẬT, KHÔNG NHẤC CON AXIE
+
+Chủ dự án chụp màn hình và gọi đúng tên: *"hình bay như này sai quá sai"*. Thứ trong ảnh là con
+Axie — **cái thân NHÌN THẤY của người chơi** — treo lơ lửng cách vòng chân của chính nó 24 px,
+không cánh, không hoạt cảnh bay nào.
+
+Nguyên nhân: khối BAY bọc **cả cặp** trong một `ctx.translate(0, yOff)`, trong khi `veCanh()` thì
+vẽ đôi cánh ở chỗ **lớp nhân vật** đứng (chính là bản vá của đợt trước — "cánh mọc ra từ con Axie"
+đã sửa rồi). Tức đôi cánh đeo trên kẻ hộ tống mà cả hai cùng bay.
+
+| | bay | bóng đổ · vòng chân · bụi gót |
+|---|---|---|
+| có avatar | **chỉ lớp nhân vật** (`veAvatarDat` cộng `bayCao` lại) | **giữ nguyên cỡ** (`bayKNen = 0`) |
+| `/avatar off` | thân người — hành vi cũ y nguyên | co + nhạt theo `bayK` như cũ |
+
+⚠ **`bayKNen` là biến riêng, đừng gộp lại với `bayK`.** `bayK` vẫn điều khiển KHỐI VẼ của lớp
+nhân vật (khối `w` ghim ở `BAY_KHUNG`) và độ cao của nó; `bayKNen` chỉ trả lời *"chân đế còn
+chạm đất không"*. Gộp là hoặc con Axie bay lại, hoặc lớp nhân vật hết bay.
+
+⚠ **`veAvatarDat()` có HAI chỗ gọi** (xếp lớp theo chiều sâu: Axie vẽ trước hay sau lớp nhân vật
+tuỳ `_avaDy`). Sửa một chỗ quên chỗ kia là con Axie bay ở **nửa số hướng nhìn** — nhìn ra "hình
+như lag" chứ không ra một lỗi.
+
+⚠ **`_coAva` nay khai SỚM**, ngay dưới `_chet`, vì khối BAY cần nó. Chỗ khai cũ (dưới phần xếp
+lớp) đã gỡ — đừng khai lại thành hai.
+
+Gác: `tests/test_baydat.js` (3 mệnh đề, đã thử ngược). Mệnh đề ② **bắt buộc** phải có: nếu chỉ
+khẳng định "con Axie đứng đất" thì gỡ sạch hệ bay cũng xanh.
+
+### 🎒 BẢN CHƠI THỬ: SAVE ĐỜI TRƯỚC CŨNG PHẢI NHẬN BỘ GIAI 7
+
+`phatDoKhoiDau()` chỉ chạy trong `newGame()`. Nên mọi nhân vật tạo **trước** bản demo — tức đúng
+những người đang chơi thử — không bao giờ thấy bộ giai 7. Và triệu chứng không đọc ra là "thiếu
+đồ": chủ dự án hỏi *"cây cung thiên mệnh gắn theo nhân vật của mình đâu?"*, vì lớp vũ khí **cầm
+tay** chỉ bật khi món đang đeo trùng `dòng|giai` trong `NV_VK_LOP` — một cây cung giai 3 làm cả
+lớp art biến mất, không lỗi nào báo.
+
+`demoDoDiTru()` trong `loadGame()` trả chỗ đó. Bốn luật:
+
+- **CHỈ NÂNG, KHÔNG BAO GIỜ HẠ.** Ô nào đã ≥ `DEMO_DO_GIAI` thì để yên — trừ vũ khí **sai dòng**,
+  vì chỉ đúng dòng mới có tranh (`DEMO_VK_DONG`).
+- **Món bị thay vào TÚI, không xoá.** Hết chỗ thì bỏ qua ô đó. Một bản demo lấy mất đồ của người
+  chơi là đổi một lỗi lấy một lỗi nặng hơn.
+- ⚠ **PHẢI chạy SAU `migrateGiai14()` / `migrateGiai7()`.** Hai hàm đó viết lại `it.tier` của MỌI
+  món trong equip/inv, nên phát trước chúng thì bộ giai 7 vừa phát bị nghiền xuống **giai 5**
+  (7 → 10 → `ceil(10/2)`) — đo được, và im lặng tuyệt đối.
+- ⚠ **Cờ `player._demoDo` chặn phát hai lần**, và `TEST_MODE`/`TEST_DO` thì không phát: hơn 180
+  bài cân bằng đo nhân vật TRẦN.
+
+⚠ **Phép sinh món nằm ở MỘT chỗ** (`demoTaoMon`), dùng chung cho cả `newGame` lẫn di trú. Chép
+sang đường thứ hai là hai đường phát ra hai bộ đồ khác nhau mà không ai thấy.
+
+Gác: `tests/test_demodo.js` (6 mệnh đề). ⚠ Mệnh đề ⑥ gác THỨ TỰ và phải đứng RIÊNG: cảnh của
+① đặt sẵn `giai14`/`giai7` (đúng như save của bản đang chạy) nên hai hàm kia no-op và **đảo thứ
+tự vẫn xanh** — đã thử ngược đúng thế.
+
 ### Trúng đòn và chết vẫn giữ AXIE — cố ý
 
 Chỉ `'a'` (đánh) và `'c'` (niệm chú) mới gọi lớp nhân vật ra. Nếu lớp nhân vật nháy ra mỗi lần
 ăn đòn thì trong một trận đông quái người chơi gần như không còn thấy avatar của mình — mà
 avatar mới là thứ họ chọn hoặc mua.
 
-**Nợ:** rig có sẵn `defense/hit-by-normal` và chưa nướng. Nướng rồi thì Axie giật được khi trúng.
+### ✅ AXIE NAY PHẢN ỨNG — GỒNG lúc ra đòn, GIẬT lúc trúng đòn (và **KHÔNG ĐÁNH**)
+
+> ⚠ Mục này trước đây ghi *"Nợ: rig có sẵn `defense/hit-by-normal` và chưa nướng"*. Đã trả.
+
+Trước bản này `veAvatar` chỉ biết hai khối (thở · chạy), nên cái thân NHÌN THẤY của người chơi
+**đứng bất động suốt trận**: ra đòn thì lớp nhân vật vung bên cạnh còn con Axie không nhúc nhích,
+ăn đòn cũng thế.
+
+| khối | hoạt cảnh nguồn | tệp | khung |
+|---|---|---|---|
+| gồng | `battle/get-buff` (1,000s) | `<id>_b.webp` | 12, 6 cột |
+| giật | `defense/hit-by-normal` (0,417s) | `<id>_h.webp` | 8, 4 cột |
+
+Nướng: `tools/spine/nuong_chi_phanung.py` · **2,17 MB cho cả 16 con**, nạp theo con đang có mặt.
+Gác: `tests/test_avaphanung.js` (7 mục, ba cơ chế đã thử ngược và đều đỏ).
+
+### ⚔ ~~AXIE KHÔNG ĐÁNH~~ — LUẬT NÀY ĐÃ BỊ LẬT (2026-09-16). Axie NAY RA ĐÒN.
+
+> ⚠ Giữ đúng cái tiêu đề gạch ngang này để cảnh báo, thay vì xoá trắng rồi để người sau đọc
+> `test_avaphanung §6` trong lịch sử git mà tưởng luật cũ còn. Cùng kiểu bẫy đã ghi ở mục
+> "~~Khắc Ấn~~" và "~~Bốn Ô Cốt~~".
+
+**Luật cũ (chốt 2026-09-15) nói:** kit có 8 đòn gần + 5 đòn xa, rất dễ "tiện tay" nướng thêm,
+**đừng** — vì cho con Axie tự húc *trong lúc* Dark Wizard niệm chú **bên cạnh** là dựng lại đúng
+cái **hai kẻ cùng đánh** mà cả đợt Đổi Vai gỡ đi.
+
+**Lý do đó hết hiệu lực vì HÌNH DẠNG đã đổi, không phải vì ai đó quên nó.** Chủ dự án chốt lại
+2026-09-16, nguyên văn: *"Cứ cho Axie ra đòn… Người chơi muốn đánh quái thì phải nhập vào Axie,
+nhưng để flex được bộ giáp thì hãy làm cho nó đi theo ở trong thành."* Nay lớp nhân vật **NHẬP
+VÀO** con Axie khi ra khỏi thành ⇒ lúc đánh trên màn chỉ còn **MỘT** thân, tức ngược hẳn với thứ
+luật cũ cấm.
+
+| | lớp nhân vật | con Axie |
+|---|---|---|
+| **trong thành** | HIỆN, đi theo, cỡ `AVA_THANH_CO` **1,00** | khối GỒNG như cũ |
+| **ngoài thành** | **nhập vào** — không vẽ | **ra đòn của LỚP mình** |
+
+**⚠ LUẬT THEO MAP, KHÔNG THEO "ĐANG ĐÁNH NHAU" — cố ý.** Gắn vào trạng thái đánh nhau thì AUTO
+cày liên tục ⇒ người chơi ở dạng đã-nhập gần như **100% thời gian**, và bộ giáp vẫn không ai
+thấy — tức mất đúng cái lợi mà cả đợt này sinh ra để lấy.
+
+**⚠ `safe` MỘT MÌNH KHÔNG ĐỦ.** Outskirts (`ngoai`) khai `safe` nhưng là **bãi săn 8 bãi** —
+cùng bẫy đã ghi ở mục Rương Canh: *cửa duy nhất đúng là CÓ BÃI QUÁI*. Sàn đấu `pvp` không bãi
+quái nhưng `freepk` ⇒ **vẫn nhập**, đúng ý. Cả ba ca đều có mệnh đề gác.
+
+**⚠ NĂM LỚP PHẢI RA NĂM ĐÒN KHÁC NHAU — đây là cả điểm của đợt này.** Lúc đánh không còn thân
+người nào để nhìn, nên nếu Axie của năm lớp vung giống hệt nhau thì 5 lớp mất sạch dấu hiệu
+**nhìn thấy được**. Kit có 9 đòn gần + 5 đòn xa dùng chung mọi rig ⇒ năm kiểu đọc tốn **0 đồng
+art**. Chọn theo cách lớp ấy đánh (khớp `SECT_ACT`), không chọn cho đủ mặt:
+
+| lớp | hoạt cảnh kit | tệp | khung |
+|---|---|---|---|
+| `thieulam` Dark Knight | `attack/melee/tail-smash` | `_ts` | 12 |
+| `baidasan` Dark Wizard | `attack/ranged/cast-high` | `_ch` | 12 |
+| `toanchan` Sylvan Ranger | `attack/ranged/cast-fly` | `_cf` | 12 |
+| `minhgiao` Spellblade | `attack/melee/multi-attack` | `_ma` | **16** |
+| `bug` Dark Lord | `attack/ranged/cast-low` | `_cl` | 12 |
+
+Đo được: **10/10 cặp lệch 5.627-6.990 điểm ảnh**. Nướng: `tools/spine/nuong_chi_danh.py` —
+**80 bảng, 7,0 MB** trên đĩa, nạp lười ~88 KB (đúng một con × một lớp đang dùng). Ô cắt
+**175×132 trùng khít** bảng nhỏ/chạy/gồng/giật ở cả 16 con ⇒ không nhảy khi đổi khối.
+
+**⚠ BỐN CHỖ PHẢI GÁC RIÊNG BẰNG `_nhap` vì chúng KHÔNG đọc `_hienLop`:** vòng triệu hồi · cánh ·
+thần khí · hào quang Thần Hiệp. Bỏ sót một chỗ là **một đôi cánh bay lơ lửng không ai đeo** cạnh
+con Axie. Cái giá, nói thẳng chứ không giấu: **ngoài thành người chơi không còn thấy đôi cánh
+mình mua** — chỗ khoe cánh nay là trong thành.
+
+> ⚠ **Câu trên nay chỉ còn đúng với BA chỗ. Thần khí (vũ khí) đã tách ra — xem mục ngay dưới.**
+> Giữ nguyên câu cũ ở đây để thấy luật đã dời tới đâu, đừng đọc nó như trạng thái hiện tại.
+
+### 🗡 LUẬT: **VŨ KHÍ LUÔN HIỆN LÚC RA ĐÒN** — nhân vật có thể không, vũ khí thì không bao giờ
+
+Chủ dự án chốt (2026-09-17), nguyên văn: *"khi Axie ra chiêu thì sẽ hiện cây vũ khí… nhân vật có
+thể không hiện nhưng **vũ khí sẽ LUÔN xuất hiện để đồng bộ được skill**"*.
+
+**Vì sao nó là một LUẬT chứ không phải một tuỳ chọn.** Đo trên bản trước:
+
+| | |
+|---|---|
+| Ngoài thành, cả **5/5 lớp** ra đòn | trên màn **không có một cây vũ khí nào** |
+| Tổ hợp (dòng × giai) không có tranh trong `VK_ANH` | **48/98 — gần một nửa** |
+
+Hai nguyên nhân chồng lên nhau, và mỗi cái tự nó đã đủ:
+- `_tkHien` có `!_nhap` ⇒ ngoài thành thần khí tắt hẳn; mà ba lớp (DK · Spellblade · Sylvan
+  Ranger) cầm vũ khí bằng **lớp nướng sẵn trong chính bộ khung người** — lớp ấy đã nhập vào Axie
+  nên không vẽ, cây vũ khí biến mất theo. `!_coVkLop` lại tắt thần khí cho đúng ba lớp đó.
+- `thanKhiNguon()` trả `null` khi dòng vũ khí chưa có tranh riêng ⇒ 48/98 tổ hợp không có gì bay.
+
+Người chơi không đọc được chiêu, và mọi mốc rèn **+N** trên vũ khí cũng tàng hình theo.
+
+| cửa | việc |
+|---|---|
+| **`_tkNhap` = `_nhap && _lopHien`** | đã nhập mà đang ra đòn ⇒ vũ khí HIỆN. **Cố ý bỏ qua `_coVkLop`**: lúc đã nhập thì không có cây nào "trong tay" để mà trùng, nên thần khí là cây DUY NHẤT trên màn, không phải cây thứ hai |
+| `_tkDx` · `_tkDy` · `_tkCo` · `_tkChan` | hệ toạ độ RIÊNG của vũ khí khi đã nhập |
+| **`TK_LOP`** | cây LÙI theo lớp cho dòng chưa có tranh: `kiem` · `no` · `makiem` · `gay` · `lenhtruong` — đúng cây cắt ra từ gói Spine của chính lớp đó |
+| `window.__veVuKhi` | phơi QUYẾT ĐỊNH ra cho bài kiểm (chỉ khi `TEST_MODE`), khoá theo từng thân người |
+
+**⚠ ĐÃ NHẬP THÌ VŨ KHÍ NEO VÀO **AXIE**, KHÔNG NEO VÀO CHỖ LỚP NHÂN VẬT LẼ RA ĐỨNG.** `_avaDx/_avaDy`
+vẫn tính ra chỗ ấy dù ở đó không còn ai — dùng nó là cây vũ khí trôi lơ lửng cách con Axie gần một
+thân người. Đúng cái lỗi mà `_nhap` sinh ra để chặn, chỉ đổi vai.
+
+**⚠ NẤC LÙI ĐẶT TRONG `thanKhiNguon()`, KHÔNG ĐẶT TRONG `vkAnh()`.** Nới trong `vkAnh` thì ba chỗ
+khác đang gọi nó cũng đổi theo — **ICON trong túi đồ**: cây rìu sẽ hiện ra hình thanh kiếm ngay
+trong ô túi, tức đổi một lỗi lấy một lỗi nặng hơn. Ở cỡ vũ khí bay quanh thì thứ cần là một BÓNG
+DÁNG; trong ô túi thì phải đúng món ấy. Cùng đánh đổi đã ghi cho `NV_VK_LOP_LOP`.
+
+**⚠ VÀ NẤC LÙI CHỈ ÁP KHI THẬT SỰ CẦM MỘT CÂY.** `d` rỗng là TAY KHÔNG — lùi ở đó là người cởi
+sạch đồ vẫn có vũ khí bay quanh. `test_vukhihien ④` gác.
+
+**Cái giá, không giấu:** cầm rìu thì cây bay ra vẫn là hình **kiếm**. Sửa được bằng ART (thêm một
+dòng vào `VK_ANH`), không sửa được bằng mã.
+
+Gác: **`tests/test_vukhihien.js`** (4 mệnh đề, hai phép thử ngược đều đỏ) — ① ngoài thành cả 5 lớp
+ra đòn phải có vũ khí · ② trong thành lúc đi theo thì vẫn phải TẮT (luật cũ, đừng phá) · ③ cả 98
+tổ hợp dòng×giai đều dựng được nguồn · ④ tay không thì không. Kèm `test_hopve`: mọi lời gọi
+`veThanKhi` phải neo `_avaDx` **hoặc** `_tkDx`, còn `veCanh` thì vẫn chỉ được neo `_avaDx`.
+⚠ ① **tự kiểm cảnh dựng trước khi chấm** — đòi cả 5 lớp THẬT SỰ `nhap` ở map đo, nếu không nó
+đang đo một cảnh khác hẳn cảnh nó định đo và xanh vô nghĩa.
+
+`get-buff` (khối GỒNG) **vẫn dùng**, hai chỗ: trong thành, và làm nấc lui khi bảng đòn chưa tải
+xong — nhờ vậy cú đánh đầu phiên vẫn có cái để vẽ thay vì rơi thẳng về khối đứng yên.
+
+Gác: `tests/test_axiedanh.js` (5 mục). Hai phép thử ngược đều đỏ: bỏ cửa `avaNhap()` ⇒ ② đỏ
+(*"TRONG THÀNH Axie không được ra đòn"*); cho 5 lớp chung một bảng ⇒ ④ đỏ (lệch **0**).
+⚠ Mục ④ **tự kiểm cảnh dựng trước khi chấm** — đòi cả năm lớp THẬT SỰ vào khối `'danh'`, nếu
+không nó đang so năm khối thở với nhau và xanh vô nghĩa. Đã dẫm đúng thế một lần: bài chạy ở
+`ardhaven` (thành) nên cả năm ra `gong` và mười cặp đều lệch **0**.
+
+**⚠ KHỐI THỞ PHA HAI KHUNG — 9 FPS là thứ người chơi nhìn nhiều nhất.** Con Axie LÀ thân nhìn
+thấy của người chơi và nó đứng trên màn 100% thời gian, mà `CHI_THO_FPS` = 9: mỗi khung bảng nằm
+im gần **bảy lượt vẽ** trên màn 60 Hz. Đo trên 60 lượt vẽ liên tiếp:
+
+| | trước | sau khi pha |
+|---|---|---|
+| lượt vẽ **ĐỨNG IM** | **51/59 (86%)** | 19/59 (32%) |
+| lệch TB mỗi lượt | 81 px | 36 px |
+| **lệch chuẩn** | **205** | **81** |
+| đỉnh | 634 | 288 |
+
+86% số khung đứng im rồi một khung nhảy 634 điểm ảnh — đó chính là "cứng nhắc", viết thành số.
+
+⚠ **Nâng `CHI_THO_FPS` KHÔNG chữa được**: bảng chỉ có 12 khung, chạy nhanh hơn thì thành thở gấp.
+
+⚠ **CHỈ pha khối THỞ, đừng pha khối CHẠY.** Đo lệch giữa hai khung liền nhau trên thân 4.290
+điểm ảnh đặc: thở **407 px (9,5%)** · chạy **1.507 px (35%)**. 9,5% pha ra hơi thở liền mạch;
+35% pha ra **bóng đôi**. Khối chạy vốn đã ~35 khung/giây trên màn (12 khung × ~2,9 bước/giây)
+nên không có khe nào để lấp.
+
+⚠ **Và nó làm đỏ một bài kiểm CŨ — đúng cái bài đang đo nhầm.** `test_xoayvfx` đặt ô đo 140×140
+quanh chân nhân vật, tức **ôm trọn con Axie**, rồi lấy một cặp ảnh làm đối chứng "nền trôi". Ở
+9 FPS thì 2/3 số lượt con Axie không nhích ⇒ nền trôi = 0 ⇒ xanh; 1/3 số lượt nó nhích ⇒ 2.167 ⇒
+đỏ. Pha khung xong thì nó nhích ở MỌI lượt ⇒ đỏ 3/3. Sửa ở BÀI KIỂM, không ở cơ chế: tắt avatar
+trong lúc đo (con Axie không phải thứ bài ấy gác) + lấy **trung vị 9 mẫu**. Sau đó nền trôi về
+**0** ở cả ba lượt, tín hiệu vẫn 480. Thử ngược (ép `goc: 0`) vẫn đỏ 5 mệnh đề.
+
+**⚠ THỨ TỰ ƯU TIÊN: giật > gồng > chạy > thở** — cùng thứ tự với `_kind` của khối thân người
+(chết > trúng đòn > niệm chú > đánh), TRỪ khối chết: luật *"trúng đòn và chết vẫn giữ Axie"*
+nghĩa là nằm xuống là việc của lớp nhân vật, không phải của cái thân nhìn thấy.
+
+**⚠ BA ĐỒNG HỒ ẤY ĐẾM NGƯỢC.** `hurtT` · `atkAnim` · `castT` đặt bằng ĐỘ DÀI rồi trừ dần về 0, nên
+tiến độ là `1 − t/dài`. Dùng thẳng là con vật gồng NGƯỢC — buông ra trước rồi mới lấy đà. Cùng cái
+bẫy đã ghi cho `atkK`; thử ngược ra khung đầu = 12 thay vì 0.
+
+**⚠ NẠP TRƯỚC, ĐỪNG NẠP LƯỜI — và đây là lỗi CÓ SẴN mà bài kiểm mới mới lôi ra.** Bảng CHẠY cũng
+nạp lười từ trước, nên **bước đi đầu tiên của mỗi phiên rơi vào nhánh lui-về-thở**. Nó chỉ xảy ra
+một lần rồi tự hết nên cực dễ nghiệm thu nhầm là đã xong. Nay `veAvatar` xin cả ba bảng ngay lúc
+con Axie hiện ra lần đầu.
+
+**⚠ Ô CẮT PHẢI TRÙNG KHÍT bảng nhỏ** (đo được: cả 16 con, ba bảng, cùng một ô). Lệch một pixel là
+con vật NHẢY một cái mỗi lần đổi khối. Công cụ dựng lại đúng phép tính hộp của `nuong_chi.py`
+(bb trên appear+idle) rồi mới đem đi cắt — cùng cách `nuong_chi_chay.py` làm.
+
+**⚠ ĐO CHỈ SỐ KHUNG, ĐỪNG ĐO ĐIỂM ẢNH cho phần lôgic.** `veAvatar` phơi khối đang vẽ ra
+`window.__avaKhoi` (chỉ khi `TEST_MODE`), khoá theo từng thân người — cùng lối `__veChet`/`__neoVe`.
+Lý do đã trả giá ở `test_dongbodo`: con Axie thở ~8 FPS nên hai lượt vẽ liên tiếp cùng điều kiện
+lệch tới 5.200/16.500 điểm ảnh.
+
+⚠ **Kit không còn trên đĩa sau mỗi phiên mới** (2,2 GB). Lấy lại:
+`GIT_LFS_SKIP_SMUDGE=1 git clone --depth 1 https://github.com/axieinfinity/axie-origins-asset-kit /home/user/axieinfinity/axie-origins-asset-kit`
+và `pip install pillow numpy` — cả hai đều mất theo container.
+
+**Nợ còn lại:** thân người từ xa chưa đồng bộ `hurtT`, nên Axie của NGƯỜI KHÁC gồng được (đã đồng
+bộ cú ra đòn) nhưng chưa giật được khi họ ăn đòn.
 
 ### 🔑 KIT AXIE CÓ 41 HOẠT CẢNH, GAME MỚI DÙNG 2
 
@@ -332,7 +923,8 @@ max(1, cấp/20)` để theo kịp giá nâng chiêu.
 | Lớp gacha Cổ Vật | `docs/CO_VAT_15.md` mới là ĐỀ XUẤT, chưa chốt. Trần 16% chỉ quản lớp đó — **chỉ số từ 5 lớp KHÔNG có trần**. |
 | Chibi 5 class Axie ở màn tạo nhân vật | chưa thiết kế. `CHIBI_CFG` hiện phân biệt bằng bóng dáng NGƯỜI. |
 | Mốc thay "Giày +6 mở dáng chạy" | avatar bay/chạy thì mốc cũ mất ý nghĩa |
-| Ngũ Hành → tam giác Axie | chưa làm. 40 nhãn `el:` trong `data/canbang.js` vẫn là Kim/Mộc/Thuỷ/Hoả/Thổ — **tàn dư kiếm hiệp, vi phạm Quy tắc số 1**. Đặc tả ở `docs/DOI_VAI_AXIE.md` §7; `hurtMob` không đổi công thức, chỉ đổi nhãn. ~~Lỗi lệch dấu `'Thuỷ'`~~ **đã vá** (`bb2a1bd`) — con Trấn Ải Trũng Nứt từng nằm ngoài toàn bộ hệ khắc hệ. |
+| ~~Axie chỉ có MỘT trục~~ | **XONG.** Trục hai là **sáu bộ phận** — xem mục ▲▲ ở trên. 96 ô dữ liệu, `calcDerived` không đụng một dòng. |
+| ~~Ngũ Hành → tam giác Axie~~ | **XONG.** 94 nhãn `el:` (54 trong `game.js` · 40 trong `data/canbang.js`) nay là chín lớp Axie; `hurtMob` không đổi một hệ số nào. Xem mục **▲ TAM GIÁC CHÍN LỚP AXIE** ở trên. |
 
 ---
 
@@ -490,6 +1082,264 @@ Sau đợt gán: vai/map từ `3,3,3,4,2,4,2` lên `4,4,6,6,6,6,6` — **tăng d
 - Từ cấp 24 trở đi mỗi map phải có **≥1 bãi Pháp Sư và ≥1 Kẻ Tiếp Sức** — hai thứ AUTO xử lý
   dở nhất, cũng là lý do người chơi phải tự cầm chuột. `tests/test_bansac.js` gác.
 
+### 🎞 BẢNG KHUNG QUÁI (`MOB_KHUNG`) + TRANH RIÊNG CHO TRÙM (`anh:`)
+
+Quái và trùm mặc định là MỘT tấm tĩnh. Khai một khoá là loài/con đó có hoạt ảnh; không khai thì
+vẽ y như trước, không lệch một pixel. Máy chạy theo dữ liệu — art về chỉ thêm một dòng.
+
+| Muốn gì | Khai ở đâu |
+|---|---|
+| quái/trùm có hoạt ảnh | `MOB_KHUNG` trong `game.js` |
+| trùm có tranh riêng (thắng cả sprite mượn lẫn khung xương) | `anh:'<tên tệp>'` trong `BOSS_DEFS` |
+
+- **Khoá `MOB_KHUNG` là TÊN TỆP, không phải khoá mob** — `assassin.png` phục vụ 3 loài,
+  `duhiep.png` 3 loài nữa, nên một bảng khung là cả ba cùng có hoạt ảnh.
+- Tấm khung ở `assets/mobs/kh/<tên>.png`, tấm tĩnh lùi ở `assets/mobs/<tên>.png`. **Cả hai đều
+  bắt buộc**: bảng khung nạp lười, thiếu tấm lùi là mấy trăm mili giây đầu xin một tệp không tồn
+  tại (404) rồi con trùm chớp thành đốm mực. `nuong_khungquai.py` xuất cả hai.
+- ⚠ **Nhịp `di` chạy theo QUÃNG ĐƯỜNG ĐÃ ĐI**, `danh` theo `lungeT`, `chet` theo `deadT` rồi
+  **dừng** ở khung cuối. Chỉ `dung` chạy theo đồng hồ. Chia nhịp đi theo thời gian là bàn chân
+  trượt đất — bài học đã trả giá ở `SAI_CHAN`.
+- ⚠ **`mobDoBuoc()` ĐO chuyển động thật, không đọc cờ do AI đặt** — quái dời chỗ ở NĂM nhánh
+  trong `update()`; đặt cờ từng chỗ thì chỗ thứ sáu thêm sau sẽ lặng lẽ không có hoạt ảnh.
+- ⚠ **Nhịp `chet` cắm ở nhánh `'deadmob'`, KHÔNG ở `drawMob`** — xác quái có đường vẽ riêng.
+- ⚠ **Năm loài khai CẢ `skel` LẪN `img`** (`trannhan · chimera_bo · kybinh · kylan ·
+  boss_sontac`) và đang hiện bằng khung xương. **Đừng đảo thứ tự skel/img để "dọn"** — làm thế
+  là âm thầm đổi tạo hình năm loài mà không ai yêu cầu. Muốn con nào dùng tranh thì khai `anh`.
+
+#### ⚠ `neoY` LÀ BÀN CHÂN, KHÔNG PHẢI ĐÁY ẢNH
+
+Công cụ mặc định đo đáy nhịp `dung` rồi coi đó là bàn chân. **Sai ngay khi art có khói, hào
+quang, vũng nước hay bóng vẽ sẵn dưới đế.** Đo trên gói trùm bóng ma đầu tiên: đế giày ở hàng
+549, đáy khói ở 640 — lệch **91px trên ô 640 (14%)**, tức con trùm treo lơ lửng đúng ngần ấy.
+Khai `--chan <hàng>` để đè. Và khi cả bộ chỉ có MỘT nhịp thì phép đo suy biến: đáy `dung` ==
+đáy chung ⇒ `neoY` luôn ra đúng 1.0, một con số vô nghĩa mà công cụ trả về trong im lặng.
+
+#### ⚠ ART TỐI: ĐỘ SÁNG TRUNG BÌNH KHÔNG DỰ ĐOÁN ĐƯỢC "đọc ra hay không"
+
+Ngưỡng đầu tiên tôi đặt — *"chênh độ sáng với nền phải > 0,28"* — **sai, và con trùm thứ hai
+chứng minh ngay**. Kỵ sĩ bóng đêm (`tq_daohoa`) chênh **0,273**, tức TRƯỢT ngưỡng, nhưng chụp ra
+thì đọc rõ từng chi tiết và không cần xử lý một bước nào.
+
+| | sáng | **lệch chuẩn** | bão hoà |
+|---|---|---|---|
+| bóng ma (`tq_corran`) gốc | 0,128 | **0,092** | 0,320 |
+| kỵ sĩ (`tq_daohoa`) | 0,237 | **0,209** | 0,498 |
+
+Thứ quyết định là **LỆCH CHUẨN — độ tách giữa các mảng sáng tối BÊN TRONG con vật**, không phải
+độ sáng trung bình. Con bóng ma là một khối gần như một sắc nên ở 113px nó thành cái bóng đen;
+con kỵ sĩ có xương trắng ngà, lửa xanh và áo choàng đỏ nằm cạnh nhau nên mắt bám được ngay, dù
+trung bình còn tối hơn cả nền.
+
+⇒ **Đo lệch chuẩn trước khi quyết xử lý.** Dưới ~0,12 thì mới cần nâng sáng + viền rìa; trên đó
+thì để nguyên. Áp cùng một liều cho mọi gói là chữa bệnh không có bệnh, và nó làm mất chính cái
+tương phản gốc mà art đã có.
+
+#### ⚠ VÀ độ sáng NỀN vẫn phải đo — nhưng để chọn MAP, không để chọn liều
+
+Gói bóng ma (Tướng Quân `corran`) đo ra **sáng 0,129 · bão hoà 0,308**, trong khi 24 tấm quái
+hiện có trung bình **0,658 / 0,591** và viên cỏ Corran là **0,722**. Tức nó **tối hơn 80%** mọi
+thứ quanh nó. Trên nền sáng thì đó là bóng dáng đọc được ngay; trên nền tối thì nó biến mất.
+Quét cả tám map: chỉ **Werebear Woods (nền 0,363) là CHÌM**, Dusk Marsh (0,412) sát ngưỡng.
+⇒ Art tối dùng được, nhưng **không phải khuôn chung cho cả 11 Tướng Quân** — và phải đo nền map
+đích trước khi cắm, đừng suy từ map khác.
+
+Cỡ đo được để khỏi đoán: trùm vẽ ra **113px thân** (hộp 132px) · avatar người chơi **74px** ·
+quái thường **53px** · lớp nhân vật `NV_THAN_PX` **95px**.
+
+Công cụ: `tools/nuong_khungquai.py` (nhận khung đã render — dải, thư mục, hay xuất từ Godot/Spine
+— rồi **đo** hộp ô và `neoY`, in ra mục dán thẳng). Bài kiểm: `tests/test_khungquai.js` (28 mục).
+Đặc tả đặt hàng: `docs/DAT_HANG_ART_3_4_5.md` · prompt: `docs/PROMPT_QUAI_VA_TUONGQUAN.md`.
+
+### ⛲ ~~LỚP "VẬT SÀN" RIÊNG CHO NƯỚC~~ — ĐÃ DỰNG RỒI GỠ TRONG CÙNG MỘT ĐỢT
+
+> ⚠ Giữ đúng cái tiêu đề gạch ngang này để cảnh báo, thay vì xoá trắng rồi để người sau đọc
+> `veVatSan` trong lịch sử git mà tưởng nó còn. Cùng kiểu bẫy đã ghi ở mục "~~Khắc Ấn~~".
+
+Yêu cầu ban đầu nghe là *"một cái hồ nước"*, nên tôi dựng hẳn một lớp `vatSan`: vẽ ngay sau mặt
+đất, **trước** mọi thực thể, không xếp lớp. Lý do đúng cho một thứ BẸT — một vũng nước không có
+chiều cao nào để che ai, nên xếp nó theo chân ảnh là người đứng ở bờ **BẮC** bị mặt nước vẽ đè
+lên, tức đứng dưới đáy hồ.
+
+Rồi chủ dự án nói rõ hơn: *"nước có khả năng bắn lên không trung rồi toả ra các hướng khác
+nhau"* — tức một **ĐÀI PHUN NƯỚC**. Cột nước là thứ **CÓ CHIỀU CAO**, nên người đứng phía bắc
+nó phải bị che, và lớp phẳng kia làm đúng điều NGƯỢC LẠI. `vatSan` vì thế đã gỡ hẳn, và cái
+đài đi chung đường `vatTo` với nhà cửa.
+
+**Đừng dựng lại lớp phẳng ấy cho nước.** Cửa quyết định là một câu: *"đứng sau nó thì có bị nó
+che không?"* — có thì `vatTo`, và `vatTo` là thứ duy nhất đang có.
+
+Hai thứ giữ lại từ đợt đó, vì chúng đúng cho MỌI công trình:
+
+| | |
+|---|---|
+| **`vatKhung(v)` + `veVatTo(v)`** | mục `vatTo` khai thêm `khung:{cot,hang,khung,oRong,oCao,fps}` là chạy hoạt ảnh từ `assets/iso/kh/<tên>.webp` — **cùng hợp đồng với `MOB_KHUNG`/`NPC_KHUNG`**, nên một đường nướng video phục vụ cả ba |
+| **`can:[[dx,dy,w,h]]` khai ngay trong mục** | thắng bảng `VAT_CAN`. Bảng kia do `tools/iso/can_vatto.py` sinh ra từ chính tấm art (mái, tường, hiên — hình thù không mô tả tay nổi); một cái bể tròn thì đúng một hộp, và chờ art về mới có vật cản là để người chơi đi xuyên qua nó suốt thời gian chờ |
+
+⚠ **TẤM TĨNH VẪN BẮT BUỘC** kể cả khi khai `khung`. Bảng khung nạp lười; thiếu tấm lùi là chỗ
+đó **thủng một lỗ** giữa map trong mấy trăm mili giây đầu — và vì nó tự hết sau một nhịp nên
+rất dễ nghiệm thu nhầm là xong.
+
+⚠ **HỘP `can` PHẢI NHỎ HƠN HẲN TẤM ẢNH** (đài phun nước: **30% khung**). Cột nước và tia bắn
+nằm trên cao, không chặn chân ai; chặn đúng khung ảnh là người chơi khựng lại giữa không khí
+cách thành bể cả gang tay. `test_vatcan §4` gác cả hai đầu — **tâm** hộp phải chặn (thử ngược:
+cho `vatToObs` quên đọc `v.can` ⇒ đỏ) và **góc khung ảnh** phải đi được.
+
+⚠ **`thoang:true` LÀ MIỄN TRỪ KHAI TRONG DỮ LIỆU, không phải một danh sách tên trong bài kiểm.**
+Đài phun nước không bán gì (nên `test_capnha §1` không đòi NPC đứng cửa) và gần như toàn là
+KHÔNG KHÍ (nên `test_vatcan §1` không đòi nó chặn ≥75% khung). Hai bài đọc CÙNG một cờ; chép
+một danh sách tên vào bài kiểm là thứ sẽ âm thầm nuốt mục thứ hai thêm sau.
+
+### 🚪 ~~CỔNG VÒM BỐN HƯỚNG~~ — ĐÃ GỠ. Nay là LỐI RA, và nhân vật TỰ ĐI RA
+
+> ⚠ Giữ đúng cái tiêu đề gạch ngang này để cảnh báo. `drawGateStatic()` · `gateSprite()` ·
+> `assets/iso/ct_cong.png` **vẫn còn** — chúng chỉ ngủ. Cổng nào muốn dựng lại bộ vòm đá thì
+> khai `vom:true` trong `GATES`; gỡ mã hay gỡ tấm art đi là đóng luôn cửa đó.
+
+**⚠ BA BÀI KIỂM CŨ ĐỎ THEO, và cả ba sửa bằng cách ĐI THEO nội dung — không bài nào bị xoá
+mệnh đề cho xanh.** Chúng đỏ vì cơ chế mới làm đúng việc của nó, đúng cái kiểu đã ghi ở mục
+`test_hethong`:
+
+| bài | đỏ vì | sửa thế nào |
+|---|---|---|
+| `test_cong` | không còn vòm nào để mà che ai | **tự bật `vom:true`** lên cổng đo rồi mới chấm ⇒ bộ vòm đang ngủ vẫn có người gác |
+| `test_vatcan §2` | đi tới cổng là **sang map khác**, vòng cũ chạy tiếp 900 nhịp trên map MỚI rồi đo khoảng cách tới cổng của map CŨ (ra 2.727px) | dừng ngay khi `curMap` đổi — **đi XUYÊN QUA** là bằng chứng mạnh hơn hẳn "tới gần cổng" |
+| `test_sandat` | cùng nguyên nhân, 16 mệnh đề đỏ | `diThu` trả `false` khi đổi map · thêm `veLai(m)` dựng lại cảnh |
+
+⚠ **`test_cong` phải đứng cách cổng > `LOIRA_TAM`.** Hai chỗ đo cách cổng 72px và 77px — vừa
+ngoài 70. Dời vào gần hơn một chút là nhân vật TỰ ĐI SANG MAP KHÁC giữa lúc đo, và thứ bài đọc
+được là một ô đất của map bên kia. Nên nó có chốt tự kiểm `oMap === 'ardhaven'` **và** `coVom`
+trước khi chấm.
+
+Chủ dự án chốt: *"dẹp luôn cổng của 4 hướng đi. Thay vào, mở map lại ở hướng cho nó bo góc rồi
+ghi chữ kiểu hướng đi ra map xxx sẽ hợp lý hơn. Và người chơi không cần phải bấm nút để có thể
+tự đi ra khỏi map nữa, nhân vật sẽ tự động đi ra khi đến khoảng đó."*
+
+| | |
+|---|---|
+| hình dạng cái miệng | **`diTrong` đã bo góc** — sinh bằng máy, xem ngay dưới |
+| phần nhìn thấy | **`veLoiRa(g)`** — vẽ trên MẶT ĐẤT, trước mọi thực thể |
+| tự đi ra | `LOIRA_TAM` **70px** · cờ `_loiRaCho` · khoá `_loiRaKhoa` |
+| gác | **`tests/test_loira.js`** (9 mệnh đề, ba cơ chế thử ngược đều đỏ) |
+
+**⚠ CHỈ CỔNG RÌA, KHÔNG PHẢI PORTAL.** Sàn Đấu · Tầng Sâu · Lò Khắc là những chuyến đi CÓ CHỦ
+Ý (một cái còn là một lượt roguelite), và **`ardhaven→pvp` hạ cánh cách cổng về ĐÚNG 0px** — tự
+đi ra ở đó là vào sàn rồi bị bắn ngược ra ngay lập tức. Đo cả 27 cặp map: khoảng cách điểm-hạ-
+cánh ↔ cổng-về nhỏ nhất **trong nhóm rìa** là 127px, nên bán kính 70 còn dư 57px.
+
+**⚠ CHỈ ARM MỘT CỜ, ĐỪNG GỌI `travelTo` TỪ `updateGate()`.** Nó chạy GIỮA `update(dt)`, mà
+`travelTo` dựng lại cả thế giới (`buildWorld`) — phần còn lại của khung sẽ đi trên mảng
+`mobs`/`decor` vừa bị thay. Đúng cái bẫy *"return giữa update(dt)"* đã ghi cho PvP. Cờ được xử
+ở **đầu** `update()` khung sau, trước khi bất cứ gì đọc thế giới.
+
+**⚠⚠ KHOÁ CHỐNG DỘI PHẢI KHOÁ THEO **CỔNG**, KHÔNG THEO TOẠ ĐỘ HẠ CÁNH — bản đầu sai, và phép
+thử ngược IM LẶNG.** Bản đầu nhớ chỗ hạ cánh rồi nhả khi đi xa quá `LOIRA_TAM*1.8` = 126px;
+nhưng điểm hạ cánh thật cách cổng về **128px**, nên khoá nhả ngay ở khung ĐẦU TIÊN — nó là mã
+chết. Gỡ hẳn nó ra thì bài kiểm vẫn xanh, và *một phép thử ngược im lặng là bằng chứng cái QUE
+DÒ hỏng, không phải bằng chứng mệnh đề yếu* (luật đã ghi ở mục `test_hethong`).
+
+⇒ Và mệnh đề gác nó cũng phải đổi theo: **`test_loira §4b` TỰ DỰNG RA CÁI CA NGUY HIỂM** — dời
+`spawnFrom` về đúng chỗ cổng về rồi mới đo. Mệnh đề cũ (§4a) đo cảnh THẬT, mà cảnh thật không
+có cặp map nào nguy hiểm, nên nó xanh dù cơ chế có hay không. *Một cơ chế chỉ bật ở cảnh chưa
+tồn tại thì bài kiểm phải tự dựng cảnh ấy ra, không thì nó không gác gì cả.*
+
+**⚠ BO GÓC: CHỌN ĐỈNH THEO KHOẢNG CÁCH TỚI ĐIỂM CỔNG, KHÔNG THEO KHOẢNG CÁCH TỚI RÌA MAP.**
+Bản đầu lấy *"cách cạnh map ≤260px"* và nó bắt **28/36 đỉnh** — tức bo tròn cả đường tường
+thành, vì tường vốn chạy sát rìa. Lấy *"cách một trong bốn điểm cổng ≤560px"* thì đúng **16
+đỉnh = 4 cuống × 4 góc**, và đỉnh gần thứ 17 cách 1.036px — hai cụm tách hẳn nhau. Cung Bézier
+bậc hai, r=90, chèn 2 đỉnh mỗi góc ⇒ `diTrong` 36 → **68 đỉnh**.
+
+**⚠ ĐO NỀN TRƯỚC KHI CHỌN TÔNG CỦA CÁI MIỆNG.** Bản đầu tô một vũng `rgba(232,224,203,.42)` và
+chụp ra thì **gần như không thấy gì**: nền ở bốn cổng đo được sáng **103-181** (phần lớn
+143-157). Thứ cứu được là một **cặp tương phản** — vành SẪM ôm ngoài + lòng SÁNG — chứ không
+phải một mảng sáng đơn độc; cùng bài học đã ghi cho viên tuyết Bird Tribe Heights.
+
+**Và nói thẳng chỗ còn thiếu:** thứ đáng ra phải nhìn thấy ở một lối ra là **khoảng hở trong
+tường thành**, mà bảy tấm `tuong_*`/`cong_*` vẫn nằm trong `MAP_VAT_CHO`. Khi art tường về thì
+cái miệng đã bo góc tự đọc ra thành một cổng mở, và vệt sáng dưới chân chỉ còn là vết mòn.
+**Đừng nâng cấp vệt sáng ấy thành một cái cổng vẽ tay** — đó đúng là thứ vừa gỡ, và Quy tắc số 3.
+
+### ⛲ ĐÀI PHUN NƯỚC ĐÃ VÀO GAME — ba bài học của đường VIDEO → BẢNG KHUNG
+
+`ct_dainuoc` đứng giữa Quảng Trường Atia (`ardhaven 2991,1425` · ô **418×360** · bảng khung
+`4×3, 12 khung, fps 12`). Đặt hàng + prompt: `docs/PROMPT_DAINUOC_VA_HANGRAO.md`.
+
+**⚠ "GẦN TÂM MAP" VÀ "THẤY ĐƯỢC LÚC VÀO GAME" LÀ HAI RÀNG BUỘC KHÁC NHAU.** Bản quét đầu ra
+(3300,1020) — ô gần tâm map nhất — và nó nằm **ngoài khung hình**: ở zoom mặc định (`xa`, 1,0×)
+trên màn 1920×1080, khung lúc mới vào game là `x 2240..4160 · y 1360..2440` quanh điểm thả, còn
+cái đài ở `y 1020..1380`. Người chơi mới tạo nhân vật sẽ không thấy gì. Phải **dựng khung hình
+thật rồi mới chấm**, đừng chấm theo khoảng cách tới một điểm.
+
+**⚠ `--do` CỦA `nuong_video.py` ĐO TÂM KHỐI ĐẶC, nên nó BÁO ĐỘNG GIẢ với thứ tự phình xẹp.**
+Bản đầy đủ báo *"máy quay động 91px"* — con số đúng, kết luận sai: một cột nước phồng lên xẹp
+xuống thì tâm khối dịch dù máy quay khoá cứng. Phải bám theo phần **PHẢI ĐỨNG YÊN** (ở đây là bề
+ngang bể đá) mới tách được "máy quay động" với "vật động". Đo thế thì lộ ra chuyện thật: video
+**zoom vào rồi zoom ra**, bể 274px → 532px → 274px, và chỉ **120/240 khung đầu** dùng được.
+
+**⚠ LÒ SINH VIDEO NƯỚNG BÓNG ĐỔ THÀNH MẢNG ĐẶC — phải gỡ.** Trên nền magenta thì bóng là
+magenta-TỐI: bộ tách gỡ đúng nền phẳng, mảng tối ở lại rồi qua bước khử viền hồng thành **một
+vũng xanh-tím ĐỤC (alpha 255)** cạnh vật. Đo ba công trình đang chạy (`ct_duoc` · `ct_quantro` ·
+`ct_loren`) ra **0,0-0,4%** điểm bóng ⇒ quy ước của dự án là **cắt SÁT VẬT**. Công cụ:
+`tools/iso/bo_bong.py`, chạy trên **cả** tấm tĩnh lẫn bảng khung.
+
+**⚠⚠ VÀ PHÉP GỠ BÓNG BẢN ĐẦU ĂN THỦNG MẶT NƯỚC.** Cửa nhận diện theo MÀU (lam · tối · G≥R) cũng
+khớp vùng nước sẫm trong lòng bể: **thủng 5,2%**, và trong game thì NPC đứng phía sau lộ qua mặt
+nước. Chữa bằng một ràng buộc HÌNH HỌC: bóng thì **chạm nền trong suốt**, nước thì bị thành đá
+bao kín ⇒ `noi_ra_ngoai()` chỉ giữ mảng lan ra được tới nền. Sau khi sửa: **0,00%**.
+*Một cửa nhận diện theo MÀU sẽ luôn bắt nhầm một vùng cùng màu ở chỗ khác; thêm một ràng buộc
+hình học mới tách được chúng.*
+
+### ⚠⚠ NPC CỦA ARDHAVEN KHAI Ở **HAI** TỆP — mọi phép quét đọc tệp đều MÙ
+
+`window.NPCS` dựng trong `data/canbang.js`, rồi `game.js` **`NPCS.push(...)` hai lượt nữa**
+(9 con của ardhaven, trong đó có `monkhach` ở `2870,2100`). Bộ quét chấm chỗ đặt đài phun nước
+của tôi đọc thẳng `canbang.js` ⇒ nó thấy **19 trên 28 con**, và nó chấm cái đài **đè thẳng lên
+`monkhach`**. `test_capnha §2` bắt được vì bài kiểm đọc `NPCS` LÚC CHẠY.
+
+⇒ **Quét chỗ đặt thì lái trong trình duyệt và đọc `NPCS`/`MAPS`/`GATES` thật**, đừng `vm.runInContext`
+một tệp rồi tin kết quả. Cùng một luật với *"màn chờ phải hỏi cùng cái hàm mà trong màn dùng"*,
+và cùng họ với bẫy `QUESTS` khai hai nơi đã ghi ở trên — chỉ khác là lần này nạn nhân là một
+**phép đo**, không phải một tính năng. *Một phép quét đọc tệp, khi dữ liệu thật được ghép từ hai
+tệp, là một phép quét mù — và nó trả về những con số trông hoàn toàn bình thường.*
+
+### 🏘 MỖI CÔNG TRÌNH PHẢI CÓ NGƯỜI ĐỨNG TRƯỚC CỬA — và "có NPC ở gần" là cái chốt KHÔNG CHỐT GÌ
+
+Trước đợt chấm lại, cả bảy ngôi nhà của Sapidae Chiefdom **đều đã có** một NPC trong bán kính
+400px. Nên một mệnh đề kiểu *"nhà nào cũng có NPC ở gần"* sẽ **XANH** trong khi `ah_vachgio`
+đứng **480px phía SAU lưng** Chòi Trông Vách và bị chính công trình vẽ đè lên. Cùng bệnh với
+luật `≤60% là kill` và với *"đúng 7 NPC có trang thoại"*: **một cái chốt đúng ở mọi trạng thái
+là một cái chốt không chốt gì.**
+
+⇒ Đo **ĐỘ LỆCH NGANG so với tim nhà** và **đứng trước hay sau**, không đo khoảng cách trần.
+Một luật cho cả bảy, và nó chấm bằng máy:
+
+| hàng | mặt tiền quay đâu | NPC đứng ở |
+|---|---|---|
+| BẮC (`khoi.y` 520) | xuống đại lộ y≈1600 | ( tim nhà , **chân nhà + 130** ) |
+| NAM (`khoi.y` 2340) | ra tường thành | ( tim nhà , **mép trên khối − 130** ) |
+
+Hàng nam cố ý đặt NPC ở phía **BẮC** vì người chơi tới từ đại lộ; đứng đúng mặt tiền thì họ
+khuất sau nhà — đúng cái vừa phải sửa. Sau khi chấm: cả bảy cặp lệch ngang **đúng 0px**.
+
+⚠ **Đẩy một NPC chức năng vào chỗ thì phải QUÉT LẠI chỗ cho con bị đẩy ra**, đừng dịch tay.
+Hai NPC phố (`ah_chimera`, `ah_thonhuom`) rơi vào tầm 200px và phải tìm chỗ mới; ràng buộc là
+trong đa giác sàn · lề ≥60px tới mọi khối và mọi `vatTo` · cách mọi NPC ≥220px · cách cổng
+≥300px.
+
+⚠ **NPC đứng lọt trong một khối `MAP_OBSTACLES` là một cửa hàng đóng VĨNH VIỄN.** Khối là vật
+cản đặc kể cả khi chưa có tấm art nào, nên người chơi không bao giờ tới đủ gần để mở bảng — và
+không một lỗi nào in ra. `test_capnha §3` gác riêng chuyện đó, tách khỏi §2 (bị **hình** công
+trình vẽ đè) vì hai thứ hỏng theo hai kiểu khác nhau.
+
+⚠ **ĐỪNG đòi "NPC chức năng nào cũng phải có nhà"** — art chưa về thì đó là một bài đỏ vĩnh
+viễn, đúng cái ngưỡng bất khả đã ghi ở mục `AXIE_CORE.md`. Đòi thứ kiểm được: con chưa có nhà
+phải **đã đứng đúng khuôn của một khối còn trống**, nên thả tệp ảnh vào là cặp khít ngay, không
+phải dời ai. Hiện còn hai con như vậy: `ah_phapsu` (Quán Sách, khối #1) và `thantoan`
+(Sảnh Cầu May, khối #9).
+
+Gác: **`tests/test_capnha.js`** (6 mệnh đề, cả năm cơ chế đã thử ngược và đều đỏ).
+Đặt hàng art đài phun nước + hàng rào: **`docs/PROMPT_DAINUOC_VA_HANGRAO.md`**.
+
 ### 🗺 BẢN SẮC MAP SUY RA TỪ DỮ LIỆU, KHÔNG CHÉP CỨNG
 
 `mapBanSac(id)` tính **loài chủ đạo · hệ trội · Dòng Cốt độc quyền** từ chính `packs`, và
@@ -513,7 +1363,7 @@ chơi không có cách nào biết map nào hệ gì. Nay hệ trội nằm ngay
 
 | | Trạng thái |
 |---|---|
-| `QUESTS` | **ĐANG CHẠY** — 9 chương / 50 nhiệm vụ (thêm chương VIII · Người Thứ Bảy), canon Nhát Gọi. Xem mục "Cốt truyện (canon)" và `docs/LORE_RUNE.md` |
+| `QUESTS` | **ĐANG CHẠY** — 9 chương / **51** nhiệm vụ (chương VIII · Người Thứ Bảy; `c1q4` dạy trục phòng thủ Axie), canon Nhát Gọi. Xem mục "Cốt truyện (canon)" và `docs/LORE_RUNE.md` |
 | `SIDE_QUESTS` | **ĐANG CHẠY** — **32 nhiệm vụ / 10 map**, phủ cấp 3→116. Trước là 9 mục chỉ trên ba map lối đi. |
 
 **Vì sao chuỗi CŨ bị gỡ (ghi lại để đừng vá nó từ git):** lối chơi đã đổi quá nhiều so với lúc
@@ -596,7 +1446,7 @@ chứ không phải đi tìm. Cả map chỉ có **41 điểm** thoả bộ ràn
 Bốn nhánh thưởng, **đều trỏ vào hệ đang chạy**, không đẻ tiền tệ mới: `item` (ô trang bị) ·
 `cot` (Dòng Cốt độc quyền của vùng) · `ngoc` (ép thẳng vào đồ) · `gk` (vé quay Khế Ước). **Shard
 CỐ Ý không có mặt** — nó chỉ tới từ mốc mỗi ngày và thông quan, cho nhiệm vụ nhả Shard là phá đúng
-luật đó. Nay **24/50 chính tuyến + 9/32 phụ tuyến** có thưởng vật phẩm (trước: 9/50 + 0/32).
+luật đó. Nay **24/51 chính tuyến + 9/32 phụ tuyến** có thưởng vật phẩm (trước: 9/50 + 0/32).
 
 ### ⏱ NHỊP CẤP — `XP_TABLE` NAY DẪN TỪ SỐ ĐO, KHÔNG TỪ CẢM GIÁC
 
@@ -648,6 +1498,28 @@ thành CỤC ở vài cấp lẻ. Phép xấp xỉ trung bình báo 3,00 giờ t
 ⚠ **`XP60PLUS_ANCHORS` và `xp60PlusHourlyRate` ĐÃ GỠ.** Chú thích của chúng ghi là đo "không trang
 bị" — đo lại kiểu đó thì từ cấp 10 trở lên nhân vật **CHẾT trước khi giết được con nào** (atk 35 vs
 quái 1.052 máu), tức mốc cũ không thể sinh ra từ phép đo mà nó tự mô tả.
+
+#### ⚠ `do_nhipcap.cjs` KHÔNG ĐO ĐƯỢC TỪ CẤP 60 TRỞ LÊN — đo được, CHƯA truy ra nguyên nhân
+
+Chạy lại công cụ (2026-09-15, `--giay 150 --lap 3`) thì các mốc **60 · 65 · 70 · 80 · 100 · 119**
+trả về **0 XP/giờ**, nên `GIỜ ĐỂ LÊN CẤP 60` in ra `Infinity`. Mốc 30 cũng rơi vào đó. Các mốc
+1-55 vẫn cho số bình thường.
+
+**Nó KHÔNG phải do đợt tam giác lớp Axie.** Đã dựng worktree ở commit ngay TRƯỚC đợt đó
+(`8414e35`), phục vụ ở một cổng riêng, chạy cùng tham số: **ra đúng cùng một bảng số 0**
+(`gan: 0`, `xpGio: 0` ở cả ba mốc 60/70/100). Đây là cách duy nhất phân biệt "đỏ do mình" với
+"đỏ có sẵn" — xem mục `rc=124` để biết vì sao phải làm đúng thứ tự ấy.
+
+Cũng **không** phải do máy bận: chạy lại lúc máy rỗi vẫn ra 0.
+
+Đã loại được một giả thuyết: *"AUTO không tới nổi bãi quái trên map khổ lớn"*. Lái thử 3.600
+nhịp ở `mongco` và `nhanmon` thì người chơi đứng trong tầm 260px của quái **95% và 58% số nhịp**
+— tức nó TỚI ĐƯỢC bãi. Vậy chỗ hỏng nằm ở khúc sau, chưa truy ra.
+
+⚠ **Hệ quả phải nói thẳng: mọi con số nhịp cấp từ 60 trở lên trong tài liệu này (33,4 giờ tới
+cấp 120) hiện KHÔNG đo lại được.** Chúng vẫn có thể đúng — bảng `XP_TABLE` không đổi — nhưng
+đừng trích chúng như một phép đo còn hiệu lực cho tới khi công cụ chạy lại được. *Một số đo mà
+công cụ sinh ra nó đã hỏng thì là một con số chép tay, dù nó từng được đo thật.*
 
 #### 🕳 BỐN HỐ XP CÒN LẠI — nợ NỘI DUNG, cố ý không nướng vào bảng cấp
 
@@ -730,7 +1602,7 @@ kẹt cứng ở ô 26/50**. Không một lỗi nào trên console, không bài 
 một `moc` mới, hỏi đủ hai câu — *đếm được không* **và** *mở ở cấp nào*. Câu thứ hai là câu đã bị
 bỏ qua. `c4q3` nay gate **Box Kundun** (mở từ đầu game: rơi từ quái, mua ở tiệm).
 
-**Bài kiểm gác: `tests/test_daochoi.js`** — đi HẾT 50 ô chính tuyến bằng chính `turnInQuest()`,
+**Bài kiểm gác: `tests/test_daochoi.js`** — đi HẾT mọi ô chính tuyến bằng chính `turnInQuest()`,
 không nhảy cóc `questIdx`, và ở mỗi ô hỏi ba câu của người chơi: nhận được không · làm được
 không · trả được không. Kèm phép lan **theo đường người chơi** (chỉ qua `GATES`) để bắt map
 thành nội dung chết.
@@ -803,6 +1675,64 @@ cuối trùng). Đúng bệnh nhân bản mà mục chẩn đoán ở đầu tà
   ("nhiệm vụ thứ 10") kèm một chú thích đã lạc ("boss Đào Hoa" — con đó nay ở Rẻo Rừng Corran).
   Nay là `QUEST_BOSS_IDX = QUESTS.findIndex(q => q.type === 'boss')`, fallback `Infinity` chứ
   không phải `-1` (vì `questIdx >= -1` là luôn đúng ⇒ trùm hiện ra từ cấp 1).
+
+### 🐣 HƯỚNG DẪN TÂN THỦ — TRẦN THỜI GIAN KHÔNG ĐƯỢC ĐẨY NGƯỜI VÀO VIỆC BẤT KHẢ
+
+`TUT_STEPS` (6 bước) · `tutTick` · `tutGhi` · `tutAdvance` · `tutLamDuoc`, trong `game.js`.
+Gác: **`tests/test_tanthu.js`** (6 mục, **cả sáu cơ chế đã thử ngược và đều đỏ**).
+
+**⚠⚠ CÁI TRẦN 90 GIÂY ĐẺ RA MỘT LỖI TỆ HƠN THỨ NÓ CHỮA.** Trần sinh ra vì bước cũ treo mãi
+("còn nguyên ở cấp 120") — đúng vấn đề, sai thuốc: hết giờ thì nó **đẩy sang bước kế** bất kể
+bước ấy có làm được ở chỗ người chơi đang đứng hay không. Đo được, đứng YÊN trong thành từ giây 0:
+
+```
+90s → npc · 180s → map · 270s → kill · 360s → loot → quest · 385s → "Hướng dẫn hoàn tất"
+```
+
+Nặng nhất là mốc 270: hộp nói *"Nhấn SPACE — hạ 1 con Axie Heo Rừng"* trong khi
+`packsOf('ardhaven').length === 0`. Bấm SPACE 90 lần trong 67 giây rồi bật AUTO 3 phút ⇒
+`kills 0 · xp 0 · bạc 0`, toạ độ không nhích một pixel, và game không nói một câu nào. Rồi ở
+giây 385 nó tự **tuyên bố hoàn tất** cho một người chưa đi, chưa nói, chưa đánh gì.
+
+⇒ **`duocO()`** — bước này làm được ở đây không, hỏi qua cửa duy nhất `tutLamDuoc(s)`. **Chỉ gác
+nhánh HẾT GIỜ**; tiến bộ THẬT (`xong`) thì luôn được đi tiếp — hỏi `duocO` ở đường LÀM XONG là
+có ngày bỏ qua vĩnh viễn bước `kill` vì một cuộc đua khung hình với `buildWorld`. Hết giờ thì
+**bỏ qua mọi bước bất khả ở chỗ đang đứng**; hết bước làm được thì đóng hẳn. Nay đứng yên trong
+thành ra `npc → map → panel → ĐÓNG`, không còn chạm vào `kill`/`loot`.
+⚠ `tutLamDuoc` trả **`true`** khi `duocO()` ném — đo hỏng thì đừng khoá hướng dẫn của người ta lại.
+⚠ **`player._tutHetGio` — hết giờ dù MỘT lần thì cuối chuỗi TẮT LẶNG LẼ.** Không có cờ này thì
+người ngồi yên trong thành vẫn trôi hết sáu bước bằng trần thời gian rồi được báo *"Hướng dẫn hoàn
+tất"* — đúng cái mốc 385 giây ở trên. `test_tanthu ②` gác.
+⚠ **`duocO` của `kill`/`loot` đọc `packsOf(curMap)`, không đọc `mobs.length`.** Vừa dọn sạch một
+bãi thì `mobs` rỗng vài giây trong khi map vẫn có quái để đánh. `packsOf` là cửa đọc chính chủ của
+dữ liệu map, không phải một bản sao thứ hai.
+
+**⚠ CỜ TRẠNG THÁI, KHÔNG PHẢI SỰ KIỆN — `TUT_CO` + `tutGhi(key)`.** `tutAdvance` chỉ ăn khi đang
+đứng ĐÚNG bước ấy, nên ai nói chuyện / nhặt đồ / mở bảng TRƯỚC lúc hộp trôi tới bước đó sẽ kẹt
+lại đủ 90 giây ở một việc đã làm xong. Cùng luật đã ghi cho `MOC_NV.dem()`. Ba cờ:
+`tutNoi` (`tryTalk`) · `tutNhat` (`takeLoot`) · `tutBang` (`togglePanel('char')`).
+
+**Bốn thứ khác cùng đợt, mỗi thứ im lặng một kiểu:**
+
+| | đã hỏng thế nào |
+|---|---|
+| bước `npc` bảo *"gặp **Trưởng Lão Rell** … nhận nhiệm vụ đầu tiên"* | SAI cả ba vế: `c0q1` đã `active` từ giây 0; người giao là **Lính Gác Cổng Tây** (`ah_gac_tay`, cách điểm thả 2540px) còn Rell (cách 300px) tới cấp 14 mới có `c1q1` — đo `npcMark()`: Gác Tây ra `…`, Rell ra chuỗi RỖNG; và `xong` là `level >= 3`, chẳng dính gì tới nói chuyện. Nay dạy **cái dấu trên đầu NPC**, thứ luôn đúng dù ai giao gì |
+| bước `loot` khai `xong: inv.length > 0` | nhân vật vừa tạo ĐÃ CÓ đồ khởi đầu ⇒ nó và bước kế cùng nhảy trong MỘT nhịp (đo: cả hai ở giây 360,1). Cả bước dạy nhặt đồ **chưa từng hiện ra một lần nào** |
+| hai lời gọi `tutAdvance('panel')` trong `togglePanel` | **không bước nào mang khoá `panel`** (bước cuối là `quest`) ⇒ hai lời gọi chết, và bước cuối không có hành động nào đóng được nó. Nay bước cuối LÀ `panel` |
+| hai khối chép **chỉ số cứng** trong `update()` | `tutStep === 0` cộng quãng đường lần thứ HAI (tutTick đã cộng theo toạ độ thật, và nó đếm được cả AUTO lẫn bấm bản đồ nhỏ) ⇒ bước 1 chạy gấp đôi; `tutStep === 4` gọi `tutAdvance('quest')` trong khi ô thứ 4 nay mang khoá `loot` ⇒ không bao giờ khớp. **Chỉ số cứng vào một mảng khai ở chỗ khác là một quả mìn hẹn giờ cho đợt thêm/bớt bước kế tiếp** |
+
+**⚠ VÀ MỘT CỜ CẤP `window` SỐNG SÓT QUA LƯỢT DỰNG LẠI NGƯỜI CHƠI:** `trackerHtml()` chỉ ghim đèn
+hiệu khi `window._beaconQuestId !== q.id`, mà cờ đó không ai đặt lại ⇒ nhân vật thứ hai dựng
+trong cùng một trang có `player.beacon` đứng `null`: mất cả dải **"Đi ngay"** lẫn mũi tên định
+hướng — đúng cái dải mà bước 3 của hướng dẫn trỏ vào. Hôm nay mọi đường đổi nhân vật đều
+`location.reload()` nên chưa ai gặp; xoá một lời gọi reload là gặp ngay. `startGame()` nay đặt
+lại. Cùng họ với dòng `loadGame()` từng nuốt thanh chiêu người chơi tự gán.
+
+**⚠ LỖI CỦA CHÍNH BÀI KIỂM, ghi lại vì nó cho một mệnh đề XANH VÔ NGHĨA:** mục ⑤ đặt
+`player.x += 200` rồi tick MỘT lượt — mà `tutTick` cộng quãng đường theo HIỆU hai khung và khung
+đầu chỉ ghi mốc, nên nó cộng **đúng 0**. Người chơi kẹt ở `move` suốt, và mệnh đề *"không kẹt ở
+npc"* xanh vì một lý do chẳng liên quan gì tới cờ trạng thái. Phép thử ngược lộ ra. Nay dời qua
+nhiều khung và **tự kiểm** là đã rời bước `move` trước khi chấm.
 
 ### 🧭 NỐI MAP BẰNG RÌA (B1) + ĐIỂM DỊCH CHUYỂN MỞ BẰNG ĐI BỘ (B2)
 
@@ -1162,6 +2092,120 @@ vảy rồng → hắc nguyệt**. Bộ tên cũ mượn thẳng binh khí kiế
 Lăng Ba Hài, Chí Tôn Long Giáp, Thiên Tôn Miện…) — vi phạm Quy tắc số 1. Tên mới phải là
 danh từ trang bị thuần, đừng mượn tên chiêu thức hay bảo vật tiểu thuyết.
 
+## 💪 BỐN CHỈ SỐ KIỂU MU — Sức Mạnh · Nhanh Nhẹn · Thể Lực · Năng Lượng
+
+Trước bản này là **NĂM**, mang tên kiếm hiệp: *Lực Lượng · Mẫn Tiệp · Phòng Ngự · Sinh Lực ·
+Linh Lực*. Chúng sống sót qua cả đợt chuyển sang MU vì không ai đọc lại `ATTR_INFO`.
+
+**⚠ "Sinh Lực" KHÔNG biến mất khỏi game** — nó vẫn là tên của MÁU ("Sinh Lực Tối Đa", "Hút
+Sinh Lực", thanh máu). Thứ đổi tên là **chỉ số đẻ ra máu** → **Thể Lực**. Tương tự "Mana" vẫn
+là tên tài nguyên, chỉ số đẻ ra nó là **Năng Lượng**. Đừng đổi nhầm nhóm.
+
+### ⚠ Ô "PHÒNG NGỰ" ĐÃ GỠ — và lý do là SỐ ĐO, không phải cho gọn
+
+`defRed = def/(def+60)` chạm trần chung `DEFRED_TRAN` (**0,55**) từ khoảng **60 điểm**. Mọi
+điểm sau đó là **số chết** — chính chú thích ở `DEFRED_TRAN` đã ghi đúng điều đó từ trước.
+Một ô chỉ số mà sau 60 điểm không còn tác dụng gì thì nó không phải một lựa chọn, nó là một
+khoản thuế. Nay phòng thủ suy từ **Nhanh Nhẹn** (`AGI_SANG_THU`).
+
+**⚠ CHỖ TÔI ƯỚC LƯỢNG SAI RỒI PHẢI ĐO LẠI** — ghi lại vì con số đầu nghe rất hợp lý. Tôi tính
+*"trần ở `s.def` ≈ 74, nền ~10, vậy hệ số 0,35 ⇒ cần ~190 điểm"*. Đo thật:
+
+| lớp | thủ ở 0 điểm | chạm trần 55% tại |
+|---|--:|--:|
+| Dark Knight | 51,8% | **50** |
+| Dark Lord | 44,9% | **50** |
+| Sylvan Ranger · Dark Wizard · Spellblade | 37% | **100** |
+
+Lý do: `defRed` đã ở **37-52% trước khi có một điểm nào** (cấp 120 tự cộng), nên phần còn lại
+tới trần rất mỏng. ⇒ **Đừng mô tả Nhanh Nhẹn là "hố đổ điểm vô tận".** Nó là: bỏ ~50-100 điểm
+cho cứng người, phần còn lại dồn vào dòng sát thương của lớp. Nâng hệ số cũng không kéo dài
+được đường cong — thứ chặn nó là cái TRẦN, và 0,55 là quyết định đã cân của chủ dự án.
+
+### Dòng sát thương từng lớp (chủ dự án chốt)
+
+| lớp | `atkSrc` | dòng chính |
+|---|---|---|
+| Dark Knight | `{str:2.0}` | Sức Mạnh |
+| Sylvan Ranger | `{agi:2.0}` | Nhanh Nhẹn |
+| Dark Wizard | `{ene:2.2}` | Năng Lượng |
+| Spellblade | `{agi:1.5, str:0.7}` | Nhanh Nhẹn · **Sức Mạnh là dòng PHỤ** |
+| Dark Lord | `{ene:2.1}` | Năng Lượng |
+
+**⚠ ĐO BẰNG CÁCH SWAP `atkSrc` TRONG CÙNG MỘT LƯỢT CHẠY.** Lượt đo đầu của tôi so hai lần chạy
+khác nhau và ra kết quả vô nghĩa — *"máu Dark Lord tụt 10%"* hoá ra chỉ là `startGame` bốc
+trúng bộ `traits`/`personality` khác, mà cả hai đều cộng chỉ số trong `calcDerived`. Phải
+`player.traits = []; player.personality = 'trung'` rồi mới đo. Kết quả đã khử nhiễu:
+
+| lớp | dồn hết dòng chính | nửa dòng chính / nửa Nhanh Nhẹn |
+|---|--:|--:|
+| Dark Knight · Sylvan Ranger | **±0,0%** | ±0,0% |
+| Dark Wizard | +5,0% | −1,4% |
+| Dark Lord | +2,1% | −1,3% |
+| **Spellblade** | **+8,6%** | **+8,7%** |
+
+**⚠⚠ VÀ HAI CON SỐ TRÊN CHỈ ĐÚNG CHO CẢNH ĐÃ ĐO — ĐỪNG TRÍCH CHÚNG NHƯ KẾT QUẢ CHUNG.**
+Bảng ngay trên đo nhân vật **rót hết điểm** vào dòng chính, `traits` rỗng, `personality` trung
+tính. Đo lại trên cảnh của `test_canbanglop` — nhân vật **0 điểm rót**, **đồ rơi ngẫu nhiên +0**,
+3 lượt × 30 giây game mỗi cây:
+
+| lớp | atk TB trước | atk TB sau | ST TB trước | ST TB sau |
+|---|--:|--:|--:|--:|
+| **Dark Wizard** | 151 | **120** (−21%) | 26.109 | **21.477** (−18%) |
+| **Spellblade** | 107 | **164** (+53%) | 26.448 | **36.661** (+39%) |
+| Dark Knight | 102 | 97 | 60.520 | 56.453 |
+| Sylvan Ranger | 189 | 196 | 54.318 | 53.558 |
+| Dark Lord | 96 | 85 | 32.375 | 27.575 |
+
+Chênh tới 6 lần so với `+5,0%` / `+8,6%` đã ghi. Lý do **không** phải phép đo cũ sai, mà là nó
+đo một cảnh khác: khi người chơi chưa rót điểm thì `atkSrc` ăn gần như trọn vẹn từ **chỉ số do
+TRANG BỊ cộng vào**, nên đổi trọng số sang một dòng mà đồ rơi ít cho là tụt thẳng. DW mất vế
+`agi` (đồ cho nhiều `agi`), Spellblade nhận được vế `agi` ấy.
+
+*Đo một cảnh rồi gọi nó là kết quả thì lúc nào cũng ra con số mình muốn* — cùng vết sẹo đã ghi
+cho con số 32,4% ở mục hệ phòng thủ Axie. Cả hai bảng đều đúng; phải nói rõ **đo ở đâu**.
+
+**Được thêm, không phải chủ ý:** Spellblade chết **7,0 → 3,0** lần mỗi 30 giây, tức trả một phần
+"nợ đã biết" ghi ở đầu `test_canbanglop` (*"Spellblade GÂY được sát thương nhưng không KẾT LIỄU
+được"*). Dark Wizard vẫn là lớp mỏng nhất ở **cả hai** cây (10,7 → 8,7 lần chết) — nợ CÓ SẴN,
+không phải do đợt này.
+
+**⚠ Spellblade +8,6% là CÓ CHỦ Ý, và nó KHÔNG phải một cú buff lén.** Bản cũ `{str:1.1,
+ene:1.1}` là một thế chia đều, mà công thức dùng **căn bậc hai** (`sqrt(_ptSum)`) nên chia đều
+là thế **bị phạt**: Spellblade vì thế là lớp có đỉnh công **thấp nhất** trong năm. Cho nó một
+dòng chính rõ ràng kéo nó về gần giữa — đo được: chênh lệch đỉnh công giữa năm lớp đi từ
+**1,59×** xuống **1,54×**. Đã thử hạ trọng số để về đúng 0%: không về được, vì `_ptNen` (vạch
+xuất phát) cũng tính theo tổng trọng số nên hai tác dụng triệt tiêu nhau — muốn 0% thì phải
+quay lại thế chia đều, tức bỏ chính cái đặc tả.
+
+### Di trú: HOÀN điểm, đừng xoá trắng
+
+`loadGame()` trả `player.def − 5` về `player.free`, ghim `player.def` về mức nền, đặt cờ
+`player._diTruDef`. Ba thứ bắt buộc, đúng nếp đã ghi cho `cotDiTru`:
+- ⚠ **Hoàn, không xoá** — người chơi cũ có thể đã đổ hàng trăm điểm vào đó.
+- ⚠ **KHÔNG cần cờ `_diTru*` ở đây** — và đây là chỗ tôi thêm thừa rồi phải gỡ. Phản xạ là
+  "phải có cờ chặn hoàn hai lần", nhưng phép hoàn này **tự bất biến**: thứ giữ nó là dòng
+  **ghim `def` về mức nền**, nên lần nạp sau `_hoan` ra 0. Thêm cờ rồi thử ngược bằng cách gỡ
+  cờ ⇒ bài kiểm **IM LẶNG**. *Một cái cờ mà gỡ đi không làm đỏ được bài nào là một cái cờ
+  không gác gì — nó chỉ trông như đang gác.* (`cotDiTru` thì đúng là cần cờ, vì nó KHÔNG ghim
+  nguồn về 0: nó đọc `lv`/`hoa` rồi xoá.)
+- ⚠ **Phải BÁO ra một dòng đọc được**, và báo ở chỗ vào game chứ không trong `loadGame()`:
+  lúc ấy thế giới chưa dựng, `addFloat` chưa có chỗ bám. Dùng biến `_diTruDefBao`.
+
+⚠ **`addAttr` phải từ chối khoá lạ** (`if (!ATTR_INFO[k]) return`). Không chốt thì một lời gọi
+cũ — bảng còn trong đệm, lệnh gỡ rối, một nút sót — vẫn đổ điểm vào ô **không còn ai đọc**:
+người chơi mất điểm vĩnh viễn, không lỗi nào báo.
+
+⚠ **`def` vẫn còn là DÒNG PHỤ TRÊN TRANG BỊ.** Gỡ ô chỉ số không có nghĩa là gỡ `applyLine`
+nhánh `def` — giáp vẫn cộng thẳng vào phòng thủ. Hai thứ khác nhau, trùng tên.
+
+⚠ **Bảng in số phải LÀM TRÒN.** Bị động Thể Lực cộng một số thập phân vào `s.vit`, nên ô này
+từng in ra `54.1 (50+4.100000000000001)` — rác dấu phẩy động phơi thẳng ra mặt bảng.
+
+Gác: `tests/test_chiso4.js` (5 mục, 10 phép thử ngược). §③ **rót điểm thật rồi đo `player.atk`**
+chứ không đọc bảng `atkSrc` — đọc bảng thì một lỗi trong `calcDerived` (nhầm khoá, quên một
+nhánh) vẫn xanh.
+
 ## Cốt truyện (canon) — **NHÁT GỌI · BẢY RUNE CỔ**
 
 > Canon đầy đủ, kèm hợp đồng thi công: **`docs/LORE_RUNE.md`**.
@@ -1277,7 +2321,7 @@ không ai nói cho họ biết là đổi được thân.
 
 ## Kiến trúc
 
-- Toàn bộ game nằm trong **1 file**: `public/game/game.js` (~12k dòng), kèm `index.html`, `style.css`.
+- Toàn bộ game nằm trong **1 file**: `public/game/game.js` (**~32,5k dòng**), kèm `index.html`, `style.css`.
 - Không build step — mở thẳng file tĩnh. Kiểm tra cú pháp: `node --check public/game/game.js`.
 - Các hằng số lớn: `SECTS` (5 lớp), `VOHOC_DEFS` (chiêu), `SKILL_DEFS`, `MAPS`, `MOBS`, `QUESTS`,
   `SIDE_QUESTS`. Hàm trung tâm: `calcDerived()` (mọi chỉ số), `update(dt)`, `render()`,
@@ -1549,6 +2593,134 @@ gác — và nó **không đặt ngưỡng phần trăm**, nó dựng lại chí
 
 Test: `node <scratchpad>/test_feel.js`.
 
+## 👁 ĐỌC ĐƯỢC TRÊN MÀN + ☠ RỦI RO — hai mảng thấp nhất bảng QA, và cả bốn lỗi đều ĐO ĐƯỢC
+
+Gác: **`tests/test_docduoc.js`** (6 mệnh đề) · **`tests/test_ruiro.js`** (13 mệnh đề).
+**Cả tám cơ chế đã thử ngược và đều đỏ.**
+
+### ① Nhật ký cắt cụt ĐÚNG phần thưởng — và ba dòng tần suất cao nuốt phần còn lại
+
+Cột `#combat-log` rộng 186px + `white-space:nowrap` + `text-overflow:ellipsis` ⇒ đo được
+**30/31 dòng bị cắt**, và phần bị cắt LUÔN là phần thưởng:
+`☠ Hạ Axie Heo Rừng — Nhận: +28 EXP +17◈` cụt đúng ở chữ *"Nhận"*. Nhật ký tồn tại để nói
+*ngươi vừa được gì*; cắt đúng chỗ đó thì nó chỉ còn là tiếng ồn. Nay **cho xuống dòng**
+(`overflow-wrap:anywhere`) — `max-height:22vh` + `overflow-y:auto` vốn đã lo phần cao. Đo lại:
+**0/41 dòng bị cắt.**
+
+**`logCombat(text, color, gop)` — GỘP, KHÔNG BỎ.** Cùng khoá với dòng ĐANG ĐỨNG ĐẦU thì cộng dồn
+vào chính nó (`×N · tổng M`). Đo được 8 cú liên tiếp cùng mục tiêu: **8 dòng → 1**.
+
+- ⚠ **CHỈ gộp vào dòng ĐẦU**, đừng đi tìm khắp hộp: gộp vào một dòng nằm giữa là thứ tự thời gian
+  của nhật ký nói dối.
+- ⚠⚠ **GỘP THEO (TIỀN TỐ × MỤC TIÊU), ĐỪNG LOẠI TRỪ ĐÒN ĐẶC BIỆT.** Bản đầu tôi chỉ gộp đòn
+  THƯỜNG và để `KHẮC HỆ`/`HOÀN HẢO`/bạo kích mỗi cú một dòng — nghe hợp lý, và phép đo bắt ngay:
+  ở Rẻo Rừng Corran vũ khí khắc hệ đàn heo nên **8/8 cú đều mang tiền tố** ⇒ phép gộp thành vô
+  dụng đúng ở chỗ nó cần nhất. Tiền tố nằm TRONG khoá (hai loại không trộn) và vẫn nằm trong chữ
+  hiện ra, nên người chơi vẫn đọc được "đòn này khắc hệ" — chỉ là một dòng thay vì tám.
+
+### ② Quái chìm vào ĐẤT — không phải chìm vào hòn đá
+
+`Axie Heo Rừng` là khối NÂU (110,76,58) đứng trên **lối mòn NÂU**; chênh sáng với decor quanh đó
+đo được **29/255**. ⚠ Báo cáo QA đổ cho *"thanh máu chỉ hiện khi đã bị đánh"* — **SAI**: thanh máu
+vẽ vô điều kiện, lệnh `return` của nhãn nằm SAU nó. Kết luận của họ đúng, nguyên nhân họ nêu thì
+không. *Một triệu chứng đọc đúng không bảo đảm cái nguyên nhân đi kèm nó cũng đúng.*
+
+Hai lớp, cả hai **nằm ngoài** đường bao con vật (cùng nguyên lý rìa sáng và viền +N):
+
+| | |
+|---|---|
+| **vòng chân** | một nét tối + một nét theo HỆ, vẽ cho **MỌI con còn sống**. Cây và đá không có vòng nào ⇒ chính cái vòng tách sinh vật khỏi địa hình |
+| **viền tối** | bóng đơn sắc của chính tấm đó vẽ lệch bốn hướng, NẰM DƯỚI thân |
+
+- ⚠ **Vòng chân KHÔNG được gắn vào `mobHe`.** Bản cũ là hào quang hệ `alpha 0.14` (dưới ngưỡng
+  đọc được) và **chỉ vẽ khi con đó có hệ** — con chưa khai hệ mất hẳn tín hiệu.
+- ⚠ **Viền đi qua `tintedImg`** nên trả giá lọc đúng một lần mỗi tấm. **KHÔNG `ctx.filter` trong
+  vòng vẽ, KHÔNG `shadowBlur`** (cả hai đã bị cấm tại chỗ), và **đừng phóng to sprite** — đó là
+  đúng cái đã phải gỡ ở mục Trụ Đá.
+- ⚠ **Viền gác sau `SETTINGS.lowFx`, vòng chân thì không.** Bốn `drawImage` thêm cho mỗi con đo
+  được **69 → 51 FPS** ở headless-CPU (14,4 → 19,7 ms/khung). Vòng chân là một nét ellipse và nó
+  mới là thứ trả lời *"đây là sinh vật"*. Đừng đẻ cờ thứ hai — `lowFx` là công tắc ĐÃ CÓ.
+
+### ③ Chết không mất gì ⇒ nay mất **5% ngân sách XP của chính cấp đang đứng**
+
+Đo một cái chết THẬT rồi `respawn()`: `cấp 5 · 796 XP · 1.588◈ · 15 mạng · túi 2` ⇒ **y hệt,
+không lệch một trường nào.** `chetMatXp()` là cửa DUY NHẤT, nên con số người chơi ĐỌC trên màn bại
+trận và con số máy TRỪ không thể lệch nhau.
+
+Chọn EXP vì ba lẽ: một con số đọc được ngay · **không bao giờ tụt cấp** (kẹp ở `player.xp`) · tự
+nhạt đi khi người chơi mạnh lên.
+
+**⚠⚠ ĐỪNG HỎI `md.type === 'safe'` — tôi viết đúng cái sai ấy trước, và phép đo bắt được:** cấp 25
+chết ở Beast Herd Camp (`ngoai`) mất **0 EXP**. `ngoai` khai `safe` (không PK) nhưng nó là **bãi
+săn 8 bãi**, tức đúng chỗ người chơi cày nhiều nhất lại thành chỗ không có rủi ro. Cùng cái bẫy đã
+ghi nguyên văn hai lần trong tài liệu này (Rương Canh · Axie nhập vào): **cửa duy nhất đúng là CÓ
+BÃI QUÁI**. Thành thật không có bãi nào nên nó tự được miễn, không cần hỏi cờ `safe` lần nào.
+
+Bốn chỗ miễn, mỗi chỗ một lý do — đừng gộp cho gọn: dưới cấp 10 (tân thủ phải tha) · map không có
+bãi quái · `md.pvp` (**luật đã chốt**: *"Thua một trận đấu không được phép đụng vào bản lưu"*) ·
+`md.dungeon` (Tầng Sâu đã có giá riêng, cộng thêm là phạt hai lần).
+
+⚠ **Khoản phạt đặt SAU hai nhánh hồi sinh** (THIÊN MỆNH `traitRevive` · Bản Nguyên Công
+`tienthiencong`), và đó là đúng: hai cái đó nghĩa là *ngươi không chết thật*, nên không phạt.
+Hệ quả cho bài kiểm: cảnh đo phải **tắt cả hai** trước khi giết, không thì nó đỏ theo xúc xắc —
+`startGame` bốc thiên phú ngẫu nhiên nên cái chết đầu có khi miễn phí, và phép đo ra 0 trong khi
+mã hoàn toàn đúng. `test_ruiro` đỏ 1/5 lượt trước khi thêm ba dòng tắt ấy, và nay nó tự kiểm
+(`hoiSinh`) rồi mới chấm.
+
+⚠ **Và phải NÓI RA — kể cả khi KHÔNG mất gì, kèm lý do.** Im lặng ở chỗ được miễn thì người chơi
+không phân biệt được *"chỗ này tha"* với *"cơ chế hỏng"*.
+
+### ④ Mục Tiêu Hôm Nay xong trong 2 phút ⇒ đặt lại theo NHỊP HẠ QUÁI ĐO ĐƯỢC
+
+Nhịp thật (AUTO, 60 giây trong game, đo bằng chính vòng `update`):
+**cấp 5 → 14 mạng/phút · cấp 11 → 24 · cấp 20 → 37 · cấp 30 → 39.**
+⇒ `kills:10` ở dải 1 tốn **25-43 giây**, `kills:15` ở dải 2 tốn **24 giây** — cả tầng NGÀY là một
+dòng và nó đóng trước khi người chơi kịp ngồi xuống. Nay ô `kills` đặt theo mốc **~3 phút cày**:
+`60 → 90 → 110 → 120 → 130 → 140 → 150`.
+
+⚠ **Trên cấp 30 là GIẢ ĐỊNH, không phải số đo** — nói thẳng chứ không giấu. Nhịp phẳng lại ở
+~39 mạng/phút từ cấp 20→30 nên bốn dải cuối lấy đúng mốc phẳng đó; `tools/do_nhipcap.cjs` hiện
+không chạy được từ cấp 60 trở lên.
+
+**⚠⚠ CHỈ NÂNG SỐ LƯỢNG, ĐỪNG THÊM Ô VÀO DẢI 1 — tôi làm sai đúng chỗ này và `test_earlygame`
+bắt được.** Bản đầu tôi cho dải 1 thành `{kills:45, forge:1}` cho "đỡ trống", và thế là dải 1
+(2 ô) **BẰNG** dải 2 (2 ô) — phá đúng tính chất mà bảng này sinh ra để có: **số ô lớn dần theo
+cấp**. Bài kiểm cũ chốt `daily1 === ['kills']` nhìn thì giống một hằng số chép cứng, nhưng nó
+đang gác một thiết kế thật; tôi đọc nhầm nó thành lời nói dối rồi suýt sửa bài kiểm cho vừa ý
+mình. *Trước khi gọi một khẳng định cũ là "chốt cứng đã mục", hỏi xem nó đang gác TÍNH CHẤT gì.*
+Hình dạng thang giữ nguyên (**1 · 2 · 3 · 4 · 5 · 5 · 5** ô); chỉ con số `kills` đổi. Thứ cần
+chữa là ĐỘ DÀI, không phải số dòng.
+
+**⚠ VÀ TUYỆT ĐỐI KHÔNG THÊM `via` VÀO DẢI 1 — đó là một phép đo.** `viaHomNay()` bốc ba
+trong bảy vùng có Dòng; đo một ngày thật ra `trungnut · chungnam · caungam`, giao với map mà nhân
+vật cấp ≤11 tới được (`ardhaven · ngoai · corran · pvp`) là **RỖNG**. Mà thưởng ngày đòi xong HẾT
+⇒ một ô bất khả là **khoá câm cả phần thưởng**, không lỗi nào báo. Đúng bài học "CỬA CƠ CHẾ MỞ Ở
+CẤP NÀO": hỏi *đếm được không* rồi phải hỏi tiếp *ai cũng làm được không*.
+
+**Nợ có sẵn, ghi ra chứ không lặng:** `via` ở dải 4 (cấp 40-59) vẫn dính cửa hẹp của đúng cái bẫy
+đó — cấp 40-59 tới được 4/7 vùng có Dòng, nên ~3% số ngày cả ba vỉa nằm ngoài tầm. Chữa đúng là
+cho `dailyReset` bốc mục tiêu theo cấp người chơi; đó là một đợt riêng.
+
+### ⚠ BỐN LỖI CỦA CHÍNH BÀI KIỂM — cả bốn cho một kết quả trông rất thuyết phục
+
+1. **Lệch chuẩn trong ô 26px là phép đo MÙ cho việc "quái có tách khỏi nền không".** Nó đo tương
+   phản BÊN TRONG con vật, thứ vốn đã cao: **42,1 → 41,6** sau khi sửa, tức nói ngược. Phải đo
+   **năng lượng biên** (`|∇L|` trung bình).
+2. **Rồi so biên-tại-quái với biên-tại-NỀN cũng hỏng, hai lần.** Ô nền chọn cứng thì rơi trúng đồ
+   (map có **102 con quái**); ô "chắc chắn trống" thì vướng đường ghép viên lát. Nền đo ra 1,8 hay
+   4,9 tuỳ chỗ lấy mẫu ⇒ **nó không phải một cái mốc**. Cách đúng: **A/B trên cùng một khung, cùng
+   những điểm ảnh ấy**, bật/tắt chính cơ chế (`SETTINGS.lowFx`) — nền là hằng số nên tự triệt tiêu.
+   Đo được **+42% năng lượng biên**.
+3. **Đếm lời gọi `ctx.ellipse` để kiểm vòng chân là một cái chốt đúng ở MỌI trạng thái** — riêng
+   bóng đổ đã hai ellipse mỗi con. Phép thử ngược **đỏ lặng**. Nay `drawMob` phơi
+   **`window.__vongChan`** (chỉ khi `TEST_MODE`) — cùng lối `__veChet` · `__avaKhoi` · `__veVuKhi`.
+4. **`camera.x` là góc TRÊN-TRÁI, không phải tâm.** `Math.abs(m.x - camera.x) < VW` gom cả con nằm
+   ngoài mép trái rồi đòi chúng phải có vòng ⇒ đỏ 17/21 trên mã ĐÚNG.
+
+⚠ Và một mệnh đề **đỏ theo xúc xắc**: `HOÀN HẢO` bốc ngẫu nhiên mỗi cú nên tám cú tự nhiên bị cắt
+thành hai ba cụm. Ghim `Math.random` trong lúc đo — cái cần gác là *hai cú LIÊN TIẾP CÙNG LOẠI thì
+phải gộp*, không phải xúc xắc.
+
 ## Sự kiện thế giới — neo theo GIỜ THẬT
 
 Lịch Tu Tiên (Can Chi/Tứ Quý/năm tháng) đã gỡ. `gameTimeInfo()` vẫn chạy ngầm cho
@@ -1689,6 +2861,46 @@ Chủ dự án chốt (nguyên văn): *"Chuyển lại tuyệt chiêu meteriote 
 - **⚠ Ô TRỐNG PHẢI ĐƯỢC KHAI RA.** Ba bài kiểm (`test_kynang5lop` · `test_tuyetchieu` ·
   `test_canbanglop`) đọc thẳng `THANH_LOP` để biết ô nào được phép trống. Miễn trừ bằng một danh
   sách tên lớp NGAY TRONG BÀI KIỂM là mở cửa cho lớp thứ hai rơi vào cùng trạng thái mà lọt êm.
+
+### 🏹 SYLVAN RANGER: NGŨ TIỄN XUỐNG Ô 3 — và Ô 4 THÌ KHÔNG ĐƯỢC ĐỘNG VÀO
+
+Chủ dự án chốt: *"đây là tuyệt chiêu ngũ tiễn của elf… Nó sẽ là tuyệt chiêu số 3 trấn phái,
+mang hơi hướng đánh lan"*. Trấn Phái **vốn đã** là đòn lan (`TP_RADIUS` 185 · `desc` ghi thẳng
+*"sát thương lan"*), nên đợt này chỉ đổi ART và VỊ TRÍ, không đụng một hệ số nào.
+
+| | |
+|---|---|
+| thanh SR | `['a', 'elf_greaterdmg', 'tp', 'elf_penetration']` trong **`THANH_LOP`** |
+| ô 3 | **Ngũ Tiễn** — chính là `tp`, đúng khuôn Meteorite của Dark Wizard |
+| art | `five_arrow` trong `VFX_ATLAS_DEFS` + `CHIEU_TRANH.sx_toanchan_c` |
+| tên | `SECTS.toanchan.tp.name` **'Ice Arrow' → 'Ngũ Tiễn'** |
+
+- **⚠ ĐỔI CHỖ ĐÚNG HAI Ô (2↔3), ĐỪNG XẾP LẠI CẢ THANH.** Ô 4 là ô **TUYỆT CHIÊU** và phím Space
+  gán thẳng vào nó (`SIGNATURE_SKILL`); đẩy Bless xuống đó là Space bấm ra một chiêu phù trợ.
+  `test_tuyetchieu §5` gác đúng chỗ ấy — đã dẫm một lần khi thử xếp Penetration lên ô 2.
+- **⚠ ĐỔI TÊN THEO ART, không phải để "Việt hoá cho đồng bộ".** Tấm dán là NĂM MŨI TÊN VÀNG,
+  không còn phiến băng nào; để tên 'Ice Arrow' là bảng kỹ năng hứa một đằng còn màn hình cho một
+  nẻo. Ba lớp kia vẫn để tiếng Anh, và đó vẫn là chủ ý (xem chú thích tại chỗ trong `canbang.js`).
+  Không đặt 'Five Shot': `elf_fiveshot` đã mang đúng cái tên ấy và `test_kynang5lop` dò trùng tên.
+- **⚠ `cong:false`.** 17,0% điểm ảnh đặc của gói là gần-đen (viền bao từng mũi tên). Cộng sáng ăn
+  mất viền — đen cộng vào nền là ra chính nền — và cả nan quạt nhoè thành mấy vệt vàng nhợt. Đúng
+  vết sẹo `fire_scream`: **độ sáng trung bình không quyết định một mình, viền đen thắng nó.**
+- **`co` để TRỐNG (= 1,00) là cố ý.** Scale = `R/neoR` = 185/337,9 ⇒ tầm với vẽ ra **đúng bằng**
+  vòng sát thương, tức `pham` không hứa suông. Khác Bão Quạ (phải thu còn 0,60): tấm đó là một
+  vụ nổ 360° quanh người niệm, tấm này neo ở thân Axie rồi bung về **một** phía nên ở cỡ thật nó
+  vẫn đọc ra một nan quạt chứ không trùm kín màn hình. Đã chụp 1,00 / 0,75 / 0,60 rồi mới chốt.
+- **Gỡ `SECT_VFX.sx_toanchan_c` (`style:'icefall'`)** theo luật chung: có mặt trong `CHIEU_TRANH`
+  mà còn khai style là chồng hai lớp lệch tâm. `test_tuyetchieu §4` suy từ bảng nên tự gác.
+
+**⚠ VÀ NÓ LÀM LỘ MỘT BÀI KIỂM ĐO TRÊN CẢNH CỦA CHÍNH NÓ.** `test_ganchieu §3` kéo một chiêu Di
+Sản vào **ô 1 chép cứng** rồi đòi %Công Kích tụt đúng bậc của chiêu ấy. Phép trừ đó sạch sẽ chỉ
+vì ô 1 hồi đó là `tp` ở cả năm lớp — mà `tp` không nằm trong Di Sản. Từ lúc ô 1 của SR giữ Bless
+(một chiêu Di Sản THẬT), kéo chiêu mới vào là **đẩy Bless ra và Bless trả lại % của nó**: đo ra
+**−1 trong khi mong 1,5**. Bài đỏ vì cảnh dựng, không vì cơ chế. Nay §3 ưu tiên ô không giữ chiêu
+Di Sản nào, và nếu không có thì **trừ lại** phần của kẻ bị đẩy; vế `knGo` chốt bằng một con số
+đúng (`legacy0 − buLai`) thay vì dựng lại thanh rồi so với chính nó — dựng lại thì `knGo` hỏng
+cũng xanh. Hai phép thử ngược đều đỏ (gỡ `!_tren.has(sid)` ⇒ 5/5 lớp; `knGo` no-op ⇒ 10 FAIL).
+*Một hằng số vị trí chép cứng trong bài kiểm là một quả mìn hẹn giờ cho đợt xếp lại thanh kế tiếp.*
 
 #### Bốn mệnh đề đã mục vì chúng đoán VỊ TRÍ thay vì hỏi MÃ CHIÊU
 
@@ -1969,6 +3181,16 @@ Và một luật vẽ: **art tối thì phải cộng sáng.** `cong:false` (v�
 nền — Meteorite, Inferno. Gói tối như Dragon Spirit vẽ đè thì thành vệt bóng; bỏ `cong:false`
 cho nó cộng sáng là bầy long hồn phát sáng lên ngay. Đã thử cả hai và chụp lại để so.
 
+⚠ **NHƯNG ĐỘ SÁNG TRUNG BÌNH KHÔNG QUYẾT ĐỊNH MỘT MÌNH — VIỀN ĐEN THẮNG NÓ.** Gói `fire_scream`
+(Hoả Xích Diệm, Dark Lord) đo ra **sáng 0,397** trong khi nền map trung bình **0,658**, tức
+TỐI HƠN nền ⇒ theo luật trên thì phải cộng sáng. Chụp cả hai lối ra thì ngược hẳn: cộng sáng
+**ăn mất đường viền đen** (đen cộng vào nền là ra chính nền), ba ngọn lửa thành mấy vệt hồng
+nhợt không còn hình dạng; vẽ đè thì đọc rõ từng lưỡi lửa trên nền gạch sáng.
+
+⇒ Luật đầy đủ: **gói có viền đen đậm thì KHÔNG BAO GIỜ cộng sáng, bất kể sáng trung bình.**
+Cộng sáng dành cho gói *không có viền* mà chỉ có ánh sáng (Dragon Spirit là bầy hồn phát quang,
+không có nét bao). Và đây vẫn là chỗ **phải chụp ra so**, đừng quyết bằng một con số.
+
 ### 🧬 HAI HỌ BỊ ĐỘNG — khoá phân biệt là trường `chiSo`, đừng nhập chúng làm một
 
 Cây kỹ năng của **cả năm lớp** nay có một **xương sống chung**: bảy bị động cộng chỉ số, khai
@@ -2117,6 +3339,225 @@ hơn một cái nút bật/tắt. `test_nhacnen` **không xoá mệnh đề cho 
 và mạnh lên: mệnh đề cũ chỉ hỏi nút có `.hidden` không (nút chết vẫn xanh), mệnh đề mới **kéo
 thanh trượt thật** rồi đòi `SETTINGS.bgm` phải đổi.
 
+### 🔊 CÔNG TẮC TỔNG ÂM THANH — `SETTINGS.amThanh`, và nó KHÁC hai thanh trượt
+
+> ⚠ Câu ngay trên ("thanh trượt là cửa đầy đủ hơn một cái nút bật/tắt") **chỉ đúng một nửa**, và
+> chủ dự án gọi tên đúng chỗ thiếu: *"game hiện tại chưa có tính năng bật tắt âm thanh"*. Giữ
+> nguyên câu cũ ở trên để thấy suy luận đã hụt ở đâu, thay vì xoá trắng.
+
+Kéo cả hai thanh về 0 thì tắt được tiếng — nhưng **mất luôn hai mức đã chỉnh**, nên bật lại phải
+dò lại từ đầu. Thực tế không ai dùng đường đó; họ tắt loa máy. Công tắc riêng giữ nguyên hai con
+số, và đó là **toàn bộ lý do nó tồn tại** (`test_amthanh §③` gác đúng chỗ đó — bản "ngây thơ"
+zero hai thanh khi tắt sẽ đỏ).
+
+| | |
+|---|---|
+| cờ | `SETTINGS.amThanh` (mặc định **true**) |
+| cửa DUY NHẤT | `window.tatMoAmThanh(bat?)` — nút loa HUD · phím **L** · nút trong Cài Đặt đều gọi nó |
+| cửa đọc DUY NHẤT | `AudioSys.tat()` — `bgmVol` · `sfxVol` · `sfx` · `_startTrack` đều hỏi nó |
+| vẽ nút | `amVeNut()` |
+
+- **⚠ MỘT CỬA, BA CHỖ BẤM.** Ba chỗ tự lật `SETTINGS.amThanh` là ba chỗ phải nhớ *lưu + hãm
+  nhạc + vẽ lại nút + vẽ lại bảng Cài Đặt*; quên một việc ở một chỗ là *"bấm chỗ này thì ăn,
+  bấm chỗ kia thì không"*. Cùng luật với `masteryKhoa` và `knOHopLe`.
+- **⚠ `refreshBgmVol` phải hỏi ÂM LƯỢNG HIỆU DỤNG, đừng hỏi `SETTINGS.bgm`.** Hỏi thanh trượt
+  thì tắt tiếng xong bản nhạc vẫn **quay** ở volume 0: không ai nghe thấy, mà máy vẫn giải mã
+  mp3 suốt phiên — đúng thứ người chơi tắt tiếng để tránh. `_startTrack` cũng không được `play()`
+  khi đang tắt.
+- **⚠ PHÍM L, KHÔNG PHẢI M.** M đã là Bản Đồ. L đọc ra "loa", hợp bản Việt hoá. Thêm phím thì
+  phải thêm vào `HD_BANG` + `strings/vi.js` + `strings/en.js` — một phím không ai biết là một
+  phím không tồn tại.
+- **⚠ SAVE ĐỜI CŨ CÓ HAI ĐƯỜNG HỎNG, KHÔNG MỘT.** Save thiếu khoá được đỡ bởi **giá trị mặc
+  định** trong `Object.assign`; save có khoá mà là rác (`null`/`0`/`""`) được đỡ bởi **dòng di
+  trú** `!== false`. Kiểm mỗi ca "thiếu khoá" thì phép thử ngược trên dòng di trú **im lặng** —
+  vì khi thiếu khoá thì `Object.assign` đã trả `true` và dòng ấy không quyết định gì. Đã dẫm
+  đúng thế một lần, và suýt kết luận là mệnh đề mù trong khi thứ hỏng là **que dò**.
+- Thanh trượt nay **in ra số %**, và `setOpt(..., quiet)` phải tự cập nhật con số đó: `quiet`
+  cố ý không dựng lại DOM (dựng lại thì núm tuột khỏi tay chuột), nên thiếu dòng ấy là kéo mà
+  số đứng im — đúng kiểu "bấm không ăn" mà con số sinh ra để chữa.
+
+Gác: `tests/test_amthanh.js` (8 mục, **10 phép thử ngược đều đỏ**).
+
+### 🏛 BỘ UI GOTHIC — icon TRANH THẬT thay ký tự chữ, và khung bảng 9 LÁT
+
+Chủ dự án đưa một tấm **2048×2048** (gói Godot 4 của Meowa). Nguồn để ở
+`tools/ui/nguon/ui_gothic_2048.png` — **trong `tools/`, nên không bao giờ tới tay người chơi**;
+`tools/ui/nuong_uigothic.py` cắt ra WebP vài KB.
+
+⚠ **CẮT, ĐỪNG SHIP CẢ TẤM.** Tấm gốc 4,2 MB, mà màn tải có ngân sách đo được (21 tệp /
+1,63 MB — `data/taitro.js`). Đo: 97 mảnh rời trên tấm; 13 mảnh đang dùng cộng lại **59 KB**.
+
+| chỗ | trước | nay |
+|---|---|---|
+| nút loa HUD · 3 hàng Âm Thanh | emoji 🔊 🔇 🎵 | `gt_loa_bat` · `gt_loa_tat` · `gt_nhac` |
+| Tổ Đội · Hảo Hữu (thanh dưới) | ký tự `⚑` `♥` | `gt_ic_todoi` · `gt_ic_haohuu` |
+| ví: Lumen · Ấn Giao Kết · Shard | ký tự `◈` `✦` `♦` | `gt_xu_vang` · `gt_xu_bac` · `gt_ngoc_lam` |
+| Menu Hệ Thống (F6), 4 nút | ký tự `⚙` `⏱` `◈` `✋` | `gt_ic_caidat` · `gt_ic_laban` · `gt_ic_ruong` · `gt_ic_tui` |
+| vành `.panel` | `linear-gradient` 9 điểm dừng + 4 đinh tán `radial-gradient` | `gt_khung_bang` 9 lát |
+
+- ⚠ **Emoji KHÔNG phải tranh.** Chúng vẽ theo bộ phông của **từng máy** — màu rực trên macOS,
+  viền phẳng trên Windows, có máy ra ô vuông rỗng. Đứng cạnh khung HUD kim loại thì đọc ra
+  một ký tự lạc. Cùng tinh thần Quy tắc số 3.
+- ⚠ **Vành cũ tuy công phu vẫn là HÌNH DỰNG BẰNG MÃ** — đúng thứ Quy tắc số 3 nói không.
+- ⚠ **`--khung-lat` và `--khung-day` buộc vào nhau.** Lát là bề rộng GÓC trong tranh (100);
+  dày là bề dày vẽ ra. Tỉ lệ thu = day/lat quyết định mọi thứ: ở **20px (0,2×) sợi chỉ vàng
+  của rail — dày ~4px trong tranh — tụt xuống 0,8px và biến mất**, cả vành đọc ra một dải tối.
+  34px (0,34×) thì còn ~1,4px, nhìn ra kim loại. Đã ship nhầm 20px một lượt, ảnh chụp mới thấy.
+- ⚠ **KHÔNG dùng `fill`** trong `border-image`: lát giữa là nền tối trung tính của bộ kit, để
+  nó tràn vào là thay luôn màu ruột bảng mà mọi màu chữ đã cân theo `--bg-panel-*`.
+- ⚠ **`border-radius` phải về 0** — phần bo cắt đúng vào bốn góc chạm trổ.
+- ⚠ **Vành đi 10px → 34px là ăn thêm 48px bề ngang mỗi bảng.** Kiểm toán @`0ab8a08` đo được
+  *"tràn ra ngoài màn = 0 ở cả 12 tổ hợp"*; `test_uigothic §⑤` giữ tính chất đó bằng phép đo
+  (9 bảng × 3 độ phân giải), không bằng niềm tin.
+
+#### ⚠ VIÊN NGỌC GIỮA CẠNH TRÊN: ĐÃ THỬ, KHÔNG ĐẶT ĐƯỢC — đừng cắt lại
+
+Tấm gốc có một viên ngọc lam giữa cạnh trên. Nó **không đi cùng `border-image` được** vì lát
+giữa mỗi cạnh bị KÉO GIÃN ⇒ viên ngọc hình thoi bè thành một vệt lam. Tách ra thì cả ba đường
+đều tắc, và đã đo từng cái:
+
+| đường | vì sao tắc |
+|---|---|
+| lớp nền | nền vẽ **bên dưới** viền ⇒ `border-image` phủ kín nó |
+| `::before/::after` | `.panel` có `overflow-y:auto`, con bị cắt ở hộp đệm |
+| `::after { position:fixed }` | **vẫn bị cắt** — `.panel` mang `transform` nên nó là khối chứa của cả con `fixed`. Đo: nhét ô đỏ ở `top:-34px`, đếm điểm ảnh đỏ ⇒ **0/64** |
+
+Đường còn lại là tách mọi bảng thành vỏ + ruột-cuộn — sửa ~20 chỗ gọi `innerHTML` để lấy một
+món trang trí. Không đáng, và đúng loại thay đổi lan rộng mà tài liệu này có sẹo (`#mc-drop`).
+⇒ **Đã gỡ luôn tệp**: một tài sản không ai tham chiếu là tài sản chết, và kiểu chết đó im lặng.
+
+#### Thanh máu / mana: TÔ ĐẦY PHẢI VƠI, KHÔNG PHẢI CO LẠI
+
+Hai cái rãnh bo góc tô `linear-gradient` nay là art vát chéo có mũi nhọn, cắt từ khối chân
+dung của bộ kit. Cơ chế: **`background-size: auto 100%`** — ảnh thu theo CHIỀU CAO nên vẽ ra
+đúng một cỡ bất kể `.fill` rộng bao nhiêu; `.fill` chỉ việc cắt bớt bằng hộp của mình. Nhờ thế
+**`updateHud()` không phải đổi một dòng nào**, nó vẫn đặt `bar-hp.style.width = N%`.
+
+- ⚠ **Khai nhầm thành `100% 100%` thì ảnh co theo `.fill`**: ở 30% máu cả cái mũi nhọn cũng co
+  lại và nằm ở 30% — thanh máu vơi đi bằng cách **NHỎ LẠI**. Nhìn qua vẫn ra "thanh đang vơi",
+  nên phải đo mới thấy.
+
+  ⚠⚠ **VÀ CÂU Ở ĐÂY TỪNG GHI LÀ `test_uigothic §⑥` GÁC NÓ — SAI, nó chưa bao giờ gác.** Mệnh đề
+  *"cỡ thanh phải bất biến"* lấy hộp của **`#orb-hp`**, mà thứ co lại là `.fill` **bên trong** nó;
+  `#orb-hp` thì không bao giờ đổi cỡ, nên mệnh đề ấy đúng ở cả hai bản. Thử ngược bản cũ ra
+  **đỏ 1/3 lượt** — và đúng lượt đỏ là lượt que dò rơi trúng chữ số, tức bắt vì MAY. *Một mệnh
+  đề đúng ở mọi trạng thái là một mệnh đề không chốt gì*, và tài liệu ghi rằng nó chốt thì tệ hơn
+  không ghi.
+
+  ⚠ **ĐO Ở 60%, ĐỪNG ĐO Ở 30%.** Nén cả tấm xuống 30% thì mũi nhọn chỉ còn ~7px, khử răng cưa
+  nuốt mất — đo được hai bản **gần như trùng nhau** (tại 0,30 của thanh: 100 vs 90). Ở 60% mũi
+  nhọn còn ~12px và lề trong suốt bên phải của tấm art cũng nén theo, nên màu **tắt sớm** trước
+  mép phần đã tô: **138 (đúng) vs 34 (sai)**, hơn ba lần. `§⑥b` gác đúng chỗ đó và là mệnh đề
+  DUY NHẤT bắt được phép đột biến ấy.
+- ⚠ **Chiều cao là số DUY NHẤT đặt tay; bề rộng suy từ tỉ lệ ĐO ĐƯỢC** của tấm art (402/54 =
+  7,444 · 402/38 = 10,579). Đặt tay cả hai là có ngày chúng lệch, mà lệch thì cái mũi nhọn bị
+  kéo bè — thứ duy nhất của một thanh vát chéo mà mắt bắt được ngay.
+- ⚠ **Bản RỖNG chỉ dìm PHẦN MÀU, khung vàng giữ nguyên.** Dìm cả tấm thì ở nửa máu cái khung
+  cũng tối đi nửa chừng — đọc ra "thanh bị hỏng" chứ không ra "thanh vơi một nửa".
+- ⚠ **KHÔNG lấy thanh thứ ba (lục) làm EXP.** Chủ dự án đã chốt kéo thanh EXP xuống cho bằng
+  ngang dải icon ở thanh dưới; bày EXP hai chỗ là đúng cái lỗi *"cùng một con số bày hai chỗ
+  thì chỗ nào cũng bị liếc qua, mà không chỗ nào được tin"*. Mà để một rãnh lục rỗng vĩnh viễn
+  thì còn tệ hơn. Nên cắt hai, bỏ một.
+- ⚠ **VÒNG CHÂN DUNG tròn của tấm art thì KHÔNG dùng** — `#cd-khung` cố ý là ô VUÔNG, lý do đã
+  đo hẳn hoi trong `style.css`: *"16 con Axie có tỉ lệ rộng/cao 1,07–1,52 nên khuôn tròn cắt
+  mất tai/sừng/càng — đúng phần làm người ta nhận ra con vật của mình"*. Thanh cắt từ x=240 để
+  thoát khỏi vòng; mép trái phẳng lại hợp hơn vì nó ghé sát khung vuông.
+
+#### Bài kiểm gác HAI CHIỀU, và một cái bẫy đo
+
+`tests/test_uigothic.js` (6 mục, **10 phép thử ngược**):
+- **① mã nhắc tệp nào cũng phải có** — họ `ISO_NEO`: sáu map mất sạch cây vì một bước chép tay.
+- **② tệp nào cũng phải có người nhắc** — chiều ngược lại, và nó không bao giờ tự lộ.
+  ⚠ Phải đọc cả chuỗi GHÉP ĐỘNG (`assets/ui/${n.anh}.webp`, tên nằm trong `SYS_NUT`), không
+  thì bốn tệp của Menu Hệ Thống bị báo oan là "chết".
+- **④ 9 lát có chạy thật không**: vẽ cùng một bảng ở **hai bề rộng** rồi so vùng GÓC. Cắt 9 lát
+  thì góc **không đổi** theo bề ngang; kéo giãn cả tấm thì góc bè ra. Hỏi `border-image` có
+  mặt trong CSS là chưa đủ — khai sai `slice` vẫn ra một chuỗi hợp lệ.
+
+⚠ **QUE DÒ CỦA ⑥ ĐỌC ĐÚNG MỘT ĐIỂM Ở GIỮA THANH — tức đọc thẳng vào CON SỐ MÁU.**
+`.cd-thanh span` canh giữa DỌC và bắt đầu ở 10px, nên điểm `(0,08 · giữa)` rơi vào chữ số, mà
+chữ số thì đổi theo lượng máu (`22194 / 22194` → `7313 / 22194`). Ba lượt liên tiếp ở CÙNG một
+trạng thái ra `{81,10,4}` · `{87,54,51}` · `{118,98,96}` ⇒ **đỏ 1/3 lượt**, và đỏ vì một thứ
+chẳng liên quan gì tới cơ chế tô đầy. Nay đọc **đỉnh độ đỏ của cả CỘT**: chữ trắng và bóng đen
+đều kéo độ đỏ XUỐNG nên không bao giờ thắng được phần tô. Sau khi sửa, năm lượt ra đúng cùng
+một bộ số (`trai` 115-117 · `phai` 184↔46).
+
+⚠ **Hai lần phép đo ④ nói dối, cả hai đều là QUE DÒ hỏng, không phải cơ chế hỏng:**
+1. Bảng trong mờ 90% và thế giới sau lưng thì **động** (mây, cỏ, ánh sáng chạy theo
+   `performance.now()`). Hai lượt chụp cách nhau vài trăm mili giây là hai ảnh khác nhau kể cả
+   khi khung vẽ y hệt. ⇒ phải che canvas + đặt nền đặc trước khi chụp.
+2. `Buffer.compare` trên hai tấm PNG **đỏ ngay khi một điểm lệch 1/255**. Đo lại bằng điểm ảnh:
+   lệch tối đa **1**, lệch TB **0,01**, số điểm lệch quá ngưỡng **0** — tức 9 lát chạy hoàn hảo
+   trong lúc bài báo "đang kéo giãn cả tấm". ⇒ so điểm ảnh CÓ DUNG SAI (giải mã bằng canvas
+   trong trang, không cần thư viện), đừng so byte.
+
+### 🗺 BẢN ĐỒ GÓC MÀN — MỘT bộ vẽ cho HAI khổ, và nó từng bị XÉN MẤT 23%
+
+Chủ dự án mở bản đồ lên và nói đúng một câu: *"nhìn rất rối"*, kèm yêu cầu cho nó giống tấm bản
+đồ thành và **đồng nhất** với nó. Đo ra **ba lỗi chồng lên nhau**, không lỗi nào in ra một dòng:
+
+| | đo được |
+|---|---|
+| **tràn cột, bị xén** | `capNhatKhungMinimap()` chốt trần bề rộng **240px chép tay**, trong khi `#cot-phai` rộng 190 (lòng **180**) và mang `overflow:hidden` ⇒ **mất 23% bên phải ở CẢ BA độ phân giải** — đúng góc có Lò Hỗn Độn và Vũ Khí |
+| **không vẽ hình cái thành** | Ardhaven có sẵn **68 đỉnh `diTrong` · 8 đường phố · 16 khối nhà**; bản đồ LỚN vẽ hết, bản đồ GÓC vẽ **0** — một mảng màu phẳng rồi rải 28 chấm lên |
+| **26 NPC một màu** | 17 trong số đó là người lore, nhưng cả 26 ra cùng một chấm vàng cỡ 3 ⇒ Lò Rèn không phân biệt nổi với một người đứng kể chuyện |
+
+**⚠ `style.css` VỐN KHAI ĐÚNG** (`#minimap { width:180px }`) — thứ phá nó là **style NỘI TUYẾN**
+mà `capNhatKhungMinimap()` ghi đè lên. *Một bảng kiểu đúng không cứu được gì khi có mã ghi thẳng
+`style.width`; và kiểu hỏng ấy không hiện trong CSS, phải đo trong DOM mới thấy.*
+
+**⇒ `veNenThanh()` là bộ vẽ DUY NHẤT của hình cái thành** (đa giác sàn · phố · khối nhà), dùng
+chung cho cả `drawMinimapStatic()` lẫn `veBanDoThanh()`; `mauCong()` là cửa duy nhất cho màu cổng.
+
+> ⚠ Mục cũ ghi *"KHÔNG dùng lại `drawMinimapStatic()`"* và nó **vẫn đúng với thứ nó nói** — bộ vẽ
+> ấy chép cứng cỡ chấm/cỡ chữ theo ô 240×120. Nhưng kết luận rút ra hồi đó — *dựng hẳn hai bộ vẽ*
+> — là cái GIÁ phải trả, không phải lời giải. Cách đúng là tách phần **không phụ thuộc khổ** ra
+> dùng chung, và cho mọi con số còn lại **suy từ bề rộng khung**.
+
+**⚠ MÀU SÀN LẤY TỪ `md.ground`.** Nay **mọi** map đều có `diTrong` (12 map ngoài trời đã lát viên),
+nên tô cứng một sắc ô-liu là mười hai vùng ra cùng một màu — xoá đúng bản sắc mà `mapBanSac()`
+dựng ra để nói.
+
+**⚠ CHẤM VẼ HẾT TRƯỚC, NHÃN VẼ SAU, DẤU NHIỆM VỤ SAU CÙNG — ba lượt.** Gộp một vòng thì nhãn của
+người này bị chấm của người đứng sau trong mảng vẽ đè lên: không lỗi, chỉ là một chữ khuyết góc.
+
+**⚠ NHÃN XẾP THEO KHOẢNG CÁCH TỚI NGƯỜI CHƠI, không theo thứ tự mảng `NPCS`.** Đo ở Ardhaven khổ
+180×90: **bảy** người có chức năng nằm gần như cùng một hàng (y≈27), tổng bề rộng nhãn **~250px
+trên một hàng rộng 180** — tức không phải thiếu chỗ thử mà là vật lý. Ai bị bỏ mà quyết bằng thứ
+tự khai trong dữ liệu thì đó là quyết định ngẫu nhiên; quyết bằng khoảng cách thì kẻ bị bỏ luôn
+là kẻ ở XA, và bản đồ góc màn vốn để trả lời *"quanh mình có gì"*.
+
+**⚠ HAI NẤC TÊN.** Tám hướng đặt nhãn vẫn rớt đúng một người, và người rớt là **Lò Hỗn Độn**
+(nhãn 42px, còn 33px tới mép). Nấc hai là tên CHUNG ngắn (`Lò Rèn`, 25px) ⇒ đủ **9/9**. Nó mơ hồ
+khi ba cửa hàng cùng ra "Cửa Hàng" — đúng cảnh báo đã ghi ở `veBanDoThanh` — nên **chỉ dùng khi
+nấc một không lọt**: một chấm ghi "Cửa Hàng" vẫn nói được *ở đây có tiệm*, chấm trần thì không.
+
+**Sửa cái xén cũng vá luôn một chỗ chồng lấn sát nút:** khe giữa bảng Nhiệm Vụ và Nhật Ký ở
+1280×720 đi từ **−1 lên +29** (minimap 120 → 90px cao).
+
+**Cố ý KHÔNG làm: nhãn tên CỔNG trên bản đồ góc.** `Bird Tribe Heights · c60` dài 96px trên khung
+180px; bốn cổng thành là hết chỗ của cả tấm. Cổng vẫn là chấm đúng màu, tên thì ở bản đồ lớn.
+
+Gác: **`tests/test_bandonho.js`** (5 mệnh đề, **cả năm đã thử ngược và đều đỏ**) — ① không tràn cột
+(đo ở BA bề rộng) · ② có vẽ khối nhà và phố (đếm điểm ảnh) · ③ mọi người có chức năng được gọi tên
+· ④ `textAlign` không rò · ⑤ hai bản đồ cùng bảng màu. Và `test_uxdo §②` đổi mệnh đề *"bản đồ nhỏ
+≥100px cao"* — một con số phụ thuộc TỈ LỆ MAP đang đứng — sang *"không tràn khỏi cột"* + sàn DIỆN
+TÍCH, tức gác đúng cái lỗi mà bản cũ mù.
+
+#### ⚠ BA LẦN QUE DÒ SAI Ở MỆNH ĐỀ ⑤ — cùng một họ, ghi lại
+
+1. **Đọc đúng MỘT điểm ảnh ở tâm mỗi NPC** ⇒ báo 6/9 lệch màu. Sai: nhãn chữ (nét viền đen
+   2,5px), chấm người đứng cạnh, khung nhìn camera và dấu nhiệm vụ đều vẽ **đè** lên tâm ấy — phép
+   đo bắt lớp TRÊN CÙNG chứ không bắt cái chấm.
+2. **Đọc mảng 9×9 quanh tâm** ⇒ còn 3/9 lệch. Vẫn sai, và lần này vì THIẾT KẾ chứ không vì lỗi:
+   ở khổ này nhãn của người bên cạnh phủ kín cả chấm 6px, mà nhãn thì **tô đúng cùng màu ấy** —
+   thông tin không mất, chỉ phép đo mất.
+3. **Đếm màu trên TOÀN khung** ⇒ đúng. Mệnh đề muốn biết *hai bản đồ có dùng chung một bảng màu
+   không*, nên hỏi "màu của hạng này có XUẤT HIỆN ở cả hai không" là miễn nhiễm với chuyện ai vẽ
+   đè lên ai.
+
+*Luật chung: trước khi tin một phép đo điểm ảnh, hỏi đã có ai vẽ đè lên chỗ mình đang đọc chưa.*
+
 ### Ngân Hàng Ngọc: sáu ICON TRANH THẬT, không phải một hình vẽ đổi màu
 
 `NGOC_ANH` → `assets/ui/ngoc_*.webp`, nướng bằng `tools/ui/nuong_ngoc.py` từ kit Axie chính chủ
@@ -2137,6 +3578,103 @@ sửa một cờ, đúng kiểu thừa đã phải dọn ở bảng Nhân Vật.
 Chưa có chat người-với-người; ghi nhận chỗ trước để khi làm không phải dời một lần nữa.
 `test_hethong §8` gác: `#combat-log-wrap` phải nằm ở nửa phải màn.
 
+#### ⚠ HAI KHỐI NEO TỪ HAI ĐẦU NGƯỢC NHAU TRONG CÙNG MỘT CỘT — chúng SẼ chồng nhau
+
+`#cot-phai` (bản đồ nhỏ + bảng Nhiệm Vụ) chảy từ **trên** xuống; `#combat-log-wrap` là
+`position:fixed` neo từ **đáy** lên. Cả hai rộng đúng 190px ở cùng một cột — và **không ai kẹp
+chúng lại**. Đo được trước khi sửa, với 20 dòng nhật ký:
+
+| màn | chồng |
+|---|--:|
+| 1920×1080 | 0 (có khe 63px) |
+| 1600×900 | **77px** |
+| 1440×810 | **118px** |
+| 1280×720 | **157px** |
+
+Thứ bị che là **đáy bảng Nhiệm Vụ** — tức mục "Mục Tiêu Hôm Nay", đúng phần nội dung ngày mà cả
+một đợt việc (`DAILY_BANDS`) vừa dựng ra. Không lỗi nào báo.
+
+⇒ Ngân sách của Nhật Ký nay là **BIẾN CSS** (`--nk-day` · `--nk-cao` · `--nk-dau`), và
+`#hud-right` trừ đúng ngần ấy ra khỏi trần chiều cao của mình. Chép tay hai con số ở hai chỗ là
+bảo đảm chúng lệch nhau sau vài đợt sửa — và media query 720px phải ghi đè **BIẾN**, không ghi
+đè thẳng `bottom`/`max-height`, nếu không cột phải vẫn chừa chỗ theo số của bản desktop.
+
+- ⚠ **KHÔNG cần `min-height:0` — và đó là chỗ tôi đã đoán sai.** Phản xạ thường là *"cho một
+  con flex co được thì phải `min-height:0`"*, nên tôi thêm nó ở hai chỗ cộng `flex:0 1 auto`.
+  **Cả ba đều trơ**: `#quest-tracker` vốn có `overflow-y:auto`, mà kích thước tối thiểu tự
+  động của một khối cuộn đã là 0. Gỡ từng cái rồi gỡ cả ba đều ra **đúng cùng một con số**.
+  Thứ duy nhất gánh việc là `max-height`. Đã gỡ cả ba.
+  *Ba dòng CSS trơ mà trông như đang gánh việc thì tệ hơn không có: chúng làm phép thử ngược
+  IM LẶNG (gỡ một dòng, bài vẫn xanh) — tức bộ kiểm không gác được dòng nào, và người sau sẽ
+  sửa nhầm chỗ.* Và chính cái im lặng đó là thứ đã chỉ ra chúng trơ: **một phép thử ngược im
+  lặng phải được TRUY tới cùng, không được ghi nhận là "mệnh đề hơi yếu" rồi bỏ qua.**
+- ⚠ **Chữa chồng lấn bằng cách bóp chết bảng Nhiệm Vụ cũng làm "khe" dương.** Nên mệnh đề gác
+  phải đo **cả hai vế**: khe ≥ 0 **và** bảng Nhiệm Vụ còn ≥90px **và** bản đồ nhỏ còn ≥100px.
+- ⚠ **Đo ở NHIỀU chiều cao màn.** Ở đúng 1920×1080 hai khối *không* chồng nhau — kiểm mỗi cỡ
+  đó là xanh vĩnh viễn trong khi mọi laptop 720p/900p đều hỏng. Cùng bài học với `test_muigio`.
+
+#### ⚠ `text-overflow:ellipsis` TRÊN NHẬT KÝ ĂN ĐÚNG PHẦN THƯỞNG
+
+Cột chữ rộng **168px**, mà một dòng hạ quái thật cần **249px** ⇒ **14/14** dòng thưởng bị cắt,
+và chỗ bị cắt luôn là **ĐUÔI**:
+
+```
+☠ Hạ Axie Heo Rừng — Nhận: +28 EXP +162◈     ← thứ game sinh ra
+☠ Hạ Axie Heo Rừng — Nhận…                   ← thứ người chơi đọc được
+```
+
+Mười dòng liền hiện ra giống hệt nhau. Nới cột thì **không được** — 190px là bề ngang của
+`#cot-phai`, hai khối phải bằng nhau mới đọc ra một cột. Nên cho **xuống dòng**
+(`overflow-wrap:anywhere` + thụt dòng tràn bằng `text-indent` âm, để nhìn ra là nối dòng trên
+chứ không phải một sự kiện mới). *Cắt cụt trong im lặng bao giờ cũng tệ hơn một dòng cao gấp đôi.*
+
+#### ⚠ LỚP KHÔNG KHAI `range` ⇒ BẢNG KỸ NĂNG NÓI DỐI, KHÔNG PHẢI BỎ TRỐNG
+
+`thieulam` · `minhgiao` · `bug` không khai `range`, nên `skillInfo()` lui về `sect.range` = rỗng
+⇒ `skThongSoGon` in `tầm 0`. Mà theo **quy ước của chính game**, `tam: 0` nghĩa là *"ngay tại chỗ
+đứng"* — tức bảng đang bảo Twisting Slash, Rageful Blow, Impale… đều nổ dưới chân người niệm.
+Đo được **24-25 chiêu/lớp** in tầm 0, so với **10-11** ở hai lớp có khai (số 10-11 là thật: đó
+là chiêu diện rộng quanh mình).
+
+⚠ **Chiến đấu KHÔNG hỏng** — `atkRange()` vốn đã có `|| 90`. Nên chữa là **khai đúng 90**, con
+số đang chạy, chứ không phải nghĩ ra một số mới: khai `range` mà đổi luôn tầm đánh thật là một
+thay đổi **cân bằng** lẻn vào sau một bản sửa hiển thị. `test_uxdo §③` gác cả hai vế
+(`SECTS[x].range === atkRange()`).
+
+#### ⚠ TIÊU ĐỀ CHUNG KHÔNG THỂ ĐÚNG CHO CẢ DANH SÁCH
+
+Bảng NPC in `PHỤ TUYẾN — ${MAPS[n.map].name}` — tên vùng của **NGƯỜI GIAO**. Nhưng **11 mục** có
+người giao đứng ở map khác (`vandai` ở Werebear Woods giao việc của Lối Mòn Corran…), nên chúng
+hiện dưới dòng *"PHỤ TUYẾN — WEREBEAR WOODS"* trong khi `sideOnKill` chỉ đếm khi
+`curMap === 'loimon'`. Người chơi nhận việc ở đây, đánh ở đây, và tiến độ **không bao giờ nhúc
+nhích**. Nay tiêu đề bỏ tên vùng, và **từng mục** mang dòng `📍 Làm tại: …` — in ở **mọi** mục,
+kể cả cùng vùng: một cái nhãn chỉ hiện ra lúc "có chuyện" thì lúc nó vắng mặt người chơi không
+đọc ra "cùng vùng", họ chỉ không thấy gì.
+
+#### ⚠ TRẦN THỜI GIAN HƯỚNG DẪN ĐẨY NGƯỜI CHƠI VÀO NGÕ CỤT
+
+`TUT_TRAN = 90` giây cho mọi bước. Đứng yên trong thành thì hộp hướng dẫn tự trôi sang bước
+*"Nhấn SPACE hạ 1 con Axie Heo Rừng"* — mà Ardhaven có **0 bãi quái**. Đo lại: bấm SPACE 90 lần
+trong 67 giây rồi AUTO 3 phút ⇒ `kills 0 · xp 0 · bạc 0`, toạ độ không đổi một pixel.
+
+⇒ Mỗi bước khai thêm `duocO()` — *làm được ở chỗ đang đứng không*. Hết giờ thì **bỏ qua** mọi
+bước bất khả thi, hết bước làm được thì **đóng hẳn** hướng dẫn.
+
+- ⚠ **ĐO THẾ GIỚI, ĐỪNG MÔ HÌNH HOÁ NÓ**: hỏi `mobs.length` (thứ đang có thật trên màn), không
+  tra một bảng "map nào có quái" — bảng đó là bản sao thứ hai của dữ liệu map và sẽ nói dối
+  ngay lần đầu ai đó thêm một bãi mà quên sửa.
+- ⚠ **Chỉ bỏ qua ở đường HẾT GIỜ, không ở đường LÀM XONG.** Người chơi vừa dịch chuyển tới Rẻo
+  Rừng Corran thì `tutAdvance('map')` chạy ngay trong nhịp đó, mà `mobs` rải xong trong đúng
+  nhịp ấy hay chưa là chuyện của `buildWorld` — hỏi `duocO` ở đấy là có ngày bỏ qua **vĩnh
+  viễn** bước `kill` vì một cuộc đua khung hình.
+- Bước 2 còn **nói sai người giao**: nó bảo tìm *Trưởng Lão Rell* để "nhận nhiệm vụ đầu tiên",
+  trong khi `QUESTS[0].npc` là `ah_gac_tay` (**Lính Gác Cổng Tây**) và nhiệm vụ đã `active` từ
+  giây 0. Điều kiện qua bước cũng sai: `level >= 3` là một **cửa ra thứ hai** bên cạnh
+  `tutAdvance('npc')` có sẵn trong `tryTalk()`, và nó tự đánh dấu hoàn tất cho một người chưa
+  từng bấm E. Đã gỡ; bài kiểm nay suy tên NPC **từ `QUESTS[0]`**, không chép cứng.
+
+Gác: `tests/test_uxdo.js` (5 mục, 10 phép thử ngược).
+
 ⚠ **Gỡ một khối HTML thì soát mọi `getElementById` trỏ vào nó.** Gỡ `#mc-drop` để lại
 `document.getElementById('btn-music').addEventListener(...)` không chốt null — nó ném **ngay lúc
 nạp trang** và giết mọi lượt đăng ký phía sau. Cùng cái bẫy đã ghi cho `btn-inv`.
@@ -2156,6 +3694,23 @@ với luật `≤60% là kill` và với *"đúng 7 NPC có trang thoại"*.
 đó có mặt ở nhiều rule chẳng liên quan — phép đột biến rơi nhầm chỗ và bài vẫn xanh. **Mỏ neo của
 phép thử ngược phải DUY NHẤT**, và phải đếm số lần xuất hiện trước khi thay.
 
+
+## 🌐 `?lang=en` — HAI LỚP DỊCH PHẢI TỰ ĐỌC, KHÔNG LỚP NÀO ĐỌC KÉ LỚP NÀO
+
+`?lang=en` / `?lang=vi` thắng `localStorage`, rồi **ghi lại** vào đó — để đưa được một đường link
+chơi thử bằng tiếng Anh cho người chưa từng mở game (`?test=1&lang=en`), mà không bắt họ đi tìm
+nút đổi ngôn ngữ.
+
+**⚠ ĐOẠN ĐỌC URL LÀ BẢN SAO CỐ Ý, có ở CẢ `i18n.js` LẪN `lang.js`.** Hai lớp dùng chung khoá
+`vlcm_lang`, và `i18n.js` nạp trước rồi ghi vào đó — nên "lang.js đọc ké" *chạy đúng ở máy bình
+thường*, và **thử ngược bằng cách gỡ đoạn URL của lang.js vẫn XANH**. Sợi dây ngầm ấy đứt khi
+`localStorage` bị chặn (cửa sổ riêng tư, chặn dữ liệu trang): `setItem` ném, i18n.js giữ `'en'`
+trong bộ nhớ còn lang.js đọc ra rỗng ⇒ **màn hình lẫn hai thứ tiếng**, không một lỗi nào báo.
+
+⇒ `test_defaultlang §H` dựng đúng cảnh đó (`addInitScript` cho `Storage.prototype.setItem/getItem`
+ném) và là mục **duy nhất** trong D-H bắt được chuyện đó. *Bốn mục kia hỏi đúng thứ cần hỏi mà
+vẫn không gác được gì ở vế này — một bài kiểm chạy ở đúng một cấu hình môi trường thì nó chỉ gác
+được cấu hình ấy.*
 
 ## ⚠ QUY TẮC SỐ 3: KHÔNG DÙNG VECTOR. CHẤM HẾT.
 
@@ -2181,6 +3736,29 @@ một BẢNG KHAI (`VK_ANH` cho vũ khí, `NV_GIAP` cho giáp, `NV_BO` cho thân
    trống có nhãn.
 
 Và KHÔNG ngồi dựng hình bằng `ctx.beginPath()` trong mọi trường hợp.
+
+### 📐 ĐO ART BẰNG MÁY TRƯỚC KHI BÀN VỀ PHONG CÁCH
+
+`python3 tools/do_art.py` quét toàn bộ `public/game/assets` và đo **sáu chỉ số** mỗi tấm, gom
+theo *"thứ người chơi nhìn thấy CẠNH NHAU trong một khung hình"* — không gom theo thư mục.
+Kết quả máy đọc: `docs/DO_ART.json`. Kết luận + danh sách cần sinh: **`docs/KIEM_ART.md`**.
+
+| chỉ số | nó trả lời câu gì |
+|---|---|
+| `sang` | độ sáng trung bình trên điểm ảnh ĐẶC (alpha > 0,78) |
+| `bh` | bão hoà — **chỉ số tách hai ngôn ngữ art rõ nhất** (nền 0,31 vs thân 0,55-0,61) |
+| `lech` | lệch chuẩn độ sáng TRONG thân; dưới ~0,12 là đọc ra một cái bóng ở cỡ nhỏ |
+| `vien` | tỉ lệ điểm ảnh có `L < 0,18` — **chữ ký của nét bao đen** (nền iso = 0,000 tuyệt đối) |
+| `am` | R−B, nóng hay lạnh |
+| `trong` | tỉ lệ điểm trong suốt; **`0` nghĩa là một tấm THẺ ĐỤC, không phải sprite** |
+
+⚠ **Gom nhóm theo CHỖ ĐỨNG, không theo thư mục.** Một viên lát sáng 0,72 đứng cạnh một con quái
+sáng 0,13 là một vấn đề thật; hai icon nằm ở hai bảng khác nhau thì không.
+
+⚠ **`vien` mới là thứ tách được hai ngôn ngữ, `sang` thì không** — cùng bài học đã ghi ở mục art
+tối (*"lệch chuẩn quyết định, không phải sáng trung bình"*). Nền map và vật thể iso đo ra
+`vien` trung vị **0,000**, còn mọi thứ đứng trên nó đo 0,09-0,23. Đó là chỗ gãy lớn nhất của
+toàn bộ art hiện tại, và nó vô hình với mắt cho tới khi đo.
 
 Sandbox KHÔNG gọi được meowa.ai (chặn egress), nên bước sinh ảnh là việc của chủ dự án.
 Nếu có khoá API, truyền qua **biến môi trường** — không bao giờ ghi vào tệp trong repo.
@@ -2530,31 +4108,75 @@ kiểu đó không ai thấy bằng mắt. `test_taitro §1` đối chiếu từ
 Mẹo ở `TAI_MEO` là **mẹo THẬT**, rút từ cơ chế đang chạy. Một dòng mẹo bịa ở màn tải là thứ
 người chơi thử ngay trong mười phút đầu rồi phát hiện ra là sai.
 
-## 🐾 CHỌN AXIE Ở MÀN TẠO NHÂN VẬT — ĐÃ DỰNG XONG RỒI GIỮ LẠI, đọc trước khi làm lại
+## 🐾 CHỌN AXIE — HAI CỬA, MỌI CON ĐỀU CẮM ĐƯỢC (chủ dự án chốt 2026-09-20)
 
-Một lưới chọn avatar ở màn tạo nhân vật **đã được thi công đầy đủ và có bài kiểm**, rồi
-**cố ý không đưa lên `main`**. Nằm ở nhánh `claude/focused-cannon-k4o6gk` (commit `4568bb1`):
-`#cc-avatar` · `ccAvaRender()` · `ccAvaChon()` · `ccAvaDang()` · `ccAvaKeCo()` ·
-`tests/test_avachon.js` (5 mục, xanh).
+> ⚠ Mục này **trước đây ghi "ĐÃ DỰNG XONG RỒI GIỮ LẠI — đừng tự dựng lại, hỏi chủ dự án chọn
+> hàng nào trước"**. Đã hỏi, đã chốt, đã thi công. Giữ đúng cái tiêu đề cũ trong lịch sử git
+> thôi — đừng đọc câu "đừng dựng lại" ấy như trạng thái hiện tại.
+>
+> ⚠ **Và mục cũ chỉ SAI COMMIT.** Nó bảo mã nằm ở `4568bb1`; commit đó là một bản sửa CLAUDE.md
+> thuần tuý, không đụng một dòng mã nào. Hai commit thật trên nhánh `claude/focused-cannon-k4o6gk`
+> là **`abdd62a`** (dựng lưới) và **`023ad84`** (gỡ lưới ra, kèm lý do). *Một số hiệu commit chép
+> tay vào tài liệu là một con số không ai kiểm lại — và nó sai trong im lặng.*
 
-**Vì sao không đưa lên:** lúc dựng, ghi chú trong kho còn nói *"Khế Ước bán chỉ số + chiêu,
-không bán hình dáng"* — nên lưới cho chọn tự do cả 16 con. Trong lúc đó `main` đã chốt ngược
-lại: *"Bỏ luôn phần Ragoon. Nếu gacha là sẽ gacha nhân vật."* và `chiChon()` gác bằng
-`if (!C.co[id]) return;` — **chỉ con đã quay được mới cắm làm avatar**. Một lưới phát không cả
-16 con ở màn tạo nhân vật là phát không đúng thứ gacha đang bán.
+**Chủ dự án chốt (2026-09-20):** cắm được **cả 16 con**, ở **cả hai** cửa — màn tạo nhân vật
+*và* bảng Khế Ước. Rủi ro đã nêu trước khi hỏi (gacha không còn bán *hình dáng* nữa) và chủ dự
+án vẫn chốt.
 
-**Đây là câu hỏi cho chủ dự án, không phải câu hỏi kỹ thuật.** Không có phiên bản nào vừa có
-ích vừa trung tính với nền kinh tế, vì `avatarId()` đã cho mỗi lớp MỘT con miễn phí
-(`AVA_MAC_DINH`) và gacha bán 15 con còn lại:
+| cửa | ở đâu |
+|---|---|
+| màn tạo nhân vật | `#cc-avatar` · `ccAva` · `ccAvaDang()` · `ccAvaChon()` · `ccAvaRender()` · `ccAvaKeCo()` |
+| bảng Khế Ước (cấp 6+) | `renderMount()` |
+| **cửa DUY NHẤT** | **`avaCamDuoc(id)`** · danh sách chung **`avaDsThan()`** |
 
-| Lưới bày gì | Phát không thêm | Dùng được không |
-|---|---|---|
-| Cả 16 con | 15 con | có, nhưng rỗng ruột gacha |
-| 5 con mặc định của 5 lớp | 4 con | có |
-| Chỉ con mặc định của lớp mình | 0 | không — một lựa chọn duy nhất |
+**Vì sao nó KHÔNG phát không sức mạnh, và đây là số đo chứ không phải lời trấn an:** bất biến ở
+mục **▲▲ SÁU BỘ PHẬN** chứng minh ba hệ số phòng thủ nội suy về chính trung bình của chúng, nên
+**kỳ vọng hệ số của cả 16 con bằng nhau CHÍNH XÁC** (lệch `2,2e-16`). Đổi thân đổi **hình dạng**
+rủi ro, không đổi **tổng**. Thứ Khế Ước còn bán là số **sưu tầm** và **Nguyệt Trần**.
 
-⇒ **Đừng tự dựng lại.** Hỏi chủ dự án chọn hàng nào trước, rồi mở lại mã từ nhánh trên.
+**⚠⚠ ĐỪNG "sửa gọn" bằng cách cắm sẵn cả 16 con vào `C.co` lúc tạo nhân vật.** Nghe thì gọn hơn
+hẳn một hàm gác mới, và nó **giết một cơ chế trong im lặng**: `C.co` là sổ **SƯU TẦM**, và
+`chiNhan()` đọc đúng nó để biết lượt quay này có phải con **MỚI** hay không. Cắm sẵn ⇒ nhánh
+`moi:true` **không bao giờ chạy nữa**, mọi lượt quay đọc ra là trùng, và khoảnh khắc "ra con
+mới" của chính hệ gacha biến mất mà không một lỗi nào báo. **Hai sổ, hai việc:** `C.co` = đã sưu
+tầm · `avaCamDuoc()` = đeo được.
 
+### ⚠ LỖI THẬT ĐÃ TÌM RA: CON KHỞI ĐẦU MẤT VĨNH VIỄN
+
+Đây là lỗi **có sẵn từ trước**, không phải do đợt này, và nó im lặng tuyệt đối. Truy bằng cách
+đọc chứ không đoán — `C.co` chỉ được ghi bởi `chiNhan()`, mà `chiNhan` chỉ được gọi từ gacha và
+hai lệnh gỡ rối ⇒ **con mặc định của lớp không bao giờ nằm trong `C.co`**. Hệ quả:
+
+- nhân vật mới: `dsCo = CHIMERA.filter(c => C.co[c.id])` ra **rỗng** ⇒ bảng Khế Ước không có con
+  nào để chọn, dù người chơi đang nhìn thấy con mặc định chạy trên màn;
+- quay ra một con rồi bấm "Đổi thân" ⇒ `player.avatar` rời khỏi `undefined`, mà
+  `chiChon(con_mặc_định)` thì bị `if (!C.co[id]) return` chặn ⇒ **không lấy lại được nữa, vĩnh
+  viễn**. `chiTatAvatar()` không cứu: nó đặt `null`, tức **tắt hẳn** avatar, khác hẳn.
+
+`test_avachon §7` gác đúng đường đó, và nó đi **đường tự nhiên** (cắm con khác rồi mới đòi con
+khởi đầu về), không nhảy cóc.
+
+### ⚠ `renderMount` TỪNG ĐỌC THẲNG `player.avatar`, và mở danh sách ra mới lộ
+
+CLAUDE.md đã ghi từ lâu: *"`avatarId(p)` là cửa DUY NHẤT — đừng đọc thẳng `p.avatar` ở chỗ
+khác."* Bảng Khế Ước vi phạm ở **hai** chỗ (`dung = player.avatar === c.id` và nhãn nút tắt).
+Vô hại suốt nhiều phiên **chỉ vì con mặc định chưa bao giờ có mặt trong danh sách**; mở danh
+sách ra là con ĐANG ĐEO mang nút *"Đổi thân"* — bảng mời người chơi đổi sang chính thứ họ đang
+mặc, và nút tắt thì ghi *"Đang dùng thân nhân vật"* trong lúc một con Axie đứng ngay trên màn.
+*Một chỗ vi phạm luật "một cửa duy nhất" có thể nằm im rất lâu vì dữ liệu chưa chạm tới nhánh
+sai — nó không hiền, nó chỉ chưa tới lượt.*
+
+Gác: **`tests/test_avachon.js`** (8 mệnh đề, **cả tám đã thử ngược và đều đỏ, không cái nào im
+lặng**). ⑥ **tự kiểm cảnh dựng trước khi chấm** — và chốt tự kiểm đầu của tôi **sai**: nó dò câu
+"mở khóa ở cấp 6" trên một chuỗi RỖNG (bảng chưa mở ⇒ `CE()` lui về một div rời ⇒ `renderMount`
+vẽ vào hư không), nên nó đọc ra *"bảng bày 0 con"* — trông y hệt cơ chế hỏng. Nay hỏi thẳng
+`#char-content` có tồn tại không, rồi mới chấm.
+
+⚠ **VÀ MỘT PHÉP THỬ NGƯỢC IM LẶNG Ở ĐÂY HOÁ RA LÀ `rc=124`.** Lượt chạy đầu của ⑧ in ra `ĐỎ ✓`
+mà **không kèm một dòng `FAIL` nào** — vì bài bị `timeout` giết lúc đang tranh CPU với một lượt
+hồi quy, và `rc` khác 0 thì script đọc thành "đỏ". Chạy lại lúc máy rỗi thì cả hai phép thử đều
+đỏ KÈM dòng `FAIL` thật. ⇒ **Một dòng "ĐỎ" không kèm thông báo của chính bài kiểm thì chưa phải
+một phép thử ngược**, và script thử ngược phải tách `rc=124` ra khỏi `rc=1`.
 
 ## Hai lối vẽ nhân vật — ĐỪNG TRỘN VÀO NHAU
 
@@ -2590,6 +4212,109 @@ lớp bằng đường viền ngoài. `CHIBI_CFG` giữ ba trục: `head` / `sh`
 **Tranh minh hoạ KHÔNG đặt vào luồng chơi.** Đã thử làm ảnh lớn ở màn chọn lớp và
 bị gỡ ra: tỉ lệ 8 đầu đứng cạnh chibi là lệch hẳn. Nó chỉ để xem, mở bằng
 `/art <lớp> [mavuong]`.
+
+## ⚔ VŨ KHÍ CẦM TAY TREO TRÊN **RÀNG BUỘC BIẾN HÌNH**, KHÔNG TREO TRÊN XƯƠNG BÀN TAY
+
+Đây là lỗi nặng nhất của đợt nhập năm bộ giáp, và nó **đã ship**: chủ dự án gõ đúng một câu —
+*"Tư thế cầm cung sai… tương tự hãy check lại với kiếm của dk và spellblade"*.
+
+Trong bản mẫu bốn-đầu-thân, cây vũ khí **không** treo trên xương bàn tay. Nó treo trên xương
+`武器` mà **cha là `root`** — đứng yên tuyệt đối — và thứ đưa nó vào tay là hai **ràng buộc
+biến hình** (`左手持剑` order 5 → `左手持剑点` · `右手持剑` order 6 → `右手持剑点`). Bộ nướng
+chưa cài loại ràng buộc đó (nó đã có IK và physics), nên cây vũ khí nằm y nguyên ở **tư thế
+gốc** trong khi cánh tay vung.
+
+**Số đo, trước khi sửa** (hộp bao lớp `vk` trên chính bảng khung game nạp):
+
+| bộ | đứng | đi | chạy | ĐÁNH | niệm |
+|---|---|---|---|---|---|
+| `dkph1` · `sbsm1` | 1/16 | 1/32 | **0/32** | **1/16** | 1/16 |
+| `elnb1` | 1/16 | 1/32 | **0/32** | 3/16 | 1/16 |
+| lớp tay `t2` (đối chứng) | 14/16 | 32/32 | 32/32 | 16/16 | 16/16 |
+
+**1 vị trí trên 16 khung của khối ĐÁNH** = một thanh kiếm dán cứng cạnh người trong lúc chủ
+nó vung tay. Sau khi cài `ap_bien_hinh()`: 14-16/16 · 32/32 · 32/32 · 15-16/16 · 16/16.
+
+**⚠ KHOÁ RỖNG `{}` NGHĨA LÀ MIX = 1, KHÔNG PHẢI 0.** Gói ghi `mixRotate: 0 … mixShearY: 0` ở
+**setup** (tắt) rồi mỗi hoạt cảnh đặt một khoá RỖNG — mà trong JSON của Spine, khoá thiếu
+trường thì mặc định **1**. Đọc nhầm chiều này thì ràng buộc không bao giờ bật và triệu chứng
+giống hệt như chưa cài gì. (`mixY` mặc định theo `mixX`, `mixScaleY` theo `mixScaleX`.)
+
+**⚠ RÀNG BUỘC GHI THẲNG MA TRẬN THẾ GIỚI** ⇒ sau nó **tuyệt đối không gọi `tt.tinh()`**, vì
+hàm ấy dựng lại từ xương CỤC BỘ và xoá sạch việc vừa làm. Chỉ `tt.tinh_cay(i)` cho nhánh con.
+Cùng cái bẫy của physics.
+
+**⚠ RIG CẤT VŨ KHÍ TRONG `00_Run`** — hai hàng cuối bảng (32 ô) rỗng trắng. Bản mẫu vẽ cho một
+game đánh bài, nơi nhân vật chỉ chạy một nhịp vào trận; ở đây lớp nhân vật chạy gần như liên
+tục, nên cây kiếm biến mất rồi hiện lại mỗi lần dừng chân. `VK_HIEN` trong `nuong_nv.py` ép
+mảnh hiện lại — ràng buộc `右手持剑` VẪN bật trong `00_Run` nên nó tự nằm đúng tay. **Chỉ ép khe
+chính**: `2b`/`2c` là dây cung và mũi tên, chúng chỉ thuộc về động tác giương cung.
+
+**⚠ GÓI `Dark_Knight.zip` KHÔNG CÓ ART VŨ KHÍ** (cả bốn vùng atlas đặc 0%); `Dark_Knight_1.zip`
+mới có. Thân người hai gói **trùng khít từng điểm ảnh** (đã đo), nên `dkph1` nay nướng trọn từ
+`Dark_Knight_1`. Ba gói kia tự có vũ khí.
+
+**Cung Thiên Mệnh lúc GIƯƠNG là một cung TRẮNG trơn — đó là ART CỦA GÓI, không phải lỗi.**
+`10_ArcheryAttack` đổi mảnh sang `左手武器2a`, một vòng cung trắng chưa vẽ theo bộ (kèm dây
+`2b` và mũi tên `2c`). Đã thử giữ cung Ngọc Bích ngọc-vàng cho khối đó và **nó tệ hơn hẳn**:
+cung không uốn theo dây nên chĩa ngang như một khẩu súng. Muốn đẹp thì phải đặt hoạ sĩ vẽ
+`左手武器2a` theo bộ, không sửa được bằng mã.
+
+**Giá phải trả, ghi ra chứ không giấu:** hộp cắt lớp `vk` nay là hợp của cả một cú vung nên
+phình gần bằng cả ô — `dkph1` 240×279, `sbsm1` 240×300. Tệp tăng ~400 KB cho cả ba bộ; bộ nhớ
+sau giải nén của lớp vũ khí tăng chừng 20 MB **cho đúng bộ đang mặc** (nạp theo nhu cầu). Muốn
+gọn lại thì phải cắt hộp THEO TỪNG KHỐI, không phải một hộp chung — chưa làm.
+
+### 🏹 BẢN MẪU CẦM MỌI CÂY NHƯ CẦM KIẾM — cung phải VẶN LẠI (`VK_XOAY`)
+
+Chủ dự án nhìn ảnh chụp và nói đúng một câu: *"cung thì không cầm vậy được"*. Đúng — và đây
+KHÔNG phải lỗi của ràng buộc biến hình, nó chạy đúng. Vấn đề là bản mẫu chỉ có **MỘT tư thế
+mang**: chuôi ở bàn tay, thân chĩa chéo xuống trước. Với kiếm thì đó là dáng xách kiếm; với
+cung thì nó đọc ra **một cây kích nằm ngang ống chân**.
+
+**Số đo:** trên khung đứng, trục chính của cây cung lệch **44,8°** so với phương dọc, và xương
+`武器` nằm ở ĐẦU cây chứ không ở giữa. Vặn thêm **−40°** đưa nó về gần dọc — cung buông xuống
+dọc theo chân, dây quay vào người.
+
+⚠ **Chốt bằng ảnh A/B, không bằng một con số đẹp.** Dựng 0 · −32 · −40 · −48 trên cả ba khối
+(đứng · đi · chạy) rồi mới chọn: `0` là cây kích, `−48` thì mũi cung quặt ra sau.
+
+⚠ **BỎ QUA `10_ArcheryAttack`.** Ở khối đó rig đã đổi sang mảnh cung GIƯƠNG và dựng đúng tư thế
+bắn — vặn thêm là phá chính cái khối duy nhất đang đúng. `VK_XOAY` vì thế là cặp
+`(số độ, những hoạt cảnh bỏ qua)`.
+
+⚠ **Chỉ vặn khi đang nướng CHÍNH lớp `vk`.** Các lớp thân không có xương `武器` trong bộ khe của
+chúng nên vặn ở đấy không đổi gì, chỉ tốn một lượt dựng lại nhánh con mỗi khung.
+
+Máy: `xoay_xuong()` trong `hoatcanh.py` (ghi thẳng ma trận thế giới rồi `tinh_cay`, cùng cấm kỵ
+với `ap_bien_hinh`: sau nó đừng gọi `tt.tinh()`) · bảng `VK_XOAY` trong `nuong_nv.py`.
+Kiếm của Dark Knight và Spellblade **không** vặn — chúng vốn là kiếm, dáng xách kiếm là đúng.
+
+### ⚠ LỚP NÀO ĐÃ CÓ CÂY CẦM TAY THÌ CẦM CHO **MỌI** MÓN — `NV_VK_LOP_LOP`
+
+Chủ dự án nhìn ảnh chụp và hỏi thẳng: *"DK có đại long đao theo sau mà?"*. Đúng. `NV_VK_LOP`
+khai theo `dòng|giai`, nên đeo **bất cứ cây nào khác** — cây rìu, cây chuỳ, hay chính cây kiếm
+ở giai 1-6 — là `nvVkLop` trả `null`, `_tkHien` bật **thần khí**, và một thanh đại kiếm cao gần
+bằng người **trôi lơ lửng** cạnh nhân vật. Đo được: **60/63** món của ba lớp rơi vào đường đó.
+
+⇒ `NV_VK_LOP_LOP = { thieulam:'dkph1', minhgiao:'sbsm1', toanchan:'elnb1' }` là nấc lùi cuối,
+tra theo lớp của **MÓN** (`d.sect`). Thần khí **cố ý** chỉ còn dành cho Dark Wizard và Dark Lord
+— chủ dự án chốt từ đợt nhập gói: *"với DK thì nhân vật tay sẽ cầm kiếm"*, và riêng Dark Lord
+*"cho vũ khí bay theo nhé"*.
+
+⚠ **ĐÁNH ĐỔI, nói thẳng:** bảng khung cầm tay là hoạt cảnh của ĐÚNG cây trong gói Spine, nên
+một cây rìu giai 3 vẽ ra Phượng Kiếm — hình trong TÚI và hình TRÊN TAY lệch nhau. Đổi lại là
+không còn cây nào trôi. Cái lệch kia sửa được bằng cách nướng thêm bảng khung cho từng dòng;
+cái trôi kia **không sửa được bằng mã**.
+
+Gác: `tests/test_vklop.js` — đọc chính bảng khung game nạp, đòi (①) không khối nào có khung
+TRỐNG, (②) vũ khí phải ĐỔI CHỖ theo khung, và (③) mọi dòng × mọi giai của ba lớp ấy đều cầm
+được trên tay. Suy danh sách bộ từ `NV_VK_LOP` và quét `WEAPON_LINES` nên thêm bộ/dòng mới là
+tự gác. Thử ngược: bảng khung cũ **27 FAIL**, gỡ nấc lùi theo lớp **60/63 FAIL**.
+
+⚠ Mệnh đề ③ phải **đổi `player.sect`** theo từng lớp: `genItem` chỉ sinh vũ khí của lớp đang
+chơi, nên bản đầu chỉ quét 21/63 món mà vẫn xanh — tức âm thầm bỏ qua hai lớp. Chốt tự kiểm
+đòi ≥50 món mới cho chấm.
 
 ## Art nướng sẵn từ Spine — có SKILL riêng, đọc trước khi đụng vào
 
@@ -2809,8 +4534,12 @@ vào nó để dọn hộ.
 có thanh máu, xếp lớp đúng theo chiều sâu.
 
 **KHÔNG làm gì:** không tài khoản, không cơ sở dữ liệu, không quyền quyết định, không chống gian
-lận, không PvP, không chat, không đồng bộ quái. **Đó là chủ ý.** Đây là giai đoạn nhỏ nhất chứng
-minh được cả hướng đi. Đừng bắt `server/bongnguoi.js` gánh thêm việc — mọi thứ có giá trị lâu dài
+lận, không PvP, không đồng bộ quái. **Đó là chủ ý.** Đây là giai đoạn nhỏ nhất chứng minh được cả
+hướng đi.
+
+> ⚠ Câu trên **trước đây còn ghi "không chat"** — nay đã có (mục 💬 CHAT). Và trang bị · cánh ·
+> hành động ra đòn cũng đã đồng bộ (mục 👁 GIAI ĐOẠN 2). Giữ lại chỗ này để thấy ranh giới đã dời
+> tới đâu, chứ đừng đọc nó như trạng thái hiện tại. Đừng bắt `server/bongnguoi.js` gánh thêm việc — mọi thứ có giá trị lâu dài
 (sinh vật phẩm, cộng tiền tệ, máu boss chung) phải đợi tới lúc có tài khoản thật và kho đồ trên
 máy chủ, xem `docs/THIET_KE_ONLINE.md` mục "Ngã ba phải chọn".
 
@@ -3032,12 +4761,424 @@ sử là việc của giai đoạn có tài khoản thật.
 được trước khi vào là điều hay. Kênh Vùng thì đòi phải đứng trong một bản đồ, và nói rõ lý do
 khi chưa vào.
 
+### 👁 GIAI ĐOẠN 2 · TRANG BỊ · CÁNH · HÀNH ĐỘNG RA ĐÒN — ĐÃ ĐỒNG BỘ
+
+Giai đoạn 1 dừng ở "nhìn thấy nhau CHẠY": mọi thân người từ xa dựng bằng `equip: {}`, nên ai cũng
+cởi trần, không cánh, và đứng như tượng trong lúc đánh nhau. Nay hết.
+
+**Câu hỏi chủ dự án hỏi trước khi làm — *"có cần build hết assets/skills rồi mới đồng bộ không"* —
+câu trả lời đo được là KHÔNG**, và ba thứ nằm ở ba mức phụ thuộc art khác hẳn nhau:
+
+| | phụ thuộc art | đo được |
+|---|---|---|
+| hành động ra đòn | **0** | `player.atkAct`/`castAct` là giá trị TÍNH RA, không tra tệp nào |
+| cánh | **0 thêm** | `veCanh()` là hàm DUY NHẤT, dùng chung mọi lớp; `WING_BANG` là dữ liệu |
+| trang bị | 3/35 | `NV_GIAP` mới có `thieulam\|1` · `baidasan\|1` · `baidasan\|7` |
+
+Lý do cốt lõi: thân người từ xa đi **CÙNG một đường vẽ** với nhân vật của mình, nên người bên kia
+trông đẹp đúng bằng thân của chính mình đang trông. Art về sau nâng cả hai bên miễn phí.
+
+| | |
+|---|---|
+| Dựng / áp mô tả | `NET_O_DO` · `window.netTrangBi()` · `window.netApTrangBi(t, g)` trong `game.js`, ngay dưới `netDoc` |
+| Vệ sinh phía máy chủ | `locTrangBi()` · `st.gear`/`st.gearV` · `ws.__gearV` trong `bongnguoi.js` |
+| Bộ đếm cú ra đòn | `player._atkSeq` / `_castSeq`, tăng ở ĐÚNG hai chỗ ghi `atkAnim`/`castT` |
+| Độ dài hoạt cảnh | `NV_DANH_GIAY` 0,22 · `NV_CHU_GIAY` 0,38 · `window.NV_HD_GIAY` |
+| Gác | `tests/test_dongbodo.js` (7 mệnh đề, **cả bảy đã thử ngược và đều đỏ**) |
+
+**⚠ GỬI CHỮ KÝ, KHÔNG GỬI `player.equip`.** Một món thật nặng 474 byte × 11 ô ≈ **5 KB mỗi người
+mỗi ảnh chụp**, để chở những trường tầng vẽ không hề đọc. Tầng vẽ chỉ cần bốn thứ mỗi ô: `def`
+(ra bộ art và lớp) · `tier` · `plus` · mức quý. **Đo được: mô tả gọn 190 byte.**
+
+**⚠ VÀ NÓ DỰNG LẠI MỘT `equip` GIẢ chứ không tự vẽ lấy.** `gearVisual()` · `nvLopCuaEquip()` ·
+`heroSprite()` · `veCanh()` chạy y nguyên trên thân người từ xa. Viết một đường vẽ thứ hai "cho
+gọn" là bộ giáp mới nướng sẽ hiện trên mình mà không hiện trên họ.
+
+**⚠ BỘ ĐẾM, KHÔNG PHẢI THỜI GIAN CÒN LẠI.** Hoạt cảnh đánh dài 0,22 s lọt gọn giữa hai ảnh chụp
+10 Hz — gửi "còn bao lâu" là thỉnh thoảng mất hẳn một cú đánh, mà mất kiểu đó không ai lần ra.
+Một con số chỉ tăng thì không có khe nào để lọt. ⚠ Lần ĐẦU nhìn thấy một người thì chỉ GHI NHẬN
+bộ đếm, đừng nổ hoạt cảnh: họ có thể đã đánh 500 cú trước đó, và coi đó là "vừa bắt đầu" thì ai
+lọt vào tầm mắt cũng vung kiếm một cái chào.
+
+**⚠ ĐẾM NGƯỢC HAI ĐỒNG HỒ ẤY Ở `noiSuy`, ĐỪNG NHÉT VÀO `thanNhip`.** `update()` đã đếm ngược cho
+người chơi của mình; `thanNhip` thì CẢ HAI bên cùng gọi ⇒ mình bị trừ hai lần. Thiếu hẳn phép đếm
+ngược thì thân người từ xa **kẹt vĩnh viễn ở khung vung kiếm** — một pho tượng đang giơ kiếm.
+
+**⚠ TRANG BỊ CHỈ GỬI KHI ĐỔI, và cửa nhớ là PER-KẾT-NỐI.** Nhét vào mọi ảnh chụp là 190 byte × 9
+người × 10 Hz ≈ **16 KB/s mỗi client**, gấp ba cả gói tin hiện tại, cho một thứ đổi vài phút một
+lần. Máy chủ giữ `st.gearV` và mỗi kết nối giữ `ws.__gearV` — người mới nhìn thấy nhau thì chưa có
+khoá đó nên tự nhận đủ ngay ảnh đầu. Không cần gửi lại phòng hờ: WebSocket chạy trên TCP.
+
+**⚠ MÔ TẢ RỖNG LÀ MỘT CÂU TRẢ LỜI.** Bản đầu `locTrangBi` trả `null` khi không nhận ra ô nào rồi
+máy chủ bỏ qua — nên **THÁO HẾT ĐỒ RA là mọi người vẫn thấy ta mặc nguyên bộ cũ**, và chính người
+tháo đồ là người duy nhất không nhìn thấy nó.
+
+**⚠ `_doCuoi` (chữ ký đã gửi) PHẢI XOÁ Ở `ws.onopen`.** Máy chủ dựng trạng thái mới toanh cho mỗi
+kết nối, nên sau khi rớt và nối lại nó không còn nhớ ta mặc gì — mà client thì thấy "chữ ký không
+đổi" rồi im lặng không gửi. Ta cởi trần với mọi người tới lần thay đồ kế tiếp.
+
+**⚠ `wingDef(it)` NAY NHẬN `sectDp` — nợ cũ đã trả.** Nhánh dự phòng trước đây lui về `player.sect`:
+vô hại hồi chỉ có một người trên màn, nhưng từ lúc đồng bộ cánh thì một Dark Wizard đứng cạnh sẽ
+mọc **đôi cánh của LỚP MÌNH**, và không lỗi nào báo — đôi cánh vẫn vẽ ra, chỉ là sai người.
+
+**⚠ `dead` LÀ BIẾN TOÀN CỤC CỦA NGƯỜI CHƠI NÀY**, mà `drawPlayer` nay vẽ cả thân người từ xa. Ba
+chỗ trong hàm đọc thẳng nó ⇒ **mình nằm xuống là lớp nhân vật của mọi người quanh mình thôi vật
+chất hoá** (`_lopHien` có `!dead`), tức họ vung kiếm trong vô hình. Nay `_chet = (p === player) ?
+dead : (p.hp <= 0)`.
+
+#### 📐 NĂM PHÉP ĐO HỎNG TRƯỚC KHI RA ĐƯỢC MỘT PHÉP ĐO ĐÚNG — đừng lặp lại
+
+Mệnh đề ⑦ (rò rỉ `dead`) mất **năm lượt** mới gác được gì, và mỗi lượt hỏng một kiểu khác nhau.
+Tất cả đều là bài học chung cho mọi phép đo điểm ảnh trong dự án này:
+
+1. **Đo một thân người ĐỨNG YÊN thì không thấy gì** — đứng yên thì thứ trên màn là con AXIE, mà
+   con Axie chẳng liên quan tới chuyện ai chết. Rò rỉ hiện ra đúng **39/16.500** điểm ảnh (cái
+   vòng dưới chân). Phải đo LÚC RA ĐÒN, chỗ `_lopHien` thật sự cắn.
+2. **Ô đo phải trùm cả LỚP NHÂN VẬT, không chỉ trùm con Axie.** Nó đứng KẾ BÊN — tới
+   `AVA_CHAN_TRUOC`(72) phía trước cộng `AVA_CHAN_BEN`(56) sang bên, tức ~91px. Ô 150px (nửa bề
+   rộng 75) cắt cụt đúng thứ cần đo.
+3. **Ô ĐỐI CHỨNG phải nằm TRONG canvas.** Đặt ở `(bx+700, by−340)` là ra ngoài khung; `getImageData`
+   kẹp về góc trên-trái và trả một vùng trống ⇒ nó ra 0 ở MỌI trường hợp. *Một ô đối chứng luôn
+   xanh không gác được gì* — cùng họ với "một cái chốt đúng ở mọi trạng thái".
+4. **Hai người đứng cách nhau 80px thì ô trùm cả hai.** Ô rộng 340 quanh B mà A ở cách 80 ⇒ đo
+   luôn thân của A, thứ đúng ra PHẢI đổi khi A chết. Đỏ 5.281 điểm ảnh trên **mã đúng**.
+5. **Và cuối cùng, cái lớn nhất: SÀN NHIỄU CỦA MỘT THÂN NGƯỜI ĐANG ĐỘNG LỚN HƠN TÍN HIỆU.** Hai
+   lượt vẽ LIÊN TIẾP, CÙNG điều kiện, của một thân người đang vung kiếm lệch nhau **6.545/102.000
+   điểm ảnh** — cánh vỗ, hào quang đập, vũ khí bay, tất cả chạy theo `performance.now()`. Con số
+   6.532 mà tôi tưởng là "rò rỉ" chính là nhiễu đó. ⇒ Mục ⑦ nay **KHÔNG đo điểm ảnh**:
+   `drawPlayer` phơi thẳng `_chet` và `_lopHien` ra **`window.__veChet`** (chỉ khi `TEST_MODE`),
+   khoá theo từng thân người — cùng lối với `__neoVe`/`__veThan`.
+
+**⚠ Ô ĐỐI CHỨNG KHÔNG PHẢI SÀN NHIỄU.** Nó đứng ở chỗ KHÔNG CÓ AI nên nó chỉ bắt nhiễu của NỀN,
+không bắt nhiễu của chính thân người đang đo. Hai thứ khác nhau, và mục ② cần CẢ HAI.
+
+**⚠ CON AXIE THỞ ~8 FPS ⇒ SÀN NHIỄU LƯỠNG CỰC, PHẢI LẤY TRUNG VỊ.** Đo 10 cặp khung liên tiếp
+trên một thân người ĐỨNG YÊN: `507·444·501·527·458·`**`5221`**`·509·448·441·377`. Một lượt render
+tốn ~13 ms nên cứ chừng 10 khung lại có đúng một lần nhảy khung hình của con Axie. Lấy MỘT cặp là
+10% số lượt rơi trúng đỉnh; lấy MAX là 100%. Đã đỏ 2/3 lượt trước khi đổi sang trung vị — và
+TÍN HIỆU cũng phải lấy trung vị, vì một lượt đo đơn lẻ rơi trúng đỉnh ấy sẽ được độn thêm 5.200
+điểm ảnh, tức xanh kể cả khi chẳng có gì đổi.
+
+**⚠ HAI THỨ PHẢI LẮNG TRƯỚC KHI ĐO, THEO HAI ĐỒNG HỒ KHÁC NHAU:** `bayCao` nhích 8% về đích MỖI
+LẦN `render()` (hâm bằng vòng render), còn ART BỘ GIÁP tải theo MẠNG (hâm bằng `await`). Chỉ làm
+một trong hai là sàn nhiễu nhảy 498 → 5.146 tuỳ lượt.
+
+**⚠ Và một bài kiểm nhiều mục thì mục sau THỪA HƯỞNG cảnh của mục trước.** Mục ③ dời B tới chỗ con
+quái để lái một cú đánh THẬT; tới mục ⑦ thì B nằm ngoài khung hình của A, ô đo rơi vào góc canvas
+trống, và **cả bản đúng lẫn bản đã tháo cơ chế đều XANH**. Mục nào đổi chỗ đứng thì mục sau phải
+dựng lại cảnh của mình, và phải TỰ KIỂM là đã dựng được.
+
+### 🛡 HAI CHỐT TRƯỚC PVP — tên không mạo danh được, `pos` không bắn dồn được
+
+| | |
+|---|---|
+| Tên | đặt **MỘT LẦN** ở gói `pos` đầu (`st.daDatTen`), và `tenRieng()` thêm hậu tố nếu trùng ai đang online |
+| Nhịp `pos` | `POS_CUA` 30 gói / `POS_CUA_MS` 1000 (nhịp thật là 10) · vượt bền `POS_QUA_MAX` 200 gói thì đóng |
+| Gác | `tests/test_giapvp.js` (6 mục, **cả sáu đã thử ngược và đều đỏ**) |
+
+**⚠ ĐÂY KHÔNG PHẢI XÁC THỰC — đừng nhầm hai thứ.** Không có tài khoản thì không cách nào biết ai
+thật sự là ai. Thứ chốt tên mua được là đúng một điều: **không mạo danh được người ĐANG CÓ MẶT.**
+Bản cũ nhận `name` ở MỌI gói `pos`, tức đổi tên bất cứ lúc nào — hồi chỉ có bóng người thì là
+chuyện nhỏ, từ lúc có CHAT thì là nói thay người khác mà họ không có cách nào biết.
+
+**⚠ TRÙNG TÊN THÌ ĐỔI, ĐỪNG ĐÁ RA.** Hai người cùng đặt "Kiếm Khách" là chuyện thường; đá người
+thứ hai là phạt nhầm người.
+
+**⚠ ĐỪNG ĐẶT TRẦN NHỊP SÁT 10 Hz.** Client gửi theo `requestAnimationFrame` nên hai gói dính sát
+nhau sau một khung nghẽn là bình thường. Và đừng ĐÁ ngay: một cú bắn dồn lẻ thì BỎ QUA gói là đủ,
+chỉ đá khi nó bền — người chơi thật không giữ được mức đó, bot thì có.
+
+### ☠ TRÚNG ĐÒN VÀ CHẾT ĐÃ ĐỒNG BỘ — và **ĐỪNG SUY CỜ CHẾT TỪ MÁU**
+
+Trúng đòn đi bằng **bộ đếm** `_hitSeq` (cùng lý do `_atkSeq`: cú giật 0,25-0,30 s lọt gọn giữa hai
+ảnh 10 Hz). Chết đi bằng **cờ riêng** `chet`, lấy từ `netDoc()`.
+
+**⚠⚠ ĐÂY LÀ LỖI ĐÃ VIẾT RA RỒI MỚI ĐO RA.** Bản đầu để `drawPlayer` suy `p.hp <= 0` cho thân người
+từ xa — nghe rất hợp lý, và SAI: hồi máu kịp chạy một nhịp giữa lúc máu về 0 và lúc cờ `dead` bật,
+nên người đã nằm xuống vẫn gửi đi **`{hp: 0,565 · dead: true}`**, rồi máy chủ `Math.round` thành
+**1**, và bên kia đọc ra "còn sống". Người chết đứng nguyên đó vung tay.
+
+⚠ **Và nó chỉ hỏng TUỲ LƯỢT** — đo được cả `0,57 → 1` (hỏng) lẫn `0,19 → 0` (không hỏng). Nên phép
+thử ngược phải **ghim máu ở 0,6**; để tự nhiên thì nó xanh chừng nửa số lượt và người sau sẽ kết
+luận nhầm là mệnh đề không gác được gì.
+
+⚠ **`deadT` phải được CỘNG Ở PHÍA NHẬN.** `update()` cộng nó cho người chơi của mình; thân người từ
+xa không bao giờ chạy `update()`, nên thiếu dòng này là **cú ngã đứng hình ở khung ĐẦU, vĩnh viễn**
+— nhìn ra "hình như lag" chứ không ra "chưa làm".
+
+⚠ **HỎI CẢ SỢI DÂY LẪN CHỖ TIÊU THỤ.** Mệnh đề đầu của tôi chỉ hỏi `n.chet` (thứ đến từ dây) và nó
+**KHÔNG ĐỎ** khi tôi trả `drawPlayer` về kiểu suy-từ-máu: dây vẫn chở cờ đúng, chỉ chỗ ĐỌC nó sai.
+Nay hỏi thẳng `window.__veChet` — quyết định mà `drawPlayer` thật sự dùng.
+
+⚠ **Bài kiểm nhiều mục: cảnh của mục trước còn nguyên ở mục sau.** B đứng giữa bãi quái `daohoa`
+nên nó có thể CHẾT trong lúc hai mục đầu chạy; bước dọn của tôi trả máu mà quên trả cờ `dead`, nên
+`deadT` đã chạy 4,5 s trước khi mục đo chết kịp giết nó. Chốt tự kiểm bắt được. *Trả lại trạng thái
+thì phải trả ĐỦ.*
+
+⚠ **ĐỪNG THỔI `maxHp` LÊN ĐỂ LÀM BẤT TỬ trong bài kiểm.** Đã thử `1e9`: hồi máu tính theo phần trăm
+máu trần nên mỗi nhịp kéo lại hàng trăm nghìn máu, nhân vật không chết nổi, và mục đo chết đọc ra
+"hp 840000" ngay sau lệnh giết. Dời quái đi là đủ.
+
+⚠ **Đo một hoạt cảnh NGẮN thì đừng lấy mẫu ở một mốc cố định.** Cú giật dài 0,30 s, ảnh chụp 10 Hz,
+độ trễ đổi theo lượt — đo được `0,017` ở mốc 300 ms và **đúng 0** ở mốc 150 ms, cùng một mã chạy
+tốt. Theo dõi liên tục rồi lấy ĐỈNH thì không còn khe nào để trượt.
+
+⚠ **HAI BÀI KIỂM CŨ ĐỎ VÌ HAI CƠ CHẾ MỚI LÀM ĐÚNG VIỆC CỦA CHÚNG** — cả hai sửa bằng cách đi
+theo, không bằng cách nới luật:
+- `test_wsnho §3/§4` nhận diện client bằng **TÊN**, mà §2 của chính nó đã cho cả chín client gửi
+  một `pos` kèm tên trước đó ⇒ tên đã chốt, hai cái tên mốc bị bỏ qua đúng như thiết kế. Nay
+  nhận diện bằng **TOẠ ĐỘ** — thứ hai mục ấy thật sự chứng minh (gói tới nơi nguyên vẹn).
+- `test_dongbodo §7` đo lớp nhân vật lúc ra đòn, mà `_lopHien` đòi `!hurtT`; từ lúc cú trúng đòn
+  được đồng bộ thì thân người từ xa đứng giữa bãi quái **liên tục giật** nên lớp nhân vật không
+  bao giờ vật chất hoá. Chốt tự kiểm của chính mục ấy bắt được — *đỏ ở chốt cảnh dựng, không đỏ
+  ở mệnh đề*, đúng như nó phải thế.
+
+### ⚔ SÀN ĐẤU ARDHAVEN — PvP đã chạy, và **MÁU TRẬN LÀ MỘT TÚI RIÊNG**
+
+Chủ dự án chốt: *"Dựng 1 map pvp và làm thử xem. Chỉ cần 2 người đánh nhau là được."* Đã chạy
+thật: hai trình duyệt, đi bộ qua cổng, đánh nhau, có kẻ thắng người thua.
+
+| | |
+|---|---|
+| Map | `pvp` trong `data/canbang.js` — *Sàn Đấu Ardhaven*, 1800×1400, `type:'freepk'`, `pvp:true` |
+| Cổng vào | `ardhaven (3820,1840)` → `pvp`, và cổng ra `pvp (900,1140)` → `ardhaven` |
+| Client | `PVP_MAP` · `PVP_HE` · `pvpDangO()` · `pvpGoc()` · `nearestNguoi()` · `pvpTran` · `drawPvpHUD()` |
+| Máy chủ | `nhanPvpDanh()` · `phatSan()` · `st.pvpHp/pvpMax/pvpChet/pvpHit` trong `bongnguoi.js` |
+| Dây | `netPvpDanh` gửi · `pvp-mau` / `pvp-ket` / `pvp-hoi` nhận, trong `net.js` |
+| Gác | `tests/test_pvp.js` (8 mệnh đề, **cả tám đã thử ngược và đều đỏ**) |
+
+**⚠⚠ QUYẾT ĐỊNH LỚN NHẤT: máu trận KHÔNG phải `player.hp`.** Ba lý do, mỗi lý do đủ để một mình
+nó quyết:
+1. `player.hp` nằm trên **máy của người BỊ đánh** — để nó quyết thì ai cũng bất tử bằng một dòng
+   devtools, và người thắng không có cách nào biết mình đang bị lừa.
+2. Chết thật thì `onDeath()` chạy: ném về map an toàn, mất tiến độ. **Thua một trận đấu không
+   được phép đụng vào bản lưu.**
+3. Túi riêng thì máy chủ giữ được, và nó mở **một** con số ra cho cả hai bên cùng nhìn.
+
+Nhưng túi ấy **khởi tạo bằng `maxHp` THẬT**, nên trang bị và cấp vẫn quyết thắng thua — đúng cái
+*"mang progress và đồ"* chủ dự án hỏi. `test_pvp §5` là mệnh đề nặng nhất của cả bài: nó đo
+`player.hp` · `dead` · `curMap` · `level` · `xp` của người vừa bị hạ và đòi **không một cái nào
+suy suyển**. Thử ngược (trừ thẳng vào `player.hp`) ra `1115 → 43` — đỏ ngay.
+
+**⚠ HAI GÓC ĐỨNG (`md.goc`), và thiếu nó thì lỗi trông y hệt "mạng không chạy".** Mọi nhân vật
+vào một map đều rơi vào **đúng một** `spawn`, nên hai người vừa vào là hai thân **chồng khít lên
+nhau lệch 0,0px** — đúng cái đã làm mất một vòng chẩn đoán ở lượt thử Bóng Người đầu tiên. Chọn
+góc theo **`NET.id`** (thứ duy nhất được máy chủ bảo đảm khác nhau giữa hai client), đừng bốc
+ngẫu nhiên: ngẫu nhiên thì một nửa số lượt hai người vẫn cùng một góc, tức lỗi cũ quay lại nhưng
+chỉ một nửa số lần.
+
+**⚠ KHÔNG hệ số phẳng nào cân được cả hai đầu — đo rồi mới biết.** Quét 5 lớp × 3 cấp × có/không
+BiS:
+
+| cảnh | `atk/maxHp` | `aspd` |
+|---|---|---|
+| tay trần (thieulam, mọi cấp) | 0,037 | 0,74 |
+| tay trần (toanchan cấp 20) | 0,083 | 0,79 |
+| BiS (`applyTestBoost`) | 0,089 | **0,25** |
+| BiS (toanchan cấp 120) | **0,266** | 0,25 |
+
+Tỉ lệ trải **7 lần**, mà `aspd` lại nhanh thêm **3 lần** ở đầu BiS ⇒ 21 lần chênh về tốc độ hạ.
+Nên chia việc: `PVP_HE = 1,0` đặt theo cảnh THẬT (trang bị thường), còn **trần một cú của máy
+chủ** `PVP_TRAN_DMG = 0,06` mới là thứ bó đầu BiS. Đo được: trận **17-32 cú**, tức ~4 giây (hai
+bên full BiS) tới ~24 giây (hai bên tay trần). **Bốn giây là đầu trên ĐÃ BIẾT, không phải chỗ
+chưa đo.**
+
+**⚠ TRẦN MỘT CÚ LÀM HAI VIỆC** — và đó là lý do nó đáng có: vừa chặn một client sửa đổi bắn một
+phát chết (`test_pvp §6` bắn thẳng `1e9` và đo ra 5,9%), vừa là cái duy nhất bó được cân bằng ở
+đầu trên. Nới nó là hai người full BiS hạ nhau trong vài cú; hạ nữa là trang bị hết nghĩa.
+
+**⚠ VÀ ĐÂY KHÔNG PHẢI CHỐNG GIAN LẬN — đừng đọc nó thành lời hứa kia.** Máy chủ không biết `atk`
+của ai (cho nó biết là phải chở cả `calcDerived` lên đấy). Ba hàng rào là để **bó thiệt hại**:
+**khoảng cách** (máy chủ có cả hai toạ độ ⇒ hàng rào THẬT), **nhịp** (`PVP_NHIP_MS` 120), và
+**trần một cú**. Kẻ sửa client đánh đau hơn — nhưng không một phát chết, không đánh xuyên map,
+không bắn 100 phát một giây.
+
+**⚠ CHỈ ĐÒN THƯỜNG.** Chiêu thức đi qua `hurtMob` ở hàng chục chỗ, mỗi chỗ một hình học riêng;
+nối tất cả vào PvP là một đợt việc riêng. Nói ra thay vì nối nửa vời — một chiêu nổ trùm qua
+người mà họ không mất máu là đúng cái "hứa suông" mà luật `pham` đã cấm.
+
+**Năm chỗ đã vấp, ghi lại:**
+1. **`return` giữa `update(dt)`.** Nhánh PvP của `pendingHit` nằm **trong** `update`, không phải
+   trong một hàm riêng — một `return` ở đó bỏ qua toàn bộ phần còn lại của khung (đạn, hồi chiêu,
+   nhặt đồ, sự kiện) và **chỉ ở đúng cái khung có một cú đánh PvP tới hạn**. Nhìn ra là "game
+   giật một cái mỗi lần đánh", không ra một lỗi. Phải là `else`.
+2. **Reset máu trận phải hỏi TRƯỚC dòng `curMap = mapId`** trong `travelTo` — sau dòng ấy thì
+   `curMap` đã bằng `mapId` và điều kiện không bao giờ đúng.
+3. **Cộng vào một bộ đếm RIÊNG (`st.pvpHit`), đừng ghi đè `st.hitSeq`.** `capNhat` ghi `hitSeq`
+   từ client ở mỗi gói `pos` (10 Hz), nên cộng thẳng vào đó là mất ngay ở gói kế tiếp. Nhờ bộ
+   đếm riêng, cú giật của người bị đánh đi qua **đúng sợi dây `hs` đã có** — không thêm cơ chế.
+4. **Báo máu trận NGAY LÚC VÀO, đừng đợi cú đánh đầu tiên.** Ảnh chụp chở `ph/pm` của người
+   KHÁC nhưng không bao giờ chở của chính mình ⇒ người vừa vào nhìn thanh máu của **trận trước**
+   cho tới lúc ăn đòn. Và `pvpMax = 0` lúc cú đầu bay tới thì trần một cú (tính theo `pvpMax`)
+   cũng bằng 0 ⇒ cú đầu tiên kẹp xuống 1 sát thương.
+5. **Trong sàn đấu, `doBasic` phải chạy tới NGƯỜI khi ngoài tầm.** Sàn không có con quái nào nên
+   nhánh cũ rơi thẳng xuống câu *"không có quái trong tầm — mở M hoặc Chọn Trận để tới bãi
+   quái"*: đứng giữa sàn đấu mà game bảo đi tìm bãi quái, và nhân vật đứng im.
+
+**Ba bài kiểm CŨ phải đi theo, và cả ba là "theo nội dung", không phải "nới luật":**
+`test_thegioi §1` (sàn đấu không có chỗ trên bản đồ thế giới — nó không giáp vùng nào nên không
+có hướng nào đúng để vẽ) · `test_domap` (mọi ngưỡng của bài đo *"map có đủ thứ để làm không"*,
+mà sàn đấu **cố ý** không có gì — cách duy nhất làm nó xanh là nhét một bãi quái vào sàn đấu,
+tức làm hỏng chính cái map) · cả hai lọc bằng `md.pvp`. `test_noimap` thì **xanh sẵn** và đó là
+bằng chứng cổng chạy: nó lan theo đúng đường người chơi và tới được `pvp`.
+
+**⚠ MAP CỐ Ý RỖNG.** Không `vung`, không `herbs`, không `boss`, không `thu` — nên Rương Canh và
+Vỉa Cốt tự vắng mặt (cửa duy nhất của cả hai là *"map có bãi quái"*). Nhét một bãi quái vào đây
+là biến sàn đấu thành một map cày có thêm người, và mọi thứ người chơi tới đây để làm sẽ bị AUTO
+làm hộ. `packs: []` / `duhiep: null` vẫn phải khai **tường minh** — `packsOf()` đọc `md.packs` và
+`.map(...)` trên `undefined` ném ngay giữa vòng dựng thế giới.
+
+**⚠ Sàn đấu KHÔNG mở điểm dịch chuyển** (`travelTo` loại cả `md.dungeon` lẫn `md.pvp`): mở ra thì
+bảng Bản Đồ có một nút dịch chuyển thẳng vào giữa một trận đang đánh.
+
+### ✦ VFX CHIÊU CỦA NGƯỜI BÊN KIA — và nó là HÌNH, không phải ĐÒN
+
+Trước bản này `castT` đã đồng bộ nên người bên kia thấy **tư thế** niệm mà không thấy một tia lửa
+nào: đứng cạnh một Dark Wizard thả Meteorite thì trên màn chỉ có người vung tay trong khoảng không.
+
+| | |
+|---|---|
+| Cửa gửi | **bên trong `spawnSkillVfx`** — `window.netChieuGui()` |
+| Cửa nhận | `window.netChieuNhan(d)` trong `game.js` |
+| Dây | `window.netChieu` gửi · tin `chieu` nhận, trong `net.js` |
+| Máy chủ | `nhanChieu()` · `CHIEU_CUA` 12 gói / `CHIEU_CUA_MS` 2000 |
+| Gác | `tests/test_vfxchieu.js` (6 mệnh đề, **cả sáu đã thử ngược và đều đỏ**) |
+
+**⚠ GỬI TỪ TRONG `spawnSkillVfx`, ĐỪNG MÓC TỪNG CHỖ GỌI.** Có **chín** chỗ gọi nó; móc tay từng
+chỗ là chỗ thứ mười thêm sau sẽ lặng lẽ không đồng bộ — cùng cái bẫy đã ghi cho `dailyTrack()` và
+`mobDoBuoc()`. Gửi từ bên trong thì **chiêu mới thêm tự có mặt**, và `test_vfxchieu §1` gác đúng
+chỗ đó bằng cách gọi thẳng `spawnSkillVfx` (không qua `castSkill`) rồi đòi nó phải gửi.
+
+**⚠ `spawnSkillVfx(id, v, phase, ang, R, x0, y0, nguoi)` — `nguoi` là tham số CUỐI và mặc định là
+người chơi này.** Trong thân hàm có **10 chỗ đọc `player.x` và 10 chỗ đọc `player.y`**; thiếu bước
+đổi chúng sang `_p` thì chiêu của người khác nổ **dưới chân MÌNH** — vẫn "có vẽ ra", nên một mệnh
+đề chỉ đếm số hiệu ứng sẽ XANH suốt. `§2` đo khoảng cách tới **cả hai** người rồi đòi hiệu ứng
+phải gần NGƯỜI NIỆM hơn; thử ngược ra `0 vs 120px`.
+
+**⚠ `vongKiemVuKhi(p)` cũng phải nhận người niệm** — nếu không, vòng kiếm của người khác vẽ bằng
+**vũ khí của mình**. Cùng họ với lỗi `wingDef` mọc cánh sai lớp: hình vẫn vẽ ra, chỉ là sai người.
+
+**⚠ VÀ ĐÂY LÀ THỨ LÀM CẢ ĐỢT NÀY AN TOÀN: VFX KHÔNG GÂY SÁT THƯƠNG.** Vòng cập nhật `effects` chỉ
+cộng `e.t`, dời hạt và quay — không một lời gọi `hurtMob` nào. Sát thương nằm ở `castVohoc` /
+`castSkill`, tách hẳn. Nên chiêu của người khác nổ trên máy mình thì quái của mình **mất đúng 0
+máu**. `§3` là mệnh đề nặng nhất; thử ngược (nối `hurtMob` vào nhánh nhận) ra `893 → 888`.
+**Đừng "tiện tay" nối sát thương vào đây** — PvP cố ý mới chỉ có đòn thường.
+
+**Ba lỗi của chính BÀI KIỂM, cả ba cho ra một bài XANH VÌ LÝ DO SAI** — ghi lại vì cùng một họ:
+
+1. **Đếm `effects.length` là đếm SỐNG SÓT, không phải đếm NHẬN.** Hiệu ứng hết hạn sau 0,4-0,7 s,
+   mà phép chờ là 600 ms — nên `§6` xanh kể cả khi đã **gỡ hẳn** hạn nhịp của máy chủ. Nay bọc
+   `window.netChieuNhan` mà đếm lời gọi.
+2. **Mục trước bắn dồn làm nghẽn mục sau.** `§3` bắn 8 gói trong ~1 giây, đầy cửa 12/2 s của máy
+   chủ, nên cú của `§4` bị **bỏ qua** — B nhận 0, và "B không gửi ngược" thành một câu vô nghĩa.
+   Nay có `choCuaTroi()` và **chốt tự kiểm**: chưa nhận được gì thì không được chấm.
+3. **NGƯỜI NIỆM CHẾT GIỮA BÀI.** Đo được ở `§5`: A ra `{dead:true, hp:0}` — nó đứng giữa bãi quái
+   `daohoa` suốt 15 giây. Mà `castSkill` `return` ngay dòng đầu khi `dead`, nên mọi mục sau đó đo
+   trên một xác chết và đọc ra "sợi dây đứt". Nay `vao()` dời quái ra góc map (giữ lại để `§3`
+   kéo về), và `tung()` trả `null` khi đã chết.
+
+**⚠ VÀ MỘT QUE DÒ HỎNG SUÝT LÀM TÔI KẾT LUẬN NGƯỢC.** `§5` (lọc theo map) có **hai lớp** gác: lọc
+ở máy chủ *và* chốt `!np` ở client. Gỡ một lớp thì lớp kia đỡ ⇒ bài vẫn xanh ⇒ trông như mệnh đề
+rỗng. Nhưng gỡ **cả hai** thì nó đỏ ngay (`nhận 12 gói`). *Một phép thử ngược im lặng là bằng
+chứng cái QUE DÒ chưa chạm đúng chỗ, không phải bằng chứng mệnh đề yếu* — đúng câu đã ghi ở mục
+`test_hethong`.
+
+**⚠ `x0/y0` là TOẠ ĐỘ THẾ GIỚI TUYỆT ĐỐI**, không phải độ lệch so với người niệm (`diemGiang()`
+trả tuyệt đối). Và máy chủ phải **giữ được `null`**: `x0 == null` nghĩa là "nổ ngay tại chỗ người
+niệm", khác hẳn "nổ tại (0,0)" — tức góc bản đồ.
+
+### ⚔ SÀN ĐẤU CÓ BỘ VIÊN RIÊNG — và ẢNH CHỤP mới bắt được cái sai, số đo thì không
+
+Sàn đấu dựng xong thì đi **mượn** viên của Ardhaven (`nen_da` + `nen_soi`), nên đứng trong đó nhìn
+ra y hệt một góc phố. Nay có bộ riêng, nướng bằng **`tools/iso/nuong_sandau.py`**.
+
+| | trước | sau |
+|---|---|---|
+| nền | `nen_da` — 163,6/139,1/115,3 · sáng **139,3** · ấm (B−R −48) | `nen_sanda` — 80,3/87,4/100,7 · sáng **89,5** · **lạnh** (B−R +20) |
+| lối | `nen_soi` · sáng 126,9 | `nen_sanmai` · sáng **129,1** |
+
+**⚠ `isoDat` ở đây SÁNG HƠN `isoCo`, ngược mọi map khác.** Ở map hoang dã lối mòn sẫm hơn (đất lộ
+ra dưới cỏ); ở đây là đá bị đế giày **mài nhẵn** suốt bảy trăm buổi sáng nên nó BÓNG lên. Đảo
+chiều ấy là thứ làm vòng giữa sàn đọc ra một *vòng mài* chứ không ra một *vũng bùn*. Khoảng cách
+sáng nền↔mài đo được **39,6** — rộng hơn Ardhaven (28,8) vì nền sàn đấu sẫm, mà trên nền sẫm mắt
+phân biệt kém hơn hẳn (bài học Bird Tribe Heights, đảo đầu).
+
+**⚠⚠ VÀ ĐÂY LÀ CHỖ SỐ ĐO NÓI DỐI.** Lượt đầu tôi rải **70 hòn `da1-3` sẵn có** cho đủ ngưỡng của
+`test_isoneo`. Bài xanh, số đạt — mà **chụp ra thì mặt sàn đọc thành một BÃI ĐÁ VỤN BỎ HOANG**,
+trong khi cả map kể chuyện một sân còn được quét dọn mỗi sáng. Đá sẵn có vừa to vừa **trùng tông
+với vòng mài** nên nó là thứ mắt bắt trước tiên. Nay `nho_san1-3` nhỏ hơn hẳn và **SẪM hơn nền**
+(0,30/0,32/0,36 so với nền 0,40/0,42/0,46) ⇒ đọc ra vết sứt trên đá phiến, và làm luôn cái **mốc
+tương phản sẫm** mà bài học kia đòi. Số lượng 70 → **46**.
+*Một ngưỡng đếm được thoả mãn bằng thứ sai — đó là lý do luật "vẽ xong phải render ra ảnh mà
+nhìn" có mặt trong tài liệu này.*
+
+**⚠ BỘ NƯỚNG TỪNG NỔ Ở DÒNG CUỐI MÀ KHÔNG AI THẤY.** `nuong_biome.py` và `nuong_sandau.py` đều nạp
+`nuong_tile.py` bằng `exec` vào một dict globals tự dựng — mà dict ấy **không có `__file__`**, nên
+`ghi_neo()` ném `NameError` **sau khi đã nướng xong hết**. Tức ảnh ra đủ, mọi dòng `NUONG XONG` đã
+in, mà **bảng neo thì không được ghi** — đúng cái dạng hỏng đã xoá sạch cây của sáu map một lần
+rồi. Đã vá cả hai tệp (thêm `'__file__'` vào `NT`). Đo lại: `ISO_NEO` 60 → **63** sprite.
+
+### 🧪 `/net` — CÔNG CỤ THỬ TẦNG ONLINE, và **BÓNG GIẢ** thay cho cửa sổ thứ hai
+
+| | |
+|---|---|
+| Cửa mở | console cũ, phím `` ` ``, vẫn khoá sau **`?test=1`** — chạy `?test=1&net=1` để có cả hai |
+| Lệnh | `/net` · `/net ds` · `/net toi [id\|tên]` · `/net ma [n]` · `/net ma danh\|chieu\|nga` · `/net xoa` · `/net hud` · `/net pvp` |
+| Máy | `window.NET_MA` · `netMaTao()` · `netMaXoa()` · `netMaDong()` · `netMaNhip()` · `drawNetHUD()` |
+| Gác | `tests/test_netma.js` (5 mệnh đề, **bốn cơ chế đã thử ngược và đều đỏ**) |
+
+**⚠ CONSOLE KHÔNG MỞ THEO `?net=1`, và đừng "tiện tay" nối vào.** Hai cờ đọc hai tham số khác
+nhau (`TEST_MODE` đọc `test|max`, `net.js` đọc `net`), nên `?test=1&net=1` bật cả hai — đó là
+đường thử. Cho `?net=1` tự mở console là phát lệnh gỡ rối cho **mọi người đang chơi thật trên
+cùng máy chủ**, mà `cheatExec` thì CLAUDE.md đã ghi là phải gỡ trước khi có bất cứ thứ gì chung.
+
+**⚠ `/net toi` LÀ LỆNH ĐÁNG GIÁ NHẤT, vì nó bác bỏ một cái bẫy đã ăn nguyên một vòng chẩn đoán.**
+Mọi nhân vật mới hiện ra ở ĐÚNG một điểm, nên hai cửa sổ vừa vào game là hai thân **chồng khít
+lên nhau lệch 0,0px** — kết nối chạy hoàn hảo mà nhìn ra "không thấy ai". `/net ds` in khoảng
+cách, `/net toi` dời mình sang **đứng CẠNH** (lệch 110px, cố ý không đứng đè: đứng đè đúng là
+cái đang muốn gỡ).
+
+**⚠ BÓNG GIẢ CHỈ SỐNG TRÊN MÁY NÀY.** Không gói tin nào mang chúng đi — `gui()` chỉ gửi
+`netDoc()`, tức người chơi của mình. Đừng nối chúng vào đường gửi: đó là dựng đúng cái cửa cho
+một client sửa đổi bơm người giả vào màn của người khác. Chúng cũng **không** có máu thật, không
+bị nhắm, không đánh được — cùng lý do đàn thú hoang vô dụng: *giá trị của một vật thử nằm ở chỗ
+nó không phải nội dung.*
+
+**⚠ HAI ĐƯỜNG PHẢI NỐI RIÊNG, và chúng hỏng theo hai kiểu khác nhau:**
+
+| | ai dựng lại `NETPLAYERS` | thiếu chỗ nối thì |
+|---|---|---|
+| **không** mạng | không ai — `net.js` `return` ngay đầu tệp | `/net ma` im lặng không vẽ gì, ở đúng đường chơi một mình mà người ta thử TRƯỚC |
+| **có** mạng | `capNhatMang()`, mỗi ảnh chụp (10 Hz) | bóng giả vẽ được đúng một nhịp rồi biến — đọc ra "tầng vẽ hỏng" |
+
+Nên `netMaDong()` (game.js) tự đổ vào cho đường đầu, và `capNhatMang()` nối `NET_MA` vào đuôi
+cho đường sau. Thử ngược từng chỗ đều đỏ đúng mệnh đề của nó.
+
+**⚠ `netThanNhip()` LÀ MỘT LUẬT, HAI CHỖ GỌI.** `noiSuy()` gọi nó cho thân người THẬT, `netMaNhip()`
+gọi nó cho bóng giả. Trước bản này phép đếm ngược ba đồng hồ hoạt cảnh + `deadT` nằm thẳng trong
+`noiSuy`; giữ nguyên rồi chép sang cho bóng giả là bóng giả diễn một kiểu còn người thật diễn một
+kiểu — mà bóng giả sinh ra **chính để thử đường vẽ của người thật**, nên hai bên lệch nhau là công
+cụ thử nói dối. Cùng lý do `thanNhip` tồn tại.
+
+**⚠ Ba đồng hồ ấy vẫn đếm ngược trong `netThanNhip`, KHÔNG được dời vào `thanNhip`** — `thanNhip`
+thì cả người chơi của mình lẫn thân người từ xa cùng gọi, nên đặt vào đó là mình bị trừ hai lần.
+
+**Hai lỗi của chính QUE DÒ, cả hai cho ra một phép đo vô nghĩa** — ghi lại vì cùng họ với những
+cái đã ghi ở mục `test_dongbodo`:
+1. **Quên tỉ lệ bộ đệm/CSS.** Canvas 2560×1500 trên khung nhìn 1280×800 ⇒ `tl` = 2. Công thức
+   đúng là `screen = (thế giới − camera) × zoom`, **rồi mới** nhân `tl`. Thiếu bước hai là đo
+   vào một ô lệch hẳn chỗ: ra 190 điểm ảnh, trông y như "vẽ được một tí".
+2. **Ô đo và ô đối chứng ra BẰNG NHAU TUYỆT ĐỐI (224 = 224).** Cả hai toạ độ âm nên
+   `getImageData` kẹp về góc trên-trái ⇒ hai ô là **cùng một vùng**. Đó là bằng chứng cảnh dựng
+   hỏng, không phải bằng chứng cơ chế hỏng. `test_netma` nay tự kiểm `trongKhung` trước khi chấm.
+   Sau khi sửa: **6.869 điểm ảnh đổi ở ô có bóng, 121 ở ô đối chứng.**
+
 ### Còn nợ, biết rõ
 
 | | |
 |---|---|
-| `wingDef(it)` lui về `player.sect` khi không tra được `it.wing` | thân người từ xa sẽ mượn cánh theo lớp của NGƯỜI CHƠI. Chưa nổ vì giai đoạn 1 không đồng bộ trang bị; phải sửa trước Giai đoạn 2 |
-| Trang bị / hành động ra đòn / cánh | chưa đồng bộ — Giai đoạn 2. Gửi **chữ ký** `gearVisual`, KHÔNG gửi `player.equip` (một món 474 byte × 11 ô = ~5 KB mỗi người mỗi ảnh chụp) |
+| Niệm chú của thân người từ xa | `castT` đã đồng bộ, nhưng VFX của chiêu thì chưa — bên kia thấy tư thế niệm mà không thấy chiêu nổ |
+| Thân người từ xa không chở `avatar` khi ai đó đổi giữa chừng… | …thật ra CÓ (`g.av`, ba trạng thái `undefined`/`null`/id). Chỗ còn thiếu là **con Axie không có hoạt cảnh ĐÁNH** — xem "Nợ" ở mục Đổi Vai |
 | `cheatExec` vẫn ship | Giai đoạn 0 chưa làm. Vô hại ở bản offline; phải gỡ trước khi có bất cứ thứ gì chung |
 | Sandbox không SSH được vào VPS | mọi bước cài Node/nginx/systemd phải do chủ dự án chạy tay |
 
@@ -3079,6 +5220,17 @@ NODE_PATH=/opt/node22/lib/node_modules node <test>.js   # playwright cài global
 Trong test: `window.TEST_MODE = true; startGame('<sect>', null);` rồi gọi thẳng hàm game
 (`calcDerived()`, `castSkill()`, `update(0.1)`...).
 
+⚠ **BÀI KIỂM SAI CÚ PHÁP KHÔNG ĐỎ Ở MỘT KHẲNG ĐỊNH NÀO** — nó chết lúc nạp mô-đun, và `reg.sh`
+chỉ thấy `rc=1` kèm một vết ngăn xếp của Node. Đã ship đúng thế một lần, và nguyên nhân nhỏ đến
+mức buồn cười: sửa một câu **THÔNG BÁO** rồi để dấu huyền quanh `player.def = DIEM_KHOI_DAU`
+trong một template literal. Bài đó thôi gác gì suốt cả một lượt hồi quy 40 phút.
+⇒ `tools/cua_kiem.sh §①` nay `node --check` **mọi** tệp trong `tests/`. Rẻ hơn hẳn việc phát
+hiện ở phút thứ 40. *Sửa một chuỗi trong bài kiểm vẫn là sửa MÃ.*
+
+⚠ Bài kiểm dùng `require()` phải chạy **ngoài cây repo** (`package.json` khai `"type":"module"`).
+`reg.sh` chép chúng sang `$OUT/src/` nên nó không dính; chạy lẻ bằng `node tests/x.js` thì dính,
+và lỗi báo ra không nhắc gì tới ESM.
+
 ⚠ Khi nhảy thẳng `player.level` trong test, phải tự gọi `vhAutoLearn()` — game thật gọi nó qua
 `gainXp()` → `unlockNotices()` mỗi lần lên cấp.
 
@@ -3102,6 +5254,14 @@ gặp `rc=124` thì **chạy lại đúng một lần**, ghi tên vào `chaylai.
 `ĐÃ CHẠY LẠI`. Lượt hai vẫn 124 thì vẫn tính đỏ. *Một bộ kiểm im lặng nuốt lỗi thì tệ hơn một
 bộ kiểm nói ra là nó đã phải chạy lại.*
 
+⚠ **BA BÀI CHÉP CỨNG CỔNG, chạy lẻ ngoài `reg.sh` là ĐỎ GIẢ.** `test_phutdau` (8861) ·
+`test_nowuxia2` (8861) · `test_bonho` (8871) mở thẳng `http://localhost:<cổng>/index.html` và
+**không đọc argv**. Chạy riêng mà quên dựng server đúng cổng thì lỗi báo ra là
+`ERR_CONNECTION_REFUSED` ở dòng `page.goto` — trông y như bài hỏng, mà thực ra chưa một khẳng
+định nào chạy. Đã mất một vòng chẩn đoán vì chuyện này: tôi đọc "3/3 đỏ" rồi suýt kết luận là
+lỗi tất định của commit mình. **Trước khi tin một lượt chạy lẻ, hỏi log xem nó có tới được trang
+không.**
+
 ⚠ **Dọn trình duyệt mồ côi bằng lọc `ppid=1`, TUYỆT ĐỐI không `pkill -f chrom`.** Mẫu đó khớp
 luôn dòng lệnh của chính shell đang chạy rồi giết nó (thoát 144) — cùng vết sẹo đã ghi ở mục
 git bên dưới, và nó đã bị dẫm lại một lần nữa trong phiên gần đây.
@@ -3113,13 +5273,37 @@ khởi động**. Triệu chứng: thoát **144**, `$OUT` không tồn tại, kh
 nhầm thành "bộ kiểm hỏng". Tắt server thì tìm pid **theo CỔNG** (`ss -lptn "sport = :8853"`), đừng
 tìm theo chuỗi lệnh.
 
-⚠ **HAI BÀI ĐANG CÒN ĐỎ THEO XÚC XẮC — đã đo, chưa sửa tận gốc.** Ghi ra để người sau đừng mất
+⚠ **BA BÀI ĐANG CÒN ĐỎ THEO XÚC XẮC — đã đo, chưa sửa tận gốc.** Ghi ra để người sau đừng mất
 một buổi truy lại từ đầu, và đừng vội đổ cho commit của mình:
 
 | bài | dấu hiệu | đã đo được |
 |---|---|---|
 | `test_ngamchuot §4` | *"con quái cạnh chân cũng mất máu"*, `ganMat` = **đúng 1** | xanh 3/3 khi chạy riêng · mục này **đã** `player.reflect = 0` rồi, nên 1 máu ấy tới từ nguồn KHÁC, chưa truy ra. Ngưỡng là `ganMat > 0` nên đúng một điểm máu của một cơ chế khác cũng đủ làm đỏ |
 | `test_tamphap §3` | *"số lần bị khoá chân không giảm hẳn (47 → 28)"* | xanh 3/3 khi chạy riêng · đây là phép đo THỐNG KÊ, mẫu mỏng |
+| `test_phutdau §4` | *"bảo đảm rơi đồ vẫn áp dụng sau giai đoạn tân thủ — lạm phát đồ"* | xanh 3/3 khi chạy riêng (rơi 4/7 · 0/6 · 0/6); lượt đỏ bốc trúng **7/7**. Chốt là `roiThem >= haThem` với `haThem` chỉ 6-7 — vòng lặp xin 12 con nhưng `break` khi hết quái trong 400px. Tỉ lệ rơi cao thì 100% do may là chuyện thường. Muốn sửa tận gốc phải NỚI MẪU (bảo đảm đủ quái) hoặc đo thẳng `computeKillRewards` — nó là hàm THUẦN nên gọi 200 lượt là dứt điểm |
+| `test_bophan §4` | *"nhánh BẤT LỢI: con sắc hơn phải mất nhiều máu hơn — 389069 vs 392734"*, có lượt đỏ **cả hai** nhánh | **đỏ trên CẢ HAI cây**: 4/9 lượt trên nhánh đang làm · **2/9 trên `origin/main`** ⇒ không phải do commit nào. Gốc là ĐỘ LỚN TÍN HIỆU: mục này chờ ~8% (ironshell 6/6 vs ridgehorn 2/6) nhưng đo thật chỉ ra **2-2,9%**, mà mỗi đòn mang `rnd(0.85,1.15)`. Tín hiệu nhỏ hơn nhiễu thì nó ĐỔI DẤU chứ không chỉ dao động — đúng cái bẫy "chọn cặp Axie quá gần nhau" mà chính mục này đã sửa một lần rồi và sửa chưa đủ. Muốn dứt điểm thì cộng dồn nhiều nhịp hơn (lối `test_hethu §2` đã làm: 900 nhịp) hoặc ghim `rnd` lúc đo, đừng nới ngưỡng |
+
+✅ **`test_tamphap §2` (*"định thân KHÔNG khoá được chân: đi được 46px"*) ĐÃ SỬA TẬN GỐC** — ghi lại
+vì nó là khuôn mẫu cho cả loại: **một mục đo trên cảnh mà mục TRƯỚC để lại.** `keoQuaiDanh` ghim
+quái ngay sát người chơi và ép nó đánh 800 nhịp, rồi để nguyên nó đấy; khối đo định thân chạy tiếp
+30 nhịp và giả định không ai đụng vào người chơi. Đo được ngay trước khối ấy: **2 con còn sống
+trong 200px, con gần nhất cách 8px**. Một cú nện văng dời được người chơi vài chục px **kể cả lúc
+đang bị khoá chân** (mục ③ đo được nó xảy ra 10/800 nhịp), và mệnh đề đọc ra thành "định thân
+không khoá được". `dinhT` lúc đó vẫn còn 3,5 — tức chân BỊ khoá thật, thứ dời người là cái khác.
+
+⇒ Nay mục ấy dời quái ra xa trước khi đo rồi trả về, và **tự kiểm** là đã dọn được (`quaiGan` phải
+bằng 0) — bỏ bước dọn ra thì chốt tự kiểm đỏ ngay, đã thử. *Luật chung: mục nào đổi chỗ đứng hay
+để lại quái thì mục sau phải dựng lại cảnh của mình, và phải chứng minh là đã dựng được.*
+
+⚠ **Và đừng tin phép đo đầu tiên của chính mình.** Lượt dò đầu tôi đặt lại `player.x/y` về giữa map
+trước mỗi lượt đo — tức dời người chơi ra xa đúng con quái cần quan sát, rồi đọc ra `quaiGan: 0` và
+suýt kết luận "giả thuyết sai". Bỏ hai dòng đặt lại ấy thì ra `quaiGan: 2, gần nhất 8px`.
+| `test_canbanglop §2` | *"chênh ST cao/thấp 4,42× > trần 3,6×"* | **xanh 3/3 trên cây đang làm VÀ 3/3 trên cây trước** — tức xúc xắc, không phải commit nào. Đo TB 3 lượt ra **2,63×** (cây nay) và **2,32×** (cây trước), đều sâu trong trần. Gốc: đồ rơi NGẪU NHIÊN + số lần chết là hàm bậc thang (mỗi lần chết `buildWorld()` hồi đầy cả bãi), nên ST tuy "trơn" hơn số mạng vẫn thừa hưởng phi tuyến ấy. Lượt đỏ bốc trúng DK 88.385 (dải thường 53-58k) và DW 19.999 ⇒ 4,42×. Chính đầu tệp bài ấy đã ghi ±22% tản — con số đó đo khi chưa ai chết 11 lần |
+| `test_sandat` (nhanmon) | *"sau 3600 khung đuổi, 1 con nằm ngoài sàn: Cao Thủ Lang Thang — nhánh di chuyển nào đó thiếu collideObstacles"* | ⚠ **ĐÂY KHÔNG PHẢI NHIỄU, đây là một LỖI THẬT bắn thưa.** Xanh 3/3 chạy riêng · xanh ở lượt hồi quy liền trước ⇒ rất dễ đọc nhầm là xúc xắc rồi bỏ qua. Nhưng chính mệnh đề ấy sinh ra để bắt *một nhánh dời chỗ quái quên gọi `collideObstacles`*, và nó chỉ nổ khi hình học truy đuổi rơi đúng chỗ. Cần một đợt riêng: quét NĂM nhánh dời quái trong `update()` (xem cảnh báo `mobDoBuoc()`) rồi đối chiếu nhánh nào thiếu. Đừng nới ngưỡng, và đừng ghi nó vào đây rồi quên |
+| ~~`test_uigothic ⑥`~~ | *"ở 30% máu, đầu TRÁI thanh cũng tối theo"* | ✅ **ĐÃ SỬA TẬN GỐC, không còn trong bảng này.** Dòng cũ ghi *"thanh máu có thành phần đập theo thời gian"* — **sai**: thanh không đập. Mẫu "đầy" đổi giữa các lượt vì `applyTestBoost()` bốc đồ NGẪU NHIÊN ⇒ `maxHp` khác ⇒ **chữ số khác**, mà que dò đọc đúng một điểm ở `(0,08 · giữa)` — tức đọc thẳng vào con số máu do `.cd-thanh span` vẽ đè. Nay đọc **đỉnh độ đỏ của cả CỘT** (chữ trắng và bóng đen chỉ kéo độ đỏ xuống) ⇒ năm lượt ra đúng cùng một bộ số. Xem mục thanh máu/mana ở khối UI Gothic. *Một bài đỏ theo xúc xắc vẫn phải TRUY tới nguyên nhân — lần này "xúc xắc" là một que dò hỏng, và chính nó che một mệnh đề rỗng suốt nhiều phiên.* |
+| `test_qablock` | *"dựng cảnh sai: người chơi không ăn đòn nào"* rồi kéo theo 2 FAIL nữa | **xanh 8/8 lượt liên tiếp** khi chạy riêng · chính chú thích trong bài đã ghi nó nhạy với mạch ngẫu nhiên (*"từng xanh chỉ vì may"*) — con quái phải kịp đánh trúng trong 40 khung, máy bận là trượt. Phân biệt bằng `git diff -U0 … | grep '^@@'`: nếu diff không chạm `update`/`hurtPlayer`/`swingFeel`/`shakeDir` thì nó không thể là của mình |
+
+⚠ **VÀ QUE DÒ CỦA CHÍNH PHÉP PHÂN BIỆT ẤY CŨNG HỎNG ĐƯỢC — tôi vừa dẫm.** Nhiều bài đọc `../public/game/game.js` bằng đường dẫn TƯƠNG ĐỐI, nên chạy chúng từ một thư mục không có `public/` bên cạnh là chết `ENOENT` **trước khi một khẳng định nào chạy** — mà `rc=1`, nên nó đọc ra đúng như *"đỏ 3/3, tất định"*. Tôi đã suýt kết luận ngược hẳn. Dựng cảnh cho đúng: một thư mục có `tests/` **và** `public/` (symlink là đủ) cạnh nhau. Cùng luật với ba bài chép cứng cổng ở trên: *trước khi tin một lượt chạy lẻ, hỏi log xem nó có tới được trang không.*
 
 **Cách phân biệt "đỏ do mình" với "đỏ do xúc xắc", làm theo thứ tự này:** chạy riêng bài đó
 **3 lượt** trên cây của mình → rồi chạy trên cây **trước commit của mình** (`git worktree add`).

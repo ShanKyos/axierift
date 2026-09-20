@@ -31,7 +31,7 @@ const PORT = process.argv[2] || '8853';
   await p.waitForTimeout(1200);
   await p.evaluate(() => {
     player.jewels = { chucPhuc:25, linhHon:3, sinhMenh:2, honDon:9 };
-    player.gems = { tuLa:3, honNguyen:0 };
+    player.gems = { honNguyen:3 };
     if (!player.khoNgoc) player.khoNgoc = { hap:{} };
     document.querySelectorAll('.tut-box,#tut').forEach(e => e.remove());
   });
@@ -94,20 +94,23 @@ const PORT = process.argv[2] || '8853';
   const r4 = await p.evaluate(async () => {
     closePanels(); togglePanel('ngocbank');
     await new Promise(r => setTimeout(r, 350));
-    const ic = [...document.querySelectorAll('#panel-ngocbank .nb-list .nb-ic')].slice(0, 6);
+    const ic = [...document.querySelectorAll('#panel-ngocbank .nb-list .nb-ic')].slice(0, KHO_NGOC_KEYS.length);
     await Promise.all(ic.map(i => i.complete ? null : new Promise(r => { i.onload = i.onerror = r; })));
     return { so: ic.length,
              src: ic.map(i => i.getAttribute('src')),
              hong: ic.filter(i => !i.naturalWidth).map(i => i.getAttribute('src')) };
   });
-  if (r4.so !== 6) fail(`§4 chỉ có ${r4.so} hàng ngọc, cần 6`);
+  // ĐỌC SỐ HÀNG TỪ GAME, đừng chép cứng: Tu La Tinh Thạch đã gỡ (GO_TULA) nên 6 → 5, và bài
+  // này đỏ ở một chỗ chẳng liên quan gì tới thứ nó định gác (icon 404).
+  const soHang = await p.evaluate(() => KHO_NGOC_KEYS.length);
+  if (r4.so !== soHang) fail(`§4 chỉ có ${r4.so} hàng ngọc, cần ${soHang}`);
   else {
-    if (!r4.hong.length) pass('§4 cả 6 icon ngọc tải được (không tệp nào 404)');
+    if (!r4.hong.length) pass(`§4 cả ${soHang} icon ngọc tải được (không tệp nào 404)`);
     else fail('§4 icon không tải được: ' + r4.hong.join(', '));
     const rieng = new Set(r4.src).size;
-    if (rieng === 6 && r4.src.every(s2 => /assets\/ui\/ngoc_/.test(s2)))
-      pass('§4 sáu icon là sáu TỆP TRANH khác nhau, không phải một hình vẽ đổi màu');
-    else fail(`§4 icon trùng nhau hoặc không phải tranh thật — ${rieng}/6 đường dẫn riêng: ${r4.src.join(' ')}`);
+    if (rieng === soHang && r4.src.every(s2 => /assets\/ui\/ngoc_/.test(s2)))
+      pass(`§4 ${soHang} icon là ${soHang} TỆP TRANH khác nhau, không phải một hình vẽ đổi màu`);
+    else fail(`§4 icon trùng nhau hoặc không phải tranh thật — ${rieng}/${soHang} đường dẫn riêng: ${r4.src.join(' ')}`);
   }
 
   // ── §5 gửi/rút ĂN THẬT, và bảng TỰ VẼ LẠI ─────────────────────────────────

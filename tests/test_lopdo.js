@@ -32,11 +32,39 @@ const { chromium } = require('playwright');
     so:  Object.keys(NV_LOP_HOP).map(k => k + ':' + Object.keys(NV_LOP_HOP[k]).length)
   }));
   console.log('1) bảng lớp:', JSON.stringify(r1));
-  // tóc-sau · tay XA · chân · thân · tay GẦN · đầu — ô `tay` phải nằm HAI BÊN ô `ao`
-  const canLop = ['h:non', 't1:tay', 'c:chan', 'a:ao', 't2:tay', 'n:non'];
-  if (r1.lop.join('|') !== canLop.join('|'))
-    fail(`NV_LOP sai thứ tự vẽ: ${r1.lop.join('|')} — cần ${canLop.join('|')}`);
-  else pass('NV_LOP đúng thứ tự vẽ của bộ xương (tay XA · chân · thân · tay GẦN · đầu)');
+  // ⚠ ĐỌC THẲNG bảng `LOP` của bộ nướng, ĐỪNG chép cứng danh sách sang đây. Thứ bài này gác là
+  // "hai bảng TRÙNG KHÍT nhau" — chép cứng thì thêm một lớp (ví dụ lớp vũ khí) là bài đỏ ở chỗ
+  // chẳng liên quan gì tới thứ nó định gác, và người sửa sẽ nới bài kiểm chứ không sửa lệch.
+  // ⚠ Bài này có thể chạy từ BẢN CHÉP ngoài kho (tools/reg.sh chép sang $OUT/src), nên
+  // __dirname không nằm trong kho. Dò cả cwd và vài chỗ quen thuộc — cùng lối `timGoc()`
+  // của test_nowuxia2, nơi đã mắc đúng lỗi này một lần và mục quét tệp im lặng rỗng ruột.
+  const fs = require('fs'), path = require('path');
+  const MOC = 'tools/spine/nuong_nv.py';
+  let goc = null;
+  for (let d of [__dirname, process.cwd()]){
+    for (let i = 0; i < 6 && d && d !== '/'; i++){
+      if (fs.existsSync(path.join(d, MOC))) { goc = d; break; }
+      d = path.dirname(d);
+    }
+    if (goc) break;
+  }
+  if (!goc) for (const g of ['/home/user/axiewuxia', '/home/user/axie-wuxia'])
+    if (fs.existsSync(path.join(g, MOC))) { goc = g; break; }
+  const py = goc ? fs.readFileSync(path.join(goc, MOC), 'utf8') : '';
+  // Đọc theo DÒNG chứ không bằng một regex bắt cả tuple: tên khe trong bảng là chữ Hán
+  // ('背后头发'…) nên \w không khớp, mà tuple thì lồng dấu phẩy và ngoặc. Mỗi dòng lấy token
+  // trong nháy ĐẦU (mã lớp) và token trong nháy CUỐI (ô trang bị) — hai thứ duy nhất viết
+  // bằng chữ latin trên dòng đó.
+  const kh = py.slice(py.indexOf('\nLOP = ['));
+  const canLop = kh.slice(0, kh.indexOf(']\n')).split('\n')
+    .map(l => l.split('#')[0])
+    .map(l => [...l.matchAll(/'([A-Za-z0-9_]+)'/g)].map(m => m[1]))
+    .filter(a => a.length >= 2)
+    .map(a => a[0] + ':' + a[a.length - 1]);
+  if (canLop.length < 5) fail('không đọc được bảng LOP trong tools/spine/nuong_nv.py — bài kiểm mất chỗ bám');
+  else if (r1.lop.join('|') !== canLop.join('|'))
+    fail(`NV_LOP lệch bảng LOP của bộ nướng: ${r1.lop.join('|')} — nuong_nv.py khai ${canLop.join('|')}`);
+  else pass(`NV_LOP trùng khít bảng LOP của bộ nướng (${canLop.length} lớp): ${canLop.join(' · ')}`);
   if (!r1.bo.length) fail('chưa bộ nào có lớp rời');
   else pass(`${r1.bo.length} bộ có lớp rời: ${r1.bo.join(', ')}`);
 

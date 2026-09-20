@@ -1,0 +1,232 @@
+#!/usr/bin/env node
+// Đo thành Ardhaven — khổ, đất chết, vòng tiếp tế, bán kính dịch vụ, và kiểm hình học
+// của lõi đề xuất. Đọc THẲNG public/game/data/canbang.js nên số luôn khớp game đang chạy.
+//
+//   node tools/do_thanh.js            — đo hiện trạng
+//   node tools/do_thanh.js --dexuat   — đo thêm lõi đề xuất (docs/THIET_KE_THI_TRAN.md §4)
+//
+// ⚠ ĐỪNG chép cứng số nào từ đây sang tài liệu mà không ghi rõ là số đo. Mọi con số về
+// Ardhaven trong docs/THIET_KE_THI_TRAN.md đều sinh ra từ tệp này.
+
+const fs = require('fs'), path = require('path');
+const ROOT = path.resolve(__dirname, '..');
+global.window = {};
+eval(fs.readFileSync(path.join(ROOT, 'public/game/data/canbang.js'), 'utf8'));
+
+const M = window.MAPS.ardhaven;
+const NP = window.NPCS.filter(n => n.map === 'ardhaven');
+const W = M.w, H = M.h, POLY = M.diTrong;
+const G = 24;            // ô lưới tìm đường, đúng bằng lưới của test_domap
+const SPEED = 209;       // tốc độ nền người chơi, px/giây
+const MAN = [1920, 1080];
+const HOANG = 2600 * 1900;   // một map hoang dã, để lấy mốc so
+
+const d = (a, b) => Math.hypot(a.x - b.x, a.y - b.y);
+const giay = px => (px / SPEED).toFixed(1);
+function trong(x, y, p){
+  let c = false;
+  for (let i = 0, j = p.length - 1; i < p.length; j = i++){
+    const [xi, yi] = p[i], [xj, yj] = p[j];
+    if ((yi > y) !== (yj > y) && x < (xj - xi) * (y - yi) / (yj - yi) + xi) c = !c;
+  }
+  return c;
+}
+const H1 = s => console.log('\n\x1b[1m' + s + '\x1b[0m');
+
+// ── 1. KHỔ ────────────────────────────────────────────────────────────────
+H1('1 · KHỔ');
+let tot = 0, di = 0;
+for (let y = G/2; y < H; y += G) for (let x = G/2; x < W; x += G){ tot++; if (trong(x, y, POLY)) di++; }
+console.log(`  khung        ${W}×${H} = ${(W*H/1e6).toFixed(2)} Mpx  (${(W*H/HOANG).toFixed(2)}× một map hoang dã)`);
+console.log(`  đi được      ${(100*di/tot).toFixed(1)}%  = ${di} ô ${G}px`);
+for (const [ten, z] of [['GẦN', 1.75], ['VỪA', 1.45], ['XA', 1.0]])
+  console.log(`  zoom ${ten.padEnd(4)}    ${(W*H/((MAN[0]/z)*(MAN[1]/z))).toFixed(1)} màn hình`);
+
+// ── 2. RUỘT RỖNG ──────────────────────────────────────────────────────────
+// 16 khối nhà nằm hết ở hai hàng sát tường; dải giữa không có công trình nào.
+H1('2 · DẢI GIỮA');
+const O = (window.MAP_OBSTACLES || {}).ardhaven || [];
+const hang = [...new Set(O.filter(o => o.wd).map(o => o.y))].sort((a, b) => a - b);
+if (hang.length >= 2){
+  const tren = Math.max(...O.filter(o => o.y === hang[0]).map(o => o.y + o.ht));
+  const duoi = hang[hang.length - 1];
+  console.log(`  ${O.length} khối ở ${hang.length} hàng: y ${hang.join(' và ')}`);
+  console.log(`  dải giữa     y ${tren} → ${duoi} = ${W}×${duoi - tren} = ${(W*(duoi-tren)/1e6).toFixed(2)} Mpx`);
+  console.log(`               = ${(W*(duoi-tren)/HOANG).toFixed(2)}× một map hoang dã · ${(W*(duoi-tren)/(MAN[0]*MAN[1])).toFixed(1)} khung hình`);
+}
+
+// ── 3. ĐẤT CHẾT ───────────────────────────────────────────────────────────
+H1('3 · ĐẤT CHẾT — ô đi được cách MỌI điểm nội dung');
+const CONG = [{x:3200,y:290},{x:3200,y:2910},{x:480,y:1600},{x:5920,y:1600},{x:2820,y:2500}];
+const diem = [...NP.map(n => ({x:n.x, y:n.y})), ...CONG];
+const nguong = [400, 700, 1000], dem = nguong.map(() => 0);
+let ndi = 0;
+for (let y = G/2; y < H; y += G) for (let x = G/2; x < W; x += G){
+  if (!trong(x, y, POLY)) continue; ndi++;
+  let m = Infinity; for (const p of diem){ const t = Math.hypot(p.x-x, p.y-y); if (t < m) m = t; }
+  nguong.forEach((n, i) => { if (m > n) dem[i]++; });
+}
+nguong.forEach((n, i) => console.log(`  > ${String(n).padStart(4)}px (${giay(n)}s)   ${(100*dem[i]/ndi).toFixed(1)}%`));
+
+// ── 4. BÁN KÍNH DỊCH VỤ ───────────────────────────────────────────────────
+H1('4 · BÁN KÍNH TỪ ĐIỂM THẢ');
+const VAI = { forge:'Lò Rèn', shop:'Tiệm', stable:'Chuồng', trunya:'Truy Nã', vanduyen:'Cầu May', tenui:'Vực' };
+const svc = NP.filter(n => VAI[n.talk]).map(n => ({ n, d: d(M.spawn, n) })).sort((a, b) => a.d - b.d);
+for (const s of svc)
+  console.log(`  ${String(Math.round(s.d)).padStart(5)}px  ${String(giay(s.d)).padStart(5)}s  ${VAI[s.n.talk].padEnd(8)} ${s.n.name}`);
+console.log(`  ── ${NP.length} NPC, trong đó ${svc.length} có chức năng, ${NP.length - svc.length} chỉ lore`);
+const khung = NP.filter(n => Math.abs(n.x - M.spawn.x) < MAN[0]/2 && Math.abs(n.y - M.spawn.y) < MAN[1]/2);
+console.log(`  ── lọt trong MỘT khung hình quanh điểm thả: ${khung.length}/${NP.length}`);
+
+// ── 5. VÒNG TIẾP TẾ ───────────────────────────────────────────────────────
+// Chuyến người chơi lặp nhiều nhất: về qua cổng, mua bán sửa đồ, ra lại cùng cổng đó.
+function vong(ten, cho){
+  let t = 0; const ch = [];
+  for (let i = 0; i < cho.length - 1; i++){ const s = d(cho[i], cho[i+1]); t += s; ch.push(Math.round(s)); }
+  console.log(`  ${ten}\n    ${ch.join(' + ')} = ${Math.round(t)}px = ${giay(t)}s`);
+  return t;
+}
+H1('5 · VÒNG TIẾP TẾ (cổng Nam → mua bán → cổng Nam)');
+const veNam = { x:3200, y:3080 };                     // spawnFrom.ngoai
+const by = id => NP.find(n => n.id === id);
+const tiem = NP.filter(n => n.talk === 'shop' || n.talk === 'forge').sort((a,b) => a.x - b.x);
+const nay = vong('nay:', [veNam, ...tiem, veNam]);
+const trai = Math.max(...tiem.map(t => t.x)) - Math.min(...tiem.map(t => t.x));
+console.log(`  ba tiệm trải ${trai}px = ${(trai/MAN[0]).toFixed(1)}× khung hình ⇒ ${trai < MAN[0] ? 'lọt' : 'KHÔNG lọt'} một màn hình`);
+
+// ── 6. CỔNG ───────────────────────────────────────────────────────────────
+// ⚠ ĐỌC THẲNG bảng GATES trong game.js. Bản đầu của tệp này chép cứng bốn dòng cổng, và
+// khi cổng Nam ↔ Tây đổi map thì nó vẫn in ra bảng CŨ mà không báo gì — đúng kiểu nói dối
+// không ai bắt được. Chép cứng dữ liệu đã có nguồn là tự tay dựng một nguồn thứ hai.
+const GSRC = fs.readFileSync(path.join(ROOT, 'public/game/game.js'), 'utf8');
+const GATES = [...GSRC.matchAll(/\{\s*map:'ardhaven',\s*x:(\d+),\s*y:(\d+),\s*to:'(\w+)',\s*name:'([^']+)'/g)]
+  .map(m => ({ x:+m[1], y:+m[2], to:m[3], name:m[4] }));
+
+H1('6 · BỐN CỔNG — khoảng cách vs cấp tối thiểu của map sau nó');
+if (!GATES.length) console.log('  ✘ không đọc được GATES từ game.js — bảng đã đổi dạng?');
+for (const g of GATES){
+  const md = window.MAPS[g.to] || {}, s = d(M.spawn, g);
+  const ten = (g.name.match(/Cổng (\S+)/) || [, '?'])[1];
+  console.log(`  ${ten.padEnd(4)} ${String(Math.round(s)).padStart(5)}px ${String(giay(s)).padStart(5)}s → ${(md.name||g.to).padEnd(20)} cấp ${md.min}`);
+}
+{ // cổng của nhân vật cấp 1 phải là cổng GẦN NHẤT
+  const xep = GATES.map(g => ({ g, d:d(M.spawn, g), min:(window.MAPS[g.to]||{}).min ?? 99 }))
+                   .sort((a, b) => a.d - b.d);
+  const deNhat = xep.reduce((a, b) => b.min < a.min ? b : a, xep[0]);
+  const ok = deNhat === xep[0];
+  console.log(`  ── cổng dễ nhất (cấp ${deNhat.min}) là cổng ${ok ? 'GẦN NHẤT ✔' : `thứ ${xep.indexOf(deNhat)+1}/4, xa ${Math.round(deNhat.d)}px ✘`}`);
+}
+
+// ── 7. LÕI ĐỀ XUẤT ────────────────────────────────────────────────────────
+if (process.argv.includes('--dexuat')){
+  H1('7 · LÕI ĐỀ XUẤT (docs/THIET_KE_THI_TRAN.md §4.1)');
+  const sp = { x:3200, y:1800 };
+  const loi = [['duoclao',2480,1510], ['trachu',2740,1510], ['thoren',3660,1510], ['binhkhi',3920,1510]];
+  const khoi = [[2380,1100,'A · Phố Chợ'], [3560,1100,'B · Phố Lò']];
+  let xau = 0;
+  for (const [id, x, y] of loi){
+    const ok = trong(x, y, POLY), s = d(sp, {x, y});
+    if (!ok) xau++;
+    console.log(`  ${id.padEnd(9)} (${x},${y})  đa giác ${ok ? '✔' : '✘'}  ${String(Math.round(s)).padStart(4)}px ${giay(s)}s`);
+  }
+  const xs = loi.map(l => l[1]), tr = Math.max(...xs) - Math.min(...xs);
+  console.log(`  trải ${tr}px ⇒ ${tr < MAN[0] ? '✔ LỌT' : '✘ KHÔNG lọt'} một khung hình ${MAN[0]}px`);
+  const de = (a, b) => a.x < b.x+b.wd && b.x < a.x+a.wd && a.y < b.y+b.ht && b.y < a.y+a.ht;
+  for (const [x, y, ten] of khoi){
+    const goc = [[x,y],[x+460,y],[x+460,y+340],[x,y+340]].every(([a,b]) => trong(a, b, POLY));
+    const va = O.filter(o => o.wd && de({x, y, wd:460, ht:340}, o)).length;
+    if (!goc || va) xau++;
+    console.log(`  ${ten.padEnd(12)} x ${x}-${x+460} y ${y}-${y+340}  bốn góc ${goc ? '✔' : '✘'}  đè ${va} khối cũ ${va ? '✘' : '✔'}`);
+  }
+  const moi = vong('vòng tiếp tế mới:', [veNam, ...loi.map(([, x, y]) => ({x, y})), veNam]);
+  console.log(`    giảm ${(100 - 100*moi/nay).toFixed(0)}% so với ${Math.round(nay)}px hiện nay`);
+  console.log(xau ? `\n  ✘ ${xau} chỗ sai hình học` : '\n  ✔ hình học đề xuất sạch');
+  process.exitCode = xau ? 1 : 0;
+}
+
+// ── 8. TƯỜNG VÀ CỔNG ──────────────────────────────────────────────────────
+// Xem docs/DE_XUAT_TUONG_CONG.md. Cuống cổng đọc THẲNG từ diTrong chứ không chép cứng:
+// vấu cổng là bốn chỗ đa giác thò hẳn ra mép map.
+if (process.argv.includes('--cong')){
+  const THAN = 38, NV_CAO = 132;      // bề ngang và chiều cao ô vẽ nhân vật
+  const V = M.vatTo || [];
+  // Cuống cổng SUY TỪ ĐA GIÁC: mặt ngoài của một cổng là cạnh thẳng nằm sát mép map.
+  // Thân thành thụt vào ≥210px, còn vấu cổng thò ra tới 50px — nên ngưỡng 160px tách sạch
+  // hai loại mà không phải chép một toạ độ nào.
+  const MEP = 160;
+  const CUONG = [];
+  for (let i = 0; i < POLY.length; i++){
+    const a = POLY[i], b = POLY[(i+1) % POLY.length];
+    // PHẢI thẳng trục: cạnh vai của vấu cổng chạy chéo và một đầu của nó cũng chạm mép, nên
+    // lọc bằng "đầu nào đó gần mép" là nhận nhầm cả vai (bản đầu ra 12 cuống thay vì 4).
+    const doc = a[0] === b[0] && a[1] !== b[1];      // cạnh dọc ⇒ cổng đông/tây
+    const ngang = a[1] === b[1] && a[0] !== b[0];
+    if (!doc && !ngang) continue;
+    const truc = doc ? a[0] : a[1], bien = doc ? W : H;
+    if (Math.min(truc, bien - truc) > MEP) continue; // thân thành thụt ≥210px, vấu thò tới 50px
+    const len = doc ? Math.abs(a[1] - b[1]) : Math.abs(a[0] - b[0]);
+    const gx = (a[0] + b[0]) / 2, gy = (a[1] + b[1]) / 2;
+    const ten = doc ? (gx < W/2 ? 'Tây' : 'Đông') : (gy < H/2 ? 'Bắc' : 'Nam');
+    // MẶT TƯỜNG là vai của vấu, không phải mặt ngoài: hai đỉnh kề mặt ngoài chạy chéo vào
+    // trong và kết thúc đúng trên mặt tường. Đo "cột mốc lùi bao nhiêu" phải đo từ ĐÓ —
+    // đo từ mặt ngoài thì mọi cột mốc đều lùi thêm nguyên bề sâu vấu (160px) một cách vô hình.
+    const truoc = POLY[(i - 1 + POLY.length) % POLY.length], sau = POLY[(i + 2) % POLY.length];
+    const tuong = doc ? (truoc[0] + sau[0]) / 2 : (truoc[1] + sau[1]) / 2;
+    CUONG.push({ ten, len, doc, gx, gy, tuong, lo: doc ? [Math.min(a[1],b[1]), Math.max(a[1],b[1])]
+                                                       : [Math.min(a[0],b[0]), Math.max(a[0],b[0])] });
+  }
+  H1('8 · KHẨU ĐỘ CỔNG — chỗ người chơi thật sự đi qua');
+  if (CUONG.length !== 4) console.log(`  ✘ nhận ra ${CUONG.length} cuống cổng, phải là 4`);
+  for (const c of CUONG)
+    console.log(`  ${c.ten.padEnd(5)} ${c.len}px = ${(c.len/THAN).toFixed(0)} người đứng ngang · ${(c.len/NV_CAO).toFixed(1)}× chiều cao nhân vật`);
+
+  H1('8b · ẢNH CỔNG CÓ CHE ĐƯỢC KHẨU ĐỘ KHÔNG');
+  const CONG_ANH = V.filter(v => v.img === 'ct_cong');
+  for (const c of CUONG){
+    // ảnh cổng gần cuống này nhất
+    let a = null, m = Infinity;
+    for (const v of CONG_ANH){
+      const t = Math.hypot(v.x + v.w/2 - c.gx, v.y + v.h/2 - c.gy);
+      if (t < m){ m = t; a = v; }
+    }
+    if (!a){ console.log(`  ${c.ten.padEnd(5)} — không có ảnh cổng nào`); continue; }
+    const lo = c.doc ? [a.y, a.y + a.h] : [a.x, a.x + a.w];
+    const phu = Math.max(0, Math.min(lo[1], c.lo[1]) - Math.max(lo[0], c.lo[0]));
+    console.log(`  ${c.ten.padEnd(5)} ${a.img} ${a.w}×${a.h} tại (${a.x},${a.y}) → che ${phu}/${c.len}px = ${(100*phu/c.len).toFixed(0)}%`);
+  }
+
+  H1('8c · CỔNG SO VỚI CỬA HÀNG — cổng thành phải là công trình TO NHẤT');
+  const cong = V.find(v => v.img === 'ct_cong');
+  for (const b of V.filter(v => v.img !== 'ct_cong'))
+    console.log(`  cổng ${cong.w}×${cong.h} vs ${b.img} ${b.w}×${b.h}  → cổng ${((cong.w*cong.h)/(b.w*b.h)*100-100).toFixed(0)}%`);
+  const dung = {}; for (const v of V) dung[v.img] = (dung[v.img] || 0) + 1;
+  console.log('  một ảnh dùng mấy hướng: ' + Object.entries(dung).map(([a,b]) => `${a}×${b}`).join(' · '));
+
+  H1('8d · TƯỜNG THÀNH');
+  let cv = 0;
+  for (let i = 0; i < POLY.length; i++){
+    const a = POLY[i], b = POLY[(i+1) % POLY.length];
+    cv += Math.hypot(a[0]-b[0], a[1]-b[1]);
+  }
+  console.log(`  chu vi đa giác ${Math.round(cv)}px ⇒ ~${Math.ceil(cv/256)} viên nhịp 256px cho cả map`);
+  console.log(`  một cạnh màn hình 1920px = ${Math.ceil(1920/256)} viên vẽ mỗi khung`);
+  console.log(`  tấm tường trong MAP_VAT_SRC: 0 — "tường" hiện là ${M.isoCay} cây ngoài đa giác + rào vô hình`);
+
+  H1('8e · CỘT MỐC BẤM G — có đứng dưới vòm không');
+  for (const c of CUONG){
+    let g = null, m = Infinity;
+    for (const t of GATES){ const q = Math.hypot(t.x - c.gx, t.y - c.gy); if (q < m){ m = q; g = t; } }
+    if (!g) continue;
+    const lui = Math.round(Math.abs((c.doc ? g.x : g.y) - c.tuong));
+    const lech = Math.round(Math.abs((c.doc ? g.y : g.x) - (c.doc ? c.gy : c.gx)));
+    console.log(`  ${c.ten.padEnd(5)} lùi ${String(lui).padStart(3)}px sau mặt tường · lệch tâm vòm ${lech}px  ` +
+      `${lui <= 150 && lech <= 40 ? '✔ đứng dưới vòm' : '✘'}`);
+  }
+  // Trần đường kính từng ÉP hai cột mốc đông/tây lùi 270px để khẩu độ chui xuống dưới nó.
+  // test_domap nay miễn trần này cho map thành (không có bãi quái) — xem ghi chú trong bài đó.
+  const cheo = Math.hypot(W, H), tran = 0.807 * cheo;
+  const xs = GATES.map(g => g.x), kd = Math.max(...xs) - Math.min(...xs);
+  console.log(`  ── khẩu độ Đông↔Tây ${kd}px vs trần cũ ${Math.round(tran)}px (80,7% đường chéo)`);
+  console.log(`     ${kd > tran ? 'vượt trần — và ĐÚNG là phải vượt: thành có bốn cổng trên bốn tường' : 'dưới trần'}; test_domap đã miễn trần cho map thành`);
+}
+

@@ -159,17 +159,44 @@ html,body { width:100%; height:100%; overflow:hidden; background:var(--bg-deep);
   font-weight:700; letter-spacing:.4px; text-shadow:0 1px 3px #000; }
 /* Hai thanh: nền TỐI ĐỤC + vạch chia, không phải khối màu trơn. Vạch chia cho mắt đọc ra
    "còn mấy phần" mà không cần đọc số — đúng việc mà một thanh máu phải làm trong lúc đánh. */
-.cd-thanh { position:relative; height:11px; border-radius:3px; overflow:hidden;
-  background:rgba(8,6,4,.82); border:1px solid rgba(0,0,0,.65);
-  box-shadow:inset 0 1px 2px rgba(0,0,0,.7), 0 1px 0 rgba(255,231,180,.07); }
-.cd-thanh .fill { display:block; height:100%; width:100%; transition:width .18s; }
-.cd-thanh span { position:absolute; inset:0; text-align:center; line-height:11px;
-  font-size:9px; font-weight:700; color:#fff; text-shadow:0 1px 2px #000, 0 0 5px rgba(0,0,0,.9);
+/* ═══ THANH MÁU / MANA — TRANH THẬT ═══
+   Trước bản này là hai cái rãnh bo góc 3px tô `linear-gradient`, cộng một lớp vạch chia
+   `repeating-linear-gradient` — vẫn là hình dựng bằng mã. Nay là art vát chéo có mũi nhọn,
+   cắt từ khối chân dung của bộ UI gothic (`tools/ui/nuong_uigothic.py`).
+
+   ⚠ CHIỀU CAO LÀ SỐ DUY NHẤT ĐẶT TAY; bề rộng SUY RA từ tỉ lệ ĐO ĐƯỢC của chính tấm art
+   (402/54 = 7,444 · 402/38 = 10,579). Đặt tay cả hai là một ngày nào đó chúng lệch nhau, mà
+   lệch thì cái mũi nhọn ở đầu thanh bị kéo bè — thứ duy nhất của một thanh vát chéo mà mắt
+   bắt được ngay.
+
+   ⚠ CƠ CHẾ TÔ ĐẦY: `background-size: auto 100%`. Ảnh thu theo CHIỀU CAO, nên nó vẽ ra đúng
+   một cỡ bất kể `.fill` rộng bao nhiêu — `.fill` chỉ việc cắt bớt bằng hộp của mình. Nhờ thế
+   `updateHud()` KHÔNG phải đổi một dòng nào: nó vẫn đặt `bar-hp.style.width = N%` như cũ.
+   (Dùng `background-size:100% 100%` là ảnh co theo `.fill` ⇒ ở 30% máu thì cả cái mũi nhọn
+   cũng co lại và nằm ở 30% — thanh máu vơi đi bằng cách NHỎ LẠI, không phải bằng cách vơi.)
+
+   ⚠ Bản RỖNG chỉ dìm PHẦN MÀU, khung vàng giữ nguyên. Dìm cả tấm thì ở nửa máu cái khung
+   cũng tối đi nửa chừng — đọc ra "thanh bị hỏng" chứ không ra "thanh vơi một nửa". */
+:root { --cd-hp-cao:23px; --cd-mp-cao:16px;
+        --cd-hp-rong:calc(var(--cd-hp-cao) * 7.444);
+        --cd-mp-rong:calc(var(--cd-mp-cao) * 10.579); }
+.cd-thanh { position:relative; overflow:hidden; border:none; box-shadow:none; border-radius:0;
+  background-repeat:no-repeat; background-position:left center; background-size:auto 100%; }
+#orb-hp { height:var(--cd-hp-cao); width:var(--cd-hp-rong);
+  background-image:url(assets/ui/gt_thanh_hp_rong.webp); }
+#orb-qi { height:var(--cd-mp-cao); width:var(--cd-mp-rong);
+  background-image:url(assets/ui/gt_thanh_mp_rong.webp); }
+.cd-thanh .fill { display:block; position:absolute; left:0; top:0; height:100%; width:100%;
+  transition:width .18s;
+  background-repeat:no-repeat; background-position:left center; background-size:auto 100%; }
+#bar-hp { background-image:url(assets/ui/gt_thanh_hp.webp); }
+#bar-qi { background-image:url(assets/ui/gt_thanh_mp.webp); }
+/* Chữ lùi khỏi cái mũi nhọn ở đầu phải: canh giữa thì số đè lên viên kim cương. */
+.cd-thanh span { position:absolute; inset:0 26px 0 10px; text-align:left;
+  display:flex; align-items:center;
+  font-size:10px; font-weight:700; color:#fff; text-shadow:0 1px 2px #000, 0 0 5px rgba(0,0,0,.9);
   font-variant-numeric:tabular-nums; letter-spacing:.2px; }
-.cd-thanh::after { content:''; position:absolute; inset:0; pointer-events:none;
-  background:repeating-linear-gradient(90deg, transparent 0 24%, rgba(0,0,0,.42) 24% calc(24% + 1px)); }
-.cd-hp .fill { background:linear-gradient(180deg,#ff8fa0,#e8324f 55%,#8a1226); }
-.cd-qi .fill { background:linear-gradient(180deg,#9ed4ff,#2f6fe0 55%,#122f72); }
+#orb-qi span { font-size:9px; }
 .bar { position:relative; height:16px; margin-bottom:4px; background:rgba(10,10,26,.72);
   border:1px solid rgba(229,211,186,.4); border-radius:999px; overflow:hidden; }
 .bar .fill { height:100%; width:100%; transition:width .18s; }
@@ -177,8 +204,24 @@ html,body { width:100%; height:100%; overflow:hidden; background:var(--bg-deep);
   color:#fff; text-shadow:0 1px 2px #000; letter-spacing:.5px; }
 .bar.xp { height:10px; } .bar.xp span { line-height:10px; font-size:8px; }
 .bar.xp .fill { background:linear-gradient(180deg,#ffd76a,#e8a83a); }
+/* Trần chiều cao = màn − lề trên − chỗ Nhật Ký đã đặt gạch. Chỉ ăn thua khi màn THẤP: ở
+   1920×1080 cột phải vốn đã ngắn hơn trần nên không đổi một pixel nào. */
 #hud-right { position:absolute; top:12px; right:12px; text-align:right; pointer-events:none;
-  display:flex; flex-direction:column; align-items:flex-end; gap:5px; }
+  display:flex; flex-direction:column; align-items:flex-end; gap:5px;
+  max-height:calc(100vh - 12px - var(--nk-day) - var(--nk-cao) - var(--nk-dau)); }
+/* ⚠ KHÔNG CẦN `min-height:0` Ở ĐÂY, và đây là chỗ ghi lại vì sao — để đừng ai thêm lại.
+   Phản xạ thông thường là "cho một con flex co được thì phải `min-height:0`". Ở đây thì
+   KHÔNG: `#quest-tracker` đã có `overflow-y:auto`, mà kích thước tối thiểu tự động của một
+   khối cuộn vốn đã là 0. Nên `#cot-phai` co được mà không cần khai gì thêm.
+   Đo hẳn hoi trước khi gỡ: thêm `min-height:0` ở đây, ở `#cot-phai`, và `flex:0 1 auto` ở
+   `#quest-tracker` — gỡ TỪNG cái rồi gỡ CẢ BA, cả ba lượt đều ra **đúng cùng một con số**
+   (khe 16px · bảng nhiệm vụ 245/275/305px) ở 1280×720 · 1440×810 · 1600×900. Chúng trơ.
+   Ba dòng CSS trơ mà trông như đang gánh việc thì tệ hơn không có: chúng làm phép thử ngược
+   IM LẶNG (gỡ một cái, bài vẫn xanh), tức bộ kiểm không gác được dòng nào — và người sau sẽ
+   sửa nhầm chỗ. Thứ DUY NHẤT gánh việc là `max-height` ở trên.
+   `overflow:hidden` thì GIỮ: nó không phải bảo hiểm trơ mà là cặp đôi hiển nhiên của một cái
+   trần chiều cao — con nào sau này không tự cuộn sẽ bị cắt, chứ không tràn ra trong im lặng. */
+#hud-right > #cot-phai { overflow:hidden; }
 #hud-right > * { pointer-events:auto; }
 
 /* Ví — ba ô NẰM NGANG: Lumen · Ấn Giao Kết · Shard. Ba loại này là ba loại DUY NHẤT thường trực
@@ -193,6 +236,9 @@ html,body { width:100%; height:100%; overflow:hidden; background:var(--bg-deep);
   transition:background .16s ease-out, border-color .16s ease-out; }
 .vi-o:hover { background:rgba(var(--rgb-vang),.24); border-color:var(--border-strong); }
 .vi-o i { font-style:normal; font-size:var(--fs-md); line-height:1; }
+/* Icon ví — tranh thật thay ba ký tự ◈ ✦ ♦. 17px: cao hơn cỡ chữ của ô một chút để đồng xu
+   không đọc ra một dấu chấm. `flex:none` giữ nó khỏi bị bóp khi số tiền dài ra. */
+.vi-ic { width:17px; height:17px; object-fit:contain; display:block; flex:none; }
 /* tabular-nums: Lumen cộng số lẻ mỗi khung trong Tụ Linh Trận — chữ số biến thiên bề rộng làm
    cả ô rung. min-width giữ mép trái đứng yên từ "0" tới "9.999.999.999". */
 .vi-o b { font-variant-numeric:tabular-nums; font-weight:600; font-size:var(--fs-md);
@@ -322,6 +368,10 @@ html,body { width:100%; height:100%; overflow:hidden; background:var(--bg-deep);
   padding:2px 8px; margin-bottom:5px; font-family:inherit; font-size:9.5px; font-weight:600; cursor:pointer; }
 #btn-questtracker:hover { border-color:var(--gold); color:#fff3d4; }
 #quest-tracker.qt-closed { display:none; }
+/* 34vh là trần mong muốn; khi cột phải bị kẹp xuống (màn thấp) thì chính bảng này là thứ
+   nhường chỗ — bản đồ nhỏ không co được, nó là một canvas cỡ cố định.
+   `overflow-y:auto` ở đây làm LUÔN hai việc: cho cuộn, và (vì kích thước tối thiểu tự động
+   của khối cuộn là 0) cho cả cột phải co lại dưới trần. Xem chú thích ở `#hud-right`. */
 #quest-tracker { width:100%; box-sizing:border-box; max-height:34vh; overflow-y:auto;
   color:var(--text-soft); font-size:10.5px; line-height:1.45; text-align:left; }
 #quest-tracker .q-title { color:var(--accent-light); font-size:var(--fs-lg); margin-bottom:2px; font-weight:700; }
@@ -460,7 +510,14 @@ html,body { width:100%; height:100%; overflow:hidden; background:var(--bg-deep);
    chat lại phải dọn lần nữa.
    Bề ngang bằng đúng `#cot-phai` (190px) để hai khối xếp thành MỘT cột: lệch bề ngang thì đọc
    ra hai thứ dán cạnh nhau, đúng bài học của thanh EXP. */
-#combat-log-wrap { position:fixed; right:12px; bottom:96px; width:190px; z-index:11; pointer-events:auto; }
+/* ⚠ HAI KHỐI NÀY NEO TỪ HAI ĐẦU NGƯỢC NHAU và cùng rộng 190px ở cùng một cột: `#cot-phai`
+   chảy từ TRÊN xuống, `#combat-log-wrap` neo từ ĐÁY lên. Không ai kẹp chúng lại nên chúng
+   CHỒNG nhau ngay khi màn không đủ cao — đo được: 77px ở 1600×900 · 118px ở 1440×810 ·
+   157px ở 1280×720, và thứ bị che là đáy bảng Nhiệm Vụ (Mục Tiêu Hôm Nay).
+   Ngân sách của Nhật Ký vì thế phải là BIẾN: `#hud-right` trừ đúng ngần ấy ra khỏi trần chiều
+   cao của mình. Chép tay hai con số ở hai chỗ là bảo đảm chúng lệch nhau sau vài đợt sửa. */
+:root { --nk-day:96px; --nk-cao:22vh; --nk-dau:38px; }
+#combat-log-wrap { position:fixed; right:12px; bottom:var(--nk-day); width:190px; z-index:11; pointer-events:auto; }
 #cl-dau { display:flex; align-items:center; justify-content:space-between; gap:6px; white-space:nowrap;
   padding:3px 7px; border-radius:7px 7px 0 0; font-size:10.5px; font-weight:700;
   color:var(--gold); letter-spacing:.3px;
@@ -475,9 +532,17 @@ html,body { width:100%; height:100%; overflow:hidden; background:var(--bg-deep);
   padding:5px 10px; margin-bottom:4px; font-family:inherit; font-size:var(--fs-md); font-weight:600; cursor:pointer; }
 #btn-combatlog:hover { background:rgba(var(--rgb-vang),.28); border-color:var(--border-strong); }
 #combat-log.cl-closed { display:none; }
-#combat-log { max-height:22vh; overflow-y:auto; background:rgba(18,20,44,.7); border:1px solid var(--border-faint);
+#combat-log { max-height:var(--nk-cao); overflow-y:auto; background:rgba(18,20,44,.7); border:1px solid var(--border-faint);
   border-left:3px solid var(--accent); border-radius:var(--r-sm); padding:6px 9px; font-size:11.5px; line-height:1.55; }
-#combat-log .cl-row { white-space:nowrap; overflow:hidden; text-overflow:ellipsis; opacity:.92; }
+/* ⚠ XUỐNG DÒNG, ĐỪNG CẮT BẰNG "…". Đo được trước khi sửa: cột chữ rộng 168px mà một dòng
+   "☠ Hạ Axie Heo Rừng — Nhận: +28 EXP +162◈" cần 249px ⇒ 14/14 dòng thưởng bị cắt, và chỗ bị
+   cắt luôn là ĐUÔI — tức đúng phần thưởng, thứ duy nhất người chơi mở nhật ký ra để đọc. Cả
+   mười dòng hiện ra giống hệt nhau: "Hạ Axie Heo Rừng — Nhận…".
+   Nới cột thì không được: 190px là bề ngang của #cot-phai, hai khối phải bằng nhau mới đọc ra
+   một cột (xem chú thích ở #combat-log-wrap). Nên cho nó xuống dòng.
+   `padding-left` + `text-indent` âm: dòng tràn thụt vào, nên nhìn là biết nó nối dòng trên
+   chứ không phải một sự kiện mới. */
+#combat-log .cl-row { opacity:.92; overflow-wrap:anywhere; padding-left:9px; text-indent:-9px; }
 #combat-log .cl-row:first-child { opacity:1; }
 
 /* Panels */
@@ -488,38 +553,52 @@ html,body { width:100%; height:100%; overflow:hidden; background:var(--bg-deep);
    chỉ hổ phách chạy bên trong, rồi lòng bảng lõm xuống.
    Làm bằng box-shadow nhiều lớp chứ không phải ảnh nền — không thêm file, co giãn theo mọi cỡ,
    và không dùng blur (dự án cấm). */
+/* ⚠ BA SỐ NÀY BUỘC VÀO NHAU, đừng chép tay cái nào.
+   `--khung-lat` là bề rộng GÓC trong tấm tranh (đo được: hoa văn góc hết ở x≈90, lấy 100 cho
+   chắc). `--khung-day` là bề dày vành VẼ RA. Tỉ lệ thu = day/lat, và nó quyết định mọi thứ:
+   ⚠ Ở 20px (thu 0,2×) sợi chỉ vàng của rail — dày ~4px trong tranh — tụt xuống 0,8px và biến
+     mất; cả cái vành đọc ra một dải tối. Ở 34px (0,34×) nó còn ~1,4px, nhìn ra kim loại.
+   Hai số này buộc vào nhau qua `border-image`: đổi `--khung-day` là cả vành thu/giãn theo,
+   không phải sửa chỗ nào khác. */
+:root { --khung-lat:100; --khung-day:34px; }
 .panel { position:fixed; top:50%; left:50%; transform:translate(-50%,-50%); z-index:20;
   width:min(520px,94vw); max-height:86vh; overflow-y:auto;
-  /* Bốn đinh tán vẽ bằng radial-gradient đặt ở bốn góc — box-shadow không nhận offset theo %,
-     nên mẹo pseudo-element không dựng được đinh ở góc phải. */
-  background:
-    /* Đinh tán nằm GỌN trong vành 10px (tâm cách mép 5px), không lấn ra ngoài như bản trước */
-    radial-gradient(circle 3px at 5px 5px, #fffaf0 0%, #d8bd85 38%, #2a2010 100%) no-repeat,
-    radial-gradient(circle 3px at calc(100% - 5px) 5px, #fffaf0 0%, #d8bd85 38%, #2a2010 100%) no-repeat,
-    radial-gradient(circle 3px at 5px calc(100% - 5px), #fffaf0 0%, #d8bd85 38%, #2a2010 100%) no-repeat,
-    radial-gradient(circle 3px at calc(100% - 5px) calc(100% - 5px), #fffaf0 0%, #d8bd85 38%, #2a2010 100%) no-repeat,
-    linear-gradient(170deg,var(--bg-panel-1),var(--bg-panel-2)) padding-box,
-    /* Vành kim loại: chóa sáng ở mép trên-trái → thân thép → gần đen ở mép dưới-phải, rồi một
-       vệt sáng hẹp ở chính góc dưới-phải cho ra cảm giác mép cuốn. Bản đầu chạy từ sáng sang
-       sáng nên ra một dải xám phẳng, không thành khối. */
-    linear-gradient(145deg,
-      #fff4dc 0%, #e8cf9a 5%, #b8975a 13%,   /* chóa sáng mép trên-trái */
-      #8f7038 26%, #6b5228 42%,              /* THÂN ĐỒNG — phải đủ rộng và đủ sáng, không thì
-                                                cả vành chìm vào nền và chỉ còn là viền dày */
-      #43331a 60%, #241b0e 78%,              /* đổ tối dần xuống dưới-phải */
-      #5c4623 92%, #d4b478 100%) border-box; /* vệt sáng mép cuốn ở góc dưới-phải */
-  background-origin: border-box;
-  border:10px solid transparent;
-  border-radius:var(--r-lg); padding:16px 18px; color:var(--text-body);
+  /* ═══ KHUNG 9 LÁT, TRANH THẬT ═══
+     Trước bản này vành bảng là một khối `linear-gradient` 9 điểm dừng cộng bốn đinh tán
+     `radial-gradient` — công phu, nhưng vẫn là HÌNH DỰNG BẰNG MÃ, tức đúng thứ Quy tắc số 3
+     nói không. Nay là tranh thật, cắt từ bộ UI gothic chủ dự án đưa
+     (`tools/ui/nuong_uigothic.py`), 26 KB cho TOÀN BỘ bảng của game.
+     ⚠ KHÔNG dùng `fill`. Lát giữa của tấm khung là nền tối trung tính của bộ kit; để nó tràn
+       vào là thay luôn màu ruột bảng, mà mọi màu chữ trong game đã cân theo `--bg-panel-*`.
+       Khung vẽ vành, nền vẫn là nền cũ.
+     ⚠ `border-radius` phải về 0. Tấm khung có góc nhọn của riêng nó; bo góc thì phần bo cắt
+       đúng vào bốn cái góc chạm trổ — thứ duy nhất của một cái khung không được phép sai.
+     ⚠ 20px, KHÔNG PHẢI 40px (bề dày thật của vành trong tranh). `border-image-width` tách
+       khỏi `slice` chính là để thế: giữ nguyên độ chi tiết của góc mà chỉ tốn 40px bề ngang
+       cho cả hai vành. Ở 40px thì bảng 520px mất 80px ruột, và bài kiểm "bảng không tràn ra
+       ngoài màn ở 1280×720" là thứ trả giá đầu tiên. */
+  border:var(--khung-day) solid transparent;
+  border-image:url(assets/ui/gt_khung_bang.webp) var(--khung-lat) / var(--khung-day) / 0 stretch;
+  border-radius:0;
+  /* ⚠ HOẠ TIẾT VIÊN NGỌC GIỮA CẠNH TRÊN: ĐÃ THỬ, KHÔNG ĐẶT ĐƯỢC — ghi lại để đừng ai cắt lại.
+     Tấm gốc có một viên ngọc lam nằm giữa cạnh trên. Nó không đi cùng `border-image` được vì
+     lát giữa mỗi cạnh bị KÉO GIÃN — viên ngọc hình thoi sẽ bè thành một vệt lam theo bề ngang
+     bảng. Nên phải tách ra thành một lớp riêng, và cả ba đường tách đều tắc:
+       · LỚP NỀN — nền vẽ BÊN DƯỚI viền, nên `border-image` phủ kín nó.
+       · `::before/::after` thường — `.panel` có `overflow-y:auto`, phần tử con bị cắt ở hộp đệm.
+       · `::after { position:fixed }` — ĐÃ ĐO: vẫn bị cắt. `.panel` mang `transform`, nên nó
+         thành khối chứa của cả con `fixed`, và `overflow` của nó vẫn cắt. Đo bằng cách nhét một
+         ô đỏ ở `top:-34px` rồi đếm điểm ảnh đỏ trên ảnh chụp: 0/64.
+     Đường duy nhất còn lại là tách mọi bảng thành vỏ + ruột-cuộn — sửa ~20 chỗ gọi `innerHTML`
+     để lấy một cái trang trí. Không đáng, và đúng loại thay đổi lan rộng mà CLAUDE.md có sẹo
+     (`#mc-drop`). Khung không có viên ngọc vẫn đọc ra một cái khung gothic sạch. */
+  background: linear-gradient(170deg,var(--bg-panel-1),var(--bg-panel-2)) padding-box;
+  padding:16px 18px; color:var(--text-body);
   box-shadow:
     inset 0 0 0 1px rgba(0,0,6,.9),               /* rãnh tối tách vành khỏi lòng bảng */
-    inset 0 0 0 2px rgba(255,177,92,.34),         /* chỉ hổ phách, cùng ngôn ngữ với icon trang bị */
-    inset 0 2px 0 rgba(255,238,200,.20),          /* gờ sáng mép trên — nguồn sáng ở trên */
-    inset 0 -2px 0 rgba(0,0,0,.6),                /* gờ tối mép dưới */
     inset 0 8px 22px rgba(0,0,0,.5),              /* lòng bảng lõm xuống */
-    0 3px 0 rgba(0,0,0,.6),                       /* chân khung dày lên */
-    0 16px 48px rgba(0,0,0,.7),
-    0 0 0 1px rgba(0,0,4,.9); }                   /* nét viền ngoài tách khỏi nền */
+    0 16px 48px rgba(0,0,0,.7); }
+
 /* Tiêu đề bảng ngồi trên một thanh khắc chìm, ngăn với phần thân.
    Trước đây đây là bộ chọn CON TRỰC TIẾP `.panel > h3`, nên tám màn có <h3> nằm sâu hơn một
    tầng (sáu tab của khung Nhân Vật viết vào #char-content, Lò Hỗn Độn viết vào #forge-content,
@@ -999,13 +1078,40 @@ html,body { width:100%; height:100%; overflow:hidden; background:var(--bg-deep);
   #quest-tracker { font-size:var(--fs-sm); max-height:34vh; overflow-y:auto; }
   #quest-tracker .q-daily { display:none; }
   #minimap { width:150px; height:110px; }
-  #combat-log-wrap { bottom:104px; width:min(170px,44vw); right:8px; }
-  #combat-log { font-size:10.5px; max-height:16vh; }
+  /* Đổi BIẾN, đừng đổi thẳng `bottom`/`max-height`: trần chiều cao của #hud-right tính từ hai
+     biến này, nên ghi đè thuộc tính mà bỏ quên biến là cột phải vẫn chừa chỗ theo số desktop. */
+  :root { --nk-day:104px; --nk-cao:16vh; --nk-dau:34px; }
+  #combat-log-wrap { width:min(170px,44vw); right:8px; }
+  #combat-log { font-size:10.5px; }
 }
 
 /* ===== v2: HUD mở rộng ===== */
-#hud-time { font-size:11.5px; text-shadow:0 1px 3px #000; margin-top:3px; letter-spacing:.5px; color:var(--pink);
+#hud-time { font-size:11.5px; text-shadow:0 1px 3px #000; letter-spacing:.5px; color:var(--pink);
   background:rgba(18,20,44,.4); border:1px solid rgba(var(--rgb-vang),.3); border-radius:999px; padding:2px 9px; display:inline-block; }
+/* Hàng chip trạng thái nền: đồng hồ thế giới + nút loa. `margin-top` dời từ #hud-time lên đây,
+   nếu không thì hai chip lệch nhau đúng 3px theo chiều dọc. */
+#hud-chip { display:flex; align-items:center; gap:5px; margin-top:3px; }
+/* Nút loa cao BẰNG chip đồng hồ (cùng font-size + cùng padding dọc), tròn, để hai thứ đọc ra
+   một cặp chứ không ra một cái chip và một cái nút lạc. */
+#btn-am { pointer-events:auto; cursor:pointer; font-family:inherit; font-size:11.5px; line-height:1.25;
+  width:24px; height:21px; padding:0; display:flex; align-items:center; justify-content:center;
+  color:var(--gold); background:rgba(18,20,44,.4); border:1px solid rgba(var(--rgb-vang),.3);
+  border-radius:999px; text-shadow:0 1px 3px #000;
+  transition:background .16s ease-out, border-color .16s ease-out, opacity .16s ease-out; }
+#btn-am:hover { background:rgba(var(--rgb-vang),.26); border-color:var(--border-strong); }
+/* Icon là TRANH (nướng 64px), hiện ra 15px — `image-rendering:auto` để nó co mượt. Không đặt
+   width/height trên chính `img` mà để nó tự vừa: hai tấm loa có tỉ lệ rộng/cao khác nhau. */
+#btn-am img { height:15px; width:auto; display:block; }
+/* Tắt tiếng: icon đã có dấu ×, nhưng ở cỡ 15px thì dấu ấy rất nhỏ — nhuốm thêm sắc đỏ để
+   trạng thái đọc được từ xa. `filter` trên một tấm 15px trong DOM là miễn phí; lệnh cấm
+   `ctx.filter` trong CLAUDE.md nói về VÒNG VẼ CANVAS, không phải về CSS. */
+#btn-am.am-tat img { filter:sepia(1) saturate(4) hue-rotate(-28deg) brightness(1.05); }
+/* Icon đứng đầu mỗi hàng Cài Đặt — cao bằng cỡ chữ của hàng để không đội dòng lên. */
+.set-ic { height:16px; width:auto; vertical-align:-3px; margin-right:2px; }
+/* Tắt tiếng phải NHÌN RA NGAY, nếu không người chơi tưởng game hỏng tiếng chứ không nhớ là
+   mình vừa tắt. Viền đỏ + mờ đi: hai tín hiệu, không chỉ đổi mỗi cái biểu tượng. */
+#btn-am.am-tat { color:#ff8a7a; border-color:rgba(232,90,74,.55); background:rgba(56,20,18,.5); opacity:.9; }
+@media (prefers-reduced-motion: reduce){ #btn-am { transition:none; } }
 #hud-buff { color:var(--orange); font-size:11.5px; text-shadow:0 1px 3px #000; margin-top:2px; letter-spacing:.5px; }
 #hud-loidon { color:var(--gold); font-size:11.5px; text-shadow:0 1px 3px #000; margin-top:2px; letter-spacing:.5px; }
 #hud-name.toiac { color:#ff5a4a; }
@@ -1143,7 +1249,10 @@ html,body { width:100%; height:100%; overflow:hidden; background:var(--bg-deep);
    animation steps() lồng nhau: một cái nhảy cột trong 0,889s, một cái nhảy hàng ở nhịp chậm gấp
    đôi, nên hết một vòng cột là sang hàng — đúng 16 khung trong 1,778s, khớp CHI_THO_FPS = 9.
    --w/--h do chiO34() ghi vào thẻ vì mỗi con một tỉ lệ ô riêng. */
-.skill-row i.chi-anh {
+/* Ô ảnh Chimera — dải 16 khung chạy bằng hai animation steps() lồng nhau. Dùng ở bảng Khế
+   Ước VÀ ở lưới chọn Axie đại diện (màn tạo nhân vật), nên KHÔNG khoá trong .skill-row:
+   khoá rồi thì chỗ thứ hai phải chép lại nguyên khối, và hai bản sao sẽ lệch nhau. */
+i.chi-anh {
   display:block; flex:0 0 auto; width:var(--w); height:var(--h);
   border:2px solid; border-radius:var(--r-sm);
   background:rgba(18,20,44,.9) var(--sh) no-repeat 0 0;
@@ -1152,7 +1261,7 @@ html,body { width:100%; height:100%; overflow:hidden; background:var(--bg-deep);
 }
 @keyframes chi-tho-x { from { background-position-x:0 } to { background-position-x:calc(var(--w) * -8) } }
 @keyframes chi-tho-y { from { background-position-y:0 } to { background-position-y:calc(var(--h) * -2) } }
-@media (prefers-reduced-motion: reduce) { .skill-row i.chi-anh { animation:none } }
+@media (prefers-reduced-motion: reduce) { i.chi-anh { animation:none } }
 /* Huy hiệu lớp Axie chính chủ — dải 9 ô 48px, thứ tự khớp LOP_DAI trong game.js. */
 .lop-hd { display:inline-block; width:13px; height:13px; vertical-align:-2px; margin-right:3px;
   background:url(assets/ui/lop.webp) no-repeat; background-size:calc(13px * 9) 13px;
@@ -1312,6 +1421,13 @@ html,body { width:100%; height:100%; overflow:hidden; background:var(--bg-deep);
 
 .set-row b { color:var(--accent-light); min-width:26px; text-align:right; }
 .set-row input[type=range] { flex:1; accent-color:var(--accent); height:4px; cursor:pointer; }
+/* Số mức bên phải thanh trượt. `tabular-nums` + `min-width`: kéo từ 9% lên 100% mà bề rộng
+   đổi thì cả cái thanh trượt co giãn theo, núm chạy lệch khỏi ngón tay. */
+.set-so { font-variant-numeric:tabular-nums; min-width:38px; text-align:right; font-size:var(--fs-md);
+  color:var(--gold); font-weight:600; }
+/* Hàng bị công tắc tổng vô hiệu hoá: mờ đi nhưng VẪN KÉO ĐƯỢC. Khoá hẳn (`pointer-events:none`)
+   thì người chơi muốn chỉnh trước rồi bật sau là không làm được, mà mức vẫn được lưu đúng. */
+.set-row.set-mo { opacity:.42; }
 /* .danger CHỈ dành cho nút phá huỷ (xoá save). Trạng thái TẮT của công tắc dùng .tat — trước
    đây cả hai chung một class, nên nút "TẮT" của mọi cài đặt trông y hệt nút xoá dữ liệu. */
 .mini-btn.danger { border-color:var(--red); color:#ff8f8f; }
@@ -2364,7 +2480,13 @@ html,body { width:100%; height:100%; overflow:hidden; background:var(--bg-deep);
   border:1px solid rgba(198,158,74,.42); }
 .sys-nut:hover { border-color:var(--gold); color:#fff3d6; }
 .sys-nut:active { transform:scale(.97); }
-.sys-nut i { font-style:normal; font-size:17px; color:var(--gold); line-height:1; }
+.sys-nut i { font-style:normal; font-size:17px; color:var(--gold); line-height:1;
+  display:flex; align-items:center; justify-content:center; width:26px; flex:none; }
+/* `width:26px` ở trên là chỗ neo: ký tự và ảnh cùng chiếm đúng ngần ấy, nên bốn cái nhãn
+   ("Cài Đặt", "Sự Kiện"…) thẳng hàng dù nút nào dùng ảnh nút nào còn dùng ký tự. */
+.sys-nut i img { width:26px; height:26px; object-fit:contain; display:block; }
+/* Hàng ba loại tiền trong chính bảng F6 — dùng đúng icon của ví trên HUD. */
+.sys-vi span { display:inline-flex; align-items:center; gap:4px; }
 .sys-nut span { flex:1; white-space:nowrap; }
 .sys-nut kbd { font-family:inherit; font-size:9.5px; padding:1px 5px; border-radius:3px;
   color:var(--text-dim); background:rgba(0,0,0,.45); box-shadow:inset 0 0 0 1px rgba(198,158,74,.3); }
@@ -2547,3 +2669,33 @@ html,body { width:100%; height:100%; overflow:hidden; background:var(--bg-deep);
   #chat-wrap { bottom:104px; width:min(240px,52vw); left:8px; font-size:11px; }
   #chat-log { max-height:16vh; }
 }
+
+/* ═══════════ LƯỚI CHỌN AXIE ĐẠI DIỆN (màn tạo nhân vật) ═══════════
+   Song song với lưới chân dung của các game cùng thể loại — khác ở chỗ ô này không phải ảnh
+   trang trí: nó chọn con Axie sẽ LÀ thân nhìn thấy của người chơi suốt hành trình.
+   Ô ảnh dùng chung `i.chi-anh` với bảng Khế Ước, không dựng bản vẽ thứ hai. */
+#cc-avatar { margin:2px auto 10px; max-width:560px; }
+.cc-ava-nhan { font-size:12px; color:var(--text-dim); letter-spacing:.04em; margin-bottom:7px; }
+.cc-ava-nhan b { font-weight:700; }
+.cc-ava-lop { margin-left:8px; font-size:11px; color:var(--text-dimmer); }
+.cc-ava-luoi { display:flex; flex-wrap:wrap; gap:6px; justify-content:center; }
+.cc-ava-o { display:flex; align-items:center; justify-content:center; padding:3px;
+  min-width:52px; height:50px; cursor:pointer;
+  background:linear-gradient(180deg, rgba(28,32,60,.88), rgba(12,14,32,.92));
+  border:1px solid var(--border-faint); border-radius:var(--r-sm);
+  transition:border-color .14s, transform .12s, box-shadow .14s; }
+.cc-ava-o:hover { transform:translateY(-2px); border-color:var(--border-strong); }
+.cc-ava-o.sel { border-color:var(--accent-light); box-shadow:0 0 14px rgba(var(--rgb-vang),.38); }
+/* Ô trong lưới bỏ viền riêng của .chi-anh: viền đang-chọn là của Ô, không phải của con vật —
+   hai đường viền lồng nhau thì không đường nào đọc ra là "đang chọn". */
+.cc-ava-o .cc-ava-hinh { border:none; background-color:transparent; }
+.cc-ava-ghi { display:block; margin-top:8px; font-size:10.5px; color:var(--text-dimmer); font-style:normal; }
+/* Con Axie đứng cạnh thẻ lớp đang chọn.
+   ⚠ NEO TRONG HỘP TRANH (.cc-art-o), KHÔNG trong thẻ. Gót của lớp nhân vật rơi ở 85,7% chiều
+   cao tấm tranh — đo trên bản dựng thật — nên `bottom:16%` đặt gót con Axie ngang gót người
+   ở MỌI bề rộng cột. Bản đầu neo vào thẻ bằng `bottom:52px` và nó tụt xuống đè lên tên lớp. */
+.cc-art-o { position:relative; display:block; }
+.cc-card .cc-ava-ke { position:absolute; right:1%; bottom:16%; z-index:3;
+  border:none; background-color:transparent; pointer-events:none;
+  filter:drop-shadow(0 3px 6px rgba(0,0,0,.55)); }
+@media (max-width:720px){ .cc-card .cc-ava-ke { display:none; } }

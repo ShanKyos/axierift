@@ -63,7 +63,7 @@ bust, standing pose."*
 | `quachtinh.png` | named hero NPC | simple heroic pose, no weapon drawn |
 | `thumo.png` | gatekeeper | simple guard stance |
 | `thuongnhan.png` | traveling merchant | pack/cart props |
-| `trachu.png` | teahouse keeper | teapot, cup |
+| ~~`trachu.png`~~ | ĐÃ GỠ — thay bằng `hauban_yt.png` (tranh thật, Quy tắc số 3) | |
 | `ttmon.png` | gate disciple | plain training clothes |
 | `vachda.png` | cave hermit | rustic, simple |
 

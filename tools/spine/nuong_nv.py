@@ -8,6 +8,8 @@ Ví dụ:
 
 Xuất ra public/game/assets/nv/<tên>.png (thân) và <tên>_vk.png (vũ khí).
 
+Thêm `--khongvk` thì BỎ lớp vũ khí — dùng cho lớp nhân vật cầm vũ khí bay (thần khí).
+
 Thêm `--lop` thì nướng NĂM LỚP RỜI (<tên>_h/_t1/_c/_a/_t2/_n .png) thay cho tấm thân liền,
 để bốn ô trang bị mặc lẫn bộ được — xem bảng LOP ở dưới.
 
@@ -23,6 +25,27 @@ from hoatcanh import doc_goi, TuThe, ve_khung, bo_vat_ly, lang_vat_ly
 from PIL import Image
 
 KHE_VK  = ('左手武器', '左手武器2b', '左手武器2c')   # vũ khí bị cắt 4 mảnh trên 3 khe
+# ⚠ RIG GIẤU VŨ KHÍ TRONG `00_Run` — và trong game này thì đó là dáng chạy suốt ngày.
+# Hoạt cảnh chạy đặt một khoá attachment RỖNG lên khe `左手武器`, tức cất vũ khí đi. Bản mẫu
+# này vốn vẽ cho một game đánh bài, nơi nhân vật chỉ chạy một nhịp vào trận rồi thôi; ở đây
+# lớp nhân vật chạy theo người chơi gần như liên tục, nên cây kiếm biến mất rồi hiện lại mỗi
+# lần dừng chân — đo được: hai hàng cuối của bảng vũ khí (32 ô khối CHẠY) rỗng trắng ở cả ba bộ.
+# Ràng buộc `右手持剑` VẪN bật trong `00_Run`, nên chỉ cần ép mảnh hiện lại là nó tự nằm đúng tay.
+# Chỉ ép khe CHÍNH: `2b`/`2c` là dây cung và mũi tên, chúng chỉ thuộc về động tác giương cung.
+VK_HIEN = {'00_Run': {'左手武器': '左手武器'}}
+# ⚠ BẢN MẪU CẦM MỌI CÂY NHƯ CẦM KIẾM — và một cây CUNG thì không cầm vậy được.
+# Xương `武器` chỉ có MỘT tư thế mang: chuôi ở bàn tay, thân chĩa chéo xuống trước, đúng dáng
+# xách một thanh kiếm. Với cung thì cái chéo ấy đọc ra một cây kích nằm ngang ống chân — chủ dự
+# án nhìn ảnh chụp và nói đúng một câu: *"cung thì không cầm vậy được"*.
+#
+# Đo trên khung đứng: trục chính của cây cung lệch **44,8°** so với phương DỌC, và xương nằm ở
+# ĐẦU cây chứ không ở giữa. Vặn thêm −40° đưa nó về gần dọc — cung buông xuống dọc theo chân,
+# dây quay vào người, đúng dáng xách cung. Đã dựng ảnh A/B 0 · −32 · −40 · −48 trên cả ba khối
+# (đứng · đi · chạy) rồi mới chốt: 0 là cây kích, −48 thì mũi cung quặt ra sau.
+#
+# Cặp (số độ, những hoạt cảnh BỎ QUA). Bỏ qua `10_ArcheryAttack` vì ở đó rig đã đổi sang mảnh
+# cung GIƯƠNG và dựng đúng tư thế bắn — vặn thêm là phá chính khối duy nhất đang đúng.
+VK_XOAY = {'elnb1': (-40, ('10_ArcheryAttack',))}
 KHE_HFX = ('爆炸特效', '爆炸特效(残影）')            # hiệu ứng nổ — game tự lo, không nướng
 KHE_TOC = ('背后头发',)                              # tóc sau, chỉ dùng lúc ĐO
 # BẢNG MỘT — những khối vẽ ở mọi khung hình, luôn nạp.
@@ -70,6 +93,11 @@ LOP = [('h',  ('背后头发',),          'non'),    # tóc sau — rỗng ở b
        ('t1', ('左手',),              'tay'),    # tay XA, nằm sau thân
        ('c',  ('左腿', '右腿'),        'chan'),
        ('a',  ('躯干_带短裤',),        'ao'),
+       # VŨ KHÍ nằm ĐÚNG GIỮA thân và tay gần — xem thứ tự vẽ ghi ở trên. Đặt sau `t2` là
+       # cây kiếm chui ra sau bàn tay; đặt trước `a` là nó nằm sau lưng áo.
+       # Nướng thẳng ba khe của rig (không phải chiếu một tấm phẳng như nuong_vk.py) nên vũ khí
+       # có BIẾN DẠNG LƯỚI đúng như hoạ sĩ vẽ — vung kiếm thì lưỡi cong theo, không cứng đơ.
+       ('vk', KHE_VK,                'vukhi'),
        ('t2', ('右手', '右手前伸'),     'tay'),   # tay GẦN, nằm trước thân
        ('n',  ('头',),                'non')]
 O_W, O_H, COT = 240, 300, 16
@@ -96,7 +124,7 @@ def _do(d, im, R, tt, skin, bo, **kw):
 # trúng đòn, chết) thì bắt đầu từ trạng thái nghỉ là đúng: trong game nó nối vào từ dáng đứng.
 LAP = {'00_Idle', '00_Walk', '00_Run', '01_Dance', '01_Dance2', '07_StatusEffect'}
 
-def _day_khung(d, im, R, tt, hc, ten, n, skin, phong, oy, bo, doi=None):
+def _day_khung(d, im, R, tt, hc, ten, n, skin, phong, oy, bo, doi=None, xoay_vk=0):
     """Trả n khung của một khối, đã áp khoá + IK + vật lý."""
     T = dai(hc)
     vl = bo_vat_ly(d, tt)
@@ -107,7 +135,7 @@ def _day_khung(d, im, R, tt, hc, ten, n, skin, phong, oy, bo, doi=None):
     for i in range(n):
         ra.append(ve_khung(d, im, R, tt, hc, i*T/n, skin, W=O_W, H=O_H,
                            phong=phong, ox=120/O_W, oy=oy, bo_khe=bo, doi_manh=doi,
-                           bo_vl=vl, dt_vl=T/n))
+                           bo_vl=vl, dt_vl=T/n, xoay_vk=xoay_vk))
     return ra
 
 def nuong(goi, skin, danh='08_SwordAttack'):
@@ -130,7 +158,8 @@ def nuong(goi, skin, danh='08_SwordAttack'):
         ks = []
         for ten, n in KHUNG:
             tenTh = danh if ten == 'DANH' else ten
-            ks += _day_khung(d, im, R, tt, d['animations'][tenTh], tenTh, n, skin, phong, oy, bo)
+            ks += _day_khung(d, im, R, tt, d['animations'][tenTh], tenTh, n, skin, phong, oy, bo,
+                             VK_HIEN.get(tenTh))
         ra[lop] = ks
     # BẢNG HAI — cùng hệ toạ độ, cùng cỡ ô, chỉ khác chỗ chứa.
     ks2 = []
@@ -147,19 +176,27 @@ def nuong(goi, skin, danh='08_SwordAttack'):
     ra['dung'] = dung
     return ra, phong
 
-def _do_khung(d, im, R, tt, skin, phong, oy, bo, danh):
+def _xoay(xoay, tenHc):
+    """Số độ phải vặn thêm cho xương vũ khí ở hoạt cảnh này — xem VK_XOAY."""
+    if not xoay: return 0
+    do, bo_qua = xoay
+    return 0 if tenHc in bo_qua else do
+
+def _do_khung(d, im, R, tt, skin, phong, oy, bo, danh, xoay=None):
     """Mọi khung của CẢ HAI bảng, cùng một hệ toạ độ — trả (khung bảng một, khung bảng hai)."""
     k1 = []
     for ten, n in KHUNG:
         tenTh = danh if ten == 'DANH' else ten
-        k1 += _day_khung(d, im, R, tt, d['animations'][tenTh], tenTh, n, skin, phong, oy, bo)
+        k1 += _day_khung(d, im, R, tt, d['animations'][tenTh], tenTh, n, skin, phong, oy, bo,
+                         VK_HIEN.get(tenTh), _xoay(xoay, tenTh))
     k2 = []
     for ten, n, doi in KHUNG2:
-        k2 += _day_khung(d, im, R, tt, d['animations'][ten], ten, n, skin, phong, oy, bo, doi)
+        k2 += _day_khung(d, im, R, tt, d['animations'][ten], ten, n, skin, phong, oy, bo, doi,
+                         _xoay(xoay, ten))
     return k1, k2
 
 
-def nuong_lop(goi, skin, danh='08_SwordAttack'):
+def nuong_lop(goi, skin, danh='08_SwordAttack', bo_vk=False, xoay=None):
     """Nướng NĂM LỚP RỜI thay cho một tấm thân liền — xem bảng LOP ở đầu tệp.
 
     Mỗi lớp CẮT SÁT hộp bao của chính nó, tính trên CẢ HAI bảng cùng lúc để hai bảng dùng
@@ -178,8 +215,14 @@ def nuong_lop(goi, skin, danh='08_SwordAttack'):
     oy = (252 - ((bb2[3] - 40) - GOT_Y)) / O_H
     ra = []
     for ten, giu, o in LOP:
+        # Lớp nào cầm vũ khí BAY (thần khí, vẽ từ món đang trang bị) thì cây vũ khí KHÔNG được
+        # dính vào thân — nướng vào là trên màn có hai cây. Bỏ ngay ở khâu nướng chứ đừng nướng
+        # rồi không khai: mỗi bộ thừa ~170 KB tệp chết mà không ai biết vì sao chúng ở đó.
+        if bo_vk and ten == 'vk': continue
         bo = tuple(k for k in moiKhe if k not in giu)
-        k1, k2 = _do_khung(d, im, R, tt, skin, phong, oy, bo, danh)
+        # Chỉ vặn khi đang nướng CHÍNH lớp vũ khí: các lớp thân không có xương `武器` trong bộ
+        # khe của chúng, nên vặn ở đấy là vô nghĩa — nhưng vẫn tốn một lượt dựng lại nhánh con.
+        k1, k2 = _do_khung(d, im, R, tt, skin, phong, oy, bo, danh, xoay if ten == 'vk' else None)
         # ⚠ HAI BẢNG CẮT HAI HỘP KHÁC NHAU. Bảng một là đứng/đi/chạy/đánh — dáng gọn.
         # Bảng hai là chết/nhảy múa/bật người — tay chân văng ra rất xa. Ép chung một hộp
         # thì bảng một phải gánh hộp của bảng hai: đo được tổng phình 94% → 167% một tấm
@@ -237,10 +280,10 @@ def bang(ks, duong):
     sh.save(duong, optimize=True)
     return os.path.getsize(duong)
 
-def main_lop(goi, skin, ten, danh, thu):
+def main_lop(goi, skin, ten, danh, thu, bo_vk=False):
     """--lop: năm tấm LỚP RỜI thay cho một tấm thân liền."""
     t0 = time.time()
-    lop, phong = nuong_lop(goi, skin, danh)
+    lop, phong = nuong_lop(goi, skin, danh, bo_vk, VK_XOAY.get(ten))
     js = []
     tong = 0
     tong2 = 0
@@ -274,7 +317,9 @@ def main():
     goc = os.path.join(os.path.dirname(os.path.abspath(__file__)), '..', '..')
     thu = os.path.normpath(os.path.join(goc, 'public/game/assets/nv'))
     os.makedirs(thu, exist_ok=True)
-    if '--lop' in sys.argv: return main_lop(goi, skin, ten, danh, thu)
+    # --khongvk: bỏ lớp vũ khí (lớp cầm vũ khí BAY — xem chú thích trong nuong_lop).
+    bo_vk = '--khongvk' in sys.argv
+    if '--lop' in sys.argv: return main_lop(goi, skin, ten, danh, thu, bo_vk)
     t0 = time.time()
     lop, phong = nuong(goi, skin, danh)
     for hau, k in (('', 'than'), ('2', 'than2'), ('_vk', 'vukhi')):

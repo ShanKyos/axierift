@@ -48,14 +48,32 @@ const PORT = process.argv[2] || '8853';
       d.coDiSan = !!diSan; d.coBiDong = !!bd;
 
       // ③ kéo chiêu Di Sản lên thanh → %ST phải TỤT đúng bằng bậc của nó
+      //
+      // ⚠ KÉO VÀO MỘT Ô ĐANG CÓ CHIÊU LÀ ĐẨY KẺ ĐÓ RA, VÀ KẺ BỊ ĐẨY TRẢ LẠI % CỦA NÓ. Bản cũ
+      // chép cứng ô 1, và ô 1 hồi đó là `tp` ở cả năm lớp — `tp` không nằm trong Di Sản nên phép
+      // trừ sạch sẽ, tình cờ. Từ lúc Sylvan Ranger đưa `tp` xuống ô 3 thì ô 1 giữ một chiêu Di
+      // Sản THẬT (Bless, bậc cao) ⇒ đo ra **−1 trong khi mong 1,5**: bài đỏ vì CẢNH DỰNG, không
+      // vì cơ chế. Nên: ưu tiên ô nào không giữ chiêu Di Sản nào, và nếu không có thì TRỪ LẠI
+      // phần của kẻ bị đẩy. Cả hai nhánh đều không phụ thuộc vào cách xếp thanh của lớp nào.
       if (diSan){
         const mong = LEGACY_TIER_PCT[VOHOC_DEFS[diSan].tier] || 0;
         d.diSanTen = VOHOC_DEFS[diSan].name;
-        window.knGan(1, diSan);
+        const oDich = [1,2,3].find(i => { const c = player.skillBar[i];
+                                          return !c || !LEGACY_SECT_SKILLS.includes(c); });
+        d.oDich = (oDich == null) ? 1 : oDich;
+        const bi = player.skillBar[d.oDich];                 // kẻ bị đẩy ra (có thể là null)
+        const buLai = (bi && LEGACY_SECT_SKILLS.includes(bi) && VOHOC_DEFS[bi])
+                      ? (LEGACY_TIER_PCT[VOHOC_DEFS[bi].tier] || 0) : 0;
+        d.biDay = bi || null; d.buLai = buLai;
+        window.knGan(d.oDich, diSan);
         d.legacy1 = +player.legacyAtkPct.toFixed(2);
-        d.tut = +(d.legacy0 - d.legacy1).toFixed(2); d.tutMong = mong;
-        // gỡ ra thì phải TRẢ LẠI
-        window.knGo(1); d.legacy2 = +player.legacyAtkPct.toFixed(2);
+        d.tut = +(d.legacy0 - d.legacy1 + buLai).toFixed(2); d.tutMong = mong;
+        // gỡ ra thì phải TRẢ LẠI. Kẻ bị đẩy VẪN ngoài thanh sau `knGo`, nên mốc mong đợi là
+        // `legacy0 − buLai`, không phải `legacy0` — chốt bằng một con số ĐÚNG thay vì dựng lại
+        // thanh rồi so với chính nó (dựng lại thì `knGo` hỏng cũng xanh).
+        window.knGo(d.oDich); d.legacy2 = +player.legacyAtkPct.toFixed(2);
+        d.legacy2Mong = +(d.legacy0 - buLai).toFixed(2);
+        d.diSanConTrenThanh = player.skillBar.includes(diSan);
       }
       // ① ô 1 từ chối bị động · không gỡ được
       player.skillBar = defaultSkillBar(sc); calcDerived();
@@ -123,7 +141,8 @@ const PORT = process.argv[2] || '8853';
     if (!d.coDiSan) fail(`${sc}: không tìm được chiêu Di Sản nào NGOÀI thanh — cảnh dựng chưa đủ, mệnh đề ③ xanh giả`);
     if (d.coDiSan){
       if (d.tut !== d.tutMong){ fail(`${sc}: kéo Di Sản lên thanh mà %ST tụt ${d.tut}, mong ${d.tutMong}`); e3++; }
-      if (d.legacy2 !== d.legacy0){ fail(`${sc}: gỡ khỏi thanh mà %ST không trả lại (${d.legacy0}→${d.legacy2})`); e3++; }
+      if (d.diSanConTrenThanh){ fail(`${sc}: knGo() không gỡ được chiêu vừa gán`); e3++; }
+      if (d.legacy2 !== d.legacy2Mong){ fail(`${sc}: gỡ khỏi thanh mà %ST không trả lại (${d.legacy2} ≠ ${d.legacy2Mong})`); e3++; }
     }
     if (d.coBiDong){
       if (d.gan2 !== true){ fail(`${sc}: ô 2 KHÔNG nhận bị động`); e2++; }

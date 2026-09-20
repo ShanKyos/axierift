@@ -267,7 +267,44 @@ function mobFlatDef(m){
 }
 const MAP = { w: 2600, h: 1900 };
 
-const ELEMENTS = ['Kim','Mộc','Thủy','Hỏa','Thổ'];
+// ═══ TAM GIÁC LỚP AXIE — hệ khắc hệ của game này ═══════════════════════════════════════
+// Chín lớp Axie chính chủ, chia ba nhóm, mỗi nhóm khắc nhóm kế tiếp:
+//     ① Beast · Bug · Mech   ▶   ② Plant · Reptile · Dusk   ▶   ③ Aquatic · Bird · Dawn   ▶   ①
+//
+// Thay cho NGŨ GIÁC năm hệ (Steel · Verdant · Stone · Frost · Ember) thừa kế từ đời game kiếm
+// hiệp. Vòng cũ chạy tốt, nhưng không có gì trong nó nói "Axie" — nó là fantasy chung chung.
+// Tam giác này là đồ thật: người chơi biết Axie đọc ra ngay, và nội dung của game VỐN ĐÃ mô tả
+// nó (bảy vùng mang đúng tên bảy tộc, quái mang đúng tên lớp) — chỉ có dữ liệu là chưa khớp.
+//
+// ⚠ ĐỔI NGŨ GIÁC THÀNH TAM GIÁC LÀ ĐỔI CÂN BẰNG, không phải đổi nhãn. Ngũ giác: mỗi hệ khắc
+// ĐÚNG MỘT trong năm ⇒ 20% số cặp là khắc. Tam giác: mỗi lớp khắc BA trong chín ⇒ 33%. Tần
+// suất ăn hệ số ×1,20 / ×1,12 tăng hơn một lần rưỡi, nên nhịp cấp phải ĐO LẠI
+// (`tools/do_nhipcap.cjs`), đừng suy.
+//
+// ⚠ KHÔNG CÒN TRƯỜNG `beats`. Ngũ giác khắc một-đối-một nên `beats` là một CHUỖI và mã so sánh
+// bằng `===`. Tam giác khắc ba-đối-ba; giữ `beats` thành mảng rồi `.includes()` là chép cùng
+// một quan hệ ra chín chỗ. Nhóm (`nhom` 0/1/2) là nguồn DUY NHẤT, và `heKhac()` là cửa duy
+// nhất hỏi nó.
+const ELEM = {
+  Beast:   { name:'Beast',   color:'#e8873a', nhom:0, glyph:'✹' },
+  Bug:     { name:'Bug',     color:'#d94f6a', nhom:0, glyph:'✽' },
+  Mech:    { name:'Mech',    color:'#9aa8bd', nhom:0, glyph:'◆' },
+  Plant:   { name:'Plant',   color:'#5db86a', nhom:1, glyph:'♣' },
+  Reptile: { name:'Reptile', color:'#b07fd8', nhom:1, glyph:'▲' },
+  Dusk:    { name:'Dusk',    color:'#6f5bd0', nhom:1, glyph:'☾' },
+  Aquatic: { name:'Aquatic', color:'#4fb8e8', nhom:2, glyph:'❄' },
+  Bird:    { name:'Bird',    color:'#f06fa0', nhom:2, glyph:'✦' },
+  Dawn:    { name:'Dawn',    color:'#e6d46a', nhom:2, glyph:'☼' },
+};
+// `a` có khắc `b` không. Cửa DUY NHẤT — mọi chỗ tính sát thương và mọi chỗ hiện ra đều hỏi nó,
+// nên thứ người chơi ĐỌC và thứ máy THỰC THI không thể lệch nhau (cùng lối với `masteryKhoa`).
+function heKhac(a, b){
+  const A = ELEM[a], B = ELEM[b];
+  return !!(A && B && (A.nhom + 1) % 3 === B.nhom);
+}
+// SUY TỪ BẢNG, đừng chép ra một mảng thứ hai: hai danh sách cùng nghĩa là bảo đảm chúng lệch
+// nhau sau vài đợt sửa. Đây là danh sách vũ khí bốc Rune từ đó.
+const ELEMENTS = Object.keys(ELEM);
 
 // ── HỆ PHẨM ĐÃ GỠ ───────────────────────────────────────────────────────────
 // Phàm · Tinh · Linh · Thần · Chí Tôn không còn. MU Online không có hệ phẩm: hai món cùng
@@ -615,16 +652,46 @@ function rerollItemTier(it){
   it.subs = rollSubs(it.slot, it.perfect, it.tier, it.luck);
   assignDef(it, player && player.sect);
 }
-// str/agi/ene mỗi phái quy đổi ra Công Kích theo TRỌNG SỐ RIÊNG (SECTS[x].atkSrc) — không còn dùng
-// chung 1 công thức "str × 2" cho mọi phái. VD: Sylvan Ranger chỉ cần dồn Mẫn Tiệp là đủ mạnh, Dark Wizard
-// cần cả Mẫn Tiệp lẫn Linh Lực — đúng lối build đặc trưng từng lớp nhân vật kiểu MU Online.
+// BỐN CHỈ SỐ, đúng bộ của MU Online: Sức Mạnh · Nhanh Nhẹn · Thể Lực · Năng Lượng.
+//
+// ⚠ TÊN CŨ LÀ TỪ KIẾM HIỆP — Lực Lượng · Mẫn Tiệp · Phòng Ngự · Sinh Lực · Linh Lực. Chúng
+// sống sót qua cả đợt chuyển sang MU vì không ai đọc lại bảng này. Quy tắc số 1.
+//
+// ⚠ VÀ CHỈ CÒN BỐN: ô "Phòng Ngự" đã GỠ, phòng thủ nay đến từ Nhanh Nhẹn. Lý do đo được chứ
+// không phải cho gọn: `defRed = def/(def+60)` chạm trần chung `DEFRED_TRAN` (0,55) từ khoảng
+// **60 điểm** — mọi điểm Phòng Ngự sau đó là SỐ CHẾT, đúng như chú thích ở `DEFRED_TRAN` đã
+// ghi. Một ô chỉ số mà sau 60 điểm không còn tác dụng gì thì nó không phải một lựa chọn, nó
+// là một khoản thuế. Gộp vào Nhanh Nhẹn thì cái trục ấy có nghĩa trở lại.
+//
+// ⚠ "Sinh Lực" KHÔNG biến mất khỏi game — nó vẫn là tên của MÁU (thanh máu, "Sinh Lực Tối Đa",
+// "Hút Sinh Lực"). Thứ đổi tên là CHỈ SỐ đẻ ra máu: nay gọi là Thể Lực. Tương tự, "Mana" vẫn
+// là tên của tài nguyên, còn chỉ số đẻ ra nó là Năng Lượng.
 const ATTR_INFO = {
-  str:{ name:'Lực Lượng', desc:'Công kích (tùy lớp), sát thương phi tiêu' },
-  agi:{ name:'Mẫn Tiệp',  desc:'Tốc đánh, bạo kích, né tránh + Công kích (tùy phái)' },
-  def:{ name:'Phòng Ngự', desc:'Giảm sát thương nhận vào' },
-  vit:{ name:'Sinh Lực',  desc:'Máu tối đa và tốc hồi phục' },
-  ene:{ name:'Linh Lực',  desc:'Mana tối đa + Công kích (tùy lớp)' },
+  str:{ name:'Sức Mạnh',   desc:'Công kích (tùy lớp), sát thương phi tiêu' },
+  agi:{ name:'Nhanh Nhẹn', desc:'Phòng thủ, tốc đánh, bạo kích, né tránh + Công kích (tùy lớp)',
+        meo:'<b>Nhanh Nhẹn</b> thì lớp nào cũng cần — khoảng 50-100 điểm là phòng thủ chạm trần, phần còn lại dồn vào dòng sát thương.' },
+  vit:{ name:'Thể Lực',    desc:'Máu tối đa và tốc hồi phục' },
+  ene:{ name:'Năng Lượng', desc:'Mana tối đa + Công kích (tùy lớp)' },
 };
+// Nhanh Nhẹn quy ra Phòng Thủ.
+//
+// ⚠ ĐÂY LÀ CHỖ TÔI ƯỚC LƯỢNG SAI RỒI PHẢI ĐO LẠI — ghi lại vì con số đầu nghe rất hợp lý.
+// Tôi tính "trục phòng thủ chạm trần khi `s.def` ≈ 74, nền ~10, vậy 0,35 ⇒ cần ~190 điểm".
+// Đo thật thì **50-100 điểm là đã chạm trần** ở cả năm lớp:
+//     thieulam 51,8% ở 0 điểm → trần 55% ở  50 điểm
+//     bug      44,9%          → trần ở  50
+//     toanchan · baidasan · minhgiao 37%  → trần ở 100
+// Lý do: `defRed` đã ở 37-52% TỪ TRƯỚC KHI có một điểm nào (cấp 120 tự cộng), nên phần còn
+// lại tới trần `DEFRED_TRAN` (0,55) rất mỏng.
+//
+// ⇒ Giữ 0,35, và đó là lựa chọn CÓ Ý: ô Phòng Ngự cũ cũng chỉ cần ~60 điểm là hết tác dụng
+// (chú thích ở `DEFRED_TRAN` đã ghi đúng điều đó). Nên đây là đổi chỗ ghi điểm, KHÔNG phải
+// đổi giá. Nâng hệ số lên cũng không kéo dài được đường cong — thứ chặn nó là cái TRẦN, và
+// trần 0,55 là quyết định đã cân của chủ dự án, không phải chỗ để lách.
+//
+// ⚠ Vì vậy đừng mô tả Nhanh Nhẹn là "hố đổ điểm vô tận". Nó là: bỏ ~50-100 điểm cho cứng
+// người, phần còn lại dồn vào dòng sát thương của lớp. Đó mới là thứ đang thật sự xảy ra.
+const AGI_SANG_THU = 0.35;
 // Phụ phẩm theo GDD: Trang bị giáp & Nhẫn (thường/hoàn hảo)
 const ARMOR_SUBS = [
   { k:'dmgred',    name:'Giảm Sát Thương',  min:1,  max:DMGRED_MOI_MON },
@@ -650,7 +717,7 @@ const AWAKENED = [
   { k:'atk',  v:25, name:'Công Kích +25' },
   { k:'hp',   v:200,name:'Sinh Lực +200' },
   { k:'qireg',v:3,  name:'Hồi Mana +3' },
-  { k:'str',  v:8,  name:'Lực Lượng +8' },
+  { k:'str',  v:8,  name:'Sức Mạnh +8' },
 ];
 
 // 12 ô trang bị theo GDD (base tính theo CẤP trang bị t=1..10, mỗi 10 level = 1 cấp)
@@ -855,14 +922,32 @@ function veKhoa(p){ return (p && p._netId != null) ? 'n' + p._netId : 'ta'; }
 // ⚠ Kiểm `!= null`, KHÔNG dùng `||`: id 0 là giá trị giả nên `||` sẽ trả 'ta' và thân người
 // từ xa số 0 dùng chung ô nhớ với người chơi của mình. Máy chủ hiện cấp id từ 1 nên chưa nổ —
 // tức là đúng kiểu lỗi ngủ yên cho tới khi ai đó sửa `idKe` ở một tệp khác.
+// ═══ ĐỘ DÀI HAI HOẠT CẢNH RA ĐÒN (giây) — khai MỘT chỗ vì nay có HAI nơi đếm ngược ═══
+// `update()` đếm ngược cho người chơi của mình. `net.js` đếm ngược cho thân người từ xa, vì
+// ảnh chụp 10 Hz chỉ chở được "vừa bắt đầu một đòn" chứ không chở được thời gian còn lại —
+// gửi thời gian còn lại thì một đòn dài 0,22 s lọt qua khe giữa hai ảnh là chuyện thường.
+// ⚠ Bốn chỗ trong `drawPlayer` CHIA cho đúng hai số này để ra `atkK`/`castK`. Trước bản này
+// cả sáu chỗ đều chép cứng, nên sửa độ dài đòn ở một chỗ là tư thế vung tính theo một độ dài
+// khác — không lỗi nào báo, chỉ là cú chém kết thúc giữa chừng hoặc đứng hình ở khung cuối.
+const NV_DANH_GIAY = 0.22, NV_CHU_GIAY = 0.38;
+// Độ dài khối GIẬT lúc trúng đòn. ⚠ Chỗ GHI `hurtT` cố ý khác nhau (0,30 cho đòn đủ, 0,25 cho
+// đòn nhẹ) — hằng này là thước của phần VẼ, tức "một cú giật đầy đủ dài bao nhiêu". Trước bản
+// này số 0,3 ấy chép cứng ở hai chỗ trong `drawPlayer`, nay có thêm chỗ thứ ba ở `veAvatar`.
+const NV_GIAT_GIAY = 0.30;
+window.NV_HD_GIAY = { a: NV_DANH_GIAY, c: NV_CHU_GIAY, h: NV_GIAT_GIAY };
 // Bậc của một đôi cánh, đọc từ chính món đồ. Món đời cũ mang id 'thienthan'/'tieuquy'
 // (bậc 1) hoặc 'phuongduc'/'hacma' (bậc 2) — loadGame() đổi chúng sang đôi của lớp.
 function wingBac(it){ return (it && it.wingBac) || 1; }
-function wingDef(it){
+// ⚠ `sectDp` LÀ LỚP CỦA CHỦ ĐÔI CÁNH, không phải lớp của người đang ngồi trước màn hình.
+// Nhánh cuối chỉ chạy khi `it.wing` tra không ra (save đời khác, hoặc gói tin từ một bản game
+// mới hơn). Trước bản này nó lui về `player.sect` — vô hại hồi chỉ có một người trên màn, nhưng
+// từ lúc đồng bộ trang bị thì một Dark Wizard đứng cạnh sẽ mọc đôi cánh của LỚP MÌNH, và nó
+// không ném lỗi nào cả: đôi cánh vẫn vẽ ra, chỉ là sai người.
+function wingDef(it, sectDp){
   if (!it) return null;
   const b = WING_BANG[clamp(wingBac(it) - 1, 0, 2)];
   for (const sk in b) if (b[sk].id === it.wing) return b[sk];
-  return b[(player && player.sect)] || b.thieulam;
+  return b[sectDp || (player && player.sect)] || b.thieulam;
 }
 // Lớp nào dùng được đôi này. Cánh khoá theo lớp y hệt kiếm/gậy/cung — xem itemUsable().
 function wingSect(it){
@@ -870,24 +955,56 @@ function wingSect(it){
   return null;
 }
 
-// Vòng khắc hệ: Kim > Mộc > Thổ > Thủy > Hỏa > Kim (khắc chế +20% sát thương)
-// Vòng khắc 5 hệ. KHÓA đối tượng giữ nguyên (chúng nằm trong save của người chơi và rải khắp
-// bảng quái); chỉ TÊN HIỆN RA đổi sang tên phương Tây — cùng quy ước đã dùng cho tên bãi săn
-// và tên quái. Vòng khắc không đổi một cạnh nào nên cân bằng giữ nguyên tuyệt đối:
-//   Steel ⚔ Verdant ⚔ Stone ⚔ Frost ⚔ Ember ⚔ Steel
-// (lưỡi thép đốn cây · rễ nứt đá · đất vùi băng · băng dập lửa · lửa nung chảy thép)
-const ELEM = {
-  Kim:  { name:'Steel',   color:'#c8d4e8', beats:'Mộc',  glyph:'◆' },
-  'Mộc':{ name:'Verdant', color:'#5db86a', beats:'Thổ',  glyph:'♣' },
-  'Thổ':{ name:'Stone',   color:'#c08a4a', beats:'Thủy', glyph:'▲' },
-  'Thủy':{ name:'Frost',  color:'#7ec8ff', beats:'Hỏa',  glyph:'❄' },
-  'Hỏa':{ name:'Ember',   color:'#e8552a', beats:'Kim',  glyph:'☼' },
-};
+// ── HỆ PHÒNG THỦ ĐẾN TỪ CON AXIE ĐANG ĐEO ──────────────────────────────────────
+// Trước bản này `SECTS[sect].element` là HẰNG SỐ: chọn lớp xong là hệ phòng thủ khoá cứng cả
+// đời, người chơi không có một cách nào tác động. Nay con Axie quyết định nó.
+//
+// ⚠ CHỈ CHIỀU PHÒNG THỦ. Chiều người → quái vẫn do VŨ KHÍ quyết (`atkElem`) — luật bất đối
+// xứng "đổi vũ khí không bao giờ làm ngươi ăn đòn nặng hơn" đã chốt từ trước và không đụng tới.
+// Ba nguồn hệ sẽ là ba thứ phải nhớ; hai nguồn cho hai CHIỀU thì đọc ra được:
+//     người → quái : VŨ KHÍ      quái → người : AXIE
+//
+// ⚠ KHÔNG CỘNG MỘT CHỈ SỐ NÀO. Hệ số ×1,12/×0,90 đã chạy sẵn trong `update`; đổi Axie chỉ đổi
+// NHÁNH nào được chọn, không đổi con số nào. Luật Đổi Vai (*Axie 0 chỉ số, 0 kỹ năng, 0 trang
+// bị*) còn nguyên: đây là một QUAN HỆ, không phải một nấc thang sức mạnh. Đừng "cải tiến" nó
+// thành +% kháng — làm thế là dựng lại đúng trục sức mạnh mua được đã bị tháo ba lần.
+//
+// ⚠ BẢNG `AXIE_HE` ĐÃ GỠ. Nó từng gộp 9 lớp Axie xuống 5 hệ của ngũ giác cũ — một bước đệm, và
+// nó không còn chỗ đứng từ khi vòng khắc CHÍNH LÀ chín lớp ấy. Lớp của con Axie giờ đọc thẳng
+// làm hệ, không qua bảng nào. Đừng dựng lại một bảng ánh xạ ở giữa: thêm một tầng dịch là thêm
+// một chỗ nói dối được.
+// Hệ PHÒNG THỦ của người chơi. Một cửa duy nhất — `update` và mọi chỗ hiện ra đều hỏi nó, nên
+// thứ người chơi ĐỌC và thứ máy THỰC THI không thể lệch nhau (cùng lối với `masteryKhoa`).
+//
+// ⚠ Lui về hệ của LỚP khi chưa có avatar. Không bao giờ trả `null`: nhánh khắc hệ đọc
+// `if (mobEl && sectEl2)`, nên trả rỗng là tắt câm cả cơ chế mà không một lỗi nào báo.
+function heThu(p){
+  const pl = p || (typeof player !== 'undefined' ? player : null);
+  if (!pl) return null;
+  const id = avatarId(pl);
+  const he = id && CHI_MAP[id] ? CHI_MAP[id].lop : null;
+  return (he && ELEM[he]) ? he : ((SECTS[pl.sect] || {}).element || null);
+}
+window.heThu = heThu;
+// Hệ của MỘT CON quái. `m.he` (do MIỀN DÂN SỐ gán) THẮNG `m.def.el` (hệ nền của loài) — cùng
+// đúng kiến trúc mà vai trò đã dùng: `MOB_ROLE` là lớp nền, `pk.vai` của bãi thì thắng.
+//
+// ⚠ VÌ SAO PHẢI CÓ HAI TẦNG. Loài dùng lại qua nhiều map: `thinu` có mặt ở bốn map, `mocnhan`
+// bốn, `bandao` bốn, `huyetbat` hai. Nếu hệ khoá theo LOÀI thì không một vùng nào có bản sắc
+// hệ — Bug Tribe Tunnels và Plant Tribe Glade dùng chung hai loài nên chúng bắt buộc trùng hệ,
+// và cả cơ chế "chọn Axie theo nơi sắp đi cày" mất nghĩa. Đo trước khi làm: chênh lệch tốt
+// nhất / tệ nhất giữa các Axie, tính trên đàn quái thật của từng map, chỉ 7,9%.
+//
+// ⚠ VÀ TUYỆT ĐỐI KHÔNG SỬA `m.def.el` TẠI CHỖ. `def` thường là chính đối tượng trong `MOBS`
+// (spawnMob chỉ clone khi vai có hệ số khác 1), nên ghi vào đó là đổi hệ của loài ấy ở MỌI map
+// cho tới khi tải lại trang. Cùng vết sẹo mà `goldify()` đã ghi.
+function mobHe(m){ return (m && (m.he || (m.def && m.def.el))) || null; }
 function elName(k){ return (ELEM[k] || {}).name || k || '—'; }
 function elColor(k){ return (ELEM[k] || {}).color || '#c9b889'; }
 // Hệ của ĐÒN ĐÁNH: lấy theo vũ khí đang cầm, không có vũ khí thì theo hệ của lớp.
-// CHỈ dùng cho chiều người → quái. Chiều quái → người vẫn theo hệ của LỚP, nên đổi vũ khí
-// không bao giờ làm ngươi ăn đòn nặng hơn — đúng như đã chốt.
+// CHỈ dùng cho chiều người → quái. Chiều quái → người đi qua `heThu(player)` — tức theo CON
+// AXIE đang đeo, không theo vũ khí — nên đổi vũ khí không bao giờ làm ngươi ăn đòn nặng hơn.
+// (Chú thích cũ ghi "theo hệ của LỚP"; đúng cho tới đợt Đổi Vai, sai từ đó.)
 function atkElem(){
   if (!player) return null;
   const w = player.equip && player.equip.vukhi;
@@ -912,7 +1029,7 @@ function hasElem(it){ return !!(it && !it.special && it.slot === 'vukhi' && ELEM
 // bù bằng sát thương cao hơn, đặc biệt Dark Wizard (range 420, xa nhất) là glass cannon rõ rệt nhất.
 // atkSrc: điểm tiềm năng nào quy đổi ra Công Kích, đúng lối build đặc trưng từng lớp kiểu MU Online —
 // str/agi/ene nhân theo trọng số riêng (xem calcDerived()), KHÔNG còn chung 1 công thức "str×2" như
-// trước. VD: Sylvan Ranger chỉ cần dồn Mẫn Tiệp (agi) là đủ mạnh; Dark Wizard cần cả Mẫn Tiệp lẫn Linh
+// trước. Nay: DK ra công từ Sức Mạnh · Sylvan Ranger + Spellblade từ Nhanh Nhẹn · DW + Dark Lord
 // Lực (ene). Tổng điểm bonus của mỗi phái GIỮ NGUYÊN so với bản cân bằng trước, chỉ đổi chỗ ghi điểm.
 // SECTS đã dời sang data/canbang.js — sửa cân bằng không phải mở tệp 26k dòng này.
 const SECTS = window.SECTS;
@@ -956,9 +1073,9 @@ const DIBIEN = {
   chieubinh: { name:'Chiêu Binh',glyph:'☍', col:'#d0e07a', desc:'triệu 4 con nhỏ cùng loại, 12s một lần', summon:4, cd:12, mini:2 },
   loantien:  { name:'Loạn Tiễn', glyph:'⇶', col:'#8fd18f', desc:'mỗi đòn đánh 3 lần, mỗi lần 45%',      dmg:1.35, shots:3, mini:1.14 },
   nhiemdoc:  { name:'Nhiễm Độc', glyph:'☠', col:'#7ec850', desc:'đòn trúng gây độc 4 giây',           poison:4, mini:1.6 },
-  hoaphu:    { name:'Hoả Phụ',   glyph:'♨', col:'#ff7a3a', desc:'+15% sát thương dạng Hoả',           dmg:1.15, el:'Hỏa', mini:1.06 },
-  bangphu:   { name:'Băng Phụ',  glyph:'❄', col:'#9ed4ff', desc:'+15% sát thương dạng Băng',          dmg:1.15, el:'Thủy', mini:1.06 },
-  loiphu:    { name:'Lôi Phụ',   glyph:'⚡', col:'#ffd76a', desc:'+15% sát thương dạng Lôi',           dmg:1.15, el:'Kim', mini:1.06 },
+  hoaphu:    { name:'Hoả Phụ',   glyph:'♨', col:'#ff7a3a', desc:'+15% sát thương dạng Hoả',           dmg:1.15, el:'Beast', mini:1.06 },
+  bangphu:   { name:'Băng Phụ',  glyph:'❄', col:'#9ed4ff', desc:'+15% sát thương dạng Băng',          dmg:1.15, el:'Aquatic', mini:1.06 },
+  loiphu:    { name:'Lôi Phụ',   glyph:'⚡', col:'#ffd76a', desc:'+15% sát thương dạng Lôi',           dmg:1.15, el:'Bird', mini:1.06 },
   noxac:     { name:'Nổ Xác',    glyph:'✸', col:'#ff9a5a', desc:'chết nổ một vòng sát thương quanh xác', burst:0.6, r:95, mini:0.24 },
   phanthan:  { name:'Phân Thân', glyph:'⧉', col:'#c07fe0', desc:'có một bản sao 30% máu, 50% sát thương', clone:true },
   dichanh:   { name:'Dịch Ảnh',  glyph:'✧', col:'#a0ffe9', desc:'mỗi 6 giây chớp tới cạnh người chơi',  tp:6, mini:12 },
@@ -1094,49 +1211,49 @@ function syncTiepHp(pack){
 const TP_CD = 10, TP_QI = 50, TP_RADIUS = 185;
 
 const MOBS = {
-  boar:    { name:'Axie Heo Rừng',    lv:1, hp:55,  atk:7,  def:0, xp:28,  silver:[4,9],   speed:52, aggro:130, range:30, atkCd:1.4, size:15, color:'#6b5b4a', eye:'#e8ecff', drop:0.14, el:'Thổ', img:'assets/mobs/boar.png' },
-  wolf:    { name:'Axie Gai Tím',  lv:4, hp:160, atk:17, def:3, xp:85,  silver:[10,20],  speed:86, aggro:170, range:30, atkCd:1.2, size:15, color:'#5a5f6b', eye:'#ffd76a', drop:0.17, el:'Mộc', img:'assets/mobs/wolf.png' },
-  bandit:  { name:'Tay Sai Gloam',   lv:6, hp:270, atk:24, def:7, xp:140, silver:[15,32], speed:66, aggro:190, range:32, atkCd:1.3, size:16, color:'#4a3a30', eye:'#ff6a5a', sash:'#a03028', drop:0.20, el:'Kim', img:'assets/mobs/bandit.png' },
-  assassin:{ name:'Cướp Đường Gloam', lv:10, hp:700, atk:37, def:12, xp:450, silver:[52,89], speed:96, aggro:230, range:34, atkCd:1.1, size:17, color:'#1d1a24', eye:'#c07fe0', elite:true, drop:0.55, el:'Thủy', img:'assets/mobs/assassin.png' },
-  boss:    { name:'Thủ Lĩnh Gloam', lv:10, hp:2600, atk:44, def:16, xp:2500, silver:[300,420], speed:78, aggro:480, range:38, atkCd:1.2, size:26, color:'#120f18', eye:'#ff3a3a', boss:true, elite:true, drop:1, el:'Hỏa', img:'assets/mobs/boss.png' },
+  boar:    { name:'Axie Heo Rừng',    lv:1, hp:55,  atk:7,  def:0, xp:28,  silver:[4,9],   speed:52, aggro:130, range:30, atkCd:1.4, size:15, color:'#6b5b4a', eye:'#e8ecff', drop:0.14, el:'Beast', img:'assets/mobs/boar.png' },
+  wolf:    { name:'Axie Gai Tím',  lv:4, hp:160, atk:17, def:3, xp:85,  silver:[10,20],  speed:86, aggro:170, range:30, atkCd:1.2, size:15, color:'#5a5f6b', eye:'#ffd76a', drop:0.17, el:'Plant', img:'assets/mobs/wolf.png' },
+  bandit:  { name:'Tay Sai Gloam',   lv:6, hp:270, atk:24, def:7, xp:140, silver:[15,32], speed:66, aggro:190, range:32, atkCd:1.3, size:16, color:'#4a3a30', eye:'#ff6a5a', sash:'#a03028', drop:0.20, el:'Dusk', img:'assets/mobs/bandit.png' },
+  assassin:{ name:'Cướp Đường Gloam', lv:10, hp:700, atk:37, def:12, xp:450, silver:[52,89], speed:96, aggro:230, range:34, atkCd:1.1, size:17, color:'#1d1a24', eye:'#c07fe0', elite:true, drop:0.55, el:'Dusk', img:'assets/mobs/assassin.png' },
+  boss:    { name:'Thủ Lĩnh Gloam', lv:10, hp:2600, atk:44, def:16, xp:2500, silver:[300,420], speed:78, aggro:480, range:38, atkCd:1.2, size:26, color:'#120f18', eye:'#ff3a3a', boss:true, elite:true, drop:1, el:'Dusk', img:'assets/mobs/boss.png' },
 };
 // Quái theo tuyến bản đồ GDD (cấp 1 → 100+)
 Object.assign(MOBS, {
-  hautu:    { name:'Axie Bí Ngô', lv:2, hp:70, atk:8, def:1, xp:36, silver:[5,10], speed:95, aggro:150, range:26, atkCd:1.1, size:13, color:'#7a6248', eye:'#ffe9a0', drop:0.14, el:'Mộc', img:'assets/mobs/hautu.png' },
-  caodo:    { name:'Axie Cỏ Dại', lv:8, hp:300, atk:21, def:4, xp:175, silver:[13,26], speed:100, aggro:180, range:26, atkCd:1.1, size:13, color:'#b05030', eye:'#ffd76a', drop:0.18, el:'Hỏa', img:'assets/mobs/caodo.png' },
-  trannhan: { name:'Tượng Đá Canh Cổng', lv:12, hp:440, atk:29, def:10, xp:230, silver:[25,46], speed:55, aggro:160, range:34, atkCd:1.5, size:17, color:'#c88aa8', eye:'#ffffff', drop:0.22, el:'Mộc', skel:'golem', skelPal:{main:'#7d8290',dark:'#565b69',trim:'#9aa2b4',glow:'#7fd0ff'}, img:'assets/mobs/trannhan.png'},
+  hautu:    { name:'Axie Bí Ngô', lv:2, hp:70, atk:8, def:1, xp:36, silver:[5,10], speed:95, aggro:150, range:26, atkCd:1.1, size:13, color:'#7a6248', eye:'#ffe9a0', drop:0.14, el:'Plant', img:'assets/mobs/hautu.png' },
+  caodo:    { name:'Axie Cỏ Dại', lv:8, hp:300, atk:21, def:4, xp:175, silver:[13,26], speed:100, aggro:180, range:26, atkCd:1.1, size:13, color:'#b05030', eye:'#ffd76a', drop:0.18, el:'Plant', img:'assets/mobs/caodo.png' },
+  trannhan: { name:'Tượng Đá Canh Cổng', lv:12, hp:440, atk:29, def:10, xp:230, silver:[25,46], speed:55, aggro:160, range:34, atkCd:1.5, size:17, color:'#c88aa8', eye:'#ffffff', drop:0.22, el:'Mech', skel:'golem', skelPal:{main:'#7d8290',dark:'#565b69',trim:'#9aa2b4',glow:'#7fd0ff'}, img:'assets/mobs/trannhan.png'},
   // ── Bậc 14-24: bộ quái RIÊNG của Beast Herd Camp. Dùng lại tạo hình có sẵn theo
   // đúng lối MU (Bull Fighter → Elite Bull Fighter): cùng sinh vật, bậc cựu binh mạnh hơn.
   // Trước đây map 2 dùng y hệt bộ quái lv1-9 của map 1 nên không có bậc nào cho khoảng 10-24.
-  boar_tusk:  { name:'Heo Rừng Nhiễm Khí', lv:14, hp:520, atk:32, def:11, xp:295, silver:[31,56], speed:60, aggro:140, range:32, atkCd:1.3, size:16, color:'#7a5b48', eye:'#ff8a6a', drop:0.20, el:'Thổ', img:'assets/mobs/boar.png'},
-  wolf_alpha: { name:'Gai Tím Đầu Đàn', lv:16, hp:600, atk:36, def:12, xp:355, silver:[37,65], speed:96, aggro:185, range:32, atkCd:1.1, size:16, color:'#48505f', eye:'#ffd76a', drop:0.21, el:'Mộc', img:'assets/mobs/wolf.png'},
-  bandit_vet: { name:'Gloam Cựu Binh',   lv:18, hp:680, atk:39, def:13, xp:420, silver:[43,75], speed:84, aggro:200, range:34, atkCd:1.2, size:17, color:'#5a4a3a', eye:'#e8dcb0', drop:0.23, el:'Kim', img:'assets/mobs/bandit.png'},
-  caodo_fire: { name:'Cỏ Dại Bén Lửa',  lv:20, hp:760, atk:43, def:13, xp:480, silver:[49,85], speed:104, aggro:190, range:30, atkCd:1.0, size:14, color:'#d4552a', eye:'#ffd76a', drop:0.22, el:'Hỏa', img:'assets/mobs/caodo.png'},
-  gloam_scout:{ name:'Trinh Sát Gloam',  lv:22, hp:1300, atk:52, def:20, xp:1035, silver:[110,189], speed:100, aggro:240, range:34, atkCd:1.1, size:18, color:'#1d1a24', eye:'#c07fe0', elite:true, drop:0.55, el:'Thủy', img:'assets/mobs/assassin.png'},
-  chimera_bo: { name:'Tượng Đá Vỡ Lệnh',  lv:24, hp:920, atk:50, def:15, xp:605, silver:[61,104], speed:62, aggro:170, range:34, atkCd:1.4, size:18, color:'#b87a9a', eye:'#ffffff', drop:0.24, el:'Thủy', skel:'golem', skelPal:{main:'#6f7d8c',dark:'#4a5563',trim:'#8fb0c4',glow:'#6ae8c0'}, img:'assets/mobs/chimera_bo.png'},
-  phando:   { name:'Bộ Xương Phản Loạn', lv:26, hp:1000, atk:53, def:16, xp:670, silver:[67,114], speed:80, aggro:200, range:34, atkCd:1.2, size:16, color:'#3a9d8b', eye:'#a0ffe9', sash:'#2a6a5c', drop:0.25, el:'Thủy', skel:'skeleton', skelPal:{main:'#8b8f9c',dark:'#3f4450',trim:'#9a8a52',bone:'#ddd6c4',cloth:'#3a5c52',glow:'#a0ffe9'}},
-  xanu:     { name:'Chimera Phun Độc', lv:31, hp:1260, atk:64, def:18, xp:840, silver:[79,134], speed:88, aggro:210, range:30, atkCd:1.15, size:16, color:'#5c8a3a', eye:'#c8ffa0', drop:0.27, el:'Mộc', img:'assets/mobs/xanu.png' },
-  bandao:   { name:'Axie Sa Ngã', lv:38, hp:1790, atk:81, def:24, xp:1190, silver:[105,175], speed:92, aggro:230, range:36, atkCd:1.1, size:17, color:'#2d3a55', eye:'#9fd0ff', elite:true, drop:0.4, el:'Kim', img:'assets/mobs/bandao.png'},
-  thinu:    { name:'Oan Hồn Ổ Ấp', lv:42, hp:2190, atk:89, def:26, xp:1440, silver:[120,195], speed:78, aggro:200, range:34, atkCd:1.2, size:15, color:'#d8d0e8', eye:'#9a86d8', drop:0.28, el:'Mộc', skel:'wraith', skelPal:{main:'#8fa8c0',dark:'#3a4458',cloth:'#5a6a86',bone:'#e0e6f0',glow:'#9fd0ff'}},
-  mocnhan:  { name:'Axie Golem', lv:48, hp:3410, atk:101, def:43, xp:1880, silver:[143,230], speed:50, aggro:170, range:36, atkCd:1.5, size:19, color:'#8a6a42', eye:'#e8b04a', drop:0.3, el:'Thổ', img:'assets/mobs/mocnhan.png'},
-  huyetbat: { name:'Dơi Chimera', lv:56, hp:2870, atk:122, def:26, xp:2465, silver:[174,275], speed:115, aggro:240, range:28, atkCd:0.95, size:14, color:'#6a1a24', eye:'#ff3a3a', drop:0.32, el:'Hỏa', img:'assets/mobs/huyetbat.png' },
+  boar_tusk:  { name:'Heo Rừng Nhiễm Khí', lv:14, hp:520, atk:32, def:11, xp:295, silver:[31,56], speed:60, aggro:140, range:32, atkCd:1.3, size:16, color:'#7a5b48', eye:'#ff8a6a', drop:0.20, el:'Beast', img:'assets/mobs/boar.png'},
+  wolf_alpha: { name:'Gai Tím Đầu Đàn', lv:16, hp:600, atk:36, def:12, xp:355, silver:[37,65], speed:96, aggro:185, range:32, atkCd:1.1, size:16, color:'#48505f', eye:'#ffd76a', drop:0.21, el:'Plant', img:'assets/mobs/wolf.png'},
+  bandit_vet: { name:'Gloam Cựu Binh',   lv:18, hp:680, atk:39, def:13, xp:420, silver:[43,75], speed:84, aggro:200, range:34, atkCd:1.2, size:17, color:'#5a4a3a', eye:'#e8dcb0', drop:0.23, el:'Dusk', img:'assets/mobs/bandit.png'},
+  caodo_fire: { name:'Cỏ Dại Bén Lửa',  lv:20, hp:760, atk:43, def:13, xp:480, silver:[49,85], speed:104, aggro:190, range:30, atkCd:1.0, size:14, color:'#d4552a', eye:'#ffd76a', drop:0.22, el:'Plant', img:'assets/mobs/caodo.png'},
+  gloam_scout:{ name:'Trinh Sát Gloam',  lv:22, hp:1300, atk:52, def:20, xp:1035, silver:[110,189], speed:100, aggro:240, range:34, atkCd:1.1, size:18, color:'#1d1a24', eye:'#c07fe0', elite:true, drop:0.55, el:'Dusk', img:'assets/mobs/assassin.png'},
+  chimera_bo: { name:'Tượng Đá Vỡ Lệnh',  lv:24, hp:920, atk:50, def:15, xp:605, silver:[61,104], speed:62, aggro:170, range:34, atkCd:1.4, size:18, color:'#b87a9a', eye:'#ffffff', drop:0.24, el:'Mech', skel:'golem', skelPal:{main:'#6f7d8c',dark:'#4a5563',trim:'#8fb0c4',glow:'#6ae8c0'}, img:'assets/mobs/chimera_bo.png'},
+  phando:   { name:'Bộ Xương Phản Loạn', lv:26, hp:1000, atk:53, def:16, xp:670, silver:[67,114], speed:80, aggro:200, range:34, atkCd:1.2, size:16, color:'#3a9d8b', eye:'#a0ffe9', sash:'#2a6a5c', drop:0.25, el:'Dusk', skel:'skeleton', skelPal:{main:'#8b8f9c',dark:'#3f4450',trim:'#9a8a52',bone:'#ddd6c4',cloth:'#3a5c52',glow:'#a0ffe9'}},
+  xanu:     { name:'Chimera Phun Độc', lv:31, hp:1260, atk:64, def:18, xp:840, silver:[79,134], speed:88, aggro:210, range:30, atkCd:1.15, size:16, color:'#5c8a3a', eye:'#c8ffa0', drop:0.27, el:'Reptile', img:'assets/mobs/xanu.png' },
+  bandao:   { name:'Axie Sa Ngã', lv:38, hp:1790, atk:81, def:24, xp:1190, silver:[105,175], speed:92, aggro:230, range:36, atkCd:1.1, size:17, color:'#2d3a55', eye:'#9fd0ff', elite:true, drop:0.4, el:'Dusk', img:'assets/mobs/bandao.png'},
+  thinu:    { name:'Oan Hồn Ổ Ấp', lv:42, hp:2190, atk:89, def:26, xp:1440, silver:[120,195], speed:78, aggro:200, range:34, atkCd:1.2, size:15, color:'#d8d0e8', eye:'#9a86d8', drop:0.28, el:'Bug', skel:'wraith', skelPal:{main:'#8fa8c0',dark:'#3a4458',cloth:'#5a6a86',bone:'#e0e6f0',glow:'#9fd0ff'}},
+  mocnhan:  { name:'Axie Golem', lv:48, hp:3410, atk:101, def:43, xp:1880, silver:[143,230], speed:50, aggro:170, range:36, atkCd:1.5, size:19, color:'#8a6a42', eye:'#e8b04a', drop:0.3, el:'Mech', img:'assets/mobs/mocnhan.png'},
+  huyetbat: { name:'Dơi Chimera', lv:56, hp:2870, atk:122, def:26, xp:2465, silver:[174,275], speed:115, aggro:240, range:28, atkCd:0.95, size:14, color:'#6a1a24', eye:'#ff3a3a', drop:0.32, el:'Bird', img:'assets/mobs/huyetbat.png' },
   // Loài RIÊNG của Aquatic Tribe Causeway, lấp đúng khoảng trống 56→62 của bảng quái ngoài
   // trời. Dùng lại sprite xanu.png (Chimera Phun Độc) như satthuhy dùng lại assassin.png —
   // cùng dáng Chimera bò, khác dải cấp và khác hệ.
-  reunuoc:  { name:'Chimera Rêu Nước', lv:59, hp:3520, atk:133, def:31, xp:2790, silver:[186,294], speed:82, aggro:225, range:32, atkCd:1.1, size:16, color:'#3a6a5a', eye:'#7ecbff', drop:0.32, el:'Thủy', img:'assets/mobs/xanu.png' },
-  ttdetu:   { name:'Kẻ Cuồng Tín Lạc Lối', lv:62, hp:4320, atk:144, def:36, xp:3165, silver:[199,314], speed:84, aggro:210, range:34, atkCd:1.15, size:16, color:'#e0779a', eye:'#ffc0d8', sash:'#a04868', drop:0.3, el:'Thổ', skel:'cultist', skelPal:{main:'#c0c6d4',dark:'#2e2438',cloth:'#4a3a5e',trim:'#c8a84a',glow:'#8fe0a8'}},
-  docyeu:   { name:'Chimera Cầu Gai', lv:70, hp:5390, atk:166, def:41, xp:4025, silver:[242,378], speed:74, aggro:220, range:38, atkCd:1.3, size:18, color:'#4a7a2a', eye:'#7ec850', drop:0.34, el:'Mộc', poisonHit:true, img:'assets/mobs/docyeu.png'},
-  satthuhy: { name:'Sát Thủ Sương Mù', lv:78, hp:6800, atk:200, def:48, xp:5200, silver:[300,400], speed:100, aggro:240, range:34, atkCd:1.0, size:16, color:'#16121e', eye:'#c07fe0', elite:true, drop:0.45, el:'Thủy', img:'assets/mobs/assassin.png' },
-  thamtu:   { name:'Trinh Sát Tro Tàn', lv:84, hp:8070, atk:227, def:54, xp:6680, silver:[325,504], speed:96, aggro:230, range:33, atkCd:1.05, size:15, color:'#4a4238', eye:'#ffd76a', drop:0.34, el:'Thổ', img:'assets/mobs/thamtu.png'},
-  cungthu:  { name:'Cung Thủ Tro Tàn', lv:92, hp:8070, atk:271, def:52, xp:7920, silver:[369,567], speed:70, aggro:260, range:230, atkCd:1.6, size:15, color:'#7a5a30', eye:'#ffe9a0', drop:0.36, el:'Mộc', ranged:true, img:'assets/mobs/cungthu.png'},
-  kybinh:   { name:'Kỵ Sĩ Tro Tàn', lv:100, hp:10300, atk:277, def:77, xp:8820, silver:[406,626], speed:90, aggro:220, range:40, atkCd:1.3, size:21, color:'#1c1c24', eye:'#ff6a5a', elite:true, drop:0.5, el:'Kim', skel:'knight', skelPal:{main:'#6a6f80',dark:'#43485a',trim:'#c8a84a',cloth:'#7a2a30',glow:'#ffb15c'}, img:'assets/mobs/kybinh.png'},
-  kylan:    { name:'Chó Ngao Lửa', lv:112, hp:14480, atk:332, def:88, xp:13450, silver:[494,758], speed:94, aggro:240, range:42, atkCd:1.2, size:22, color:'#8a1a10', eye:'#ffd76a', elite:true, drop:0.55, el:'Hỏa', skel:'hound', skelPal:{main:'#8a3a2a',dark:'#5a2418',trim:'#ffb15c',glow:'#ff6a3a',bone:'#e8d0b0'}, img:'assets/mobs/kylan.png'},
-  cuongbinh:{ name:'Cuồng Binh Tro Tàn', lv:102, hp:12220, atk:345, def:67, xp:11645, silver:[445,685], speed:98, aggro:230, range:36, atkCd:1.0, size:17, color:'#5a2a1a', eye:'#ff9a3a', drop:0.42, el:'Thổ', img:'assets/mobs/cuongbinh.png'},
-  daokhach: { name:'Axie Cuồng Bão', lv:120, hp:14000, atk:380, def:75, xp:15000, silver:[750,1000], speed:102, aggro:250, range:38, atkCd:0.9, size:17, color:'#3a1010', eye:'#ff3a3a', elite:true, drop:0.6, el:'Hỏa', img:'assets/mobs/daokhach.png'},
+  reunuoc:  { name:'Chimera Rêu Nước', lv:59, hp:3520, atk:133, def:31, xp:2790, silver:[186,294], speed:82, aggro:225, range:32, atkCd:1.1, size:16, color:'#3a6a5a', eye:'#7ecbff', drop:0.32, el:'Aquatic', img:'assets/mobs/xanu.png' },
+  ttdetu:   { name:'Kẻ Cuồng Tín Lạc Lối', lv:62, hp:4320, atk:144, def:36, xp:3165, silver:[199,314], speed:84, aggro:210, range:34, atkCd:1.15, size:16, color:'#e0779a', eye:'#ffc0d8', sash:'#a04868', drop:0.3, el:'Dawn', skel:'cultist', skelPal:{main:'#c0c6d4',dark:'#2e2438',cloth:'#4a3a5e',trim:'#c8a84a',glow:'#8fe0a8'}},
+  docyeu:   { name:'Chimera Cầu Gai', lv:70, hp:5390, atk:166, def:41, xp:4025, silver:[242,378], speed:74, aggro:220, range:38, atkCd:1.3, size:18, color:'#4a7a2a', eye:'#7ec850', drop:0.34, el:'Aquatic', poisonHit:true, img:'assets/mobs/docyeu.png'},
+  satthuhy: { name:'Sát Thủ Sương Mù', lv:78, hp:6800, atk:200, def:48, xp:5200, silver:[300,400], speed:100, aggro:240, range:34, atkCd:1.0, size:16, color:'#16121e', eye:'#c07fe0', elite:true, drop:0.45, el:'Bird', img:'assets/mobs/assassin.png' },
+  thamtu:   { name:'Trinh Sát Tro Tàn', lv:84, hp:8070, atk:227, def:54, xp:6680, silver:[325,504], speed:96, aggro:230, range:33, atkCd:1.05, size:15, color:'#4a4238', eye:'#ffd76a', drop:0.34, el:'Reptile', img:'assets/mobs/thamtu.png'},
+  cungthu:  { name:'Cung Thủ Tro Tàn', lv:92, hp:8070, atk:271, def:52, xp:7920, silver:[369,567], speed:70, aggro:260, range:230, atkCd:1.6, size:15, color:'#7a5a30', eye:'#ffe9a0', drop:0.36, el:'Reptile', ranged:true, img:'assets/mobs/cungthu.png'},
+  kybinh:   { name:'Kỵ Sĩ Tro Tàn', lv:100, hp:10300, atk:277, def:77, xp:8820, silver:[406,626], speed:90, aggro:220, range:40, atkCd:1.3, size:21, color:'#1c1c24', eye:'#ff6a5a', elite:true, drop:0.5, el:'Reptile', skel:'knight', skelPal:{main:'#6a6f80',dark:'#43485a',trim:'#c8a84a',cloth:'#7a2a30',glow:'#ffb15c'}, img:'assets/mobs/kybinh.png'},
+  kylan:    { name:'Chó Ngao Lửa', lv:112, hp:14480, atk:332, def:88, xp:13450, silver:[494,758], speed:94, aggro:240, range:42, atkCd:1.2, size:22, color:'#8a1a10', eye:'#ffd76a', elite:true, drop:0.55, el:'Beast', skel:'hound', skelPal:{main:'#8a3a2a',dark:'#5a2418',trim:'#ffb15c',glow:'#ff6a3a',bone:'#e8d0b0'}, img:'assets/mobs/kylan.png'},
+  cuongbinh:{ name:'Cuồng Binh Tro Tàn', lv:102, hp:12220, atk:345, def:67, xp:11645, silver:[445,685], speed:98, aggro:230, range:36, atkCd:1.0, size:17, color:'#5a2a1a', eye:'#ff9a3a', drop:0.42, el:'Dusk', img:'assets/mobs/cuongbinh.png'},
+  daokhach: { name:'Axie Cuồng Bão', lv:120, hp:14000, atk:380, def:75, xp:15000, silver:[750,1000], speed:102, aggro:250, range:38, atkCd:0.9, size:17, color:'#3a1010', eye:'#ff3a3a', elite:true, drop:0.6, el:'Bird', img:'assets/mobs/daokhach.png'},
   // Axie Lang Thang — "người chơi" NPC trung lập để PK (3 cấp theo map)
-  duhiep1:  { name:'Axie Lang Thang', lv:30, hp:1800, atk:70, def:20, xp:900, silver:[90,140], speed:88, aggro:0, range:34, atkCd:1.2, size:16, color:'#4a5a7a', eye:'#dfe8ff', drop:0.5, el:'Kim', duHiep:true, img:'assets/mobs/duhiep.png'},
-  duhiep2:  { name:'Axie Lang Thang', lv:60, hp:5200, atk:160, def:42, xp:3600, silver:[260,360], speed:90, aggro:0, range:34, atkCd:1.15, size:16, color:'#5a4a6a', eye:'#dfe8ff', drop:0.55, el:'Thủy', duHiep:true, img:'assets/mobs/duhiep.png'},
-  duhiep3:  { name:'Cao Thủ Lang Thang', lv:115, hp:12000, atk:300, def:75, xp:10000, silver:[600,850], speed:94, aggro:0, range:36, atkCd:1.05, size:17, color:'#6a3a3a', eye:'#ffe0a0', elite:true, drop:0.7, el:'Hỏa', duHiep:true, img:'assets/mobs/duhiep.png'},
+  duhiep1:  { name:'Axie Lang Thang', lv:30, hp:1800, atk:70, def:20, xp:900, silver:[90,140], speed:88, aggro:0, range:34, atkCd:1.2, size:16, color:'#4a5a7a', eye:'#dfe8ff', drop:0.5, el:'Dawn', duHiep:true, img:'assets/mobs/duhiep.png'},
+  duhiep2:  { name:'Axie Lang Thang', lv:60, hp:5200, atk:160, def:42, xp:3600, silver:[260,360], speed:90, aggro:0, range:34, atkCd:1.15, size:16, color:'#5a4a6a', eye:'#dfe8ff', drop:0.55, el:'Aquatic', duHiep:true, img:'assets/mobs/duhiep.png'},
+  duhiep3:  { name:'Cao Thủ Lang Thang', lv:115, hp:12000, atk:300, def:75, xp:10000, silver:[600,850], speed:94, aggro:0, range:36, atkCd:1.05, size:17, color:'#6a3a3a', eye:'#ffe0a0', elite:true, drop:0.7, el:'Beast', duHiep:true, img:'assets/mobs/duhiep.png'},
 });
 const MOB_IMGS = {};
 
@@ -1176,14 +1293,66 @@ const MAP_VAT_SRC = {
   ct_thapvach:  'assets/iso/ct_thapvach.png',    // Chòi Trông Vách — NPC `ah_vachgio`
   ct_saanhlenh: 'assets/iso/ct_saanhlenh.png',   // Sảnh Lệnh       — NPC `bodau`
   ct_chuong:    'assets/iso/ct_chuong.png',      // Dãy Chuồng      — NPC `ah_mucdong`
+  // ── TƯỜNG THÀNH VÀ BỐN CỔNG · ĐANG CHỜ ART ────────────────────────────────
+  // Bảy tên dưới đây đã khai sẵn để THẢ TỆP VÀO LÀ CHẠY, không phải sửa một dòng mã nào.
+  // Chừng nào tên còn nằm trong MAP_VAT_CHO thì `vatTai()` trả null và máy vẽ số không viên.
+  // Đặc tả khổ ảnh + hợp đồng neo: docs/DE_XUAT_TUONG_CONG.md §5 và §5c.
+  tuong_ngang_trong: 'assets/iso/tuong_ngang_trong.png',   // 256×300 · cạnh Bắc
+  tuong_ngang_ngoai: 'assets/iso/tuong_ngang_ngoai.png',   // 256×300 · cạnh Nam
+  tuong_doc:         'assets/iso/tuong_doc.png',           // 160×428 · cạnh Tây, lật cho Đông
+  tuong_goc:         'assets/iso/tuong_goc.png',           // 256×300 · bốn góc bo
+  cong_bac:          'assets/iso/cong_bac.png',            // 720×700 · Cổng Bắc
+  cong_nam:          'assets/iso/cong_nam.png',            // 720×700 · Cổng Nam
+  cong_doc:          'assets/iso/cong_doc.png',            // 400×960 · Cổng Tây, lật cho Đông
+  // ── ĐÀI PHUN NƯỚC · ĐANG CHỜ ART ──────────────────────────────────────────
+  ct_dainuoc:        'assets/iso/ct_dainuoc.png',           // 418×360 · Đài Phun Nước Atia — TẤM LÙI của
+                                                           // bảng khung assets/iso/kh/ct_dainuoc.webp
 };
+// ⚠ DANH SÁCH "CHƯA VỀ". Khai tên trong MAP_VAT_SRC mà tệp chưa có thì trình duyệt nạp hụt và
+// ném 404 — bảy dòng đỏ trong devtools trên BẢN PHÁT HÀNH, cho một thứ cố ý chưa tồn tại.
+// Tên nằm đây thì không nạp gì cả.
+//
+// ⇒ THẢ TỆP PNG VÀO assets/iso/ RỒI XOÁ TÊN ĐÓ KHỎI ĐÂY. Đúng một dòng, không sửa gì thêm.
+//   Kiểm ngay sau đó: `node tools/do_thanh.cjs --cong` — mục 8b phải ra 100%.
+const MAP_VAT_CHO = new Set([
+  'tuong_ngang_trong', 'tuong_ngang_ngoai', 'tuong_doc', 'tuong_goc',
+  'cong_bac', 'cong_nam', 'cong_doc',
+]);
 const _vatIm = {};
 function vatTai(ten){
+  if (MAP_VAT_CHO.has(ten)) return null;   // art chưa về — đừng nạp, tránh 404 trên bản phát hành
   const src = MAP_VAT_SRC[ten];
   if (!src) return null;
   let im = _vatIm[ten];
   if (!im){ im = _vatIm[ten] = new Image(); im.src = src; }
   return (im.complete && im.naturalWidth) ? im : null;
+}
+// ── CÔNG TRÌNH CHẠY HOẠT ẢNH — bảng khung cho một mục `vatTo` ────────────────────────────
+// Mặc định một công trình là MỘT tấm tĩnh. Khai thêm `khung:{cot,hang,khung,oRong,oCao,fps}`
+// là mục đó chạy hoạt ảnh từ `assets/iso/kh/<tên>.webp` — cùng hợp đồng với `MOB_KHUNG` và
+// `NPC_KHUNG`, nên một đường nướng video duy nhất phục vụ cả ba.
+//
+// ⚠ TẤM TĨNH VẪN BẮT BUỘC. Bảng khung nạp lười; thiếu tấm lùi là mấy trăm mili giây đầu chỗ
+// đó THỦNG một lỗ giữa map — và vì nó tự hết sau một nhịp nên rất dễ nghiệm thu nhầm là xong.
+//
+// ⚠ ĐỪNG DỰNG MỘT LỚP "VẬT SÀN" RIÊNG CHO NƯỚC. Đã thử và đã gỡ: một lớp vẽ trước mọi thực
+// thể thì đúng cho thứ BẸT TUYỆT ĐỐI, mà đài phun nước thì CAO — người đứng phía bắc nó phải
+// bị cột nước che. `vatTo` xếp theo chân ảnh nên nó lo đúng chuyện đó; lớp phẳng kia sẽ vẽ
+// người đè lên cột nước, tức đứng trước một thứ mình đang đứng sau.
+const _vatKh = {};
+function vatKhung(v){
+  if (!v.khung) return null;
+  let im = _vatKh[v.img];
+  if (im === undefined){ im = _vatKh[v.img] = new Image(); im.src = 'assets/iso/kh/' + v.img + '.webp'; }
+  if (!(im.complete && im.naturalWidth)) return null;
+  const K = v.khung, tong = K.khung || (K.cot * K.hang);
+  const i = Math.floor(performance.now() / 1000 * (K.fps || 8)) % tong;
+  return { im, sx:(i % K.cot) * K.oRong, sy:((i / K.cot) | 0) * K.oCao, sw:K.oRong, sh:K.oCao };
+}
+function veVatTo(v){
+  const kh = vatKhung(v);
+  if (kh){ ctx.drawImage(kh.im, kh.sx, kh.sy, kh.sw, kh.sh, v.x, v.y, v.w, v.h); return; }
+  const im = vatTai(v.img); if (im) ctx.drawImage(im, v.x, v.y, v.w, v.h);
 }
 // Nạp NỀN THEO NHU CẦU. Trước đây nạp cả 15 mục ngay khi tải trang — 3,2 MB ảnh nền cho 15 bản
 // đồ mà người chơi mới chỉ đứng ở đúng MỘT. Nay chỉ nạp map đang vào (và nạp trước những map đi
@@ -1210,6 +1379,134 @@ function mapBgDon(k){
 // `im.src = '' ` KHÔNG phải là "không nạp gì": trình duyệt coi chuỗi rỗng là đường dẫn tương đối
 // và đi tải lại chính trang hiện tại. Quái dựng bằng khớp xương thì không có ảnh — bỏ hẳn.
 for (const k in MOBS){ if (!MOBS[k].img) continue; const im = new Image(); im.src = MOBS[k].img; MOB_IMGS[k] = im; }
+
+// ═══════════ BẢNG KHUNG HÌNH QUÁI & TRÙM ═══════════
+// Mặc định mỗi loài là MỘT tấm tĩnh: cả chuyển động lẫn cú đánh hiện ra bằng nhịp nhấp nhô
+// `bob` và một vòng cung màu nguyên tố. Khai một khoá ở bảng dưới là loài đó có hoạt ảnh thật;
+// không khai thì vẽ y hệt như trước, không lệch một pixel. Máy chạy theo dữ liệu — art về chỉ
+// cần thêm một dòng, không sửa hàm nào.
+//
+// ⚠ KHOÁ LÀ **TÊN TỆP** TRONG assets/mobs/, KHÔNG PHẢI KHOÁ MOB. Cố ý: `assassin.png` đang phục
+// vụ 3 loài và `duhiep.png` phục vụ 3 loài nữa, nên nướng một bảng khung là cả ba cùng có hoạt
+// ảnh. Khoá theo mob thì phải chép cùng một dòng ba lần rồi quên đồng bộ.
+//
+// Tấm khung hình nằm ở `assets/mobs/kh/<tên>.png`, TÁCH khỏi tấm tĩnh `assets/mobs/<tên>.png`.
+// Tách hai chỗ để tấm tĩnh còn nguyên làm lối lùi: bảng khung tải hỏng hay chưa tải xong thì
+// quái vẫn hiện, chỉ là chưa cử động.
+//
+// `nhip` — các đoạn trong cùng một tấm, mỗi đoạn `[khung đầu, số khung, fps]`:
+//   dung  đứng thở   ·  di  di chuyển  ·  danh  ra đòn  ·  chet  gục
+// Chỉ `dung` là bắt buộc; nhịp nào thiếu thì rơi về `dung`.
+//
+// `neoY` — BÀN CHÂN nằm ở đâu trong ô, theo tỉ lệ chiều cao ô (0 = mép trên, 1 = mép dưới).
+// Không khai thì lấy 0.94. Đây là thứ giữ con quái đứng trên đất thay vì lún hoặc lơ lửng, và
+// nó phải do người NƯỚNG tấm đo ra chứ không phải người viết bảng đoán.
+//
+// `sai` — quãng đường (px thế giới) cho TRỌN một vòng nhịp `di`. Không khai thì lấy bề rộng vẽ
+// ra × 1,15.
+//
+// Khuôn một mục — bỏ dấu chú thích là chạy:
+//   'boar': { cot:6, hang:4, oRong:256, oCao:256, neoY:0.94, sai:74,
+//             nhip:{ dung:[0,6,8], di:[6,6,12], danh:[12,6,16], chet:[18,6,10] } },
+const MOB_KHUNG = {
+  // Người Giữ Rẻo Corran — Tướng Quân đầu game. Gói Meowa xuất kiểu Godot 4 (8 khung 640px,
+  // một nhịp lơ lửng), thu về ô 256 vì trùm chỉ vẽ ra 132px trên màn.
+  // ⚠ `neoY` ĐO Ở ĐẾ GIÀY (hàng 549/640), KHÔNG ở đáy ảnh: art có vệt khói kéo xuống dưới
+  // chân, neo theo đáy là con ma treo lơ lửng cao hơn mặt đất 14% chiều cao ô.
+  // fps 10 = đúng nhịp gói gốc khai (Godot: speed 8,0 × duration 0,8 ⇒ 0,1 s mỗi khung).
+  //
+  // Art gốc quá tối để đọc được nét: sáng 0,128 trong khi 24 tấm quái hiện có trung bình 0,658
+  // và viên cỏ Corran là 0,722. Nướng lại có xử lý — LỆNH ĐÚNG, giữ lại để dựng lại được:
+  //   python3 tools/nuong_khungquai.py tq_corran --dung <8 khung>/*.png \
+  //           --chan 549 --cao 256 --sang 0.8754,1.0,1.08 --vien 5,#9ec8e8,0.55
+  // gamma 0,8754 dò ra để độ sáng ĐO ĐƯỢC tăng đúng 25% (0,128 → 0,160); viền rìa lạnh cộng
+  // thêm nên tổng ra 0,217. Vẫn tối hơn quái thường 67% — nó giữ nguyên bản sắc "bóng tối",
+  // chỉ là nay đọc được nếp áo. Lệch chuẩn (độ tách nét) 0,092 → 0,149.
+  // Thủ Lĩnh Đoàn Gloam — kỵ sĩ xương cưỡi ngựa xương, lửa hồn xanh ở vó và ở kiếm.
+  // ⚠ `neoY` đo ở VÓ NGỰA (hàng 394/417), không ở đáy lửa: lửa hồn liếm xuống dưới vó 23px,
+  // neo theo nó là con ngựa treo lơ lửng. Cùng bẫy với vệt khói của tq_corran.
+  // KHÔNG nâng sáng: art này đo ra sáng 0,237 · lệch chuẩn 0,209 — gấp 1,85× và 2,3× con bóng
+  // ma, tức nó vốn đã đọc được nét. Áp cùng liều xử lý cho mọi gói là chữa bệnh không có bệnh.
+  //   python3 tools/nuong_khungquai.py tq_daohoa --dung <8 khung>/*.png --chan 394
+  'tq_daohoa': { cot:8, hang:1, oRong:207, oCao:195, neoY:0.8821,
+                 nhip:{ dung:[0,8,10] } },
+  'tq_corran': { cot:8, hang:1, oRong:256, oCao:256, neoY:0.8578,
+                 nhip:{ dung:[0,8,10] } },
+};
+const MOB_KH_IMGS = {};
+function mobKhAnh(ten){
+  let im = MOB_KH_IMGS[ten];
+  if (!im){ im = new Image(); im.src = 'assets/mobs/kh/' + ten + '.png'; MOB_KH_IMGS[ten] = im; }
+  return (im.complete && im.naturalWidth) ? im : null;
+}
+// Tên tệp art của một con quái — cũng là khoá tra MOB_KHUNG.
+// `anh` là art RIÊNG của chính con đó và THẮNG cả khung xương (xem drawMob); không có `anh` thì
+// suy từ đường dẫn `img`. Nhớ lại theo đường dẫn chứ không gắn vào `def`: `def` của quái thường
+// là chính đối tượng trong MOBS, mà MOBS thì tuyệt đối không được mutate (Xâm Lăng Vàng clone
+// def trước khi sửa cũng vì lý do đó).
+const _mobTenAnh = {};
+function mobTenAnh(d){
+  if (!d) return null;
+  if (d.anh) return d.anh;
+  if (!d.img) return null;
+  return _mobTenAnh[d.img] || (_mobTenAnh[d.img] = d.img.replace(/^.*\//, '').replace(/\.[a-z0-9]+$/i, ''));
+}
+// Tấm TĨNH tra theo tên tệp — lối vào cho art riêng của trùm (`anh`). MOB_IMGS tra theo khoá
+// mob nên không dùng lại được: hai con trùm khác nhau có thể cùng mượn một tấm.
+// ⚠ Khai bảng TRƯỚC hàm: `const` có vùng chết, và tệp này đã một lần trắng trang vì đúng lỗi đó.
+const MOB_ANH_TEN = {};
+function mobAnhTen(ten){
+  let im = MOB_ANH_TEN[ten];
+  if (!im){ im = new Image(); im.src = 'assets/mobs/' + ten + '.png'; MOB_ANH_TEN[ten] = im; }
+  return (im.complete && im.naturalWidth) ? im : null;
+}
+// ĐI HAY ĐỨNG: đo từ chuyển động THẬT, không đọc một lá cờ do AI đặt.
+// Quái tự dời chỗ ở NĂM chỗ khác nhau trong update() (chạy trốn, đuổi, lảng vảng, kéo về lãnh
+// địa, đòn lao tới). Đặt cờ ở từng chỗ thì chỗ thứ sáu thêm sau sẽ lặng lẽ không có hoạt ảnh —
+// và cái hỏng đó nhìn ra là "hình như con này hơi đơ", rất khó lần. Đo thì không bao giờ lệch.
+//
+// ⚠ Nhịp bước tính theo QUÃNG ĐƯỜNG ĐÃ ĐI, không theo thời gian. Chia theo thời gian là bàn
+// chân trượt đất — đúng bài học đã trả giá ở sải chân nhân vật (SAI_CHAN), và ở quái thì còn
+// dễ dính hơn vì `slowT` đổi tốc độ giữa chừng.
+function mobDoBuoc(m, now){
+  const t0 = m._buocT || 0, dt = Math.min(0.12, (now - t0) / 1000);
+  if (t0 && dt > 0){
+    const dd = Math.hypot(m.x - m._buocX, m.y - m._buocY);
+    m.mvPh = (m.mvPh || 0) + dd;
+    const k = Math.min(1, (dd / dt) / Math.max(20, (m.def.speed || 60) * 0.5));
+    m.mvK = (m.mvK || 0) + (k - (m.mvK || 0)) * Math.min(1, dt * 12);
+  }
+  m._buocT = now; m._buocX = m.x; m._buocY = m.y;
+}
+// Nhịp nào đang chạy. Thứ tự ưu tiên là thứ tự người chơi CẦN đọc ra trước: gục > ra đòn > đi.
+function mobNhip(m){
+  if (m.dead) return 'chet';
+  if ((m.lungeT || 0) > 0) return 'danh';
+  return (m.mvK || 0) > 0.3 ? 'di' : 'dung';
+}
+// Ô khung đang phải vẽ. Trả null khi loài này chưa có bảng khung hoặc tấm chưa tải xong —
+// người gọi vẽ tấm tĩnh như cũ.
+//
+// Ba nhịp KHÔNG chạy tự do theo đồng hồ, vì cả ba đều phải khớp với một thứ có thật trong máy:
+//   danh — chạy theo `lungeT`, nên lưỡi vung đúng lúc sát thương rơi;
+//   chet — chạy theo `deadT` và DỪNG ở khung cuối, không lặp lại cú gục;
+//   di   — chạy theo quãng đường, nên chân không trượt.
+// Chỉ `dung` chạy theo đồng hồ, vì nó không khớp với gì cả.
+function mobKhungO(ten, m, now){
+  const K = ten && MOB_KHUNG[ten]; if (!K) return null;
+  const im = mobKhAnh(ten); if (!im) return null;
+  const nh = mobNhip(m);
+  const n = K.nhip[nh] || K.nhip.dung; if (!n) return null;
+  const [dau, so, fps] = n;
+  let i;
+  if (nh === 'danh')      i = Math.min(so - 1, Math.floor((1 - (m.lungeT || 0) / 0.22) * so));
+  else if (nh === 'chet') i = Math.min(so - 1, Math.floor((1 - Math.max(0, (m.deadT || 0)) / 0.45) * so));
+  else if (nh === 'di')   i = Math.floor((m.mvPh || 0) / (K.sai || Math.max(24, m.def.size * 3.3 * 1.15)) * so) % so;
+  else                    i = Math.floor(now / 1000 * fps + (m.wob || 0)) % so;
+  const k = dau + Math.max(0, i), cot = K.cot || 1;
+  return { im, sx: (k % cot) * K.oRong, sy: Math.floor(k / cot) * K.oCao,
+           sw: K.oRong, sh: K.oCao, neoY: K.neoY == null ? 0.94 : K.neoY };
+}
 // Sourced status-effect overlay clips (axieinfinity/axie-origins-asset-kit web-vfx) — generic (not
 // per-class), played once at the moment a status effect actually lands (see playStatusFx below).
 // Grid metadata copied from each clip's clip.json (cols/rows/frameW/frameH/frames/fps/anchor).
@@ -1253,6 +1550,49 @@ const VFX_ATLAS_DEFS = {
   // Inferno (ô 3 của Dark Wizard) — cột lửa mọc từ vòng dung nham, hồn lửa xanh bay quanh.
   fire_pillar:    { k:1, cols:8, rows:2,  frameW:384, frameH:384, frames:16, fps:20, anchorX:183.0, anchorY:317.4, neoR:192.0, cong:false },
   meteor_rain:    { k:1, cols:7, rows:2,  frameW:384, frameH:384, frames:14, fps:22, anchorX:191.1, anchorY:344.1, neoR:191.7, cong:false },
+  // Twisting Slash (ô 1 của Dark Knight) — quạt chém xanh thép, cú chạm loé vàng ở khung 6.
+  // Gói Gemini, bóc nền caro bằng tools/vfx_gemini.py — Gemini KHÔNG xuất được nền trong suốt:
+  // nó VẼ lưới ô caro thành điểm ảnh thật, đo trên cả ba tấm đầu ra `alpha = 0` chiếm 0,0%.
+  // Khung thứ 9 của gói gốc đã BỎ: nó là khung tàn mờ nhất, nhạt tới mức không tách nổi khỏi
+  // lưới, và một khung nhiễu thì tệ hơn một khung thiếu.
+  // ⚠ `anchorX` 46 là mép TRÁI quạt chém, tức chỗ bàn tay — và đó cũng là TÂM QUAY khi bật
+  // `xoay`. Dời nó về giữa ô là lưỡi kiếm vừa quay vừa văng khỏi tay.
+  //   python3 tools/vfx_gemini.py <gói> sx_thieulam_a --luoi 3,3 --bo 8 --fps 18 --canh trai
+  // ⚠ `neoR` 337,9 = 384 − anchorX, tức TẦM VƯƠN KỂ TỪ NEO chứ không phải nửa ô. Chỗ gọi lấy
+  // tỉ lệ vẽ bằng `R / neoR`; neo nằm sát rìa trái nên tầm vươn gần trọn bề rộng ô. Lấy nửa ô
+  // (192) là vẽ to gấp đôi — đo ở lượt cắm đầu: đặc tả 125px, vẽ ra 211px.
+  // ⚠ `cong:false` — VẼ ĐÈ, KHÔNG CỘNG SÁNG. Đo được: tấm này sáng 169 và có viền xanh navy
+  // đậm bao ngoài. Cộng sáng trên nền cát sáng của thị trấn thì cả quạt chém cháy TRẮNG và
+  // viền biến mất — chụp ra là một vệt trắng, không còn ra nhát kiếm xanh thép. Cùng lý do
+  // meteor_rain và fire_pillar đều khai cờ này. Luật: cộng sáng dành cho gói TỐI HƠN nền.
+  sx_thieulam_a:  { k:1, cols:8, rows:2,  frameW:384, frameH:384, frames:10, fps:20, anchorX:46.1, anchorY:192.0, neoR:337.9, cong:false },
+  // Hai tấm dưới cùng đường ống, cùng gói Gemini. `cong:false` vì cả hai đều sáng hơn nền và
+  // có viền tối riêng — cộng sáng là cháy trắng, mất cả màu lẫn viền (đã chụp ra so).
+  sx_bug_a:       { k:1, cols:6, rows:1,  frameW:384, frameH:384, frames:6,  fps:18, anchorX:46.1, anchorY:192.0, neoR:337.9, cong:false },
+  // ⚠ NỢ ĐÃ BIẾT: tấm này còn lưới lỗ ở quầng sáng và vành tan. Nguyên nhân đo được — nền caro
+  // của gói gốc SÁNG NHẤT trong ba gói (hai tông 156/197, so với 44/96 của Twisting Slash), nên
+  // art trắng-bạc hà rơi đúng dải sáng ấy và phép tách không phân biệt nổi. Không chữa được ở
+  // khâu nhập; phải sinh lại gói trên NỀN MỘT MÀU PHẲNG (tools/vfx_gemini.py --nen '#ff00ff').
+  sx_toanchan_a:  { k:1, cols:5, rows:1,  frameW:384, frameH:384, frames:5,  fps:18, anchorX:46.1, anchorY:192.0, neoR:337.9, cong:false },
+  // Hoả Xích Diệm (Hành Vi ô 2 của Dark Lord) — ba ngọn lửa toả ra từ một điểm, lõi trắng chạy dọc.
+  // Gói Meowa 8 khung / lưới 3×3; ô thứ 9 rỗng nên bỏ bằng `--bo 8`.
+  fire_scream:    { k:1, cols:8, rows:1,  frameW:384, frameH:384, frames:8,  fps:16, anchorX:46.1, anchorY:192.0, neoR:337.9, cong:false },
+  // Bão Quạ (Trấn Phái của Dark Lord) — bầy quạ tuôn ra từ một xoáy tối, vệt khói tím kéo theo.
+  // ⚠ ART TỐI: sáng 0,136 · lệch chuẩn 0,094 — DƯỚI ngưỡng 0,12 mà CỐ Ý không nâng sáng. Chụp
+  // trên map tối nhì (`chungnam` 0,376; tối nhất là `deep` 0,361) thì bản gốc đọc rõ, còn liều
+  // nâng nhẹ nhất đã làm quạ ngả xám và mất luôn chất "chim đen". Ngưỡng 0,12 rút ra từ art TRÙM
+  // vẽ ở 113px; tấm này vẽ ~230px nên chi tiết sống sót, cộng viền tím và vệt khói cho tương phản.
+  raven_storm:    { k:1, cols:8, rows:1,  frameW:384, frameH:384, frames:8,  fps:16, anchorX:46.1, anchorY:192.0, neoR:337.9, cong:false },
+  // Death Stab / "đâm gió" (Trấn Phái của Dark Knight) — ngọn thương xoắn dài ra, hơi lam cuốn quanh.
+  // 16 khung và KHÔNG khung nào chết: đổi thấp nhất giữa hai khung liền nhau là 11,5 RMS, tức
+  // ngọn thương vẫn đang xoay. (Hai gói trước phải bỏ khung độn; gói này thì không.)
+  death_stab:     { k:1, cols:8, rows:2,  frameW:384, frameH:384, frames:16, fps:20, anchorX:46.1, anchorY:192.0, neoR:337.9, cong:false },
+  // Ngũ Tiễn (Trấn Phái của Sylvan Ranger) — năm mũi tên vàng bung thành nan quạt từ một điểm.
+  // `cong:false`: 17,0% điểm ảnh đặc là gần-đen (viền bao quanh từng mũi tên). Cộng sáng ăn mất
+  // viền đen — đen cộng vào nền là ra chính nền — nên cả nan quạt sẽ nhoè thành mấy vệt vàng
+  // nhợt không còn hình mũi tên. Đúng vết sẹo đã ghi cho `fire_scream`.
+  // Không nâng sáng lúc nhập: lệch chuẩn 0,224, gấp đôi ngưỡng 0,12 (sáng TB 110,4/255).
+  five_arrow:     { k:1, cols:8, rows:1,  frameW:384, frameH:384, frames:8,  fps:16, anchorX:46.1, anchorY:192.0, neoR:337.9, cong:false },
 };
 const VFX_ATLAS_IMGS = {};
 const VFX_ATLAS_DUNG = {};   // id → lúc dùng gần nhất (ms)
@@ -1330,77 +1670,108 @@ function veVongKiem(g, e, nua){
 
   g.save();
   g.lineCap = 'round';
-  // Vệt lửa: dựng từ N đốt ngắn nối nhau, mỗi đốt một màu và một bề dày. Không dùng gradient
-  // dọc theo đường cong được — canvas chỉ có gradient thẳng và gradient toả tròn, mà đây là
-  // một cung elip. Đủ đốt và bo đầu tròn thì mắt đọc thành một dải liền.
+  g.globalCompositeOperation = 'lighter';
+  // ⚠ KHÔNG CÒN VỆT LỬA DÀY. Bản cũ vẽ một dải cam-đỏ dày 16px với năm nấc màu
+  // (#fff6d8 → #ffd76a → #ff9a2e → #e8552a → #8f2418) cộng một quầng mềm rộng gấp đôi — nó
+  // nuốt mất chính thanh kiếm, mà thanh kiếm mới là thứ chiêu này nói về. Chủ dự án chốt:
+  // *"bỏ hiệu ứng màu cam đi… nó chỉ cần hiện lên màu cam nhạt (như tia lửa xẹt điện là ok)"*.
+  // Nay là một vệt MỎNG, cam nhạt, có nhiễu dọc đường như tia điện.
+  //
+  // Nhiễu tính từ CHỈ SỐ ĐỐT + thời gian, không phải `Math.random` mỗi khung: random thì nó
+  // nhấp nháy loạn 60 lần một giây, đọc ra nhiễu hạt chứ không ra một tia điện đang chạy.
   for (let i = 0; i < N; i++){
-    const t0 = i / N, t1 = (i + 1) / N;            // 0 = đầu vệt (nóng nhất) → 1 = đuôi
+    const t0 = i / N, t1 = (i + 1) / N;            // 0 = đầu vệt (sáng nhất) → 1 = đuôi
     const a0 = dau - t0 * VONGKIEM_QUET, a1 = dau - t1 * VONGKIEM_QUET;
     const s0 = Math.sin(a0), s1 = Math.sin(a1);
     // Nửa dưới elip là phần GẦN người xem. Mỗi lượt vẽ chỉ nhận đúng nửa của mình; đốt nào vắt
     // qua ranh giới thì bỏ, đốt kế bên đã phủ chỗ đó rồi nên không hở.
     if ((s0 < 0) !== sauNua || (s1 < 0) !== sauNua) continue;
-    const x0 = e.x + Math.cos(a0) * VONGKIEM_RX, y0 = cyc + s0 * VONGKIEM_RY;
-    const x1 = e.x + Math.cos(a1) * VONGKIEM_RX, y1 = cyc + s1 * VONGKIEM_RY;
-    // Nửa gần vẽ dày hơn nửa xa — chính chỗ này làm vòng lửa trông có chiều sâu chứ không phải
-    // một cái vòng dán bẹt.
-    const gan = 1 + s0 * 0.30;
-    const day = (16 - t0 * 11) * gan;
-    const mau = t0 < 0.16 ? '#fff6d8' : t0 < 0.34 ? '#ffd76a'
-              : t0 < 0.58 ? '#ff9a2e' : t0 < 0.80 ? '#e8552a' : '#8f2418';
-    // Quầng mềm vẽ TRƯỚC và rộng gấp đôi: thiếu nó thì vệt lửa ra như một dải ruy băng nhựa,
-    // sắc cạnh đều tăm tắp. Lửa phải có mép loang.
-    g.globalAlpha = mo * (1 - t0 * 0.72) * 0.26;
-    g.strokeStyle = mau; g.lineWidth = day * 2.1;
+    const n0 = Math.sin(i * 2.7 + k * 44) * VONGKIEM_XET * (1 - t0);   // tia điện giật dọc đường
+    const n1 = Math.sin((i + 1) * 2.7 + k * 44) * VONGKIEM_XET * (1 - t1);
+    const x0 = e.x + Math.cos(a0) * (VONGKIEM_RX + n0), y0 = cyc + s0 * VONGKIEM_RY + n0 * 0.45;
+    const x1 = e.x + Math.cos(a1) * (VONGKIEM_RX + n1), y1 = cyc + s1 * VONGKIEM_RY + n1 * 0.45;
+    const gan = 1 + s0 * 0.30;                     // nửa gần dày hơn nửa xa — giữ chiều sâu
+    const mo0 = mo * (1 - t0) * (1 - t0);          // tắt nhanh về đuôi, đừng kéo lê cả vòng
+    // ⚠ QUẦNG cộng sáng, LÕI vẽ ĐÈ — và đây là một phép đo, không phải khẩu vị. Để cả hai cộng
+    // sáng thì trên nền map SÁNG (~200) kênh đỏ kịch trần trước, hai kênh kia vẫn leo, nên phần
+    // ánh sáng cộng vào đo ra (57 · 61 · 56) — **xám trơn, bão hoà 0,07**: đúng thứ chủ dự án
+    // bảo bỏ đi, chỉ nhạt hơn. Cùng bẫy đã ghi cho gói `fire_scream`: cộng sáng ăn mất SẮC.
+    g.globalCompositeOperation = 'lighter';
+    g.globalAlpha = mo0 * 0.30;
+    g.strokeStyle = VONGKIEM_QUANG; g.lineWidth = VONGKIEM_DAY * gan * 3.4;
     g.beginPath(); g.moveTo(x0, y0); g.lineTo(x1, y1); g.stroke();
-    g.globalAlpha = mo * (1 - t0 * 0.72) * 0.92;
-    g.lineWidth = day;
+    g.globalCompositeOperation = 'source-over';
+    g.globalAlpha = mo0 * 0.92;
+    g.strokeStyle = VONGKIEM_LOI; g.lineWidth = VONGKIEM_DAY * gan;
     g.beginPath(); g.moveTo(x0, y0); g.lineTo(x1, y1); g.stroke();
-    // Lõi trắng chỉ ở khúc đầu — đó là chỗ lưỡi kiếm vừa quét qua, phải chói hơn hẳn phần đuôi.
-    if (t0 < 0.30){
-      g.globalAlpha = mo * (1 - t0 / 0.30) * 0.85;
-      g.strokeStyle = '#ffffff'; g.lineWidth = day * 0.34;
-      g.beginPath(); g.moveTo(x0, y0); g.lineTo(x1, y1); g.stroke();
-    }
   }
-  // Tàn lửa bắn ra ngoài — sinh từ chính vị trí đầu vệt, không random mỗi khung (nhấp nháy).
-  g.globalCompositeOperation = 'lighter';
-  for (let i = 0; i < 7; i++){
-    const a = dau - i * 0.19, s = Math.sin(a);
-    if ((s < 0) !== sauNua) continue;
-    const r = 1 + i * 0.055;                       // càng về sau càng văng xa
-    const x = e.x + Math.cos(a) * VONGKIEM_RX * r, y = cyc + s * VONGKIEM_RY * r - i * 3;
-    g.globalAlpha = mo * (1 - i / 7) * 0.8;
-    g.fillStyle = i < 3 ? '#fff0be' : '#ffb15c';
-    g.beginPath(); g.arc(x, y, 2.6 - i * 0.22, 0, 7); g.fill();
+  // Tia lửa bắn ra ngoài — ĐOẠN THẲNG ngắn theo phương tiếp tuyến, không phải chấm tròn: chấm
+  // tròn đọc ra tàn than rơi, đoạn thẳng mới đọc ra điện xẹt.
+  for (let i = 0; i < 9; i++){
+    const a = dau - i * 0.17, sn = Math.sin(a);
+    if ((sn < 0) !== sauNua) continue;
+    const r = 1 + i * 0.05 + Math.sin(i * 5.1 + k * 60) * 0.03;
+    const x = e.x + Math.cos(a) * VONGKIEM_RX * r, y = cyc + sn * VONGKIEM_RY * r - i * 2.4;
+    const tt = a - Math.PI / 2, L = 7 - i * 0.5;
+    g.globalAlpha = mo * (1 - i / 9) * 0.75;
+    g.strokeStyle = i < 3 ? VONGKIEM_LOI : VONGKIEM_QUANG; g.lineWidth = 1.5;
+    g.beginPath();
+    g.moveTo(x, y);
+    g.lineTo(x + Math.cos(tt) * L, y + Math.sin(tt) * L * 0.6);
+    g.stroke();
   }
   g.restore();
   g.globalAlpha = 1; g.globalCompositeOperation = 'source-over';
 
   // Vũ khí bay quanh — cùng elip, cùng tâm, chỉ nhỏ hơn một chút để nó chạy trong lòng vệt lửa
+  // ⚠ NHIỀU LƯỠI, KHÔNG PHẢI MỘT. Bản đầu vẽ đúng MỘT cây: chụp ra thì nửa vòng nó nằm ở nửa
+  // XA — nhỏ, khuất sau lưng người — nên phần lớn thời gian trên màn chỉ còn một vòng lửa trống
+  // ruột, và chủ dự án đọc nó thành "một chiêu hình ảnh đơn lẻ". `VONGKIEM_LUOI` lưỡi rải ĐỀU
+  // quanh elip ⇒ luôn có ít nhất một cây ở nửa gần, tức lúc nào cũng đọc ra "vũ khí đang xoay".
   const W = e.wpn;
   if (W){
-    const ang = -Math.PI / 2 + k * Math.PI * 2 * VONGKIEM_VONG;
-    const s = Math.sin(ang);
-    if ((s < 0) === sauNua){
+    const goc0 = -Math.PI / 2 + k * Math.PI * 2 * VONGKIEM_VONG;
+    for (let b = 0; b < VONGKIEM_LUOI; b++){
+      const ang = goc0 + b * (Math.PI * 2 / VONGKIEM_LUOI);
+      const s = Math.sin(ang);
+      if ((s < 0) !== sauNua) continue;
       const gan = 1 + s * 0.22;                    // nửa gần to hơn nửa xa
       g.save();
+      g.globalAlpha = mo;                          // tắt cùng vệt lửa, đừng biến mất đột ngột
       g.translate(e.x + Math.cos(ang) * VONGKIEM_VKX, cyc + s * VONGKIEM_VKY);
-      g.rotate(ang + Math.PI / 2);                 // lưỡi nằm theo tiếp tuyến
+      // Tiếp tuyến + phần TỰ QUAY quanh chuôi. Chỉ có tiếp tuyến thì cây vũ khí đi vòng mà thân
+      // nó đứng im so với quỹ đạo — đọc ra "bị kéo lê", không ra "đang xoay".
+      g.rotate(ang + Math.PI / 2 + k * Math.PI * 2 * VONGKIEM_TUQUAY);
       g.scale(gan * W.k, gan * W.k);
       g.translate(0, W.dy);
       W.ve(g);
       g.restore();
     }
+    g.globalAlpha = 1;
   }
 }
 // Gom thông tin vẽ vũ khí MỘT LẦN lúc tung chiêu, không phải mỗi khung.
-// Chỉ vẽ được cây nào CÓ TRANH trong VK_ANH. Dòng chưa có tranh thì vòng kiếm quay không —
-// vẫn là một vòng lửa đầy đủ, chỉ thiếu mấy lưỡi kiếm bay quanh.
-function vongKiemVuKhi(){
-  const it = player.equip && player.equip.vukhi;
-  const d = it && itemDef(it);
-  const A = d && vkAnh(d);
+//
+// ⚠ CÂY CỐ ĐỊNH CỦA CHIÊU, KHÔNG PHẢI CÂY ĐANG CẦM. Chủ dự án chốt: *"bỏ cây đại kiếm giai 7
+// của DK vào, sau đó cho thanh kiếm đó xoay… như kiểu tuyệt chiêu xoay kiếm của Dark Knight
+// trong MU Online Season 2"*. Ở MU, hình của một chiêu KHÔNG đổi theo món đang cầm — chiêu có
+// tạo hình riêng, và đó là thứ làm người chơi nhận ra nó từ xa.
+//
+// Bản trước vẽ đúng cây đang cầm. Nghe hay, nhưng đo ra hai chỗ hỏng: Dark Knight có ba dòng
+// (kiem · riu · chuy) mà `VK_ANH` chỉ vẽ `kiem` ⇒ 2/3 người chơi tung ra vòng RỖNG; và ngay cả
+// khi có tranh thì cây giai 1 là một thanh kiếm đồng mảnh — đọc không ra một tuyệt chiêu.
+// ⚠ `vongKiem` hiện CHỈ `dk_cyclone` dùng (xem `CHIEU_TRANH`), nên "cây của chiêu" ở đây đúng
+// bằng "cây của Dark Knight". Ngày nào lớp khác mượn hình này thì phải đổi thành một BẢNG theo
+// lớp — đừng để nó lặng lẽ vẽ kiếm DK trên tay một pháp sư.
+//
+// ⚠ THAM SỐ `p` GIỮ LẠI DÙ KHÔNG ĐỌC — và chính nó là bằng chứng hai nhánh gặp nhau ở đây.
+// `main` thêm `p` để vòng kiếm của NGƯỜI KHÁC vẽ bằng vũ khí của họ chứ không phải của mình
+// (cùng họ lỗi với `wingDef` vẽ nhầm cánh). Cây CỐ ĐỊNH thì lỗi ấy không còn cửa xảy ra — mọi
+// người cùng một lưỡi — nhưng chỗ gọi ở `castSkill` vẫn truyền `_p` vào, và ngày nào cây quay
+// lại theo người thì tham số đã có sẵn ở đúng chỗ cần.
+const VK_VONGKIEM_CAY = 'kiem|7';            // Kiếm Long Vương — cây giai 7 của Dark Knight
+function vongKiemVuKhi(p){                   // eslint-disable-line no-unused-vars
+  const A = VK_ANH[VK_VONGKIEM_CAY];
   if (!A) return null;
   const im = nvTai(A.tep, 'png');
   if (!(im && im.complete && im.naturalWidth)) return null;
@@ -1471,6 +1842,20 @@ const VK_ANH = {
   // Khai rõ ràng chứ không để rơi vào nhánh lùi: nhánh lùi là "chưa có art", còn đây là
   // "art của đúng món này". Hai ý khác nhau, và chỉ khai rõ mới đọc ra được ý thứ hai.
   'gay|7': { tep:'tk_dwstaff', x:65, y:33 },           // Gậy Hư Vô — cây gốc của bộ Grand Soul
+  // Đại kiếm đi kèm gói Spine của bộ Phoenix (Dark Knight giai 7). Cùng lối với 'gay|7':
+  // ghim thành món ĐỨNG RIÊNG ở đúng giai của bộ giáp, không đè lên tấm 'kiem' chung.
+  // ⚠ Tranh nằm ở gói CẦM VŨ KHÍ, không phải gói giáp — gói giáp để TRỐNG cả bốn vùng
+  // vũ khí trong atlas (đo được 0 điểm đặc). Cần nướng lại thì phải xin đúng gói ấy.
+  'kiem|7': { tep:'vk_phoenix', x:65, y:16 },          // Phượng Kiếm — cây gốc của bộ Phoenix
+  // Quyền trượng vàng-đỏ nạm hồng ngọc, cắt từ gói Spine của Dark Lord.
+  // ⚠ Dark Lord CỐ Ý không có lớp vũ khí cầm tay (không khai trong NV_VK_LOP): chủ dự án
+  // chốt lớp này cầm trượng BAY theo người như Dark Wizard. Nên cây này chỉ cần MỘT tấm
+  // phẳng ở đây, không cần nướng bảng khung — và gói gốc cũng chỉ có mỗi vũ khí.
+  'lenhtruong|7': { tep:'vk_dltruong', x:65, y:26 },   // Vương Trượng Hồng Ngọc
+  // Cung Thiên Mệnh. Cây này CÓ lớp cầm tay (NV_VK_LOP) nên trong màn không dùng tấm này —
+  // nhưng ICON TRONG TÚI thì vẫn vẽ từ đây, nên thiếu dòng này là túi hiện cây cung cũ.
+  'truongcung|7': { tep:'vk_elfcung', x:65, y:38 },    // Cung Thiên Mệnh
+  'makiem|7':     { tep:'vk_sbkiem',  x:65, y:28 },    // Kiếm Sinh Mệnh
 };
 // Tra art của một món vũ khí: tranh riêng của giai trước, tranh chung của dòng sau.
 function vkAnh(d){
@@ -1512,14 +1897,33 @@ const VONGKIEM_RX = 1.254 * NV_CAO, VONGKIEM_RY = 0.576 * NV_CAO;   // vành l�
 const VONGKIEM_VKX = 1.119 * NV_CAO, VONGKIEM_VKY = 0.525 * NV_CAO; // quỹ đạo vũ khí, hơi lọt vào trong vành lửa
 const VONGKIEM_QUET = Math.PI * 1.15;        // vệt lửa dài bao nhiêu radian, tính từ đầu vệt
 const VONGKIEM_VONG = 2;                     // số vòng trọn trong một lần tung
+const VONGKIEM_LUOI = 3;                     // số lưỡi bay quanh, rải ĐỀU trên elip
+const VONGKIEM_TUQUAY = 3;                   // số vòng mỗi lưỡi tự quay quanh chuôi trong một lần tung
+// Vệt để lại sau lưỡi. CAM NHẠT và MỎNG — chủ dự án chốt bỏ hẳn dải lửa cam-đỏ dày của bản cũ.
+const VONGKIEM_LOI = '#ffb877';              // lõi tia — CAM NHẠT thật, không phải trắng ngả cam
+const VONGKIEM_QUANG = '#ff8a38';            // quầng quanh lõi, cam đậm hơn lõi một nấc
+const VONGKIEM_DAY = 2.2;                    // bề dày lõi tia (bản lửa cũ: 16)
+const VONGKIEM_XET = 5;                      // biên độ giật ngang của tia, px
 // Trả về { dai, ve } — `ve` vẽ cây vũ khí với CHỖ NẮM ở gốc và MŨI dọc trục +X, đơn vị px thế
 // giới. Nhờ chuẩn hoá đó mà thanKhiTuThe() chỉ cần lo quỹ đạo, không cần biết đang cầm cây gì.
+// Cây LÙI theo LỚP, cho dòng vũ khí chưa có tranh riêng. Lấy đúng cây cắt ra từ gói Spine của
+// chính lớp đó, nên nó luôn là vũ khí "của lớp mình" chứ không phải một cây bốc đại.
+// ⚠ Vì sao phải có: đo được **48/98 tổ hợp (dòng × giai) không có tranh trong `VK_ANH`** —
+// `riu` `chuy` `cungngan` `songdao` `bua` `kich` trống sạch bảy giai. Tức gần MỘT NỬA số cây
+// vũ khí trong game, khi ra đòn, không hiện ra một cái gì. Từ đợt "lớp nhân vật NHẬP vào Axie"
+// thì chỗ này thành lỗ thủng hẳn: ba lớp cầm vũ khí bằng lớp nướng sẵn không còn thân người để
+// mà cầm, nên trên màn KHÔNG có vũ khí nào cả.
+const TK_LOP = { thieulam:'kiem', toanchan:'no', minhgiao:'makiem', baidasan:'gay', bug:'lenhtruong' };
 function thanKhiNguon(p){
   const it = p.equip && p.equip.vukhi;
   const d  = it && itemDef(it);
   if (!d) return null;                         // tay không thì không có gì bay theo
-  const A = vkAnh(d);
-  if (!A) return null;                         // dòng chưa có tranh thì chưa có gì bay theo
+  // ⚠ Nấc lùi đặt Ở ĐÂY, không đặt trong `vkAnh()`. Nới trong `vkAnh` thì ICON trong túi đồ
+  // cũng đổi theo — cây rìu sẽ hiện ra hình thanh kiếm ngay trong ô túi. Ở cỡ vũ khí bay quanh
+  // thì thứ cần là một BÓNG DÁNG; trong ô túi thì phải đúng món ấy. Cùng đánh đổi đã ghi cho
+  // `NV_VK_LOP_LOP`, và cùng chỗ đặt.
+  const A = vkAnh(d) || VK_ANH[TK_LOP[d.sect || (p && p.sect) || player.sect]] || null;
+  if (!A) return null;                         // lớp chưa khai cây lùi thì đành chịu
   const im = nvTai(A.tep, 'png');
   if (!(im && im.complete && im.naturalWidth)) return null;
   const s = (NV_CAO / HERO_H) * TK_PHONG;
@@ -1698,9 +2102,14 @@ function veThanKhi(g, t, p){
   g.restore();
   g.globalAlpha = 1; g.globalCompositeOperation = 'source-over';
 }
-function spawnAtlasVfx(id, x, y, scale){
+// `goc`: XOAY tấm dán theo hướng nhân vật. Bỏ trống (mặc định) là KHÔNG xoay — đúng hành vi cũ
+// tới từng điểm ảnh, vì hai atlas đang chạy (meteor_rain · fire_pillar) đều GIÁNG XUỐNG ĐẤT và
+// một hố thiên thạch thì không có hướng. Chỉ tranh có hướng — quạt chém của ô 1 — mới khai xoay,
+// và nó khai bằng cờ `xoay` trong CHIEU_TRANH chứ không phải ở đây: chỗ gọi không được tự quyết,
+// nếu không thì một tấm giáng-xuống-đất nào đó sẽ lặng lẽ bị xoay nghiêng.
+function spawnAtlasVfx(id, x, y, scale, goc){
   const def = VFX_ATLAS_DEFS[id]; if (!def) return;
-  addEffect({ type:'atlasVfx', id, x, y, scale: scale || 0.4, dur: def.frames / def.fps });
+  addEffect({ type:'atlasVfx', id, x, y, scale: scale || 0.4, goc: goc || 0, dur: def.frames / def.fps });
 }
 // One-shot status-effect cue: generic (not per-class) SFX + atlas-clip overlay, played once at the
 // exact moment a status effect is applied (stun/bleed/shield/poison/heal/slow) — not per DoT tick.
@@ -1945,6 +2354,173 @@ function raiIso(md){
   rai(md.isoNho ?? Math.round(MAP.w * MAP.h / 3e4), md.isoNhoBo || ISO_NHO, (trong, d) => trong && d > 60);
   raiCum(md, boc);
 }
+// ═══ TƯỜNG THÀNH — lát viên dọc mép `diTrong` ═══════════════════════════════════
+//
+// ⚠ VÌ SAO CÓ KHỐI NÀY: trước nó, Sapidae Chiefdom KHÔNG CÓ TƯỜNG. `MAP_VAT_SRC` chỉ có bốn
+// tấm công trình, và thứ đóng vai bức tường là `isoCay:200` — hai trăm cái cây rải ngoài đa
+// giác, cộng một hàng rào vô hình. Mà cổng là CÁI LỖ TRÊN MỘT BỨC TƯỜNG: không có tường thì
+// không có chỗ đặt nào làm cổng trông đúng được, và đo ra ảnh cổng che đúng 0% khẩu độ ở cả
+// bốn hướng. Xem docs/DE_XUAT_TUONG_CONG.md.
+//
+// Lát viên lặp lại chứ không vẽ một tấm tranh dài — kết luận đã chốt ở
+// docs/NGHIEN_CUU_MAP_CAC_GAME.md §2: không game nào vẽ một tấm to, tất cả đều ghép từ mảnh
+// nhỏ dùng lại. Viên tường còn dễ hơn viên nền: nó chỉ phải liền mép theo MỘT chiều.
+//
+// ⚠ HAI LUẬT XẾP LỚP, NGƯỢC NHAU, ĐỪNG TRỘN:
+//   · TƯỜNG vẽ MỘT LƯỢT RIÊNG, sau mặt sàn và TRƯỚC mọi thực thể — không xếp theo `y`.
+//     Tường nam nằm ở `y` lớn nhất map; thả nó vào danh sách thực thể là nó vẽ ĐÈ LÊN người
+//     chơi mỗi khi anh ta đứng gần, tức người chơi biến mất sau bức tường mà lẽ ra anh ta
+//     đang đứng trước. Người chơi không bao giờ ra được ngoài `diTrong`, nên không có trường
+//     hợp nào cần tường nằm trước anh ta ⇒ vẽ trước hết là đúng tuyệt đối.
+//   · CỔNG thì NGƯỢC LẠI — vào danh sách thực thể, xếp theo chân ảnh như `vatTo`, vì người
+//     chơi ĐI XUYÊN QUA nó: lúc đứng trong vòm, tháp phía trước phải che anh ta.
+//
+// ⚠ CHƯA CÓ TẤM ART NÀO. `vatTai()` trả null cho tên chưa có tệp, nên khối này hiện vẽ ra
+// SỐ KHÔNG viên — không có hồi quy hình ảnh nào. Đơn hàng 4 viên tường + 3 tấm cổng nằm ở
+// docs/DE_XUAT_TUONG_CONG.md §5; thả tệp PNG vào assets/iso/ và khai tên trong `MAP_VAT_SRC`
+// là tường hiện lên, KHÔNG phải sửa một dòng máy nào. Xem trước hình học bằng
+// `window.debugTuong()` — nó lát tạm bằng viên nền để soi bố cục khi chưa có art.
+//
+// Cố ý KHÔNG lát tạm bằng cách phóng to một sprite có sẵn: CLAUDE.md đã ghi hai lần cùng một
+// bài học (lớp phủ tối, rồi trụ đá phóng ~3×) và cả hai đều phải gỡ.
+const TUONG_MEP = 160;        // vấu cổng thò ra tới 50px, thân thành thụt vào ≥210px
+let _tuong = null;            // [{img,x,y,w,h,lat}] — dựng lại mỗi lần vào map
+let _tuongTam = false;        // debugTuong(): lát tạm bằng viên nền để soi hình học
+
+// Tách mép `diTrong` thành ĐOẠN TƯỜNG và CUỐNG CỔNG.
+// Cuống = cạnh THẲNG TRỤC nằm sát mép map. Phải thẳng trục: cạnh vai của vấu chạy chéo và một
+// đầu của nó cũng chạm mép, nên lọc bằng "đầu nào đó gần mép" là nhận nhầm cả vai — bản đầu
+// của tools/do_thanh.cjs ra 12 cuống thay vì 4 đúng vì thiếu điều kiện này.
+function tuongChiaMep(poly, w, h){
+  const cong = [], doan = [];
+  for (let i = 0; i < poly.length; i++){
+    const a = poly[i], b = poly[(i + 1) % poly.length];
+    const dc = a[0] === b[0] && a[1] !== b[1];
+    const ng = a[1] === b[1] && a[0] !== b[0];
+    if (dc || ng){
+      const truc = dc ? a[0] : a[1], bien = dc ? w : h;
+      if (Math.min(truc, bien - truc) <= TUONG_MEP){
+        cong.push({ a, b, doc: dc, i });
+        continue;
+      }
+    }
+    doan.push({ a, b });
+  }
+  return { cong, doan };
+}
+
+// ⚠ HỢP ĐỒNG NEO — đơn hàng art phải vẽ đúng quy ước này, nếu không mọi tấm lệch chỗ.
+//   · MỌI tấm tường và cổng: MÉP DƯỚI của ảnh là ĐƯỜNG CHÂN (chỗ tường chạm đất), và TÂM
+//     NGANG của ảnh là tim của đoạn tường. Không chừa lề trong suốt dưới chân.
+//   · Cạnh NGANG (bắc/nam): ảnh `nhip` × `cao` — 256 × 300.
+//   · Cạnh DỌC (đông/tây): ảnh `day` × (`cao` + nửa nhịp) — 160 × 428. Cao hơn tấm ngang vì
+//     nó phải cõng cả đoạn chạy 128px theo trục y lẫn chiều cao tường.
+//   · Cổng ngang: ảnh (`khẩu độ` × `congRong`) × `congCao` — 720 × 700, vòm đúng giữa.
+//   · Cổng dọc: ảnh `congDay` × (`congCao` + khẩu độ) — 400 × 960.
+// Đổi mấy con số này thì phải đổi cả đơn hàng ở docs/DE_XUAT_TUONG_CONG.md §5 — chúng LÀ
+// bản đặc tả kích thước cho hoạ sĩ, không phải hằng số tiện tay.
+function dungTuong(){
+  _tuong = null;
+  const md = mapDef();
+  const tw = md.tuong;
+  if (!tw || !md.diTrong) return;
+  const { cong, doan } = tuongChiaMep(md.diTrong, MAP.w, MAP.h);
+  const nhip = tw.nhip || ISO_W, cao = tw.cao || 300, day = tw.day || 160, A = tw.anh || {};
+  const buoc = nhip / 2;                 // cạnh dọc bước nửa nhịp — viên iso cao bằng nửa rộng
+  const ra = [];
+
+  for (const d of doan){
+    const dx = d.b[0] - d.a[0], dy = d.b[1] - d.a[1];
+    const dai = Math.hypot(dx, dy);
+    if (dai < 8) continue;
+    const cheo = Math.abs(dx) > 1 && Math.abs(dy) > 1;
+    const ngang = Math.abs(dx) >= Math.abs(dy);
+    // Viên NGANG nhìn từ phía nam (mặt trong) và nhìn từ phía bắc (mặt lưng) là HAI tấm khác
+    // nhau — lật DỌC một tấm iso là hỏng phép chiếu, xem §5a của tài liệu. Lật NGANG thì đúng,
+    // và đó là cách cạnh tây dùng lại tấm của cạnh đông.
+    const img = cheo ? A.goc
+              : ngang ? ((d.a[1] + d.b[1]) / 2 < MAP.h / 2 ? A.ngang : A.ngangSau)
+                      : A.doc;
+    if (!img) continue;
+    const n = Math.max(1, Math.round(dai / (ngang || cheo ? nhip : buoc)));
+    for (let k = 0; k < n; k++){
+      const t = (k + 0.5) / n;
+      const cx = d.a[0] + dx * t, cy = d.a[1] + dy * t;
+      if (ngang || cheo)
+        ra.push({ img, x: cx - nhip/2, y: cy - cao, w: nhip, h: cao, lat: false });
+      else
+        // Chân viên dọc nằm ở ĐÁY đoạn chạy (cy + buoc/2), không ở tâm: mép dưới ảnh là đường
+        // chân, nên neo vào tâm thì nửa dưới bức tường thụt xuống dưới mặt đất.
+        ra.push({ img, x: cx - day/2, y: cy + buoc/2 - cao - buoc, w: day, h: cao + buoc,
+                  lat: cx < MAP.w/2 });
+    }
+  }
+
+  // CUỐNG CỔNG: một tấm phủ TRỌN cuống, vòm đúng giữa, chân đặt trên MẶT TƯỜNG.
+  // ⚠ Mặt tường là VAI của vấu, không phải mặt ngoài. Hai đỉnh kề mặt ngoài chạy chéo vào
+  // trong và kết thúc đúng trên mặt tường; neo vào mặt ngoài thì cổng thụt ra khỏi thành
+  // nguyên bề sâu vấu (160px).
+  const P = md.diTrong;
+  for (const c of cong){
+    const gx = (c.a[0] + c.b[0]) / 2, gy = (c.a[1] + c.b[1]) / 2;
+    const img = c.doc ? A.congDoc : (gy < MAP.h/2 ? A.congNgang : A.congNgangSau);
+    if (!img) continue;
+    const truoc = P[(c.i - 1 + P.length) % P.length], sau = P[(c.i + 2) % P.length];
+    const tuong = c.doc ? (truoc[0] + sau[0]) / 2 : (truoc[1] + sau[1]) / 2;
+    const kd = c.doc ? Math.abs(c.a[1] - c.b[1]) : Math.abs(c.a[0] - c.b[0]);
+    const cCao = tw.congCao || 700;
+    if (c.doc){
+      const w = tw.congDay || 400, h = cCao + kd;
+      ra.push({ img, x: tuong - w/2, y: gy + kd/2 - h, w, h, lat: gx < MAP.w/2, cong:true });
+    } else {
+      const w = Math.round(kd * (tw.congRong || 2.77));
+      ra.push({ img, x: gx - w/2, y: tuong - cCao, w, h: cCao, lat:false, cong:true });
+    }
+  }
+  _tuong = ra;
+}
+
+// Vẽ tường — MỘT LƯỢT, trước mọi thực thể. Cổng (`cong:true`) bị bỏ qua ở đây và đi vào danh
+// sách thực thể trong render(), vì người chơi đi xuyên qua nó.
+function veTuong(){
+  if (!_tuong) return;
+  for (const t of _tuong){
+    if (t.cong) continue;
+    if (t.x + t.w < camera.x || t.x > camera.x + VW || t.y + t.h < camera.y || t.y > camera.y + VH) continue;
+    veTuongVien(t);
+  }
+}
+
+function veTuongVien(t){
+  const im = vatTai(t.img);
+  if (!im){
+    // CHƯA CÓ ART ⇒ vẽ số không. Chỉ `debugTuong()` mới bật khối khảo sát bên dưới, và nó
+    // cố ý thô — đây là chỗ trống có nhãn để soi hình học, KHÔNG phải art tường tạm.
+    if (!_tuongTam) return;
+    ctx.save();
+    ctx.globalAlpha = 0.5; ctx.fillStyle = t.cong ? '#7d7a5e' : '#5c6348';
+    ctx.fillRect(t.x, t.y, t.w, t.h);
+    ctx.globalAlpha = 1; ctx.strokeStyle = t.cong ? '#ffd76a' : '#9ad45e'; ctx.lineWidth = 4;
+    ctx.strokeRect(t.x, t.y, t.w, t.h);
+    ctx.restore();
+    return;
+  }
+  ctx.save();
+  if (t.lat){ ctx.translate(t.x + t.w, t.y); ctx.scale(-1, 1); ctx.drawImage(im, 0, 0, t.w, t.h); }
+  else ctx.drawImage(im, t.x, t.y, t.w, t.h);
+  ctx.restore();
+}
+
+// QA: xem hình học tường khi chưa có art. `/tuong` cũng gọi được.
+window.debugTuong = function(bat){
+  _tuongTam = bat === undefined ? !_tuongTam : !!bat;
+  dungTuong();
+  const n = _tuong ? _tuong.length : 0;
+  const c = _tuong ? _tuong.filter(t => t.cong).length : 0;
+  console.log(`[tường] ${_tuongTam ? 'BẬT lát tạm' : 'TẮT lát tạm'} — ${n - c} viên tường + ${c} cổng trên ${curMap}`);
+  return { vien: n - c, cong: c };
+};
+
 // LÙM CHẶN nằm TRONG lòng vùng đi được — thứ làm một map rộng có nghĩa.
 //
 // ⚠ Một map rộng mà trống thì đi đâu cũng như nhau, và cái "rộng" ấy đọc ra thành nhàm chứ
@@ -2080,6 +2656,30 @@ const GATES = [
   // đi lên. Phím G ở đây chạy nhánh RÚT LUI (deepLeave) chứ không travelTo — `to` chỉ là chỗ về.
   { map:'deep', x:1300, y:1660, to:'ardhaven', portal:true, label:'Xuất Môn',
     name:'Rời Tầng Sâu → Sapidae Chiefdom' },
+  // Lò Khắc — mini-game roguelite chọn thẻ (docs/DAC_TA_LO_KHAC.md). Đặt ở góc ĐÔNG-NAM,
+  // đối xứng với giếng Tầng Sâu ở tây-nam. Chỗ đứng QUÉT BẰNG MÁY, không đặt tay: trong đa
+  // giác sàn, lề 70px tới mọi khối trong MAP_OBSTACLES, cách mọi NPC ≥220px, cách mọi cổng
+  // khác ≥420px, thoáng đủ 8 hướng ở bán kính 120px, và cách điểm thả 1237px nên người chơi
+  // đi ngang qua chứ không phải đi tìm. Cả map có 226 điểm thoả — đừng dịch tay, quét lại.
+  // KHÔNG dùng `to`: nó không dẫn tới một map cố định mà mở một LƯỢT, xem lkStart().
+  { map:'ardhaven', x:3980, y:2860, lokhac:true, portal:true, label:'Lò Khắc',
+    name:'Cửa Lò Khắc — 15 đợt, mỗi đợt khắc một nếp (cấp 15+)' },
+  { map:'lokhac', x:1300, y:1660, to:'ardhaven', portal:true, label:'Rời Lò',
+    name:'Rời Lò Khắc → Sapidae Chiefdom' },
+  // ── ⚔ SÀN ĐẤU ARDHAVEN ───────────────────────────────────────────────────────────
+  // Chỗ đứng QUÉT BẰNG MÁY, không chấm tay (luật CLAUDE.md). Bộ ràng buộc: trong đa giác sàn ·
+  // cách mọi NPC ≥200px · ngoài mọi `vatTo` và mọi khối nhà +40px lề · cách mọi cổng khác
+  // ≥600px · cách điểm thả ≥500px. Cả thành có 14.754 điểm thoả; (3820,1840) là điểm LỀ LỚN
+  // NHẤT trong dải "đi bộ 500-900px từ điểm thả" — 420px lề, 623px từ chỗ vừa rơi xuống, tức
+  // người chơi đi ngang qua nó chứ không phải đi tìm. Dịch tay mấy số này thì quét lại.
+  //
+  // `portal` chứ không phải cổng đá: sàn đấu KHÔNG phải một hướng của thế giới. Và tên cố ý
+  // KHÔNG bắt đầu bằng "Lối " — `test_noimap` nhận diện lối rìa hoang dã bằng đúng tiền tố đó
+  // rồi đòi điểm tới phải nằm sát rìa map.
+  { map:'ardhaven', x:3820, y:1840, to:'pvp', portal:true, label:'Sàn Đấu',
+    name:'Sàn Đấu Ardhaven — đấu tay đôi' },
+  { map:'pvp', x:900, y:1140, to:'ardhaven', portal:true, label:'Rời Sàn',
+    name:'Rời Sàn Đấu → Sapidae Chiefdom' },
 
   // ── B1 · NỐI MAP BẰNG RÌA ────────────────────────────────────────────────
   // ⚠ ĐÂY LÀ MỘT BẢN VÁ LỖI, KHÔNG CHỈ LÀ TÍNH NĂNG. Trước bản này, Bug Tribe Tunnels (cấp 40),
@@ -2185,7 +2785,11 @@ const DGN_ROOMS = [
 const DGN_WALLS = [ { y:1140, h:60 }, { y:690, h:60 } ];  // hai bức tường ngăn
 const DGN_GATE = { x0:1230, x1:1370 };                    // khe cửa giữa mỗi tường
 function dgnWallObs(){
-  if (DEEP) return [];   // Tầng Sâu: sảnh mở, dọn sạch là xuống tầng — không có cửa để mở
+  // ⚠ Tầng Sâu VÀ Lò Khắc đều là sảnh MỞ — không có cửa để mở, nên không dựng tường ngăn.
+  // Thiếu `|| LK` ở đây là một lỗi câm: hai mode đó chạy với `DGN === null`, mà điều kiện
+  // `!(DGN && DGN.doorOpen && …)` dưới kia khi đó thành TRUE ⇒ cả hai khe cửa bị bịt kín và
+  // người chơi kẹt cứng trong phòng 1, không một lỗi nào in ra.
+  if (DEEP || LK) return [];
   const out = [];
   DGN_WALLS.forEach((w, i) => {
     out.push({ x:330, y:w.y, wd: DGN_GATE.x0 - 330, ht: w.h });
@@ -2430,7 +3034,10 @@ function vatToObs(mapId){
   const md = MAPS[mapId], B = window.VAT_CAN || {};
   const ra = [];
   for (const v of (md && md.vatTo) || []){
-    for (const b of B[v.img] || [])
+    // `can` khai NGAY TRONG MỤC thắng bảng `VAT_CAN`. Bảng kia do máy sinh ra từ chính tấm
+    // art (mái, tường, hiên — hình thù không mô tả bằng tay nổi); một cái bể tròn thì đúng một
+    // hộp, và chờ art về mới có vật cản là để người chơi đi xuyên qua nó suốt thời gian chờ.
+    for (const b of v.can || B[v.img] || [])
       ra.push({ x: v.x + b[0], y: v.y + b[1], wd: b[2], ht: b[3] });
   }
   return (_vatCanNho[mapId] = ra);
@@ -2903,13 +3510,129 @@ function drawAiPasses(){
   }
 }
 
+// ═══════════ LỐI RA — bốn hướng của map, KHÔNG CÒN CỔNG VÒM ═══════════
+// Chủ dự án chốt: *"dẹp luôn cổng của 4 hướng đi. Thay vào, mở map lại ở hướng cho nó bo góc
+// rồi ghi chữ kiểu hướng đi ra map xxx… người chơi không cần phải bấm nút để có thể tự đi ra
+// khỏi map nữa, nhân vật sẽ tự động đi ra khi đến khoảng đó."*
+//
+// Cái vòm đá vẽ tay (`drawGateStatic`) nay CHỈ còn dùng cho cổng nào khai `vom:true`. Mặc
+// định một cổng rìa vẽ ra một CÁI MIỆNG: vũng đá mòn tắt dần về mép, ba mũi chevron bò ra
+// ngoài, và một dòng chữ nói thẳng nó dẫn đi đâu.
+//
+// ⚠ CHỈ CỔNG RÌA, KHÔNG PHẢI PORTAL. Sàn Đấu · Tầng Sâu · Lò Khắc là những chuyến đi CÓ CHỦ
+// Ý (một cái còn là một lượt roguelite), và `ardhaven→pvp` hạ cánh cách cổng về ĐÚNG 0px —
+// tự đi ra ở đó là vào sàn rồi bị bắn ngược ra ngay lập tức. Đo cả 27 cặp map: khoảng cách
+// điểm-hạ-cánh ↔ cổng-về nhỏ nhất trong nhóm RÌA là **127px**, nên bán kính 70 còn dư 57px.
+const LOIRA_TAM = 70;        // chạm tới đây là tự đi ra
+const LOIRA_RONG = 170;      // nửa bề ngang cái miệng vẽ ra
+let _loiRaCho = null;        // cổng đã chạm — `update()` đầu khung SAU mới đi, xem chú thích ở đó
+let _loiRaKhoa = null;       // CỔNG mà điểm hạ cánh đè lên — KHÔNG phải toạ độ, xem `travelTo`
+
+// Hướng RA: cạnh map gần cổng nhất. Suy từ hình học, không khai tay — thêm một cổng rìa mới
+// là nó tự có hướng đúng, và không có bảng thứ hai nào để mà lệch.
+function loiRaHuong(g){
+  const md = MAPS[g.map] || {};
+  const w = md.w || 4000, h = md.h || 3000;
+  const can = [ { v:[0,-1], k:g.y }, { v:[0,1], k:h - g.y }, { v:[-1,0], k:g.x }, { v:[1,0], k:w - g.x } ];
+  can.sort((a, b) => a.k - b.k);
+  return can[0].v;
+}
+function loiRaTen(g){
+  const md = MAPS[g.to];
+  return md && md.name ? md.name : (g.label || g.to || '');
+}
+// Vẽ trên MẶT ĐẤT (trước mọi thực thể) — người chơi đi ĐÈ LÊN cái miệng, không chui sau nó.
+//
+// ⚠ ĐO NỀN TRƯỚC KHI CHỌN TÔNG. Bản đầu tô một vũng `rgba(232,224,203,.42)` và chụp ra thì
+// **gần như không thấy gì**: nền ở bốn cổng đo được sáng 103-181, phần lớn 143-157, tức chỉ
+// cách tông ấy chừng 30 điểm sau khi hoà. Cùng bài học đã ghi cho viên tuyết Bird Tribe Heights
+// (*"mặt phẳng sáng đều không mốc thì đọc ra khoảng không"*) — thứ cứu được là một **cặp
+// tương phản**: vành SẪM ôm ngoài + lòng SÁNG, chứ không phải một mảng sáng đơn độc.
+//
+// ⚠ VÀ ĐÂY LÀ CHỖ TRỐNG CÓ NHÃN, KHÔNG PHẢI ART. Thứ đáng ra phải nhìn thấy ở một lối ra là
+// KHOẢNG HỞ TRONG TƯỜNG THÀNH, mà bảy tấm `tuong_*`/`cong_*` còn nằm trong `MAP_VAT_CHO`.
+// Khi art tường về thì cái miệng đã bo góc trong `diTrong` tự đọc ra thành một cái cổng mở,
+// và vệt sáng này chỉ còn là vết mòn dưới chân. Đừng nâng cấp nó thành một cái cổng vẽ tay —
+// đó đúng là thứ vừa gỡ.
+function veLoiRa(g){
+  const [hx, hy] = loiRaHuong(g);
+  const doc = Math.abs(hy) > 0.5;                       // ra bắc/nam hay đông/tây
+  const rx = doc ? LOIRA_RONG : 135;
+  const ry = (doc ? 135 : LOIRA_RONG) * 0.55;           // nén trục sâu — cùng lối với bóng đổ
+  const t = performance.now() / 1000;
+  ctx.save();
+  ctx.translate(g.x, g.y); ctx.scale(1, ry / rx);
+  // ① vành SẪM ôm ngoài — cái mốc cho mắt bám, và nó chạy được trên cả nền sáng lẫn nền tối
+  const vg = ctx.createRadialGradient(0, 0, rx * 0.55, 0, 0, rx);
+  vg.addColorStop(0, 'rgba(38,30,20,0)');
+  vg.addColorStop(0.72, 'rgba(38,30,20,.20)');
+  vg.addColorStop(0.93, 'rgba(38,30,20,.26)');
+  vg.addColorStop(1, 'rgba(38,30,20,0)');
+  ctx.fillStyle = vg; ctx.beginPath(); ctx.arc(0, 0, rx, 0, 7); ctx.fill();
+  // ② lòng SÁNG — đá bị đế giày mài nhẵn, đúng lối `nen_sanmai` của sàn đấu
+  const lg = ctx.createRadialGradient(0, 0, rx * 0.10, 0, 0, rx * 0.82);
+  lg.addColorStop(0, 'rgba(250,244,226,.50)');
+  lg.addColorStop(0.55, 'rgba(250,244,226,.24)');
+  lg.addColorStop(1, 'rgba(250,244,226,0)');
+  ctx.fillStyle = lg; ctx.beginPath(); ctx.arc(0, 0, rx * 0.82, 0, 7); ctx.fill();
+  ctx.restore();
+  // ③ ba mũi chevron BÒ RA NGOÀI — thứ nói "đi tiếp hướng này thì ra khỏi map".
+  // Viền sẫm dưới nét sáng: cùng lý do ở ①, nền bốn cổng sáng 103-181 nên một nét trắng trơn
+  // chìm ở nửa số chỗ.
+  const px = -hy, py = hx * 0.55;
+  for (let i = 0; i < 3; i++){
+    const k = (t * 0.5 + i / 3) % 1;
+    const d = 20 + k * 78, a = 1 - Math.abs(k * 2 - 1);
+    const cx = g.x + hx * d, cy = g.y + hy * d * 0.55, S = 30, L = 13;
+    const p0 = [cx - px * S - hx * L, cy - py * S - hy * L * 0.55];
+    const p2 = [cx + px * S - hx * L, cy + py * S - hy * L * 0.55];
+    ctx.lineCap = 'round'; ctx.lineJoin = 'round';
+    for (const [w, col] of [[9, `rgba(30,22,12,${(a * 0.42).toFixed(3)})`],
+                            [5, `rgba(255,250,232,${(a * 0.92).toFixed(3)})`]]){
+      ctx.strokeStyle = col; ctx.lineWidth = w;
+      ctx.beginPath(); ctx.moveTo(p0[0], p0[1]); ctx.lineTo(cx, cy); ctx.lineTo(p2[0], p2[1]); ctx.stroke();
+    }
+  }
+  // ④ dòng chữ: nói THẲNG nó dẫn đi đâu, không bắt người chơi đoán từ một cái vòm
+  const ten = loiRaTen(g);
+  if (ten){
+    ctx.font = 'bold 16px "Be Vietnam Pro", sans-serif'; ctx.textAlign = 'center';
+    const txt = '⟶  ' + ten, ty = g.y - (doc ? 92 : 78);
+    ctx.strokeStyle = 'rgba(0,0,0,.72)'; ctx.lineWidth = 4.5;
+    ctx.strokeText(txt, g.x, ty);
+    ctx.fillStyle = '#f7efd8'; ctx.fillText(txt, g.x, ty);
+  }
+}
+function veMoiLoiRa(){
+  for (const g of gatesHere()) if (!g.portal) veLoiRa(g);
+}
 function updateGate(){
   nearGate = null;
   if (!player || dead) return;
+  // ⚠ KHOÁ THEO **CỔNG**, KHÔNG THEO TOẠ ĐỘ HẠ CÁNH — và đây là chỗ bản đầu sai.
+  // Bản đầu nhớ chỗ hạ cánh rồi nhả khi người chơi đi xa quá `LOIRA_TAM*1.8` = 126px. Nhưng
+  // điểm hạ cánh thật cách cổng về **128px** (đo cả 27 cặp map; nhỏ nhất trong nhóm rìa là
+  // 127) ⇒ khoá nhả ngay ở khung ĐẦU TIÊN, tức nó là mã chết. Phép thử ngược gỡ nó ra cũng
+  // IM LẶNG — đúng dấu hiệu *"que dò không chạm đúng chỗ"* đã ghi ở mục `test_hethong`.
+  //
+  // Nay khoá đúng CÁI CỔNG mà điểm hạ cánh đè lên (nếu có), nhả khi người chơi rời xa cổng
+  // ấy. Với dữ liệu hiện nay không cặp map nào rơi vào ca đó nên khoá KHÔNG BAO GIỜ BẬT —
+  // và đó là đúng. `test_loira §4b` dựng thẳng cái ca ấy ra để chứng minh nó còn chạy.
+  if (_loiRaKhoa){
+    if (_loiRaKhoa.map !== curMap || dist(player.x, player.y, _loiRaKhoa.x, _loiRaKhoa.y) > LOIRA_TAM * 1.6)
+      _loiRaKhoa = null;
+  }
   for (const g of GATES){
     if (g.map !== curMap) continue;
     if (dist(player.x, player.y, g.x, g.y) < 90){ nearGate = g; break; }
   }
+  // ⚠ CHỈ ARM MỘT CỜ, ĐỪNG GỌI `travelTo` TỪ ĐÂY. `updateGate()` chạy GIỮA `update(dt)`, mà
+  // `travelTo` dựng lại cả thế giới (`buildWorld`) — phần còn lại của khung sẽ đi trên mảng
+  // `mobs`/`decor` vừa bị thay. Đúng cái bẫy "return giữa update(dt)" đã ghi cho PvP.
+  if (nearGate && !nearGate.portal && !DEEP && !LK &&
+      !(_loiRaKhoa && _loiRaKhoa.g === nearGate) &&
+      dist(player.x, player.y, nearGate.x, nearGate.y) < LOIRA_TAM)
+    _loiRaCho = nearGate;
 }
 function drawPortal(g){
   const t = performance.now()/1000;
@@ -3042,7 +3765,10 @@ function drawOneGate(g0){
   // những map mà nền chỉ là cỏ đất; dán nó lên một cổng thành đã vẽ sẵn trong tranh isometric
   // là hai cái cổng chồng nhau, cái vẽ tay nhỏ hơn và lệch phối cảnh. Map như thế thì cổng
   // thành ĐIỂM DỊCH CHUYỂN VÔ HÌNH: không vẽ gì, chỉ giữ vòng sáng khi lại gần và dòng "G — …".
-  if (!g0.anGiau){
+  // `anGiau` giữ nguyên nghĩa cũ (tranh nền ĐÃ CÓ cổng). Nay thêm một cửa nữa: từ đợt
+  // LỐI RA, cổng rìa mặc định KHÔNG vẽ vòm — `veLoiRa()` lo phần nhìn thấy. Chỉ cổng
+  // nào khai `vom:true` mới dựng lại bộ vòm đá + hai ngọn đuốc.
+  if (g0.vom && !g0.anGiau){
     ctx.drawImage(gateSprite(), g0.x - GATE_SPRW/2, oy);
     for (const s of [-1, 1]) drawGateFlame(g0.x + s * GATE_FX, oy + GATE_BOWL, t, s);
     drawCalligraphy((g0.name || 'Cổng Thành').split(' → ')[0], g0.x, oy - 8, '#c9c6b4', 15);
@@ -3052,15 +3778,19 @@ function drawOneGate(g0){
     ctx.beginPath(); ctx.ellipse(g0.x, g0.y, 78 + Math.sin(t * 3) * 6, 22, 0, 0, 7); ctx.stroke();
     ctx.font = 'bold 14px "Be Vietnam Pro", sans-serif'; ctx.textAlign = 'center';
     ctx.strokeStyle = 'rgba(0,0,0,.65)'; ctx.lineWidth = 3; ctx.fillStyle = '#7ecbff';
-    const txt = 'G — ' + g0.name;
-    ctx.strokeText(txt, g0.x, oy - 28); ctx.fillText(txt, g0.x, oy - 28);
+    // ⚠ ĐỪNG ĐỂ LẠI "G — …" Ở CỔNG RÌA. Phím G vẫn chạy (đường cũ, và bài kiểm nào lái nó
+    // vẫn phải lái được), nhưng nói với người chơi rằng PHẢI bấm G trong khi nhân vật tự đi
+    // ra là một dòng chữ nói dối — đúng cái kiểu "lời mời suông" đã ghi ở mục upBtnHtml.
+    const txt = (g0.portal || g0.vom ? 'G — ' : '') + g0.name;
+    const ny = (g0.portal || g0.vom) ? oy - 28 : g0.y - 96;
+    ctx.strokeText(txt, g0.x, ny); ctx.fillText(txt, g0.x, ny);
   }
 }
 function gatesHere(){ return GATES.filter(g => g.map === curMap); }
 // NPCS đã dời sang data/canbang.js — sửa cân bằng không phải mở tệp 26k dòng này.
 const NPCS = window.NPCS;
 const NPC_IMGS = {};
-for (const n of NPCS){ const im = new Image(); im.src = n.img; NPC_IMGS[n.id] = im; }
+for (const n of NPCS){ if (!n.img) continue; const im = new Image(); im.src = n.img; NPC_IMGS[n.id] = im; }
 function mapDef(){ return MAPS[curMap]; }
 function zoneType(){ return ZONE_TYPES[mapDef().type]; }
 
@@ -3358,7 +4088,17 @@ function knRaSoat(){
 // ⚠ PHẢI TRẢ VỀ MẢNG MỚI MỖI LẦN GỌI. Bản công thức dựng mảng literal nên chuyện đó là mặc
 // nhiên; đọc từ một bảng thì không — thiếu `.slice()` là mọi người chơi cùng lớp dùng CHUNG
 // một mảng, và cú kéo thả đầu tiên sửa luôn cái bảng gốc cho cả phiên.
-const THANH_LOP = { baidasan: ['a', null, 'tp', null] };
+const THANH_LOP = {
+  baidasan: ['a', null, 'tp', null],
+  // Sylvan Ranger: chủ dự án chốt Ngũ Tiễn là "tuyệt chiêu số 3 trấn phái" ⇒ `tp` xuống ô 3 và
+  // Bless (`elf_greaterdmg`) lên ô 2 — tức ĐỔI CHỖ đúng hai ô, không đụng ô 1 lẫn ô 4.
+  // ⚠ Ô 4 PHẢI GIỮ Penetration. Ô 4 là ô TUYỆT CHIÊU và phím Space gán thẳng vào nó
+  // (`SIGNATURE_SKILL`); đẩy Bless xuống đó là Space bấm ra một chiêu phù trợ.
+  // `test_tuyetchieu §5` gác đúng chỗ ấy — đã dẫm một lần khi xếp Penetration lên ô 2.
+  // Cả BỐN ô vẫn đầy và vẫn đúng bộ bốn chiêu cũ ⇒ %Công Kích Di Sản không đổi một điểm
+  // (`calcDerived()` trừ theo THÀNH VIÊN của thanh, không theo vị trí).
+  toanchan: ['a', 'elf_greaterdmg', 'tp', 'elf_penetration'],
+};
 function defaultSkillBar(sect){
   const t = THANH_LOP[sect];
   return t ? t.slice() : ['a', 'tp', O3_SKILL_ID[sect] || null, SIGNATURE_SKILL[sect] || null];
@@ -3691,18 +4431,22 @@ function vhKnockback(m, ang, px){
 // VH_VFX: kỹ năng chủ động · style → drawVfx, proj → drawProjStyled.
 // SECT_VFX: 16 chiêu riêng của lớp (8 chiêu chính sx_*_a + 8 tuyệt chiêu sx_*_c) — hình ảnh riêng từng lớp
 const SECT_VFX = {
-  sx_thieulam_a: { style:'bladewhirl',   c2:'#cfe8ff', spin:1.2, dur:0.7 },   // Twisting Slash (Dark Knight) — quét trọn vòng quanh thân
-  sx_thieulam_c: { style:'stabburst',    c2:'#cfe8ff', dur:0.85 },            // Death Stab (Dark Knight) — chuỗi nhát đâm liên tiếp
-  sx_toanchan_a: { style:'flash',        c2:'#d8f4ff', proj:'arrow' },        // Triple Shot (Sylvan Ranger) — loạt tên bắn tỉa
-  sx_toanchan_c: { style:'icefall',      c2:'#dff4ff', dur:1.0 },             // Ice Arrow (Sylvan Ranger) — phiến băng kết trên cao rồi rơi xuống vỡ
+  // sx_thieulam_a đã GỠ khỏi bảng này — nay có tranh thật trong CHIEU_TRANH. Giữ lại dòng style
+  // là chồng một vòng sáng vector lên đúng chỗ tấm dán đang toả ra, thành hai lớp lệch nhau.
+  // sx_thieulam_c — ĐÃ CÓ ART THẬT (`death_stab` trong CHIEU_TRANH). Style tạm `stabburst` gỡ
+  // theo luật: có mặt trong CHIEU_TRANH mà còn khai style là chồng hai lớp lệch tâm lên nhau.
+  // sx_toanchan_a đã GỠ khỏi bảng này — nay có tranh thật trong CHIEU_TRANH.
+  // sx_toanchan_c — ĐÃ CÓ ART THẬT (`five_arrow` trong CHIEU_TRANH). Style tạm `icefall` gỡ theo
+  // luật: có mặt trong CHIEU_TRANH mà còn khai style là chồng hai lớp lệch tâm lên nhau.
   sx_baidasan_a: { style:'poisonbloom',  c2:'#b8ff9a', proj:'serpent', dur:1.1 }, // Poison (Dark Wizard) — vũng độc loang ra, sủi bọt
   // Meteorite (Dark Wizard) KHÔNG khai style: nó chạy gói art thật, xem CHIEU_TRANH.
   sx_minhgiao_a: { style:'fireslash',    c2:'#ffcf7a' },                      // Fire Slash (Spellblade) — đao quang cuốn lửa
   sx_minhgiao_c: { style:'flamewall',    c2:'#ff9a5a', dur:1.15 },            // Flame Strike (Spellblade) — hàng cột lửa dựng lên phía trước
   // QA: Dark Lord (sect id 'bug') chưa từng có entry nào ở đây — cả chiêu chính lẫn Trấn Phái đều rơi
   // về style mặc định chung chung, là lớp DUY NHẤT không có hình ảnh nhận diện riêng khi tung chiêu.
-  sx_bug_a:      { style:'windslash',    c2:'#d0e07a' },                      // Force Wave (Dark Lord) — sóng chấn quyền trượng
-  sx_bug_c:      { style:'firepillar',   c2:'#ffb15c', dur:1.15 },            // Fire Scream (Dark Lord) — ba vệt lửa chạy ra rồi dựng cột lửa
+  // sx_bug_a đã GỠ khỏi bảng này — nay có tranh thật trong CHIEU_TRANH.
+  // sx_bug_c — ĐÃ CÓ ART THẬT (`raven_storm` trong CHIEU_TRANH). Style tạm `firepillar` gỡ theo
+  // luật: có mặt trong CHIEU_TRANH mà còn khai style là chồng hai lớp lệch tâm lên nhau.
                       // Hatchling Strike (Unclassed) — cú đấm trần, chưa có binh khí
                       // Wanderer's Resolve (Unclassed) — dồn hết sức vào một đòn
 };
@@ -3724,7 +4468,8 @@ const VH_VFX = {
   mg_flamestrike:   { style:'flamewall',   c2:'#ff9a5a', dur:1.15 }, // hàng cột lửa phía trước
   dk_ragefulblow:   { style:'groundburst', c2:'#cfe8ff', dur:0.9 },  // nền toác thành tia từ điểm giáng
   mg_powerslash:    { style:'lightwave',   c2:'#ffe9b0', dur:0.85 }, // sóng sáng rời kiếm bay đi
-  dl_chaoticdiseier:{ style:'quakeburst',  c2:'#e8c88a', dur:1.0 },  // Earthquake — nền nứt thành vòng, đá bắn lên
+  // dl_chaoticdiseier — ĐÃ CÓ ART THẬT (`fire_scream` trong CHIEU_TRANH). Style tạm `quakeburst`
+  // gỡ theo luật: có mặt trong CHIEU_TRANH mà còn khai style là chồng hai lớp lệch tâm lên nhau.
   elf_penetration:  { style:'flash',       c2:'#dfffff', proj:'lance' }, // mũi tên xuyên — xem drawProjStyled
 };
 function _vxLine(x1, y1, x2, y2){ ctx.beginPath(); ctx.moveTo(x1, y1); ctx.lineTo(x2, y2); ctx.stroke(); }
@@ -4312,6 +5057,20 @@ const CHIEU_TRANH = {
   // con quái kia". Sát thương KHÔNG đổi theo hệ số này, nó chỉ là cỡ hình.
   sx_baidasan_c: { atlas:'meteor_rain', neo:'quai', co:0.62 },  // Meteorite — thiên thạch tím rơi xuống, nổ tung nền đất
   dw_inferno:    { atlas:'fire_pillar', neo:'quai', co:0.62 },  // Inferno — cột lửa dựng lên từ vòng dung nham
+  // `xoay:true`: tranh CÓ HƯỚNG ⇒ xoay theo hướng nhân vật, quay quanh chính `anchorX/anchorY`.
+  // Hai tấm trên KHÔNG khai cờ này và không được khai — chúng giáng xuống đất, mà một hố thiên
+  // thạch thì không có hướng; xoay nó là nghiêng cả vạch nền. `tests/test_xoayvfx.js §0` gác.
+  sx_thieulam_a: { atlas:'sx_thieulam_a', xoay:true },  // Twisting Slash — quạt chém Dark Knight
+  sx_bug_a:      { atlas:'sx_bug_a',      xoay:true },  // Force Wave — sóng chấn quyền trượng Dark Lord
+  sx_toanchan_a: { atlas:'sx_toanchan_a', xoay:true },  // Triple Shot — loé cung Sylvan Ranger
+  dl_chaoticdiseier: { atlas:'fire_scream', xoay:true },  // Hoả Xích Diệm — ba ngọn lửa toả ra, Dark Lord
+  // `co:0.60` — chủ dự án chốt sau khi xem bốn cỡ chụp trên map thật. Không khai `co` thì
+  // scale = R/neoR = 185/337,9 = 0,547 ⇒ hộp vẽ ra 210px, to hơn cả con Axie (113px).
+  // Bảng đã chụp: 1,00→210px · 0,85→179 · 0,72→151 · **0,60→126**.
+  // ⚠ Chỉ được thu NHỎ hơn vòng sát thương (`pham` 185), không bao giờ to hơn — xem luật `pham`.
+  sx_bug_c:      { atlas:'raven_storm',   xoay:true, co:0.60 },  // Bão Quạ — Trấn Phái Dark Lord
+  sx_thieulam_c: { atlas:'death_stab',    xoay:true },  // Death Stab — Trấn Phái Dark Knight
+  sx_toanchan_c: { atlas:'five_arrow',    xoay:true },  // Ngũ Tiễn — Trấn Phái Sylvan Ranger
 };
 // Chỗ chiêu giáng xuống: CHUỘT CHỈ ĐÂU, CHIÊU GIÁNG ĐÓ.
 //
@@ -4357,17 +5116,39 @@ function diemGiang(tam){
 // Là hàm chứ không phải hằng vì HERO_H/HERO_GOT khai ở dưới xa — hằng ở đây sẽ đọc trúng vùng
 // chết của `const` ngay lúc nạp trang.
 function chanDy(){ return (HERO_GOT - HERO_H / 2) * (NV_CAO / HERO_H) - NV_LECH_Y; }
-function spawnSkillVfx(id, v, phase, ang, R, x0, y0){
+/* ⚠ `nguoi` LÀ THAM SỐ CUỐI VÀ MẶC ĐỊNH LÀ NGƯỜI CHƠI NÀY — mọi lời gọi 7 tham số cũ chạy y
+ * nguyên (cùng quy ước đã dùng cho `heroPose(..., sway, swayDir)`).
+ *
+ * ⚠⚠ VÀ ĐÂY LÀ CỬA DUY NHẤT GỬI VFX CHIÊU SANG NGƯỜI KHÁC. Có CHÍN chỗ gọi hàm này; móc tay
+ * từng chỗ là chỗ thứ mười thêm sau sẽ lặng lẽ không đồng bộ — đúng cái bẫy đã ghi cho
+ * `dailyTrack()` và `mobDoBuoc()`. Gửi từ BÊN TRONG thì chiêu mới thêm tự có mặt.
+ *
+ * ⚠ VFX KHÔNG BAO GIỜ GÂY SÁT THƯƠNG, và đó là thứ làm đồng bộ này an toàn. Vòng cập nhật
+ * `effects` chỉ cộng `e.t`, dời hạt và quay — không một lời gọi `hurtMob` nào. Sát thương nằm
+ * ở `castVohoc`/`castSkill`, tách hẳn. Nên vẽ chiêu của người khác lên máy mình là vẽ, không
+ * phải đánh. Đừng "tiện tay" nối sát thương vào đây: PvP cố ý mới chỉ có đòn thường. */
+function spawnSkillVfx(id, v, phase, ang, R, x0, y0, nguoi){
+  const _p = nguoi || player;
+  if (!_p) return;
+  // Người chơi NÀY niệm ⇒ bắn sang những người cùng bản đồ. `nguoi` có giá trị nghĩa là đang
+  // dựng lại chiêu của người khác — không gửi tiếp, nếu không là một vòng dội vô tận.
+  if (!nguoi && typeof window.netChieuGui === 'function')
+    window.netChieuGui(id, v && v.color, v && v.glyph, phase, ang, R, x0, y0);
   // Chiêu đã có tranh thì DỪNG Ở ĐÂY. Hình vector chung bên dưới sẽ chồng thêm một vòng sáng
   // nữa lên đúng chỗ tranh đang toả ra, thành hai lớp lệch nhau — một lớp vẽ tay, một lớp hình
   // học. Đó chính là thứ phải bỏ, không phải thứ để làm nền dự phòng.
   const _tr = CHIEU_TRANH[id];
   if (_tr){
     if (_tr.ve === 'vongKiem')
-      addEffect({ type:'vongKiem', x:player.x, y:player.y, dur:1.0, scale:1, wpn: vongKiemVuKhi() });
+      addEffect({ type:'vongKiem', x:_p.x, y:_p.y, dur:1.0, scale:1, wpn: vongKiemVuKhi(_p) });
     else {
-      const _cx = x0 == null ? player.x : x0, _cy = (y0 == null ? player.y : y0) + chanDy();
-      spawnAtlasVfx(_tr.atlas, _cx, _cy, (_tr.co || 1) * R / VFX_ATLAS_DEFS[_tr.atlas].neoR);
+      const _cx = x0 == null ? _p.x : x0, _cy = (y0 == null ? _p.y : y0) + chanDy();
+      // ⚠ Góc lấy từ tham số `ang` của chính lời gọi, KHÔNG đọc thẳng `player.face`. Hai thứ đó
+      // thường bằng nhau nhưng không phải luôn: nhánh `proj` đặt `player.face = ang` TRƯỚC khi
+      // gọi, còn nhánh Trấn Phái thì chỉ đổi face khi điểm giáng lệch chỗ đứng. Đọc `player.face`
+      // là dựng bản sao thứ hai của một giá trị đang sống, và nó sẽ lệch ở đúng chỗ khó thấy nhất.
+      spawnAtlasVfx(_tr.atlas, _cx, _cy, (_tr.co || 1) * R / VFX_ATLAS_DEFS[_tr.atlas].neoR,
+                    _tr.xoay ? (ang || 0) : 0);
     }
     return;
   }
@@ -4379,18 +5160,18 @@ function spawnSkillVfx(id, v, phase, ang, R, x0, y0){
   // trước khi nổ. Chiêu nào có hoạt ảnh nhiều nhịp thì khai `dur` riêng trong bảng VFX.
   const _d = (t) => (c && c.dur) || t;
   if (phase === 'cone'){
-    addEffect({ type:'vfx', style, x:player.x, y:player.y, face:ang, r:R, c1:col, c2, glyph, dur:_d(0.55), spin:(c && c.spin) || 0 });
-    for (let i = 0; i < 5; i++) addEffect({ type:'ink', x:player.x + Math.cos(ang)*rnd(30,90), y:player.y + Math.sin(ang)*rnd(30,90), vx:rnd(-30,30), vy:rnd(-60,-10), color:c2 });
+    addEffect({ type:'vfx', style, x:_p.x, y:_p.y, face:ang, r:R, c1:col, c2, glyph, dur:_d(0.55), spin:(c && c.spin) || 0 });
+    for (let i = 0; i < 5; i++) addEffect({ type:'ink', x:_p.x + Math.cos(ang)*rnd(30,90), y:_p.y + Math.sin(ang)*rnd(30,90), vx:rnd(-30,30), vy:rnd(-60,-10), color:c2 });
   } else if (phase === 'cast'){
-    addEffect({ type:'vfx', style, x:player.x, y:player.y, face:ang, r:R, c1:col, c2, glyph, dur:_d(0.4) });
+    addEffect({ type:'vfx', style, x:_p.x, y:_p.y, face:ang, r:R, c1:col, c2, glyph, dur:_d(0.4) });
   } else if (phase === 'aoe'){
-    addEffect({ type:'vfx', style, x:player.x, y:player.y, face:ang, r:R, c1:col, c2, glyph, dur:_d(0.7), big:true, spin:(c && c.spin) || 0 });
-    addEffect({ type:'vfx', style:'shock', x:player.x, y:player.y, face:0, r:R, c1:col, c2, glyph, dur:0.5 });
+    addEffect({ type:'vfx', style, x:_p.x, y:_p.y, face:ang, r:R, c1:col, c2, glyph, dur:_d(0.7), big:true, spin:(c && c.spin) || 0 });
+    addEffect({ type:'vfx', style:'shock', x:_p.x, y:_p.y, face:0, r:R, c1:col, c2, glyph, dur:0.5 });
   } else if (phase === 'dash'){
-    addEffect({ type:'vfx', style, x:player.x, y:player.y, face:ang, r:R, c1:col, c2, glyph, dur:_d(0.6), x0, y0 });
-    addEffect({ type:'vfx', style:'shock', x:player.x, y:player.y, face:0, r:80, c1:col, c2, glyph, dur:0.45 });
+    addEffect({ type:'vfx', style, x:_p.x, y:_p.y, face:ang, r:R, c1:col, c2, glyph, dur:_d(0.6), x0, y0 });
+    addEffect({ type:'vfx', style:'shock', x:_p.x, y:_p.y, face:0, r:80, c1:col, c2, glyph, dur:0.45 });
   } else if (phase === 'buff'){
-    addEffect({ type:'vfx', style, x:player.x, y:player.y, face:0, r:R, c1:col, c2, glyph, dur:_d(1.0), big:true, spin:(c && c.spin) || 0 });
+    addEffect({ type:'vfx', style, x:_p.x, y:_p.y, face:0, r:R, c1:col, c2, glyph, dur:_d(1.0), big:true, spin:(c && c.spin) || 0 });
   }
 }
 
@@ -5361,6 +6142,24 @@ const AVA_THEO_CO  = 0.72;   // …và thu còn mấy phần. Nhỏ hơn Axie th
 // ở CẢ HAI trạng thái mới giữ được thứ bậc đó; cú đổi 0,60 → 0,80 vẫn đủ để mắt thấy nó lớn
 // lên khi xông ra.
 const AVA_DANH_CO  = 0.90;
+// …và CỠ TRONG THÀNH. Chủ dự án: *"bộ giáp nhìn xấu cũng là do scale bé quá, bạn thử scale nhân
+// vật to ra xem sao"*. Trong thành là chỗ DUY NHẤT còn thấy lớp nhân vật (ngoài thành nó đã nhập
+// vào Axie), nên ở đây không còn lý do thu nhỏ: thứ bậc "Axie là thân, người là sức mạnh" chỉ có
+// nghĩa khi hai hình cùng đứng trong một cảnh ĐÁNH NHAU. Trong thành thì cả cảnh là để khoe đồ.
+// 0,72 → 1,00 là +39% chiều, tức gần GẤP ĐÔI số điểm ảnh đọc được của bộ giáp.
+const AVA_THANH_CO = 1.00;
+// Cỡ THẦN KHÍ lúc lớp nhân vật đã NHẬP vào Axie. Lúc đó cây vũ khí là thứ DUY NHẤT trên màn nói
+// rằng người chơi vừa ra đòn, nên nó không còn phải nhường chỗ cho thân người nào — để bằng cỡ
+// lúc ra đòn (`AVA_DANH_CO`) là nó tụt xuống nhỏ hơn con Axie đang cầm nó.
+const AVA_TK_NHAP_CO = 1.00;
+// …và CHỖ ĐỨNG TRONG THÀNH. ⚠ ĐO RỒI MỚI BIẾT: KÉO CỠ TO RA KHÔNG CHỮA ĐƯỢC GÌ. Chụp thử ở ba
+// cỡ 0,72 · 1,00 · 1,20 thì cả ba đều cho ra một bộ giáp bị CON AXIE CHE — vì lúc thường lớp
+// nhân vật đứng LÙI SAU 70px và chỉ lệch sang bên 34px, trong khi hộp vẽ của Axie rộng tới
+// ~112px (nửa hộp 56) cộng nửa bề ngang người ~19 ⇒ phải vượt 75px mới thật sự đứng rời.
+// Tức vấn đề là CHE KHUẤT, không phải KÍCH CỠ — kéo to lên chỉ làm cái phần bị che to theo.
+// Trong thành vì thế đứng gần như NGANG HÀNG (lùi ít) và lệch hẳn sang bên.
+const AVA_THANH_SAU = 18;
+const AVA_THANH_BEN = 88;
 const AVA_TY  = 0.95;   // thân Axie cao mấy phần thân người…
 const AVA_TRAN = 1.18;  // …và hộp vẽ ra, chiều nào cũng vậy, không quá ngần này lần
 function avaCo(id){
@@ -5378,6 +6177,103 @@ function chiChayImg(id){
   let im = CHI_CHAY_IMGS[id];
   if (!im){ im = new Image(); im.src = 'assets/chimera/' + id + '_r.webp'; CHI_CHAY_IMGS[id] = im; }
   return im;
+}
+/* ═══ HAI KHỐI PHẢN ỨNG — Axie KHÔNG đánh, nó PHẢN ỨNG ═════════════════════════════════════
+ * `<id>_b.webp` gồng (battle/get-buff) · `<id>_h.webp` giật (defense/hit-by-normal),
+ * do tools/spine/nuong_chi_phanung.py nướng, dùng CHUNG ô với bảng nhỏ và bảng chạy.
+ *
+ * ⚠ VÌ SAO KHÔNG NƯỚNG ĐÒN ĐÁNH CHO AXIE, dù kit có sẵn 8 đòn gần + 5 đòn xa: luật Đổi Vai
+ * chốt *"Axie chỉ đơn thuần là avatar thôi, khi tấn công thì ví dụ Dark Wizard sẽ xuất hiện và
+ * tung chiêu"*. Cho con Axie tự húc trong lúc Dark Wizard niệm chú bên cạnh là dựng lại đúng
+ * cái "hai kẻ cùng đánh" mà cả đợt Đổi Vai gỡ đi. Chủ dự án đã chốt lại hướng này (2026-09-15).
+ *
+ * ⚠ TRƯỚC BẢN NÀY Axie ĐỨNG YÊN suốt trận: `veAvatar` chỉ biết hai khối (thở · chạy), nên lúc
+ * ra đòn người chơi thấy lớp nhân vật vung còn cái thân của mình thì bất động — và lúc ăn đòn
+ * thì cũng thế. Món nợ `defense/hit-by-normal` đã ghi trong CLAUDE.md từ đợt Đổi Vai.            */
+const CHI_GONG = { n: 12, cot: 6 };
+const CHI_GIAT = { n:  8, cot: 4 };
+const CHI_GONG_IMGS = {}, CHI_GIAT_IMGS = {};
+function _chiPhuImg(id, kho, duoi){
+  if (!CHI_MAP[id]) return null;
+  let im = kho[id];
+  if (!im){ im = new Image(); im.src = 'assets/chimera/' + id + duoi + '.webp'; kho[id] = im; }
+  return im;
+}
+function chiGongImg(id){ return _chiPhuImg(id, CHI_GONG_IMGS, '_b'); }
+function chiGiatImg(id){ return _chiPhuImg(id, CHI_GIAT_IMGS, '_h'); }
+// `i` là CHỈ SỐ KHUNG đã tính sẵn; hàm này không biết gì về đồng hồ của trò chơi.
+function _chiVeKhoi(g, id, im, K, i, x, y, thanPx){
+  const A = CHI_ANH.o[id];
+  if (!A || !chiSan(im)) return false;
+  _chiVe(g, im, A, K.cot, A.nhoRong, A.nhoCao, clamp(i | 0, 0, K.n - 1), x, y, thanPx);
+  return true;
+}
+function chiVeGong(g, id, i, x, y, thanPx){ return _chiVeKhoi(g, id, chiGongImg(id), CHI_GONG, i, x, y, thanPx); }
+function chiVeGiat(g, id, i, x, y, thanPx){ return _chiVeKhoi(g, id, chiGiatImg(id), CHI_GIAT, i, x, y, thanPx); }
+
+/* ── KHỐI RA ĐÒN — MỖI LỚP MỘT KIỂU ─────────────────────────────────────────────────────────
+ * ⚠ ĐÂY LÀ LUẬT "AXIE KHÔNG ĐÁNH" BỊ LẬT, có chủ ý, không phải ai đó quên nó. Luật cũ (chốt
+ * 2026-09-15) cấm cho Axie đánh, và lý do ghi ở đầu `nuong_chi_phanung.py` là: cho Axie tự húc
+ * TRONG LÚC lớp nhân vật niệm chú BÊN CẠNH là dựng lại cái "hai kẻ cùng đánh" mà đợt Đổi Vai
+ * gỡ đi. Lý do ấy hết hiệu lực vì HÌNH DẠNG đã đổi: nay lớp nhân vật NHẬP VÀO con Axie khi ra
+ * khỏi thành, nên lúc đánh trên màn chỉ còn MỘT thân. Chủ dự án chốt lại 2026-09-16.
+ *
+ * ⚠ NĂM LỚP PHẢI RA NĂM ĐÒN KHÁC NHAU, và đó là cả điểm của đợt này. Lúc đánh không còn thân
+ * người nào để nhìn, nên nếu Axie của cả năm lớp vung giống hệt nhau thì 5 lớp mất sạch dấu
+ * hiệu nhìn thấy được. Kit Axie có sẵn 9 đòn gần + 5 đòn xa dùng chung cho mọi rig ⇒ năm kiểu
+ * đọc khác nhau tốn 0 đồng art. Bảng này phải TRÙNG KHÍT `LOP` trong `nuong_chi_danh.py`.
+ *
+ * ⚠ CHỌN ĐÒN THEO CÁCH LỚP ẤY ĐÁNH (khớp `SECT_ACT`/`HERO_ACT`), không chọn cho đủ mặt — nếu
+ * không thì con Axie húc đầu trong lúc VFX của chiêu rơi từ trên trời xuống.                */
+/* ── NHẬP VÀO AXIE: một luật, một cửa ───────────────────────────────────────────────────────
+ * Chủ dự án chốt 2026-09-16: *"Người chơi muốn đánh quái thì phải nhập vào Axie, nhưng để flex
+ * được bộ giáp thì hãy làm cho nó đi theo ở trong thành."*
+ *
+ *   TRONG THÀNH   lớp nhân vật HIỆN, đi theo, đủ giáp — chỗ duy nhất khoe đồ
+ *   NGOÀI THÀNH   lớp nhân vật NHẬP VÀO Axie ⇒ trên màn một thân, Axie ra đòn của lớp mình
+ *
+ * ⚠ ĐÂY LÀ LUẬT THEO MAP, KHÔNG PHẢI THEO "ĐANG ĐÁNH NHAU". Cố ý. Gắn vào trạng thái đánh nhau
+ * thì AUTO cày liên tục ⇒ người chơi ở dạng đã nhập gần như 100% thời gian, và bộ giáp vẫn
+ * không ai thấy — tức mất đúng cái lợi mà cả đợt này sinh ra để lấy.
+ *
+ * ⚠ VÀ `safe` MỘT MÌNH LÀ KHÔNG ĐỦ. Outskirts (`ngoai`) khai `safe` (không PK) nhưng vẫn là bãi
+ * săn 8 bãi — cùng cái bẫy đã ghi ở mục Rương Canh: *"cửa duy nhất đúng là CÓ BÃI QUÁI"*. Nên
+ * thành = `safe` VÀ không bãi quái nào. Sàn đấu `pvp` không bãi quái nhưng `freepk` ⇒ vẫn nhập,
+ * đúng ý: ở đó người chơi đánh nhau thật.                                                   */
+function avaTrongThanh(mid){
+  const md = MAPS[mid || curMap];
+  if (!md || md.type !== 'safe') return false;
+  const pk = packsMd(md);
+  return !(pk && pk.length);
+}
+function avaNhap(mid){ return !avaTrongThanh(mid); }
+
+const CHI_DANH = {
+  thieulam: { duoi: '_ts', n: 12, cot: 6 },  // tail-smash   — bổ nặng từ trên
+  baidasan: { duoi: '_ch', n: 12, cot: 6 },  // cast-high    — Meteorite giáng xuống
+  toanchan: { duoi: '_cf', n: 12, cot: 6 },  // cast-fly     — bắn đi xa
+  minhgiao: { duoi: '_ma', n: 16, cot: 8 },  // multi-attack — combo nhiều nhát
+  bug:      { duoi: '_cl', n: 12, cot: 6 },  // cast-low     — quét thấp, ra lệnh
+};
+const CHI_DANH_IMGS = {};
+// ⚠ `const` ở tầng cao nhất KHÔNG gắn vào `window` — bẫy đã ghi ở mục ONLINE (`player`/`curMap`
+// khai bằng `let` nên `net.js` đọc `window.player` ra undefined, im lặng). Bày ra để bài kiểm
+// đối chiếu được bảng này với `LOP` trong `nuong_chi_danh.py`.
+window.CHI_DANH = CHI_DANH;
+// Khoá đệm phải gồm CẢ LỚP: cùng một con Axie phục vụ năm lớp với năm bảng khác nhau, khoá
+// theo mỗi `id` là người chơi lớp này thấy đòn của lớp kia.
+function chiDanhImg(id, sect){
+  const K = CHI_DANH[sect];
+  if (!K || !CHI_MAP[id]) return null;
+  const khoa = id + K.duoi;
+  let im = CHI_DANH_IMGS[khoa];
+  if (!im){ im = new Image(); im.src = 'assets/chimera/' + khoa + '.webp'; CHI_DANH_IMGS[khoa] = im; }
+  return im;
+}
+function chiVeDanh(g, id, sect, i, x, y, thanPx){
+  const K = CHI_DANH[sect];
+  if (!K) return false;
+  return _chiVeKhoi(g, id, chiDanhImg(id, sect), K, i, x, y, thanPx);
 }
 // Avatar MẶC ĐỊNH theo lớp — chủ dự án chốt: bản này người chơi vào là thấy Axie luôn,
 // không phải gõ lệnh mới có. Mỗi lớp một con khác nhau cho dễ phân biệt ngoài đường.
@@ -5397,10 +6293,30 @@ window.AVA_MAC_DINH = AVA_MAC_DINH;
 //   · `null`      = người chơi ĐÃ TẮT bằng `/avatar off` ⇒ tôn trọng, vẽ lớp nhân vật như cũ.
 // Gộp hai cái thành một phép `!p.avatar` là tắt xong vào lại thấy nó tự bật — tức là cái nút
 // tắt không tắt được gì.
+// Cửa DUY NHẤT hỏi "con này CẮM LÀM THÂN được không". Chủ dự án chốt 2026-09-20: **mọi con
+// đều cắm được**, không phải quay ra mới dùng được.
+//
+// Vì sao nó không phát không sức mạnh: bất biến đã chứng minh ở mục ▲▲ SÁU BỘ PHẬN — ba hệ số
+// phòng thủ nội suy về chính trung bình của chúng, nên **kỳ vọng hệ số của cả 16 con bằng nhau
+// CHÍNH XÁC** (đo được lệch 2,2e-16). Đổi thân đổi HÌNH DẠNG rủi ro, không đổi tổng. Thứ Khế
+// Ước còn bán là số SƯU TẦM và Nguyệt Trần.
+//
+// ⚠⚠ ĐỪNG "sửa gọn" thành cắm sẵn cả 16 con vào `C.co` lúc tạo nhân vật. `C.co` là sổ SƯU TẦM,
+// và `chiNhan()` đọc đúng nó để biết lượt quay này có phải con MỚI hay không — cắm sẵn là nhánh
+// `moi:true` KHÔNG BAO GIỜ chạy nữa, mọi lượt quay đọc ra là trùng. Không lỗi nào báo, và cái
+// hỏng là khoảnh khắc "ra con mới" của chính hệ gacha. Hai sổ, hai việc: `C.co` = đã sưu tầm,
+// hàm này = đeo được.
+//
+// ⚠ VẪN ĐÒI CÓ ART (`CHI_ANH.o`). Bày một con chưa nướng bảng khung là một ô trống trơn, mà
+// người chơi thì không có cách nào biết đó là lỗi hay là chủ ý — cùng luật `ccAvaDS()` đã ghi.
+function avaCamDuoc(id){ return !!(id && CHI_MAP[id] && CHI_ANH.o[id]); }
+// Danh sách thân đeo được, dùng chung cho CẢ HAI cửa (màn tạo nhân vật · bảng Khế Ước). Hai
+// bảng lọc riêng là hai chỗ phải nhớ sửa, và chúng sẽ lệch nhau ngay lần đầu thêm một con.
+function avaDsThan(){ return CHIMERA.filter(c => avaCamDuoc(c.id)); }
 function avatarId(p){
   if (!p) return null;
   const id = p.avatar === undefined ? (AVA_MAC_DINH[p.sect] || null) : p.avatar;
-  return (id && CHI_MAP[id] && CHI_ANH.o[id]) ? id : null;
+  return avaCamDuoc(id) ? id : null;
 }
 function chiVeChay(g, id, i, x, y, thanPx){
   const A = CHI_ANH.o[id], im = chiChayImg(id);
@@ -5419,12 +6335,103 @@ function veAvatar(g, p, dangDiChuyen, now){
   g.save();
   g.translate(p.x, p.y + 12 - than * 0.38);
   if (Math.cos(p.face) < 0) g.scale(-1, 1);
-  const ok = dangDiChuyen
-    ? chiVeChay(g, id, Math.floor(((p.walkPh || 0) / (Math.PI * 2)) * CHI_CHAY.n), 0, 0, than)
-    : false;
-  if (!ok) chiVeNho(g, id, Math.floor(now / 1000 * CHI_THO_FPS), 0, 0, than);
+  // ── CHỌN KHỐI: giật > gồng > chạy > thở ────────────────────────────────────────────────
+  // Cùng thứ tự ưu tiên với `_kind` của khối thân người (chết > trúng đòn > niệm chú > đánh),
+  // trừ khối CHẾT: luật Đổi Vai chốt "trúng đòn và chết vẫn giữ Axie" nên nằm xuống là việc
+  // của lớp nhân vật, không phải của cái thân nhìn thấy.
+  //
+  // ⚠ BA ĐỒNG HỒ NÀY ĐẾM NGƯỢC. `hurtT` · `atkAnim` · `castT` đều đặt bằng độ dài rồi trừ dần
+  // về 0, nên TIẾN ĐỘ là `1 − t/dài`, không phải `t/dài`. Dùng thẳng là con vật gồng NGƯỢC:
+  // buông ra trước rồi mới lấy đà. Cùng cái bẫy đã ghi cho `atkK` ở drawPlayer.
+  const gt = Math.max((p.atkAnim || 0) / NV_DANH_GIAY, (p.castT || 0) / NV_CHU_GIAY);
+  const ht = (p.hurtT || 0) / NV_GIAT_GIAY;
+  // ⚠ NẠP TRƯỚC HAI BẢNG PHẢN ỨNG ngay từ lúc con Axie hiện ra lần đầu, đừng đợi tới lúc cần.
+  // Nạp lười thì lượt tải BẮT ĐẦU đúng vào cú đánh đầu tiên, nên cú đánh đầu tiên của mỗi phiên
+  // rơi vào nhánh lui-về-khối-thở — tức đúng cái lỗi "Axie đứng yên" mà cả đợt này sinh ra để
+  // sửa, chỉ khác là nó chỉ xảy ra một lần rồi tự hết, nên rất dễ nghiệm thu nhầm là đã xong.
+  // Hai bảng cộng lại ~140 KB mỗi con, và chỉ tải con đang thật sự có mặt trên màn.
+  // ⚠ BẢNG CHẠY CŨNG NẰM Ở ĐÂY, và nó là lỗi CÓ SẴN chứ không phải lỗi của đợt này: nó cũng
+  // nạp lười, nên BƯỚC ĐI ĐẦU TIÊN của mỗi phiên cũng rơi vào nhánh lui-về-thở. Chỉ lộ ra khi
+  // bài kiểm mới đặt `moving = true` trên một nhân vật chưa từng đi và nhận về khối 'tho'.
+  chiChayImg(id); chiGongImg(id); chiGiatImg(id); chiDanhImg(id, p.sect);
+  let ok = false, khoi = 'tho', khung = 0;
+  if (ht > 0){
+    khung = (1 - Math.min(1, ht)) * CHI_GIAT.n;
+    ok = chiVeGiat(g, id, khung, 0, 0, than); if (ok) khoi = 'giat';
+  } else if (gt > 0){
+    // ⚠ CHỈ NGOÀI THÀNH AXIE MỚI RA ĐÒN. Trong thành lớp nhân vật còn đứng đó và tự vung, nên
+    // cho Axie vung cùng lúc là dựng lại đúng cái "hai kẻ cùng đánh" mà đợt Đổi Vai gỡ đi —
+    // lần này ở ngay giữa thành phố. Trong thành Axie giữ khối GỒNG như cũ (sức mạnh đang được
+    // gọi tới), ngoài thành nó ra đòn của LỚP mình.
+    if (avaNhap()){
+      const K = CHI_DANH[p.sect];
+      if (K){
+        khung = (1 - Math.min(1, gt)) * K.n;
+        ok = chiVeDanh(g, id, p.sect, khung, 0, 0, than); if (ok) khoi = 'danh';
+      }
+    }
+    // Bảng đòn chưa tải xong thì lui về GỒNG trước khi lui về thở: gồng đã nạp sẵn từ lâu nên
+    // cú đánh đầu phiên vẫn có cái để vẽ, thay vì rơi thẳng về khối đứng yên.
+    if (!ok){
+      khung = (1 - Math.min(1, gt)) * CHI_GONG.n;
+      ok = chiVeGong(g, id, khung, 0, 0, than); if (ok) khoi = 'gong';
+    }
+  } else if (dangDiChuyen){
+    khung = Math.floor(((p.walkPh || 0) / (Math.PI * 2)) * CHI_CHAY.n);
+    ok = chiVeChay(g, id, khung, 0, 0, than); if (ok) khoi = 'chay';
+  }
+  // Bảng chưa tải xong thì lui về khối thở — hơi trượt một nhịp, nhưng không bao giờ để trống
+  // chỗ đứng của nhân vật. (Cùng lý do và cùng cách với khối chạy từ trước.)
+  if (!ok){
+    // ⚠ KHỐI THỞ CHẠY 9 FPS — và đó là thứ người chơi nhìn nhiều nhất. Con Axie LÀ thân nhìn
+    // thấy của người chơi, đứng trên màn 100% thời gian; ở 9 FPS thì mỗi khung bảng nằm im
+    // gần BẢY lượt vẽ trên màn 60 Hz, mắt đọc ra một tấm hình đổi nấc chứ không ra hơi thở.
+    //
+    // Nâng `CHI_THO_FPS` KHÔNG chữa được: bảng chỉ có 12 khung, chạy nhanh hơn thì thành thở
+    // gấp. Thứ chữa được là PHA hai khung liền nhau — đúng cách khối chạy của lớp nhân vật đã
+    // làm (xem `_phaLe`/`_phaSau`), và ở đây còn an toàn hơn hẳn:
+    //
+    //   đo trên thân 4.290 điểm ảnh đặc — thở lệch TB 407 px giữa hai khung liền nhau (9,5%)
+    //                                   — chạy lệch TB 1.507 px (35%)
+    //
+    // 9,5% thì pha ra hơi thở liền mạch; 35% thì pha ra BÓNG ĐÔI. Nên chỉ pha khối thở.
+    // Khối chạy đã ~35 khung/giây trên màn (12 khung × ~2,9 bước/giây) nên vốn không có khe.
+    khoi = 'tho';
+    const _kf = now / 1000 * CHI_THO_FPS;
+    khung = Math.floor(_kf);
+    const _le = _kf - khung;
+    chiVeNho(g, id, khung, 0, 0, than);
+    if (_le > 0.02){
+      // Vẽ ĐÈ khung sau ở alpha = phần lẻ: cùng phép hoà mà `heroBlit` dùng cho lớp nhân vật.
+      const _a = g.globalAlpha;
+      g.globalAlpha = _a * _le; chiVeNho(g, id, khung + 1, 0, 0, than); g.globalAlpha = _a;
+    }
+  }
+  // Phơi quyết định ra cho bài kiểm, khoá theo từng thân người — cùng lối với `__veChet` và
+  // `__neoVe`. Ở đây bắt buộc phải thế: thứ cần gác là CHỈ SỐ KHUNG (một con số), mà đo nó bằng
+  // điểm ảnh thì vấp đúng sàn nhiễu đã ghi ở mục Giai đoạn 2 — con Axie thở ~8 FPS nên hai lượt
+  // vẽ kế nhau đã lệch vài nghìn điểm ảnh mà chẳng cần ai đổi gì.
+  if (window.TEST_MODE)
+    (window.__avaKhoi || (window.__avaKhoi = {}))[veKhoa(p)] = { khoi, khung: Math.floor(khung), id };
   g.restore();
   return true;
+}
+// Vẽ Axie NHƯNG HUỶ phép nhấc do đôi cánh: con Axie không đeo cánh và không có hoạt cảnh bay
+// nào, nên nhấc nó lên là một cái thân treo lơ lửng cách vòng chân của chính nó mấy chục pixel.
+// `bayCao` > 0 nghĩa là khối gọi đang nằm trong một `translate(0, -bayCao)`; cộng lại là về đất.
+// Gom vào MỘT hàm vì có HAI chỗ gọi (xếp lớp theo chiều sâu) — sửa một chỗ quên chỗ kia là con
+// Axie bay ở nửa số hướng nhìn, mà kiểu lệch đó nhìn ra "hình như lag" chứ không ra một lỗi.
+function veAvatarDat(g, p, now, bayCao){
+  if (!bayCao){
+    if (window.TEST_MODE) _doNeo('axie', g, p.x, p.y);
+    veAvatar(g, p, !!p.moving, now); return;
+  }
+  g.save(); g.translate(0, bayCao);
+  // Phơi chỗ CHÂN con Axie ra cho bài kiểm — qua đúng ma trận đang vẽ, không chép lại phép
+  // tính. Xem `_doNeo`: đo bằng điểm ảnh ở đây là vô ích, con Axie thở ~8 FPS nên sàn nhiễu
+  // giữa hai lượt vẽ liên tiếp lớn hơn cả 24 px cần đo.
+  if (window.TEST_MODE) _doNeo('axie', g, p.x, p.y);
+  veAvatar(g, p, !!p.moving, now); g.restore();
 }
 // ĐO CHỖ MỘT ĐIỂM THẬT SỰ RƠI VÀO, qua đúng ma trận mà vòng vẽ đang dùng.
 // Vì sao phải đo chứ không tính lại trong bài kiểm: chép công thức sang bài kiểm là dựng bản
@@ -6549,6 +7556,20 @@ const MOC_NV = {
   ruong: { ten:'mở Rương Canh',           dem:() => Object.keys((player && player.ruong) || {}).length },
   hap:   { ten:'mở Box Kundun',           dem:() => (player && player.hapMo) || 0 },
   khe:   { ten:'quay Khế Ước',            dem:() => Object.keys(((player && player.chimera) || {}).co || {}).length },
+  // Cửa dạy **trục phòng thủ của Axie** — thứ gánh tiêu chí Axie Core mà trước đây không một
+  // nhiệm vụ nào trỏ tới. Đếm "đã TỰ cắm một cái thân", vì cửa duy nhất vào việc đó là bảng Khế
+  // Ước, và bảng đó nay nói thẳng mình đang đứng ở đất hệ gì (xem `axieTaiDay`). Nhiệm vụ mở
+  // cửa, cái bảng mới là thứ dạy.
+  //
+  // ⚠ ĐỪNG đòi "đang đeo một thân KHẮC LẠI đất này". Nghe mạnh hơn, nhưng thân là thứ bốc từ
+  // gacha: một người xui có thể không sở hữu con nào thuộc nhóm cần, và chính tuyến là chuỗi
+  // THẲNG — một ô không qua được là cả game dừng. Cùng bài học đã ghi ở mục "CỬA CƠ CHẾ MỞ Ở
+  // CẤP NÀO": hỏi *đếm được không* rồi phải hỏi tiếp *ai cũng làm được không*.
+  //
+  // ⚠ `player.avatar !== undefined` mới là "đã tự chọn" — `undefined` là chưa từng chạm, `null`
+  // là đã tắt bằng /avatar off (cũng là một lựa chọn hẳn hoi). Gộp hai cái thành `!player.avatar`
+  // là nhiệm vụ không bao giờ xong với người bấm nút tắt.
+  than:  { ten:'tự cắm thân Axie',        dem:() => (player && player.avatar !== undefined) ? 1 : 0 },
   // ⚠ §6 của docs/LORE_RUNE.md hứa một cửa "Tinh Luyện" — hứa sai: Tinh Luyện là một NÚT trong
   // bảng Đại Thành (`sr_tinhluyen`, +0,18% hiệu lực mỗi cấp rèn), không phải một hệ có hành
   // động để chạm vào. Không có gì đếm được, nên cửa đó đổi sang **Đại Thành** — thứ mà nút Tinh
@@ -7020,7 +8041,10 @@ function specialItem(slot, def, extra){
     // khác thì không — chúng lên cấp bằng đường riêng, cho rèn nữa là hai thang tiến hoá
     // chồng lên nhau trên cùng một món.
     noForge: slot !== 'canh',
-    main: null, element: 'Kim', subs, plus: 0, awakened: AWAKENED[0],
+    // `element: null` chứ không phải một lớp bất kỳ: món đặc biệt mang `special:true`, mà cả
+    // `hasElem()` lẫn `atkElem()` đều chặn ở đó — nên một cái hệ đặt ở đây không bao giờ được
+    // đọc. Để một giá trị trông-như-thật là mời người sau tưởng nó có tác dụng.
+    main: null, element: null, subs, plus: 0, awakened: AWAKENED[0],
   }, extra || {});
 }
 // LINH THÚ đã GỠ. Chú thích cũ ngay trên PET_DEFS đã tự nhận nó yếu: 'chỉ là MỘT ô, tốn cả
@@ -7051,8 +8075,11 @@ function giapHp(t, phan){
   return Math.round((GIAP_HP_GOC + (clamp(t || 1, 1, GIAI_MAX) - 1) * GIAP_HP_BUOC) * phan);
 }
 function mainName(k){
-  return { atk:'Công Kích', def:'Phòng Ngự', vit:'Sinh Lực', str:'Lực Lượng',
-           agi:'Mẫn Tiệp', hp:'Sinh Lực tối đa', crit:'Bạo Kích %', qireg:'Hồi Mana' }[k] || k;
+  // ⚠ `def` ở đây là DÒNG PHỤ TRÊN TRANG BỊ ("Phòng Thủ"), không phải ô chỉ số đã gỡ — đồ
+  // vẫn cộng thẳng vào phòng thủ. `vit`/`str`/`agi`/`ene` thì dùng ĐÚNG tên trong `ATTR_INFO`,
+  // đừng chép lại: hai bảng cùng đặt tên cho một thứ là bảo đảm chúng lệch nhau.
+  return { atk:'Công Kích', def:'Phòng Thủ', hp:'Sinh Lực tối đa', crit:'Bạo Kích %',
+           qireg:'Hồi Mana', ...Object.fromEntries(Object.entries(ATTR_INFO).map(([a,v]) => [a, v.name])) }[k] || k;
 }
 // ═══════════ SO SÁNH TRANG BỊ — nửa còn lại của bài học Loot 2.0 ═══════════
 // Với 15 dòng phụ đều là % thuần, người chơi KHÔNG có cách nào tự nhìn ra món vừa nhặt hơn
@@ -7440,7 +8467,13 @@ function calcDerived(){
   try { nvBoTruoc(player.sect, heroTier(player), gearVisual(player)); } catch { /* chưa dựng xong */ }
   const sect0 = SECTS[player.sect];
   const b = sect0.bonus;
-  const s = { str:player.str+b.str, agi:player.agi+b.agi, def:Math.round((player.def+b.def)*(sect0.defMult||1)), vit:player.vit+b.vit, ene:player.ene+(b.ene||0) };
+  // ⚠ `def` KHÔNG còn là một ô rót điểm — nó SUY RA từ Nhanh Nhẹn (xem `AGI_SANG_THU`).
+  // `player.def` vẫn còn trong save của người chơi cũ; `loadGame()` hoàn số điểm đã đổ vào đó
+  // về `player.free` rồi ghim lại mức nền, nên ở đây nó chỉ còn đúng vai "mức nền của lớp".
+  const _agi0 = player.agi + b.agi;
+  const s = { str:player.str+b.str, agi:_agi0,
+    def:Math.round((DIEM_KHOI_DAU + b.def + _agi0 * AGI_SANG_THU) * (sect0.defMult||1)),
+    vit:player.vit+b.vit, ene:player.ene+(b.ene||0) };
   // NỀN THẦN BINH. Thần Binh đã gỡ, nhưng tầng 1 của nó (+3 Lực · +2 Mẫn · +2 Cốt · +3 Thể)
   // là quà mọi nhân vật có SẴN từ cấp 1 — `newPlayer` khởi tạo `thanbinh:{tier:1}`, không ai
   // phải cày để có. Bảng vàng chỉ số trong test_lvpower được viết KÈM khoản đó, nên gỡ hệ mà
@@ -7520,7 +8553,7 @@ function calcDerived(){
   if (P.excAtkLv) P.atk += P.excAtkLv;
   player.atk = Math.round((P.atk + rawAtk) * (1 + LP.mult) * (sect0.dmgMult || 1));
   player.maxHp = Math.round((100 + player.level*PWR.hpPerLv + s.vit*PWR.hpPerVit + P.hp) * (1 + LP.mult) * (sect0.hpMult || 1));
-  player.maxQi = 50 + player.level*5 + Math.round(s.ene*1.5); // Linh Lực: mỗi điểm +1.5 mana tối đa (mọi lớp)
+  player.maxQi = 50 + player.level*5 + Math.round(s.ene*1.5); // Năng Lượng: mỗi điểm +1.5 mana tối đa (mọi lớp)
   player.crit = Math.min(0.45, s.agi*0.003 + P.crit/100);
   // Instinct Channels — cũng tự mở theo cấp độ (không cần tự tay khai thông từng nấc nữa),
   // đều nhau cả 8 mạch, chạm mức tối đa (20 đốt/mạch) ở cấp 120
@@ -7684,6 +8717,33 @@ function calcDerived(){
   const _psEva = biDongChiSo('evaPP'), _psCrit = biDongChiSo('critPP');
   if (_psEva)  player.eva  = Math.min(0.45, player.eva  + _psEva / 100);
   if (_psCrit) player.crit = Math.min(0.65, player.crit + _psCrit / 100);
+  // ── LÒ KHẮC · Nếp Khắc ──────────────────────────────────────────────────
+  // MỘT khối, MỘT cửa đọc (`lkCong`). `lkCong` trả 0 khi `LK` null, nên khối này vô hại với
+  // 100% thời gian người chơi ở ngoài mini-game — và lượt kết thúc là mọi thẻ tự biến mất ở
+  // lần calcDerived kế tiếp, không phải dọn tay. Đặt CUỐI HÀM vì nó nhân lên chỉ số đã thành
+  // hình, đúng thứ người chơi đọc trên bảng Nhân Vật (cùng lý do khối bị động chỉ số ở trên).
+  if (LK){
+    const _kA = lkCong('atkPct'), _kH = lkCong('hpPct'), _kQ = lkCong('qiPct'),
+          _kD = lkCong('defPct'), _kS = lkCong('spdPct'), _kC = lkCong('cdPct'),
+          _kR = lkCong('critPP'), _kAs = lkCong('aspdPct');
+    if (_kA)  player.atk    = Math.max(1, Math.round(player.atk * (1 + _kA / 100)));
+    if (_kH)  player.maxHp  = Math.max(1, Math.round(player.maxHp * (1 + _kH / 100)));
+    if (_kQ)  player.maxQi  = Math.max(1, Math.round(player.maxQi * (1 + _kQ / 100)));
+    if (_kD)  player.dDef   = Math.round(player.dDef * (1 + _kD / 100));
+    if (_kS)  player.speed  = Math.round(player.speed * (1 + _kS / 100));
+    // ⚠ `player.aspd` là KHOẢNG CÁCH giữa hai đòn (giây), THẤP hơn = NHANH hơn. Nhân với
+    // (1 + %) ở đây là biến lá Tay Nhanh thành một lá debuff, và không gì báo. Dùng cùng
+    // phép trừ và cùng sàn 0,25 mà nhánh trang bị (`P.aspdPct`) đang dùng.
+    if (_kAs) player.aspd   = Math.max(0.25, player.aspd * (1 - _kAs / 100));
+    // Hồi chiêu dùng CÙNG sàn 0,35 với Đại Thành — hai nguồn trừ thẳng chồng nhau là về 0.
+    if (_kC)  player.vhCdMult = Math.max(0.35, (player.vhCdMult || 1) * (1 - _kC / 100));
+    // Bạo kích đi qua ĐÚNG cái trần 0,65 mà mọi nguồn khác đi qua — bỏ trần ở đây là mở cửa
+    // sau cho chính chỉ số mà cả phần trên của hàm này cẩn thận kẹp lại.
+    if (_kR)  player.crit   = Math.min(0.65, player.crit + _kR / 100);
+    const _kL = lkCong('leech'), _kP = lkCong('phan');
+    if (_kL)  player.hpLeech = (player.hpLeech || 0) + _kL / 100;   // dùng lại cơ chế có sẵn
+    if (_kP)  player.reflect = (player.reflect || 0) + _kP / 100;   // ...và cơ chế phản đòn có sẵn
+  }
   player.hp = Math.min(player.hp, player.maxHp);
   player.qi = Math.min(player.qi, player.maxQi);
 }
@@ -7735,8 +8795,8 @@ function newPlayer(sectKey){
     mastery: {}, mpts: 0, mptsTotal: 0, mRespec: 0, // Đại Thành: {nút: điểm} · điểm chưa dùng · tổng đã nhận · số lần tẩy điểm
     // hệ thêm ở bản GDD đời trước
     khi: 0,                                    // Instinct — tiền tệ nâng cấp bậc cao
-    gems: { tuLa: 0, honNguyen: 0 },           // Tu La Tinh Thạch / Hỗn Nguyên Thạch
-    mats: { manh:0, tichMa:0 },   // Vật liệu Kế Thừa (Drop v2.0)
+    gems: { honNguyen: 0 },                    // Hỗn Nguyên Thạch (Tu La đã gỡ — xem GO_TULA)
+    mats: {},                     // Kế Thừa đã gỡ — xem GO_MANH
     bossPity: 0,                               // Pity đai: đếm Vệ Binh Rune không ra Thần
     chinhPhat: { date:'', count:0 },           // Chinh Phạt Cổng Vực 1 lần/ngày
     bossKills: {},                             // { mapId: [bossId...] } — mở cổng ải
@@ -7876,6 +8936,9 @@ function xoaNhanVat(i){
   ghiDoc(doc);
   return true;
 }
+// Số điểm Phòng Ngự vừa hoàn cho save đời cũ — `loadGame()` đặt, chỗ vào game đọc rồi in ra.
+// Tách ra một biến vì lúc `loadGame()` chạy thì thế giới chưa dựng: `addFloat` chưa có chỗ bám.
+let _diTruDefBao = 0;
 function loadGame(idx){
   try {
     const doc = docSave();
@@ -7951,7 +9014,7 @@ function loadGame(idx){
       if (Array.isArray(player.inv)) player.inv = player.inv.map(_doiCanh);
       if (Array.isArray(player.kho)) player.kho = player.kho.map(_doiCanh);
     }
-    if (!player.gems) player.gems = { tuLa: 0, honNguyen: 0 };
+    if (!player.gems) player.gems = { honNguyen: 0 };
     if (player.charms == null) player.charms = 0;
     delete player.tienDan;   // Đá Thăng Cấp gỡ cùng hệ Thuần Thục — nó không còn nơi tiêu
     // Save cũ mang ba trường của hệ Thuần Thục đã gỡ — dọn luôn, đừng để chúng nằm lại
@@ -8054,7 +9117,7 @@ function loadGame(idx){
     if (player.auto == null) player.auto = false; // auto farm (treo máy)
     if (!player.autoCfg) player.autoCfg = { skill:true, potion:true, potionPct:40, range:430, boss:false }; // Auto Farm cfg backfill
     if (!player.gender) player.gender = 'nam';
-    if (!player.mats) player.mats = { manh:0, tichMa:0 };
+    if (!player.mats) player.mats = {};
     if (player.bossPity == null) player.bossPity = 0;
     if (!player.chinhPhat) player.chinhPhat = { date:'', count:0 };
     if (!player.bossKills) player.bossKills = {};
@@ -8137,8 +9200,8 @@ function loadGame(idx){
           else if (t <= 9){ _s += 9000*t; _m += 9*t; _tl += t-3; _hn += t-6; _cp += t-6; }
           else { _s += 15000*t; _m += 14*t; _tl += t; _hn += t-6; _cp += t-6; _lh += Math.max(0, t-8); _hd += 1; }
         }
-        if (_tl){ player.gems = player.gems || { tuLa:0, honNguyen:0 }; player.gems.tuLa += _tl; }
-        if (_hn){ player.gems = player.gems || { tuLa:0, honNguyen:0 }; player.gems.honNguyen += _hn; }
+        if (_tl){ player.gems = player.gems || { honNguyen:0 }; player.silver += _tl * GO_TULA; }
+        if (_hn){ player.gems = player.gems || { honNguyen:0 }; player.gems.honNguyen += _hn; }
         if (_cp || _lh || _hd){
           player.jewels = player.jewels || { chucPhuc:0, linhHon:0, sinhMenh:0, honDon:0 };
           player.jewels.chucPhuc += _cp; player.jewels.linhHon += _lh; player.jewels.honDon += _hd;
@@ -8191,6 +9254,39 @@ function loadGame(idx){
     if (player.khoPlus == null) player.khoPlus = 0;
     if (!player.khoNgoc || typeof player.khoNgoc !== 'object') player.khoNgoc = { hap:{} };
     if (player.autoNgoc == null) player.autoNgoc = false;
+    // Lò Khắc: sổ lượt/ngày. Thiếu dòng này thì lkNgay() tự dựng lại ở lần gọi đầu — nhưng
+    // vá ở đây để bảng hiện số lượt còn lại được ngay khi vào game, không phải đợi bấm cổng.
+    if (!player.lokhac || typeof player.lokhac !== 'object') player.lokhac = { day:'', luot:0 };
+    // ═══ GỘP TIỀN TỆ — bậc 5: Tu La Tinh Thạch ra khỏi game ════════════════════════════
+    // Chủ dự án chốt: ép ngọc lo +1→+9, Lò lo +10/+11/+12. "Rèn Thường" — đường Lumen + Tu La
+    // lên +9 — gỡ theo, và Tu La mất chỗ tiêu chính. Phần nó còn giữ ở Phá Thiên Kiếp đã dồn
+    // vào Hỗn Nguyên theo đúng giá tiệm (xem forgeRule), nên ở đây chỉ còn việc hoàn tồn kho.
+    // ⚠ HOÀN Ở HAI CHỖ: túi (`gems.tuLa`) VÀ Ngăn Ngọc (`khoNgoc.tuLa`). Ngọc CẤT trong kho thì
+    // không tiêu được, nên bỏ sót chỗ thứ hai là người chơi nào lỡ cất Tu La sẽ mất trắng.
+    {
+      const _tlTui = (player.gems && player.gems.tuLa) || 0;
+      const _tlKho = (player.khoNgoc && player.khoNgoc.tuLa) || 0;
+      const _tl = _tlTui + _tlKho;
+      if (_tl > 0){
+        player.silver += _tl * GO_TULA;
+        setTimeout(() => { if (player) zoneBanner = { text:'◆ TU LA TINH THẠCH ĐÃ NGỪNG DÙNG',
+          sub:`${_tl} viên → ${(_tl * GO_TULA).toLocaleString('vi-VN')}◈ Lumen · rèn +1→+9 nay chỉ bằng ngọc`,
+          color:'#e8552a', t:7 }; }, 2200);
+      }
+      if (player.gems) delete player.gems.tuLa;
+      if (player.khoNgoc) delete player.khoNgoc.tuLa;
+    }
+    // ═══ GỠ KẾ THỪA — hoàn hai vật liệu của nó ════════════════════════════════════════
+    if (player.mats && ((player.mats.manh || 0) > 0 || (player.mats.tichMa || 0) > 0)){
+      const _mn = player.mats.manh || 0, _tm = player.mats.tichMa || 0;
+      const _bu = _mn * GO_MANH + _tm * GO_TICHMA;
+      player.silver += _bu;
+      setTimeout(() => { if (player) zoneBanner = { text:'⚒ KẾ THỪA ĐÃ GỠ',
+        sub:`${_mn} Mảnh + ${_tm} Đá Ấn Rune → ${_bu.toLocaleString('vi-VN')}◈ Lumen · giai của món nay do thứ RƠI RA quyết định`,
+        color:'#9fd0ff', t:8 }; }, 2800);
+    }
+    if (player.mats){ delete player.mats.manh; delete player.mats.tichMa; }
+
     // ═══ GỘP TIỀN TỆ — bậc 4: Tâm Đắc nhập vào Instinct ═══════════════════════════════
     // Tỉ giá lấy từ chính chỗ tiêu: nâng trọn một chiêu 1→120 trước đây tốn 21💠, nay tốn thêm
     // ~84.800 Instinct so với đường cong nền — chia ra tròn 4.000 Instinct một viên Tâm Đắc.
@@ -8250,7 +9346,28 @@ function loadGame(idx){
     const _mHoan = masteryRaSoat();
     if (_mHoan) setTimeout(() => { if (player) addFloat(player.x, player.y - 70,
       `↺ Hoàn ${_mHoan} điểm ${MASTERY_NAME} — bảng nay đi theo nhánh`, '#7ecbff', 14); }, 1200);
-    if (player.ene == null) player.ene = 5; // Linh Lực (stat mới) backfill (save cũ chưa có) — mức khởi điểm giống str/agi/def/vit
+    if (player.ene == null) player.ene = 5; // Năng Lượng backfill (save cũ chưa có) — mức khởi điểm giống str/agi/vit
+    // ⚠ HOÀN ĐIỂM PHÒNG NGỰ, ĐỪNG XOÁ TRẮNG. Ô "Phòng Ngự" đã gỡ (phòng thủ nay từ Nhanh
+    // Nhẹn), nhưng người chơi cũ có thể đã đổ hàng trăm điểm vào đó. Xoá thẳng là lấy mất của
+    // họ đúng ngần ấy điểm mà không một dòng nào báo — đúng kiểu mất trắng mà nếp di trú của
+    // dự án này cấm (xem `cotDiTru`). Trả về `free` để họ rót lại chỗ khác.
+    // ⚠ KHÔNG CẦN CỜ CHẶN HOÀN HAI LẦN, và đây là chỗ ghi lại vì sao — để đừng ai thêm vào.
+    // Phản xạ thông thường (và `cotDiTru` thì đúng là cần) là một cờ `_diTru*`. Ở đây thì
+    // KHÔNG: phép hoàn tự bất biến, vì thứ giữ nó là dòng GHIM `def` về mức nền ngay bên dưới
+    // — lần nạp sau `def` đã bằng nền nên `_hoan` ra 0.
+    // Đã thử thêm cờ rồi thử ngược bằng cách gỡ cờ: bài kiểm IM LẶNG. Một cái cờ mà gỡ đi
+    // không làm đỏ được bài nào là một cái cờ không gác gì — nó chỉ trông như đang gác.
+    // (`cotDiTru` cần cờ vì nó KHÔNG ghim nguồn về 0, nó đọc `lv`/`hoa` rồi xoá.)
+    {
+      const _hoan = Math.max(0, Math.round((player.def || DIEM_KHOI_DAU) - DIEM_KHOI_DAU));
+      player.def = DIEM_KHOI_DAU;   // ← dòng này mới là thứ làm phép hoàn bất biến
+      if (_hoan > 0){
+        player.free = (player.free || 0) + _hoan;
+        // ⚠ PHẢI BÁO RA MỘT DÒNG ĐỌC ĐƯỢC. Một khoản hoàn không ai thấy thì với người chơi
+        // không khác gì mất trắng.
+        _diTruDefBao = _hoan;
+      }
+    }
     migrateGiai14();                                      // 10 giai → 14 giai, xem hàm để biết vì sao
     migrateGiai7();                                       // 14 giai → 7 giai, phải chạy SAU bước trên
     migrateBoPham();                                      // gỡ hệ phẩm — xem hàm để biết vì sao không đền bù
@@ -8330,9 +9447,18 @@ function loadGame(idx){
       }
     }
 
-    // clamp old +12..+15 gear to the new +11 cap
-    for (const s in player.equip) if (player.equip[s] && player.equip[s].plus > 11) player.equip[s].plus = 11;
-    for (const it of player.inv) if (it.plus > 11) it.plus = 11;
+    // Kẹp đồ đời cũ về trần hiện hành. Trần nay là +12 (trước là +11, trước nữa có save +15).
+    // ⚠ Con số này phải ĐI THEO trần của Lò — để nguyên 11 sau khi mở +12 thì món vừa rèn lên
+    // +12 sẽ bị kẹp ngược về +11 ở lần tải trang kế tiếp, và người chơi mất một lượt Phá Thiên
+    // Kiếp mà không có một dòng báo nào.
+    for (const s in player.equip) if (player.equip[s] && player.equip[s].plus > 12) player.equip[s].plus = 12;
+    for (const it of player.inv) if (it.plus > 12) it.plus = 12;
+    // ⚠ BẢN CHƠI THỬ — phát bộ giai 7 cho save đời trước. PHẢI đứng ở ĐÂY, không được đưa lên
+    // cạnh `cotDiTru()`: `migrateGiai14()`/`migrateGiai7()` chạy mãi dưới kia và chúng viết lại
+    // `it.tier` của MỌI món trong equip/inv. Phát trước hai bước đó thì bộ giai 7 vừa phát bị
+    // chính phép di trú nghiền xuống giai 5 (7 → 10 → ceil(10/2)) — đo được, và không lỗi nào
+    // báo. Ở đây thì lưới túi cũng đã dựng xong nên `bagConCho`/`bagThem` trả lời đúng.
+    demoDoDiTru();
     let maxUid = 0;
     for (const s in player.equip) if (player.equip[s]) maxUid = Math.max(maxUid, player.equip[s].uid);
     for (const it of player.inv) maxUid = Math.max(maxUid, it.uid);
@@ -8413,7 +9539,8 @@ function mapBanSac(id){
     const d = MOBS[q.mob]; if (!d) continue;
     const n = q.n || 5; tong += n;
     dan[q.mob] = (dan[q.mob] || 0) + n;
-    if (d.el) he[d.el] = (he[d.el] || 0) + n;
+    const _he = q.he || d.el;              // bãi khai hệ thì bãi thắng — cùng luật mobHe()
+    if (_he) he[_he] = (he[_he] || 0) + n;
   }
   if (!tong) return null;
   const troi = o => Object.keys(o).sort((a,b) => o[b] - o[a])[0];
@@ -8423,11 +9550,182 @@ function mapBanSac(id){
            he: ht || null, tyLeHe: ht ? Math.round(100 * he[ht] / tong) : 0,
            cot: COT_DONG_THEO_MAP[id] || null };
 }
-// Một dòng, kiểu Ragnarok: đất của ai · khắc hệ gì · nơi duy nhất rơi cái gì.
+// Ba lớp Axie khắc được `he` — tức ba lớp mà người chơi nên CẦM tới vùng này: Axie thuộc một
+// trong ba lớp ấy ăn đòn nhẹ đi 10%, và vũ khí mang Rune của chúng đánh nặng thêm 20%.
+//
+// ⚠ SUY TỪ `heKhac`, đừng chép một bảng "khắc gì" thứ hai. Bảng thứ hai là bảo đảm nó lệch với
+// công thức sau vài đợt sửa, và kiểu lệch đó thì người chơi phát hiện trước bài kiểm: họ làm
+// đúng lời bảng Bản Đồ và ăn đòn nặng hơn.
+function heKhacLai(he){ return ELEMENTS.filter(k => heKhac(k, he)); }
+// Phán quyết khắc hệ ở chiều PHÒNG THỦ (quái → người). Đây là cửa DUY NHẤT cho mọi chỗ NÓI RA
+// vế đó — băng-rôn lúc vào map và số bay mỗi lần trúng đòn — và nó mang luôn hai hệ số, nên
+// `hurtPlayer` cũng đọc từ đây. Chép công thức ra ba nơi là ba nơi phải nhớ sửa, mà lệch nhau
+// thì băng-rôn hứa một đằng còn đòn đánh ra một nẻo, không một lỗi nào báo.
+//
+// ⚠ TRẢ CẢ TRẠNG THÁI TRUNG TÍNH (`ket:0`), đừng trả `null` cho nó. Im lặng ở nhánh trung tính
+// thì người chơi không phân biệt được "con Axie này không khắc gì ở đây" với "cơ chế không
+// chạy" — mà chính vế CÓ LỢI (×0,90) đã im lặng suốt từ đầu vì đúng kiểu bỏ sót ấy.
+//
+// ⚠ THAM SỐ THỨ BA `sac` LÀ ĐỘ SẮC TỪ SÁU BỘ PHẬN — xem `bpCung`/`bpSac` ngay dưới. Mặc định 1
+// = đúng hệ số của bản trước bộ phận, nên mọi lời gọi hai tham số cũ vẫn ra đúng số cũ.
+const HE_THIET = 1.12;   // quái khắc hệ mình  ⇒ ăn đòn nặng hơn
+const HE_LOI   = 0.90;   // mình khắc lại quái ⇒ chịu đòn nhẹ hơn
+const HE_TRUNG = 1.00;
+// ⚠⚠ ĐÂY LÀ CHỖ GIỮ LỜI HỨA "AXIE KHÔNG BÁN SỨC MẠNH", và nó giữ bằng PHÉP DỰNG chứ không bằng
+// một con số chọn khéo. Ba hệ số được nội suy về chính TRUNG BÌNH của chúng:
+//
+//     mul(sac) = HE_TB + (mul_gốc − HE_TB) × sac
+//
+// nên trung bình của ba nhánh **bằng `HE_TB` với MỌI `sac`** — đạo hàm theo `sac` của tổng ba
+// nhánh là đúng 0. Trên phân bố đều chín lớp quái (mỗi nhóm 3 lớp ⇒ 3 nhánh đều nhau) thì kỳ
+// vọng hệ số phòng thủ của **mọi** con Axie bằng nhau CHÍNH XÁC.
+//
+// ⚠ ĐỪNG "sửa gọn" thành `mul = 1 + (mul_gốc − 1) × sac`. Nhìn thì sạch hơn, nhưng `HE_THIET` và
+// `HE_LOI` KHÔNG đối xứng quanh 1 (+0,12 so với −0,10), nên cách đó cho trung bình
+// `1 + 0,00667 × sac` — tức con càng thuần càng ăn đòn nặng hơn trên tổng thể. Đó đúng là một
+// nấc thang, chỉ là một nấc đi xuống, và nó vẫn phá lời hứa.
+const HE_TB = (HE_THIET + HE_LOI + HE_TRUNG) / 3;
+function heThuKet(mobEl, axieEl, sac){
+  if (!mobEl || !axieEl || !ELEM[mobEl] || !ELEM[axieEl]) return null;
+  const k = (typeof sac === 'number' && isFinite(sac)) ? sac : 1;
+  const pha = g => HE_TB + (g - HE_TB) * k;
+  const gA = ELEM[axieEl].glyph, gM = ELEM[mobEl].glyph;
+  const pct = m => Math.round(Math.abs(m - 1) * 100);
+  if (heKhac(mobEl, axieEl)){
+    const mul = pha(HE_THIET);
+    return { ket:-1, mul, sac:k, mau:'#ff9a3a',
+             txt:`⚠ ${gM} ${mobEl} khắc ${gA} ${axieEl} +${pct(mul)}%`,
+             dai:`⚠ Axie ${gA} ${axieEl} ăn đòn NẶNG hơn ${pct(mul)}% ở đất ${mobEl} — đổi sang ${heKhacLai(mobEl).join(' / ')} thì chịu đòn nhẹ hơn (phím C → Khế Ước)` };
+  }
+  if (heKhac(axieEl, mobEl)){
+    const mul = pha(HE_LOI);
+    return { ket:1, mul, sac:k, mau:'#7ec850',
+             txt:`✦ ${gA} ${axieEl} khắc lại ${gM} ${mobEl} −${pct(mul)}%`,
+             dai:`✦ Axie ${gA} ${axieEl} khắc lại đất ${mobEl} — chịu đòn NHẸ hơn ${pct(mul)}% ở đây` };
+  }
+  const mul = pha(HE_TRUNG);
+  return { ket:0, mul, sac:k, mau:'#c9b889',
+           txt:`${gA} ${axieEl} trung tính`,
+           dai:`${gA} Axie ${axieEl} trung tính với đất ${mobEl} — đổi sang ${heKhacLai(mobEl).join(' / ')} thì chịu đòn nhẹ hơn (phím C → Khế Ước)` };
+}
+
+// ═══════════ SÁU BỘ PHẬN AXIE ═══════════
+// Trục THỨ HAI của con Axie. Trục một là `lop` (hệ phòng thủ — khắc ai, bị ai khắc); trục hai là
+// CẤU TẠO: sáu bộ phận theo `axie-hinh-hoa §1`, và mấy cái cùng nhóm tam giác với chính nó.
+//
+// Nó trả lời đúng hai khoản còn thiếu của tiêu chí Axie Core: *"con Axie mới có MỘT trục"* và
+// *"sáu bộ phận — thứ định nghĩa một con Axie thật — chưa đọc một lần nào"*.
+//
+// ⚠ ĐÂY KHÔNG PHẢI CHỈ SỐ. Nó không đi qua `calcDerived`, không cộng một điểm nào, và kỳ vọng
+// trên cả chín lớp quái bằng nhau cho mọi con — xem khối `HE_TB` ở trên. Luật *"Axie 0 chỉ số"*
+// còn nguyên, và `tests/test_hethu §4` vẫn gác nó.
+const BP_TEN  = ['mat', 'tai', 'sung', 'mieng', 'lung', 'duoi'];
+const BP_NHAN = { mat:'Mắt', tai:'Tai', sung:'Sừng', mieng:'Miệng', lung:'Lưng', duoi:'Đuôi' };
+// Độ sắc chạy từ TẠP tới THUẦN. Sàn CỐ Ý không phải 0: một con tạp hoàn toàn mà hệ số phẳng lì
+// ×1,00 là con Axie đó **tắt hẳn** cơ chế cho người đang đeo nó, tức trở lại đúng cái skin mà cả
+// đợt này sinh ra để gỡ. 0,45 thì nó vẫn còn nói được điều gì đó, chỉ là nói khẽ.
+const BP_SAC_MIN = 0.45, BP_SAC_MAX = 1.50;
+// Mấy bộ phận thuộc CÙNG NHÓM tam giác với `lop` của chính con Axie. `null` khi con đó chưa khai
+// bộ phận — và `null` phải đọc ra "không biết", không đọc ra 0: 0 là *tạp nhất có thể*, một phán
+// quyết hẳn hoi, còn thiếu dữ liệu thì phải lui về hành vi cũ (sắc = 1).
+function bpCung(c){
+  if (!c || !c.bp || !ELEM[c.lop]) return null;
+  const g = ELEM[c.lop].nhom;
+  let n = 0;
+  for (const k of BP_TEN){ const e = ELEM[c.bp[k]]; if (e && e.nhom === g) n++; }
+  return n;
+}
+function bpSac(cung){
+  if (typeof cung !== 'number') return 1;
+  return BP_SAC_MIN + (BP_SAC_MAX - BP_SAC_MIN) * (cung / BP_TEN.length);
+}
+// Cửa DUY NHẤT hỏi "người chơi này đang sắc tới đâu". Lui về 1 khi chưa có avatar hoặc con đó
+// chưa khai bộ phận ⇒ hệ số y hệt bản trước đợt này, và save cũ không phải di trú gì.
+function axieSac(p){
+  const pl = p || (typeof player !== 'undefined' ? player : null);
+  if (!pl) return 1;
+  const id = avatarId(pl);
+  const cung = id ? bpCung(CHI_MAP[id]) : null;
+  return cung === null ? 1 : bpSac(cung);
+}
+// Đọc ra cho người chơi: "Thuần 5/6" / "Tạp 1/6", kèm một chữ nói nó NGHĨA LÀ GÌ. Con số trần
+// trụi không nói được gì — 5/6 là tốt hay xấu thì người chơi không có cách nào đoán.
+function bpHang(cung){
+  if (cung === null || cung === undefined) return null;
+  if (cung >= 5) return { ten:'Thuần',     mau:'#ffd76a', y:'chuyên gia — cực nhẹ đòn ở vùng hợp, cực nặng ở vùng khắc' };
+  if (cung >= 3) return { ten:'Pha',       mau:'#9fd0ff', y:'cân — mạnh yếu vừa phải ở cả hai phía' };
+  return           { ten:'Tạp',       mau:'#c9b889', y:'thợ đụng — không bao giờ tệ, không bao giờ xuất sắc' };
+}
+// Một dòng đọc được cho DANH SÁCH Axie: hạng + sáu bộ phận, mỗi bộ phận tô theo lớp của nó.
+// Đây là chỗ DUY NHẤT người chơi nhìn thấy cả sáu — bảng Nhân Vật chỉ in được cái hạng.
+function bpDongMoTa(c){
+  const cung = bpCung(c), h = bpHang(cung);
+  if (!h) return '';
+  const o = BP_TEN.map(k => {
+    const e = ELEM[c.bp[k]];
+    return `<span style="color:${e ? e.color : '#c9b889'}" title="${BP_NHAN[k]}: ${c.bp[k]}">${e ? e.glyph : '?'}</span>`;
+  }).join('');
+  return `<br><b style="color:${h.mau}">${h.ten} ${cung}/6</b> <span style="letter-spacing:2px">${o}</span>`
+       + ` <span style="opacity:.7">${h.y}</span>`;
+}
+window.bpCung = bpCung; window.bpSac = bpSac; window.axieSac = axieSac; window.bpHang = bpHang;
+window.bpDongMoTa = bpDongMoTa;
+
+// ── "CON NÀY Ở ĐẤT ĐANG ĐỨNG THÌ THẾ NÀO" — cửa DUY NHẤT ──────────────────────────────────
+// Bảng Khế Ước trước đây giải thích cơ chế rất kỹ nhưng KHÔNG biết người chơi đang đứng ở đâu,
+// nên nó không trả lời được câu người chơi thật sự hỏi: *nên cắm con nào BÂY GIỜ*. Một bảng
+// thông số tuyệt đối thì bắt người đọc tự làm phép so sánh trong đầu — đúng cái mà hệ trang bị
+// đã phải học một lần rồi và chữa bằng `itemCompareHtml`.
+//
+// ⚠ ĐI QUA `heThuKet` + `bpSac(bpCung(c))`, đừng tự nhân hệ số. Chép `1.12`/`0.9` hay công thức
+// độ sắc ra thêm một chỗ là thêm một chỗ nói dối được — và kiểu nói dối đó không lỗi nào báo.
+// ⚠ TRẢ `null` KHI ĐẤT KHÔNG CÓ HỆ (trong thành, hành lang trộn hệ như Lối Mòn Corran). In
+// "trung tính" ở đó là nói dối theo chiều ngược lại: nó khiến người chơi tưởng đã hỏi và đã
+// được trả lời, trong khi chỗ đó vốn không có câu trả lời nào.
+function axieTaiDay(c, mapId){
+  const mid = mapId || (typeof curMap !== 'undefined' ? curMap : null);
+  if (!mid || !c || !ELEM[c.lop] || typeof mapBanSac !== 'function') return null;
+  const he = (mapBanSac(mid) || {}).he;
+  if (!he || !ELEM[he]) return null;
+  const kq = heThuKet(he, c.lop, bpSac(bpCung(c)));
+  if (!kq) return null;
+  const pct = Math.round(Math.abs(kq.mul - 1) * 100);
+  const gM = ELEM[he].glyph;
+  const txt = kq.ket > 0 ? `✦ chịu đòn nhẹ hơn −${pct}% ở đất ${gM} ${he}`
+            : kq.ket < 0 ? `⚠ ăn đòn nặng hơn +${pct}% ở đất ${gM} ${he}`
+                         : `trung tính với đất ${gM} ${he}`;
+  return { he, ket:kq.ket, mul:kq.mul, pct, mau:kq.mau, txt };
+}
+window.axieTaiDay = axieTaiDay;
+// Hồi cho số bay khắc hệ. Nó bắn theo TỪNG ĐÒN TRÚNG, mà một trận đông quái có hàng chục đòn
+// mỗi giây — không có hồi thì nó vừa phủ kín màn vừa đẩy tràn mảng `floats` (trần 70) và nuốt
+// mất mọi thông báo khác. Để ngoài `player` để nó không chui vào save.
+//
+// ⚠ MỐC KHỞI TẠO LÀ `-Infinity`, KHÔNG PHẢI 0 — và 0 là một lỗi THẬT, bài kiểm tìm ra.
+// `performance.now()` đếm từ lúc NẠP TRANG, nên với mốc 0 thì điều kiện `now - 0 > 2600` sai
+// trong suốt **2,6 giây đầu đời của trang**: ai vừa vào game mà ăn đòn ngay thì không thấy gì,
+// và cái không-thấy đó đọc ra y hệt "cơ chế không chạy". Nó cũng làm bài kiểm phụ thuộc vào
+// trang nạp nhanh hay chậm — `test_hethu §7a` đỏ 3/3 vì đúng chuyện đó, trong khi `heThuKet`
+// trả về hoàn toàn đúng. `-Infinity` thì đòn ĐẦU TIÊN luôn nói ra, rồi mới vào nhịp hồi.
+let _heFloatMs = -Infinity;
+const HE_FLOAT_HOI = 2600;
+// Cửa mở lại nhịp hồi, CHỈ cho bài kiểm. Không có nó thì không cách nào đo được kênh này một
+// cách xác định: mốc so với `performance.now()` là THỜI GIAN THẬT, mà vòng game vẫn chạy giữa
+// hai lệnh của bài kiểm — nên một cú đánh ngoài ý muốn đóng cửa hồi ngay trước lúc đo, và bài
+// báo "cơ chế câm" trong khi nó chạy hoàn hảo. Đã đo đúng thế: 2/3 lượt xanh, lượt thứ ba đỏ.
+// Nó KHÔNG đổi hành vi của game — chỉ đặt lại một cái mốc.
+window.__heFloatReset = function(){ _heFloatMs = -Infinity; };
+// Một dòng, kiểu Ragnarok: đất của ai · lớp Axie nào · mang gì tới · nơi duy nhất rơi cái gì.
 function banSacHtml(id){
   const b = mapBanSac(id); if (!b) return '';
   const bits = [`Đất của <b style="color:#ffd76a">${b.tenChuDao}</b> <span style="opacity:.6">${b.tyLe}%</span>`];
-  if (b.he && ELEM[b.he]) bits.push(`hệ <b style="color:${ELEM[b.he].color}">${b.he}</b> <span style="opacity:.6">${b.tyLeHe}%</span>`);
+  if (b.he && ELEM[b.he]){
+    bits.push(`lớp <b style="color:${ELEM[b.he].color}">${ELEM[b.he].glyph} ${b.he}</b> <span style="opacity:.6">${b.tyLeHe}%</span>`);
+    // Cơ chế vô hình là cơ chế không tồn tại: không có dòng này thì tam giác chạy suốt mà người
+    // chơi không có một cửa nào để học nó.
+    const kh = heKhacLai(b.he);
+    if (kh.length) bits.push(`mang <b style="color:${ELEM[kh[0]].color}">${kh.join(' · ')}</b> tới`);
+  }
   if (b.cot && COT_DONG[b.cot]) bits.push(`nơi <b>duy nhất</b> rơi Cốt <b style="color:${COT_DONG[b.cot].mau}">${COT_DONG[b.cot].ten}</b>`);
   let ruong = '';
   if (typeof ruongCuaMap === 'function'){
@@ -8597,6 +9895,11 @@ function banRaiVung(mid){
       const vai = d.vai ? d.vai[i % d.vai.length] : null;
       const pk = { mob: d.mob, x: p.x, y: p.y, n, r: 90 + n * 4, vung: v.id, farm: !!v.farm };
       if (vai) pk.vai = vai;
+      // Hệ của cụm: `d.he` (một dòng dân số) > `v.he` (cả miền) > hệ nền của loài trong `MOBS`.
+      // Ba nấc, cùng khuôn với vai trò. Không khai gì thì loài giữ hệ của nó — nên map chưa
+      // được gán vùng vẫn chạy y như cũ.
+      const _he = d.he || v.he || null;
+      if (_he) pk.he = _he;
       if (v.tiep) pk.tiep = true;
       out.push(pk); daDat.push(p); datMien.push(p);
     }
@@ -8893,6 +10196,7 @@ function buildWorld(){
   // đều đọc lúc gọi, nên hai dòng này làm đúng toàn bộ cùng lúc. Camera đã kẹp theo MAP sẵn.
   MAP.w = md.w || 2600;  MAP.h = md.h || 1900;
   sanIsoDung();          // bảng viên nền — phải sau khi MAP.w/h đã đúng, xem sanIsoDung()
+  dungTuong();           // tường thành — cùng lý do: đọc MAP.w/h để tách cuống cổng khỏi mép
   capNhatKhungMinimap();   // khung bản đồ thu nhỏ chép cứng tỉ lệ 2600:1900 — xem hàm
   packsMd(md);   // A4: bung miền dân số thành bãi quái TRƯỚC mọi thứ khác đọc md.packs
   mobs = []; pickups = []; projectiles = []; effects = []; floats = []; groundLoot = []; // đồ dưới đất KHÔNG theo người sang map khác
@@ -8924,11 +10228,11 @@ function buildWorld(){
     // người chơi cận chiến không với tới được mục tiêu ưu tiên (docs §3.6).
     // `pk.vai` (nếu có) THẮNG vai mặc định của loài — đây là toàn bộ cơ chế A1: cùng một loài,
     // bãi khác thì vai khác, nên map ba loài vẫn có sáu kiểu đánh.
-    const _vai = pk.vai ? { role: pk.vai } : undefined;
+    const _vai = (pk.vai || pk.he) ? { role: pk.vai || undefined, he: pk.he || undefined } : undefined;
     if (pk.farm) _baiFarm.add(packId);   // Bãi Farm: quái ở đây rơi đậm hơn — xem FARM_THUONG
     for (let j = 0; j < soCon - (pk.tiep ? 1 : 0); j++) spawnMob(pk.mob, zone, packId, false, _vai); // dàn trải cụm quái, tránh chồng hình
     if (pk.tiep){
-      const t = spawnMob(pk.mob, zone, packId, false, { role:'tiep' });
+      const t = spawnMob(pk.mob, zone, packId, false, { role:'tiep', he: pk.he || undefined });
       const a = Math.random() * Math.PI * 2; t.x = pk.x + Math.cos(a) * 128; t.y = pk.y + Math.sin(a) * 128; t.homeX = t.x; t.homeY = t.y;
       if (inObstacle(curMap, t.x, t.y, 16)){ const _f = nearestFree(curMap, t.x, t.y); t.x = _f.x; t.y = _f.y; }
     }
@@ -9070,6 +10374,9 @@ function spawnMob(type, zone, pack, vfx, opts){
   }
   const m = {
     type, def, name: def.name, role, tiep: role === 'tiep',
+    // ⚠ Hệ nằm trên CON QUÁI, không phải trên `def`. `def` thường LÀ đối tượng trong `MOBS`
+    // (chỉ clone khi vai có hệ số khác 1), nên ghi hệ vào đó là đổi hệ của loài ấy ở mọi map.
+    he: (opts && opts.he) || def.el || null,
     x: zone ? zone.x + rnd(-zone.r, zone.r) : rnd(200, MAP.w-200),
     y: zone ? zone.y + rnd(-zone.r, zone.r) : rnd(200, MAP.h-200),
     zone, pack: pack ?? null, hp: mobHp(def), maxHp: mobHp(def), atkT: rnd(0,1), dead:false, face: 0,
@@ -9082,7 +10389,7 @@ function spawnMob(type, zone, pack, vfx, opts){
   // buildWorld() dựng cả map cùng lúc, gọi vfx ở đó sẽ spam hàng chục cột sáng cùng lúc, chỉ
   // bật cho respawn từng con lẻ, xem game.js chỗ "respawn dead mobs").
   if (vfx){
-    const bc = (def.el && ELEM[def.el]) ? ELEM[def.el].color : (def.color || '#ffd76a');
+    const bc = (m.he && ELEM[m.he]) ? ELEM[m.he].color : (def.color || '#ffd76a');
     addEffect({ type:'spawnbeam', x:m.x, y:m.y, color:bc, dur:0.6 });
   }
   return m;
@@ -9144,6 +10451,11 @@ function spawnZoneBoss(bd, kind){
   // (file PNG của nhóm này đã xoá; không kế thừa thì boss rơi về hình mực dự phòng)
   const _src = MOBS[bd.img];
   if (_src && _src.skel){ def.skel = _src.skel; def.skelPal = _src.skelPal; def.img = ''; }
+  // `anh` — TRANH CỦA CHÍNH CON TRÙM NÀY, và nó thắng tất cả. Phải đứng SAU khối kế thừa ở
+  // trên, nếu không dòng `def.img = ''` sẽ xoá luôn thứ vừa khai.
+  // Trước khoá này, 40 con trùm chia nhau 23 tạo hình và `mocnhan` một mình gánh 5 con.
+  // Khai `anh:'<tên tệp>'` trong BOSS_DEFS là con đó tách ra khỏi đàn — không đụng dòng máy nào.
+  if (bd.anh){ def.anh = bd.anh; def.skel = null; def.skelPal = null; def.img = ''; }
   // role:'can' cho có, không phải để dùng: boss vùng dựng thẳng ở đây chứ không qua spawnMob nên
   // trước giờ `m.role` là undefined. Không ai đọc nên không vỡ, nhưng đếm vai trò trong một map
   // thì hiện ra một khoá "undefined" — số liệu bẩn là số liệu không tin được.
@@ -9288,6 +10600,9 @@ function bossHitPlayer(m, mul){
   const gapB = m.def.lv - player.level; // Áp Bức chiều ngược
   if (gapB > 10) dmg = Math.round(dmg*1.6); else if (gapB >= 6) dmg = Math.round(dmg*1.3);
   player.hp -= dmg; player.hurtT = 0.3; player.combatT = 4;
+  // Bộ đếm cú trúng đòn — `net.js` gửi số này thay vì gửi `hurtT` còn lại. Cùng lý do với
+  // `_atkSeq`: một cú giật dài 0,25-0,30 s lọt gọn giữa hai ảnh chụp 10 Hz.
+  player._hitSeq = (player._hitSeq || 0) + 1;
   addFloat(player.x, player.y-30, dmg, '#ff5a3a', 17);
   addEffect({ type:'ring', x:player.x, y:player.y-10, r:26, color:'#ff5a3a' });
   AudioSys.sfx('hurt', 0.8);
@@ -9347,13 +10662,19 @@ function drawBossTele(m){
 // shake: 0 TẮT · 1 NHẸ (mặc định) · 2 ĐẦY. Trước đây là boolean và mặc định `false` để chống
 // chóng mặt — nhưng bật/tắt là quá thô, và hậu quả là TOÀN BỘ 12 chỗ đặt shakeT/shakeMag trong
 // game không ai nhìn thấy. Diablo luôn rung, chỉ là rung rất khẽ và CÓ HƯỚNG.
-const SETTINGS = Object.assign({ bgm:35, sfx:60, lowFx:false, mobName:'gon', minimap:true, shake:1, questTracker:true, combatLog:true, perfHud:false, res:'auto', dmgNum:true, zoom:'xa' },
+// `amThanh` là CÔNG TẮC TỔNG, tách hẳn khỏi hai mức `bgm`/`sfx`. Tắt bằng cách kéo cả hai
+// thanh về 0 thì người chơi MẤT mức đã chỉnh — bật lại phải dò lại từ đầu, nên trong thực tế
+// không ai tắt, họ chỉ tắt loa máy. Công tắc riêng giữ nguyên hai con số.
+const SETTINGS = Object.assign({ bgm:35, sfx:60, amThanh:true, lowFx:false, mobName:'gon', minimap:true, shake:1, questTracker:true, combatLog:true, perfHud:false, res:'auto', dmgNum:true, zoom:'xa' },
   (()=>{ try { return JSON.parse(localStorage.getItem('vlcm_settings') || '{}'); } catch { return {}; } })());
 // Save cũ lưu `shake` là boolean. Không di trú thì Object.assign ghi đè `false` lên mặc định
 // mới và người chơi cũ mắc kẹt ở mức TẮT vĩnh viễn — mà họ chưa từng chọn tắt, đó chỉ là
 // mặc định cũ. `true` (đã tự bật) thì cho lên ĐẦY.
 if (typeof SETTINGS.shake === 'boolean') SETTINGS.shake = SETTINGS.shake ? 2 : 1;
 SETTINGS.shake = clamp(SETTINGS.shake | 0, 0, 2);
+// Save đời trước bản này KHÔNG có khoá `amThanh` ⇒ Object.assign giữ mặc định `true`, tức
+// người chơi cũ mở game lên vẫn có tiếng y như hôm qua. Ép về boolean phòng khoá bị ghi tay.
+SETTINGS.amThanh = SETTINGS.amThanh !== false;
 // Bơm mức zoom đã lưu vào biến riêng (xem ghi chú ở ZOOM_CHON) rồi tính lại VW/VH.
 if (ZOOM_MUC[SETTINGS.zoom]) ZOOM_CHON = SETTINGS.zoom;
 capNhatTamNhin();
@@ -9369,7 +10690,8 @@ function saveSettings(){ try { localStorage.setItem('vlcm_settings', JSON.string
 // Nhạc trong màn chơi vẫn TRỐNG, và để trống có chủ ý: playBgm() thấy tên rỗng là thoát ngay,
 // không phát sinh một yêu cầu mạng nào (trỏ tới tệp không có sẽ thành 404 mỗi lần đổi map).
 // Thêm nhạc mới: bỏ tệp vào assets/music/ rồi điền lại đúng ba hằng số dưới đây, không cần sửa
-// chỗ nào khác. Nút ♪ tự hiện khi có ít nhất một bản (xem uiSyncBgmBtn).
+// chỗ nào khác. (Nút ♪ và `uiSyncBgmBtn` đã GỠ — nay là nút loa 🔊 trên HUD + phím L, và nó
+// tắt CẢ nhạc lẫn hiệu ứng chứ không riêng nhạc: xem `tatMoAmThanh`.)
 // ⚠ ĐÍNH CHÍNH cho khối chú thích ngay bên trên. Commit c8ac08f xoá 13 tệp nhạc với lý do
 // "13 bản nhạc phim kiếm hiệp Hoa ngữ". Kiểm lại thì lý do đó SAI với gần hết số đó: giải mã
 // từng tệp ra mono 8 kHz, dựng đường bao RMS 400 đoạn rồi đối chiếu với 15 bản trong kho
@@ -9397,6 +10719,19 @@ const BGM_TRACKS = {
   mongco:     'bgm_mongco',      // lunar_battle — thảo nguyên tro
   nhanmon:    'bgm_nhanmon',     // pvp — ải cuối, căng nhất
   deep: 'bgm_dungeon',         // Tầng Sâu
+  // Lò Khắc: mượn bản PvP — chú thích của chính nó ghi "ải cuối, căng nhất", và một sảnh 15 đợt
+  // dồn liên tục thì đúng chất đó hơn nhạc hang. Dùng chung nhạc là nếp đã có (bốn map rẻo rừng
+  // Corran dùng chung `bgm_chungnam`), không phải chỗ cắt góc.
+  // ⚠ Map nào KHÔNG có mục ở đây thì `nhacMap()` gọi `stopBgm()` — vào map là im bặt, và
+  // `test_nhacnen` bắt đúng chuyện đó. Thêm map mới thì thêm luôn một dòng ở bảng này.
+  lokhac: 'bgm_nhanmon',
+  // ⚠ SÀN ĐẤU PHẢI CÓ NHẠC — `test_nhacnen` bắt được chỗ này và nó đúng: một map không khai
+  // nhạc thì `nhacMap()` gọi `stopBgm()`, tức bước qua cổng là IM BẶT. Không lỗi nào báo.
+  //
+  // Dùng lại `bgm_nhanmon` chứ không thêm tệp mới, và không phải để tiết kiệm: tên gốc của
+  // chính bản nhạc ấy trong kho là **`pvp`** (xem chú thích ở `nhanmon` ngay trên). Đúng bản
+  // nhạc, đúng chỗ. Dùng chung là nếp sẵn có ở đây — corran/loimon/trungnut chung một bản.
+  pvp: 'bgm_nhanmon',
 };
 const BGM_INTRO = 'bgm_intro';   // màn mở đầu & chọn nhân vật
 // boss.wav trong kho, chuyển sang mp3. Chỗ gọi playBgm(BGM_BOSS) lúc vào trận trùm đã có sẵn
@@ -9404,8 +10739,12 @@ const BGM_INTRO = 'bgm_intro';   // màn mở đầu & chọn nhân vật
 const BGM_BOSS = 'bgm_boss';
 const AudioSys = {
   bgm: null, bgmName: '', started: false, cache: {}, last: {},
-  bgmVol(){ return (SETTINGS.bgm/100) * 0.85; },
-  sfxVol(){ return SETTINGS.sfx/100; },
+  // ⚠ CỬA DUY NHẤT. Mọi thứ phát ra tiếng đều phải đi qua `tat()` — nếu công tắc tổng được
+  // hỏi ở nhiều chỗ thì sớm muộn có một đường quên hỏi, và triệu chứng là "đã tắt tiếng rồi
+  // mà thỉnh thoảng vẫn kêu một cái", thứ không ai mô tả nổi cho ra lỗi.
+  tat(){ return SETTINGS.amThanh === false; },
+  bgmVol(){ return this.tat() ? 0 : (SETTINGS.bgm/100) * 0.85; },
+  sfxVol(){ return this.tat() ? 0 : SETTINGS.sfx/100; },
   playBgm(name){
     if (!name || this.bgmName === name) return;   // name rỗng = chưa có nhạc, im lặng chứ không 404
     this.bgmName = name;
@@ -9424,7 +10763,9 @@ const AudioSys = {
     if (!this.bgmName){ this.bgm = null; return; }
     const a = new Audio('assets/music/' + this.bgmName + '.mp3');
     a.loop = true; a.volume = this.bgmVol();
-    a.play().catch(()=>{ /* autoplay bị chặn — chờ tương tác */ });
+    // Đang tắt tiếng thì GIỮ tên bài (đổi map vẫn ghi nhận) nhưng không phát: tải + giải mã
+    // một tệp mp3 để nghe ở âm lượng 0 là trả tiền cho thứ không ai nhận được.
+    if (!this.tat()) a.play().catch(()=>{ /* autoplay bị chặn — chờ tương tác */ });
     this.bgm = a;
   },
   tryStart(){
@@ -9433,9 +10774,12 @@ const AudioSys = {
     if (!this.bgmName) this.bgmName = BGM_TRACKS[curMap] || null;   // 'bgm_safe' cũng đã xoá
     this._startTrack();
   },
-  refreshBgmVol(){ if (this.bgm){ this.bgm.volume = this.bgmVol(); if (SETTINGS.bgm <= 0) this.bgm.pause(); else this.bgm.play().catch(()=>{}); } },
+  // ⚠ HỎI ÂM LƯỢNG HIỆU DỤNG, đừng hỏi `SETTINGS.bgm`. Hỏi thanh trượt thì tắt công tắc tổng
+  // xong bản nhạc vẫn QUAY ở volume 0: không ai nghe thấy, nhưng máy vẫn giải mã mp3 suốt
+  // phiên — tức đúng thứ người chơi tắt tiếng để tránh.
+  refreshBgmVol(){ if (this.bgm){ const v = this.bgmVol(); this.bgm.volume = v; if (v <= 0) this.bgm.pause(); else this.bgm.play().catch(()=>{}); } },
   sfx(name, vol){
-    if (SETTINGS.sfx <= 0) return;
+    if (this.tat() || SETTINGS.sfx <= 0) return;
     const now = performance.now();
     if (this.last[name] && now - this.last[name] < 70) return; // chống spam âm
     this.last[name] = now;
@@ -9453,25 +10797,53 @@ const AudioSys = {
 // Không thay bằng bộ giọng khác vì chưa có bản thu nào để thay.
 window.addEventListener('pointerdown', ()=>AudioSys.tryStart());
 window.addEventListener('keydown', ()=>AudioSys.tryStart());
-// Nút ♪ chỉ có nghĩa khi có nhạc để tắt/bật. Chưa có bản nào thì ẩn đi — nút bấm không làm gì
-// là thứ người chơi thử đúng một lần rồi mất lòng tin vào cả thanh nút.
-function uiSyncBgmBtn(){
-  const b0 = document.getElementById('btn-music');
-  if (b0) b0.classList.toggle('hidden', Object.keys(BGM_TRACKS).length === 0 && !BGM_INTRO && !BGM_BOSS);
+// ═══════ CÔNG TẮC TỔNG ÂM THANH ═══════
+// Trước bản này game KHÔNG có cách nào tắt tiếng ngoài việc mở Cài Đặt rồi kéo HAI thanh
+// trượt về 0 — và làm thế là MẤT luôn hai mức đã chỉnh. Nút ♪ cũ thì đã gỡ cùng khối
+// `#mc-drop`, và nó cũng chỉ tắt được nhạc nền chứ không tắt được tiếng đánh nhau.
+//
+// ⚠ MỘT CỬA, BA CHỖ BẤM. Nút loa trên HUD · phím L · hàng trong Cài Đặt đều gọi đúng
+// hàm này. Ba chỗ tự lật `SETTINGS.amThanh` là ba chỗ phải nhớ vẽ lại nút + lưu + hãm nhạc,
+// quên một việc ở một chỗ là "bấm chỗ này thì ăn, bấm chỗ kia thì không".
+window.tatMoAmThanh = function(bat){
+  SETTINGS.amThanh = (bat === undefined) ? !SETTINGS.amThanh : !!bat;
+  saveSettings();
+  AudioSys.refreshBgmVol();
+  // Đang tắt mà bật lại giữa chừng: track có thể chưa bao giờ được dựng (xem `_startTrack`),
+  // nên `refreshBgmVol` không có gì để mà mở. Dựng lại từ đầu.
+  if (SETTINGS.amThanh && AudioSys.started && !AudioSys.bgm) AudioSys._startTrack();
+  amVeNut();
+  // Bảng Cài Đặt có thể đang mở ở sau lưng — một công tắc hai cửa mà chỉ một cửa đổi thì
+  // đọc ra là "bấm không ăn" — cùng bài học đã ghi cho bốn công tắc nhặt đồ.
+  const ps = document.getElementById('panel-settings');
+  if (ps && !ps.classList.contains('hidden') && window.setTab !== 'phim') renderSettings();
+  return SETTINGS.amThanh;
+};
+// Vẽ lại nút loa trên HUD. Tách ra riêng vì nó còn được gọi lúc nạp trang để nút khởi
+// hiện sai trạng thái trong một nhịp đầu.
+// ⚠ TRANH THẬT, KHÔNG PHẢI EMOJI. Bản đầu dùng 🔊/🔇 — chúng vẽ theo bộ phông của TỪNG máy
+// (màu rực trên macOS, viền phẳng trên Windows, có máy ra hình vuông rỗng), nên cái nút đứng
+// cạnh khung HUD kim loại đọc ra là một ký tự lạc chứ không ra một nút của bộ giao diện này.
+// Nay là hai tấm cắt từ bộ UI gothic (`tools/ui/nuong_uigothic.py`), 3 KB một cái.
+const AM_ANH = { bat:'assets/ui/gt_loa_bat.webp', tat:'assets/ui/gt_loa_tat.webp' };
+function amVeNut(){
+  const b = document.getElementById('btn-am');
+  if (!b) return;
+  const on = SETTINGS.amThanh !== false;
+  // Đổi `src` chứ không dựng thẻ mới: dựng mới là trình duyệt nháy một khung trắng mỗi lần
+  // bấm, mà cái nút này thì bấm đi bấm lại.
+  let i = b.querySelector('img');
+  if (!i){ b.textContent = ''; i = document.createElement('img'); i.alt = ''; b.appendChild(i); }
+  i.src = on ? AM_ANH.bat : AM_ANH.tat;
+  b.classList.toggle('am-tat', !on);
+  b.title = (on ? 'Tắt âm thanh' : 'Bật âm thanh') + ' (phím L)';
+  b.setAttribute('aria-pressed', on ? 'false' : 'true');
 }
-uiSyncBgmBtn();
-// ⚠ KIỂM NULL. Nút ♪ nằm trong `#mc-drop` — cái thả xuống ĐÃ GỠ khi nút ≡ chuyển sang mở
-// thẳng Menu Hệ Thống. `getElementById(...).addEventListener` trên một phần tử không còn tồn
-// tại ném "Cannot read properties of null" NGAY LÚC NẠP TRANG và giết chết mọi thứ đăng ký
-// phía sau nó — đúng cái bẫy đã ghi ở vòng nối bảng (`btn-inv`). Nhạc nền vẫn chỉnh được:
-// thanh trượt 🎵 trong Cài Đặt là cửa đầy đủ hơn cái nút bật/tắt này.
+window.amVeNut = amVeNut;
 {
-  const bm = document.getElementById('btn-music');
-  if (bm) bm.addEventListener('click', ()=>{
-    SETTINGS.bgm = SETTINGS.bgm > 0 ? 0 : 35;
-    saveSettings(); AudioSys.refreshBgmVol();
-    bm.style.opacity = SETTINGS.bgm > 0 ? '1' : '0.4';
-  });
+  const b = document.getElementById('btn-am');
+  if (b) b.addEventListener('click', ()=>window.tatMoAmThanh());
+  amVeNut();
 }
 
 // ---------- Input ----------
@@ -9516,6 +10888,12 @@ function phimXuong(e){
   if (e.key.toLowerCase()==='p') togglePanel('party');    // Tổ Đội
   if (e.key.toLowerCase()==='h') togglePanel('friend');   // Bạn Bè
   if (e.key.toLowerCase()==='u'){ SETTINGS.minimap = !SETTINGS.minimap; saveSettings(); }
+  // L — LOA. Công tắc tổng âm thanh, cùng họ với U (cả hai lật một cờ, không mở cửa sổ nào).
+  // ⚠ KHÔNG dùng M: M đã là Bản Đồ. Chữ L đọc ra "loa", hợp với bản Việt hoá và chưa ai giữ.
+  if (e.key.toLowerCase()==='l' && !e.ctrlKey && !e.altKey && !e.metaKey){
+    const on = window.tatMoAmThanh();
+    if (player) addFloat(player.x, player.y-40, on ? '🔊 Âm thanh: BẬT' : '🔇 Âm thanh: TẮT', on ? '#a0ffe9' : '#ff9a6a', 13);
+  }
   if (e.key.toLowerCase()==='o') togglePanel('settings');
   // F6 — bảng Hướng Dẫn & Phím Tắt. preventDefault vì F6 mặc định của trình duyệt là nhảy
   // focus sang thanh địa chỉ: không chặn thì bấm một cái là mất luôn bàn phím khỏi game.
@@ -9537,6 +10915,10 @@ function phimXuong(e){
   if (e.key.toLowerCase()==='t') useManaPot();   // T kề R trên bàn phím — hai ô thuốc kề nhau trên thanh
   if (e.key.toLowerCase()==='g' && nearGate && player && !dead){
     if (nearGate.deep) deepStart();
+    // Lò Khắc KHÔNG cần nhánh rời riêng ở đây: cửa ra khai `to`, và travelTo() đã có chốt
+    // `if (LK && mapId !== LK_MAP)`. Thêm chốt thứ hai ở đây là dựng bản sao thứ hai của một
+    // luật đang sống — sửa một bên là hai bên lệch.
+    else if (nearGate.lokhac) window.lkStart();
     // Đang trong Tầng Sâu mà đi cổng thoát: coi như RÚT LUI, đừng để mất trắng kho tạm chỉ vì
     // người chơi bấm nhầm cổng quen tay thay vì nút Rút Lui.
     else if (DEEP) window.deepLeave();
@@ -9812,7 +11194,7 @@ function takeLoot(g, idx){
   }
   addEffect({ type:'ring', x: g.x, y: g.y, r: 26, color: lootColor(g) });
   groundLoot.splice(idx, 1);
-  tutAdvance('loot');
+  tutGhi('loot');
   return true;
 }
 // Phím J (không truyền toạ độ): với quanh người chơi, ưu tiên món gần nhất.
@@ -9941,13 +11323,35 @@ function drawLootJewel(x, y, col, t){
 // Nhật ký chiến đấu: gộp sát thương/thưởng mỗi đòn thành 1 dòng chữ trong panel góc dưới trái,
 // thay cho số bay đầy màn hình khi AUTO đang đánh nhiều quái cùng lúc (kiểu combat log NGU Idle) —
 // thao tác DOM trực tiếp, không giữ mảng riêng vì log không cần lưu qua save/load
-function logCombat(text, color){
+// ⚠ BA DÒNG TẦN SUẤT CAO NUỐT SẠCH DÒNG THƯỞNG — đo được, không phải lo xa. Đánh 900 nhịp ở
+// Rẻo Rừng Corran rồi đếm cả hộp: **15/31 dòng là `⚔`** (một dòng cho MỖI cú đánh), cộng `🩸`
+// mỗi cú ăn đòn và `🛡 phản` mỗi lần phản — trong khi thứ người chơi cần đọc (`☠ Hạ … Nhận:
+// +28 EXP +17◈`) chỉ có một dòng rồi bị đẩy lên mất.
+//
+// ⇒ `gop` — GỘP, KHÔNG BỎ. Cùng khoá với dòng ĐANG ĐỨNG ĐẦU thì cộng dồn vào chính nó
+// (`×N · tổng M`) thay vì đẩy thêm một dòng. Người chơi vẫn đọc được "mình đánh có vào không",
+// mà hộp không còn trôi. Bỏ hẳn dòng đòn thường là chữa một chỗ mù bằng một chỗ mù khác.
+//
+// ⚠ ĐÒN ĐẶC BIỆT KHÔNG ĐƯỢC TRUYỀN `gop` ⇒ không bao giờ bị gộp: `HOÀN HẢO` · `KHẮC HỆ` ·
+// `bị khắc` · `(chống)` · bạo kích · `KHẮC CHẾ` là đúng những dòng đáng dừng mắt, và chúng hiếm.
+//
+// ⚠ CHỈ GỘP VÀO DÒNG ĐẦU, đừng đi tìm khắp hộp. Gộp vào một dòng nằm giữa là thứ tự thời gian
+// của nhật ký nói dối: một cú đánh vừa xảy ra lại hiện ra bên dưới một cú cũ hơn.
+function logCombat(text, color, gop){
   const logEl = el('combat-log');
   if (!logEl) return;
+  const dau = logEl.firstChild;
+  if (gop && dau && dau._gopK === gop.k){
+    dau._gopN += 1; dau._gopV += gop.v;
+    dau.textContent = gop.txt(dau._gopN, dau._gopV);
+    dau.style.color = color || '#e8ecff';
+    return;
+  }
   const row = document.createElement('div');
   row.className = 'cl-row';
   row.style.color = color || '#e8ecff';
-  row.textContent = text;
+  row.textContent = gop ? gop.txt(1, gop.v) : text;
+  if (gop){ row._gopK = gop.k; row._gopN = 1; row._gopV = gop.v; }
   logEl.insertBefore(row, logEl.firstChild);
   while (logEl.children.length > 50) logEl.removeChild(logEl.lastChild);
 }
@@ -10010,10 +11414,10 @@ function hurtMob(m, dmg, source){
   let shieldNote = false, counterNote = false, counteredNote = false, perfectNote = false;
   // Khắc hệ: hệ đòn đánh (VŨ KHÍ, không có thì hệ lớp) khắc hệ quái → +20% sát thương;
   // bị quái khắc → -12%. Chỉ chiều này đọc hệ vũ khí — xem atkElem().
-  const sectEl = atkElem();
-  if (sectEl && m.def.el){
-    if (ELEM[sectEl].beats === m.def.el){ final *= 1.2; counterNote = true; }
-    else if (ELEM[m.def.el] && ELEM[m.def.el].beats === sectEl){ final *= 0.88; counteredNote = true; }
+  const sectEl = atkElem(), mHe = mobHe(m);
+  if (sectEl && mHe){
+    if (heKhac(sectEl, mHe)){ final *= 1.2; counterNote = true; }
+    else if (heKhac(mHe, sectEl)){ final *= 0.88; counteredNote = true; }
   }
   // Áp Bức Võ Công (GDD Boss v2.1): boss cao hơn người chơi → ST bị áp chế theo chênh cấp (tường level mềm)
   if (m.def.bossKind){
@@ -10054,6 +11458,10 @@ function hurtMob(m, dmg, source){
   // Sàn DMG_FLOOR giữ cho không ai kẹt cứng ở 0 sát thương — luôn còn đường gỡ, chỉ là rất chậm.
   if (m.def.def) final *= 1 - m.def.def / (m.def.def + 250);
   final = Math.max(final * DMG_FLOOR, final - mobFlatDef(m));
+  // LÒ KHẮC: chỉ HAI lá đi qua đây — `lo_chua_nguoi` (tăng theo giây trong đợt) và
+  // `chong_chat` (tăng theo đợt). Mọi lá còn lại cộng vào player.atk ở calcDerived, nên
+  // KHÔNG được nhân lại ở đây — nhân hai lần là một lỗi không ai nhìn ra từ bảng chỉ số.
+  if (LK) final *= lkDmgMul();
   final = Math.max(1, Math.round(final));
   m.hp -= final; m.hitT = 0.15;
   // Màu loé theo LOẠI đòn — trước đây `ctx.filter` chỉ làm sáng lên, không phân biệt được gì.
@@ -10125,7 +11533,17 @@ function hurtMob(m, dmg, source){
   {
     const note = perfectNote ? 'HOÀN HẢO ' : counterNote ? 'KHẮC HỆ ' : counteredNote ? 'bị khắc ' : shieldNote ? '(chống) ' : '';
     const color = perfectNote ? '#ff9df0' : counterNote ? '#5db86a' : counteredNote ? '#8a94a8' : shieldNote ? '#8a8a8a' : (source==='crit' ? '#ffd76a' : '#e8ecff');
-    logCombat(`⚔ ${note}-${final} → ${m.def.name}${source==='crit' ? ' (bạo kích)' : ''}`, color);
+    // ⚠ GỘP THEO (TIỀN TỐ × MỤC TIÊU), ĐỪNG LOẠI TRỪ ĐÒN ĐẶC BIỆT. Bản đầu tôi chỉ gộp đòn
+    // THƯỜNG và để `KHẮC HỆ`/`HOÀN HẢO`/bạo kích mỗi cú một dòng — nghe hợp lý, và phép đo bắt
+    // ngay: ở Rẻo Rừng Corran vũ khí khắc hệ đàn heo nên **8/8 cú đều là `KHẮC HỆ`**, tức lũ
+    // dòng quay lại y nguyên và cả phép gộp thành vô dụng đúng ở chỗ nó cần nhất.
+    // Tiền tố nằm TRONG khoá nên hai loại không trộn vào nhau, và nó vẫn nằm trong chữ hiện ra —
+    // người chơi vẫn đọc được "đòn này khắc hệ", chỉ là một dòng thay vì tám.
+    const _bk = source === 'crit';
+    logCombat(`⚔ ${note}-${final} → ${m.def.name}${_bk ? ' (bạo kích)' : ''}`, color,
+      { k:`dmg:${note}:${_bk}:${m.def.name}`, v:final,
+        txt:(n, t) => n > 1 ? `⚔ ${note}${m.def.name} ×${n}${_bk ? ' bạo kích' : ''} — tổng ${t} ST`
+                            : `⚔ ${note}-${t} → ${m.def.name}${_bk ? ' (bạo kích)' : ''}` });
     // Số bay TRÊN ĐẦU QUÁI. Nhật ký góc dưới-trái không thay thế được nó: lúc đang đánh, mắt
     // người chơi ở giữa màn hình, còn hộp nhật ký rộng 260px thì trôi quá nhanh để đọc. Đây là
     // kênh phản hồi CHÍNH của Diablo 3 và game đang không có.
@@ -10159,6 +11577,18 @@ function hurtMob(m, dmg, source){
     player.hp = Math.min(player.maxHp, player.hp + final * 0.25);
   }
   if (m.hp <= 0) killMob(m, source);
+  // ── LÒ KHẮC · hai lá đổi CÁCH ĐÁNH ──────────────────────────────────────
+  if (LK && !m.dead){
+    const _cham = lkCong('cham');
+    if (_cham > 0){ m.slowT = Math.max(m.slowT || 0, 2); m.slowPct = Math.min(m.slowPct == null ? 1 : m.slowPct, 1 - _cham / 100); }
+    // Hai Lưỡi: nhát thứ hai là một lời gọi hurtMob THẬT (ăn giáp, ăn khắc hệ, ăn bạo kích như
+    // mọi đòn khác). `_lkNhat2` chặn đệ quy vô hạn; `!m.dead` chặn killMob chạy hai lần cho
+    // cùng một xác. swingFeel gộp theo cửa sổ 60ms nên hai nhát KHÔNG nối hitstop.
+    if (!_lkNhat2 && (source === 'hit' || source === 'crit')){
+      const _hl = lkCong('haiLuoi');
+      if (_hl > 0){ _lkNhat2 = true; try { hurtMob(m, final * _hl / 100, 'hit'); } finally { _lkNhat2 = false; } }
+    }
+  }
 }
 // ═══════════ PHẦN THƯỞNG KHI HẠ QUÁI — tách QUYẾT ĐỊNH khỏi GHI VÀO ═══════════
 // computeKillRewards() quyết định ĐƯỢC GÌ. applyRewards() ghi vào player và phát phản hồi.
@@ -10180,8 +11610,8 @@ function computeKillRewards(m, source, P, rng){
   const d = m.def;
   const rw = {
     xp:0, xpMul:1, silver:0, khi:0, kills:1,
-    gems:{ tuLa:0, honNguyen:0 }, bikipVH:0,
-    mats:{ manh:0, tichMa:0 },
+    gems:{ honNguyen:0 }, bikipVH:0,
+
     wings:[], items:[], autoSold:[],
     bossPity:null, firstDrop:false, chinhPhat:false, dropSrc:null, gotThan:false,
   };
@@ -10208,8 +11638,9 @@ function computeKillRewards(m, source, P, rng){
     const _oCanh = BAG_SIZES.canh[0] * BAG_SIZES.canh[1];
     if (R() < 0.12 && _sotCho >= _oCanh){ rw.wings.push(Math.floor(R()*2)); _sotCho -= _oCanh; }
   }
-  // đá quý: Tu La (cấp 3+), Hỗn Nguyên (tinh anh)
-  if (d.lv >= 3 && R() < 0.15) rw.gems.tuLa = 1;
+  // Đá rèn: Hỗn Nguyên từ tinh anh. Tu La (15% quái thường lv≥3) ĐÃ GỠ cùng với Rèn Thường —
+  // xem GO_TULA. Cố ý KHÔNG dồn 15% đó sang Hỗn Nguyên: Tu La chỉ nuôi đoạn +7→+9, mà đoạn ấy
+  // nay là việc của Linh Hồn Châu, vốn đã có đường rơi riêng (NGOC_MOI_GIO).
   if (d.elite && R() < 0.35) rw.gems.honNguyen = 1;
   // Sách Kỹ Năng từ tinh anh/boss
   const _bkR = d.bossKind === 'tranai' ? 0.35 : (d.bossKind === 'thuve' || d.boss) ? 0.12 : d.elite ? 0.03 : 0;
@@ -10262,8 +11693,6 @@ function computeKillRewards(m, source, P, rng){
     }
   }
   // Vật liệu
-  if (!d.boss && !d.bossKind && R() < (d.elite ? 1 : 0.08)) rw.mats.manh = 1;
-  if (d.bossKind === 'thuve') rw.mats.tichMa = 1 + (R() < 0.5 ? 1 : 0);
   if (d.bossKind === 'tranai'){
     const _today = new Date().toDateString();
     const cp = P.chinhPhat;
@@ -10286,7 +11715,6 @@ function applyRewards(rw, m){
     if (bagThem(_w)) addFloat(m.x, m.y-114, `${_d.name}!`, _d.color, 15);
     else dropToGround({ k:'item', it:_w }, m.x, m.y);
   }
-  if (rw.gems.tuLa){ player.gems.tuLa += rw.gems.tuLa; logCombat('+1 ◆ Tu La Tinh Thạch', '#e84a6a'); }
   if (rw.gems.honNguyen){ player.gems.honNguyen += rw.gems.honNguyen; logCombat('+1 ❖ Hỗn Nguyên Thạch', '#b08ae8'); }
   if (rw.bikipVH){ player.bikipVH = (player.bikipVH || 0) + rw.bikipVH; addFloat(m.x, m.y-100, '+1 📜 Sách Kỹ Năng', '#ffb15c', 13); }
   // ⚠ `cotBossVung` đã GỠ cùng hệ Cốt. Không phải bù lại bằng thứ khác: trùm vùng VỐN ĐÃ
@@ -10308,8 +11736,6 @@ function applyRewards(rw, m){
   if (rw.bossPity !== null) player.bossPity = rw.bossPity;
   // Vật liệu vụn về NHẬT KÝ, không bay lên sân khấu: đo thật 300 con thì 229 chữ bay là vật liệu
   // còn 29 là tên trang bị — mà chữ trang bị lại nhỏ hơn và nhạt hơn. Sân khấu để cho đồ và ngọc.
-  if (rw.mats.manh){ player.mats.manh += rw.mats.manh; logCombat('+1 ❖ Mảnh Trang Bị', '#7ec8d8'); }
-  if (rw.mats.tichMa){ player.mats.tichMa += rw.mats.tichMa; addFloat(m.x, m.y-92, `+${rw.mats.tichMa} ◆ Đá Ấn Rune`, '#e84a6a', 13); }
   if (rw.chinhPhat){
     const _today = new Date().toDateString();
     if (!player.chinhPhat || player.chinhPhat.date !== _today) player.chinhPhat = { date:_today, count:0 };
@@ -10366,6 +11792,9 @@ function killMob(m, source){
   // khi ngươi chủ động rút. Đo được: để chúng phát Lumen như quái thường thì chết vẫn +2730 Lumen,
   // tức là chẳng còn gì để đặt cược và cả chế độ mất sạch ý nghĩa.
   if (m.def.deepMob){ addEffect({ type:'ink', x:m.x, y:m.y-6, vx:0, vy:-28, color:'#c07fe0' }); AudioSys.sfx('die', 0.5); return; }
+  // Quái Lò Khắc: cùng lý do với Tầng Sâu — thưởng trả một cục lúc kết lượt, không rơi lẻ.
+  // ⚠ `lkOnKill` phải chạy TRƯỚC `return`, nếu không hai lá Nổ Xác / Thu Hồn không bao giờ nổ.
+  if (m.def.lkMob){ lkOnKill(m); addEffect({ type:'ink', x:m.x, y:m.y-6, vx:0, vy:-28, color:'#ff9a4d' }); AudioSys.sfx('die', 0.5); return; }
   // Hai cơ chế chỉ đồ Hoàn Hảo có: hạ địch hồi Mana / Sinh Lực. Đặt ở killMob() để mọi đường
   // sát thương (đòn thường, chiêu) đều tính — không phải chỉ đòn tay.
   if (player.excQi && player.qi < player.maxQi){
@@ -10382,6 +11811,9 @@ function killMob(m, source){
       if (dist(player.x, player.y, m.x, m.y) < R && player.hp > 0){
         const dmgN = Math.max(1, Math.round(mobAtk(m.def) * pct * (1 - player.defRed)));
         player.hp -= dmgN; player.hurtT = 0.25; player.combatT = 4;
+        // Bộ đếm cú trúng đòn — `net.js` gửi số này thay vì gửi `hurtT` còn lại. Cùng lý do với
+        // `_atkSeq`: một cú giật dài 0,25-0,30 s lọt gọn giữa hai ảnh chụp 10 Hz.
+        player._hitSeq = (player._hitSeq || 0) + 1;
         addFloat(player.x, player.y - 40, `✸ -${dmgN}`, DIBIEN.noxac.col, 14);
         if (player.hp <= 0){ player.hp = 0; onDeath(); }
       }
@@ -10854,12 +12286,20 @@ function doBasic(){
   const sect = SECTS[player.sect] || SECTS.thieulam;
   const rng = atkRange();   // Đại Thành có nút cộng tầm — xem atkRange()
   const ranged = rng > 200; // Dark Wizard/Sylvan Ranger: đòn thường bắn đạn tầm xa (đánh xa kiểu vây), phái khác vung cận chiến như trước
-  const t = nearestMob(rng);
+  // ⚠ TRONG SÀN ĐẤU THÌ NGƯỜI ĐỨNG TRƯỚC QUÁI trong thứ tự nhắm — nhưng sàn đấu không có quái
+  // nào, nên vế `|| nearestMob` chỉ là chỗ dựa nếu sau này ai thêm quái vào đấy. Ngoài sàn đấu
+  // thì `nguoi` luôn `null`: `pvpDangO()` khoá theo đúng một khoá map.
+  const nguoi = pvpDangO() ? nearestNguoi(rng) : null;
+  const t = nguoi || nearestMob(rng);
   // Ngoài tầm: trước đây bấm Space là IM LẶNG tuyệt đối — không nhích chân, không chữ. Chơi thử:
   // 70 lần bấm ở cấp 1, 0 quái chết. Tutorial ghi "đánh quái gần nhất" nên ai cũng tưởng nhân vật
   // tự chạy tới. Nay đúng là tự chạy tới, tới tầm thì đánh (xem _spaceQueued trong update()).
   if (!t && !player.auto){
-    const far = nearestMob(720);
+    // ⚠ TRONG SÀN ĐẤU PHẢI CHẠY TỚI NGƯỜI, không phải tới quái. Sàn đấu không có con quái nào,
+    // nên nhánh cũ rơi thẳng xuống câu "không có quái trong tầm — mở M hoặc Chọn Trận để tới
+    // bãi quái": đứng giữa một sàn đấu mà game bảo đi tìm bãi quái. Và tệ hơn, nhân vật đứng
+    // im — trong khi cả tính năng này là hai người đi tới chỗ nhau.
+    const far = (pvpDangO() && nearestNguoi(720)) || nearestMob(720);
     if (far){
       setMoveTarget(far.x, far.y); player._spaceQueued = true;
       if ((player._spaceSayT || 0) <= 0){ addFloat(player.x, player.y-44, '→ Chạy tới ' + far.name, '#9fd8ff', 12); player._spaceSayT = 2; }
@@ -10869,7 +12309,11 @@ function doBasic(){
     return;
   }
   if (t) player.face = Math.atan2(t.y-player.y, t.x-player.x);
-  player.cd.basic = player.aspd; player.atkAnim = 0.22;
+  player.cd.basic = player.aspd; player.atkAnim = NV_DANH_GIAY;
+  // Bộ đếm cú đánh — `net.js` gửi số này thay vì gửi thời gian còn lại. Ảnh chụp 10 Hz
+  // không bắt kịp một hoạt cảnh 0,22 s: lấy mẫu trúng lúc nó vừa gần tàn là bên kia bỏ luôn
+  // cú đánh ấy. Một con số chỉ tăng thì không có khe nào để lọt.
+  player._atkSeq = (player._atkSeq || 0) + 1;
   player.nhat2 = !player.nhat2;   // đổi nhát: Dark Knight/Spellblade có hai dáng chém
   player.atkAct = heroActOf(player.sect, 'basic'); // tư thế vung khớp vũ khí của lớp
   const _basicCls = SECT_SFX[player.sect];
@@ -10885,11 +12329,24 @@ function doBasic(){
                player.face, 95, _wf ? _wf.col : sect.color, _wf ? _wf.glow : sect.glow);
   }
   if (t){
+    if (nguoi){
+      // ⚠ ĐÒN LÊN NGƯỜI KHÔNG ĐI QUA `hurtMob` — nó là điểm áp sát thương lên QUÁI, và máu của
+      // người bên kia không nằm trên máy này. Đi qua `pendingHit` để dùng lại đúng khoảnh khắc
+      // lưỡi chạm (0,09 s, xem hSwing) và đúng phép whiff khi đối thủ chạy khỏi tầm.
+      //
+      // Lớp tầm xa thì hẹn theo ĐƯỜNG BAY THẬT (`dist/520`, đúng tốc độ viên đạn vẽ ra bên
+      // dưới), không phải 0,09 s — nếu không thì mũi tên còn giữa đường mà máu đã trừ, và đó
+      // là thứ nhìn ra ngay chứ không phải một sai lệch trừu tượng.
+      const _d = dist(player.x, player.y, t.x, t.y);
+      player.pendingHit = { t: ranged ? Math.min(1.2, _d / 520) : 0.09,
+                            dmg: player.atk * rnd(0.9, 1.12) * PVP_HE,
+                            reach: rng * 1.15, nguoi: t._netId };
+    }
     if (ranged){
       const ang = Math.atan2(t.y-player.y, t.x-player.x);
       const _wp = weaponFx();
       projectiles.push({ x:player.x, y:player.y-10, ang, speed:520, dmg:player.atk*rnd(0.9,1.12), kind:'basic', life:0.9, color:_wp ? _wp.col : sect.color, style:sect.basicProj || 'orb' });
-    } else {
+    } else if (!nguoi) {
       // Hẹn sát thương tới KHUNG TIẾP XÚC thay vì nổ ngay khung đầu. hSwing() đẩy khoảnh khắc
       // lưỡi thật sự chạm ra p≈0.41, nên bắn âm thanh/khựng hình/sát thương ở p=0 là lệch ~8
       // khung — tay còn chưa nhấc lên mà quái đã trúng đòn.
@@ -10991,7 +12448,10 @@ function questTarget(q){
     if (n) return { map:n.map, x:n.x, y:n.y, label:'Gặp ' + n.name, npcId:n.id };
   }
   if (q.type === 'meditate' && typeof SPRING !== 'undefined') return { map:'corran', x:SPRING.x, y:SPRING.y, label:'Suối Ký Ức' };
-  if (q.type === 'enhance'){ const n = NPCS.find(x => x.talk === 'forge'); if (n) return { map:n.map, x:n.x, y:n.y, label:'Lò Rèn Hoàng Gia', npcId:n.id }; }
+  // ⚠ NHÃN ĐỌC TỪ `n.name`, ĐỪNG CHÉP CỨNG 'Lò Rèn Hoàng Gia'. Từ lúc Ardhaven có HAI con
+  // talk:'forge' (Thợ Rèn · Yêu Tinh Hỗn Độn) thì `find` trả về con nào là chuyện của thứ tự
+  // mảng — chép cứng nhãn là mũi tên chỉ tới một con mà lại gọi tên con kia.
+  if (q.type === 'enhance'){ const n = NPCS.find(x => x.talk === 'forge'); if (n) return { map:n.map, x:n.x, y:n.y, label:n.name, npcId:n.id }; }
   if (q.type === 'collect' && typeof HERB_SPOTS !== 'undefined'){
     // herbMap riêng, không dùng q.map — q.map trên vài NV chính (VD #12) là nơi trả NV (NPC ở
     // Sapidae Chiefdom), khác với nơi thật sự hái Thảo Dược.
@@ -11379,6 +12839,12 @@ document.addEventListener('click', e=>{
 let _zoneAliveCache = null; // per-frame memo for zoneAliveCount(), reset every update() tick
 function update(dt){
   if (!player) return;
+  // LỐI RA tự đi: xử ở ĐẦU khung, trước khi bất cứ gì đọc `mobs`/`decor` — xem `updateGate()`.
+  if (_loiRaCho){
+    const g = _loiRaCho; _loiRaCho = null;
+    if (g.map === curMap && !dead){ travelTo(g.to, curMap); return; }
+  }
+  netMaNhip(dt);           // bóng giả của `/net ma` — trên nhánh `dead` để chúng còn thở lúc mình nằm
   _zoneAliveCache = null;
   _gtiCache = null; // gameTimeInfo() per-frame memo — reset once per tick, see its own comment
   if (hitStop > 0){ hitStop -= dt; dt *= 0.08; } // hit-stop: thế giới khựng lại 1 nhịp khi chém trúng — đòn có lực
@@ -11550,6 +13016,12 @@ function update(dt){
     // đứng im vĩnh viễn. Đây là ổ duy nhất nên kéo neo về tâm luôn, không sợ "lan sang bãi kế".
     if (DEEP){ player._autoAX = DEEP_HALL.cx; player._autoAY = DEEP_HALL.cy;
                player._autoPack = null; player._autoZoneLocked = false; player._autoEmptyT = 0; }
+    // Lò Khắc: y hệt lý do trên, và đo được là nó xảy ra THẬT. Ghim neo MỖI KHUNG chứ không chỉ
+    // lúc sang đợt — bật AUTO sau khi đã vào lò, hay `toggleAuto` neo lại tại chỗ, đều kéo neo
+    // về điểm thả (cách tâm sảnh 560px) và cả lượt treo. Probe chạy thật: nhân vật cấp 40/60/90
+    // trang bị đúng cấp đứng 33 PHÚT mô phỏng mà không dọn nổi đợt 1.
+    if (LK){ player._autoAX = LK_HALL.cx; player._autoAY = LK_HALL.cy;
+             player._autoPack = null; player._autoZoneLocked = false; player._autoEmptyT = 0; }
     // Chỉ quét quanh điểm neo (bán kính 430 ≈ 1-2 bãi quái) — không rượt quái khắp map
     // QA: chỉ farm ĐÚNG 1 bãi quái — khoá vào zone của mục tiêu đầu tiên tìm được (m.zone: cùng
     // tham chiếu cho mọi quái spawn từ 1 bãi/1 đợt), các frame sau chỉ xét quái CÙNG zone đó, dù
@@ -11558,7 +13030,7 @@ function update(dt){
     // vĩnh viễn — đo được con cuối cách neo 427px với tầm 430px, sát mép tới mức chỉ cần nó nhích
     // thêm một bước là AUTO mất dấu. Trong sảnh kín chỉ có ĐÚNG một ổ quái nên quét rộng ra không
     // sợ lan sang bãi khác.
-    let _at = null, _bd = DEEP ? Math.max(_ac.range, 900) : _ac.range;
+    let _at = null, _bd = (DEEP || LK) ? Math.max(_ac.range, 900) : _ac.range;
     for (const m of mobs){
       if (m.dead) continue;
       if (!_ac.boss && (m.def.bossKind || m.type === 'boss')) continue; // auto không tự khơi trận boss — trừ khi bật trong Cài Đặt
@@ -11702,17 +13174,13 @@ function update(dt){
       }
     }
     player.face = Math.atan2(my,mx);
-    // hướng dẫn tân thủ bước 1: di chuyển một đoạn
-    if (player.tutStep === 0){
-      player.tutDist = (player.tutDist || 0) + spd*dt;
-      if (player.tutDist > 150) tutAdvance('move');
-    }
   }
-  // hướng dẫn bước cuối: tự hoàn thành sau 12s
-  if (player.tutStep === 4){
-    player.tutTimer = (player.tutTimer || 0) + dt;
-    if (player.tutTimer > 12) tutAdvance('quest');
-  }
+  // ⚠ HAI KHỐI HƯỚNG DẪN CHÉP CHỈ SỐ CỨNG ĐÃ GỠ Ở ĐÂY — cả hai đều mục theo một kiểu khác nhau:
+  //   `tutStep === 0` cộng quãng đường LẦN THỨ HAI (tutTick đã cộng theo toạ độ thật, và nó
+  //   đếm được cả AUTO lẫn bấm bản đồ nhỏ, thứ nhánh này không đếm) ⇒ bước 1 chạy gấp đôi tốc độ;
+  //   `tutStep === 4` gọi `tutAdvance('quest')` trong khi ô thứ 4 nay mang khoá `loot` ⇒ không
+  //   bao giờ khớp, chỉ còn cộng `player.tutTimer` cho không ai đọc.
+  // Chỉ số cứng vào một mảng khai ở chỗ khác là một quả mìn hẹn giờ cho đợt thêm/bớt bước kế tiếp.
   updateTut();
   updateGate();
   // qi regen + hp regen (P0: hồi máu nhanh hơn — base ×3, ngoài combat thêm 5% max HP/s)
@@ -11723,6 +13191,7 @@ function update(dt){
   updateKyngo(dt); // A2: Kỳ ngộ trên đường
   if (DGN) updateDungeon(dt); // Phó bản: đợt quái → boss → thưởng
   if (DEEP) updateDeep();   // Tầng Sâu: dọn sạch tầng → gửi kho tạm → xuống tầng kế
+  if (LK) lkTick(dt);       // Lò Khắc: dọn sạch đợt → thưởng → bày ba lá Nếp Khắc
   mocTick(dt);     // nhiệm vụ loại `moc` — đếm từ TRẠNG THÁI, xem MOC_NV
   updateHorses(dt); // GDD Đợt 2 B5
   player.qi = Math.min(player.maxQi, player.qi + (player.qireg + player.maxQi*(player.combatT <= 0 ? 0.01 : 0.0025))*dt); // GDD Đợt 2 B1: +1% maxQi/s ngoài combat, +0.25% trong combat
@@ -11942,7 +13411,7 @@ function update(dt){
       m.atkT = m.def.atkCd;
       // hiệu ứng ra đòn: quái lao tới (lunge) + vệt chém màu nguyên tố
       m.lungeT = 0.22;
-      const elC = (m.def.el && ELEM[m.def.el]) ? ELEM[m.def.el].color : m.def.color;
+      const _mhe = mobHe(m); const elC = (_mhe && ELEM[_mhe]) ? ELEM[_mhe].color : m.def.color;
       addEffect({ type:'arc', x:m.x, y:m.y, face:Math.atan2(player.y-m.y,player.x-m.x), r:34, color:elC });
       if (m.def.ranged){ // Cung Thủ Thảo Nguyên: đạn bay từ xa (hình), sát thương tính trực tiếp
         projectiles.push({ cosmetic:true, x:m.x, y:m.y, ang:Math.atan2(player.y-m.y,player.x-m.x), speed:420, dmg:0, kind:'mobshot', life:d/420, color:'#d8b060' });
@@ -11967,13 +13436,12 @@ function update(dt){
         const lvGapM = (m.def.lv || 1) - player.level;
         if (lvGapM > 5) dmg *= 1 + Math.min(1.2, (lvGapM - 5) * 0.08);
         if (m.def.bossKind){ const gapB2 = m.def.lv - player.level; if (gapB2 > 10) dmg *= 1.6; else if (gapB2 >= 6) dmg *= 1.3; } // Áp Bức Võ Công chiều ngược
-        // khắc hệ chiều quái → người: hệ quái khắc phái +12%, bị phái khắc -10%
-        const mobEl = m.def.el, sectEl2 = SECTS[player.sect].element;
-        let mobCounter = false;
-        if (mobEl && sectEl2){
-          if (ELEM[mobEl].beats === sectEl2){ dmg *= 1.12; mobCounter = true; }
-          else if (ELEM[sectEl2].beats === mobEl) dmg *= 0.9;
-        }
+        // khắc hệ chiều quái → người: hệ quái khắc hệ NGƯỜI +12%, bị người khắc -10%.
+        // Hệ người nay do CON AXIE đang đeo quyết định — xem heThu(). Trước đây là
+        // `SECTS[player.sect].element`, tức một hằng số người chơi không tác động được.
+        const _hek = heThuKet(mobHe(m), heThu(player), axieSac(player));
+        if (_hek) dmg *= _hek.mul;
+        const mobCounter = !!_hek && _hek.ket === -1;
         dmg = Math.max(1, Math.round(dmg));
         // ĐỠ ĐÒN — cơ chế chỉ đồ Hoàn Hảo có: chặn HẲN một đòn, không phải giảm %. Đặt SAU khi
         // đã làm tròn để con số hiện lên đúng bằng thứ người chơi vừa chặn được.
@@ -11995,10 +13463,14 @@ function update(dt){
             player.poisonDps = Math.max(1, Math.round(player.maxHp * 0.008 * (1 - (player.vhPoisonRes || 0))));
             playStatusFx('poison', 'poison_apply', player.x, player.y, 0.5, 0.3); } }
         // đòn đánh trúng: vụ nổ hào quang nguyên tố + rung màn hình
-        const elC2 = _dbEl && ELEM[_dbEl] ? ELEM[_dbEl].color : (mobEl && ELEM[mobEl]) ? ELEM[mobEl].color : '#ff7a6a';
+        const _mobEl = mobHe(m);
+        const elC2 = _dbEl && ELEM[_dbEl] ? ELEM[_dbEl].color : (_mobEl && ELEM[_mobEl]) ? ELEM[_mobEl].color : '#ff7a6a';
         addEffect({ type:'ring', x:player.x, y:player.y-10, r:22, color:elC2 });
         for (let i=0;i<4;i++) addEffect({ type:'ink', x:player.x, y:player.y-12, vx:rnd(-70,70), vy:rnd(-90,-20), color:elC2 });
         player.hurtT = 0.25; // viền đỏ nhấp khi trúng đòn
+        // Bộ đếm cú trúng đòn — `net.js` gửi số này thay vì gửi `hurtT` còn lại. Cùng lý do với
+        // `_atkSeq`: một cú giật dài 0,25-0,30 s lọt gọn giữa hai ảnh chụp 10 Hz.
+        player._hitSeq = (player._hitSeq || 0) + 1;
         player.combatT = 4; // P0: vào trạng thái combat — ngừng hồi máu nhanh
         shakeT = Math.max(shakeT, 0.16);
         // Math.max, không phải gán đè: một cú cào nhẹ từng có thể HẠ biên độ của cú vừa nện.
@@ -12037,12 +13509,26 @@ function update(dt){
           playStatusFx('stunned', 'stunned', player.x, player.y, 0.5, 0.3);
         }
         AudioSys.sfx('hurt', 0.7);
-        logCombat(`🩸 ${mobCounter ? 'KHẮC CHẾ ' : ''}-${dmg} ← ${m.def.name}`, mobCounter ? '#ff9a3a' : '#ff7a6a');
+        { const _kc = mobCounter ? 'KHẮC CHẾ ' : '';   // cùng luật: tiền tố nằm trong KHOÁ, không loại trừ
+          logCombat(`🩸 ${_kc}-${dmg} ← ${m.def.name}`, mobCounter ? '#ff9a3a' : '#ff7a6a',
+            { k:`an:${_kc}:${m.def.name}`, v:dmg,
+              txt:(n, t) => n > 1 ? `🩸 ${_kc}${m.def.name} ×${n} — mất ${t} máu` : `🩸 ${_kc}-${t} ← ${m.def.name}` }); }
+        // Vế PHÒNG THỦ của tam giác lớp Axie, nói thẳng lên đầu người chơi.
+        // Trước bản này nó chỉ có đúng một cửa: dòng nhật ký ngay trên — hộp 260px ở góc
+        // dưới-trái, trôi quá nhanh để đọc giữa lúc đánh nhau — và CHỈ ở vế bất lợi, vì
+        // `mobCounter` không bao giờ bật ở nhánh ×0,90. Tức nửa có lợi của cơ chế, cũng là nửa
+        // trả lời cho câu "vì sao phải có nhiều hơn một con Axie", chưa từng hiện ra một lần.
+        if (_hek && _hek.ket !== 0 && performance.now() - _heFloatMs > HE_FLOAT_HOI){
+          _heFloatMs = performance.now();
+          addFloat(player.x, player.y - 58, _hek.txt, _hek.mau, 13);
+        }
         // Thái Cực hộ thể (Lưỡng Nghi Cảnh): phản 5% sát thương
         if (player.reflect && !m.dead){
           const ref = Math.max(1, Math.round(dmg * player.reflect));
           m.hp -= ref; m.hitT = 0.15;
-          logCombat(`🛡 phản ${ref} → ${m.def.name}`, '#ffd76a');
+          logCombat(`🛡 phản ${ref} → ${m.def.name}`, '#ffd76a',
+            { k:'phan:' + m.def.name, v:ref,
+              txt:(n, t) => n > 1 ? `🛡 phản ${m.def.name} ×${n} — tổng ${t}` : `🛡 phản ${t} → ${m.def.name}` });
           if (m.hp <= 0){ killMob(m, 'reflect'); continue; }
         }
         if (player.hp <= 0){
@@ -12137,11 +13623,27 @@ function update(dt){
     if (player.pendingHit.t <= 0){
       const ph = player.pendingHit; player.pendingHit = null;
       player._tpBo = 0;   // đòn thường KHÔNG thuộc bộ nào — để nguyên cờ là nó ăn ké bộ của chiêu vừa tung
-      const tgt = nearestMob(ph.reach);
-      if (tgt){
-        let dmg = ph.dmg, src = 'hit';
-        if (Math.random() < player.crit){ dmg *= (player.critDmgMult || 2); src = 'crit'; }
-        hurtMob(tgt, dmg, src);
+      // ⚠ `else if`, KHÔNG PHẢI `return`. Khối này nằm GIỮA `update(dt)`, không phải trong một
+      // hàm riêng — một `return` ở đây bỏ qua toàn bộ phần còn lại của khung: đạn, hồi chiêu,
+      // nhặt đồ, sự kiện. Và nó chỉ xảy ra ở đúng cái khung có một cú đánh PvP hẹn tới hạn,
+      // nên nhìn ra là "game giật một cái mỗi lần đánh", không ra một lỗi.
+      if (ph.nguoi){
+        // Tìm LẠI người ấy ở thời điểm chạm — cùng phép whiff với quái: họ chạy khỏi tầm hoặc
+        // vừa bị hạ thì cú này HỤT. Không tự chuyển sang đánh người khác đứng gần hơn: người
+        // chơi đã chọn mục tiêu lúc bấm, đổi hộ là cướp mất lựa chọn đó.
+        const np = window.NETPLAYERS.find(n => n._netId === ph.nguoi);
+        if (np && !np.chet && dist(player.x, player.y, np.x, np.y) <= ph.reach){
+          let dmg = ph.dmg;
+          if (Math.random() < player.crit) dmg *= (player.critDmgMult || 2);
+          pvpDanh(np, dmg);
+        }
+      } else {
+        const tgt = nearestMob(ph.reach);
+        if (tgt){
+          let dmg = ph.dmg, src = 'hit';
+          if (Math.random() < player.crit){ dmg *= (player.critDmgMult || 2); src = 'crit'; }
+          hurtMob(tgt, dmg, src);
+        }
       }
     }
   }
@@ -12219,9 +13721,30 @@ function update(dt){
 
   updateHud();
 }
+// Cửa DUY NHẤT hỏi "cái chết này mất bao nhiêu EXP". Cả `onDeath` lẫn màn bại trận đều đọc nó,
+// nên con số người chơi ĐỌC và con số máy TRỪ không thể lệch nhau — cùng lối `masteryKhoa`.
+const CHET_MIEN_CAP = 10;     // dưới cấp này chết không mất gì
+const CHET_MAT_XP   = 0.05;   // 5% NGÂN SÁCH XP của chính cấp đang đứng
+function chetMatXp(){
+  if (!player || (player.level || 1) < CHET_MIEN_CAP || player.level >= MAX_LV) return 0;
+  const md = mapDef();
+  if (!md || md.pvp || md.dungeon) return 0;
+  // ⚠⚠ ĐỪNG HỎI `md.type === 'safe'` — tôi viết đúng cái sai ấy trước, và phép đo bắt được:
+  // cấp 25 chết ở Beast Herd Camp (`ngoai`) mất **0 EXP**. `ngoai` khai `safe` (không PK) nhưng
+  // nó là **bãi săn 8 bãi**, tức đúng chỗ người chơi cày nhiều nhất lại là chỗ chết không mất gì.
+  // Cùng cái bẫy đã ghi nguyên văn hai lần trong tài liệu này (Rương Canh · Axie nhập vào):
+  // **cửa duy nhất đúng là CÓ BÃI QUÁI.** Thành thật (`ardhaven`) không có bãi nào nên nó tự
+  // được miễn, mà không cần hỏi cờ `safe` một lần nào.
+  let coBai = false;
+  try { coBai = packsOf(curMap).length > 0; } catch { coBai = false; }
+  if (!coBai) return 0;
+  const ngan = XP_TABLE[player.level - 1] || 0;
+  return Math.max(0, Math.min(Math.floor(player.xp || 0), Math.round(ngan * CHET_MAT_XP)));
+}
 function onDeath(){
   moveTarget = null; moveWaypoint = null; movePlanClear(); // Click-to-move: hủy đích khi chết, tránh tự đi lung tung sau khi hồi sinh
   deepOnDeath();   // Tầng Sâu: chết là mất sạch kho tạm — phải chạy TRƯỚC mọi nhánh hồi sinh
+  lkOnDeath();     // Lò Khắc: chết thì GIỮ phần thưởng đã ăn, chỉ mất bộ thẻ
   npcTalkTarget = null;
   // The Hatching · THIÊN MỆNH: mỗi màn chơi 1 lần, chết hồi sinh tại chỗ
   if (player.traitRevive && !player.reviveUsed){
@@ -12243,18 +13766,51 @@ function onDeath(){
     AudioSys.sfx('levelup', 0.9);
     return;
   }
+  // ── CHẾT PHẢI CÓ MỘT CÁI GIÁ ────────────────────────────────────────────────────────────
+  // Đo trước khi làm, một cái chết THẬT (để quái đánh, rồi `respawn()`):
+  //   trước: cấp 5 · 796 XP · 1.588◈ · 15 mạng · túi 2  ⇒  sau: **y hệt, không lệch một trường nào**
+  // Không mất EXP, không mất Lumen, không hao bền, không phải chạy về xác. Màn "Trọng Thương!"
+  // viết đẹp nhưng nó chỉ là một nút *tiếp tục*. Trong một game tribute MU thì đây đúng là chỗ
+  // sức căng phải nằm — QA chấm mảng rủi ro **3,0/10** vì chuyện này.
+  //
+  // Cái giá chọn là **EXP của chính cấp đang đứng**, vì ba lý do:
+  //  ① một con số, đọc được ngay trên màn bại trận — mất bền hay rơi đồ thì người chơi phải đi
+  //    tìm mới biết mình mất gì;
+  //  ② nó KHÔNG BAO GIỜ tụt cấp (kẹp ở `player.xp`), nên không ai mất một mốc đã qua;
+  //  ③ nó tự nhạt đi khi người chơi mạnh lên — chết lúc đang cày là mất vài phút, không phải
+  //    mất một buổi.
+  //
+  // ⚠ BỐN CHỖ MIỄN, và mỗi chỗ có lý do riêng — đừng gộp thành một điều kiện cho gọn:
+  //  · dưới `CHET_MIEN_CAP`: đoạn tân thủ phải tha. Người chơi mới chết vì chưa biết luật, phạt
+  //    họ ở đó là dạy sai bài học.
+  //  · map `safe`: chết trong thành là chết vì một chuyện lạ, không phải vì đánh nhau.
+  //  · map `pvp`: **luật đã chốt** — *"Thua một trận đấu không được phép đụng vào bản lưu"*.
+  //    Sàn đấu có túi máu riêng nên `onDeath` lẽ ra không chạy ở đó, nhưng chốt này là hàng rào
+  //    thứ hai: một đường chết khác thêm sau sẽ tự được che.
+  //  · `dungeon`: Tầng Sâu và Lò Khắc đã có giá RIÊNG của chúng (`deepOnDeath` mất sạch kho tạm)
+  //    — cộng thêm một khoản nữa là phạt hai lần cho một cái chết.
+  const _matXp = chetMatXp();
+  if (_matXp > 0) player.xp = Math.max(0, player.xp - _matXp);
   // màn hình bại trận rồi chạy tiếp ở TOẠ ĐỘ CŨ sau khi hồi sinh — có khi ở tận map khác.
   player.pendingHit = null; // đòn thường đã hẹn cũng phải huỷ: update() return sớm khi dead nên
                             // nó đóng băng nguyên vẹn rồi nổ vào con quái đứng cạnh điểm hồi sinh
   dead = true; player.deadT = 0;
   const _kb = player._killedByBoss; player._killedByBoss = null;
   // khoa=true: màn Bại Trận là lớp phủ CHẶN — chỉ respawn() tắt được nó.
+  // ⚠ CÁI GIÁ PHẢI HIỆN RA. Một khoản mất không ai thấy thì với người chơi không khác gì không
+  // mất — cùng luật đã ghi cho khoản hoàn của `cotDiTru()`. Và khi KHÔNG mất gì thì cũng nói,
+  // kèm LÝ DO: im lặng ở đó là người chơi không phân biệt được "chỗ này tha" với "cơ chế hỏng".
+  const _mucMat = _matXp > 0
+    ? `<p style="color:#ff9a5a;font-size:13px;margin:6px 0 0">✦ Mất <b>${_matXp.toLocaleString('vi-VN')} EXP</b> của cấp này — không bao giờ tụt cấp.</p>`
+    : `<p style="color:#8fd18f;font-size:12.5px;margin:6px 0 0">✦ Không mất EXP${(player.level||1) < CHET_MIEN_CAP ? ` — dưới cấp ${CHET_MIEN_CAP} thì chết còn được tha` : ' ở nơi này'}.</p>`;
   lopPhuMo(true).innerHTML = _kb ? `
     <h2 style="color:#ff6b6b">Bại Trận!</h2>
     <p>Ngươi bị <b style="color:#ff8f6b">${_kb}</b> đánh bại.<br><span style="color:#e8b060;font-size:12.5px">Mẹo: khi trấn thủ tụ chiêu (vùng đỏ), hãy chạy ra khỏi vùng đỏ — sau đó là 2.5 giây phản công tốt nhất.<br>Hoặc quay lại khi ngươi đã mạnh hơn.</span></p>
+    ${_mucMat}
     <button class="big-btn" onclick="respawn()">Tái Chiến</button>` : `
     <h2>Trọng Thương!</h2>
     <p>Ngươi bị đánh bại... Nhưng Lunacia chưa hề bỏ rơi kẻ có chí.<br>Hồi sinh tại làng trên Rẻo Rừng Corran với đầy đủ sinh lực.</p>
+    ${_mucMat}
     <button class="big-btn" onclick="respawn()">Hồi Sinh</button>`;
 }
 window.respawn = function(){
@@ -12399,6 +13955,10 @@ function render(){
 
   // nền bản đồ — map lát viên ghép bằng hình thoi, còn lại vẫn là tranh nền một tấm
   const _latVien = veSanIso();
+  // ⚠ TƯỜNG THÀNH VẼ Ở ĐÂY, không trong danh sách thực thể — xem khối TƯỜNG THÀNH. Tường nam
+  // nằm ở `y` lớn nhất map nên xếp theo `y` là nó vẽ đè lên người chơi. Cổng thì ngược lại,
+  // nó nằm trong `ents` bên dưới vì người chơi đi xuyên qua.
+  veTuong();
   const bg = _latVien ? null : mapBgOf(curMap);
   if (bg && bg.complete && bg.naturalWidth > 0){
     // Chỉ vẽ ĐÚNG mảnh ảnh đang lọt vào khung nhìn. Vẽ cả ảnh phóng ra 2600×1900 là bảo trình
@@ -12489,6 +14049,7 @@ function render(){
   if (md.village) drawCalligraphy('Sapwood Hamlet', 430, 340, '#6a5836', 18);
   // cổng KHÔNG vẽ ở đây nữa — nó đi vào danh sách sắp theo y bên dưới (xem drawOneGate)
 
+  veMoiLoiRa();        // miệng lối ra: vẽ trên MẶT ĐẤT, người chơi đi đè lên (xem veLoiRa)
   drawObstacleRim();   // hàng đá dọc mép vùng chặn — vẽ trước decor để cây/đá rải phủ lên tự nhiên
 
   // decor (behind entities)
@@ -12562,6 +14123,9 @@ function render(){
   // thì bị công trình vẽ đè lên — đúng chiều sâu của tranh isometric. Lấy nóc làm khoá thì
   // ngược lại, nhân vật sẽ dán lên mái.
   for (const v of (mapDef().vatTo || [])) ents.push({ y:v.y + v.h, kind:'vat', v });
+  // Cổng thành: chân ảnh làm khoá, y như `vatTo`. Người chơi ĐI XUYÊN QUA cổng nên lúc đứng
+  // trong vòm, tháp phía trước phải che anh ta — đó là khác biệt duy nhất giữa cổng và tường.
+  if (_tuong) for (const t of _tuong) if (t.cong) ents.push({ y:t.y + t.h, kind:'tuong', t });
   ents.sort((a,b)=>a.y-b.y);
 
   // Nửa SAU của Vòng Kiếm Lửa — phải nằm dưới lớp entity, nếu không thì cả vòng lửa dán bẹt
@@ -12571,15 +14135,21 @@ function render(){
 
   for (const e of ents){
     switch (e.kind){
-      case 'vat': { const im = vatTai(e.v.img); if (im) ctx.drawImage(im, e.v.x, e.v.y, e.v.w, e.v.h); break; }
+      case 'vat': veVatTo(e.v); break;   // tấm tĩnh, hoặc bảng khung nếu mục khai `khung`
+      case 'tuong': veTuongVien(e.t); break;   // chỉ CỔNG tới đây; đoạn tường vẽ ở lượt riêng trên kia
       case 'iso': veVatIso(e.d); break;
       case 'mob': drawMob(e.m); break;
       case 'deadmob': {
+        // Xác quái KHÔNG đi qua drawMob — nó có nhánh vẽ riêng ở đây. Nên nhịp `chet` cũng
+        // phải cắm vào đây; cắm vào drawMob là con quái gục xong mới biến mất mà không ai
+        // thấy cú gục. Loài chưa có nhịp `chet` thì vẫn tan thành vệt mực như cũ.
         const m = e.m, k = Math.max(0, m.deadT/0.45);
-        ctx.save(); ctx.globalAlpha = k*0.45;
-        ctx.fillStyle = '#241f18';
-        ctx.beginPath(); ctx.ellipse(m.x, m.y+4, m.def.size*(1+(1-k)*0.8), m.def.size*0.5*(1+(1-k)*0.4), 0, 0, 7); ctx.fill();
-        ctx.restore();
+        if (!veXacKhung(m, k)){
+          ctx.save(); ctx.globalAlpha = k*0.45;
+          ctx.fillStyle = '#241f18';
+          ctx.beginPath(); ctx.ellipse(m.x, m.y+4, m.def.size*(1+(1-k)*0.8), m.def.size*0.5*(1+(1-k)*0.4), 0, 0, 7); ctx.fill();
+          ctx.restore();
+        }
         break;
       }
       case 'netplayer': drawPlayer(e.np); veNhanNet(e.np); break;
@@ -12690,8 +14260,18 @@ function render(){
         ctx.save();
         if (def.cong !== false) ctx.globalCompositeOperation = 'lighter';
         ctx.globalAlpha = a > 0.15 ? 1 : a / 0.15; // hold full bright, only fade the last sliver
-        ctx.drawImage(img, col*def.frameW, row*def.frameH, def.frameW, def.frameH,
-          e.x - def.anchorX*sc, e.y - def.anchorY*sc, dw, dh);
+        // ⚠ XOAY QUANH CHÍNH ĐIỂM NEO, không quanh tâm ô. `anchorX/anchorY` là chỗ tranh cắm vào
+        // thế giới (với quạt chém: cán kiếm, tức chỗ nhân vật đứng). Xoay quanh tâm ô thì lưỡi
+        // kiếm vừa quay vừa văng ra khỏi tay — và ở góc 180° nó nằm hẳn phía sau lưng.
+        // `goc` = 0 đi đúng nhánh cũ: dịch rồi vẽ, không gọi rotate, không sai số nào.
+        if (e.goc){
+          ctx.translate(e.x, e.y); ctx.rotate(e.goc);
+          ctx.drawImage(img, col*def.frameW, row*def.frameH, def.frameW, def.frameH,
+            -def.anchorX*sc, -def.anchorY*sc, dw, dh);
+        } else {
+          ctx.drawImage(img, col*def.frameW, row*def.frameH, def.frameW, def.frameH,
+            e.x - def.anchorX*sc, e.y - def.anchorY*sc, dw, dh);
+        }
         ctx.restore(); ctx.globalAlpha = 1;
       }
     }
@@ -12742,6 +14322,9 @@ function render(){
   drawBeaconArrow(); // GDD Đợt 2 B2: mũi tên chỉ hướng khi mục tiêu ngoài màn hình
   if (DGN) drawDungeonHUD(); // HUD phó bản: đợt quái + thanh máu boss
   if (DEEP) drawDeepHUD();   // HUD Tầng Sâu: tầng hiện tại + kho tạm chưa vào túi
+  if (LK) drawLoKhacHUD();   // HUD Lò Khắc: đợt · kho · danh sách nếp đang cầm
+  drawPvpHUD();              // HUD sàn đấu: máu TRẬN (không phải máu nhân vật)
+  drawNetHUD();              // ô chỉ số mạng — chỉ hiện sau khi gõ `/net hud`
   { const _dl = el('deep-leave'); if (_dl) _dl.classList.toggle('hidden', !DEEP); }
 
   // Cốt truyện — HAI bộ đếm, không phải một. Trước đây cả hiệu ứng này lẫn chú thích của nó nói
@@ -13352,6 +14935,22 @@ function drawMobFigure(m, d, dx, dy, now, g){
   return true;
 }
 
+// Cú gục, khi loài đó có nhịp `chet` trong bảng khung. Trả false để người gọi vẽ vệt mực cũ.
+// Mờ dần theo `deadT` y như vệt mực, nhưng nhạt hơn nhiều: xác có hình thì không cần mờ tới
+// 45% mới đọc ra là đã chết, mà mờ sớm quá thì mất luôn cú gục vừa vẽ.
+function veXacKhung(m, k){
+  const o = mobKhungO(mobTenAnh(m.def), m, performance.now());
+  if (!o || !MOB_KHUNG[mobTenAnh(m.def)].nhip.chet) return false;
+  const d = m.def;
+  const mw = d.size * (d.boss ? 4.4 : 3.3), mh = mw * (o.sh / o.sw);
+  ctx.save();
+  ctx.globalAlpha = Math.min(1, 0.25 + k * 0.75);
+  ctx.translate(m.x, m.y - (o.neoY - 0.5) * mh);
+  if (Math.cos(m.face || 0) < 0) ctx.scale(-1, 1);
+  ctx.drawImage(o.im, o.sx, o.sy, o.sw, o.sh, -mw/2, -mh/2, mw, mh);
+  ctx.restore();
+  return true;
+}
 function drawMob(m){
   const d = m.def;
   const bob = Math.sin(m.wob)*2;
@@ -13382,11 +14981,32 @@ function drawMob(m){
     }
     ctx.restore(); ctx.globalAlpha = 1;
   }
-  // hào quang nguyên tố quanh quái (mờ, theo hệ)
-  if (d.el && ELEM[d.el]){
-    ctx.save(); ctx.globalAlpha = 0.14 + 0.05*Math.sin(m.wob*1.3);
-    ctx.strokeStyle = ELEM[d.el].color; ctx.lineWidth = 2;
-    ctx.beginPath(); ctx.ellipse(dx, dy+4, d.size+6, (d.size+6)*0.4, 0, 0, 7); ctx.stroke();
+  // ── VÒNG CHÂN: "thứ này là một SINH VẬT, không phải địa hình" ────────────────────────────
+  // ⚠ Đo trước khi làm, và chỗ chìm KHÔNG phải chỗ ai cũng đoán. Ảnh chụp 1440×900 ở Rẻo Rừng
+  // Corran: `Axie Heo Rừng` là khối NÂU (110,76,58) nằm trên LỐI MÒN NÂU — nó chìm vào MẶT ĐẤT,
+  // không phải chìm vào hòn đá. Chênh sáng với decor quanh đó chỉ **29/255**.
+  // Báo cáo QA đổ cho "thanh máu chỉ hiện khi đã bị đánh" — SAI: thanh máu vẽ vô điều kiện, lệnh
+  // `return` của nhãn nằm SAU nó. Kết luận của họ đúng, nguyên nhân họ nêu thì không.
+  //
+  // Vòng chân cũ là hào quang hệ ở `alpha 0.14` — dưới ngưỡng đọc được, và **chỉ vẽ khi con đó
+  // có hệ**. Nay vẽ cho MỌI con còn sống: cây và đá không có vòng nào, nên chính cái vòng là thứ
+  // tách sinh vật khỏi địa hình. Hai nét lồng nhau vì nền có cả chỗ sáng (cỏ kẹo) lẫn chỗ sẫm:
+  // một nét TỐI bên ngoài + một nét theo HỆ bên trong, đọc được trên cả hai — cùng bài học
+  // "mặt phẳng sáng đều không mốc thì đọc ra khoảng không" đã ghi cho map lát viên.
+  if (!m.dead){
+    const _hauHe = mobHe(m);
+    // Phơi QUYẾT ĐỊNH ra cho bài kiểm, đừng bắt nó đếm điểm ảnh hay đếm lời gọi `ctx.ellipse` —
+    // riêng bóng đổ đã hai ellipse mỗi con, nên đếm lời gọi là một cái chốt đúng ở mọi trạng
+    // thái. Cùng lối `window.__veChet` · `__avaKhoi` · `__veVuKhi`.
+    if (window.TEST_MODE){ (window.__vongChan || (window.__vongChan = new Set())).add(m); }
+    const _vr = d.size + 7, _vy = dy + 5;
+    ctx.save();
+    ctx.lineWidth = 3; ctx.strokeStyle = 'rgba(12,10,20,.42)';
+    ctx.beginPath(); ctx.ellipse(dx, _vy, _vr, _vr*0.42, 0, 0, 7); ctx.stroke();
+    ctx.lineWidth = 1.6;
+    ctx.strokeStyle = (_hauHe && ELEM[_hauHe]) ? ELEM[_hauHe].color : '#ff8a6a';
+    ctx.globalAlpha = 0.62 + 0.12*Math.sin(m.wob*1.3);
+    ctx.beginPath(); ctx.ellipse(dx, _vy, _vr, _vr*0.42, 0, 0, 7); ctx.stroke();
     ctx.restore();
   }
   // Kẻ Tiếp Sức: hào quang nối tới từng con nó đang nuôi — nhìn là biết ai nuôi ai
@@ -13407,24 +15027,66 @@ function drawMob(m){
     ctx.strokeStyle = 'rgba(192,127,224,.7)'; ctx.lineWidth = 2.5;
     ctx.beginPath(); ctx.arc(dx, dy-6+bob*0.4, d.size+8, 0, 7); ctx.stroke();
   }
-  // body — sprite art with ink-blob fallback
+  // ── THÂN ──────────────────────────────────────────────────────────────────────────────
+  // Thứ tự: art RIÊNG của chính con này (`anh`, có thể kèm bảng khung) > khung xương > sprite
+  // mượn > vệt mực. `anh` đứng TRƯỚC `skel` là chủ ý: một con trùm có tranh của riêng nó thì
+  // không bao giờ được rơi về hình dựng bằng đường, kể cả khi def của nó kế thừa `skel` từ con
+  // quái mà nó mượn chỉ số.
+  //
+  // ⚠ Năm loài đang khai CẢ `skel` LẪN `img` (trannhan · chimera_bo · kybinh · kylan ·
+  // boss_sontac) và đang hiện ra bằng khung xương. Đừng "dọn dẹp" bằng cách đảo thứ tự
+  // skel/img — làm thế là âm thầm đổi tạo hình của năm loài mà không ai yêu cầu. Muốn con nào
+  // dùng tranh thì khai `anh` cho đúng con đó.
   let topY = dy - d.size;
-  const img = MOB_IMGS[m.type];
-  if (d.skel && drawMobFigure(m, d, dx, dy + bob, performance.now())){
+  const _ten = mobTenAnh(d);
+  mobDoBuoc(m, performance.now());
+  const _o  = mobKhungO(_ten, m, performance.now());   // null = loài này chưa có bảng khung
+  const img = _o ? _o.im : (d.anh ? mobAnhTen(d.anh) : MOB_IMGS[m.type]);
+  if (!d.anh && !_o && d.skel && drawMobFigure(m, d, dx, dy + bob, performance.now())){
     topY = dy + bob - d.size * (d.boss ? 5.0 : 3.6) * 0.94;   // thanh máu nằm trên đỉnh đầu
   } else if (img && img.complete && img.naturalWidth){
+    const sw = _o ? _o.sw : img.naturalWidth, sh = _o ? _o.sh : img.naturalHeight;
     const mw = d.size * (d.boss ? 4.4 : 3.3); // vừa tầm nhìn — không chồng lấn khi đứng cụm
-    const mh = mw * (img.naturalHeight / img.naturalWidth);
-    topY = dy - mh*0.28 - mh/2 + bob;
+    const mh = mw * (sh / sw);
+    // Một biểu thức cho cả hai đường. Tấm tĩnh giữ nguyên quy ước cũ (tâm ảnh cao hơn m.y một
+    // khoảng 0,28 lần chiều cao); tấm khung thì neo BÀN CHÂN đúng vào m.y theo `neoY` đo được
+    // lúc nướng. Gộp lại để đường cũ không lệch một pixel nào, mà đường mới vẫn đứng trên đất.
+    const _cy = dy + bob - (_o ? (_o.neoY - 0.5) * mh : 0.28 * mh);
+    topY = _cy - mh/2;
     const flip = Math.cos(m.face || 0) < 0;
-    ctx.save(); ctx.translate(dx, dy - mh*0.28 + bob);
+    ctx.save(); ctx.translate(dx, _cy);
     if (flip) ctx.scale(-1, 1);
     // Bản nhuộm sẵn có cache thay cho ctx.filter mỗi khung (xem tintedImg). Quái vàng đứng
-    // suốt 12 phút nên chỗ này là chỗ tiết kiệm lớn nhất.
+    // suốt 12 phút nên chỗ này là chỗ tiết kiệm lớn nhất. Nhuộm CẢ TẤM một lần rồi mới cắt ô —
+    // nhuộm từng ô là mỗi nhịp một bản cache mới.
     let _src = img;
     if (m.hitT > 0) _src = tintedImg(img, img.src + '|hit', 'brightness(1.7) saturate(2) hue-rotate(-45deg)');
     else if (d.golden) _src = tintedImg(img, img.src + '|gold', 'sepia(0.85) saturate(2.6) hue-rotate(-14deg) brightness(1.25)');
-    ctx.drawImage(_src, -mw/2, -mh/2, mw, mh);
+    // ── VIỀN TỐI quanh thân: vế thứ hai của việc tách quái khỏi ĐẤT ─────────────────────────
+    // Bóng đơn sắc của chính tấm đó vẽ lệch bốn hướng, NẰM DƯỚI thân. Cùng nguyên lý với rìa
+    // sáng ở mục "Đổ khối" và viền +N: lấy bóng dời đi chứ không tô đè lên một điểm ảnh nào của
+    // con vật — nên nó không ăn mất màu gốc mà art đã có.
+    // ⚠ KHÔNG `ctx.filter` trong vòng vẽ, KHÔNG `shadowBlur` (cả hai đã bị cấm tại chỗ). Bản
+    // đơn sắc đi qua `tintedImg` nên trả giá lọc ĐÚNG MỘT LẦN cho mỗi tấm, rồi cache.
+    // ⚠ VÀ ĐỪNG CHỮA BẰNG CÁCH PHÓNG TO SPRITE — đó là đúng cái đã phải gỡ ở mục Trụ Đá.
+    // Viền dày theo cỡ con vật, không phải một số px chép cứng: 53px và 113px cần hai bề dày khác nhau.
+    // ⚠ TRẢ GIÁ THẬT, NÊN PHẢI CÓ CÔNG TẮC. Bốn lượt `drawImage` thêm cho MỖI con trên màn: đo
+    // được **69 → 51 FPS** ở headless-CPU (14,4 → 19,7 ms/khung) với ~15 con trong khung. Máy
+    // thật có GPU nên rẻ hơn nhiều, nhưng đây vẫn là chỗ đáng nhường — và `SETTINGS.lowFx` là
+    // công tắc ĐÃ CÓ cho đúng loại đánh đổi này, đừng đẻ cờ thứ hai.
+    // Vòng chân thì KHÔNG gác: nó là một nét ellipse, và nó mới là thứ trả lời "đây là sinh vật".
+    const _vien = SETTINGS.lowFx ? img : tintedImg(img, img.src + '|vien', 'brightness(0) saturate(0)');
+    if (_vien !== img){
+      const _k = Math.max(1.5, mw * 0.022);
+      ctx.save(); ctx.globalAlpha = 0.5;
+      for (const [ox, oy] of [[-_k,0],[_k,0],[0,-_k],[0,_k]]){
+        if (_o) ctx.drawImage(_vien, _o.sx, _o.sy, sw, sh, -mw/2+ox, -mh/2+oy, mw, mh);
+        else    ctx.drawImage(_vien, -mw/2+ox, -mh/2+oy, mw, mh);
+      }
+      ctx.restore();
+    }
+    if (_o) ctx.drawImage(_src, _o.sx, _o.sy, sw, sh, -mw/2, -mh/2, mw, mh);
+    else    ctx.drawImage(_src, -mw/2, -mh/2, mw, mh);
     ctx.restore();
   } else {
     ctx.fillStyle = m.hitT > 0 ? '#8a2020' : d.color;
@@ -13455,7 +15117,7 @@ function drawMob(m){
     ctx.font = '8px "Be Vietnam Pro", sans-serif'; ctx.textAlign = 'center'; ctx.globalAlpha = 0.55;
     ctx.fillStyle = DIBIEN[c0.db[0]].col; ctx.fillText(DIBIEN[c0.db[0]].glyph, dx, topY - 24); ctx.globalAlpha = 1; } }
   ctx.font = '10px "Be Vietnam Pro", sans-serif'; ctx.textAlign='center';
-  const eld = d.el && ELEM[d.el];
+  const _nhanHe = mobHe(m); const eld = _nhanHe && ELEM[_nhanHe];
   const nw = ctx.measureText(nameTxt).width;
   const nameX = eld ? dx + 8 : dx;
   if (eld){
@@ -14143,6 +15805,25 @@ const NV_MOC2  = { h:0, p:8, s:20, d:36, j:46, q:56, n:62, t:68, e:74 };
 // khối lúc vẽ nữa: Sylvan Ranger bắn nỏ, Dark Wizard và Dark Lord niệm chú, ngay trong khối 'a'.
 // Lớp nào có nhát thứ hai thì đòn thường luân phiên 'a' ↔ 's'.
 const DANH_HAI_NHAT = { thieulam: 1, minhgiao: 1 };
+// ── CHIÊU NÀO DÙNG HOẠT CẢNH NÀO ──────────────────────────────────────────────────────────
+// Rig có tới bốn hoạt cảnh ra đòn đã nướng sẵn, mà trước bản này mọi chiêu đều dùng đúng MỘT
+// khối 'c' (05_MagicAttack) — tức Dark Knight bổ đại kiếm bằng tư thế niệm chú.
+//
+// Ánh xạ từ `player.castAct` chứ KHÔNG khai theo id chiêu: `heroCastAct()` đã suy ra kiểu ra
+// đòn cho từng chiêu và đã chọn sao cho KHỚP VFX (Meteor rơi từ trên ⇒ 'raise', quạt lửa ⇒
+// 'spin'). Khai lại theo id chiêu là dựng bản sao thứ hai của một luật đang sống — thêm chiêu
+// mới là hai bên lệch ngay. Ở đây chỉ dịch kiểu ra đòn sang khối art.
+//
+//   slash  chém ngang      → 'a'  08_SwordAttack   (nhát chính)
+//   spin   quét vòng       → 's'  08_SwordAttack2  (nhát hai, biên độ rộng hơn)
+//   thrust đâm             → 's'  — chủ dự án chốt: "đâm gió thì sẽ là attack 2"
+//   guard  thủ thế / buff  → 't'  07_StatusEffect  (đúng dáng đứng khi dính buff)
+//   raise · point · shoot  → 'c'  05_MagicAttack   (giơ tay niệm — hành vi cũ, giữ nguyên)
+//
+// ⚠ 's' · 't' · 'p' nằm ở BẢNG HAI (nạp khi cần). Chưa về thì heroSprite lui về dáng đứng chứ
+// không rơi về hình vẽ — và nvBoTruoc() đã kéo sẵn cả hai bảng của bộ đang mặc, nên cú tung
+// chiêu đầu tiên không bị hụt.
+const KHOI_THEO_ACT = { slash: 'a', spin: 's', thrust: 's', guard: 't' };
 // SẢI CHÂN mỗi VÒNG hoạt cảnh — quãng đường thế giới mà MỘT vòng bảng khung chở được.
 // Đo bằng máy: `tools/do_dang.js`. ĐỪNG chép tay lại, và đừng ước lượng.
 //
@@ -14322,6 +16003,11 @@ const NV_GIAP = {
   'thieulam|1': 'dkgs1',
   // Bộ ĐẦU TIÊN đi đường LỚP RỜI (xem NV_LOP_HOP): bốn ô vẽ tách nhau, không cần đủ bộ.
   'baidasan|1': 'dwvt1',
+  // Phoenix — bộ ĐỈNH của Dark Knight, nên giai 7 chứ không phải giai 1 (cùng lý do dwsm1).
+  'thieulam|7': 'dkph1',
+  'bug|7': 'dlbc1',        // Dark Lord — trượng bay, không có lớp vũ khí cầm tay
+  'toanchan|7': 'elnb1',   // Sylvan Ranger — bộ Ngọc Bích, cung CẦM TAY
+  'minhgiao|7': 'sbsm1',   // Spellblade — bộ Sinh Mệnh, kiếm CẦM TAY, KHÔNG mũ
 };
 // Lớp này có art giáp ở giai nào? Lấy giai CAO NHẤT có art. Có hàm này thì ?test=1 và bài kiểm
 // không ai phải thuộc lòng "Dark Wizard thì giai 7, Dark Knight thì giai 1", và thêm bộ mới
@@ -14367,7 +16053,12 @@ const NV_ICON_O = { non: 0, ao: 1, tay: 2, chan: 3 };
 // tự ô trang bị. Spine vẽ: tóc-sau · tay-XA · hai chân · thân · tay-GẦN · đầu — tức ô `tay`
 // nằm HAI BÊN ô `ao`. Gộp `tay` làm một lớp là tay xa nhảy ra trước ngực.
 // Phải trùng khít bảng LOP trong tools/spine/nuong_nv.py.
-const NV_LOP = [['h', 'non'], ['t1', 'tay'], ['c', 'chan'], ['a', 'ao'], ['t2', 'tay'], ['n', 'non']];
+// ⚠ VŨ KHÍ nằm GIỮA thân (`a`) và tay gần (`t2`) — đúng thứ tự vẽ của bộ xương Spine:
+//     背后头发 · 左手 · 左腿 · 右腿 · 躯干 · (vũ khí) · 右手 · 右手前伸 · 头
+// Đặt sau `t2` là lưỡi kiếm chui ra sau bàn tay; đặt trước `a` là nó nằm sau lưng áo.
+// Bảng này phải TRÙNG KHÍT `LOP` trong tools/spine/nuong_nv.py — tests/test_lopdo.js §1 gác.
+const NV_LOP = [['h', 'non'], ['t1', 'tay'], ['c', 'chan'], ['a', 'ao'],
+                ['vk', 'vukhi'], ['t2', 'tay'], ['n', 'non']];
 // Hộp CẮT của từng lớp: [x1,y1,w1,h1, x2,y2,w2,h2] — bảng một rồi bảng hai, trong hệ ô 240x300.
 // Do chính `nuong_nv.py --lop` in ra sau khi nướng; sai một số là lớp dán lệch người.
 //
@@ -14402,6 +16093,28 @@ const NV_LOP_HOP = {
               a:[93,123,57,72,32,113,137,140], t2:[63,123,139,86,35,114,160,141],
               n:[84,87,76,56,0,79,180,173] },
   // ── BỘ GIÁP ──────────────────────────────────────────────────────────────────────────
+  // Phoenix — bộ giai 7 của Dark Knight. Lớp `h` (tóc sau) RỖNG ở bộ này nên không khai,
+  // y như dkcw1/sbhd1/dlcm1: mũ giáp trùm kín gáy thì không còn tóc nào thò ra sau.
+  'dkph1':  { t1:[61,133,135,105,43,102,175,131], c:[62,161,152,105,70,139,136,124],
+              a:[63,124,126,138,26,114,167,147], vk:[0,21,240,279,73,137,167,160],
+              t2:[57,110,145,103,35,111,163,139], n:[84,87,105,75,0,79,179,169] },
+  // Dark Lord — bộ vàng-đỏ nạm hồng ngọc. KHÔNG có lớp `vk`: lớp này cầm trượng BAY
+  // (thần khí), nên nướng bằng cờ --khongvk. Xem NV_VK_LOP — cố ý không khai.
+  // Sylvan Ranger — bộ Ngọc Bích. Bộ ĐẦU TIÊN có lớp `h` (tóc sau): elf tóc dài nên khe
+  // 背后头发 có nét vẽ thật, khác bốn bộ trước đều rỗng lớp này.
+  // Spellblade — bộ Sinh Mệnh. Lớp `n` (đầu) là TÓC TRẦN, không mũ: chủ dự án chốt lớp này
+  // không đội mũ, và art của gói vốn đã vẽ vậy nên không phải xử gì thêm ở mã.
+  'sbsm1':  { h:[80,94,109,89,6,86,174,182], t1:[70,128,113,91,38,111,167,118],
+              c:[63,149,141,108,66,141,130,123], a:[89,119,95,96,26,111,148,143],
+              vk:[0,0,240,300,63,133,177,167], t2:[62,116,130,84,31,107,155,152],
+              n:[81,86,110,73,0,79,181,176] },
+  'elnb1':  { h:[85,96,70,79,5,88,170,177], t1:[71,132,116,75,39,115,165,118],
+              c:[70,159,121,101,71,142,127,119], a:[92,125,59,75,33,115,137,139],
+              vk:[0,93,240,207,9,141,231,159], t2:[63,126,132,80,36,119,156,136],
+              n:[82,86,76,62,0,79,178,173] },
+  'dlbc1':  { t1:[68,132,126,91,44,112,175,131], c:[65,157,130,108,69,141,134,120],
+              a:[74,121,98,89,28,111,154,161], t2:[65,127,137,85,36,114,161,139],
+              n:[86,88,80,55,0,80,186,168] },
   'dwvt1':  { t1:[61,137,136,82,44,105,174,128], c:[64,154,135,114,67,136,141,125],
               a:[65,121,129,122,28,111,163,142], t2:[68,125,130,81,31,116,163,139],
               n:[87,88,80,55,0,79,187,172] },
@@ -14409,9 +16122,44 @@ const NV_LOP_HOP = {
 // Ô nào đang đeo món của bộ CÓ LỚP RỜI? Tra theo `lớp|giai` của CHÍNH MÓN ĐỒ, không phải của
 // người chơi: trong túi có thể nằm cái nón giai 3 của lớp khác, và nó phải hiện đúng nón đó.
 // Trả null khi không ô nào có — người gọi khỏi phải tạo rác mỗi khung hình.
+// Món vũ khí nào có LỚP CẦM TAY. Khoá giống hệt VK_ANH (`dòng|giai`, lùi về `dòng`), vì đây
+// là cùng một câu hỏi — "cây này trông ra sao" — chỉ khác đầu ra: VK_ANH cho THẦN KHÍ một tấm
+// phẳng bay theo người, còn bảng này cho một BẢNG KHUNG đã nướng trong tay theo từng hoạt cảnh.
+// Có mặt ở đây thì thần khí tự tắt (xem `_tkHien`), nếu không là hiện HAI cây.
+const NV_VK_LOP = {
+  'kiem|7': 'dkph1',        // Phượng Kiếm — nướng từ chính gói Spine của bộ Phoenix
+  'makiem|7': 'sbsm1',      // Kiếm Sinh Mệnh — Spellblade cầm kiếm, combo hai nhát a↔s
+  'truongcung|7': 'elnb1',  // Cung Thiên Mệnh — cung thì PHẢI cầm tay, bắn bằng cung bay
+                            // lơ lửng thì không đọc ra động tác giương cung nào cả.
+};
+// ⚠ LỚP NÀO ĐÃ CÓ MỘT CÂY CẦM TAY THÌ CẦM CÂY ẤY CHO MỌI MÓN — đừng để rơi về thần khí.
+// Chủ dự án nhìn ảnh chụp và hỏi thẳng: *"DK có đại long đao theo sau mà?"*. Đúng: đeo bất cứ
+// cây nào KHÔNG khai trong NV_VK_LOP (rìu, chuỳ, hay chính cây kiếm ở giai 1-6) là `nvVkLop`
+// trả null ⇒ `_tkHien` bật thần khí ⇒ một thanh đại kiếm cao gần bằng người TRÔI LƠ LỬNG cạnh
+// nhân vật. Mà chủ dự án đã chốt từ đợt nhập gói: *"với DK thì nhân vật tay sẽ cầm kiếm"* —
+// thần khí CỐ Ý chỉ dành cho Dark Wizard và Dark Lord.
+//
+// ⚠ ĐÁNH ĐỔI, nói thẳng: bảng khung cầm tay là hoạt cảnh của ĐÚNG cây trong gói Spine, nên
+// một cây rìu giai 3 sẽ vẽ ra Phượng Kiếm. Tức hình trong TÚI và hình TRÊN TAY lệch nhau.
+// Đổi lại là không còn cây nào trôi lơ lửng. Cái lệch kia sửa được bằng cách nướng thêm một
+// bảng khung cho từng dòng; cái trôi kia thì không sửa được bằng mã.
+//
+// Khoá theo lớp của MÓN (`d.sect`), không theo lớp người chơi: món của lớp khác thì không mặc
+// được (itemUsable gác), nhưng đọc theo món mới là cùng một nguồn sự thật với hai dòng trên.
+const NV_VK_LOP_LOP = { thieulam: 'dkph1', minhgiao: 'sbsm1', toanchan: 'elnb1' };
+function nvVkLop(p){
+  const it = p && p.equip && p.equip.vukhi;
+  const d = it && itemDef(it);
+  if (!d || !d.line) return null;
+  const ten = NV_VK_LOP[d.line + '|' + (it.tier || 1)] || NV_VK_LOP[d.line]
+            || NV_VK_LOP_LOP[d.sect];
+  return (ten && NV_LOP_HOP[ten] && NV_LOP_HOP[ten].vk) ? ten : null;
+}
 function nvLopCuaEquip(p){
   if (!p || !p.equip) return null;
   let ra = null;
+  const vk = nvVkLop(p);
+  if (vk) (ra || (ra = {})).vukhi = vk;
   for (const k of HERO_ARMOR_SLOTS){
     const it = p.equip[k];
     if (!it || NV_ICON_O[k] == null) continue;
@@ -14430,12 +16178,69 @@ const NV_COT = 16, NV_OW = 240, NV_OH = 300;
 const NV_MOC = { i: 0, w: 16, a: 48, c: 64, r: 80 };   // trong BẢNG MỘT
 // Thân dùng WEBP (bảng 3840x1500, nén còn ~36%), vũ khí dùng PNG — lớp vũ khí gần như trong
 // suốt hoàn toàn, mà PNG nén khoảng trong suốt giỏi hơn WEBP: đo được 69 KB PNG so với 124 KB.
+// ⚠ VẼ TỪ `ImageBitmap`, KHÔNG VẼ THẲNG TỪ `Image`. `im.complete` bật ngay khi BYTE về, còn
+// phép GIẢI MÃ webp thì trình duyệt để dành tới lần `drawImage` đầu tiên — tức nó rơi thẳng vào
+// vòng vẽ, và nó đắt hơn mọi thứ khác trong khung đó cộng lại.
+//
+// SỐ ĐO (headless, không GPU · `assets/nv/dkph1_n.webp` 1680×525):
+//   Image + drawImage lần đầu            210 ms   ← nằm TRONG vòng vẽ
+//   Image + await decode() rồi mới vẽ    283 ms   ← vẫn chặn luồng chính, KHÔNG cứu được gì
+//   createImageBitmap() rồi vẽ            24 ms   ← giải mã NGOÀI luồng chính, vẽ 0 ms
+//
+// ⚠ ĐÃ THỬ `decode()` VÀ NÓ KHÔNG ĂN THUA — đừng thử lại. Khung tệ nhất chỉ hạ 272 → 254 ms,
+// và mọi tấm đều báo đã giải mã xong trong khi `drawImage` vẫn tốn 210 ms: `decode()` chuẩn bị
+// ảnh cho việc HIỂN THỊ, không chuẩn bị cho việc vẽ vào canvas 2D.
+//
+// VÌ SAO NÓ THÀNH VẤN ĐỀ ĐÚNG LÚC NÀY: một nhân vật mặc bộ giáp có lớp rời phải nạp HAI bộ —
+// thân nền (`dkcw1`, 1,10 MB) cộng bộ đang mặc (`dkph1`, 1,85 MB). Trước khi có năm bộ giáp giai
+// 7 thì chỉ có một bộ, khung tệ nhất 76 ms; sau đó là 272 ms.
+//
+// VÀ CÁI KHỰNG ẤY ĂN VÀO LỐI CHƠI, không chỉ gây khó chịu: `dt` kẹp 0,05 s mỗi khung, nên một
+// khung 272 ms chỉ nhích đồng hồ trò chơi 0,05 s. Bộ gộp số sát thương đếm 0,22 s ⇒ cần đủ 5
+// khung; mất một khung vào giải mã là nửa giây thật không đủ 5 khung và SỐ SÁT THƯƠNG KHÔNG BAY
+// RA. `test_dmgnum` bắt được đúng chuyện đó (đỏ 3/5 lượt) với một triệu chứng trông chẳng liên
+// quan gì tới art.
+//
+// ⚠ TRẢ `null` TRONG LÚC CHỜ NƯỚNG BITMAP, ĐỪNG TRẢ TẠM `Image`. Trả tạm là trả lại đúng cú
+// 210 ms mình vừa gỡ. Trạng thái "chưa có art" ĐÃ CÓ đường xử lý sẵn: `nvKhungGop()` trả null,
+// `heroSprite()` giữ `_choArt` nên khung dựng dở không bị nhớ lại.
+//
+// ⚠ PHẢI GẮN `naturalWidth`/`naturalHeight`/`complete` LÊN BITMAP. Mấy chỗ gọi (vòng kiếm, vũ
+// khí cầm tay) đọc đúng ba thuộc tính đó; `ImageBitmap` chỉ có `width`/`height`. Thiếu bước này
+// là mấy hàm ấy lặng lẽ trả null và vũ khí biến mất — không lỗi nào báo.
+//
+// ⚠ NHÁNH HỎNG PHẢI LUI VỀ `Image`. `createImageBitmap` ném khi ảnh 404/hỏng, và trình duyệt cũ
+// có thể không có nó; không bắt lỗi là lớp đó treo `null` vĩnh viễn và nhân vật rơi về hình dựng
+// bằng đường — im lặng, không lỗi nào báo.
+// Thân dùng WEBP (bảng 3840x1500, nén còn ~36%), vũ khí dùng PNG — lớp vũ khí gần như trong
+// suốt hoàn toàn, mà PNG nén khoảng trong suốt giỏi hơn WEBP: đo được 69 KB PNG so với 124 KB.
 function nvTai(ten, duoi){
   if (!ten) return null;
   const k = ten + '.' + duoi;
   let im = NV_ANH[k];
-  if (!im){ im = new Image(); im.src = 'assets/nv/' + k; NV_ANH[k] = im; }
-  return (im.complete && im.naturalWidth) ? im : null;
+  if (!im){
+    im = new Image(); NV_ANH[k] = im;
+    // ⚠ NƯỚNG BITMAP NGAY LÚC ẢNH TẢI XONG, KHÔNG ĐỢI TỚI LÚC VẼ. Đặt ở `onload` thì phép
+    // giải mã chạy song song với phần còn lại của lượt nạp, nên tới khung vẽ đầu tiên bitmap
+    // gần như luôn sẵn — mà cửa sổ hở chỉ còn ~24 ms thay vì cả cú 210 ms.
+    im.onload = () => {
+      if (typeof createImageBitmap !== 'function') return;
+      createImageBitmap(im).then(bm => {
+        // Mấy chỗ gọi (vòng kiếm, vũ khí cầm tay) đọc `naturalWidth`/`complete`, mà ImageBitmap
+        // chỉ có `width`/`height`. Thiếu ba dòng này là hai hàm ấy lặng lẽ trả null và vũ khí
+        // biến mất — không lỗi nào báo.
+        bm.naturalWidth = bm.width; bm.naturalHeight = bm.height; bm.complete = true;
+        im._bm = bm;
+      }, () => {});      // 404 / ảnh hỏng: cứ để đường `Image` gánh như cũ
+    };
+    im.src = 'assets/nv/' + k;
+  }
+  // ⚠ KHÔNG CHẶN CHỜ BITMAP. Bản đầu của tôi trả `null` tới khi bitmap xong, và nó làm ĐỎ 6 bài
+  // art (`test_herosprite` · `test_lopdo` · `test_vongkiem` · `test_khoihinh` · `test_itemdb` ·
+  // `test_chaos`): mấy bài đó gọi `heroSprite()` ĐỒNG BỘ ngay sau khi nạp, không nhả lượt cho
+  // trình duyệt, nên bitmap không bao giờ kịp về và art KHÔNG BAO GIỜ được dùng. Người chơi
+  // cũng gặp đúng thế ở khung đầu tiên — chỉ là ở đó nó tự khỏi nên không ai thấy.
+  return im._bm || ((im.complete && im.naturalWidth) ? im : null);
 }
 // ── TÁM HƯỚNG NHÌN — TÊN BỘ MANG LUÔN HƯỚNG ───────────────────────────────────────────────
 // Thế giới nhìn từ trên xuống, còn art thì CHỈ CÓ MỘT hướng nghiêng. Đo được trước bản này:
@@ -14493,7 +16298,22 @@ function nvChonHuong(base, face){
   }
   return tot;
 }
-function nvTen(sectKey, tier, hw){ const t = NV_BO[sectKey + '|' + tier]; return t ? t + (hw || '') : t; }
+// Thân trần LÀ CỦA LỚP, không của giai. `NV_BO` khai theo `lớp|giai` cho ngày nào có nhiều
+// bản thân khác nhau, nhưng hiện mỗi lớp đúng MỘT bản (khai ở `|1`) — nên tra hụt giai thì
+// lui về bản của chính lớp đó, đừng trả `undefined`.
+//
+// ⚠ ĐÂY LÀ MỘT LỖ THỦNG CỦA QUY TẮC SỐ 3, không phải chuyện nhỏ. Trước bản này
+// `nvTen('thieulam', 7)` trả `undefined` ⇒ `nvKhungGop()` thoát sớm ⇒ **cả nhân vật** rơi về
+// hình dựng bằng đường (hiệp sĩ xám, áo choàng đỏ), dù art có đủ. Mọi lớp ở giai ≥2 đều dính,
+// và nó im lặng tuyệt đối: không lỗi, không 404, chỉ là một nhân vật khác hẳn.
+// Lui về thân trần đúng nguyên tắc đã chốt ở màn chờ: *thà thân trần còn hơn một nhân vật
+// khác hẳn* (xem `ccArtSan`).
+const NV_BO_NEN = {};                              // lớp -> bản thân trần đầu tiên khai được
+for (const k in NV_BO){ const [sk] = k.split('|'); if (!NV_BO_NEN[sk]) NV_BO_NEN[sk] = NV_BO[k]; }
+function nvTen(sectKey, tier, hw){
+  const t = NV_BO[sectKey + '|' + tier] || NV_BO_NEN[sectKey];
+  return t ? t + (hw || '') : t;
+}
 // Tên bộ art đang mặc: bộ giáp nếu có, không thì thân trần của lớp. Mọi thứ vẽ theo bộ này —
 // thân, vũ khí, viền sáng — nên không có cách nào thân một bộ mà tay áo một bộ khác.
 // `hw` là MÃ BẢN VẼ (xem NV_HUONG); bỏ trống = bản nghiêng, tức mọi lời gọi cũ vẫn đúng.
@@ -14533,7 +16353,30 @@ function nvMoc(kind){ return NV_BANG2[kind] ? NV_MOC2[kind] : NV_MOC[kind]; }
 // Mốc bắt đầu (NV_MOC.r = 80) GIỮ NGUYÊN cho cả hai đời, nên chỉ khác SỐ khung chứ không lệch
 // mốc. Chỗ chồng lớp thì quy về PHA 0..1 rồi mới nhân với số khung của chính lớp đó — xem
 // nvKhungGop(), đó là chỗ duy nhất một khung hình đọc nhiều bộ khác số khung cùng lúc.
-const NV_KHUNG_R = { dkcw1: 32, dwsc1: 32, elfar1: 32, dlcm1: 32 };
+// ⚠ Bộ nào nướng ra 112 ô (16 cột × 7 hàng) thì khối CHẠY là 32 khung, không phải 16 như
+// HS_FRAMES.r mặc định. Kiểm bằng phép chia: bềRộngBảng/bềRộngÔ = 16 và bềCao/caoÔ = 7.
+// Quên khai là lớp đó chỉ đọc NỬA ĐẦU vòng chạy — chân lệch nhịp so với lớp khai đủ.
+const NV_KHUNG_R = { dkcw1: 32, dwsc1: 32, elfar1: 32, dlcm1: 32,
+                     dkph1: 32, dlbc1: 32, elnb1: 32, sbsm1: 32 };
+// Số khung của một khối, tính trên MỌI bộ đang góp lớp — không chỉ thân nền.
+//
+// ⚠ `nvBoTen()` trả THÂN NỀN cho bộ đã cắt lớp (vì `nvBoGiap()` cố ý trả null), nên hỏi nó số
+// khung là hỏi nhầm người: Spellblade mặc `sbsm1` (32 khung chạy) mà thân nền `sbhd1` chỉ có
+// 16 ⇒ vòng chạy đọc nửa đầu rồi lặp lại, nửa sau trùng khít nửa trước. Nhìn ra chỉ thấy
+// "chạy hơi lạ"; `tests/test_khungchay.js` bắt được bằng cách so từng khung.
+//
+// Lấy MAX chứ không lấy của thân: `nvKhungGop()` đã quy mỗi lớp về PHA 0..1 rồi mới nhân với
+// số khung của CHÍNH nó, nên lớp ít khung vẫn chạy đúng nhịp, chỉ thô hơn. Lấy min thì bộ
+// nướng mới bị bộ cũ kéo xuống.
+function nvSoKhungBo(sectKey, tier, gv, kind, hw){
+  let n = nvSoKhung(nvBoTen(sectKey, tier, gv, hw), kind);
+  const o = gv && gv.oLop;
+  if (o) for (const k in o){
+    const t = o[k] ? o[k] + (hw || '') : null;
+    if (t) n = Math.max(n, nvSoKhung(t, kind));
+  }
+  return n;
+}
 function nvSoKhung(ten, kind){
   if (kind === 'r' && ten && NV_KHUNG_R[ten]) return NV_KHUNG_R[ten];
   return HS_FRAMES[kind] || 1;
@@ -14629,7 +16472,7 @@ function nvKhungGop(sectKey, tier, gv, kind, idx, hw){
   // mỗi lớp tự nhân với số khung của CHÍNH nó: thân 32 khung và giáp 16 khung vẫn dừng ở
   // cùng một thời điểm trong vòng chạy, chỉ khác độ mịn. Lấy chung một `k` như bản trước thì
   // lớp 16 khung nhận chỉ số tới 31, chia dư ra thành đi ngược nửa vòng — tay rời khỏi thân.
-  const nRef = nvSoKhung(than, kind);
+  const nRef = nvSoKhungBo(sectKey, tier, gv, kind, hw);
   const pha  = (((idx % nRef) + nRef) % nRef) / nRef;
   const oL = (gv && gv.oLop) || {};
   // Gom nguồn TRƯỚC. Thiếu một tấm thì bỏ cả lượt chứ đừng vẽ nửa người: bảng hai nạp khi
@@ -14773,7 +16616,7 @@ function heroSprite(sectKey, tier, gv, kind, idx, act, back, sw, blk, hw){
   g.scale(HS_SCALE, HS_SCALE);
   g.translate(HS_PAD, HS_PAD);
   // Số khung của KHỐI ĐANG ĐỌC, theo chính bộ art này (khối chạy khai riêng — xem NV_KHUNG_R).
-  const _nk = nvSoKhung(nvBoTen(sectKey, tier, gv, hw), blk);
+  const _nk = nvSoKhungBo(sectKey, tier, gv, blk, hw);
   const ps = heroFramePose(kind, idx, act, sw, _nk);
   ps.back = !!back;
   // Cánh KHÔNG nướng vào sprite: drawPlayer đã vẽ nó riêng bằng veCanh(). Nướng vào đây là vẽ
@@ -15897,8 +17740,8 @@ function canhLongVu(g, B, M, rong){
   g.quadraticCurveTo(cx - nx * rong * 0.5, cy - ny * rong * 0.5, B.x, B.y);
   g.closePath();
 }
-function veCanh(g, it, px, py, sway, swayDir, co, bay){
-  const d = wingDef(it); if (!d) return;
+function veCanh(g, it, px, py, sway, swayDir, co, bay, sectDp){
+  const d = wingDef(it, sectDp); if (!d) return;
   const bac = clamp(wingBac(it), 1, 3);
   const T = WING_TIERS[bac - 1];
   const now = performance.now();
@@ -16449,12 +18292,93 @@ window.NETPLAYERS = [];
 // đối tượng thật vì `p.equip && p.equip.canh` đọc thẳng vào nó.
 function netTaoThan(nid){
   return { _netId: nid, map: '', x: 0, y: 0, face: 0, moving: false, sect: 'thieulam',
-           level: 1, name: '', hp: 1, maxHp: 1, speed: 190,
+           level: 1, name: '', hp: 1, maxHp: 1, speed: 190, chet: false,
            equip: {}, walkPh: 0, sway: 0, swayV: 0, swayDir: 0,
-           atkAnim: 0, castT: 0, hurtT: 0, poisonT: 0, deadT: 0,
+           atkAnim: 0, castT: 0, hurtT: 0, poisonT: 0, deadT: 0, pvpHp: 0, pvpMax: 0,
            nhayT: 0, noiT: 0, ltT: 0, nhat2: 0, buffAtkT: 0 };
 }
 window.netTaoThan = netTaoThan;
+
+// ⚠ MỘT NHỊP CỦA MỘT THÂN NGƯỜI TỪ XA — MỘT luật, HAI chỗ gọi.
+// `noiSuy()` trong net.js gọi nó cho thân người THẬT; `netMaNhip()` ngay dưới gọi nó cho BÓNG
+// GIẢ của lệnh `/net ma`. Chép nó ra làm bản thứ hai thì bóng giả diễn một kiểu còn người thật
+// diễn một kiểu — mà bóng giả sinh ra chính để THỬ đường vẽ của người thật, nên hai bên lệch
+// nhau là công cụ thử nói dối. Cùng lý do `thanNhip` tồn tại.
+// ⚠ Ba đồng hồ hoạt cảnh đếm ngược Ở ĐÂY, KHÔNG nhét vào `thanNhip`: `thanNhip` thì CẢ người
+// chơi của mình lẫn thân người từ xa cùng gọi, nên đặt vào đó là mình bị trừ hai lần.
+window.netThanNhip = function(t, dt, dx, dy){
+  const dl = Math.hypot(dx || 0, dy || 0);
+  if (typeof window.thanNhip === 'function') window.thanNhip(t, dt, dx || 0, dy || 0, dl > 0.01 ? 1 : 0);
+  if (t.atkAnim > 0) t.atkAnim = Math.max(0, t.atkAnim - dt);
+  if (t.castT   > 0) t.castT   = Math.max(0, t.castT   - dt);
+  if (t.hurtT   > 0) t.hurtT   = Math.max(0, t.hurtT   - dt);
+  // Nằm xuống: `update()` cộng `deadT` cho người chơi của mình, còn thân người từ xa không bao
+  // giờ chạy `update()` — thiếu dòng này là cú ngã đứng hình ở khung ĐẦU, vĩnh viễn.
+  if (t.chet) t.deadT = (t.deadT || 0) + dt;
+  else if (t.deadT) t.deadT = 0;
+};
+
+/* ═══ BÓNG GIẢ — thử tầng vẽ online mà KHÔNG cần cửa sổ thứ hai ═══════════════════════════
+ * `/net ma 3` dựng ba thân người từ xa ngay cạnh chân, đi qua ĐÚNG `netTaoThan` + `netApTrangBi`
+ * mà một người thật đi qua. Vì sao đáng có: thử online bằng hai cửa sổ có một cái bẫy đã ghi
+ * trong CLAUDE.md — mọi nhân vật mới hiện ra ở ĐÚNG một điểm, nên hai thân chồng khít lên nhau
+ * lệch 0,0px và kết nối chạy hoàn hảo vẫn đọc ra "không thấy ai".
+ *
+ * ⚠ CHÚNG CHỈ SỐNG TRÊN MÁY NÀY. Không gói tin nào mang chúng đi: `gui()` chỉ gửi `netDoc()`,
+ * tức người chơi của mình. Đừng "tiện tay" nối chúng vào đường gửi — đó là dựng đúng cái cửa
+ * cho một client sửa đổi bơm người giả vào màn của người khác.
+ * ⚠ Và chúng KHÔNG có máu thật, không bị nhắm, không đánh được: cùng lý do đàn thú hoang vô
+ * dụng — giá trị của một vật thử nằm ở chỗ nó không phải nội dung. */
+window.NET_MA = [];
+window.NET_HUD = false;
+
+window.netMaTao = function(n){
+  if (!player) return 0;
+  const g0 = window.netTrangBi ? window.netTrangBi() : null;
+  for (let i = 0; i < n; i++){
+    const t = netTaoThan(-(1000 + window.NET_MA.length));
+    const g = Math.PI * 2 * (i + 0.5) / Math.max(1, n);
+    t.x = player.x + Math.cos(g) * 170;
+    t.y = player.y + Math.sin(g) * 170;
+    t.map = curMap;
+    t.face = g + Math.PI;                       // quay mặt về phía mình
+    t.sect = player.sect;                        // cùng lớp ⇒ cùng bộ art, so được với thân mình
+    t.level = player.level;
+    t.hp = t.maxHp = player.maxHp;
+    t.speed = player.speed;
+    t.name = 'Bóng Giả ' + (window.NET_MA.length + 1);
+    // Mặc đúng bộ đồ của mình, và mặc QUA hai hàm của sợi dây thật — nếu chữ ký trang bị hỏng
+    // thì bóng giả hỏng y như người thật sẽ hỏng, đó mới là chỗ nó có ích.
+    if (g0 && window.netApTrangBi) window.netApTrangBi(t, g0);
+    window.NET_MA.push(t);
+  }
+  netMaDong();
+  return window.NET_MA.length;
+};
+
+window.netMaXoa = function(){
+  const n = window.NET_MA.length;
+  window.NET_MA.length = 0;
+  netMaDong();
+  return n;
+};
+
+// Đổ bóng giả vào mảng mà vòng vẽ đọc. Khi có mạng thì `capNhatMang()` của net.js dựng lại mảng
+// ấy mỗi ảnh chụp và tự nối `NET_MA` vào đuôi; khi KHÔNG có mạng thì net.js `return` ngay từ
+// đầu tệp nên không ai dựng lại — vì thế phải tự đồng bộ ở đây, nếu không `/net ma` im lặng
+// không vẽ gì ở đúng cái đường chơi một mình mà người ta hay thử trước.
+function netMaDong(){
+  const a = window.NETPLAYERS;
+  for (let i = a.length - 1; i >= 0; i--) if (a[i]._netId <= -1000) a.splice(i, 1);
+  for (const t of window.NET_MA) a.push(t);
+}
+
+// Nhịp của bóng giả. Gọi từ `update()`, và đứng TRƯỚC nhánh `dead` — người chơi nằm xuống thì
+// bóng giả vẫn phải thở, nếu không nó đứng hình đúng lúc ta đang xem khối chết trông thế nào.
+function netMaNhip(dt){
+  if (!window.NET_MA.length) return;
+  for (const t of window.NET_MA) window.netThanNhip(t, dt, 0, 0);
+}
 
 // ⚠ CỬA ĐỌC BẮT BUỘC — `net.js` không tự lấy được `player` và `curMap`.
 // Cả hai khai bằng `let` ở tầng cao nhất của một script THƯỜNG, mà `let` ở tầng ấy **không** gắn
@@ -16462,7 +18386,63 @@ window.netTaoThan = netTaoThan;
 // trong khi `typeof player` → "object". Nên `net.js` đọc `window.player` sẽ nhận `undefined`,
 // im lặng không gửi gì, không một lỗi nào in ra — đúng kiểu hỏng tệ nhất.
 // Ai đọc tới đây và định thêm trường: sửa ở ĐÂY, đừng cho net.js với tay vào phạm vi của game.
-window.netDoc = function(){ return { p: player, map: curMap }; };
+// ⚠ `chet` PHẢI ĐI RIÊNG, ĐỪNG SUY TỪ MÁU. Bản đầu để thân người từ xa suy `hp <= 0` và nó SAI
+// một cách rất khó thấy: hồi máu kịp chạy một nhịp giữa lúc máu về 0 và lúc cờ `dead` bật, nên
+// người đã nằm xuống vẫn gửi đi `hp = 0,565` — rồi máy chủ làm tròn thành **1**, và bên kia đọc
+// ra "còn sống". Đo được đúng thế: `{hp: 0.565, dead: true}` ở phía người chết.
+window.netDoc = function(){ return { p: player, map: curMap, chet: dead }; };
+
+/* ═══ GIAI ĐOẠN 2 · TRANG BỊ NHÌN THẤY ĐƯỢC ══════════════════════════════════════════════
+ * Người bên kia mặc gì thì phải NHÌN RA. Trước bản này mọi thân người từ xa đều dựng bằng
+ * `equip: {}` — tức ai cũng cởi trần, cùng một bậc giáp, không cánh, dù họ đang full +11.
+ *
+ * ⚠ GỬI CHỮ KÝ, KHÔNG GỬI `player.equip`. Một món thật nặng 474 byte (dòng chính, 15 dòng phụ,
+ * Thức Tỉnh, lịch sử ép ngọc…) — 11 ô là ~5 KB MỖI NGƯỜI MỖI ẢNH CHỤP, tức 50× cả gói tin
+ * hiện tại, để chở những trường mà tầng vẽ không hề đọc. Tầng vẽ chỉ đọc đúng bốn thứ trên mỗi
+ * ô: `def` (ra bộ art và lớp), `tier`, `plus`, và mức quý. Đo được: mô tả gọn này ~180 byte.
+ *
+ * ⚠ VÀ NÓ DỰNG LẠI MỘT `equip` GIẢ chứ không tự vẽ lấy. `gearVisual()` · `nvLopCuaEquip()` ·
+ * `heroSprite()` · `veCanh()` chạy y nguyên trên thân người từ xa, nên người bên kia đi qua
+ * ĐÚNG đường vẽ mà người chơi của mình đi qua. Viết một đường vẽ thứ hai "cho gọn" là dựng bản
+ * sao của một luật đang sống — bộ giáp mới nướng sẽ hiện trên mình mà không hiện trên họ.
+ *
+ * ⚠ Cánh gửi kèm LỚP của chủ nó (`s` trong ảnh chụp) — xem `wingDef(it, sectDp)`.            */
+const NET_O_DO = ['non', 'ao', 'tay', 'chan', 'vukhi'];
+
+window.netTrangBi = function(){
+  const p = player;
+  if (!p || !p.equip) return null;
+  const g = {};
+  for (const k of NET_O_DO){
+    const it = p.equip[k];
+    if (!it) continue;
+    // mức quý gộp về MỘT số: 0 trơn · 1 có Vận · 2 Hoàn Hảo. `gearVisual` chỉ phân biệt ngần ấy.
+    g[k] = [it.def || '', it.tier || 1, it.plus || 0, it.perfect ? 2 : it.luck ? 1 : 0];
+  }
+  const w = p.equip.canh;
+  if (w) g.canh = [w.wing || '', wingBac(w)];
+  // ⚠ BA TRẠNG THÁI, KHÔNG PHẢI HAI (xem `avatarId`). `JSON.stringify` bỏ hẳn khoá mang giá trị
+  // `undefined` nhưng GIỮ `null`, nên phép gán thẳng này chở đúng cả ba qua dây: thiếu khoá =
+  // chưa từng chọn ⇒ con mặc định của lớp · `null` = đã tắt · chuỗi = con đang cắm.
+  if (p.avatar !== undefined) g.av = p.avatar;
+  return g;
+};
+
+// Dựng lại `equip` GIẢ trên một thân người từ xa. Chỉ đủ cho tầng vẽ — không dòng chỉ số nào,
+// vì thân người từ xa không đánh nhau trên máy này và sẽ không bao giờ đánh: máy chủ giai đoạn
+// này chỉ chuyển tiếp. Cắm chỉ số thật vào đây là mời người ta sửa `def` trong devtools.
+window.netApTrangBi = function(t, g){
+  t.equip = {};
+  if (!g){ delete t.avatar; return; }
+  for (const k of NET_O_DO){
+    const a = g[k];
+    if (!Array.isArray(a)) continue;
+    t.equip[k] = { def: a[0], tier: (a[1] | 0) || 1, plus: a[2] | 0,
+                   luck: (a[3] | 0) >= 1, perfect: (a[3] | 0) >= 2 };
+  }
+  if (Array.isArray(g.canh)) t.equip.canh = { wing: g.canh[0], wingBac: (g.canh[1] | 0) || 1 };
+  if ('av' in g) t.avatar = g.av; else delete t.avatar;
+};
 
 // Nhãn tên + thanh máu. ⚠ Đo bề rộng chữ MỘT LẦN rồi nhớ — cùng bài học đã ghi ở nhãn NPC:
 // ctx.measureText dựng lại hộp chữ mỗi lần gọi, đặt trong vòng vẽ là mỗi người mỗi khung một
@@ -16479,7 +18459,13 @@ function veNhanNet(np){
   }
   const w = np._nhanW, x = np.x, y = np.y - cao - 10;
   // thanh máu — rẻ, và đứng cạnh một người không biết họ còn bao nhiêu máu thì vô nghĩa
-  const bw = 34, bh = 3, hpK = clamp((np.hp || 0) / Math.max(1, np.maxHp || 1), 0, 1);
+  // ⚠ TRONG SÀN ĐẤU PHẢI ĐỌC MÁU TRẬN, KHÔNG ĐỌC `np.hp`. `np.hp` là máu THẬT của nhân vật
+  // bên kia, thứ mà trận đấu cố ý không đụng tới — vẽ nó ở đây là một thanh máu đầy cứng suốt
+  // trận, tức là thanh máu nói dối đúng lúc nó là thứ duy nhất người chơi nhìn.
+  const _tran = pvpDangO() && (np.pvpMax || 0) > 0;
+  const bw = 34, bh = 3,
+        hpK = _tran ? clamp((np.pvpHp || 0) / np.pvpMax, 0, 1)
+                    : clamp((np.hp || 0) / Math.max(1, np.maxHp || 1), 0, 1);
   ctx.fillStyle = 'rgba(8,10,14,.62)';
   ctx.fillRect(x - bw/2 - 1, y + 3, bw + 2, bh + 2);
   ctx.fillStyle = hpK > 0.3 ? '#5fd07a' : '#d05f5f';
@@ -16490,6 +18476,230 @@ function veNhanNet(np){
   ctx.textAlign = 'center'; ctx.textBaseline = 'alphabetic';
   ctx.fillStyle = '#dfe6f5';
   ctx.fillText(np.name || '?', x, y);
+  ctx.restore();
+}
+
+/* ═══ ✦ VFX CHIÊU CỦA NGƯỜI BÊN KIA ═══════════════════════════════════════════════════════
+ * Trước bản này `castT` đã đồng bộ nên người bên kia thấy TƯ THẾ niệm — giơ trượng, xoay người —
+ * mà không thấy một tia lửa nào. Đứng cạnh một Dark Wizard đang thả Meteorite thì trên màn chỉ
+ * có một người vung tay trong khoảng không.
+ *
+ * ⚠ ĐÂY LÀ HÌNH, KHÔNG PHẢI ĐÒN. Vòng cập nhật `effects` chỉ cộng `e.t`, dời hạt và quay — không
+ * một lời gọi `hurtMob` nào (đã đếm: 22 chỗ gọi `hurtMob`, không chỗ nào trong vòng ấy). Nên
+ * chiêu của người khác nổ trên máy mình thì quái của mình KHÔNG mất máu, và người mình đang đấu
+ * cũng không. Đó là chủ ý: sát thương PvP cố ý mới chỉ có đòn thường.
+ *
+ * ⚠ GỬI TỪ TRONG `spawnSkillVfx`, ĐỪNG MÓC TỪNG CHỖ GỌI. Có chín chỗ gọi nó; móc tay từng chỗ
+ * là chỗ thứ mười thêm sau sẽ lặng lẽ không đồng bộ, và kiểu thiếu đó không ném lỗi.             */
+
+// Bắn một chiêu vừa niệm sang những người cùng bản đồ. Gọi từ `spawnSkillVfx` — đừng gọi thẳng.
+window.netChieuGui = function(id, mau, gly, phase, ang, R, x0, y0){
+  if (typeof window.netChieu !== 'function') return false;   // chưa nối mạng
+  return window.netChieu({
+    id: String(id || ''), mau: mau || '', gly: gly || '', ph: String(phase || ''),
+    ang: +(ang || 0).toFixed(2), R: Math.round(R || 0),
+    // ⚠ `x0/y0` là TOẠ ĐỘ THẾ GIỚI TUYỆT ĐỐI (điểm ngắm của chiêu giáng), không phải độ lệch so
+    // với người niệm — `diemGiang()` trả toạ độ tuyệt đối. Quy nó về tương đối rồi cộng lại ở
+    // bên kia là thêm một phép biến hình để sai, mà cả hai bên vốn đã dùng chung một hệ toạ độ.
+    x0: x0 == null ? null : Math.round(x0), y0: y0 == null ? null : Math.round(y0),
+  });
+};
+
+// Máy chủ báo có người niệm chiêu. `d` là gói trên, kèm `tu` = id người niệm.
+window.netChieuNhan = function(d){
+  if (!d || !player) return;
+  // ⚠ DỰNG LẠI BẰNG CHÍNH `spawnSkillVfx`, và truyền THÂN NGƯỜI TỪ XA vào tham số cuối. Viết
+  // một đường vẽ thứ hai "cho gọn" là chiêu mới thêm sẽ hiện trên mình mà không hiện trên họ —
+  // đúng lý do mà trang bị cũng dựng lại một `equip` giả thay vì tự vẽ lấy.
+  const np = window.NETPLAYERS.find(n => n._netId === d.tu);
+  if (!np || np.map !== curMap) return;
+  try {
+    spawnSkillVfx(d.id, { color: d.mau || undefined, glyph: d.gly || undefined },
+                  d.ph, d.ang || 0, d.R || 0,
+                  d.x0 == null ? undefined : d.x0, d.y0 == null ? undefined : d.y0, np);
+  } catch (e) { console.error('[net] vfx chiêu', e); }
+};
+
+/* ═══ ⚔ SÀN ĐẤU — ĐẤU TAY ĐÔI (Giai đoạn 2b online) ══════════════════════════════════════
+ * Chủ dự án chốt: *"Dựng 1 map pvp và làm thử xem. Chỉ cần 2 người đánh nhau là được."*
+ *
+ * ⚠⚠ MÁU TRẬN LÀ MỘT TÚI RIÊNG, KHÔNG PHẢI `player.hp` — và đây là quyết định lớn nhất của cả
+ * khối này. Ba lý do, mỗi lý do đủ để một mình nó quyết:
+ *   ① `player.hp` nằm trên MÁY CỦA NGƯỜI BỊ ĐÁNH. Để nó quyết thì ai cũng bất tử bằng một dòng
+ *      devtools, và người thắng không có cách nào biết mình đang bị lừa.
+ *   ② Chết thật thì `onDeath()` chạy: rơi vào map an toàn, mất tiến độ, trôi cả phiên. Một trận
+ *      đấu thua không được phép đụng vào bản lưu.
+ *   ③ Túi riêng thì máy chủ giữ được — và nó MỞ SỐ ra cho cả hai bên nhìn cùng một con số.
+ * Nhưng túi ấy KHỞI TẠO BẰNG `maxHp` THẬT, nên trang bị và cấp vẫn quyết thắng thua: đúng cái
+ * "mang progress và đồ" mà chủ dự án hỏi.
+ *
+ * ⚠ SÁT THƯƠNG DO KẺ ĐÁNH TÍNH, MÁY CHỦ KẸP LẠI. Máy chủ không biết `atk` của ai, và cho nó
+ * biết là phải chở cả `calcDerived` lên đấy — việc của giai đoạn có kho đồ trên máy chủ. Nên
+ * ở đây: client gửi con số, máy chủ kiểm KHOẢNG CÁCH (nó có cả hai toạ độ), kiểm NHỊP, và kẹp
+ * một cú vào `PVP_TRAN_DMG` phần máu trận. Ai sửa client thì đánh đau hơn — nhưng không bao giờ
+ * một phát chết, không đánh xuyên map, và không bắn 100 phát một giây. Đó là hàng rào ĐO ĐƯỢC,
+ * không phải một lời hứa chống gian lận. Đừng đọc nó thành lời hứa kia.
+ *
+ * ⚠ CHỈ ĐÒN THƯỜNG. Chiêu thức đi qua `hurtMob` ở hàng chục chỗ (nón, vòng, sóng dư chấn, đạn
+ * xuyên) và mỗi chỗ là một hình học riêng; nối tất cả vào PvP là một đợt việc riêng, không phải
+ * một dòng thêm vào. Nói ra ở đây thay vì nối nửa vời: một chiêu nổ trùm qua người mà họ không
+ * mất máu là đúng cái "hứa suông" mà luật `pham` đã cấm.                                        */
+const PVP_MAP = 'pvp';
+/* Quy đổi Công Kích → sát thương lên NGƯỜI.
+ *
+ * ⚠ ĐO TRƯỚC KHI CHỌN, và phép đo nói một chuyện khác hẳn phỏng đoán đầu tiên của tôi (0,30 vì
+ * "atk/maxHp ≈ 0,10-0,14"). Quét 5 lớp × 3 cấp × có/không trang bị BiS:
+ *
+ *   | cảnh                        | atk/maxHp | aspd  |
+ *   |-----------------------------|-----------|-------|
+ *   | trần, cấp 20-120            | 0,037     | 0,74  |  ← thieulam, đáy
+ *   | trần, toanchan cấp 20       | 0,083     | 0,79  |
+ *   | BiS (`applyTestBoost`)      | 0,089     | 0,25  |
+ *   | BiS, toanchan cấp 120       | 0,266     | 0,25  |  ← đỉnh
+ *
+ * Tức tỉ lệ ấy trải **7 lần** giữa đáy và đỉnh, mà `aspd` lại nhanh thêm **3 lần** ở đầu BiS —
+ * cộng lại là 21 lần chênh về tốc độ hạ. KHÔNG hệ số phẳng nào cho cả hai đầu một trận dài
+ * bằng nhau; đừng đi tìm con số ấy.
+ *
+ * Nên chia việc: hệ số này đặt theo cảnh THẬT (trang bị thường) và trần một cú của máy chủ
+ * (`PVP_TRAN_DMG`) mới là thứ bó đầu BiS lại. Đo được ở `PVP_HE = 1,0`:
+ * trận 17-32 cú, tức ~4 giây (hai bên full BiS) tới ~24 giây (hai bên tay trần).
+ * Bốn giây là ĐẦU TRÊN đã biết, không phải chỗ chưa đo. */
+const PVP_HE = 1.0;
+function pvpDangO(){ return curMap === PVP_MAP && !!(window.NET && window.NET.on); }
+
+// Máu trận CỦA MÌNH. `max` = 0 nghĩa là chưa vào trận nào — phân biệt với "máu đầy", vì một
+// thanh máu 0/0 vẽ ra trông hệt một người sắp chết.
+let pvpTran = { hp: 0, max: 0, chet: false };
+window.pvpTranDoc = () => pvpTran;
+
+// ⚠ HAI GÓC ĐỨNG. Mọi nhân vật vào một map đều rơi vào ĐÚNG một `spawn`, nên hai người vừa vào
+// là hai thân CHỒNG KHÍT lên nhau, lệch 0,0px — và cái đó đọc ra là "mạng không chạy" chứ không
+// đọc ra "hai người đang đứng chồng lên nhau". Đã mất một vòng chẩn đoán vì đúng chuyện đó ở
+// lượt thử Bóng Người đầu tiên (xem CLAUDE.md, mục THỬ HAI NGƯỜI).
+//
+// ⚠ CHỌN GÓC THEO `NET.id`, ĐỪNG BỐC NGẪU NHIÊN. `id` là thứ DUY NHẤT ở đây được máy chủ bảo
+// đảm khác nhau giữa hai client. Bốc ngẫu nhiên thì một nửa số lượt hai người vẫn cùng một góc,
+// tức là lỗi cũ quay lại nhưng chỉ một nửa số lần — kiểu hỏng khó lần nhất.
+function pvpGoc(md){
+  const gs = md && md.goc;
+  if (!gs || !gs.length) return null;
+  const id = (window.NET && window.NET.on && window.NET.id) || 0;
+  return gs[(id > 0 ? id - 1 : 0) % gs.length];
+}
+
+// Thân người từ xa gần nhất còn đứng được. Cùng khuôn `nearestMob`, và CỐ Ý là một hàm riêng:
+// gộp người vào `nearestMob` là mọi chiêu, mọi đạn, mọi AUTO trong cả game bỗng nhiên nhắm được
+// vào người chơi khác — ở mọi bản đồ.
+function nearestNguoi(range){
+  let best = null, bd = range;
+  for (const np of window.NETPLAYERS){
+    if (np.map !== curMap || np.chet) continue;
+    if ((np.pvpMax || 0) > 0 && (np.pvpHp || 0) <= 0) continue;   // đã bị hạ, đang chờ dựng lại
+    const d = dist(player.x, player.y, np.x, np.y);
+    if (d < bd){ bd = d; best = np; }
+  }
+  return best;
+}
+
+// Gửi một cú lên máy chủ. Trả `false` khi chưa nối — bên gọi phải nói ra, đừng nuốt.
+function pvpDanh(np, dmg){
+  if (!np || !np._netId) return false;
+  return typeof window.netPvpDanh === 'function' && window.netPvpDanh(np._netId, Math.max(1, Math.round(dmg)));
+}
+
+/* Máy chủ báo máu đổi. `d = {id, hp, max, tu, dmg, ten}` — `id` là người BỊ đánh.
+ * ⚠ Tin này tới CẢ HAI bên, kể cả người bị đánh (ảnh chụp không bao giờ chở chính mình). Thiếu
+ * vế đó thì người bị đánh là người DUY NHẤT không thấy mình đang mất máu. */
+window.netPvpMau = function(d){
+  if (!d || !player) return;
+  const ta = (window.NET && window.NET.id) || 0;
+  if (d.id === ta){
+    pvpTran.hp = d.hp; pvpTran.max = d.max; pvpTran.chet = d.hp <= 0;
+    // Đi qua ĐÚNG đường mà một cú trúng đòn của quái đi qua: giật người, rung màn, loé đỏ. Vẽ
+    // riêng một hiệu ứng "trúng đòn PvP" là dựng bản sao thứ hai của một cảm giác đang sống.
+    player.hurtT = 0.3; player.combatT = 4;
+    player._hitSeq = (player._hitSeq || 0) + 1;
+    addFloat(player.x, player.y - 30, d.dmg, '#ff5a3a', 17);
+    addEffect({ type:'ring', x:player.x, y:player.y - 10, r:26, color:'#ff5a3a' });
+    AudioSys.sfx('hurt', 0.8);
+  } else {
+    const np = window.NETPLAYERS.find(n => n._netId === d.id);
+    if (np){ np.pvpHp = d.hp; np.pvpMax = d.max;
+             if (d.tu === ta) addFloat(np.x, np.y - 30, d.dmg, '#ffd76a', 17); }
+  }
+};
+
+/* Kết trận. `d = {thang, thua, tenThang, tenThua}` */
+window.netPvpKet = function(d){
+  if (!d || !player) return;
+  const ta = (window.NET && window.NET.id) || 0;
+  const thang = d.thang === ta;
+  if (d.thua === ta) pvpTran.chet = true;
+  // ⚠ Tên do NGƯỜI KHÁC đặt — nó đi vào `zoneBanner`, mà banner vẽ bằng `ctx.fillText` chứ
+  // không phải `innerHTML`, nên không có đường nào thành HTML. Giữ đúng nếp đó nếu ai dời
+  // banner này sang DOM: xem luật thoát ký tự ở khối CHAT.
+  zoneBanner = { text: thang ? '⚔ THẮNG' : (d.thua === ta ? '☠ BỊ HẠ' : '⚔ KẾT TRẬN'),
+                 sub: `${d.tenThang || '?'} hạ ${d.tenThua || '?'} — dựng lại trận sau ít giây`,
+                 color: thang ? '#ffd76a' : '#ff7a6a', t: 4.5 };
+  AudioSys.sfx(thang ? 'quest' : 'hurt', 0.9);
+};
+
+/* Máy chủ dựng lại trận (hồi sinh). `d = {id, hp, max}` — đi chung một cửa với `netPvpMau` thì
+ * gọn hơn, nhưng tách ra vì chỗ này KHÔNG được giật người và KHÔNG được in số sát thương. */
+window.netPvpHoi = function(d){
+  if (!d || !player) return;
+  const ta = (window.NET && window.NET.id) || 0;
+  if (d.id === ta){
+    pvpTran.hp = d.hp; pvpTran.max = d.max; pvpTran.chet = false;
+    addFloat(player.x, player.y - 60, '⚔ Trận mới', '#9fe0ff', 15);
+  } else {
+    const np = window.NETPLAYERS.find(n => n._netId === d.id);
+    if (np){ np.pvpHp = d.hp; np.pvpMax = d.max; }
+  }
+};
+
+// HUD trận — một thanh máu của mình ở giữa trên. Chỉ hiện trong sàn đấu và chỉ khi đã vào trận.
+// ⚠ Vẽ SAU `ctx.restore()` của khối thế giới (gọi từ vùng HUD), nên toạ độ ở đây là MÀN HÌNH.
+// Ô chỉ số mạng. Bật bằng `/net hud`, mặc định TẮT — nó là công cụ thử, không phải giao diện.
+// Vì sao vẽ ra màn thay vì in ra console: lúc thử hai cửa sổ thì thứ cần nhìn là con số ĐANG
+// ĐỔI (ảnh chụp có tới đều không, có ai rơi khỏi danh sách không), mà một dòng log in một lần
+// thì không nói được điều đó. Đọc thẳng `window.NET`, không giữ bản sao nào.
+function drawNetHUD(){
+  if (!window.NET_HUD) return;
+  const N = window.NET || { on:false, tinhTrang:'tat', id:0, soAnh:0 };
+  const that = window.NETPLAYERS.filter(n => n._netId > -1000).length;
+  const gia  = (window.NET_MA || []).length;
+  const d = [
+    'NET ' + (N.on ? N.tinhTrang : 'tat') + (N.on ? '  #' + N.id : ''),
+    'người thật: ' + that + '   bóng giả: ' + gia,
+    'ảnh chụp: ' + (N.soAnh || 0),
+  ];
+  ctx.save();
+  ctx.font = '11px ui-monospace, monospace'; ctx.textAlign = 'left'; ctx.textBaseline = 'top';
+  const w = 168, h = d.length * 14 + 8, x = 10, y = H - h - 96;
+  ctx.fillStyle = 'rgba(8,10,14,.72)'; ctx.fillRect(x, y, w, h);
+  ctx.strokeStyle = N.tinhTrang === 'da-noi' ? 'rgba(95,208,122,.8)' : 'rgba(255,215,106,.8)';
+  ctx.lineWidth = 1; ctx.strokeRect(x + .5, y + .5, w - 1, h - 1);
+  ctx.fillStyle = '#cfe8ff';
+  d.forEach((t, i) => ctx.fillText(t, x + 7, y + 5 + i * 14));
+  ctx.restore();
+}
+function drawPvpHUD(){
+  if (!pvpDangO() || pvpTran.max <= 0) return;
+  const w = Math.min(360, W * 0.34), h = 14, x = W/2 - w/2, y = 74;
+  const k = clamp(pvpTran.hp / pvpTran.max, 0, 1);
+  ctx.save();
+  ctx.fillStyle = 'rgba(8,10,14,.70)'; ctx.fillRect(x - 2, y - 2, w + 4, h + 4);
+  ctx.fillStyle = k > 0.3 ? '#5fd07a' : '#d05f5f'; ctx.fillRect(x, y, w * k, h);
+  ctx.strokeStyle = 'rgba(232,74,58,.85)'; ctx.lineWidth = 1; ctx.strokeRect(x - 2.5, y - 2.5, w + 5, h + 5);
+  ctx.font = 'bold 12px "Be Vietnam Pro", sans-serif'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+  ctx.fillStyle = '#e4ebff';
+  ctx.fillText(`⚔ MÁU TRẬN ${Math.round(pvpTran.hp)} / ${Math.round(pvpTran.max)}`, W/2, y + h/2);
+  if (pvpTran.chet){
+    ctx.font = 'bold 13px "Be Vietnam Pro", sans-serif'; ctx.fillStyle = '#ff9a8a';
+    ctx.fillText('Đang chờ dựng lại trận…', W/2, y + h + 16);
+  }
   ctx.restore();
 }
 
@@ -16615,6 +18825,14 @@ function chatNoi(){
 function drawPlayer(p){
   p = p || player;
   const sect = SECTS[p.sect];
+  // ⚠ `dead` LÀ BIẾN TOÀN CỤC CỦA NGƯỜI CHƠI NÀY. Hàm này nay vẽ cả thân người từ xa, nên đọc
+  // thẳng nó là ba chỗ bên dưới hỏi "TA có chết không" trong khi đang vẽ NGƯỜI KHÁC: mình nằm
+  // xuống là cả map ai cũng đổ ra nằm, và ngược lại người khác chết vẫn đứng vung kiếm.
+  // Người từ xa thì hỏi máu — đó là thứ ảnh chụp có chở theo.
+  const _chet = (p === player) ? dead : !!p.chet;
+  // Có avatar hay không phải biết TỪ ĐÂY, không phải mãi dưới chỗ xếp lớp: khối BAY ngay bên
+  // dưới cần nó để quyết cái gì rời mặt đất. Xem `bayKNen`.
+  const _coAva = !!avatarId(p);
   // ═══ LAYERING: đất → sau lưng → người → vũ khí → aura quỹ đạo → danh hiệu ═══
   const riding = false; // không còn cơ chế cưỡi; giữ cờ vì vài phép tính bóng đổ đọc nó
   const now = performance.now();
@@ -16636,6 +18854,17 @@ function drawPlayer(p){
   if (Math.abs(_bayDich - bayCao) < 0.05) bayCao = _bayDich;
   _bayCao.set(_bayK0, bayCao);
   const bayK = bayCao / Math.max(1, BAY_CAO[2]);        // 0 = chạm đất, 1 = bay cao nhất
+  // ⚠ ĐÔI CÁNH ĐEO TRÊN LỚP NHÂN VẬT, KHÔNG TRÊN CON AXIE — nên chỉ lớp nhân vật rời mặt đất.
+  // `veCanh()` đã vẽ cánh ở chỗ lớp nhân vật đứng (xem chú thích tại chỗ vẽ), tức đôi cánh
+  // thuộc về kẻ hộ tống. Bản trước nhấc CẢ CẶP bằng một `ctx.translate(0, yOff)` bọc ngoài,
+  // nên con Axie — cái thân NHÌN THẤY của người chơi, không có cánh và không có hoạt cảnh bay
+  // nào — treo lơ lửng cách vòng chân của chính nó 24 px. Chủ dự án chụp lại và gọi đúng tên:
+  // "hình bay như này sai quá sai".
+  //
+  // ⇒ Khi có avatar: lớp nhân vật bay, con Axie ĐỨNG ĐẤT, và bóng đổ / vòng chân giữ nguyên
+  // cỡ (chúng là chân đế của con Axie, mà con Axie thì vẫn đang chạm đất). Tắt avatar bằng
+  // `/avatar off` thì thân người LÀ thân nhìn thấy ⇒ hành vi cũ y nguyên.
+  const bayKNen = _coAva ? 0 : bayK;
   let yOff = -bayCao;
   // Nhịp bước chân chỉ có nghĩa khi chân còn chạm đất. Đang bay mà vẫn nhún như đang chạy bộ
   // là thứ phá cảm giác bay nhanh nhất.
@@ -16647,7 +18876,7 @@ function drawPlayer(p){
   const _bobK = p.moving ? Math.abs(Math.sin(p.walkPh || 0)) : 0;
   // Bay cao thì bóng vừa CO lại vừa NHẠT đi — đó là tín hiệu duy nhất cho biết nhân vật đang
   // lơ lửng chứ không phải chỉ được vẽ dịch lên vài pixel.
-  const _shK = (1 - _bobK * 0.20) * (1 - bayK * 0.42);
+  const _shK = (1 - _bobK * 0.20) * (1 - bayKNen * 0.42);
   const _shRx = (riding?27:16) * _shK, _shRy = (riding?9:6) * _shK;
   ctx.fillStyle = 'rgba(0,0,0,' + (0.09*_shAl*_shK).toFixed(3) + ')'; ctx.beginPath();
   ctx.ellipse(p.x + _shDx, p.y+8, _shRx*1.5, _shRy*1.5, 0, 0, 7); ctx.fill();
@@ -16657,8 +18886,8 @@ function drawPlayer(p){
   // nên nó nổi trên bóng, và vẫn nằm dưới thân người. Co + nhạt theo `bayK` y như bóng: đang
   // lơ lửng mà vòng vẫn nguyên cỡ thì nó dính xuống đất trong khi người đã bay lên.
   // Màu lấy theo LỚP, nên nó vừa chỉ chỗ vừa nhắc mình đang chơi lớp nào.
-  if (!dead){
-    const _neoK = 1 - bayK * 0.55;
+  if (!_chet){
+    const _neoK = 1 - bayKNen * 0.55;
     ctx.save();
     ctx.globalAlpha = 0.52 * _neoK * _shAl;
     ctx.strokeStyle = sect.color; ctx.lineWidth = 1.6;
@@ -16670,7 +18899,7 @@ function drawPlayer(p){
   // Bụi gót chân: nổ ĐÚNG LÚC bàn chân chạm đất, không phải rắc ngẫu nhiên 8% số khung.
   // Bàn chân chạm khi sải chân mở hết cỡ — tức cos(pha) đổi dấu. Bắt đúng lần đổi dấu
   // đó thì tiếng bước và bụi trùng nhau, chân mới có cảm giác BÁM đất.
-  if (!SETTINGS.lowFx && p.moving && bayK < 0.3){   // chân không chạm đất thì không có bụi gót
+  if (!SETTINGS.lowFx && p.moving && bayKNen < 0.3){   // chân không chạm đất thì không có bụi gót
     const _c = Math.cos(p.walkPh || 0);
     if (p._lastCos !== undefined && (_c <= 0) !== (p._lastCos <= 0)){
       const _sd = _c <= 0 ? 1 : -1;                    // chân nào vừa chạm
@@ -16713,12 +18942,12 @@ function drawPlayer(p){
   // Bay theo thì gỡ cả ba: một tấm 9 KB, đặt ở toạ độ thế giới, chuyển động do mã quyết định.
   // Và bỏ vũ khí ra khỏi khung hình KHÔNG để lại bàn tay hụt — bộ xương nắm đấm rồi vung theo
   // cung, đọc thành "ra hiệu điều khiển" chứ không phải "quên cầm đồ". Đã chụp lại đối chiếu.
-  const _tk = thanKhiTuThe(p, (p.atkAnim || 0) / 0.22, (p.castT || 0) / 0.38, p.walkPh || 0, now);
+  const _tk = thanKhiTuThe(p, (p.atkAnim || 0) / NV_DANH_GIAY, (p.castT || 0) / NV_CHU_GIAY, p.walkPh || 0, now);
   // ⚠ CHỖ VẼ cũng dời xuống, cùng lý do với cánh: nó bám neo người chơi nên bật avatar lên là
   // cây vũ khí lơ lửng trên đầu con Axie.
 
-  const castK = (p.castT || 0) / 0.38;
-  const atkK = (p.atkAnim || 0) / 0.22;
+  const castK = (p.castT || 0) / NV_CHU_GIAY;
+  const atkK = (p.atkAnim || 0) / NV_DANH_GIAY;
   // `atkAnim` ĐẾM NGƯỢC nên atkK = 1 ở khung ĐẦU và 0 ở khung cuối: thân người dồn tới xa nhất
   // ngay lúc LẤY ĐÀ rồi lùi dần trong lúc lưỡi bổ xuống. Trọng tâm đi ngược chiều đòn đánh —
   // đúng thứ làm cú chém "nhẹ hều". hSwing(1-atkK) cho thân dồn tới đúng lúc lưỡi chạm.
@@ -16743,16 +18972,35 @@ function drawPlayer(p){
   // chỗ tính `_kind`. Điều kiện dưới đây là đúng chuỗi ưu tiên của `_kind` (chết > trúng đòn
   // > niệm chú > đánh), và `_veAva` bên dưới đọc lại chính nó — một nguồn sự thật, không
   // phải hai điều kiện song song rồi lệch nhau lúc ai đó sửa một bên.
-  const _lopHien = !dead && !((p.hurtT || 0) > 0) && (castK > 0 || atkK > 0);
-  const _coAva = !!avatarId(p);
+  const _lopHien = !_chet && !((p.hurtT || 0) > 0) && (castK > 0 || atkK > 0);
+  // ⚠ `_nhap` TÍNH Ở ĐÂY, cạnh `_lopHien` — nó chỉ phụ thuộc `_coAva` (đã khai trên) và map.
+  // Phải sớm vì `__veChet` bên dưới phơi nó ra cho bài kiểm, và vì khối cánh/thần khí đọc nó.
+  // ⚠ ĐỪNG GỘP VỚI `_lopHien`. Hai thứ trả lời hai câu khác hẳn nhau:
+  //   `_lopHien` — lớp nhân vật đang ở tư thế RA ĐÒN hay ĐI THEO (chỗ đứng + cỡ)
+  //   `_nhap`    — lớp nhân vật CÓ MẶT TRÊN MÀN HAY KHÔNG (đã nhập vào Axie chưa)
+  // Ngoài thành `_lopHien` vẫn bật lúc ra đòn dù chẳng còn ai để hiện — đó là chủ ý, nó giữ
+  // nguyên ràng buộc `_lopHien === (_kind==='a'||'c')` mà cả khối `_kind` bên dưới dựa vào.
+  const _nhap = _coAva && avaNhap();
+  // Phơi hai quyết định này ra cho bài kiểm, KHOÁ THEO TỪNG THÂN NGƯỜI — cùng lối với
+  // `__neoVe`/`__veThan`: đưa chính biến đang điều khiển vòng vẽ ra ngoài, thay vì để bài kiểm
+  // dựng lại luật một lần nữa. Ở đây bắt buộc phải thế: đo bằng điểm ảnh KHÔNG dùng được, vì một
+  // thân người đang vung kiếm đổi 6.545/102.000 điểm ảnh giữa HAI LƯỢT VẼ LIÊN TIẾP cùng điều
+  // kiện (cánh vỗ, hào quang đập, vũ khí bay — tất cả chạy theo performance.now()). Sàn nhiễu ấy
+  // lớn hơn thứ cần đo, nên mọi ngưỡng đặt trên nó đều là ngưỡng đặt trên nhiễu.
+  if (window.TEST_MODE)
+    (window.__veChet || (window.__veChet = {}))[_bayK0] = { chet: _chet, lopHien: _lopHien, nhap: _nhap };
   // Trục sâu nén 0,55 — cùng lối với bóng đổ: game nhìn chếch từ trên nên dời dọc phải ngắn
   // hơn dời ngang, không thì nhân vật nhảy lên cao hẳn khi Axie quay mặt lên.
   // RA TRƯỚC khi tung chiêu · ĐI THEO SAU lúc thường. Một phép nội suy thì mượt hơn, nhưng chủ
   // dự án nói rõ "biến mất rồi xuất hiện" — nên đổi chỗ TỨC THÌ, và cú hiện ra do `_hienLop` +
   // vòng triệu hồi lo. Trượt từ sau ra trước đọc thành "chạy vòng lên", không ra "hộ pháp".
-  const _lopT  = _lopHien ? AVA_CHAN_TRUOC : -AVA_THEO_SAU;
-  const _lopB  = _lopHien ? AVA_CHAN_BEN   :  AVA_THEO_BEN;
-  const _lopCo = _coAva ? (_lopHien ? AVA_DANH_CO : AVA_THEO_CO) : 1;
+  const _oThanh = _coAva && avaTrongThanh();
+  const _lopT  = _oThanh ? -AVA_THANH_SAU : _lopHien ? AVA_CHAN_TRUOC : -AVA_THEO_SAU;
+  const _lopB  = _oThanh ?  AVA_THANH_BEN : _lopHien ? AVA_CHAN_BEN   :  AVA_THEO_BEN;
+  // Trong thành thì cỡ riêng (khoe giáp); ngoài thành lớp nhân vật đã nhập nên `_lopCo` chỉ
+  // còn ý nghĩa với nhánh không-avatar.
+  const _lopCo = _coAva ? (_oThanh ? AVA_THANH_CO
+                         : _lopHien ? AVA_DANH_CO : AVA_THEO_CO) : 1;
   const _avaDx = _coAva ? Math.cos(p.face)*_lopT - Math.sin(p.face)*_lopB : 0;
   const _avaDy = _coAva ? (Math.sin(p.face)*_lopT + Math.cos(p.face)*_lopB)*0.55 : 0;
   // Thu quanh BÀN CHÂN, không quanh tâm hộp. Hộp 160x220 vẽ quanh tâm nên gót nằm thấp hơn neo
@@ -16767,16 +19015,23 @@ function drawPlayer(p){
   const _lopNeoY = p.y - NV_LECH_Y;
   // Độ VẬT CHẤT HOÁ, cũng tính sớm vì vòng triệu hồi phải vẽ TRƯỚC thân người.
   // ⚠ `atkAnim` ĐẾM NGƯỢC nên tiến độ là 1 − atkK, không phải atkK.
+  // ⚠ ĐÃ NHẬP VÀO AXIE thì lớp nhân vật KHÔNG có mặt trên màn — không mờ đi, không nhỏ lại,
+  // là KHÔNG CÓ. `_hienLop = 0` tắt cả thân người lẫn mọi thứ đọc nó; ba chỗ KHÔNG đọc nó
+  // (vòng triệu hồi · cánh/thần khí · hào quang Thần Hiệp) phải gác riêng bằng `_nhap`, nếu
+  // không thì trên màn còn một đôi cánh và một vòng sáng bay lơ lửng không có ai đeo.
   let _hienLop = 1;
-  if (_coAva && _lopHien)
+  if (_nhap) _hienLop = 0;
+  else if (_coAva && _lopHien)
     _hienLop = clamp((castK > 0 ? Math.min(1, castK) : 1 - Math.min(1, atkK)) / 0.28, 0, 1);
   // ── THỨ TỰ VẼ THEO CHIỀU SÂU ───────────────────────────────────────────────────────
   // Ai đứng THẤP hơn trên màn thì vẽ SAU. `_avaDy > 0` nghĩa là lớp nhân vật đứng thấp hơn
   // Axie ⇒ Axie phải vẽ TRƯỚC. Bản đầu vẽ Axie sau cùng ở mọi hướng, nên quay mặt xuống là
   // con Axie che mất nửa người — nhìn ra một lỗi hiển thị chứ không ra "đứng kế bên".
-  if (_coAva && _avaDy > 0) veAvatar(ctx, p, !!p.moving, now);
+  // ⚠ TRẢ CON AXIE VỀ MẶT ĐẤT. Khối này nằm trong `ctx.translate(0, yOff)` — phép nhấc do đôi
+  // cánh sinh ra — mà cánh thì đeo trên LỚP NHÂN VẬT, không trên Axie. Xem `bayKNen`.
+  if (_coAva && _avaDy > 0) veAvatarDat(ctx, p, now, bayCao);
   // Vòng triệu hồi nổ dưới chân LỚP NHÂN VẬT (thứ đang được gọi tới), và phải nằm DƯỚI nó.
-  if (_coAva && _lopHien && _hienLop < 1)
+  if (_coAva && _lopHien && _hienLop < 1 && !_nhap)
     veVongTrieu(ctx, { x: p.x + _avaDx, y: p.y + _avaDy }, _hienLop);
   // ── CÁNH và THẦN KHÍ đi theo LỚP NHÂN VẬT, không theo neo người chơi ────────────────
   // Cả hai là trang bị CỦA NGƯỜI. Trước bản này chúng vẽ thẳng ở (p.x, p.y) không hỏi avatar,
@@ -16786,7 +19041,37 @@ function drawPlayer(p){
   //
   // Thần khí thì còn phải TẮT lúc đi theo sau: vũ khí XUẤT HIỆN cùng cú ra đòn, đó là nửa còn
   // lại của "xuất hiện đằng trước tung chiêu kèm vũ khí".
-  const _tkHien = !_coAva || _lopHien;
+  // Bộ nào có LỚP VŨ KHÍ nướng sẵn thì cây kiếm đã nằm trong tay rồi — tắt thần khí, không
+  // thì trên màn có HAI cây: một cây trong tay và một cây bay lượn cạnh người.
+  const _coVkLop = !!nvVkLop(p);
+  // ⚠⚠ ĐÃ NHẬP VÀO AXIE THÌ VŨ KHÍ VẪN PHẢI HIỆN — chủ dự án chốt (2026-09-17), nguyên văn:
+  // *"khi Axie ra chiêu thì sẽ hiện cây vũ khí… nhân vật có thể không hiện nhưng vũ khí sẽ
+  // LUÔN xuất hiện để đồng bộ được skill"*.
+  //
+  // Vì sao đây là một luật chứ không phải một tuỳ chọn: ngoài thành lớp nhân vật nhập vào Axie
+  // nên nó không có trên màn, mà ba lớp (DK · Spellblade · Sylvan Ranger) cầm vũ khí bằng LỚP
+  // NƯỚNG SẴN trong chính bộ khung người — lớp ấy không vẽ thì cây vũ khí biến mất theo. Cộng
+  // với `!_coVkLop` vốn tắt thần khí cho đúng ba lớp đó, kết quả là **ngoài thành, ba lớp cầm
+  // vũ khí tung chiêu mà trên màn không có một cây vũ khí nào** — người chơi không đọc được
+  // chiêu, và mọi mốc rèn +N trên vũ khí cũng tàng hình theo.
+  //
+  // ⇒ `_tkNhap` là cửa riêng, và nó CỐ Ý bỏ qua `_coVkLop`: lúc đã nhập thì không có cây nào
+  // "trong tay" để mà trùng, nên thần khí là cây DUY NHẤT trên màn, không phải cây thứ hai.
+  const _tkNhap = _nhap && _lopHien;
+  const _tkHien = _tkNhap || ((!_coAva || _lopHien) && !_coVkLop && !_nhap);
+  // Đã nhập thì vũ khí thuộc về CON AXIE, nên nó neo vào chỗ Axie đứng (độ lệch 0), không neo
+  // vào chỗ lớp nhân vật LẼ RA đứng — chỗ đó nay không có ai, cây vũ khí sẽ trôi lơ lửng cách
+  // con Axie gần một thân người. Cùng lỗi mà `_nhap` sinh ra để chặn, chỉ đổi vai.
+  const _tkDx  = _tkNhap ? 0 : _avaDx;
+  const _tkDy  = _tkNhap ? 0 : _avaDy;
+  const _tkCo  = _tkNhap ? AVA_TK_NHAP_CO : _lopCo;
+  const _tkChan = _tkNhap ? (HERO_GOT - HERO_H/2) * (NV_CAO / HERO_H) * (1 - _tkCo) : _lopChan;
+  // Phơi QUYẾT ĐỊNH ra cho bài kiểm, khoá theo từng thân người — cùng lối `__veChet`/`__neoVe`.
+  // Đếm điểm ảnh ở đây không dùng được: thần khí phát sáng bằng `lighter` trên nền map sáng, mà
+  // sàn nhiễu của một thân người đang vung kiếm còn lớn hơn cả cây vũ khí (xem `test_dongbodo`).
+  if (window.TEST_MODE)
+    (window.__veVuKhi || (window.__veVuKhi = {}))[_bayK0] =
+      { co: !!_tk, hien: _tkHien, nhap: _nhap, nhapTk: _tkNhap, vkLop: _coVkLop, lopHien: _lopHien };
   {
     ctx.save();
     // Cùng cả phép LẤY ĐÀ của khối thân: cánh cắm vào lưng, thân lùi lại lấy đà rồi bổ tới mà
@@ -16796,10 +19081,25 @@ function drawPlayer(p){
                   _lopNeoY + _avaDy + _lopChan + Math.sin(p.face)*lungeK*3);
     ctx.scale(_lopCo, _lopCo);
     ctx.translate(-p.x, -_lopNeoY);
-    if (wingIt) veCanh(ctx, wingIt, p.x, p.y + CANH_CHAN_MAN, p.sway || 0, p.swayDir || 0,
-                       CANH_CO_MAN, bayK);
+    // ⚠ Đã nhập vào Axie thì KHÔNG vẽ cánh: cánh đeo trên lớp nhân vật, mà lớp ấy không còn
+    // trên màn. Bỏ chốt này là một đôi cánh bay lơ lửng cạnh con Axie, không ai đeo.
+    // (Cái giá, nói thẳng: ngoài thành người chơi KHÔNG thấy đôi cánh mình mua nữa. Đó là hệ
+    //  quả thẳng của việc nhập vào, không phải một lỗi — chỗ khoe cánh nay là trong thành.)
+    if (wingIt && !_nhap) veCanh(ctx, wingIt, p.x, p.y + CANH_CHAN_MAN, p.sway || 0, p.swayDir || 0,
+                       CANH_CO_MAN, bayK, p.sect);
     if (window.TEST_MODE) _doNeo('canh', ctx, p.x, p.y + CANH_CHAN_MAN + CANH_CO_MAN * CANH_GOC_Y);
-    if (_tk && !_tk.truoc && _tkHien) veThanKhi(ctx, _tk, p);   // nằm sau lưng: vẽ TRƯỚC thân
+    if (_tk && !_tk.truoc && _tkHien && !_tkNhap) veThanKhi(ctx, _tk, p);   // nằm sau lưng: vẽ TRƯỚC thân
+  }
+  // Đã nhập ⇒ thần khí có hệ toạ độ RIÊNG (neo vào Axie), không đi nhờ khối cánh ở trên.
+  if (_tk && !_tk.truoc && _tkNhap){
+    ctx.save();
+    ctx.translate(p.x + _tkDx, _lopNeoY + _tkDy + _tkChan);
+    ctx.scale(_tkCo, _tkCo);
+    ctx.translate(-p.x, -_lopNeoY);
+    veThanKhi(ctx, _tk, p);
+    ctx.restore();
+  }
+  {
     ctx.restore();
   }
   ctx.save();
@@ -16809,7 +19109,7 @@ function drawPlayer(p){
   if (flip) ctx.scale(-1, 1);
   ctx.scale(pulse, pulse);
   // Thần Hiệp: hào quang vàng rực sau lưng + viền kim quang quanh thân
-  if (maxed && (!_coAva || _lopHien)){
+  if (maxed && (!_coAva || _lopHien) && !_nhap){
     const hg = ctx.createRadialGradient(0, -8, 6, 0, -8, 64);
     hg.addColorStop(0, 'rgba(255,228,150,.55)'); hg.addColorStop(0.55, 'rgba(255,177,92,.16)'); hg.addColorStop(1, 'rgba(0,0,0,0)');
     ctx.globalAlpha = 0.85 + 0.15*Math.sin(now/300); ctx.fillStyle = hg;
@@ -16838,7 +19138,7 @@ function drawPlayer(p){
   _ps.back = Math.sin(p.face) < -0.42;
   // Trúng đòn: nhân vật giật ngửa ra sau, đầu hất lên, tay bung — trước đây chỉ
   // có viền đỏ nhấp trên màn hình, còn thân người thì đứng im như không hề gì.
-  const _hurt = Math.min(1, (p.hurtT || 0) / 0.3);
+  const _hurt = Math.min(1, (p.hurtT || 0) / NV_GIAT_GIAY);
   if (_hurt > 0){
     _ps.lean -= 0.24 * _hurt;
     _ps.head += 0.26 * _hurt;
@@ -16894,7 +19194,7 @@ function drawPlayer(p){
     const _tt   = !p.moving && ((p.poisonT || 0) > 0 || (p.buffAtkT || 0) > 0);
     // THỨ TỰ QUAN TRỌNG. Chết đè lên tất cả; trúng đòn đè lên đánh, vì phản hồi ăn đòn phải
     // thấy ngay cả khi đang giữa cú vung; ba dáng đứng yên xếp cuối.
-    const _kind = dead ? 'd'
+    const _kind = _chet ? 'd'
                 : (p.hurtT || 0) > 0 ? 'h'
                 : castK > 0 ? 'c'
                 : atkK > 0 ? 'a'
@@ -16926,18 +19226,21 @@ function drawPlayer(p){
     //   tay không          → 'p' (đấm)  — nhân vật mới tạo không có vũ khí nào
     //   Dark Knight/Spellblade → luân phiên 'a' ↔ 's' cho hai nhát khác nhau
     // Spellblade sau này mang hai kiếm thì 's' chính là nhát của tay phụ.
-    const _blk = _kind !== 'a' ? _kind
+    // Niệm chú: đổi khối theo KIỂU RA ĐÒN của chiêu (xem KHOI_THEO_ACT). `_kind` vẫn là 'c'
+    // nên ràng buộc `_lopHien === (_kind==='a'||'c')` ở khối trên không đổi — chỉ khối VẼ đổi.
+    const _blk = _kind === 'c' ? (KHOI_THEO_ACT[p.castAct] || 'c')
+               : _kind !== 'a' ? _kind
                : !(p.equip && p.equip.vukhi) ? 'p'
                : (DANH_HAI_NHAT[p.sect] && p.nhat2) ? 's' : 'a';
     // Số khung lấy theo KHỐI VẼ, không theo _kind: khối đấm có 12 khung còn khối chém 16,
     // tính chỉ số bằng 16 rồi chia dư cho 12 là thứ tự khung đảo lộn giữa cú đấm.
     // Số khung phải hỏi CHÍNH bộ art đang mặc: khối chạy của bộ nướng lại có 32 khung, bộ cũ
     // 16. Đọc thẳng HS_FRAMES là bộ 32 khung chỉ chạy được nửa vòng rồi lặp.
-    const _n = nvSoKhung(nvBoTen(p.sect, _tier, _gv, p._hw), _blk) || HS_FRAMES[_kind];
+    const _n = nvSoKhungBo(p.sect, _tier, _gv, _blk, p._hw) || HS_FRAMES[_kind];
     const _TAU = Math.PI * 2;
     const _idx = _kind === 'c' ? clamp((Math.min(1, castK) * _n) | 0, 0, _n - 1)
                : _kind === 'a' ? clamp((atkK * _n) | 0, 0, _n - 1)
-               : _kind === 'h' ? clamp((((0.3 - (p.hurtT || 0)) / 0.3) * _n) | 0, 0, _n - 1)
+               : _kind === 'h' ? clamp((((NV_GIAT_GIAY - (p.hurtT || 0)) / NV_GIAT_GIAY) * _n) | 0, 0, _n - 1)
                : _kind === 'd' ? clamp((((p.deadT || 0) / 1.2) * _n) | 0, 0, _n - 1)
                : _kind === 'j' ? clamp((bayK / 0.5 * _n) | 0, 0, _n - 1)
                : (_kind === 'w' || _kind === 'r')
@@ -17007,7 +19310,12 @@ function drawPlayer(p){
   // Đây là hình học mà mắt không đo được: "ra trước hay ra sau" là dấu của tích vô hướng với
   // hướng mặt, không phải cảm giác nhìn ảnh. Ghi ba số mỗi khung, rẻ hơn nhiều so với để cú
   // đổi chỗ sau→trước lặng lẽ hỏng.
-  window.__lopVe = { dx: _avaDx, dy: _avaDy, co: _lopCo, truoc: !!(_coAva && _lopHien) };
+  // ⚠ Phơi CẢ độ lệch THÔ (`ben`/`sau`, đơn vị thế giới, TRƯỚC khi nén trục sâu 0,55) lẫn
+  // `dx`/`dy` đã nén. Bài kiểm phải chấm trên `ben`: `dy` đã nén nên cùng một cấu hình cho ra
+  // hai con số khác nhau tuỳ hướng mặt (88 → 48,4 khi quay sang đông), và chấm trên đó là chấm
+  // vào hướng nhìn chứ không vào cái hằng số mình muốn gác.
+  window.__lopVe = { dx: _avaDx, dy: _avaDy, co: _lopCo, truoc: !!(_coAva && _lopHien),
+                     nhap: _nhap, ben: _lopB, sau: _lopT };
   // Thân người LUÔN vẽ — kể cả khi có avatar. Bản trước bỏ hẳn nhánh này lúc không đánh, vì
   // lớp nhân vật chỉ được gọi ra trong cú đòn. Nay nó đi theo sau suốt, nên không còn chỗ nào
   // được phép bỏ vẽ; chỗ đứng và cỡ đã do `_avaDx/_avaDy/_lopCo` lo.
@@ -17042,18 +19350,18 @@ function drawPlayer(p){
   // Axie là THÂN của người chơi nên vẽ ở MỌI trạng thái — kể cả lúc lớp nhân vật đang hiện.
   // Bản trước cho nó biến mất lúc đánh (đổi chỗ cho nhau), chủ dự án chốt lại là đứng cạnh.
   // Nửa còn lại của phép xếp chiều sâu ở trên: lớp nhân vật đứng CAO hơn ⇒ Axie vẽ SAU.
-  if (_coAva && _avaDy <= 0) veAvatar(ctx, p, !!p.moving, now);
+  if (_coAva && _avaDy <= 0) veAvatarDat(ctx, p, now, bayCao);
   if (_tk && _tk.truoc && _tkHien){                   // quét ra trước mặt: vẽ SAU thân
     ctx.save();
-    ctx.translate(p.x + _avaDx, _lopNeoY + _avaDy + _lopChan);
-    ctx.scale(_lopCo, _lopCo);
+    ctx.translate(p.x + _tkDx, _lopNeoY + _tkDy + _tkChan);
+    ctx.scale(_tkCo, _tkCo);
     ctx.translate(-p.x, -_lopNeoY);
     veThanKhi(ctx, _tk, p);
     ctx.restore();
   }
   // weapon arc while attacking
   if (p.atkAnim > 0){
-    const k = p.atkAnim/0.22;
+    const k = p.atkAnim/NV_DANH_GIAY;
     ctx.strokeStyle = sect.glow; ctx.globalAlpha = k; ctx.lineWidth = 3;
     ctx.beginPath(); ctx.arc(p.x, p.y-18, 26, p.face-1.1+(1-k)*1.6, p.face-0.2+(1-k)*1.6); ctx.stroke();
     ctx.globalAlpha = 1;
@@ -17217,6 +19525,7 @@ window.toggleAuto = function(){
     // Trong phó bản, quái đợt luôn spawn ở (1300,800) — cách xa cửa vào (1300,1560) hơn tầm AUTO
     // mặc định. Bật AUTO ngay cửa vào trước đây neo tại chỗ đứng, đứng im không đánh gì (QA phát hiện).
     if (DEEP){ player._autoAX = DEEP_HALL.cx; player._autoAY = DEEP_HALL.cy; }
+    else if (LK){ player._autoAX = LK_HALL.cx; player._autoAY = LK_HALL.cy; }
     else if (DGN && mapDef().dungeon){ player._autoAX = 1300; player._autoAY = 800; }
     else { player._autoAX = player.x; player._autoAY = player.y; } // neo tại chỗ bật — auto chỉ ôm 1-2 bãi quái quanh neo
     // QA: bật AUTO khi còn 1 lệnh click-di-chuyển tay đang treo (chưa tới đích) — nếu không huỷ ở
@@ -17254,18 +19563,27 @@ function renderChar(){
   html += `<div style="font-size:12px;color:#9aa8d4;margin-bottom:8px">Điểm tiềm năng còn: <b style="color:#7ecbff">${p.free}</b> (mỗi cấp +5) — cộng chỉ số bên dưới, hoặc rót vào chiêu ở bảng Kỹ Năng (<b>K</b>, trần ${SK_TN_TRAN} điểm mỗi chiêu)</div>`;
   // Gợi ý build: điểm nào quy đổi ra Công Kích cho ĐÚNG phái này (xem SECTS[x].atkSrc trong calcDerived())
   const _atkSrc = sect.atkSrc || { str:2.0 };
-  const _dmgStatNames = Object.keys(_atkSrc).map(k => ATTR_INFO[k].name);
-  html += `<div style="font-size:11.5px;color:#ffd76a;margin-bottom:10px;padding:6px 10px;border:1px dashed rgba(255,215,106,.4);border-radius:6px">💡 ${sect.name} ra Công Kích từ <b>${_dmgStatNames.join(' + ')}</b> — dồn điểm tiềm năng vào đây là hiệu quả nhất.</div>`;
-  const base = { str:p.str, agi:p.agi, def:p.def, vit:p.vit, ene:p.ene };
-  const drv = { str:p.dStr, agi:p.dAgi, def:p.dDef, vit:p.dVit, ene:p.dEne };
-  for (const k of ['str','agi','def','vit','ene']){
+  // ⚠ NÓI RÕ DÒNG CHÍNH VÀ DÒNG PHỤ, đừng liệt kê phẳng. Spellblade ra công từ Nhanh Nhẹn
+  // 1,5 và Sức Mạnh 0,7 — in "Nhanh Nhẹn + Sức Mạnh" thì người chơi đọc ra hai dòng ngang
+  // nhau và chia đôi điểm, tức làm đúng cái việc kém hiệu quả nhất.
+  const _dmgSort = Object.entries(_atkSrc).sort((a, b) => b[1] - a[1]);
+  const _dmgTxt = _dmgSort.length > 1
+    ? `<b>${ATTR_INFO[_dmgSort[0][0]].name}</b> (dòng chính) + <b>${_dmgSort.slice(1).map(([k]) => ATTR_INFO[k].name).join(' · ')}</b> (dòng phụ)`
+    : `<b>${ATTR_INFO[_dmgSort[0][0]].name}</b>`;
+  html += `<div style="font-size:11.5px;color:#ffd76a;margin-bottom:10px;padding:6px 10px;border:1px dashed rgba(255,215,106,.4);border-radius:6px">💡 ${sect.name} ra Công Kích từ ${_dmgTxt} — dồn điểm vào đó là hiệu quả nhất.<br><span style="color:#a0ffe9">${ATTR_INFO.agi.meo}</span></div>`;
+  const base = { str:p.str, agi:p.agi, vit:p.vit, ene:p.ene };
+  const drv = { str:p.dStr, agi:p.dAgi, vit:p.dVit, ene:p.dEne };
+  // ⚠ LÀM TRÒN TRƯỚC KHI IN. Bị động Thể Lực cộng một số thập phân vào `s.vit`, nên ô này
+  // từng in ra `54.1 (50+4.100000000000001)` — rác dấu phẩy động phơi thẳng ra mặt bảng.
+  const lt = v => Math.round((Number(v) || 0) * 10) / 10;
+  for (const k of ['str','agi','vit','ene']){
     const a = ATTR_INFO[k];
     const isDmgStat = !!_atkSrc[k];
     // Hai NỬA có vai rõ ràng: nửa trái co giãn và được phép xuống dòng, nửa phải KHÔNG co và
     // KHÔNG xuống dòng. Trước đây cả hai đều là <span> trơn, nên mô tả dài một chút là cụm
     // ô-số/+/Max bị đẩy vỡ thành mấy dòng so le. Xem .attr-ten / .attr-dieu trong style.css.
     html += `<div class="attr-row"><span class="attr-ten">${a.name}${isDmgStat?' <span class="attr-sao">★</span>':''} <span class="attr-mo">(${a.desc})</span></span>
-      <span class="attr-dieu"><span class="attr-gt"><b class="attr-so">${drv[k]}</b>${drv[k]!==base[k]?`<span class="attr-them">(${base[k]}+${drv[k]-base[k]})</span>`:''}</span>
+      <span class="attr-dieu"><span class="attr-gt"><b class="attr-so">${lt(drv[k])}</b>${lt(drv[k])!==lt(base[k])?`<span class="attr-them">(${lt(base[k])}+${lt(drv[k]-base[k])})</span>`:''}</span>
       <input type="number" class="attr-qty" id="qty-${k}" min="1" max="${p.free||1}" value="${Math.min(10, p.free||1)||1}" ${p.free<=0?'disabled':''}>
       <button class="plus-btn" onclick="addAttr('${k}', qtyOf('${k}'))" ${p.free<=0?'disabled':''} title="Cộng theo ô số">+</button>
       <button class="plus-btn max-btn" onclick="addAttr('${k}', player.free)" ${p.free<=0?'disabled':''} title="Dồn hết điểm còn lại">Max</button></span></div>`;
@@ -17285,7 +19603,30 @@ function renderChar(){
     // Mana = tài nguyên tung chiêu (hồi liên tục). Instinct = điểm nâng kỹ năng (tích lũy).
     ['Bản Năng (nâng kỹ năng)', Math.floor(p.khi || 0).toLocaleString('vi-VN')],
   ];
-  if (_ae) stats.push(['Hệ đòn đánh', `<span style="color:${elColor(_ae)}">${ELEM[_ae].glyph} ${elName(_ae)}</span>`]);
+  // Hai dòng HỆ chen lên ngay sau Công Kích / Sinh Lực, KHÔNG đẩy xuống cuối mảng.
+  //
+  // ⚠ Đây là chỗ đã phải sửa sau khi CHỤP RA NHÌN: đẩy xuống cuối thì chúng rơi khỏi vùng nhìn
+  // thấy của bảng và người chơi phải cuộn mới gặp. Mà đây lại là hai dòng DUY NHẤT trong cả
+  // khối mà người chơi đổi được bằng một lựa chọn (vũ khí đang cầm · Axie đang đeo) — mấy dòng
+  // còn lại chỉ là kết quả của cấp và trang bị. Một cơ chế bị chôn dưới đáy danh sách cuộn thì
+  // với người chơi không khác gì không tồn tại.
+  //
+  // Mỗi dòng nói rõ nó đến TỪ ĐÂU. Hai nguồn cho hai CHIỀU là cả thiết kế (xem heThu); in hai
+  // dòng mà không ghi nguồn thì người chơi đọc ra là game có hai cái hệ mâu thuẫn nhau.
+  const _he = heThu(player);
+  const _heRow = [];
+  if (_ae) _heRow.push(['Hệ đòn đánh <span style="opacity:.6;font-size:10px">(vũ khí)</span>', `<span style="color:${elColor(_ae)}">${ELEM[_ae].glyph} ${elName(_ae)}</span>`]);
+  if (_he) _heRow.push(['Hệ phòng thủ <span style="opacity:.6;font-size:10px">(Axie)</span>', `<span style="color:${elColor(_he)}">${ELEM[_he].glyph} ${elName(_he)}</span>`]);
+  // Dòng thứ BA: cấu tạo sáu bộ phận. Nó đứng cạnh hai dòng kia vì nó là trục thứ hai của cùng
+  // một thứ — con Axie — và vì nếu không in ra thì `bpCung` chạy suốt mà không ai biết nó tồn
+  // tại. Cùng bài học với vế phòng thủ từng chỉ có một dòng nhật ký.
+  //
+  // ⚠ In cả HẠNG lẫn con số, đừng in mỗi con số: "5/6" không nói được là tốt hay xấu, mà ở đây
+  // thì **không** có tốt/xấu — có chuyên gia và có thợ đụng. Chữ phải nói ra điều đó.
+  const _bpAva = avatarId(player), _bpC = _bpAva ? bpCung(CHI_MAP[_bpAva]) : null, _bpH = bpHang(_bpC);
+  if (_bpH) _heRow.push([`Cấu tạo Axie <span style="opacity:.6;font-size:10px">(sáu bộ phận)</span>`,
+    `<span style="color:${_bpH.mau}" title="${_bpH.y}">${_bpH.ten} ${_bpC}/6</span>`]);
+  stats.splice(2, 0, ..._heRow);
   for (const [n,v] of stats) html += `<div class="stat-row"><span>${n}</span><b>${v}</b></div>`;
   // Khối CHIÊU THỨC đã gỡ: bảng Kỹ Năng (phím K) vốn đã in đủ năm thông số của từng chiêu,
   // nên ba dòng ở đây là bản tóm tắt thứ ba của cùng một thứ.
@@ -17308,6 +19649,10 @@ window.qtyOf = function(k){
   return (!n || n < 1) ? 1 : n;
 };
 window.addAttr = function(k, n){
+  // ⚠ CHẶN KHOÁ LẠ. `def` đã thôi là ô rót điểm; không chốt ở đây thì một lời gọi cũ (bảng
+  // cache, lệnh gỡ rối, hay một nút sót) vẫn đổ điểm vào một ô KHÔNG CÒN AI ĐỌC — người chơi
+  // mất điểm vĩnh viễn mà không có lỗi nào báo.
+  if (!ATTR_INFO[k]) return;
   if (player.free <= 0) return;
   n = Math.max(1, Math.min(Math.floor(n) || 1, player.free)); // ô cộng điểm nhanh: gõ số hoặc bấm Max thay vì bấm tay từng điểm
   player.free -= n; player[k] += n;
@@ -17317,50 +19662,70 @@ window.addAttr = function(k, n){
 };
 
 window.forgeUseCharm = false;
-// GDD 3 giai đoạn: +1~6 an toàn 100% · +7~9 Đập Ngọc Tu La, xịt tụt 1 cấp · +10/+11 CHỈ tại Lò Rèn Hoàng Gia
-// Huyền Thiết đã gỡ khỏi bảng này (nó là chỗ tiêu cuối cùng của loại tiền đó). Phần nó gánh
-// chuyển sang BẠC theo đúng tỉ giá tiệm bán ra: 750 Lumen / 5 viên = 150 Lumen một viên. Cường hoá
-// vì thế không rẻ đi một đồng nào — chỉ bớt một ô đếm người chơi phải theo dõi.
+// Huyền Thiết — ô đếm nguyên liệu rèn cũ — đã gỡ, và mọi chi phí từng ghi bằng Huyền Thiết
+// chuyển sang BẠC theo đúng tỉ giá tiệm bán ra: 750 Lumen / 5 viên = 150 Lumen một viên.
+// ⚠ HẰNG NÀY CÒN ĐƯỢC `loadGame()` DÙNG Ở NHIỀU CHỖ (hoàn Thần Binh · Đài Hội Lực · Linh Thú ·
+// Mảnh Cổ Thần…). Xoá nó đi thì `loadGame` ném ReferenceError và trả false — tức MỌI save cũ
+// không mở được, mà `node --check` vẫn xanh vì đó là lỗi lúc chạy. Đã lỡ xoá nó một lần khi
+// viết lại khối này, và triệu chứng hiện ra ở tận bài kiểm hoàn tiền.
 const GO_HUYENTHIET = 150;   // 1 Huyền Thiết cũ = 150 Lumen (giá tiệm r_mat5: 750 Lumen / 5 viên)
+// ═══ RÈN: HAI ĐOẠN, HAI NƠI, KHÔNG CHỒNG NHAU ═══════════════════════════════════════
+// Chủ dự án chốt: **ép ngọc lo +1→+9, Lò lo +10/+11/+12.** Không có đoạn nào hai bên cùng làm.
+//
+// Trước bản này có tới BA đường đưa món đồ lên +9, mỗi đường một bảng luật:
+//   ① ép ngọc thẳng trong túi (`epNgoc`)      — Chúc Phúc tới +6, Linh Hồn 50% tới +9, xịt tụt 1
+//   ② "Rèn Thường" ở Lò Hỗn Độn (`forgeRule`) — Lumen + Tu La, 75/65/50%, xịt +8/+9 VỀ 0
+//   ③ `useJewel('linhHon')` ở NPC Thợ Rèn     — Linh Hồn 50% **tới tận +11**, không cần gì khác
+// ② và ③ đều đã gỡ. Mỗi cái là một lỗi riêng, và không cái nào lộ ra khi đọc code một chỗ:
+//   · ② lệch ① ở LUẬT XỊT, nên ai đọc ra bảng sẽ rèn +7 ở Lò (75% thay vì 50%) rồi chuyển
+//     sang ngọc cho +8/+9 (tụt 1 thay vì về 0). Ai không đọc ra thì mất đồ. Đó không phải
+//     chiều sâu — đó là một cái bẫy do hai hệ làm cùng một việc bằng hai bảng luật.
+//   · ③ cho Linh Hồn lên thẳng +11, tức nó ĂN ĐỨT Phá Thiên Kiếp ở cả hai mốc cuối (không cần
+//     Hỗn Nguyên, không cần Hỗn Độn, không có rủi ro vỡ đồ). Lần hạ trần trước chỉ sửa
+//     `NGOC_EP`, còn `useJewel` bỏ lọt **vì nó không đi qua `ngocEpDuoc()`**. Nay nó đi qua.
+//
+// ⇒ `forgeRule` chỉ còn phục vụ Phá Thiên Kiếp, nên nó chỉ nhận target 10/11/12.
+// ⇒ Tu La Tinh Thạch chết theo ②: đó là chỗ tiêu chính của nó, phần còn lại dồn vào Hỗn Nguyên.
 function forgeRule(target){
-  if (target <= 6)  return { rate:100, matBac: (1 + Math.floor((target-1)/3)) * GO_HUYENTHIET, tuLa:0, hon:0, fail:'none' };
-  // Luật xịt của Ngọc Linh Hồn, chủ dự án chốt:
-  //   · lên +7  (từ +6): xịt TỤT MỘT CẤP → còn +5
-  //   · lên +8/+9      : xịt VỀ +0 — đây là vách ngăn thật của cuối bảng rèn
-  // Trước đây cả ba mốc đều 'drop1', mà drop1 lại bị chặn sàn ở +6, nên xịt +7 vẫn nằm nguyên
-  // +6: người chơi bấm mãi không mất gì, mốc +7 hoá ra không có rủi ro nào cả.
-  if (target === 7) return { rate:75, matBac: GO_HUYENTHIET, tuLa:1, hon:0, fail:'drop1' };
-  if (target <= 9)  return { rate:{8:65, 9:50}[target], matBac: GO_HUYENTHIET, tuLa:1, hon:0, fail:'zero' };
-  // GDD Phá Thiên Kiếp: +10 = 50%, +11 = 45%, thất bại → HỦY DIỆT trang bị (Phù bảo hộ)
-  if (target === 10) return { rate:50, matBac: 2*GO_HUYENTHIET, tuLa:3, hon:1, fail:'break', bagua:true };
-  return { rate:45, matBac: 3*GO_HUYENTHIET, tuLa:5, hon:2, fail:'break', bagua:true };
+  // ⚠ NÉM LỖI với mọi target ngoài 10-12, đừng trả về một luật gần đúng. Nếu để nó lặng lẽ
+  // rơi vào nhánh cuối thì một công thức mới lỡ gọi forgeRule(5) sẽ nhận luật +12 (40%, vỡ
+  // vụn, 9 Hỗn Nguyên) mà không ai báo — tức dựng lại đường thứ hai lên +9 một cách vô tình.
+  if (!(target >= 10 && target <= 12))
+    throw new Error(`forgeRule: mốc +${target} không thuộc Lò — đoạn +1→+9 là việc của ép ngọc`);
+  // Phần `hon` ĐÃ NUỐT phần Tu La cũ theo ĐÚNG GIÁ TIỆM (Tu La 1.800◈ · Hỗn Nguyên 2.600◈),
+  // phần lẻ không chia hết thì bù bằng Lumen để tổng chi phí không đổi một đồng nào:
+  //   +10 cũ = 3 Tu La + 1 Hỗn = 8.000◈  →  3 Hỗn = 7.800◈, thiếu   200 ⇒ matBac += 200
+  //   +11 cũ = 5 Tu La + 2 Hỗn = 14.200◈ →  5 Hỗn = 13.000◈, thiếu 1.200 ⇒ matBac += 1.200
+  if (target === 10) return { rate:50, matBac: 2*GO_HUYENTHIET + 200,  hon:3, fail:'break', bagua:true };
+  if (target === 11) return { rate:45, matBac: 3*GO_HUYENTHIET + 1200, hon:5, fail:'break', bagua:true };
+  // +12 là mốc MỚI. Tỉ lệ đi tiếp bậc thang 50 → 45 → 40. Giá theo đúng nhịp tăng của hai mốc
+  // trước (+11 đắt gấp 1,78 lần +10): 14.200 × 1,78 ≈ 25.300◈ ≈ 9 Hỗn Nguyên.
+  return { rate:40, matBac: 4*GO_HUYENTHIET, hon:9, fail:'break', bagua:true };
 }
 // ── Drop v2.0: KẾ THỪA (leo giai) · ĐỔI HỆ ──
-// TẤN PHẨM (leo phẩm) đã GỠ từ trước, và nay cả hệ phẩm cũng gỡ: đó là trục thứ hai song song với +N,
-// cùng ăn một túi nguyên liệu, cùng ở Lò Rèn, và người chơi phải học hai bảng giá cho hai thứ
-// nghe na ná nhau. MU chỉ có MỘT trục trên món đồ: +N bằng ngọc. Phẩm nay do món rơi ra quyết định.
-// Mảnh Trang Bị và Đá Ấn Rune KHÔNG chết theo — Kế Thừa vẫn ăn đúng hai thứ đó.
+// ⚠ MÓN ĐỒ NAY CHỈ CÓ **MỘT** TRỤC: +N bằng ngọc. Giai và Phẩm do thứ RƠI RA quyết định.
+//
+// Ba hệ từng là trục thứ hai trên cùng món đồ, cả ba đã gỡ, và cả ba vì cùng một lý do:
+//   · TẤN PHẨM (leo phẩm)  — gỡ sớm nhất
+//   · hệ PHẨM               — gỡ theo
+//   · KẾ THỪA (leo giai)    — gỡ ở đợt tiền tệ
+// Lý do chép nguyên văn từ lần gỡ Tấn Phẩm: *"đó là trục thứ hai song song với +N, cùng ăn một
+// túi nguyên liệu, cùng ở Lò Rèn, và người chơi phải học hai bảng giá cho hai thứ nghe na ná
+// nhau."* Kế Thừa là **cùng một câu, khác tên** — nên nó đi cùng đường, và `Mảnh Trang Bị` +
+// `Đá Ấn Rune` chết theo vì đó là chỗ tiêu DUY NHẤT của cả hai.
+//
+// ⇒ ĐỪNG DỰNG LẠI dưới một cái tên thứ tư. Muốn món đồ mạnh lên thì có đúng hai đường: rèn +N,
+//    hoặc đi kiếm món giai cao hơn.
+//
+// *Ghi lại hai con số CHẾT mà Kế Thừa mang theo tới lúc bị gỡ:* trần của nó là `it.tier >= 10`
+// trong khi `GIAI_MAX = 7` (tức nâng được lên giai 8-9, `giaiName` kẹp về tên cuối và `GIAI_POW`
+// kẹp sức mạnh về giai 7 ⇒ trả tiền mà không nhận gì), và cấp yêu cầu tính `(tier-1)*10 + 10`
+// trong khi `GIAI_SPAN = 16`. Cả hai là di sản thời game còn 10 giai, không bài kiểm nào gác.
 function findItemByUid(uid){
   for (const s in player.equip){ const it = player.equip[s]; if (it && it.uid === uid) return it; }
   for (let i = 0; i < player.inv.length; i++) if (player.inv[i].uid === uid) return player.inv[i];
   return null;
 }
-// Kế Thừa: tăng 1 giai — giữ Phẩm/+N/dòng phụ, chỉ số gốc = 90% bản gốc giai mới
-window.doKeThua = function(uid){
-  const it = findItemByUid(uid);
-  if (!it || it.special || it.tier >= 10) return;
-  const cost = { manh:40, tichMa:4, silver:5000*it.tier };
-  if (player.mats.manh < cost.manh || player.mats.tichMa < cost.tichMa || player.silver < cost.silver) return;
-  player.mats.manh -= cost.manh; player.mats.tichMa -= cost.tichMa; player.silver -= cost.silver;
-  it.tier++;
-  it.level = (it.tier-1)*10 + 10;
-  const slot = SLOTS.find(s => s.id === it.slot);
-  if (slot && it.main) it.main.v = Math.max(1, Math.round(slot.base(it.tier) * 0.9));
-  addFloat(player.x, player.y-52, `⚒ KẾ THỪA — lên giai[${giaiName(it.tier)}]!`, '#9fd0ff', 15);
-  addEffect({ type:'ring', x:player.x, y:player.y, r:80, color:'#9fd0ff', big:true });
-  AudioSys.sfx('levelup', 0.7);
-  calcDerived(); saveGame(); renderForge();
-};
 // Đổi Hệ: 1 Hỗn Độn Châu — re-roll nguyên tố trang bị
 window.doDoiHe = function(uid){
   const it = findItemByUid(uid);
@@ -17437,7 +19802,20 @@ function spendJewels(need){
 // Đang đứng tại Lò Rèn Hoàng Gia? Công thức royal:true đòi có mặt ở đó (giữ nguyên thiết kế cũ:
 // +9 trở lên và Linh Dực chỉ luyện được tại chỗ Tông Sư Thợ Rèn).
 // Lò rèn nào trên map ĐANG ĐỨNG (có hơn một Thợ Rèn — xem NPC thoren_dao).
-function forgeNpcHere(){ return NPCS.find(x => x.talk === 'forge' && x.map === curMap) || null; }
+// ⚠ GẦN NHẤT, KHÔNG PHẢI CON ĐẦU MẢNG. Ardhaven có HAI con talk:'forge' — Thợ Rèn và Yêu
+// Tinh Hỗn Độn đứng cách nhau 190px, đúng lối MU đặt máy hỗn độn cạnh lò rèn. Với `find` thì
+// mọi phép đo đều chạy về con đứng trước trong `NPCS`, nên đứng sát con kia vẫn bị báo "chưa
+// tới Lò Rèn Hoàng Gia" và nút KẾT HỢP mờ đi — không lỗi nào ném ra, chỉ một cái nút chết.
+function forgeNpcHere(){
+  let g = null, d0 = Infinity;
+  for (const x of NPCS){
+    if (x.talk !== 'forge' || x.map !== curMap) continue;
+    if (!player){ return x; }
+    const d2 = dist(player.x, player.y, x.x, x.y);
+    if (d2 < d0){ d0 = d2; g = x; }
+  }
+  return g;
+}
 function atRoyalForge(){
   const n = forgeNpcHere();
   if (!n || !player) return false;
@@ -17447,8 +19825,15 @@ function atRoyalForge(){
 const NGOC_EP = {
   chucPhuc: { ten:'Chúc Phúc Châu', glyph:'◎', mau:'#7ec850', tran:6, rate:100,
               mo:'100% lên +1, an toàn tuyệt đối — dùng được tới +6.' },
+  // ⚠ LUẬT XỊT THEO TỪNG MỐC, không phải một luật chung. Đây là quyết định của chủ dự án, và
+  // nó TỪNG SỐNG Ở `forgeRule` (đường "Rèn Thường" ở Lò) — nên gỡ đường đó suýt cuốn nó đi mất.
+  // Đo được lúc nó tạm mất: đoạn +6→+9 dễ đi 35% (22,5 lượt → 15,0), vì "tụt 1" nhẹ hơn "về 0"
+  // nhiều hơn là 25% tỉ lệ nặng hơn. Nay luật nằm ở ĐÂY, cạnh chính viên ngọc thi hành nó.
+  //   · lên +7 (từ +6) mà xịt ⇒ TỤT MỘT CẤP, còn +5
+  //   · lên +8/+9       mà xịt ⇒ VỀ +0 — vách ngăn thật của cuối bảng ngọc
   linhHon:  { ten:'Linh Hồn Châu',  glyph:'◉', mau:'#b08ae8', tran:9, rate:50,
-              mo:'50% lên +1, hỏng thì TỤT 1 CẤP — dùng được tới +9.' },
+              xit: { 8:'zero', 9:'zero' },   // mốc không khai ⇒ 'drop1'
+              mo:'50% lên +1, hỏng thì tụt 1 cấp (lên +8/+9 hỏng thì VỀ +0) — dùng được tới +9.' },
   // Sinh Mệnh không đụng tới mức rèn — nó nâng DÒNG SINH LỰC, một thang riêng 7 bậc. Vì thế
   // mới có trường `loai`: hai viên trên ăn vào `it.plus`, viên này ăn vào `it.life`.
   sinhMenh: { ten:'Sinh Mệnh Châu', glyph:'❤', mau:'#e84a6a', loai:'life', tran:7, rate:50,
@@ -17458,40 +19843,20 @@ const NGOC_LIFE_PCT = 4;        // mỗi bậc Sinh Mệnh cộng bấy nhiêu %
 
 const CHAOS_RECIPES = [
   // ── Nhóm RÈN ────────────────────────────────────────────────────────────
-  { id:'ren', group:'ren', name:'Rèn Thường', tray:'1 trang bị (+0 → +9)',
-    match(v){
-      if (v.items.length !== 1 || v.nJewel) return null;
-      const it = v.items[0];
-      if (it.noForge || it.plus >= 9) return null;
-      return { it, target: it.plus + 1 };
-    },
-    plan(v, m){
-      const r = forgeRule(m.target);
-      const silver = (20 + m.it.plus * 15) * (m.it.tier || 1) + r.matBac;
-      return {
-        title: `${m.it.name} +${m.it.plus} → +${m.target}`,
-        rate: Math.min(100, r.rate + (player.forgeBonus || 0)),
-        cost: [ chaosCost('Lumen', player.silver, silver, '◈'),
-                ...(r.tuLa ? [chaosCost('Tu La Tinh Thạch', player.gems.tuLa, r.tuLa, '◆')] : []) ],
-        warn: r.fail === 'drop1' ? 'Thất bại: trang bị TỤT 1 CẤP.'
-            : r.fail === 'zero'  ? 'Thất bại: trang bị VỀ +0.'
-            : r.fail === 'break' ? 'Thất bại: trang bị VỠ VỤN.'
-            : 'Thất bại: chỉ mất nguyên liệu, trang bị vẹn nguyên.',
-        charm: r.fail !== 'none', silver, rule: r,
-      };
-    },
-    run(v, m, p){
-      player.silver -= p.silver;
-      player.gems.tuLa -= p.rule.tuLa; player.gems.honNguyen -= p.rule.hon;
-      return chaosResolveEnhance(m.it, p.rate, p.rule);
-    } },
+  // ⚠ "Rèn Thường" (+0→+9 bằng Lumen + Tu La) ĐÃ GỠ — lý do đầy đủ ở khối chú thích trên
+  // `forgeRule`. Tóm tắt: nó là đường THỨ HAI đưa món đồ lên +9, và nó lệch luật xịt với đường
+  // ép ngọc, nên ai đọc ra bảng thì lách, ai không đọc ra thì mất đồ. Đoạn +1→+9 nay CHỈ có
+  // một đường duy nhất: ép ngọc (Chúc Phúc tới +6, Linh Hồn tới +9), ép thẳng trong túi.
+  // ĐỪNG DỰNG LẠI: thêm bất kỳ công thức nào ăn `it.plus < 9` là làm sống lại đúng cái bẫy đó.
 
-  { id:'phathien', group:'ren', name:'Phá Thiên Kiếp', royal:true, tray:'1 trang bị +9/+10 · ngọc',
+  { id:'phathien', group:'ren', name:'Phá Thiên Kiếp', royal:true, tray:'1 trang bị +9/+10/+11 · ngọc',
     match(v){
       if (v.items.length !== 1) return null;
       const it = v.items[0];
-      if (it.noForge || it.plus < 9 || it.plus >= 11) return null;
-      const n = it.plus === 9 ? 2 : 3;
+      // Trần nay là +12 (chủ dự án chốt: Lò lo +10 · +11 · +12). Món phải đã +9 — tức đã đi
+      // trọn đường ép ngọc — mới vào được đây.
+      if (it.noForge || it.plus < 9 || it.plus >= 12) return null;
+      const n = it.plus === 9 ? 2 : it.plus === 10 ? 3 : 4;
       return { it, target: it.plus + 1, need: { honDon:1, chucPhuc:n, linhHon:n } };
     },
     plan(v, m){
@@ -17504,7 +19869,6 @@ const CHAOS_RECIPES = [
                 jewelCost('chucPhuc', v, m.need.chucPhuc),
                 jewelCost('linhHon', v, m.need.linhHon),
                 chaosCost('Lumen', player.silver, silver, '◈'),
-                chaosCost('Tu La Tinh Thạch', player.gems.tuLa, r.tuLa, '◆'),
                 chaosCost('Hỗn Nguyên', player.gems.honNguyen, r.hon, '❖') ],
         warn: 'THẤT BẠI: TRANG BỊ VỠ VỤN — mất vĩnh viễn (trừ khi dùng Thiên Mệnh Phù).',
         charm: true, silver, rule: r,
@@ -17513,7 +19877,7 @@ const CHAOS_RECIPES = [
     run(v, m, p){
       spendJewels(m.need);
       player.silver -= p.silver;
-      player.gems.tuLa -= p.rule.tuLa; player.gems.honNguyen -= p.rule.hon;
+      player.gems.honNguyen -= p.rule.hon;
       return chaosResolveEnhance(m.it, p.rate, p.rule);
     } },
 
@@ -17535,7 +19899,11 @@ const CHAOS_RECIPES = [
       const d = NGOC_EP[_k];
       return { title: `${m.it.name} +${m.it.plus} → +${m.it.plus + 1}`, rate: ngocRate(_k),
         cost: [ jewelCost(_k, v, 1) ],
-        warn: d.rate >= 100 ? 'An toàn tuyệt đối — không có thất bại.' : 'Thất bại: trang bị TỤT 1 CẤP.',
+        // ⚠ Câu cảnh báo phải SUY TỪ `d.xit`, đừng chép cứng "tụt 1 cấp": ở mốc +8/+9 thì Linh
+        // Hồn xịt là VỀ +0, và hứa sai ở đây là người chơi bấm mà không biết mình đang cược gì.
+        warn: d.rate >= 100 ? 'An toàn tuyệt đối — không có thất bại.'
+            : ((d.xit && d.xit[(m.it.plus || 0) + 1]) === 'zero'
+                ? 'Thất bại: trang bị VỀ +0.' : 'Thất bại: trang bị TỤT 1 CẤP.'),
         charm: false }; },
     run(v, m){
       const d = NGOC_EP[_k];
@@ -17607,31 +19975,6 @@ const CHAOS_RECIPES = [
       return true; } },
 
   // ── Nhóm CHẾ TẠO ────────────────────────────────────────────────────────
-
-  { id:'kethua', group:'che', name:'Kế Thừa', tray:'1 trang bị (dưới giai X)',
-    match(v){
-      if (v.items.length !== 1 || v.nJewel) return null;
-      const it = v.items[0];
-      if (it.special || it.tier >= 10) return null;
-      return { it, cost:{ manh:40, tichMa:4, silver:5000*it.tier } };
-    },
-    plan(v, m){ return {
-      title: `[${giaiName(m.it.tier)}]→[${giaiName(m.it.tier+1)}]giữ Phẩm / +${m.it.plus} / dòng phụ`,
-      rate: 100,
-      cost: [ chaosCost('Mảnh Trang Bị', player.mats.manh, m.cost.manh, '❖'),
-              chaosCost('Đá Ấn Rune', player.mats.tichMa, m.cost.tichMa, '◆'),
-              chaosCost('Lumen', player.silver, m.cost.silver, '◈') ],
-      warn: 'Chỉ số gốc của giai mới bằng 90% bản gốc — bù lại giữ trọn mọi dòng đã có.', charm:false }; },
-    run(v, m){
-      player.mats.manh -= m.cost.manh; player.mats.tichMa -= m.cost.tichMa; player.silver -= m.cost.silver;
-      m.it.tier++; m.it.level = (m.it.tier-1)*10 + 10;
-      const sl = SLOTS.find(s => s.id === m.it.slot);
-      if (sl && m.it.main) m.it.main.v = Math.max(1, Math.round(sl.base(m.it.tier) * 0.9));
-      chaosSay(`⚒ Kế Thừa — lên giai[${giaiName(m.it.tier)}]!`, '#9fd0ff');
-      addFloat(player.x, player.y-52, `⚒ KẾ THỪA —[${giaiName(m.it.tier)}]!`, '#9fd0ff', 15);
-      addEffect({ type:'ring', x:player.x, y:player.y, r:80, color:'#9fd0ff', big:true });
-      AudioSys.sfx('levelup', 0.7);
-      return true; } },
 
   // ── Ba bậc cánh. Cả ba đều royal:true — cánh là việc của Lò Rèn Hoàng Gia, đúng như
   // Chaos Machine của MU. Không còn quay xổ số giữa hai đôi: ra ĐÚNG đôi của lớp đang chơi.
@@ -17783,9 +20126,9 @@ function chaosSay(t, c){
 }
 function chaosAwakenNote(it){
   if (it.plus === 10) addFloat(player.x, player.y-58, `☆ Thức tỉnh: ${it.awakened.name}`, '#f39c3d', 13);
-  if (it.plus === 11){
+  if (it.plus >= 11){
     player.forged11 = true;
-    addFloat(player.x, player.y-76, '☀ KHAI QUANG +11!', '#ffd76a', 16);
+    addFloat(player.x, player.y-76, `☀ KHAI QUANG +${it.plus}!`, '#ffd76a', 16);
     addEffect({ type:'ring', x:player.x, y:player.y, r:120, color:'#ffd76a', big:true });
     checkTitles();
   }
@@ -17907,6 +20250,14 @@ window.chaosClear = function(){ forgeTray = []; chaosPick = null; renderForge();
 // Bốc SAU nhịp nín thở chứ không phải trước, vì mọi tiếng động và dòng chữ của công thức đều
 // nổ ra ngay trong `run()`; bốc trước thì tai nghe kết quả xong mắt mới thấy yêu tinh diễn.
 // (Nhịp này KHÔNG đụng tới tỉ lệ — xem ghi chú "canh nhịp là mê tín" ở khối SÂN LÒ.)
+// ⚠ PHƠI KHOÁ RA CHO BÀI KIỂM ĐỌC. `_loBan` giữ từ lúc bấm tới `LO_KHUI + 1000`ms sau, và
+// `doChaos()` thì `return` LẶNG LẼ khi nó còn bật. Bài kiểm nào chờ bằng một con số đoán tay
+// sẽ đỏ theo tải máy chứ không theo lỗi: `test_chaos` chờ 2400ms cho một nhịp 2150ms, tức lề
+// 250ms — dưới headless không GPU thì hai hẹn giờ lệch nhau ngần ấy là chuyện thường, và cú
+// bấm KẾ TIẾP bị khoá nuốt mất trong im lặng. Triệu chứng đọc ra là "công thức không chạy".
+// Có cửa này thì bài kiểm chờ ĐÚNG ĐIỀU KIỆN thay vì chờ một con số — và nó tự đúng nếu sau
+// này ai đổi LO_KHUI.
+window.loDangBan = () => _loBan;
 window.doChaos = function(){
   if (_loBan) return;
   const cur = chaosCurrent();
@@ -17991,7 +20342,6 @@ function renderForge(){
   // ── kho: tiền + nguyên liệu số lượng lớn ──
   h += `<div class="chaos-bank">
     <span title="Lumen">◈ ${player.silver.toLocaleString('vi-VN')}</span>
-    <span title="Tu La Tinh Thạch" style="color:#e84a6a">◆ ${player.gems.tuLa}</span>
     <span title="Hỗn Nguyên" style="color:#b08ae8">❖ ${player.gems.honNguyen}</span>
     <span title="Thiên Mệnh Phù" style="color:#7ecbff">☂ ${player.charms}
       <button class="mini-btn" style="padding:1px 6px;font-size:10px" onclick="buyCharm()" ${player.silver<500?'disabled':''}>Mua 500◈</button></span>
@@ -18782,17 +21132,101 @@ function tangDoThuNghiem(){
 // là vừa thổi cân bằng vừa làm hỏng khoảnh khắc nhặt được món Hoàn Hảo THẬT về sau.
 // Dùng genItem() — đúng đường đồ rơi từ quái — ép perfect:0 và plus9:0, cấp 1. Đây là bộ đồ vải
 // tầm thường: đủ để nhân vật hiện ra có mặc gì đó, không đủ để ai thấy mình mạnh sẵn.
-function phatDoKhoiDau(){
-  for (const _id of ['vukhi', 'non', 'ao', 'tay', 'chan']){
-    const sl = SLOTS.find(s2 => s2.id === _id);
-    if (!sl || sl.special) continue;
-    const it = genItem(1, null, null, { slots: [_id], perfect: 0, plus9: 0 });
-    if (!it) continue;
-    it.plus = 0;
-    player.equip[_id] = it;
+// ═══ BẢN CHƠI THỬ — phát thẳng bộ giai 7 ═══
+// Chủ dự án chốt cho bản demo này: người thử phải thấy ngay năm bộ giáp giai 7 (Phoenix ·
+// Grand Soul · Ngọc Bích · Sinh Mệnh · bộ vàng Dark Lord) chứ không phải đồ vải cấp 1.
+//
+// ⚠ ĐÂY LÀ QUYẾT ĐỊNH CỦA BẢN THỬ, KHÔNG PHẢI CÂN BẰNG. Tách thành hằng riêng để gỡ về nhịp
+// chơi thật chỉ phải sửa MỘT dòng (`= 1`), và để ai đọc code biết ngay đoạn này không mô tả
+// trải nghiệm thật của người chơi mới.
+const DEMO_DO_GIAI = 7;
+// Dòng vũ khí có ART của từng lớp. Phát bừa một dòng khác thì bộ giáp giai 7 hiện đúng mà
+// trên tay lại là cây vũ khí chưa có tranh — mà vũ khí là thứ to nhất trên bóng dáng.
+// Ba lớp có lớp vũ khí CẦM TAY (xem NV_VK_LOP) nên chọn sai dòng là mất luôn cây trong tay.
+const DEMO_VK_DONG = { thieulam:'kiem', minhgiao:'makiem', toanchan:'truongcung',
+                       baidasan:'gay',  bug:'lenhtruong' };
+const DEMO_O = ['vukhi', 'non', 'ao', 'tay', 'chan'];
+// Sinh ĐÚNG MỘT món của bộ chơi thử cho một ô. Tách khỏi `phatDoKhoiDau` vì có HAI đường gọi
+// (tạo nhân vật mới · di trú save cũ) — chép phép sinh sang đường thứ hai là dựng bản sao của
+// một luật đang sống, rồi hai đường phát ra hai bộ đồ khác nhau mà không ai thấy.
+function demoTaoMon(_id){
+  const giai = clamp(DEMO_DO_GIAI, 1, GIAI_MAX);
+  const cap  = clamp(capDauGiai(giai), 1, MAX_LV);
+  const dong = DEMO_VK_DONG[player.sect];
+  const sl = SLOTS.find(s2 => s2.id === _id);
+  if (!sl || sl.special) return null;
+  let it = null;
+  // Vũ khí: quay cho tới khi ra ĐÚNG dòng có art. genItem bốc ngẫu nhiên trong các dòng lớp
+  // này dùng được, nên không ép được bằng tham số — mà đây là lúc tạo nhân vật, quay vài
+  // chục lượt không ai thấy.
+  for (let i = 0; i < (_id === 'vukhi' && dong ? 300 : 1); i++){
+    const t = genItem(cap, null, null, { slots: [_id], perfect: 0, plus9: 0 });
+    if (!t) continue;
+    it = t;
+    if (_id !== 'vukhi' || !dong) break;
+    const d = itemDef(t);
+    if (d && d.line === dong) break;
   }
+  if (!it) return null;
+  // Ép GIAI để art khớp: nvLopCuaEquip() và nvVkLop() đều tra theo `it.tier`, nên món đúng
+  // cấp mà sai giai thì vẫn rơi về bộ cũ.
+  it.tier = giai; it.level = cap; it.plus = 0;
+  if (it.main && sl.base) it.main.v = sl.base(giai);
+  return it;
+}
+function phatDoKhoiDau(){
+  for (const _id of DEMO_O){
+    const it = demoTaoMon(_id);
+    if (it) player.equip[_id] = it;
+  }
+  player._demoDo = DEMO_DO_GIAI;   // đã nhận bộ chơi thử — xem demoDoDiTru()
   calcDerived();
   player.hp = player.maxHp; player.qi = player.maxQi;
+}
+// ═══ SAVE ĐỜI TRƯỚC CŨNG PHẢI NHẬN BỘ CHƠI THỬ ═══════════════════════════════════════════
+// `phatDoKhoiDau()` chỉ chạy trong `newGame()`, nên mọi nhân vật tạo TRƯỚC bản demo không bao
+// giờ thấy bộ giai 7 — và đó chính là những người đang chơi thử. Triệu chứng họ mô tả không
+// phải "thiếu đồ" mà là **"cây cung thiên mệnh gắn theo nhân vật của mình đâu?"**: cây vũ khí
+// cầm tay chỉ hiện khi món đang đeo trùng `dòng|giai` trong NV_VK_LOP (xem nvVkLop), nên một
+// cây cung giai 3 làm cả lớp art biến mất mà không lỗi nào báo.
+//
+// ⚠ CHỈ NÂNG, KHÔNG BAO GIỜ HẠ. Ô nào đã tốt hơn thì để yên; món bị thay thì **cho vào túi**
+// chứ không xoá — hết chỗ thì bỏ qua ô đó. Một bản demo lấy mất đồ của người chơi là đổi một
+// lỗi lấy một lỗi nặng hơn.
+// ⚠ Cờ `player._demoDo` chặn chạy hai lần: nạp save nhiều lần trong một phiên mà thiếu cờ là
+// in đồ. Cùng khuôn với `_diTruCot`.
+function demoDoDiTru(){
+  if (window.TEST_MODE || window.TEST_DO) return;   // bài kiểm cân bằng đo nhân vật TRẦN
+  if (!player || (player._demoDo || 0) >= DEMO_DO_GIAI) return;
+  player._demoDo = DEMO_DO_GIAI;
+  const dong = DEMO_VK_DONG[player.sect];
+  const ten = [];
+  for (const _id of DEMO_O){
+    const cu = player.equip && player.equip[_id];
+    // Đã đạt giai demo rồi thì thôi — TRỪ vũ khí sai dòng, vì đúng dòng mới có tranh.
+    if (cu && (cu.tier || 1) >= DEMO_DO_GIAI){
+      const d = _id === 'vukhi' ? itemDef(cu) : null;
+      if (_id !== 'vukhi' || !dong || (d && d.line === dong)) continue;
+    }
+    const it = demoTaoMon(_id);
+    if (!it) continue;
+    if (cu){
+      if (!bagConCho(cu)) continue;                 // hết chỗ ⇒ giữ nguyên, không vứt của ai
+      bagThem(cu);
+    }
+    player.equip[_id] = it;
+    ten.push(it.name);
+  }
+  if (!ten.length) return;
+  calcDerived();
+  player.hp = Math.min(player.maxHp, Math.max(player.hp, 1));
+  // Phải BÁO ra một dòng đọc được: một khoản phát mà không ai thấy thì không khác gì không phát.
+  setTimeout(() => {
+    if (!player) return;
+    logCombat('<b style="color:#ffd76a">Bản chơi thử</b> — đã trang bị bộ giai ' + DEMO_DO_GIAI +
+              ': ' + ten.join(' · ') + '. Đồ cũ nằm trong túi.');
+    addFloat(player.x, player.y - 78, 'Bản chơi thử — nhận trọn bộ giai ' + DEMO_DO_GIAI, '#ffd76a', 14);
+  }, 700);
 }
 function applyTestBoost(){
   // ===== CHẾ ĐỘ THỬ NGHIỆM: MỌI TÍNH NĂNG TỐI ĐA =====
@@ -18802,7 +21236,7 @@ function applyTestBoost(){
   player.silver = 999999;
   player.shard = 999;                              // Shard — đủ mua trọn Quầy Shard
   player.khi = 999999;                             // Instinct — nạp đầy để thử
-  player.gems = { tuLa: 99, honNguyen: 99 };       // rèn +7 trở lên
+  player.gems = { honNguyen: 99 };                 // rèn +10 trở lên
   player.charms = 99;                              // bảo hiểm rèn +10/+11
   player.silver += 999999;
   // Khế Ước: sở hữu hết 16 thân + một nắm vé để thử quay. Không còn cấp/Hoá/Đất Hồn để tối đa.
@@ -18833,7 +21267,6 @@ function applyTestBoost(){
   player.mats = player.mats || {};
   // Đủ MỌI nguyên liệu Lò Hỗn Độn cần — thiếu manh/tichMa thì Kế Thừa
   // vẫn khoá cứng ở max mode, tức là hai công thức không test được.
-  player.mats.manh = 300; player.mats.tichMa = 60;
   // Danh hiệu: mở hết, trang bị danh hiệu cuối cùng
   player.titles.unlocked = TITLES.map(t => t.id);
   player.titles.equipped = TITLES[TITLES.length - 1].id;
@@ -18879,35 +21312,69 @@ function moHetCong(){
 // ---------- Khế Ước: chọn thân Axie + bốn ô Cốt của người chơi ----------
 function renderMount(){
   if (lvPeak() < 6){
-    CE().innerHTML = `<div class="stat-sec">Chimera Đồng Hành</div>
+    CE().innerHTML = `<div class="stat-sec">Thân Axie</div>
       <div style="padding:14px;font-size:13px">Khế Ước mở khóa ở <b style="color:#7ecbff">cấp 6</b>.</div>`;
     return;
   }
   const C = chiState();
-  const dsCo = CHIMERA.filter(c => C.co[c.id]);
-  let html = `<div class="stat-sec">Chimera Đồng Hành</div>`;
-  html += `<div style="font-size:11.5px;color:#9aa8d4;line-height:1.55;margin-bottom:8px">Thân Axie quay được ở <b>Khế Ước</b>. Con đang cắm là <b>hình dáng của chính bạn</b> — nó không cộng chỉ số và không tự đánh. Sức mạnh nằm ở lớp nhân vật; lúc ra đòn lớp ấy hiện ra rồi tan.</div>`;
+  // Con ĐANG hiện ra trên màn — qua cửa DUY NHẤT, xem avatarId(). `null` = đã tắt bằng
+  // /avatar off; một id = đang đeo con đó (kể cả khi đó là con mặc định chưa ai chọn tay).
+  const _avaNay = avatarId(player);
+  // ⚠ Danh sách là MỌI con đeo được, KHÔNG phải chỉ con đã quay ra — xem avaCamDuoc().
+  // `daCo` chỉ còn để in con số sưu tầm; nó không còn gác gì.
+  const dsThan = avaDsThan(), daCo = dsThan.filter(c => C.co[c.id]).length;
+  let html = `<div class="stat-sec">Thân Axie</div>`;
+  html += `<div style="font-size:11.5px;color:#9aa8d4;line-height:1.55;margin-bottom:8px">Cắm <b>con nào cũng được</b> — không phải quay ra mới dùng được. Con đang cắm là <b>hình dáng của chính bạn</b> — nó không cộng chỉ số và không tự đánh. Sức mạnh nằm ở lớp nhân vật; lúc ra đòn lớp ấy hiện ra rồi tan.</div>`;
   html += `<div class="forge-actions" style="margin-bottom:8px">
       <button class="mini-btn" style="font-size:13px;padding:7px 18px" onclick="closePanels();openKheUoc()">✦ Mở Khế Ước (${(C.ve.gk||0)} Ấn)</button>
-      <button class="mini-btn" onclick="chiTatAvatar()">${player.avatar ? 'Về Thân Nhân Vật (X)' : 'Đang dùng thân nhân vật'}</button></div>`;
-  if (!dsCo.length){
-    html += `<div style="text-align:center;padding:14px;opacity:.7;font-size:13px">Chưa có Chimera nào.<br>Quay ở Khế Ước để nhận con đầu tiên.</div>`;
+      <button class="mini-btn" onclick="chiTatAvatar()">${_avaNay ? 'Về Thân Nhân Vật (X)' : 'Đang dùng thân nhân vật'}</button></div>`;
+  // Nhánh này nay chỉ với tới được khi KHÔNG con nào có bảng khung — tức art chưa tải/chưa
+  // nướng, không phải "chưa quay được con nào". Nói đúng cái đang xảy ra.
+  if (!dsThan.length){
+    html += `<div style="text-align:center;padding:14px;opacity:.7;font-size:13px">Chưa nạp được bảng khung của con nào.<br>Thử tải lại trang.</div>`;
     CE().innerHTML = html; return;
   }
   // ── ~~Bốn ô Cốt~~ — bảng đã gỡ cùng hệ Cốt (chủ dự án chốt gỡ hẳn chỉ số). ──
   // ⚠ Danh sách này KHÔNG in một con số chỉ số nào, và đó là cả thiết kế. Bản cũ in "Cấp N ·
   // Huyết Thống CN · <bị động> · Chiêu <tên> (Ns)" — bốn thứ đó nay đều không tồn tại. In lại
   // bất kỳ cái nào là hứa với người chơi một sức mạnh mà con Axie không còn cho.
-  html += `<div class="stat-sec">ĐANG CÓ — ${dsCo.length}/${CHIMERA.length}</div>`;
-  html += `<div style="font-size:11px;color:#9aa8d4;margin-bottom:6px;line-height:1.5">Con Axie là <b>thân nhìn thấy</b> của bạn — nó không cộng chỉ số và không tự đánh. Toàn bộ sức mạnh nằm ở lớp nhân vật; lúc ra đòn lớp ấy hiện ra rồi tan.</div>`;
-  for (const c of dsCo){
-    const o = C.co[c.id], con = (o && o.con) || 0, dung = player.avatar === c.id;
+  html += `<div class="stat-sec">THÂN AXIE — ${dsThan.length} con, cắm con nào cũng được <span style="font-weight:400;opacity:.65">· đã sưu tầm ${daCo}/${CHIMERA.length}</span></div>`;
+  // ⚠ NÓI RA ĐANG ĐỨNG Ở ĐÂU, ngay trên danh sách. Không có dòng này thì mọi nhãn "ở đất X"
+  // bên dưới treo lơ lửng — người chơi không biết X là đất nào và vì sao bảng lại nhắc tới nó.
+  {
+    const _bsNay = (typeof curMap !== 'undefined' && typeof mapBanSac === 'function') ? mapBanSac(curMap) : null;
+    const _heNay = _bsNay && ELEM[_bsNay.he] ? _bsNay.he : null;
+    if (_heNay){
+      const _kh = heKhacLai(_heNay);
+      html += `<div style="font-size:11.5px;color:#cfd8ff;background:#1a1f33;border:1px solid #2e3a5c;border-radius:6px;padding:6px 9px;margin-bottom:7px;line-height:1.5">`
+            + `\ud83d\uddfa Đang đứng ở <b>${(MAPS[curMap]||{}).name || curMap}</b> — đất <b style="color:${ELEM[_heNay].color}">${ELEM[_heNay].glyph} ${_heNay}</b> <span style="opacity:.65">${_bsNay.tyLeHe}% đàn quái</span>.`
+            + (_kh.length ? ` Thân <b style="color:${ELEM[_kh[0]].color}">${_kh.join(' · ')}</b> chịu đòn nhẹ hơn ở đây.` : '')
+            + `</div>`;
+    } else {
+      html += `<div style="font-size:11.5px;color:#9aa8d4;margin-bottom:7px;line-height:1.5">\ud83d\uddfa Chỗ đang đứng <b>không có hệ trội</b> — không thân nào hợp hơn thân nào. Vào một vùng săn rồi mở lại bảng này để thấy con nào hợp ở đó.</div>`;
+    }
+  }
+  // ⚠ HAI CON SỐ NÀY TỪNG CHÉP CỨNG "12%" / "10%", và từ đợt sáu bộ phận thì đó là lời nói dối:
+  // hệ số phụ thuộc độ sắc của con đang đeo (×0,45 tới ×1,50). Suy thẳng từ `heThuKet` — một
+  // bảng hứa một đằng còn đòn đánh ra một nẻo thì không lỗi nào báo, và người chơi thì đọc ra
+  // là game nói dối. Lấy hai đầu dải để nói đúng cái RANGE, không nói một điểm.
+  const _dTap = heThuKet('Beast', 'Plant', BP_SAC_MIN), _dThuan = heThuKet('Beast', 'Plant', BP_SAC_MAX);
+  const _dLoiTap = heThuKet('Plant', 'Beast', BP_SAC_MIN), _dLoiThuan = heThuKet('Plant', 'Beast', BP_SAC_MAX);
+  const _pc = m => Math.round(Math.abs(m - 1) * 100);
+  html += `<div style="font-size:11px;color:#9aa8d4;margin-bottom:6px;line-height:1.5">Con Axie là <b>thân nhìn thấy</b> của bạn — nó <b>không cộng chỉ số</b> và không tự đánh. Toàn bộ sức mạnh nằm ở lớp nhân vật; lúc ra đòn lớp ấy hiện ra rồi tan.<br>Nhưng <b style="color:#ffd76a">lớp Axie quyết định hệ PHÒNG THỦ</b> của bạn: quái khắc hệ bạn đánh đau hơn <b>${_pc(_dTap.mul)}–${_pc(_dThuan.mul)}%</b>, bạn khắc lại thì nhẹ đi <b>${_pc(_dLoiTap.mul)}–${_pc(_dLoiThuan.mul)}%</b> — rộng hay hẹp là do <b style="color:#ffd76a">cấu tạo sáu bộ phận</b> của chính con đó. Đổi thân là đổi vùng đất nào dễ thở. Hệ đòn đánh vẫn theo <b>vũ khí</b>.<br><span style="opacity:.75">Con <b>thuần</b> là chuyên gia (ăn đòn rất nhẹ ở vùng hợp, rất nặng ở vùng khắc); con <b>tạp</b> là thợ đụng. Trung bình trên cả chín lớp quái thì <b>mọi con bằng nhau</b> — cấu tạo đổi hình dạng rủi ro, không đổi tổng.</span></div>`;
+  for (const c of dsThan){
+    // ⚠ HỎI `avatarId()`, ĐỪNG ĐỌC THẲNG `player.avatar`. Con mặc định của lớp hiện ra khi
+    // `player.avatar === undefined`, nên so bằng thô thì đúng con NGƯỜI CHƠI ĐANG ĐEO lại
+    // mang nút "Đổi thân" — bảng mời đổi sang chính thứ đang mặc. Trước đợt này không ai
+    // thấy vì con mặc định không bao giờ có mặt trong danh sách.
+    const o = C.co[c.id], con = (o && o.con) || 0, dung = _avaNay === c.id;
     html += `<div class="skill-row${dung ? '' : ' locked'}" style="align-items:center">
       ${chiO34(c)}
       <span class="sk-info"><b style="color:${c.mau}">${c.ten}</b>
         <span style="font-size:10.5px;color:${CHI_SAO_MAU[c.sao]}"> · ${'★'.repeat(c.sao)} · </span>${lopHuyHieu(c.lop)}<span style="font-size:10.5px;color:${CHI_SAO_MAU[c.sao]}">${c.lop}</span>
-        ${con ? `<span style="font-size:10.5px;color:#ffd76a"> · trùng ×${con}</span>` : ''}
-        <div class="sk-desc">Thân ${c.lop} — ${c.ten}</div></span>
+        ${(o ? (con ? `<span style="font-size:10.5px;color:#ffd76a"> · sưu tầm ×${con + 1}</span>` : '<span style="font-size:10.5px;color:#8fd18f"> · đã sưu tầm</span>')
+             : '<span style="font-size:10.5px;color:#7d86a8"> · chưa sưu tầm</span>')}
+        <div class="sk-desc">Thân ${c.lop} — ${c.ten} · phòng thủ lớp <b style="color:${elColor(c.lop)}">${(ELEM[c.lop]||{}).glyph||''} ${elName(c.lop)}</b>${bpDongMoTa(c)}${(() => { const h = axieTaiDay(c); return h ? `<br><b style="color:${h.mau}">${h.txt}</b>` : ''; })()}</div></span>
       ${dung ? '<span style="font-size:11px;color:#8fd18f">ĐANG LÀM THÂN</span>'
            : `<button class="mini-btn" onclick="window.chiChon('${c.id}')">Đổi thân</button>`}</div>`;
   }
@@ -18916,11 +21383,12 @@ function renderMount(){
 // Ô Chimera 34px trong danh sách. Không dùng <img> nữa vì art nay là DẢI 16 khung — trình
 // duyệt chạy nó bằng hai animation steps() lồng nhau (xem .chi-anh trong style.css), nên phải
 // là một khối có background chứ không phải một tấm ảnh.
-function chiO34(c){
-  const A = CHI_ANH.o[c.id], cao = 34, rong = A ? Math.round(cao * A.nhoRong / A.nhoCao) : cao;
-  return `<i class="chi-anh" style="--sh:url(assets/chimera/${c.id}.webp);--w:${rong}px;`
+function chiOAnh(c, cao, lop){
+  const A = CHI_ANH.o[c.id], rong = A ? Math.round(cao * A.nhoRong / A.nhoCao) : cao;
+  return `<i class="chi-anh${lop ? ' ' + lop : ''}" style="--sh:url(assets/chimera/${c.id}.webp);--w:${rong}px;`
        + `--h:${cao}px;border-color:${CHI_SAO_MAU[c.sao]}"></i>`;
 }
+function chiO34(c){ return chiOAnh(c, 34); }
 // Huy hiệu lớp Axie chính chủ, cắt từ dải lop.webp theo đúng thứ tự LOP_DAI.
 function lopHuyHieu(lop){
   const i = LOP_DAI.indexOf(lop);
@@ -19362,7 +21830,7 @@ window.muaShard = function(id){
 // quyết định con thú nào được triệu hồi; nay nó quyết định cái thân nào hiện ra.
 window.chiChon = function(id){
   const C = chiState();
-  if (!C.co[id]) return;                        // chỉ con đã quay được mới cắm làm avatar
+  if (!avaCamDuoc(id)) return;                   // cửa DUY NHẤT — xem avaCamDuoc()
   C.eq = id; player.avatar = id;
   calcDerived(); saveGame(); refreshCharTab('mount');
   addFloat(player.x, player.y - 44, `✦ Đổi thân sang ${CHI_MAP[id].ten}`, CHI_MAP[id].mau, 14);
@@ -19441,6 +21909,11 @@ function startGame(sectKey, quze){
   bungMoiVung();   // A4: bung miền của MỌI map ngay ở đây, xem ghi chú tại bungMoiVung()
   newPlayer(sectKey);
   player.name = (quze && quze.name) || genCharName(); // danh tính phiêu bạt (bước đặt tên)
+  // Axie đại diện chọn ở màn tạo nhân vật. CHỈ ghi khi người chơi thật sự chọn một con hợp lệ:
+  // để trống thì `player.avatar` phải giữ nguyên `undefined`, và đó là cả một cơ chế — `undefined`
+  // nghĩa là "chưa chọn ⇒ lấy con mặc định của lớp", còn `null` nghĩa là "đã tắt bằng /avatar off".
+  // Gán bừa `quze.avatar || null` vào đây là biến mọi nhân vật mới thành đã-tắt-avatar.
+  if (quze && quze.avatar && avaCamDuoc(quze.avatar)) player.avatar = quze.avatar;
   // The Hatching: từ màn roll (người chơi thật) hoặc roll ngầm (quick-start/test)
   if (quze && quze.traits){
     player.traits = quze.traits.slice(0, 3);
@@ -19484,7 +21957,8 @@ function startGame(sectKey, quze){
       tangDoThuNghiem();
       addFloat(player.x, player.y-72, 'Chế độ test — mặc sẵn nguyên bộ giai 1 và vũ khí của lớp', '#a0ffe9', 13);
     } else if (!window.TEST_MODE){
-      // Người chơi THẬT: phát bộ khởi đầu hai ô (xem phatDoKhoiDau). Loại trừ TEST_MODE vì hơn
+      // Người chơi THẬT: phát bộ khởi đầu (xem phatDoKhoiDau — bản chơi thử phát NGUYÊN BỘ
+      // GIAI 7 cộng đúng dòng vũ khí có art, xem DEMO_DO_GIAI). Loại trừ TEST_MODE vì hơn
       // trăm bài kiểm tự đặt cờ đó rồi gọi startGame để mở cổng dịch chuyển — bài cân bằng nào
       // cũng đo trên nhân vật TRẦN, treo đồ vào đây là cả bộ đo đổi mốc trong im lặng.
       phatDoKhoiDau();
@@ -19508,6 +21982,14 @@ function startGame(sectKey, quze){
   if (el('ghha-lang-toggle')) el('ghha-lang-toggle').style.display = 'none';
   if (maxMode) player.tutStep = -1; // chế độ thử nghiệm: bỏ qua hướng dẫn
   updateTut();
+  // ⚠ `_beaconQuestId` là cờ CẤP `window`, nên nó SỐNG SÓT qua một lượt dựng lại người chơi.
+  // `trackerHtml()` chỉ ghim đèn hiệu khi cờ này KHÁC mã nhiệm vụ đang làm, nên nhân vật thứ
+  // hai dựng trong cùng một trang không bao giờ được ghim: `player.beacon` đứng `null`, mất cả
+  // dải "Đi ngay" lẫn mũi tên định hướng — mà bước 3 của hướng dẫn tân thủ thì trỏ thẳng vào
+  // cái dải đó. Hôm nay mọi đường đổi nhân vật đều `location.reload()` nên chưa ai gặp; xoá
+  // một lời gọi reload là gặp ngay, và nó im lặng tuyệt đối. Cùng họ với dòng `loadGame()`
+  // từng nuốt thanh chiêu người chơi tự gán.
+  window._beaconQuestId = null;
   snapCamera(); // vào game: camera đặt thẳng vào nhân vật, không pan từ góc (0,0)
   AudioSys.nhacMap(curMap); // chuyển từ nhạc intro sang nhạc map
   saveGame();
@@ -19579,7 +22061,7 @@ function showMainMenu(){
   // Ô này đổi tên thành #cc-classes khi dựng màn tạo nhân vật. Bỏ sót ở đây là NGƯỜI CHƠI CŨ
   // (có save ⇒ đi thẳng vào showMainMenu) đâm vào null ngay lúc mở game.
   { const _cc = el('cc-classes'); if (_cc) _cc.style.display = 'none'; }
-  for (const _id of ['cc-detail','btn-create','cc-back']){ const _e = el(_id); if (_e) _e.style.display = 'none'; }
+  for (const _id of ['cc-detail','cc-avatar','btn-create','cc-back']){ const _e = el(_id); if (_e) _e.style.display = 'none'; }
   { const _n = document.querySelector('#sect-select .cc-name'); if (_n) _n.style.display = 'none'; }
   { const _w = el('cc-name-warn'); if (_w) _w.style.display = 'none'; }
   const mm = el('max-mode'); if (mm) mm.style.display = 'none';
@@ -19779,6 +22261,13 @@ setTimeout(() => {
       fxLoad();
       snapCamera(); // tiếp tục hành trình: camera đặt thẳng vào nhân vật
       AudioSys.nhacMap(curMap); // chuyển từ nhạc intro sang nhạc map
+      // Báo khoản hoàn điểm Phòng Ngự — xem `_diTruDefBao`. In ở ĐÂY chứ không trong
+      // `loadGame()` vì tới lúc này thế giới mới dựng xong và nhật ký mới có chỗ ghi.
+      if (_diTruDefBao > 0){
+        const _n = _diTruDefBao; _diTruDefBao = 0;
+        logCombat(`💠 Ô Phòng Ngự đã gỡ — phòng thủ nay đến từ Nhanh Nhẹn. Hoàn lại <b>${_n}</b> điểm tiềm năng, bấm <b>C</b> để rót lại.`, '#7ecbff');
+        if (player) addFloat(player.x, player.y - 60, `💠 Hoàn ${_n} điểm tiềm năng`, '#7ecbff', 14);
+      }
     }
   });
 }
@@ -19890,6 +22379,14 @@ const GO_ANIMA = 2;        // 1 Anima cũ = 2 Lumen
 const GO_CONGHUAN = 2000;  // 1 Công Huân Lệnh cũ = 2000 Lumen — cũng là giá một lượt Sảnh Cầu May
 const GO_ANTHUANTHU = 1500; // 1 Ấn Thuần Thú cũ = 1500 Lumen — đúng giá bán ở Vũ Khí Phường
 const GO_TAMDAC = 4000;     // 1 Tâm Đắc cũ = 4000 Instinct — xem skMileMult
+const GO_TULA = 1800;       // 1 Tu La Tinh Thạch cũ = 1800 Lumen — ĐÚNG giá tiệm nó từng bán
+// Hai vật liệu Kế Thừa. Không thứ nào từng bày bán nên KHÔNG có giá tiệm để lấy; tỉ giá suy từ
+// hai chỗ khác, cả hai có sẵn trong game:
+//   · Mảnh = 150 — cùng đơn vị mà `loadGame` đã dùng cho mọi "mảnh" vụn khác (GO_HUYENTHIET,
+//     và Mảnh Cổ Thần lẻ cũng hoàn đúng 150 một mảnh)
+//   · Đá Ấn Rune = 1500 — gấp MƯỜI lần Mảnh, đúng tỉ lệ 40 : 4 mà chính công thức Kế Thừa niêm yết
+const GO_MANH = 150;
+const GO_TICHMA = GO_MANH * 10;
 function cheatLog(t, color){
   const lg = document.getElementById('cheat-log');
   if (!lg) return;
@@ -19939,6 +22436,7 @@ function cheatHelp(){
     '/map <phó bản> — ' + _pb,
     '/go <x> <y> — dịch chuyển tọa độ · /boss — mở phong ấn & tới Cổng Vực · /boss reset — dựng lại phong ấn',
     '/deep — vào Tầng Sâu',
+    '/lokhac [đợt] — vào Lò Khắc (mini-game chọn thẻ), nhảy thẳng tới một đợt',
     '── kỹ năng ──',
     `/fullskill — học hết ${Object.keys(VOHOC_DEFS).length} kỹ năng, mọi chiêu cấp 120`,
     '/learn — học toàn bộ Sổ Kỹ Năng · /bikip <n> — số Sách Kỹ Năng',
@@ -19948,7 +22446,7 @@ function cheatHelp(){
     '── tài nguyên ──',
     '/silver /shard /khi /bikip <n> — Lumen · Shard · Bản Năng · Sách (+n để cộng)',
     '/jewel <n> — cả bốn Tứ Châu · /gem <n> — Tử La + Hỗn Nguyên',
-    '/manh /tich <n> — mảnh ghép chế tác · /hap <n> — Box Kundun mọi tầng',
+    '/hap <n> — Box Kundun mọi tầng',
     '/item [phẩm 0-4] [giai 1-10] — tạo trang bị vào túi',
     `/gen <giai 1-${GIAI_MAX}> [+rèn 0-11] [cánh 0-3] — MẶC THẲNG cả bộ, ví dụ: /gen 1 +11`,
     '── Khế Ước (thân Axie) & Cốt ──',
@@ -19965,6 +22463,11 @@ function cheatHelp(){
     '/ruong — kéo Rương Canh chưa mở gần nhất về sát chân + dọn trại · /ruong ds — rương của mọi vùng',
     '── tranh ──',
     `/art [lớp=${Object.keys(SPLASH_CFG).join('|')}] [mavuong] — mở tranh minh hoạ + chibi của lớp`,
+    '── online (chạy với ?test=1&net=1) ──',
+    '/net — tình trạng nối · /net ds — ai đang ở trong map · /net toi [id|tên] — dịch tới cạnh họ',
+    '/net ma [n] — dựng n bóng GIẢ để thử tầng vẽ mà không cần cửa sổ thứ hai',
+    '/net ma danh|chieu|nga — bắt bóng giả diễn · /net xoa — dọn · /net hud — ô chỉ số mạng',
+    '/net pvp — vào Sàn Đấu Ardhaven',
     '/wipe — xóa save & tải lại game',
   ];
 }
@@ -20042,7 +22545,7 @@ window.cheatExec = function(raw){
         // (Lệnh /nd của Lõi Nguyên Tố đã bỏ cùng hệ đó.)
         const v2 = Math.max(0, Math.round(num(1, 20)));
         if (cmd === 'jewel'){ for (const k in JEWEL_NAMES) player.jewels[k] = v2; cheatLog('Tứ Châu → ' + v2 + ' mỗi loại', '#7ecbff'); }
-        else if (cmd === 'gem'){ player.gems.tuLa = v2; player.gems.honNguyen = v2; cheatLog(`Tử La ${v2} · Hỗn Nguyên ${v2}`, '#e8552a'); }
+        else if (cmd === 'gem'){ player.gems.honNguyen = v2; cheatLog(`Hỗn Nguyên ${v2}`, '#b08ae8'); }
         else { for (let t = 1; t < BAOHAP_TIERS.length; t++) player.baohap[t] = v2; cheatLog(`Box Kundun → ${v2} mỗi tầng (I-${BAOHAP_TIERS.length - 1})`, '#ffd76a'); }
         break;
       }
@@ -20072,7 +22575,7 @@ window.cheatExec = function(raw){
         calcDerived();
         cheatLog(`${skName(sid)} bậc ${bac} → ${EVO_PATHS[path].name} (cấp chiêu ${player.skillLv[sid]})`, '#ffd76a'); break;
       }
-      case 'silver': case 'khi': case 'shard': case 'manh': case 'tich': case 'dan': {
+      case 'silver': case 'khi': case 'shard': case 'dan': {
         const raw2 = parts[1] || '10000';
         const add = raw2.startsWith('+');
         const v = Math.abs(parseFloat(raw2)) || 0;
@@ -20080,8 +22583,6 @@ window.cheatExec = function(raw){
         if (cmd === 'silver') set(() => player.silver, x => player.silver = x);
         else if (cmd === 'shard') set(() => player.shard, x => player.shard = x);
         else if (cmd === 'khi') set(() => player.khi, x => player.khi = x);
-        else if (cmd === 'manh') set(() => player.mats.manh, x => player.mats.manh = x);
-        else if (cmd === 'tich') set(() => player.mats.tichMa, x => player.mats.tichMa = x);
         cheatLog('OK', '#8fd18f'); break;
       }
       case 'item': {
@@ -20195,7 +22696,7 @@ window.cheatExec = function(raw){
         if (t === 'off' || t === 'tat'){
           player.avatar = null; cheatLog('Đã tắt avatar — về lớp nhân vật như cũ.', '#ffd76a'); break;
         }
-        if (!CHI_MAP[t] || !CHI_ANH.o[t]){
+        if (!avaCamDuoc(t)){        // cùng cửa với chiChon/ccAvaChon — xem avaCamDuoc()
           cheatLog(`Không có Axie nào tên "${t}". Gõ /avatar ds để xem danh sách.`, '#ff7a6a'); break;
         }
         player.avatar = t;
@@ -20237,8 +22738,102 @@ window.cheatExec = function(raw){
         player.speed = 190 * mul;
         cheatLog('Tốc chạy ×' + mul, '#8fd18f'); break;
       }
+      /* /net … — công cụ thử tầng online. Xem `window.NET_MA` để biết vì sao có bóng giả.
+       * ⚠ Console này vẫn khoá sau `?test=1`, KHÔNG mở theo `?net=1`. Hai cờ đọc hai tham số
+       * khác nhau nên `?test=1&net=1` bật cả hai — đó là đường thử. Cho `?net=1` tự mở console
+       * là phát lệnh gỡ rối cho mọi người đang chơi thật trên cùng máy chủ. */
+      case 'net': {
+        const N = window.NET || { on:false };
+        const sub = (parts[1] || '').toLowerCase();
+
+        if (sub === 'ds'){
+          const ds = window.NETPLAYERS.filter(n => n.map === curMap);
+          if (!ds.length){ cheatLog('Không có ai trong map này. /net — xem tình trạng nối · /net ma 2 — dựng bóng giả.', '#ff7a6a'); break; }
+          cheatLog(`${ds.length} thân người trong ${MAPS[curMap].name}:`, '#7fd4ff');
+          for (const n of ds){
+            const d = Math.round(Math.hypot(n.x - player.x, n.y - player.y));
+            const gi = Object.keys(n.equip || {}).length;
+            cheatLog(`  #${n._netId}${n._netId <= -1000 ? ' (giả)' : ''} ${n.name || '?'} · ${(SECTS[n.sect]||{}).name || n.sect} c${n.level}`
+                   + ` · (${Math.round(n.x)},${Math.round(n.y)}) cách ${d}px · máu ${Math.round(n.hp)}/${Math.round(n.maxHp)}`
+                   + (n.pvpMax > 0 ? ` · TRẬN ${Math.round(n.pvpHp)}/${Math.round(n.pvpMax)}` : '')
+                   + ` · ${gi} ô đồ` + (n.chet ? ' · ĐÃ NGÃ' : ''), n._netId <= -1000 ? '#9a8cff' : '#cfe8ff');
+          }
+          break;
+        }
+
+        // ⚠ LỆNH ĐÁNG GIÁ NHẤT CỦA CẢ NHÓM. Bẫy đã ghi trong CLAUDE.md: mọi nhân vật mới hiện ra
+        // ở ĐÚNG một điểm, nên hai cửa sổ vừa vào là hai thân chồng khít lên nhau lệch 0,0px —
+        // kết nối chạy hoàn hảo mà nhìn ra "không thấy ai". Đây là cách bác bỏ nó trong một giây.
+        if (sub === 'toi'){
+          const ds = window.NETPLAYERS.filter(n => n.map === curMap);
+          if (!ds.length){ cheatLog('Không có ai trong map này để tới.', '#ff7a6a'); break; }
+          const key = (parts[2] || '').replace(/^#/, '');
+          let t = key ? ds.find(n => String(n._netId) === key || (n.name || '').toLowerCase().includes(key.toLowerCase())) : null;
+          if (!t && key){ cheatLog(`Không thấy ai tên/id khớp "${key}".`, '#ff7a6a'); break; }
+          if (!t) t = ds.reduce((b, n) => (Math.hypot(n.x-player.x, n.y-player.y) < Math.hypot(b.x-player.x, b.y-player.y) ? n : b));
+          // Đứng CẠNH, đừng đứng ĐÈ — chồng khít lên nhau đúng là cái đang muốn gỡ.
+          player.x = t.x + 110; player.y = t.y + 40;
+          moveTarget = null; player.moving = false;
+          cheatLog(`Đã tới cạnh ${t.name || ('#'+t._netId)} tại (${Math.round(t.x)},${Math.round(t.y)}).`, '#7ecbff');
+          break;
+        }
+
+        if (sub === 'ma'){
+          const arg = (parts[2] || '').toLowerCase();
+          if (arg === 'danh' || arg === 'chieu'){
+            // Nổ hoạt cảnh bằng cách đặt ĐÚNG đồng hồ mà `nhanAnh` đặt khi bộ đếm của người thật
+            // nhảy — nên thứ nhìn thấy là đúng thứ một người thật sẽ làm, không phải một bản diễn
+            // riêng cho công cụ thử.
+            const G = window.NV_HD_GIAY || { a:0.22, c:0.38, h:0.30 };
+            for (const m of window.NET_MA){ if (arg === 'danh') m.atkAnim = G.a; else m.castT = G.c; }
+            cheatLog(`${window.NET_MA.length} bóng giả ${arg === 'danh' ? 'vung một cú' : 'niệm chú'}.`, '#9a8cff');
+            break;
+          }
+          if (arg === 'nga'){ for (const m of window.NET_MA){ m.chet = !m.chet; m.hp = m.chet ? 0 : m.maxHp; }
+            cheatLog('Bóng giả đổi trạng thái nằm/đứng.', '#9a8cff'); break; }
+          const n = clamp(Math.round(num(2, 2)), 1, 12);
+          const tong = window.netMaTao(n);
+          cheatLog(`Dựng ${n} bóng giả quanh chân (tổng ${tong}). Chúng CHỈ có trên máy này — không gói tin nào mang chúng đi.`, '#9a8cff');
+          cheatLog('  /net ma danh · /net ma chieu · /net ma nga · /net xoa', '#7f8ea8');
+          break;
+        }
+
+        if (sub === 'xoa'){ cheatLog(`Đã xoá ${window.netMaXoa()} bóng giả.`, '#9a8cff'); break; }
+
+        if (sub === 'hud'){ window.NET_HUD = !window.NET_HUD;
+          cheatLog('Ô chỉ số mạng: ' + (window.NET_HUD ? 'BẬT' : 'TẮT'), '#7ecbff'); break; }
+
+        if (sub === 'pvp'){
+          if (!MAPS[PVP_MAP]){ cheatLog('Không có map sàn đấu.', '#ff7a6a'); break; }
+          travelTo(PVP_MAP);
+          cheatLog(`Đã vào ${MAPS[PVP_MAP].name}. Máu TRẬN là túi riêng của máy chủ — thua không đụng gì vào bản lưu.`, '#e84a3a');
+          break;
+        }
+
+        // /net — tình trạng. Đọc thẳng NET của net.js, không giữ bản sao nào.
+        if (!N.on){
+          cheatLog('Online: TẮT — trang này nạp không có máy chủ.', '#ff7a6a');
+          cheatLog('  Bật bằng: ?test=1&net=1   (hoặc ?test=1&net=ws://localhost:8877/ws)', '#cfe8ff');
+          cheatLog('  Vẫn thử được tầng vẽ mà không cần mạng: /net ma 2', '#cfe8ff');
+          break;
+        }
+        cheatLog(`Online: ${N.tinhTrang} · ${N.url}`, N.tinhTrang === 'da-noi' ? '#5fd07a' : '#ffd76a');
+        cheatLog(`  id mình #${N.id} · ${window.NETPLAYERS.filter(n => n._netId > -1000).length} người khác trong map`
+               + ` · ${window.NET_MA.length} bóng giả · ${N.soAnh} ảnh chụp đã nhận`, '#cfe8ff');
+        cheatLog('  /net ds · /net toi [id|tên] · /net ma [n] · /net xoa · /net hud · /net pvp', '#7f8ea8');
+        break;
+      }
       case 'wipe': window.wipeSave(true); return;
       case 'deep': deepStart(); cheatLog('Tầng Sâu: bắt đầu', '#c07fe0'); return;
+      case 'lokhac': {          // /lokhac [đợt] — vào lò, tuỳ chọn nhảy thẳng tới một đợt
+        if (LK){ cheatLog('Đang trong Lò Khắc rồi. /lokhac ra để rời.', '#ff7a6a'); return; }
+        if ((parts[1] || '') === 'ra'){ cheatLog('Không ở trong lò.', '#ff7a6a'); return; }
+        player.lokhac = { day:new Date().toDateString(), luot:0 };   // gỡ trần ngày khi thử
+        window.lkStart();
+        const _d = Math.max(1, Math.min(LK_DOT_TONG, parseInt(parts[1], 10) || 1));
+        if (LK && _d > 1){ LK.dot = _d - 1; lkDotMoi(); }
+        cheatLog(`Lò Khắc: đợt ${LK ? LK.dot : '?'}/${LK_DOT_TONG}`, '#ff9a4d'); return;
+      }
       // ⚠ /dat và /chilv đã GỠ cùng vòng nuôi Ragoon (Đất Hồn · cấp 80 · sáu lần Hoá). Đừng
       // thêm lại một lệnh đặt cấp cho con Axie: nó không có cấp nữa, nó là một cái thân.
       // ⚠ /cot đã GỠ cùng hệ Cốt. Bản Năng thay chỗ nó — dùng `/khi <n>` hoặc đi khai vỉa.
@@ -20513,7 +23108,11 @@ window.charTab = 'info';
 // lv = cấp mở khóa — tab khóa sẽ mờ đi, bấm vào chỉ hiện gợi ý (giảm quá tải tân thủ)
 const CHAR_TABS = [
   { id:'info',     name:'Thông Tin',  lv:1 },
-  { id:'mount',    name:'✦ Chimera',  lv:6 },   // id giữ 'mount' — sysUnlocked/refreshCharTab và bài kiểm cũ tra theo mã này
+  // ⚠ NHÃN là 'Thân Axie', KHÔNG phải 'Chimera Đồng Hành'. Ragoon (con thú đi theo) đã gỡ —
+  // con Axie nay LÀ thân nhìn thấy của người chơi, không phải một kẻ đi cạnh. Để nhãn cũ là
+  // tiêu đề bảng nói 'đồng hành' ngay trên một đoạn giải thích rằng đó là chính mình.
+  // ⚠ id giữ 'mount' — sysUnlocked/refreshCharTab và bài kiểm cũ tra theo mã này, không theo nhãn.
+  { id:'mount',    name:'✦ Thân Axie', lv:6 },
   // Tab 'taytuy' (Tái Sinh) đã gỡ — chủ dự án sẽ thiết kế lại. `renderTayTuy()` và
   // `window.doTayTuy()` GIỮ NGUYÊN: `player.resetCount` đang nằm trong mọi bản lưu và còn cộng
   // chỉ số vĩnh viễn trong `calcDerived()`. Trả tab về = thêm lại đúng dòng này.
@@ -20618,7 +23217,7 @@ function togglePanel(which){
       AudioSys.sfx('ui', 0.6);
       window.charTab = tabbed[which];
       renderCharPanel(); p.classList.remove('hidden');
-      tutAdvance('panel');
+      tutGhi('panel');
     }
     return;
   }
@@ -20647,7 +23246,7 @@ function togglePanel(which){
     const e2 = el(map[k]); if (e2) e2.classList.add('hidden');
   }
   if (wasHidden){
-    AudioSys.sfx('ui', 0.6); renderPanel(which); p.classList.remove('hidden'); if (which==='char') tutAdvance('panel');
+    AudioSys.sfx('ui', 0.6); renderPanel(which); p.classList.remove('hidden'); if (which==='char') tutGhi('panel');
     bangGhiChong(id); bangDatCho(p); bangGanKeo(p);
     // Trang Bị + Túi Đồ: trên màn hình đủ rộng, mở cùng lúc cả 2 (side-by-side, xem CSS) để
     // kéo-thả đồ từ Túi Đồ sang ô Trang Bị được — kéo-thả HTML5 cần cả 2 cùng có mặt trên DOM.
@@ -21106,7 +23705,7 @@ function caOrb(g, M){
   g.beginPath(); g.arc(0, 0, 24, 0, 7); g.stroke();
   g.restore();
 }
-// Đá / tinh thạch — khối cắt mặt, dùng cho Tu La và Hỗn Nguyên.
+// Đá / tinh thạch — khối cắt mặt, dùng cho Hỗn Nguyên.
 function caStone(g, M){
   g.save();
   iFill(g, [[0,-28],[19,-9],[12,24],[-12,24],[-19,-9]], iGrad(g, 0, -28, 0, 24, M.hi, M.lo));
@@ -21140,8 +23739,6 @@ const CONSUM_DB = {
                have:()=>player.charms, info:()=>`Đang giữ ${player.charms||0} lá` },
   sach:      { art:'scroll',   col:'#ffb15c', name:'Sách Kỹ Năng',    use:'Nâng thẳng 1 cấp cho một chiêu của lớp mình (bảng K)',
                have:()=>player.bikipVH, info:()=>`Đang có ${player.bikipVH||0} quyển · rơi từ tinh anh/trùm & Vực Thẳm` },
-  tula:      { art:'stone',    col:'#e8552a', name:'Tu La Tinh Thạch', use:'Khảm trang bị · rèn +7 trở lên',
-               have:()=>player.gems.tuLa, info:()=>`Đang có ${player.gems.tuLa||0}` },
   honnguyen: { art:'stone',    col:'#b08ae8', name:'Hỗn Nguyên Thạch', use:'Rèn +10/+11',
                have:()=>player.gems.honNguyen, info:()=>`Đang có ${player.gems.honNguyen||0}` },
 };
@@ -21943,12 +24540,9 @@ window.onEquipSlotDrop = function(e, slotId){
 window.bagSel = -1;
 const MAT_ROWS = [
   { icon:'shard', name:'Shard', get:()=>(player&&player.shard)||0, color:'#b18cff', desc:'Quầy Shard — đổi vé quay · nới túi/kho' },
-  { icon:'tula', name:'Tu La Tinh Thạch', get:()=>player.gems.tuLa, color:'#e84a6a', desc:'rèn +7 trở lên' },
   { icon:'honnguyen', name:'Hỗn Nguyên Thạch', get:()=>player.gems.honNguyen, color:'#b08ae8', desc:'rèn +10/+11' },
   { icon:'phu', name:'Thiên Mệnh Phù', get:()=>player.charms, color:'#7ecbff', desc:'bảo hiểm rèn' },
   { icon:'tanquyen', name:'Mảnh Cổ Thư (Thượng/Trung/Hạ)', get:()=>player.bikip ? player.bikip.pieces.join('/') : '0/0/0', color:'#e84a6a', desc:'dung hợp Huyết Ma Thôn Phệ' },
-  { icon:'manhtrangbi', name:'Mảnh Trang Bị', get:()=>(player.mats&&player.mats.manh)||0, color:'#7ec8d8', desc:'Kế Thừa — rơi từ quái/tinh anh' },
-  { icon:'tichma', name:'Đá Ấn Rune', get:()=>(player.mats&&player.mats.tichMa)||0, color:'#e84a6a', desc:'mảnh vỡ bật ra khi phiến Rune bị đè — Kế Thừa leo giai, rơi từ Vệ Binh Rune' },
 ];
 function fmtCount(n){
   n = n || 0;
@@ -22116,14 +24710,14 @@ function khoList(){ if (!player.kho) player.kho = []; return player.kho; }
 // người chơi phải đọc CHỮ mới biết hàng nào là hàng nào, tức icon không làm việc của icon.
 // ⚠ Ghép theo `JEWEL_COLORS` đã có sẵn, đừng bốc đại: màu đó chạy ở nhãn đồ rơi, chấm trên
 // đất và khung Lò. Icon lệch màu với nhãn của chính nó là bắt người chơi học hai lần.
-// ⚠ "Thạch" lấy QUẶNG THÔ, "châu" lấy VIÊN MÀI — Tu La / Hỗn Nguyên là đá, không phải ngọc.
+// ⚠ "Thạch" lấy QUẶNG THÔ, "châu" lấy VIÊN MÀI — Hỗn Nguyên là đá, không phải ngọc.
 const NGOC_ANH = {
   chucPhuc:'assets/ui/ngoc_chucPhuc.webp', linhHon:'assets/ui/ngoc_linhHon.webp',
   sinhMenh:'assets/ui/ngoc_sinhMenh.webp', honDon:'assets/ui/ngoc_honDon.webp',
-  tuLa:'assets/ui/ngoc_tuLa.webp',         honNguyen:'assets/ui/ngoc_honNguyen.webp',
+  honNguyen:'assets/ui/ngoc_honNguyen.webp',
 };
-function ngocMau(k){ return k === 'tuLa' ? '#ff9a4d' : k === 'honNguyen' ? '#c07fe0' : (JEWEL_COLORS[k] || '#9aa8d4'); }
-const KHO_NGOC_KEYS = ['chucPhuc','linhHon','sinhMenh','honDon','tuLa','honNguyen'];
+function ngocMau(k){ return k === 'honNguyen' ? '#c07fe0' : (JEWEL_COLORS[k] || '#9aa8d4'); }
+const KHO_NGOC_KEYS = ['chucPhuc','linhHon','sinhMenh','honDon','honNguyen'];
 function khoNgoc(){
   if (!player.khoNgoc) player.khoNgoc = { hap:{} };
   for (const k of KHO_NGOC_KEYS) if (player.khoNgoc[k] == null) player.khoNgoc[k] = 0;
@@ -22133,15 +24727,15 @@ function khoNgoc(){
 // Ngọc nằm ở hai nơi: player.jewels/gems (dùng được) và khoNgoc (đang cất). Hai hàm này là chỗ
 // DUY NHẤT đọc/ghi số trong túi, để không chỗ nào quên mất một trong hai kho.
 function ngocTui(k){
-  if (k === 'tuLa' || k === 'honNguyen') return (player.gems && player.gems[k]) || 0;
+  if (k === 'honNguyen') return (player.gems && player.gems[k]) || 0;
   return (player.jewels && player.jewels[k]) || 0;
 }
 function ngocTuiSet(k, v){
-  if (k === 'tuLa' || k === 'honNguyen'){ if (!player.gems) player.gems = { tuLa:0, honNguyen:0 }; player.gems[k] = v; }
+  if (k === 'honNguyen'){ if (!player.gems) player.gems = { honNguyen:0 }; player.gems[k] = v; }
   else { if (!player.jewels) player.jewels = { chucPhuc:0, linhHon:0, sinhMenh:0, honDon:0 }; player.jewels[k] = v; }
 }
 function ngocTen(k){
-  return k === 'tuLa' ? 'Tu La Tinh Thạch' : k === 'honNguyen' ? 'Hỗn Nguyên Thạch'
+  return k === 'honNguyen' ? 'Hỗn Nguyên Thạch'
        : (JEWEL_NAMES[k] || k).replace(/^[^ ]+ /, '');
 }
 window.khoNgocGui = function(k, n){
@@ -22510,6 +25104,15 @@ window.xepGonTui = function(){
 // Tu La + Hỗn Nguyên, phải đi tới lò, và hỏng thì mất trắng món đồ). Không ai có lý do bấm
 // Phá Thiên Kiếp. Chốt Linh Hồn ở +9 vừa trả lại chỗ đứng cho Phá Thiên, vừa đúng bậc thang MU.
 function ngocRate(k){ return Math.min(100, NGOC_EP[k].rate + (player.forgeBonus || 0)); }
+// Xịt thì món về mức nào. CỬA DUY NHẤT — `epNgoc` và `useJewel` đều gọi nó, nên thứ người chơi
+// ĐỌC trong mô tả viên ngọc và thứ máy THỰC THI không thể lệch nhau. Đừng chép lại phép
+// `Math.max(0, plus-1)` ở chỗ gọi: đó đúng là cách đường thứ ba (`useJewel`) từng lệch khỏi
+// luật chung và sống sót qua cả một đợt sửa.
+function ngocXit(k, truoc){
+  const d = NGOC_EP[k] || {};
+  const luat = (d.xit && d.xit[truoc + 1]) || 'drop1';
+  return luat === 'zero' ? 0 : Math.max(0, truoc - 1);
+}
 // Lý do KHÔNG ép được, dạng câu nói thẳng với người chơi. Trả null = ép được.
 function ngocEpDuoc(it, k){
   const d = NGOC_EP[k];
@@ -22547,7 +25150,7 @@ function epNgoc(it, k){
     return { ok:true, thang, truoc, sau: it.life, k, life:true };
   }
   const truoc = it.plus || 0;
-  it.plus = thang ? truoc + 1 : Math.max(0, truoc - 1);
+  it.plus = thang ? truoc + 1 : ngocXit(k, truoc);
   return { ok:true, thang, truoc, sau: it.plus, k };
 }
 window.ngocCam = null;            // viên ngọc đang cầm trên tay
@@ -23387,7 +25990,8 @@ function castSkill(id){
   player.cd[id] = info.cd * (player.vhCdMult || 1) * _sm.cd * _se.cd * skCdScale(id); // mốc 40 −10% · Tẩy Tủy −30% · cấp chiêu −0,25%/cấp (tối đa −30%) · nhánh Tốc Chiến
   const _atk0 = player.atk; player.atk = Math.round(player.atk * skLvMult(id) * skTnMult(id) * _sm.dmg * _se.dmg); // GDD Đợt 2 B6: mốc ST nhân dồn · nhánh Bá Đạo // cấp kỹ năng 1-120: +2.5% ST mỗi cấp
   player.comboT = 3; // mở/duy trì chuỗi combo — ám khí trúng trong lúc này sẽ kích Liên Trảm
-  player.castT = 0.38; // animation tung tuyệt chiêu
+  player.castT = NV_CHU_GIAY; // animation tung tuyệt chiêu
+  player._castSeq = (player._castSeq || 0) + 1;   // xem ghi chú ở `_atkSeq`
   player.castAct = heroCastAct(id, d);           // tư thế phải khớp VFX của chiêu
   const sect = SECTS[player.sect];
   let sfxTag = 'skill'; // per-class override set in the sectTP/sectA branches below
@@ -23732,6 +26336,13 @@ const SHOPS = {
       { id:'ruongvk', col:'#c8d4e8', name:'Rương Binh Khí',  price:800, desc:'Vũ khí ngẫu nhiên theo cấp của bạn — có thể ra hàng hiếm' },
       { id:'ruongpc', col:'#5aa0e8', name:'Rương Phòng Cụ', price:700, desc:'Giáp trụ ngẫu nhiên theo cấp — có thể ra trang bị Hoàn Hảo' },
     ]},
+  // Sách Kỹ Năng trước đó CHỈ tới từ tinh anh/trùm và Tầng Sâu, nên muốn nâng đúng một chiêu
+  // thì không có cửa nào ngoài cày may rủi. Giá neo vào chỗ tiêu của nó: một bậc chiêu tốn
+  // `30 × cấp^1,1` Bản Năng + Lumen, còn sách thì bỏ qua cả hai — nên nó phải đắt hơn hẳn mọi
+  // món trong ba tiệm kia (đắt nhất trước nay: Rương Binh Khí 800◈).
+  ah_phapsu: { quote:'"Chép tay cả, không có bản thứ hai. Cầm nhẹ tay cho."', rows:[
+    { id:'sach', icon:'📜', name:'Sách Kỹ Năng', price:4000, desc:'Nâng thẳng 1 cấp cho một chiêu của lớp mình — bảng K, khỏi tốn Lumen lẫn Bản Năng' },
+  ]},
   trachu: { quote:'"Vào đây uống chén trà nóng đã — chuyện Lunacia để sau hẵng hay."', rows:[
     { id:'nghitro', icon:'🛏', name:'Nghỉ Trọ',    price:120, desc:'Nghỉ ngơi dưỡng thần' },
     { id:'ruou',    icon:'🍶', name:'Rượu Hổ Cốt', price:200, desc:'Men say bừng bừng sát khí' },
@@ -23913,7 +26524,6 @@ function renderShop(n){
 
   // Vật Phẩm Quý — làm mới 2 giờ/lần, mỗi tiệm một món khác nhau
   const RARE_POOL = (window.RARE_POOL = window.RARE_POOL || [
-    { id:'r_tula',     item:'tula',       name:'Tu La Tinh Thạch',          price:1800, desc:'Khảm trang bị, rèn +7 trở lên — hiếm có' },
     { id:'r_hon',      item:'honnguyen',  name:'Hỗn Nguyên Thạch',          price:2600, desc:'Rèn +10/+11 — cực hiếm' },
   ]);
   const cycle = Math.floor(Date.now()/7200000);
@@ -23960,7 +26570,6 @@ function shopRowInfo(id){
                                blocked: P.hp >= P.maxHp && P.qi >= P.maxQi };
     case 'ruou':      return { stat:`+12% công lực trong 3 phút${(P.buffAtkT||0) > 0 ? ` · còn ${Math.ceil(P.buffAtkT)}s` : ''}` };
     case 'loidon':    return { stat:`−40% sát thương thiên lôi trong 5 phút${(P.loidonT||0) > 0 ? ` · còn ${Math.ceil(P.loidonT)}s` : ''}` };
-    case 'r_tula':    return { stat:`+1 Tu La Tinh Thạch · đang có ${P.gems.tuLa}` };
     case 'r_hon':     return { stat:`+1 Hỗn Nguyên Thạch · đang có ${P.gems.honNguyen}` };
     default:          return { stat:'' };
   }
@@ -23977,6 +26586,7 @@ window.buyFromShop = function(what){
     player.silver -= row.price; player.potions++;
   }
   else if (what==='phu'){ player.silver -= row.price; player.charms++; }
+  else if (what==='sach'){ player.silver -= row.price; player.bikipVH = (player.bikipVH || 0) + 1; }
   else if (what==='trithuong'){
     if (player.hp >= player.maxHp){ addFloat(player.x, player.y-34, 'Vẫn khỏe mạnh — không cần thuốc!', '#8a8a8a', 12); return; }
     player.silver -= row.price; player.hp = player.maxHp;
@@ -24003,7 +26613,6 @@ window.buyFromShop = function(what){
     zoneBanner = { text:'⚡ BÙA CHẮN SÉT', sub:'5 phút giảm 40% sát thương thiên lôi — cứ yên tâm xông vào bão!', color:'#ffb15c', t:2.6 };
     AudioSys.sfx('quest', 0.5);
   }
-  else if (what==='r_tula'){ player.silver -= row.price; player.gems.tuLa++; }
   else if (what==='r_hon'){ player.silver -= row.price; player.gems.honNguyen++; }
   else if (what==='ruongvk' || what==='ruongpc'){
     // Món trong rương chưa sinh ra lúc này, nên đo bằng món TO NHẤT rương có thể nhả: vũ khí
@@ -24473,6 +27082,13 @@ function ccHeroLop(){
 //
 // `avatarId` trả null khi người chơi đã tắt bằng `/avatar off`; tôn trọng, đừng lấp chỗ bằng
 // con mặc định. Trong màn họ không thấy Axie thì màn chờ cũng không được vẽ thêm một con.
+// ⚠ NHÁNH `CC_AXIE_LOP` Ở ĐÂY KHÔNG BAO GIỜ CHẠY, và đừng "sửa" nó thành đọc `ccAva`.
+// Đã thử đúng thế rồi phải gỡ ra: `ccBoCuc` chỉ gọi hàm này trong nhánh `if (sect)`, mà `sect`
+// tới từ `ccHeroLop()` — vốn trả `null` khi ô đang chọn CHƯA CÓ nhân vật. Nên lúc hàm này chạy
+// thì `pl` luôn khác null và mọi dòng sau `if (pl)` là mã chết. Phép thử ngược đã nói ra điều
+// đó bằng cách IM LẶNG, và cái im lặng ấy là bằng chứng chứ không phải nhiễu.
+// Lúc TẠO nhân vật, sân khấu đi nhánh NĂM LỚP (mỗi lớp một con mặc định) — phản hồi cho lựa
+// chọn trong lưới là con Axie đứng cạnh THẺ LỚP (`.cc-ava-ke`), không phải sân khấu.
 function ccHeroAxie(sect){
   const pl = ccHeroNV();
   return pl ? avatarId(pl) : (CC_AXIE_LOP[sect] || null);
@@ -24798,17 +27414,61 @@ el('is-skip').addEventListener('click', closeIntro);
 // cấp, hộp hướng dẫn vẫn nằm giữa màn hình nói "Bấm chuột phải trên nền đất… hãy thử một lần".
 // Lý do: bước 1 cộng quãng đường trong nhánh DI CHUYỂN TAY, mà TỰ ĐÁNH không đi qua nhánh đó.
 // Người chơi có thể vượt qua toàn bộ nội dung mà bước 1 vẫn đứng nguyên.
-// Kèm theo: TRẦN THỌI GIAN cho MỌI bước. Bản cũ chỉ có trần cho bước cuối — và chú thích ở
+// Kèm theo: TRẦN THỜI GIAN cho MỌI bước. Bản cũ chỉ có trần cho bước cuối — và chú thích ở
 // đó ghi rõ vì sao: nó từng "treo mãi, chơi thử: còn nguyên ở cấp 120". Năm bước kia treo được
 // theo đúng kiểu đó, chỉ là chưa ai đo.
+//
+// ⚠⚠ VÀ CÁI TRẦN ẤY ĐẺ RA MỘT LỖI TỆ HƠN THỨ NÓ CHỮA — đo được, không phải lo xa. Đứng yên
+// trong thành từ giây 0, `tutTick` tự đẩy hộp qua đủ sáu bước rồi tuyên bố **"Hướng dẫn hoàn
+// tất"** ở giây 385, cho một người chơi CHƯA đi một bước, CHƯA nói một câu, CHƯA hạ một con:
+//
+//     90s → npc · 180s → map · 270s → kill · 360s → loot → quest · 385s → "hoàn tất"
+//
+// Nặng nhất là mốc 270: hộp nói *"Nhấn SPACE — hạ 1 con Axie Heo Rừng"* trong khi Ardhaven có
+// **0 bãi quái** (`packsOf('ardhaven').length === 0`). Bấm SPACE 90 lần trong 67 giây rồi bật
+// AUTO 3 phút ⇒ `kills 0 · xp 0 · bạc 0`, toạ độ không nhích một pixel, và game không nói một
+// câu nào. Hướng dẫn tân thủ dạy sai chỗ thì tệ hơn hẳn không có hướng dẫn.
+// ⇒ `kha()` — bước này LÀM ĐƯỢC ở chỗ đang đứng không. Chỉ gác nhánh HẾT GIỜ; tiến bộ THẬT
+// (`xong`) thì luôn được đi tiếp. Hết giờ mà bước kế không làm được ở đây ⇒ **tắt hẳn hướng
+// dẫn**, đừng đẩy người ta vào một việc bất khả. Người ngồi yên trong thành 4 phút không phải
+// người đang theo hướng dẫn.
 const TUT_TRAN = 90;   // giây — trần mặc định mỗi bước
+// ⚠ CỜ TRẠNG THÁI, KHÔNG PHẢI SỰ KIỆN. `tutAdvance` chỉ ăn khi đang đứng ĐÚNG bước ấy, nên ai
+// nói chuyện / nhặt đồ / mở bảng TRƯỚC lúc hộp trôi tới bước đó sẽ kẹt lại đủ 90 giây ở một
+// việc họ đã làm xong. Cùng luật đã ghi cho `MOC_NV.dem()`: đếm từ TRẠNG THÁI, không từ sự kiện.
+const TUT_CO = { npc:'tutNoi', loot:'tutNhat', panel:'tutBang' };
+function tutGhi(stepKey){
+  if (!player) return;
+  const f = TUT_CO[stepKey];
+  if (f) player[f] = (player[f] || 0) + 1;
+  tutAdvance(stepKey);
+}
 const TUT_STEPS = [
   { key:'move',  xong:() => (player.tutDist || 0) > 150 || (player.level || 1) >= 2, txt:'Bấm <b>chuột phải</b> trên nền đất hoặc bấm vào <b>bản đồ thu nhỏ</b> — nhân vật sẽ tự chạy tới đó, hãy thử một lần', },
-  { key:'npc',   xong:() => (player.level || 1) >= 3, txt:'Đến gần <b>Trưởng Lão Rell</b> giữa thành và nhấn <b>E</b> để trò chuyện, nhận nhiệm vụ đầu tiên' },
-  { key:'map',   xong:() => curMap !== 'ardhaven', txt:'Bấm <b>Đi ngay</b> trên dải nhiệm vụ giữa màn hình (hoặc <b>🧭 Tới Ngay</b> ở khung nhiệm vụ) để dịch chuyển tới <b>Rẻo Rừng Corran</b>' },
-  { key:'kill',  xong:() => (player.kills || 0) > 0, txt:'Nhấn <b>SPACE</b> — nhân vật tự chạy tới con quái gần nhất và đánh. Hãy hạ 1 con <b>Axie Heo Rừng</b>' },
-  { key:'loot',  xong:() => (player.inv && player.inv.length > 0), txt:'Quái chết có thể rơi đồ hoặc <b>Châu</b> xuống đất — <b>đi ngang qua</b>, bấm <b>J</b> hoặc <b>bấm chuột trúng món</b> để nhặt. Giữ <b>ALT</b> xem tên mọi món trên màn' },
-  { key:'quest', tran:25, txt:'Làm theo nhiệm vụ ở <b>góc phải màn hình</b> · <b>C</b> nhân vật · <b>K</b> kỹ năng · <b>B</b> túi đồ' },
+  // ⚠ ĐừNG VIẾT LẠI THÀNH "đến gặp Trưởng Lão Rell nhận nhiệm vụ đầu tiên" — câu đó SAI cả ba
+  // vế và đã ship một thời gian: (a) nhiệm vụ đầu `c0q1` đã `active` từ giây 0, không ai phải
+  // đi nhận; (b) người giao nó là **Lính Gác Cổng Tây** (`ah_gac_tay`), còn Rell (`quachtinh`,
+  // cách điểm thả 300px) tới tận cấp 14 mới có `c1q1` — đo `npcMark()` lúc vào game: Gác Tây ra
+  // `…`, Rell ra chuỗi RỖNG; (c) điều kiện qua bước là `level >= 3`, chẳng dính gì tới việc nói
+  // chuyện. Nay nói ĐÚNG TÊN người giao, và dạy luôn CÁI DẤU trên đầu NPC — thứ vẫn đúng
+  // khi chuỗi nhiệm vụ đổi người giao. `test_uxdo ⑤` gác vế tên, `test_tanthu ①` gác vế cờ.
+  { key:'npc',   xong:() => (player.tutNoi || 0) > 0, duocO:() => NPCS.some(n => n.map === curMap),
+    txt:'Nhiệm vụ đầu đã chạy sẵn rồi — tới gần <b>Lính Gác Cổng Tây</b> (phía tây thành) rồi nhấn <b>E</b> để nghe giao việc — ai có dấu <b>!</b> (việc mới) hay <b>…</b> (đang làm dở) trên đầu là người đang có việc cho ngươi' },
+  { key:'map',   xong:() => curMap !== 'ardhaven', txt:'Nhiệm vụ đầu nằm sẵn ở <b>góc phải màn hình</b>. Bấm <b>Đi ngay</b> trên dải nhiệm vụ (hoặc <b>🧭 Tới Ngay</b> ở khung nhiệm vụ) để tới <b>Rẻo Rừng Corran</b> — hoặc tự đi bộ ra <b>Cổng Tây</b> rồi nhấn <b>G</b>' },
+  // ⚠ `duocO` đọc `packsOf(curMap)` chứ không đọc `mobs.length`. Hai câu trả lời khác nhau ở đúng
+  // một chỗ: vừa dọn sạch một bãi thì `mobs` rỗng trong vài giây, mà map thì vẫn có quái để đánh.
+  // `packsOf` là cửa đọc chính chủ của dữ liệu map, không phải một bản sao thứ hai.
+  { key:'kill',  xong:() => (player.kills || 0) > 0, duocO:() => packsOf(curMap).length > 0,
+    txt:'Nhấn <b>SPACE</b> — nhân vật tự chạy tới con quái gần nhất và đánh. Hãy hạ 1 con <b>Axie Heo Rừng</b>' },
+  // ⚠ ĐIỀU KIỆN CŨ LÀ `player.inv.length > 0` — mà nhân vật vừa tạo ĐÃ CÓ đồ khởi đầu trong
+  // túi, nên bước này qua ngay trong cùng một nhịp với bước trước: đo được `loot` và bước cuối
+  // cùng nhảy ở giây 360,1. Tức cả bước dạy nhặt đồ chưa từng hiện ra một lần nào.
+  { key:'loot',  xong:() => (player.tutNhat || 0) > 0, duocO:() => packsOf(curMap).length > 0,
+    txt:'Quái chết có thể rơi đồ hoặc <b>Châu</b> xuống đất — <b>đi ngang qua</b>, bấm <b>J</b> hoặc <b>bấm chuột trúng món</b> để nhặt. Giữ <b>ALT</b> xem tên mọi món trên màn' },
+  // ⚠ KHOÁ LÀ `panel`, KHÔNG PHẢI `quest`. Hai chỗ trong `togglePanel` gọi `tutGhi('panel')`
+  // từ lâu, mà bước cuối lại mang khoá `quest` ⇒ hai lời gọi ấy KHÔNG BAO GIỜ khớp, và bước
+  // cuối không có hành động nào đóng được nó (chỉ còn cái trần 25 giây).
+  { key:'panel', tran:25, xong:() => (player.tutBang || 0) > 0, txt:'Mở thử bảng <b>Nhân Vật</b> (phím <b>C</b>) để xem chỉ số và con Axie đang đeo · <b>K</b> kỹ năng · <b>B</b> túi đồ · <b>M</b> bản đồ' },
 ];
 function updateTut(){
   const box = el('tut-hint');
@@ -24825,9 +27485,8 @@ function updateTut(){
     <span class="tut-x" onclick="player.tutStep=-1; window._tutShown=-99; updateTut()">Đã biết ✕</span>${s.txt}`;
   box.classList.remove('hidden');
 }
-// Bước cuối ('quest') chỉ là bảng tổng kết phím — không có hành động nào đóng nó, nên nó treo
-// mãi (chơi thử: còn nguyên ở cấp 120) và che mất prompt "Nhấn J — Hái Thảo Dược" vẽ cùng chỗ.
-// Tự tắt sau 25 giây kể từ khi tới bước đó.
+// Bước cuối ('panel') tự tắt sau 25 giây nếu người chơi không mở bảng nào — nó từng treo mãi
+// (chơi thử: còn nguyên ở cấp 120) và che mất prompt "Nhấn J — Hái Thảo Dược" vẽ cùng chỗ.
 function tutTick(dt){
   if (!player || player.tutStep == null || player.tutStep < 0) return;
   const s = TUT_STEPS[player.tutStep];
@@ -24842,16 +27501,38 @@ function tutTick(dt){
   player._tutLX = player.x; player._tutLY = player.y;
   player._tutT = (player._tutT || 0) + dt;
   if (s.xong){ let ok = false; try { ok = !!s.xong(); } catch { ok = false; } if (ok){ tutAdvance(s.key); return; } }
-  if (player._tutT > (s.tran || TUT_TRAN)) tutAdvance(s.key);
+  if (player._tutT > (s.tran || TUT_TRAN)) tutAdvance(s.key, true);   // true = HẾT GIỜ, không phải làm xong
 }
-function tutAdvance(stepKey){
+// Bước này có làm được ở chỗ đang đứng không. Không khai `duocO` = làm được ở đâu cũng được.
+function tutLamDuoc(s){
+  if (!s || !s.duocO) return true;
+  try { return !!s.duocO(); } catch { return true; }   // đo hỏng thì CHO QUA, đừng khoá người chơi lại
+}
+// ⚠ `hetGio` CHỈ do trần thời gian đặt. Bỏ qua bước bất khả thi chỉ được làm ở đường HẾT GIỜ,
+// không làm ở đường LÀM XONG: người chơi vừa dịch chuyển tới Rẻo Rừng Corran thì `tutAdvance
+// ('map')` chạy ngay trong nhịp đó, mà `mobs` có được rải xong trong đúng nhịp ấy hay chưa là
+// chuyện của `buildWorld` — hỏi `duocO` ở đấy là có ngày bỏ qua VĨNH VIỄN bước 'kill' vì một
+// cuộc đua khung hình. Đường hết giờ thì không có cuộc đua nào: 90 giây sau khi vào map.
+function tutAdvance(stepKey, hetGio){
   if (!player || player.tutStep < 0) return;
+  // ⚠ CHỐT `>= length` LÀ BẮT BUỘC, không phải phòng xa: `tutGhi` nay gọi hàm này từ BỐN chỗ,
+  // trong đó `takeLoot` chạy mỗi lần nhặt đồ. Một save mang `tutStep` ngoài dải (bản khác, save
+  // hỏng) thì `TUT_STEPS[i].key` NÉM — và ném ngay giữa đường nhặt đồ. `updateTut` và `tutTick`
+  // đã có chốt của chúng từ trước; đúng hàm này thì chưa.
+  if (player.tutStep >= TUT_STEPS.length){ player.tutStep = -1; return; }
   if (TUT_STEPS[player.tutStep].key === stepKey){
     player.tutStep++;
     player._tutT = 0;   // bước mới, đồng hồ trần đếm lại từ đầu
+    // Bỏ qua mọi bước KHÔNG làm được ở chỗ này. Hết bước làm được thì đóng hướng dẫn hẳn —
+    // thà im lặng còn hơn đứng giữa màn hình bảo người ta hạ một con quái không tồn tại.
+    if (hetGio) while (player.tutStep < TUT_STEPS.length && !tutLamDuoc(TUT_STEPS[player.tutStep])) player.tutStep++;
+    // ⚠ CHỈ CHÚC MỪNG NGƯỜI THỰC SỰ LÀM. Một người ngồi yên trong thành vẫn đi hết
+    // chuỗi bằng trần thời gian (và bỏ qua mấy bước bất khả), rồi được báo "hoàn tất" cho một
+    // việc họ chưa làm — đo được ở giây 385 của bản cũ. Hết giờ dù MỘT lần là tắt LẶNG LẼ.
+    if (hetGio) player._tutHetGio = 1;
     if (player.tutStep >= TUT_STEPS.length){
       player.tutStep = -1;
-      addFloat(player.x, player.y-70, 'Hướng dẫn hoàn tất — chúc hành trình phi nước đại!', '#7ecbff', 14);
+      if (!player._tutHetGio) addFloat(player.x, player.y-70, 'Hướng dẫn hoàn tất — chúc hành trình phi nước đại!', '#7ecbff', 14);
     }
     updateTut(); saveGame();
   }
@@ -24929,17 +27610,29 @@ let _miniStaticCache = null, _miniStaticKey = null;
 // bấm vào minimap để chạy tới sẽ trỏ sai chỗ theo đúng tỉ lệ bóp ấy.
 // Giữ DIỆN TÍCH gần như cũ rồi chia lại hai cạnh theo tỉ lệ map, nên map 2600x1900 vẫn ra đúng
 // 200x146 như trước — không map cũ nào đổi hình.
+// ⚠⚠ TRẦN BỀ RỘNG PHẢI LÀ BỀ RỘNG CỘT, KHÔNG PHẢI MỘT CON SỐ CHÉP TAY.
+// Bản cũ chốt trần 240px trong khi `#cot-phai` rộng 190px (padding 5 ⇒ lòng **180px**) và mang
+// `overflow:hidden`. Đo được ở CẢ BA độ phân giải (1920 · 1440 · 1280): canvas 240px, cột cắt
+// còn 184px ⇒ **23% bên phải của bản đồ bị xén mất, im lặng**. Đúng cái góc có Lò Hỗn Độn và
+// Vũ Khí — tức phần người chơi mở bản đồ ra để tìm. `style.css` vốn khai đúng
+// (`#minimap { width:180px }`), nhưng style NỘI TUYẾN mà hàm này ghi thì thắng bảng kiểu.
+// ⇒ Hỏi thẳng khối chứa. Chép 180 vào đây là dựng bản sao thứ hai của một con số CSS, và nó sẽ
+// lệch ngay lần đầu ai đó nới cột — đúng họ với `ISO_NEO` và `mapBanSac()`.
 function capNhatKhungMinimap(){
   if (!miniCvs) return;
   const ti = MAP.w / MAP.h;
+  const hop = miniCvs.parentElement;
+  const tran = Math.max(120, (hop && hop.clientWidth) || 180);
   let w = Math.round(Math.sqrt(200 * 146 * ti));
   let h = Math.round(w / ti);
-  if (w > 240){ w = 240; h = Math.round(w / ti); }
+  if (w > tran){ w = tran; h = Math.round(w / ti); }
   if (h > 170){ h = 170; w = Math.round(h * ti); }
   if (miniCvs.width !== w || miniCvs.height !== h){
     miniCvs.width = w; miniCvs.height = h;
-    miniCvs.style.width = w + 'px'; miniCvs.style.height = h + 'px';
   }
+  // Bitmap và bề rộng hiện ra ĐỂ BẰNG NHAU (1:1). Vẽ ở khổ lớn hơn rồi thu bằng CSS thì chữ
+  // 8px cũng thu theo — ở tỉ lệ 0,75 nó ra 6px, tức đọc không nổi đúng thứ vừa thêm vào.
+  miniCvs.style.width = w + 'px'; miniCvs.style.height = h + 'px';
 }
 
 function drawMinimapStatic(mw, mh, sx, sy, md){
@@ -24947,9 +27640,15 @@ function drawMinimapStatic(mw, mh, sx, sy, md){
   if (_miniStaticCache && _miniStaticKey === key) return _miniStaticCache;
   const off = document.createElement('canvas'); off.width = mw; off.height = mh;
   const sc = off.getContext('2d');
-  // nền: ưu tiên ảnh map vẽ tay (thu nhỏ + phủ tối 40%), fallback màu đất phẳng
+  // nền. Map có ĐA GIÁC SÀN (thành) thì vẽ đúng hình cái thành — cùng bộ vẽ với bản đồ lớn,
+  // xem `veNenThanh()`. Trước bản này minimap tô một mảng màu phẳng rồi rải 28 chấm vàng lên,
+  // nên Ardhaven — vốn có sẵn 68 đỉnh sàn, 8 đường phố và 16 khối nhà trong dữ liệu — đọc ra
+  // một đám chấm không có chỗ bám. Chủ dự án gọi đúng tên: *"nhìn rất rối"*.
   const _bg = mapBgOf(curMap);
-  if (_bg && _bg.complete && _bg.naturalWidth > 0){
+  if (md.diTrong && md.diTrong.length > 2){
+    sc.fillStyle = '#12150d'; sc.fillRect(0, 0, mw, mh);
+    veNenThanh(sc, md, curMap, v => v * sx, v => v * sy, 1);
+  } else if (_bg && _bg.complete && _bg.naturalWidth > 0){
     sc.drawImage(_bg, 0, 0, mw, mh);
     sc.fillStyle = 'rgba(22,18,12,.40)';
     sc.fillRect(0, 0, mw, mh);
@@ -25016,12 +27715,13 @@ function drawMinimapStatic(mw, mh, sx, sy, md){
     sc.fillStyle = 'rgba(60,54,44,.65)';
     for (const pt of _rimPts) sc.fillRect(pt.x*sx - 1, pt.y*sy - 1, 2, 2);
   }
+  // Cổng — CHẤM TRÒN cùng màu với bản đồ lớn (`mauCong`), không còn ô vuông cam/tím riêng.
+  // Hai bản đồ vẽ cùng một thứ bằng hai ký hiệu khác nhau thì người chơi phải học hai lần.
   for (const g of GATES){
     if (g.map !== curMap) continue;
-    sc.fillStyle = g.portal ? '#b08ae8' : '#d8963a';
-    sc.fillRect(g.x*sx-3, g.y*sy-3, 6, 6);
-    sc.strokeStyle = 'rgba(0,0,0,.6)'; sc.lineWidth = 1;
-    sc.strokeRect(g.x*sx-3, g.y*sy-3, 6, 6);
+    sc.fillStyle = mauCong(g);
+    sc.strokeStyle = 'rgba(0,0,0,.7)'; sc.lineWidth = 1;
+    sc.beginPath(); sc.arc(g.x*sx, g.y*sy, 3.2, 0, 7); sc.fill(); sc.stroke();
   }
   _miniStaticCache = off; _miniStaticKey = key;
   return off;
@@ -25065,57 +27765,114 @@ function drawMinimap(){
   const qNow = (typeof currentQuest === 'function') ? currentQuest() : null;
   const mapNpcs = NPCS.filter(n => n.map === curMap);
   const placedLabels = []; // chống chồng nhãn khi NPC đứng gần nhau
-  for (const n of mapNpcs){
-    const nx = n.x*sx, ny = n.y*sy;
-    // dấu nhiệm vụ (đồng bộ logic với drawNpc)
-    let mark = '';
-    if (n.talk === 'quest'){
-      if ((qNow && qNow.npc === n.id && questState === 'done') ||
-          (typeof SIDE_QUESTS !== 'undefined' && SIDE_QUESTS.some(sq => sq.npc === n.id && sideStates[sq.id] && sideStates[sq.id].st === 'done')))
-        mark = '!';
-      else if ((qNow && qNow.npc === n.id) ||
-               (typeof SIDE_QUESTS !== 'undefined' && SIDE_QUESTS.some(sq => sq.npc === n.id && (sideAvail(sq) === 'avail' || sideAvail(sq) === 'active'))))
-        mark = '…';
+
+  // Dấu nhiệm vụ của một NPC (đồng bộ logic với drawNpc): ! = trả được · … = đang có việc.
+  const dauNV = n => {
+    if (n.talk !== 'quest') return '';
+    if ((qNow && qNow.npc === n.id && questState === 'done') ||
+        (typeof SIDE_QUESTS !== 'undefined' && SIDE_QUESTS.some(sq => sq.npc === n.id && sideStates[sq.id] && sideStates[sq.id].st === 'done')))
+      return '!';
+    if ((qNow && qNow.npc === n.id) ||
+        (typeof SIDE_QUESTS !== 'undefined' && SIDE_QUESTS.some(sq => sq.npc === n.id && (sideAvail(sq) === 'avail' || sideAvail(sq) === 'active'))))
+      return '…';
+    return '';
+  };
+  const ds = mapNpcs.map(n => ({
+    n, tk: THANH_TALK[n.talk], mark: dauNV(n),
+    ghim: !!(player.beacon && player.beacon.npcId === n.id),
+    x: n.x*sx, y: n.y*sy, d: dist(n.x, n.y, player.x, player.y),
+  }));
+
+  // ── LƯỢT 1: CHẤM. Người có chức năng nổi, người lore mờ ─────────────────────────────
+  // Đo trước khi sửa: Ardhaven có 26 NPC, **17 là người lore** (`talk:'quest'`), và cả 26 vẽ ra
+  // CÙNG một chấm vàng cỡ 3. Tức 2/3 số chấm là nhiễu, và cái Lò Rèn thì không phân biệt nổi
+  // với một người đứng kể chuyện. Bản đồ lớn đã tách hai hạng đó từ lâu (`THANH_TALK`); bản đồ
+  // góc thì chưa, nên hai bản đồ dạy hai thứ khác nhau.
+  // ⚠ CHẤM VẼ HẾT TRƯỚC, NHÃN VẼ SAU. Gộp một vòng thì nhãn của người này bị chấm của người
+  // đứng sau trong mảng vẽ đè lên — không lỗi nào báo, chỉ là một chữ bị khuyết một góc.
+  for (const o of ds){
+    if (o.tk){
+      mc.fillStyle = o.tk.mau;
+      mc.strokeStyle = 'rgba(0,0,0,.7)'; mc.lineWidth = 1;
+      mc.beginPath(); mc.arc(o.x, o.y, 3, 0, 7); mc.fill(); mc.stroke();
+    } else if (o.mark || o.ghim){
+      mc.fillStyle = '#ffd76a';                       // người lore ĐANG có việc: vẫn nổi
+      mc.strokeStyle = 'rgba(0,0,0,.65)'; mc.lineWidth = 1;
+      mc.beginPath(); mc.arc(o.x, o.y, 3, 0, 7); mc.fill(); mc.stroke();
+    } else {
+      mc.fillStyle = 'rgba(255,215,106,.45)';         // người lore rảnh: chấm mờ, cỡ 2
+      mc.beginPath(); mc.arc(o.x, o.y, 2, 0, 7); mc.fill();
     }
-    mc.fillStyle = '#ffd76a';
-    mc.strokeStyle = 'rgba(0,0,0,.65)'; mc.lineWidth = 1;
-    mc.beginPath(); mc.arc(nx, ny, 3, 0, 7); mc.fill(); mc.stroke();
-    // ── NHÃN TÊN: CHỈ CHO NGƯỜI ĐÁNG GỌI TÊN ────────────────────────────────────────────
-    // Ardhaven có 26 NPC nhồi trong ô 150×110: gắn tên cho tất thì ra một mảng chữ đặc, không
-    // đọc nổi CHỮ NÀO — tệ hơn hẳn là không ghi gì. Luật tránh chồng bên dưới vẫn đúng, nó chỉ
-    // bó tay ở mật độ này. Nên lọc trước: chỉ gọi tên người ĐANG có việc (dấu ! hoặc …) và
-    // người đang được đèn hiệu ghim. Còn lại là chấm vàng — rê chuột lên bản đồ vẫn đọc được,
-    // và người chơi tới gần thì nhãn trong màn hiện đủ tên.
-    const dongDuc = mapNpcs.length > 8;
-    const dangGhim = player.beacon && player.beacon.npcId === n.id;
-    if (!dongDuc || mark || dangGhim){
-    mc.font = '8px "Be Vietnam Pro", sans-serif';
-    const lw = mc.measureText(n.name).width;
+  }
+
+  // ── LƯỢT 2: NHÃN, ưu tiên theo KHOẢNG CÁCH TỚI NGƯỜI CHƠI ───────────────────────────
+  // ⚠ NGƯỜI CÓ CHỨC NĂNG LUÔN ĐƯỢC XÉT, kể cả map đông. Luật cũ "map quá 8 NPC thì chỉ gắn tên
+  // cho ai đang có việc" sinh ra để chặn 26 cái tên nhồi vào một ô bé — đúng với người LORE,
+  // nhưng nó nuốt luôn Lò Rèn và Tiệm Thuốc, tức nuốt đúng thứ người chơi mở bản đồ ra để tìm.
+  //
+  // ⚠ VÀ THỨ TỰ LÀ THEO KHOẢNG CÁCH, KHÔNG PHẢI THỨ TỰ MẢNG `NPCS`. Đo ở Ardhaven: 9 người có
+  // chức năng, khổ 180×90, chỉ **7** nhãn đặt lọt — bốn người ở góc trên-phải (Quán Trọ · Cầu
+  // May · Lò Hỗn Độn · Vũ Khí) chen trong ~50px. Ai bị bỏ mà quyết bằng thứ tự khai trong dữ
+  // liệu thì đó là một quyết định ngẫu nhiên; quyết bằng khoảng cách thì kẻ bị bỏ luôn là kẻ
+  // ở XA, và bản đồ góc màn vốn để trả lời *"quanh mình có gì"*.
+  const dsNhan = ds.filter(o => o.tk || o.mark || o.ghim || mapNpcs.length <= 8)
+                   .sort((a, b) => (b.tk ? 1 : 0) - (a.tk ? 1 : 0) || a.d - b.d);
+  mc.font = '7.5px "Be Vietnam Pro", sans-serif';
+  for (const o of dsNhan){
+    // Tên NGẮN (`n.nhan`) trước, đúng lý do đã ghi ở `veBanDoThanh`: ở khổ này "Nhà Giả Kim ·
+    // Tiệm Thuốc" dài gấp ba chỗ có, mà ba người cùng in "Cửa Hàng" thì bằng không gắn nhãn.
+    // ⚠ HAI NẤC TÊN. Đo ở Ardhaven, khổ 180×90: **bảy** người có chức năng nằm gần như cùng
+    // một hàng (y≈27), tổng bề rộng nhãn ~250px trên một hàng rộng 180 — tức không phải thiếu
+    // chỗ thử mà là vật lý. Thử đủ tám hướng vẫn rớt đúng một người, và người rớt là **Lò Hỗn
+    // Độn** (nhãn 42px, chỉ còn 33px tới mép phải).
+    // Nấc hai là tên CHUNG ngắn (`Lò Rèn` 25px). Nó mơ hồ với ba cửa hàng cùng ra "Cửa Hàng" —
+    // đúng cảnh báo đã ghi ở `veBanDoThanh` — nên chỉ dùng khi nấc một KHÔNG lọt: một chấm ghi
+    // "Cửa Hàng" vẫn nói được *ở đây có tiệm*, còn một chấm trần thì không nói gì.
+    const tenDai = (o.tk && (o.n.nhan || o.tk.ten)) || o.n.name;
+    const tenNgan = o.tk ? o.tk.ten : tenDai;
+    for (const ten of (tenDai === tenNgan ? [tenDai] : [tenDai, tenNgan])){
+    const lw = mc.measureText(ten).width;
+    // BỐN hướng, không phải ba — thêm hướng LÊN. Bản cũ chỉ thử phải/trái/xuống, nên hai người
+    // đứng cạnh nhau theo chiều ngang là người thứ hai mất tên dù ngay trên đầu còn trống.
+    // ⚠ Và phải CHỪA MÉP: nhãn tràn ra ngoài canvas bị `overflow:hidden` của cột xén mất đuôi —
+    // đo được "Lò Hỗn Độn" ra "Lò Hỗn Độ". Thà bỏ nhãn còn hơn in một cái tên cụt.
     const spots = [
-      { x: nx + 5, y: ny + 3, align: 'left' },
-      { x: nx - 5, y: ny + 3, align: 'right' },
-      { x: nx, y: ny + 11, align: 'center' },
+      { x: o.x + 5, y: o.y + 3, align: 'left' },
+      { x: o.x - 5, y: o.y + 3, align: 'right' },
+      { x: o.x, y: o.y + 10, align: 'center' },
+      { x: o.x, y: o.y - 6, align: 'center' },
+      // Bốn hướng CHÉO — nấc cuối cho cụm chật. Đo ở Ardhaven: bốn hướng thẳng đặt được 8/9,
+      // và kẻ bị bỏ là **Lò Hỗn Độn** (góc trên-phải, chen với Quán Trọ và Vũ Khí) — tức đúng
+      // cái người chơi mở bản đồ ra để tìm. Thêm chéo là đủ 9/9.
+      { x: o.x + 5, y: o.y - 5, align: 'left' },
+      { x: o.x - 5, y: o.y - 5, align: 'right' },
+      { x: o.x + 5, y: o.y + 10, align: 'left' },
+      { x: o.x - 5, y: o.y + 10, align: 'right' },
     ];
     for (const sp of spots){
       const lx = sp.align === 'left' ? sp.x : sp.align === 'right' ? sp.x - lw : sp.x - lw/2;
-      const hit = placedLabels.some(r => lx < r.x + r.w && lx + lw > r.x && Math.abs(sp.y - 4 - r.y) < 9);
-      if (hit) continue;
-      placedLabels.push({ x: lx, y: sp.y - 4, w: lw });
+      if (lx < 1 || lx + lw > mw - 1 || sp.y < 7 || sp.y > mh - 9) continue;
+      if (placedLabels.some(r => lx < r.x + r.w + 2 && lx + lw + 2 > r.x && Math.abs(sp.y - 4 - r.y) < 8)) continue;
+      placedLabels.push({ x: lx, y: sp.y - 4, w: lw, tk: !!o.tk, ten });
       mc.textAlign = sp.align;
-      mc.strokeStyle = 'rgba(0,0,0,.75)'; mc.lineWidth = 2;
-      mc.strokeText(n.name, sp.x, sp.y);
-      mc.fillStyle = '#ffe9a8';
-      mc.fillText(n.name, sp.x, sp.y);
+      mc.strokeStyle = 'rgba(0,0,0,.85)'; mc.lineWidth = 2.5;
+      mc.strokeText(ten, sp.x, sp.y);
+      mc.fillStyle = o.tk ? o.tk.mau : '#ffe9a8';
+      mc.fillText(ten, sp.x, sp.y);
       break;
     }
+    if (placedLabels.length && placedLabels[placedLabels.length-1].ten === ten) break;
     }
-    if (mark){
-      mc.font = 'bold 11px "Be Vietnam Pro", sans-serif'; mc.textAlign = 'center';
-      mc.fillStyle = mark === '!' ? '#ffd76a' : '#9fd0ff';
-      mc.shadowColor = mc.fillStyle; mc.shadowBlur = 4;
-      mc.fillText(mark, nx, ny - 5);
-      mc.shadowBlur = 0;
-    }
+  }
+
+  // ── LƯỢT 3: DẤU NHIỆM VỤ, vẽ trên cùng ──────────────────────────────────────────────
+  for (const o of ds){
+    if (!o.mark) continue;
+    mc.font = 'bold 11px "Be Vietnam Pro", sans-serif'; mc.textAlign = 'center';
+    mc.fillStyle = o.mark === '!' ? '#ffd76a' : '#9fd0ff';
+    mc.shadowColor = mc.fillStyle; mc.shadowBlur = 4;
+    mc.fillText(o.mark, o.x, o.y - 5);
+    mc.shadowBlur = 0;
   }
   // quái vật — thường đỏ nhỏ, tinh anh cam, boss tím nhấp nháy, Du Hiệp lam viền trắng
   const _blink = Math.sin(performance.now()/260) > 0;
@@ -25149,10 +27906,33 @@ function drawMinimap(){
   mc.moveTo(4.5, 0); mc.lineTo(-3, -2.8); mc.lineTo(-1.5, 0); mc.lineTo(-3, 2.8);
   mc.closePath(); mc.fill();
   mc.restore();
-  // tên map
+  // Cờ cho bài kiểm đọc: đã gắn được mấy nhãn trên tổng số người ĐÁNG gắn. Đo chỉ số, đừng đo
+  // điểm ảnh — cùng lối `__avaKhoi`/`__veChet`, và vì hai lượt vẽ liên tiếp của minimap lệch
+  // nhau theo quái đang chạy nên đếm pixel ở đây là đếm nhiễu.
+  // ⚠ ĐẾM RIÊNG HAI HẠNG. Gộp lại thì một nhãn của người LORE che lấp việc một người CÓ CHỨC
+  // NĂNG bị bỏ — mà chính hạng sau mới là thứ mệnh đề cần gác.
+  if (window.TEST_MODE) window.__miniNhan = {
+    chucNangCan: mapNpcs.filter(n => THANH_TALK[n.talk]).length,
+    chucNangDat: placedLabels.filter(r => r.tk).length,
+    tongNhan: placedLabels.length,
+    ten: placedLabels.filter(r => r.tk).map(r => r.ten),
+    khung: [mw, mh],
+  };
+  // Tên map.
+  // ⚠ PHẢI ĐẶT LẠI `textAlign`. Vòng NPC ngay trên để nó ở `'center'` (dấu nhiệm vụ) hoặc
+  // `'right'`, và canvas thì giữ trạng thái — nên dòng này căn giữa tại x=6 và **mất đầu tên**:
+  // ảnh chụp ra `…Chiefdom` thay vì `Sapidae Chiefdom`. Một thuộc tính canvas rò từ vòng lặp
+  // phía trên không ném lỗi và không ai thấy cho tới khi soi ảnh.
+  mc.textAlign = 'left';
   mc.font = '9px "Be Vietnam Pro", sans-serif';
-  mc.fillStyle = 'rgba(255,240,200,.9)';
+  mc.lineWidth = 3; mc.strokeStyle = 'rgba(0,0,0,.85)';
+  mc.strokeText(md.name, 6, mh - 6);
+  mc.fillStyle = 'rgba(255,240,200,.95)';
   mc.fillText(md.name, 6, mh - 6);
+  if (window.TEST_MODE) window.__miniTen = {
+    ten: md.name, canLe: mc.textAlign, x: 6,
+    rong: Math.round(mc.measureText(md.name).width), khung: mw,
+  };
 }
 
 // ════════════════════════════════════════════════════════════════════════════
@@ -25197,7 +27977,12 @@ window.setTab = 'chung';
 window.setSetTab = function(v){ window.setTab = v; renderSettings(); };
 function renderSettings(){
   const p = el('panel-settings'); if (!p) return;
-  const slider = (key, val) => `<input type="range" min="0" max="100" value="${val}" oninput="setOpt('${key}', this.value, true)" onchange="setOpt('${key}', this.value)">`;
+  // ⚠ THANH TRƯỢT PHẢI IN RA SỐ. Hai hàng âm thanh là hai hàng DUY NHẤT của bảng này không
+  // nói mức hiện tại — mọi hàng khác có nút sáng lên, còn thanh trượt thì chỉ có một cái núm.
+  // Người chơi hạ nhạc xuống rồi quay lại sau một tuần thì không có cách nào biết đang ở đâu.
+  // (Cụm TỰ ĐÁNH bên dưới vốn đã in `40%` / `430px` — hai hàng này chỉ là làm cho đồng nhất.)
+  const slider = (key, val, hau = '%') => `<input type="range" min="0" max="100" value="${val}" oninput="setOpt('${key}', this.value, true)" onchange="setOpt('${key}', this.value)"><span class="set-so">${val}${hau}</span>`;
+  const amOn = SETTINGS.amThanh !== false;
   const tog = (key) => `<button class="mini-btn ${SETTINGS[key] ? '' : 'tat'}" onclick="toggleOpt('${key}')">${SETTINGS[key] ? 'BẬT' : 'TẮT'}</button>`;
   const _acS = (typeof player !== 'undefined' && player && player.autoCfg) ? player.autoCfg : { skill:true, potion:true, potionPct:40, range:430, boss:false };
   const togA = (key) => `<button class="mini-btn ${_acS[key] ? '' : 'tat'}" onclick="toggleAutoCfg('${key}')">${_acS[key] ? 'BẬT' : 'TẮT'}</button>`;
@@ -25214,8 +27999,11 @@ function renderSettings(){
     return;
   }
   p.innerHTML = moBang({ tieu:'Cài Đặt', mat:'⚙', tabs:SET_TABS, chon:'chung', ham:'setSetTab' }) + `
-    <div class="set-row"><span>🎵 Nhạc nền</span>${slider('bgm', SETTINGS.bgm)}</div>
-    <div class="set-row"><span>🔔 Hiệu ứng âm thanh</span>${slider('sfx', SETTINGS.sfx)}</div>
+    <div class="set-row" style="border-bottom:none;justify-content:center"><b style="color:#ffd76a;font-size:12px">— <img class="set-ic" src="${AM_ANH.bat}" alt=""> ÂM THANH —</b></div>
+    <div class="set-row"><span><img class="set-ic" src="${amOn ? AM_ANH.bat : AM_ANH.tat}" alt=""> Toàn bộ âm thanh <i>(phím L · cũng có nút loa cạnh đồng hồ góc trái)</i></span><button class="mini-btn ${amOn ? '' : 'tat'}" onclick="window.tatMoAmThanh()">${amOn ? 'BẬT' : 'TẮT'}</button></div>
+    <div class="set-row${amOn ? '' : ' set-mo'}"><span><img class="set-ic" src="assets/ui/gt_nhac.webp" alt=""> Nhạc nền</span>${slider('bgm', SETTINGS.bgm)}</div>
+    <div class="set-row${amOn ? '' : ' set-mo'}"><span><img class="set-ic" src="${AM_ANH.bat}" alt=""> Hiệu ứng âm thanh</span>${slider('sfx', SETTINGS.sfx)}</div>
+    ${amOn ? '' : '<div style="font-size:10.5px;color:#ff9a6a;margin:-2px 0 8px">Đang tắt tiếng — hai mức trên vẫn được giữ nguyên, bật lại là nghe đúng như cũ.</div>'}
     <div class="set-row"><span>🔭 Tầm nhìn <i>(kéo gần thì mỗi khung hình chứa ít thế giới hơn — map thấy rộng hơn)</i></span><span>${
       [['gan','GẦN'],['vua','VỪA'],['xa','XA']].map(([v,t]) =>
       `<button class="mini-btn ${SETTINGS.zoom === v ? '' : 'tat'}" onclick="setZoom('${v}')">${t}</button>`).join(' ')}</span></div>
@@ -25256,7 +28044,14 @@ window.setOpt = function(key, v, quiet){
   SETTINGS[key] = clamp(parseInt(v, 10) || 0, 0, 100);
   saveSettings();
   if (key === 'bgm') AudioSys.refreshBgmVol();
-  if (!quiet) renderSettings();
+  // ⚠ `quiet` CỐ Ý không vẽ lại cả bảng (kéo núm mà dựng lại DOM thì núm tuột khỏi tay chuột),
+  // nên con số bên cạnh phải tự cập nhật. Thiếu dòng này là kéo thanh trượt mà số đứng im —
+  // đúng kiểu "bấm không ăn" mà cái số này sinh ra để chữa.
+  if (quiet){
+    const sl = document.querySelector(`#panel-settings input[type=range][oninput*="'${key}'"]`);
+    const so = sl && sl.nextElementSibling;
+    if (so && so.classList.contains('set-so')) so.textContent = SETTINGS[key] + '%';
+  } else renderSettings();
 };
 window.toggleOpt = function(key){
   SETTINGS[key] = !SETTINGS[key];
@@ -25315,7 +28110,7 @@ NPCS.push(
     barks:['"Rễ này mọc ngược từ hôm trời nứt."','"Ai ho ba ngày thì tới đây, đừng để tới ngày thứ tư."',
            '"Thuốc hay cứu người, thuốc độc cũng cứu người — tuỳ ai dùng."','"Đừng giẫm lên luống kia."'] },
 
-  { id:'quachtinh', name:'Trưởng Lão Rell',      map:'ardhaven', x:3200, y:1600,  img:'assets/npcs/quachtinh.png', talk:'quest',
+  { id:'quachtinh', name:'Trưởng Lão Rell',      map:'ardhaven', x:2920, y:1620,  img:'assets/npcs/quachtinh.png', talk:'quest',
     lore:{
       idle:  '"Ta dẫn sáu người qua Nhát Gọi. Ngươi là người duy nhất còn đứng."',
       offer: '"Ngồi xuống. Ngươi chưa đủ sức cho việc ta định giao, và ta đã chôn đủ người rồi."',
@@ -25436,7 +28231,7 @@ NPCS.push(
   // (1050,700) nằm LỌT trong gờ đá tây của Beast Herd Camp ({x:820,y:660,wd:380,ht:110}) —
   // đi thử 4/4 lượt đều khựng lại cách 72px, tức là Trại Ngựa không bao giờ mở được. Dời
   // xuống dưới chân gờ đá, vẫn cùng một khu.
-  { id:'traichu',   name:'Trại Chủ Mục Đồng',      map:'ngoai',      x:2184, y:682,  img:'assets/npcs/traichu.png', talk:'stable',
+  { id:'traichu',   name:'Trại Chủ Mục Đồng',      map:'ngoai',      x:2184, y:682,  talk:'stable',
     lore:'"Tuấn mã hoang ngoài đồng kia đấy — rượt cho nó kiệt sức rồi bấm E mà bắt. Mã Thầu thu được dùng khi thăng giai thú cưỡi!"',
     barks:['"Con nâu kia bướng nhất bầy."','"Rượt cho nó mệt, đừng rượt cho mình mệt."',
            '"Cỏ ngoài này ngọt hơn cỏ trong thành."'] }, // GDD Đợt 2 B5
@@ -25459,7 +28254,7 @@ NPCS.push(
     lore:'"Phiến thứ bảy lung lay tới đâu, mép vực lở tới đó. Gió biên thuỳ cắt thịt — vận may chỉ dành cho kẻ dám nhảy."',
     barks:['"Gió ở đây cắt được da."','"Nhảy thì nhảy, đừng đứng ngó."'] },
 );
-for (const n of NPCS){ if (!NPC_IMGS[n.id]){ const im = new Image(); im.src = n.img; NPC_IMGS[n.id] = im; } }
+for (const n of NPCS){ if (!n.img || NPC_IMGS[n.id]) continue; const im = new Image(); im.src = n.img; NPC_IMGS[n.id] = im; }
 function npcName(id){ const n = NPCS.find(x => x.id === id); return n ? n.name : 'Trưởng Làng'; }
 
 // ---------- Chính tuyến: ĐÃ GỠ SẠCH ----------
@@ -25595,8 +28390,16 @@ window.travelTo = function(mapId, from){
   // có chốt này, nên teleport ra ngoài vẫn để DEEP sống: updateDeep() thấy map an toàn sạch quái
   // liền coi như "dọn xong tầng", tự lên tầng và spawn quái Tầng Sâu ngay giữa Sapidae Chiefdom.
   if (DEEP && mapId !== DEEP_MAP){ window.deepLeave(mapId); return; }
+  // ...và Lò Khắc y hệt. Cổng G, nút Rời Lò, nút Dịch Chuyển của bảng Bản Đồ đều đổ về đây,
+  // nên một chốt ở travelTo() phủ đủ ba đường — đừng chép chốt thứ hai vào updateGate().
+  if (LK && mapId !== LK_MAP){ window.lkRoi(mapId); return; }
   const md = MAPS[mapId];
   if (!md || !player) return;
+  // Rời sàn đấu ⇒ quên máu trận NGAY, và phải hỏi TRƯỚC dòng `curMap = mapId` bên dưới — sau
+  // dòng ấy thì `curMap` đã bằng `mapId` và điều kiện không bao giờ đúng. Máy chủ cũng xoá,
+  // nhưng nó không gửi tin nào khi ta đi ra (`phatSan` chỉ tới người đang ĐỨNG trong sàn — mà
+  // ta vừa rời), nên chốt này là chỗ DUY NHẤT dọn được phía client.
+  if (curMap === PVP_MAP && mapId !== PVP_MAP) pvpTran = { hp: 0, max: 0, chet: false };
   const g = mapGate(mapId);
   if (!g.ok && !window.TEST_MODE){
     const msg = g.why === 'lv' ? `Cần cấp ${g.need} để vào ${md.name}!`
@@ -25625,9 +28428,19 @@ window.travelTo = function(mapId, from){
   _bgTruoc = from || curMap;
   mapBgOf(mapId); mapBgDon(mapId);
   setTimeout(fxApply, 0);   // lớp phủ CSS theo bản đồ mới (tối / vignette)
-  const sp = (from && md.spawnFrom && md.spawnFrom[from]) || md.spawn;
+  // Sàn đấu: rơi vào một trong hai GÓC, không rơi chung một điểm — xem `pvpGoc()`.
+  const sp = (md.pvp && pvpGoc(md)) || (from && md.spawnFrom && md.spawnFrom[from]) || md.spawn;
   player.x = sp.x; player.y = sp.y;
   const _fp = nearestFree(curMap, player.x, player.y); player.x = _fp.x; player.y = _fp.y; // GDD Đợt 2 A: không spawn vào vùng cấm
+  // KHOÁ CHỖ VỪA HẠ CÁNH — xem `updateGate()`. Đặt ở ĐÂY chứ không ở chỗ gọi: mọi đường
+  // vào một map (cổng, dịch chuyển, nút 'Đi ngay' của băng-rôn) đều đổ về hàm này, nên
+  // một chỗ đặt phủ hết. Rải ra từng chỗ gọi là chỗ thứ tư thêm sau sẽ lặng lẽ thiếu.
+  _loiRaCho = null;
+  _loiRaKhoa = null;
+  for (const g of GATES){
+    if (g.map !== curMap || g.portal) continue;
+    if (dist(player.x, player.y, g.x, g.y) < LOIRA_TAM){ _loiRaKhoa = { map: curMap, x: g.x, y: g.y, g }; break; }
+  }
   player.hintOff = {}; // B3: qua map mới → các Nhắc Việc đã tắt hiện lại
   snapCamera(); // đổi map: camera đặt thẳng vào vị trí mới, không pan từ map cũ
   if (md.type === 'safe') player.pk = false;
@@ -25638,13 +28451,25 @@ window.travelTo = function(mapId, from){
   // chết. `wpUnlocked[mapId]` là cờ "đã từng tới", được đặt ngay bên dưới, nên đọc trước khi đặt.
   const _dauTienFirst = !(player.wpUnlocked && player.wpUnlocked[mapId]);
   const _rlore = _dauTienFirst && typeof REGION_UNLOCK_LORE !== 'undefined' ? REGION_UNLOCK_LORE[mapId] : null;
-  zoneBanner = _rlore ? { text:'🗺 ' + md.name, sub:_rlore.sub, color:'#ffd76a', t:5.5 }
-                       : { text: md.name, sub: `${zt.name} — ${md.desc}`, color: zt.color, t: 3.2 };
+  // Vế phòng thủ của tam giác lớp Axie, nói ra ĐÚNG LÚC nó còn đổi được gì: vừa đặt chân, trước
+  // khi đánh trận đầu. Suy từ `mapBanSac` (hệ trội của chính miền dân số ở đây) qua cùng một cửa
+  // `heThuKet` mà đòn đánh dùng — băng-rôn và sát thương không thể nói hai đằng.
+  //
+  // ⚠ Băng-rôn KHÔNG thay được số bay mỗi đòn, và ngược lại. Nó bắn một lần lúc vào map, nên
+  // người chơi đổi Axie giữa map là nó thành một câu đã cũ; còn số bay thì không bao giờ nói
+  // được "nên cầm con nào TỚI đây". Hai kênh cho hai câu hỏi khác nhau.
+  const _bsHe = (mapBanSac(mapId) || {}).he;
+  const _kqHe = _bsHe ? heThuKet(_bsHe, heThu(player), axieSac(player)) : null;
+  const _subHe = _kqHe ? ' · ' + _kqHe.dai : '';
+  zoneBanner = _rlore ? { text:'🗺 ' + md.name, sub:_rlore.sub + _subHe, color:'#ffd76a', t:5.5 }
+                       : { text: md.name, sub: `${zt.name} — ${md.desc}${_subHe}`, color: zt.color, t: 3.2 };
   addEffect({ type:'ring', x:player.x, y:player.y, r:120, color:zt.color, big:true });
   // Điểm dịch chuyển: lần đầu đặt chân tới 1 vùng (dù được nhiệm vụ dẫn tới hay tự dịch chuyển
   // khi vừa đủ điều kiện) sẽ mở khoá nút "Dịch Chuyển" cho vùng đó trong Bản Đồ (M) từ giờ về sau.
   if (!player.wpUnlocked) player.wpUnlocked = {};
-  if (!md.dungeon && !player.wpUnlocked[mapId]){
+  // ⚠ Sàn đấu KHÔNG mở điểm dịch chuyển, cùng lý do phó bản không mở: vào thì đi qua cổng cho
+  // đàng hoàng. Mở ra thì bảng Bản Đồ có một nút dịch chuyển thẳng vào giữa một trận đang đánh.
+  if (!md.dungeon && !md.pvp && !player.wpUnlocked[mapId]){
     player.wpUnlocked[mapId] = true;
     addFloat(player.x, player.y - 70, '🚩 Đã mở khoá điểm dịch chuyển: ' + md.name, '#ffd76a', 14);
     AudioSys.sfx('quest', 0.8);
@@ -25678,6 +28503,157 @@ function noiMapHtml(mid){
   }).filter(Boolean).join(' · ');
   return bit ? `<div class="m-desc" style="margin-top:2px;opacity:.9">🧭 Đi bộ: ${bit}</div>` : '';
 }
+// ═══ BẢN ĐỒ THÀNH — tấm lớn, CÓ NHÃN CHỮ ════════════════════════════════════════
+//
+// ⚠ VÌ SAO CÓ KHỐI NÀY. Đo được: Ardhaven có 26 NPC và **0 trong 26 có tên trên bản đồ**.
+// `drawMinimap()` có luật "map quá 8 NPC thì chỉ gắn tên cho ai đang có việc", và luật ấy
+// ĐÚNG — 26 cái tên nhồi vào ô 240×120 ra một mảng chữ đặc, không đọc nổi chữ nào. Nhưng hệ
+// quả là không ai có tên cả, và bảng Bản Đồ thì chỉ là một DANH SÁCH CHỮ CÁC MAP, không có
+// hình cái thành. Người chơi không có cách nào biết Lò Rèn ở đâu trừ khi đi vòng quanh.
+//
+// Cách giải không phải nhồi thêm nhãn vào góc màn hình mà là một TẤM LỚN RIÊNG — đúng như
+// map thành của mấy game cùng dòng làm. Ở 560×280 (gấp 5,4 lần diện tích bản đồ góc) thì 8
+// nhãn chức năng + 4 nhãn cổng thừa chỗ. Xem docs/DE_XUAT_NPC_NHA.md §3A.
+//
+// ⚠ CHỈ GẮN NHÃN CHO NPC CÓ CHỨC NĂNG. 18 người `talk:'quest'` để chấm không tên — gắn cả 26
+// là lặp lại đúng cái lỗi mà luật kia sinh ra để tránh, chỉ ở khổ to hơn.
+//
+// ⚠ KHÔNG dùng lại `drawMinimapStatic()`. Nó chỉnh riêng cho ô 240×120: cỡ chấm, cỡ chữ 7px
+// và mấy bán kính đều chép cứng theo khổ đó, phóng lên 560 thì chấm bé như hạt bụi.
+// ⚠ TÊN TRÊN BẢN ĐỒ LẤY TỪ `n.nhan` TRƯỚC, bảng này chỉ là lớp nền. Ba NPC `talk:'shop'`
+// mà cùng in ra "Cửa Hàng" thì người chơi vẫn không biết cái nào bán thuốc — đúng bằng không
+// gắn nhãn. Tên đầy đủ ("Nhà Giả Kim · Tiệm Thuốc") thì dài gấp ba chỗ có, nên NPC khai một
+// nhãn NGẮN riêng ở `data/canbang.js`.
+const THANH_TALK = {
+  forge:    { ten:'Lò Rèn',     mau:'#ffb15c' },
+  shop:     { ten:'Cửa Hàng',   mau:'#ffd76a' },
+  stable:   { ten:'Chuồng',     mau:'#9ad45e' },
+  trunya:   { ten:'Truy Nã',    mau:'#ff9a4d' },
+  vanduyen: { ten:'Cầu May',    mau:'#c07fe0' },
+  tenui:    { ten:'Vực Thẳm',   mau:'#7fb8c4' },
+};
+// ═══ NỀN THÀNH — MỘT bộ vẽ, HAI khổ ═══════════════════════════════════════════════
+//
+// ⚠ Mục "KHÔNG dùng lại `drawMinimapStatic()`" ở ngay trên vẫn ĐÚNG với thứ nó nói: bộ vẽ ấy
+// chép cứng cỡ chấm và cỡ chữ theo ô 240×120, phóng lên 560 thì chấm bé như hạt bụi. Nhưng kết
+// luận rút ra hồi đó — *dựng hẳn hai bộ vẽ* — là cái giá phải trả, không phải lời giải. Đo được
+// cái giá ấy: bản đồ lớn vẽ **đa giác sàn + 8 đường phố + 16 khối nhà** của Ardhaven, còn bản đồ
+// góc màn vẽ **không một cái nào** — 28 chấm vàng như nhau rải trên một mảng tối phẳng. Chủ dự
+// án gọi đúng tên: *"nhìn rất rối"*.
+//
+// ⇒ Tách phần KHÔNG phụ thuộc khổ (hình cái thành) ra đây, và mọi con số còn lại thì **suy từ
+// bề rộng khung** thay vì chép cứng. Hai khổ dùng chung một hình, nên chúng không thể nói hai
+// đằng — đúng luật `mapBanSac()` suy từ `packs`.
+//
+// ⚠ ĐỪNG chép ba khối vẽ này sang chỗ thứ hai. Thêm một lớp (ví dụ vỉa hè, quảng trường) mà chỉ
+// sửa một bên là hai bản đồ lệch nhau, và kiểu lệch đó người chơi đọc ra thành "bản đồ sai".
+function veNenThanh(g, md, mid, X, Y, day){
+  // mặt sàn = đúng đa giác đi được, nên hình cái thành đọc ra được ngay
+  g.beginPath();
+  md.diTrong.forEach((pt, i) => i ? g.lineTo(X(pt[0]), Y(pt[1])) : g.moveTo(X(pt[0]), Y(pt[1])));
+  g.closePath();
+  // ⚠ MÀU SÀN LẤY TỪ `md.ground`, ĐỪNG CHÉP MỘT MÃ MÀU. Mọi map nay đều có `diTrong` (cả 12 map
+  // ngoài trời đã lát viên), nên tô cứng một sắc ô-liu là **mười hai vùng ra cùng một màu** —
+  // xoá đúng cái bản sắc mà `mapBanSac()` dựng ra để nói. Ardhaven `#3a4230` gần như trùng sắc
+  // cũ nên bản đồ thành không đổi hình; thứ đổi là Rẻo Rừng, Trũng Nứt, Dusk Marsh…
+  g.fillStyle = md.ground || '#39402c'; g.fill();
+  g.strokeStyle = '#8a8768'; g.lineWidth = Math.max(1, day * 0.9); g.stroke();
+  // phố
+  g.save();
+  g.strokeStyle = 'rgba(120,118,92,.85)'; g.lineCap = 'round';
+  for (const d of (md.isoDuong || [])){
+    g.lineWidth = Math.max(1.5, X(110));
+    g.beginPath(); g.moveTo(X(d[0][0]), Y(d[0][1])); g.lineTo(X(d[1][0]), Y(d[1][1])); g.stroke();
+  }
+  g.restore();
+  // khối nhà
+  g.fillStyle = '#6d6a52'; g.strokeStyle = '#8a8768'; g.lineWidth = Math.max(0.5, day * 0.45);
+  for (const o of ((window.MAP_OBSTACLES || {})[mid] || [])){
+    if (!o.wd) continue;
+    g.fillRect(X(o.x), Y(o.y), X(o.wd), Y(o.ht));
+    g.strokeRect(X(o.x), Y(o.y), X(o.wd), Y(o.ht));
+  }
+}
+// Cổng/dịch chuyển: MÀU phải giống nhau ở hai bản đồ. Tím = cổng dịch chuyển (Tầng Sâu, Lò Khắc,
+// Sàn Đấu), trắng ngà = lối ra đi bộ. Bản đồ lớn trước đây tô trắng cho cả hai nên ba cổng dịch
+// chuyển đọc ra y hệt bốn cổng thành.
+function mauCong(gt){ return gt.portal ? '#c07fe0' : '#e9ebda'; }
+function veBanDoThanh(mid, W0, H0){
+  const md = MAPS[mid];
+  if (!md || !md.diTrong) return null;
+  const cv = document.createElement('canvas');
+  cv.width = W0; cv.height = H0;
+  const g = cv.getContext('2d');
+  const sx = W0 / md.w, sy = H0 / md.h;
+  const X = v => v * sx, Y = v => v * sy;
+
+  g.fillStyle = '#12150d'; g.fillRect(0, 0, W0, H0);
+  veNenThanh(g, md, mid, X, Y, 2);
+
+  // ── NHÃN: vẽ SAU cùng, và tránh chồng bằng cách thử bốn chỗ quanh chấm ──────────
+  const daDat = [];
+  g.font = '600 11px "Be Vietnam Pro", sans-serif';
+  g.textBaseline = 'middle';
+  const nhan = (x, y, chu, mau, r) => {
+    const w = g.measureText(chu).width;
+    const cho = [ [x + r + 4, y, 'left'], [x - r - 4, y, 'right'],
+                  [x, y + r + 9, 'center'], [x, y - r - 9, 'center'] ];
+    for (const [lx, ly, al] of cho){
+      const x0 = al === 'left' ? lx : al === 'right' ? lx - w : lx - w/2;
+      if (x0 < 2 || x0 + w > W0 - 2 || ly < 8 || ly > H0 - 8) continue;
+      if (daDat.some(q => x0 < q.x + q.w + 3 && x0 + w + 3 > q.x && Math.abs(ly - q.y) < 12)) continue;
+      daDat.push({ x:x0, y:ly, w });
+      g.textAlign = al;
+      g.lineWidth = 3; g.strokeStyle = 'rgba(0,0,0,.85)'; g.strokeText(chu, lx, ly);
+      g.fillStyle = mau; g.fillText(chu, lx, ly);
+      return true;
+    }
+    return false;
+  };
+
+  // Cổng — ⑨ CƠ CHẾ ĐẮT NHẤT lấy từ map tham chiếu: lối ra ghi CẤP ngay cạnh nó, nên bản đồ
+  // thành đồng thời là bảng chỉ đường theo cấp. Dữ liệu đã có sẵn ở MAPS[to].min, trước nay
+  // chỉ không được hiện ra.
+  for (const gt of GATES){
+    if (gt.map !== mid || !gt.to) continue;
+    const dm = MAPS[gt.to]; if (!dm) continue;
+    const px = X(gt.x), py = Y(gt.y);
+    g.fillStyle = mauCong(gt); g.strokeStyle = 'rgba(0,0,0,.7)'; g.lineWidth = 1.5;
+    g.beginPath(); g.arc(px, py, 5, 0, 7); g.fill(); g.stroke();
+    const du = !player || player.level >= (dm.min || 1);
+    nhan(px, py, `${dm.name} · c${dm.min}`, du ? mauCong(gt) : '#9aa07f', 6);
+  }
+  // NPC có chức năng
+  for (const n of NPCS){
+    if (n.map !== mid) continue;
+    const k = THANH_TALK[n.talk];
+    const px = X(n.x), py = Y(n.y);
+    if (!k){   // người lore: chấm mờ, KHÔNG tên
+      g.fillStyle = 'rgba(255,215,106,.45)';
+      g.beginPath(); g.arc(px, py, 2, 0, 7); g.fill();
+      continue;
+    }
+    g.fillStyle = k.mau; g.strokeStyle = 'rgba(0,0,0,.7)'; g.lineWidth = 1.5;
+    g.beginPath(); g.arc(px, py, 4.5, 0, 7); g.fill(); g.stroke();
+    nhan(px, py, n.nhan || k.ten, k.mau, 5.5);
+  }
+  // người chơi
+  if (player && curMap === mid){
+    g.fillStyle = '#7ecbff'; g.strokeStyle = '#fff'; g.lineWidth = 2;
+    g.beginPath(); g.arc(X(player.x), Y(player.y), 4, 0, 7); g.fill(); g.stroke();
+  }
+  return cv;
+}
+
+// Chèn tấm bản đồ vào bảng SAU khi innerHTML đã đặt — canvas không sống qua innerHTML.
+function ganBanDoThanh(mid){
+  const hoc = el('bando-thanh'); if (!hoc) return;
+  const cv = veBanDoThanh(mid, 560, 280);
+  if (!cv){ hoc.remove(); return; }
+  cv.style.cssText = 'width:100%;height:auto;display:block;border-radius:3px';
+  hoc.innerHTML = ''; hoc.appendChild(cv);
+}
+
 // ═══════════ TAB THẾ GIỚI CỦA BẢNG BẢN ĐỒ ═══════════
 //
 // Trước bản này bấm M ra một DANH SÁCH CHỮ mười hai dòng. Danh sách nói được "vùng nào cấp bao
@@ -26768,6 +29744,8 @@ function renderMapPanel(){
   let html = moBang({ tieu:'Bản Đồ Lunacia', dong: mapDef().name, tabs, chon:_banDoTab, ham:'banDoTab' });
   html += `<div style="font-size:12px;color:#9aa8d4;margin-bottom:6px">Đang ở: <b style="color:${zt.color}">${mapDef().name}</b> · ${zt.name} · <span style="opacity:.7">Nhiệm vụ: phím Q</span>${window.TEST_MODE ? ' · <span style="color:#7fd4ff">[CHẾ ĐỘ TEST — dịch chuyển tự do]</span>' : ''}</div>`;
   if (_banDoTab === 'ht'){
+    // Tấm bản đồ THÀNH nằm trong tab Hiện Tại — chỉ hiện khi map đang đứng có `diTrong`.
+    if (mapDef().diTrong) html += `<div id="bando-thanh" style="margin:2px 0 8px"></div>`;
     html += htHtml();
   } else {
     html += `<div class="bd-hai">
@@ -26781,6 +29759,7 @@ function renderMapPanel(){
   }
   el('panel-map').innerHTML = html + ttHtml();
   bdBatVong();
+  ganBanDoThanh(curMap);   // canvas không sống qua innerHTML — phải gắn SAU
 }
 // ═══════════ Chọn Trận (GDD Đợt 3 — kiểu NGU Idle): chọn thẳng 1 cụm quái từ danh sách,
 // vào là dịch chuyển tới + tự bật AUTO luôn — bỏ hẳn việc phải đi bộ/né vật cản để tìm bãi quái. ═══════════
@@ -27105,12 +30084,22 @@ function renderQuestNpc(n){
   // — Phụ tuyến của NPC này —
   const mine = SIDE_QUESTS.filter(sq => sq.npc === n.id);
   if (mine.length){
-    html += `<div style="font-size:11.5px;color:#9aa8d4;margin:6px 0 4px;border-top:1px dashed rgba(76,141,255,.3);padding-top:6px">PHỤ TUYẾN — ${MAPS[n.map].name.toUpperCase()}</div>`;
+    // ⚠ TIÊU ĐỀ KHÔNG ĐƯỢC MANG TÊN MAP. Bản cũ in `MAPS[n.map].name` — tên vùng của NGƯỜI
+    // GIAO, không phải của NHIỆM VỤ. Mười một mục phụ tuyến có người giao đứng ở map khác
+    // (vandai ở Werebear Woods giao việc của Lối Mòn Corran…), nên chúng hiện ra dưới dòng
+    // "PHỤ TUYẾN — WEREBEAR WOODS" trong khi `sideOnKill` chỉ đếm khi `curMap === 'loimon'`:
+    // người chơi nhận việc ở đây, đánh ở đây, và tiến độ không bao giờ nhúc nhích.
+    // Một tiêu đề CHUNG thì không thể đúng cho cả danh sách — chỗ làm phải ghi TỪNG MỤC.
+    html += `<div style="font-size:11.5px;color:#9aa8d4;margin:6px 0 4px;border-top:1px dashed rgba(76,141,255,.3);padding-top:6px">PHỤ TUYẾN</div>`;
     for (const sq of mine){
       const st = sideAvail(sq);
       const sts = sideStates[sq.id];
       const prog = sts ? ` ${sts.prog}/${sq.need}` : '';
       const rew = rewMoTa(sq.rew);
+      // Chỗ làm in ở MỌI mục, không chỉ mục khác vùng: một cái nhãn chỉ hiện ra lúc "có
+      // chuyện" thì lúc nó vắng mặt người chơi không đọc ra "cùng vùng", họ chỉ không thấy gì.
+      const _cungVung = sq.map === n.map;
+      const _noi = `<div style="font-size:10.5px;margin-top:3px;color:${_cungVung ? '#9aa8d4' : '#ffb15c'}">📍 Làm tại: <b>${MAPS[sq.map] ? MAPS[sq.map].name : sq.map}</b>${_cungVung ? '' : ' — khác vùng, phải đi tới đó thì tiến độ mới tính'}</div>`;
       if (st === 'claimed')
         html += `<div class="qd-quest" style="opacity:.55"><div class="q-name" style="color:#8fd18f">✔ ${sq.name}</div>${sq.desc}</div>`;
       else if (st === 'done')
@@ -27118,14 +30107,14 @@ function renderQuestNpc(n){
           <div class="q-rew">Thưởng: ${rew}</div>
           <div style="text-align:center;margin-top:6px"><button class="mini-btn" onclick="turnInSide('${sq.id}')">Nhận Thưởng</button></div></div>`;
       else if (st === 'active')
-        html += `<div class="qd-quest"><div class="q-name">${sq.name}${prog}</div>${sq.desc}
+        html += `<div class="qd-quest"><div class="q-name">${sq.name}${prog}</div>${sq.desc}${_noi}
           <div class="q-rew">Thưởng: ${rew}</div></div>`;
       else if (st === 'avail')
-        html += `<div class="qd-quest"><div class="q-name" style="color:#9fd0ff">◈ ${sq.name}</div>${sq.desc}
+        html += `<div class="qd-quest"><div class="q-name" style="color:#9fd0ff">◈ ${sq.name}</div>${sq.desc}${_noi}
           <div class="q-rew">Thưởng: ${rew}</div>
           <div style="text-align:center;margin-top:6px"><button class="mini-btn" onclick="acceptSide('${sq.id}')">Nhận Nhiệm Vụ</button></div></div>`;
       else if (st === 'full')
-        html += `<div class="qd-quest" style="opacity:.55"><div class="q-name">◈ ${sq.name}</div>${sq.desc}
+        html += `<div class="qd-quest" style="opacity:.55"><div class="q-name">◈ ${sq.name}</div>${sq.desc}${_noi}
           <div class="q-rew">Đang cầm tối đa ${SIDE_TRAN} phụ tuyến — hoàn thành bớt rồi quay lại.</div></div>`;
       else
         // ⚠ NÓI ĐÚNG CÁI ĐANG KHOÁ. Câu cũ in cả hai điều kiện một lúc ("Cần cấp X · Tiến độ
@@ -27274,7 +30263,7 @@ function tryTalk(){
     if (u > bu || (u === bu && d < bd)){ bu = u; bd = d; best = n; }
   }
   if (!best) return;
-  tutAdvance('npc');
+  tutGhi('npc');
   questOnTalk(best);
   if (best.talk === 'quest'){ renderQuestNpc(best); return; }
   if (best.talk === 'forge'){ renderBaGua(); return; }
@@ -27348,6 +30337,50 @@ function tickBark(n){
 const NV_THAN_PX = CAO_THAN_NUONG * (NV_CAO / HERO_H);   // thân nhân vật VẼ RA ≈ 95px
 const NPC_CAO = 1.00;   // NPC cao bằng ngần này lần THÂN nhân vật…
 const NPC_TRAN = 1.30;  // …và hộp vẽ ra, chiều nào cũng vậy, không quá ngần này lần
+// ═══ NPC CÓ HOẠT ẢNH — khai MỘT khoá là NPC đó sống, không khai thì vẽ y như cũ ═══
+//
+// Trước bản này `drawNpc()` vẽ đúng MỘT tấm PNG, nên 26 con trong thành đứng bất động tuyệt đối
+// (chỉ nhấp nhô 2,2px theo `_nb`). Quái thì đã có `MOB_KHUNG` từ lâu; NPC thì chưa.
+//
+// ⚠ DÙNG LẠI ĐÚNG KHUÔN `MOB_KHUNG`, ĐỪNG DỰNG KHUÔN THỨ HAI. Hai bảng cùng ý nghĩa là bảo đảm
+// chúng lệch nhau sau vài đợt sửa — cùng lý do `knDsKhac()` suy ra thay vì chép thành bảng thứ ba.
+//
+// ⚠ KHOÁ LÀ TÊN TỆP, KHÔNG PHẢI ID NPC — y như `MOB_KHUNG`. Nhiều NPC dùng chung một tấm
+// (`laotuong.png` phục vụ bốn lính gác), nên khai theo tệp là cả bốn cùng sống bằng một dòng.
+//
+// ⚠ TẤM LÙI Ở `assets/npcs/<tên>.png` LÀ BẮT BUỘC. Bảng khung nạp lười; thiếu tấm lùi thì mấy
+// trăm mili giây đầu `NPC_IMGS` xin một tệp không tồn tại (404) rồi NPC chớp thành đốm mực.
+// `tools/nuong_video.py` xuất CẢ HAI trong một lượt chạy, đừng xuất tay một cái.
+//
+// ⚠ `neoY` LÀ BÀN CHÂN TRONG Ô, không phải đáy ô. Bảng do máy nướng lấy TRUNG VỊ hàng đáy từng
+// khung, nên một khung có mẩu hiệu ứng rơi thấp hơn chân không kéo neo của cả bảng xuống.
+const NPC_KHUNG = {
+  // Kỵ Sĩ Ronin — nướng từ video nền magenta phẳng (máy quay đứng yên, chân lệch ĐÚNG 0px qua
+  // cả 12 khung). Đôi cánh lửa lạnh là thứ động; thân đứng im, đúng vai một kẻ đang ĐỢI.
+  //   python3 tools/nuong_video.py <video.mp4> public/game/assets/npcs/kh/ronin_canh.webp
+  'ronin_canh': { cot:4, hang:3, khung:12, oRong:219, oCao:150, neoY:1.0000, fps:8 },
+};
+const NPC_KH_IMGS = {};
+// Tên tệp của một NPC, bỏ thư mục và đuôi — `assets/npcs/ronin_canh.png` → `ronin_canh`.
+function npcTen(n){ return (n.img || '').replace(/^.*\//, '').replace(/\.[a-z0-9]+$/i, ''); }
+function npcKhAnh(ten){
+  let im = NPC_KH_IMGS[ten];
+  if (!im){ im = new Image(); im.src = 'assets/npcs/kh/' + ten + '.webp'; NPC_KH_IMGS[ten] = im; }
+  return (im.complete && im.naturalWidth) ? im : null;
+}
+// Ô đang vẽ của một NPC. Trả null khi NPC không khai hoạt ảnh HOẶC bảng chưa tải xong — chỗ gọi
+// lùi về tấm tĩnh, nên art về trễ một nhịp chứ không bao giờ thành ô trống.
+function npcKhungCua(n){
+  const ten = npcTen(n);
+  const K = NPC_KHUNG[ten]; if (!K) return null;
+  const im = npcKhAnh(ten); if (!im) return null;
+  const tong = K.khung || (K.cot * K.hang);
+  // ⚠ Lệch pha theo TOẠ ĐỘ, không để chung một nhịp: hai NPC cùng tấm mà vỗ cánh khớp nhau
+  // đọc ra hai bản sao, không ra hai người. Cùng lý do `_nb` lệch pha bên dưới.
+  const i = Math.floor(performance.now() / 1000 * (K.fps || 8) + n.x * 0.013 + n.y * 0.007) % tong;
+  return { im, K, H:{ sx:(i % K.cot) * K.oRong, sy:((i / K.cot) | 0) * K.oCao,
+                      sw:K.oRong, sh:K.oCao } };
+}
 const _npcHop = {};
 function npcHop(id, im){
   const cu = _npcHop[id];
@@ -27368,14 +30401,48 @@ function npcHop(id, im){
   }
   return (_npcHop[id] = x2 < 0 ? tron : { sx:x1, sy:y1, sw:x2 - x1 + 1, sh:y2 - y1 + 1 });
 }
-function npcCoTrongMan(id, im){
-  const H = npcHop(id, im);
+// `hop` truyền vào để đường HOẠT ẢNH dùng ô của bảng khung thay vì hộp alpha của cả tấm —
+// đo alpha trên một bảng 4×3 là ra hộp bao của MỌI khung gộp lại, tức sai cỡ lẫn sai neo.
+function npcCoTrongMan(id, im, hop){
+  const H = hop || npcHop(id, im);
   let cao = NV_THAN_PX * NPC_CAO;
   let rong = cao * (H.sw / H.sh);
   const tran = NV_THAN_PX * NPC_TRAN;
   const qua = Math.max(cao, rong) / tran;
   if (qua > 1){ cao /= qua; rong /= qua; }
   return { cao, rong, H };
+}
+// ═══ NPC CHƯA CÓ ART — CHỖ TRỐNG CÓ NHÃN, KHÔNG PHẢI MỘT NGƯỜI GIẢ ═══════════════════════
+//
+// Chủ dự án chốt (2026-09-19): *"loại bỏ hết các bản vẽ NPC bằng vector đi. Mình sẽ cần người
+// thật cơ"*. Năm tệp vector cuối (`binhkhi` · `bodau` · `duoclao` · `thantoan` · `traichu`) đã
+// xoá khỏi kho — nhưng nhánh dự phòng ở đây thì VẼ LẠI ĐÚNG CÁI ẤY bằng mã: một khối ê-líp nâu
+// làm thân cộng một vòng tròn màu da làm đầu. Xoá tệp mà để nguyên nhánh này là đổi một hình
+// vector trong tệp lấy một hình vector trong mã — cùng thứ, chỉ khác chỗ cất.
+//
+// ⚠ VÀ NÓ TỆ HƠN TỆP: một người giả trông "tạm được" thì không ai đi vẽ người thật. Đây chính
+// là lý do `iaChuaArt` của hệ vật phẩm cố ý vẽ THÔ — Quy tắc số 3 gọi nó là "chỗ trống có
+// nhãn", và nói rõ đó KHÔNG phải vẽ vector. Nên chỗ này cũng phải đọc ra là một CHỖ TRỐNG:
+// bệ tối, khung nét đứt, dấu `?`. Nhìn vào là biết ngay art chưa về.
+//
+// ⚠ NHÃN TÊN VÀ DẤU NHIỆM VỤ VẪN CHẠY như cũ (`n._cao` đặt trước khi gọi vào đây), nên NPC
+// chưa có art vẫn bấm được, vẫn mở bảng được, vẫn hiện trên bản đồ thành qua `nhan:`. Chỗ
+// trống là chuyện của MẮT, không phải của cơ chế.
+function veNpcChoArt(n, rong, cao, nb){
+  const w = rong * 0.62, h = cao * 0.86;
+  const x0 = n.x - w/2, y0 = n.y - h + 4 + nb;
+  ctx.save();
+  ctx.fillStyle = 'rgba(14,18,30,.55)';
+  ctx.fillRect(x0, y0, w, h);
+  ctx.setLineDash([5, 4]);
+  ctx.lineWidth = 1.5; ctx.strokeStyle = 'rgba(255,215,106,.75)';
+  ctx.strokeRect(x0, y0, w, h);
+  ctx.setLineDash([]);
+  ctx.fillStyle = 'rgba(255,215,106,.85)';
+  ctx.font = `700 ${Math.round(h * 0.38)}px "Be Vietnam Pro", sans-serif`;
+  ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+  ctx.fillText('?', n.x, y0 + h * 0.5);
+  ctx.restore();
 }
 let _dtBark = 0;
 function drawNpc(){
@@ -27390,21 +30457,28 @@ function drawNpc(){
     // đổi nằm quanh nhân vật — chín NPC trong thành đứng bất động tuyệt đối. Lệch pha theo toạ
     // độ để cả thành không thở cùng một nhịp.
     const _nb = SETTINGS.lowFx ? 0 : Math.sin(performance.now()/640 + n.x*0.031 + n.y*0.017) * 2.2;
-    const _co = (im && im.complete && im.naturalWidth) ? npcCoTrongMan(n.id, im) : null;
+    // Hoạt ảnh thắng tranh tĩnh khi NPC có khai `NPC_KHUNG` VÀ bảng đã tải xong; chưa xong thì
+    // rơi về tấm lùi, nên art về trễ một nhịp chứ không bao giờ hiện ra ô trống.
+    const _kh = npcKhungCua(n);
+    const _anh = _kh ? _kh.im : im;
+    const _co = _kh ? npcCoTrongMan(n.id, _kh.im, _kh.H)
+              : (im && im.complete && im.naturalWidth) ? npcCoTrongMan(n.id, im) : null;
     const _cao = _co ? _co.cao : NV_THAN_PX, _rong = _co ? _co.rong : NV_THAN_PX * 0.48;
-    n._cao = _cao;   // nhãn tên & dấu nhiệm vụ đo theo đây, xem dưới
+    // ⚠ BÀN CHÂN, không phải đáy hộp. Tranh tĩnh cắt sát nội dung nên hai chỗ đó trùng nhau
+    // (neo 1,0); bảng khung thì ô phải chừa chỗ cho hiệu ứng trùm ra ngoài chân, nên phải lùi
+    // theo `neoY` đo được. Dùng 1,0 cho cả hai là NPC nào có hiệu ứng dưới chân sẽ treo lơ lửng.
+    const _neo = _kh ? (_kh.K.neoY == null ? 1 : _kh.K.neoY) : 1;
+    n._cao = _cao * _neo;   // nhãn tên & dấu nhiệm vụ đo theo đây, xem dưới
     ctx.fillStyle = 'rgba(0,0,0,.18)';
     ctx.beginPath(); ctx.ellipse(n.x, n.y+4, _rong*0.34 - _nb*0.5, _rong*0.12, 0, 0, 7); ctx.fill();
     if (_co){
       const H = _co.H;
       // Neo ĐÁY hộp nội dung vào chân NPC — không neo đáy KHUNG, vì lề dưới mỗi tranh một khác
       // (2px tới 49px) và neo theo khung thì nửa số NPC lơ lửng trên không.
-      ctx.drawImage(im, H.sx, H.sy, H.sw, H.sh, n.x - _rong/2, n.y - _cao + 4 + _nb, _rong, _cao);
+      ctx.drawImage(_anh, H.sx, H.sy, H.sw, H.sh,
+                    n.x - _rong/2, n.y - _cao*_neo + 4 + _nb, _rong, _cao);
     } else {
-      ctx.fillStyle = '#5a4a30';
-      ctx.beginPath(); ctx.ellipse(n.x, n.y - _cao*0.34, _rong*0.30, _cao*0.34, 0, 0, 7); ctx.fill();
-      ctx.fillStyle = '#e8cfa8';
-      ctx.beginPath(); ctx.arc(n.x, n.y - _cao*0.79, _cao*0.16, 0, 7); ctx.fill();
+      veNpcChoArt(n, _rong, _cao, _nb);
     }
     _nhanCho.push(n);   // nhãn để LƯỢT SAU đặt — xem chú thích ở đầu hàm
   }
@@ -27956,6 +31030,46 @@ function ccSlotsRender(){
   // lệnh rỗng; ở chế độ giảm chuyển động thì đây là lần vẽ duy nhất.
   titleVeLai();
 }
+// ═══════════ CHỌN AXIE ĐẠI DIỆN — màn tạo nhân vật ═══════════
+//
+// Mô hình đã chốt của game: "Chỉ số tới từ 5 class. Axie chỉ đơn thuần là avatar thôi." Trước
+// bản này mô hình đó KHÔNG CÓ MẶT NÀO ở màn tạo nhân vật — `player.avatar` chỉ đổi được bằng
+// lệnh gỡ rối `/avatar <id>` hoặc bảng Khế Ước (cấp 6).
+//
+// ⚠ TỰ DO, KHÔNG KHOÁ THEO LỚP. Không phải nới lỏng cho vui: avatar mang 0 chỉ số, 0 kỹ năng,
+//   0 trang bị. Thứ khoá một lần lúc tạo nhân vật là LỚP. Khoá cả avatar theo lớp là đặt một
+//   bức tường trước một ô hoàn toàn thẩm mỹ.
+// ⚠ VÀ KHÔNG KHOÁ THEO SỞ HỮU — chủ dự án chốt 2026-09-20. Cửa là `avaCamDuoc()`, dùng CHUNG
+//   với bảng Khế Ước; đừng dựng bảng lọc thứ hai ở đây.
+//
+// `null` ở đây nghĩa là "chưa tự chọn ⇒ theo lớp", trùng đúng quy ước của avatarId().
+let ccAva = null;
+function ccAvaDang(){ return ccAva || (ccSect ? (AVA_MAC_DINH[ccSect] || null) : null); }
+window.ccAvaChon = function(id){
+  if (!avaCamDuoc(id)) return;
+  ccAva = id; AudioSys.sfx('ui', 0.5);
+  ccRender();          // vẽ lại CẢ thẻ lớp: con Axie còn đứng cạnh thẻ đang chọn nữa
+};
+function ccAvaRender(){
+  const box = el('cc-avatar'); if (!box) return;
+  const ds = avaDsThan(), dang = ccAvaDang();
+  // Chưa chọn lớp thì chưa có gì để đứng cạnh — và một lưới 16 ô bày ra trước khi người chơi
+  // biết mình là ai chỉ làm loãng bước quan trọng hơn hẳn ở ngay trên.
+  if (!ccSect || !ds.length){ box.innerHTML = ''; box.style.display = 'none'; return; }
+  box.style.display = '';
+  const c = dang && CHI_MAP[dang];
+  box.innerHTML = `<div class="cc-ava-nhan">Axie đại diện`
+    + (c ? ` — <b style="color:${c.mau}">${c.ten}</b>`
+         + `<span style="color:${CHI_SAO_MAU[c.sao]}"> ${'★'.repeat(c.sao)}</span>`
+         + `<span class="cc-ava-lop">${lopHuyHieu(c.lop)}${c.lop}</span>` : '')
+    + `</div><div class="cc-ava-luoi">`
+    + ds.map(x => `<button type="button" class="cc-ava-o${x.id === dang ? ' sel' : ''}"`
+        + ` title="${x.ten} · ${'★'.repeat(x.sao)} · ${x.lop}"`
+        + ` aria-pressed="${x.id === dang}"`
+        + ` onclick="window.ccAvaChon('${x.id}')">${chiOAnh(x, 38, 'cc-ava-hinh')}</button>`).join('')
+    + `</div><i class="cc-ava-ghi">Chỉ là hình dáng — mọi chỉ số, kỹ năng và trang bị đều tới từ lớp. Đổi lúc nào cũng được ở bảng Khế Ước.</i>`;
+}
+
 function ccRender(){
   const wrap = el('cc-classes'); if (!wrap) return;
   // Cờ cho CSS biết đã có lớp được chọn hay chưa — chưa chọn thì cả năm đứng ngang nhau,
@@ -27970,7 +31084,15 @@ function ccRender(){
     d.tabIndex = 0;
     // Ảnh thẻ là NHÂN VẬT THẬT (ccLopThe), không còn là bộ tranh anh hùng `pick_*`: người chơi
     // chọn cái gì thì phải nhận đúng cái đó. Dải khung chưa tải xong thì tạm lui về art cũ.
-    d.innerHTML = `<img class="cc-art" src="${ccLopThe(k) || heroPickUrl(k)}" alt="">
+    // Con Axie đứng cạnh THẺ ĐANG CHỌN — không có nó thì lưới bên dưới là một lựa chọn mù:
+    // bấm một ô và không thấy gì đổi. Chỉ thẻ đang chọn mới có, vì avatar thuộc về NHÂN VẬT
+    // sắp tạo chứ không phải thuộc về lớp.
+    const avaId = (ccSect === k) ? ccAvaDang() : null;
+    const ava = (avaId && CHI_MAP[avaId]) ? chiOAnh(CHI_MAP[avaId], 1, 'cc-ava-ke') : '';
+    // Con Axie neo trong HỘP TRANH, không trong thẻ: gót của lớp nhân vật nằm ở 85,7% chiều
+    // cao tấm tranh, mà tấm tranh thì co giãn theo bề ngang cột. Neo vào thẻ là neo vào một
+    // con số px cố định, và nó rơi xuống đè lên tên lớp ngay khi cột hẹp lại.
+    d.innerHTML = `<span class="cc-art-o"><img class="cc-art" src="${ccLopThe(k) || heroPickUrl(k)}" alt="">${ava}</span>
       <div class="cc-nm" style="color:${sc.color}">${sc.name}</div>
       <div class="cc-tag">${sc.role || ''}</div>`;
     const pick = () => { ccSect = k; AudioSys.sfx('ui', 0.5); ccRender(); };
@@ -27994,7 +31116,40 @@ function ccRender(){
          <div class="cc-skills">Chiêu chính: <b>${(sc.skillA||{}).name || '—'}</b> · Trấn Phái: <b>${(sc.tp||{}).name || '—'}</b></div>`
       : '<span style="opacity:.6">Chọn một lớp để xem chi tiết.</span>';
   }
+  ccAvaRender();
   ccValidate();
+  // Cỡ con Axie cạnh thẻ phải ĐO, không được chọn tay — xem ccAvaKeCo().
+  requestAnimationFrame(ccAvaKeCo);
+}
+// Con Axie cạnh thẻ lớp: to bằng mấy phần người.
+//
+// ⚠ HỎI `avaCo()` — CÙNG CÁI HÀM MÀ TRONG MÀN DÙNG. Chép một con số px vào đây là dựng bản sao
+//   thứ hai của luật tỉ lệ, và màn tạo nhân vật sẽ hứa một đằng còn trong game ra một nẻo. Đúng
+//   cái lỗi mà cả đợt màn chờ trước sinh ra để sửa (CC_AXIE_LOP hứa Ironshell, game cho Emberjaw).
+//   Luật thật không phải "Axie cao 0,72 lần thân người" mà là "0,72 lần VÀ hộp vẽ ra không quá
+//   0,95 lần theo cả hai chiều" — 16 con có 16 tỉ lệ rộng/cao, nên vế thứ hai có thật sự cắn.
+//
+// Phải ĐO bề cao tấm tranh lúc chạy: `.cc-art` là `width:100%` trong một cột co giãn, nên chiều
+// cao vẽ ra đổi theo bề rộng cửa sổ. Trong tấm tranh thì thân người chiếm đúng 0,80 chiều cao —
+// hằng số của ccLopThe(), không phải số đo bằng mắt.
+const CC_KE_THAN = 0.80;
+// …rồi THU LẠI. Ở đúng tỉ lệ thật, con Axie vẽ ra 170×134 trên một cái thẻ rộng 246 và nó che
+// mất nửa dưới nhân vật — mà lớp mới là lựa chọn quan trọng hơn trên màn này. Nên ô này là
+// HUY HIỆU "con nào", KHÔNG phải mô hình tỉ lệ; chỗ xem tỉ lệ thật là sân khấu màn chờ
+// (ccBoCuc → ccAxieThan), nơi có cả nửa màn hình mà đứng.
+// Vẫn dẫn xuất từ avaCo() chứ không chép một con số px: con bè nhất và con cao nhất phải giữ
+// đúng chênh lệch của chúng, chỉ là cả nhóm nhỏ đi cùng một hệ số.
+const CC_KE_CO = 0.60;
+function ccAvaKeCo(){
+  const ke = document.querySelector('#cc-classes .cc-card.sel .cc-ava-ke'); if (!ke) return;
+  const art = ke.parentNode.querySelector('.cc-art'); if (!art) return;
+  const hArt = art.getBoundingClientRect().height; if (!hArt) return;
+  const id = ccAvaDang(), A = id && CHI_ANH.o[id]; if (!A) return;
+  const thanNguoi = hArt * CC_KE_THAN;                       // thân NGƯỜI vẽ ra trên thẻ
+  const thanAxie  = thanNguoi * (avaCo(id) / NV_THAN_PX) * CC_KE_CO;   // …và thân AXIE, theo đúng luật trong màn
+  const cao = Math.round(thanAxie / A.thanCao);              // thân → HỘP vẽ (chừa sừng, đuôi, chân)
+  ke.style.setProperty('--h', cao + 'px');
+  ke.style.setProperty('--w', Math.round(cao * A.nhoRong / A.nhoCao) + 'px');
 }
 function ccValidate(){
   const inp = el('inp-char-name'), btn = el('btn-create'), warn = el('cc-name-warn');
@@ -28010,6 +31165,9 @@ function ccValidate(){
 let ccOMoi = -1;   // ô sẽ nhận nhân vật vừa tạo
 function openCreate(o){
   ccSect = null;
+  ccAva = null;   // nhân vật MỚI: chưa tự chọn ⇒ theo lớp. Giữ lại lựa chọn của lần tạo trước
+                  // thì người chơi tạo con thứ hai lại nhận con Axie của con thứ nhất mà không
+                  // hiểu vì sao mặc định lại là con đó.
   ccOMoi = (typeof o === 'number' && o >= 0) ? o : oTrongDauTien();
   if (ccOMoi < 0) return;   // đủ năm ô — không còn chỗ nào để tạo
   el('sect-select').classList.remove('hidden'); titleStart();
@@ -28050,7 +31208,7 @@ function openCreate(o){
     activeSlot = o; ccOMoi = -1;
     const nm = sanitizeCharName(el('inp-char-name').value) || genCharName();
     el('sect-select').classList.add('hidden'); titleStop();
-    startGame(ccSect, { name: nm });
+    startGame(ccSect, { name: nm, avatar: ccAva });
     checkTitles();
     AudioSys.sfx('quest', 0.9);
   });
@@ -28175,10 +31333,10 @@ Object.assign(MOBS, {
   // ⚠ skel còn là đường DƯ PHÒNG của TRÙM VÙNG: BOSS_DEFS trỏ vào khoá này rồi kế thừa
   // skel/skelPal (xem `_src.skel` trong hàm dựng trùm vùng) — bỏ skel là trùm vùng rơi về hình
   // mực dự phòng. Có sprite thật (nền trong suốt, trọn con) thì thêm lại img, giữ nguyên skel.
-  boss_hacphong:  { name:'Thủ Lĩnh Đoàn Gloam',    lv:16,  hp:3500,   atk:55,  def:20,  xp:3200,  silver:[350,500],   speed:80, aggro:9999, range:40, atkCd:1.2,  size:24, color:'#181420', eye:'#ff3a3a', boss:true, elite:true, bossKind:'dgn', bossId:'boss_hacphong', moves:['vach','xung','daovung'], drop:1, el:'Hỏa', skel:'knight', skelPal:{main:'#4a4450',dark:'#2a2632',trim:'#c8a84a',cloth:'#6a2a24',glow:'#ff6a3a'} },
-  boss_sontac:    { name:'Thủ Lĩnh Sói Hoang',  lv:22,  hp:6000,   atk:75,  def:28,  xp:5200,  silver:[500,700],   speed:76, aggro:9999, range:42, atkCd:1.25, size:25, color:'#241a12', eye:'#ff9a3a', boss:true, elite:true, bossKind:'dgn', bossId:'boss_sontac', moves:['vach','goi','vogiap'], drop:1, el:'Thổ', skel:'hound', skelPal:{main:'#5f5348',dark:'#3d342c',trim:'#c8a84a',glow:'#ffd76a',bone:'#e8dcc0'}, img:'assets/mobs/boss_sontac.png'},
-  boss_phando:    { name:'Đại Tướng Phản Loạn',     lv:34,  hp:11000,  atk:110, def:40,  xp:9000,  silver:[800,1100],  speed:82, aggro:9999, range:44, atkCd:1.2,  size:25, color:'#12201c', eye:'#a0ffe9', boss:true, elite:true, bossKind:'dgn', bossId:'boss_phando', moves:['vong','xung','cuong','daovung'], drop:1, el:'Thủy', skel:'knight', skelPal:{main:'#4f7a70',dark:'#2e4a44',trim:'#a0ffe9',cloth:'#1e3a34',glow:'#6ae8c0'}},
-  boss_mochu:     { name:'Chúa Tể Hầm Mộ',          lv:52,  hp:22000,  atk:170, def:70,  xp:16000, silver:[1300,1800], speed:70, aggro:9999, range:46, atkCd:1.3,  size:26, color:'#1c1a14', eye:'#9a86d8', boss:true, elite:true, bossKind:'dgn', bossId:'boss_mochu', moves:['vach','goi','cuong','vogiap'], drop:1, el:'Thổ', skel:'cultist', skelPal:{main:'#b0a890',dark:'#332a24',cloth:'#4a3a2a',trim:'#c8a84a',glow:'#8fe0a8'}},
+  boss_hacphong:  { name:'Thủ Lĩnh Đoàn Gloam',    lv:16,  hp:3500,   atk:55,  def:20,  xp:3200,  silver:[350,500],   speed:80, aggro:9999, range:40, atkCd:1.2,  size:24, color:'#181420', eye:'#ff3a3a', boss:true, elite:true, bossKind:'dgn', bossId:'boss_hacphong', moves:['vach','xung','daovung'], drop:1, el:'Dusk', skel:'knight', skelPal:{main:'#4a4450',dark:'#2a2632',trim:'#c8a84a',cloth:'#6a2a24',glow:'#ff6a3a'} },
+  boss_sontac:    { name:'Thủ Lĩnh Sói Hoang',  lv:22,  hp:6000,   atk:75,  def:28,  xp:5200,  silver:[500,700],   speed:76, aggro:9999, range:42, atkCd:1.25, size:25, color:'#241a12', eye:'#ff9a3a', boss:true, elite:true, bossKind:'dgn', bossId:'boss_sontac', moves:['vach','goi','vogiap'], drop:1, el:'Beast', skel:'hound', skelPal:{main:'#5f5348',dark:'#3d342c',trim:'#c8a84a',glow:'#ffd76a',bone:'#e8dcc0'}, img:'assets/mobs/boss_sontac.png'},
+  boss_phando:    { name:'Đại Tướng Phản Loạn',     lv:34,  hp:11000,  atk:110, def:40,  xp:9000,  silver:[800,1100],  speed:82, aggro:9999, range:44, atkCd:1.2,  size:25, color:'#12201c', eye:'#a0ffe9', boss:true, elite:true, bossKind:'dgn', bossId:'boss_phando', moves:['vong','xung','cuong','daovung'], drop:1, el:'Dusk', skel:'knight', skelPal:{main:'#4f7a70',dark:'#2e4a44',trim:'#a0ffe9',cloth:'#1e3a34',glow:'#6ae8c0'}},
+  boss_mochu:     { name:'Chúa Tể Hầm Mộ',          lv:52,  hp:22000,  atk:170, def:70,  xp:16000, silver:[1300,1800], speed:70, aggro:9999, range:46, atkCd:1.3,  size:26, color:'#1c1a14', eye:'#9a86d8', boss:true, elite:true, bossKind:'dgn', bossId:'boss_mochu', moves:['vach','goi','cuong','vogiap'], drop:1, el:'Bug', skel:'cultist', skelPal:{main:'#b0a890',dark:'#332a24',cloth:'#4a3a2a',trim:'#c8a84a',glow:'#8fe0a8'}},
   // ⚠ ART CÒN NỢ. assets/mobs/boss_tinhhoa.png là TRANH THẺ chứ không phải sprite: đục 100%,
   // không một điểm trong suốt nào, và con vật bị khung cắt ở cả bốn mép — đắp vào thế giới thì
   // hiện ra đúng một ô vuông dán lên nền — chụp lại được giữa đồng cỏ pastel của Plant
@@ -28187,21 +31345,21 @@ Object.assign(MOBS, {
   // ⚠ skel còn là đường DƯ PHÒNG của TRÙM VÙNG: BOSS_DEFS trỏ vào khoá này rồi kế thừa
   // skel/skelPal (xem `_src.skel` trong hàm dựng trùm vùng) — bỏ skel là trùm vùng rơi về hình
   // mực dự phòng. Có sprite thật (nền trong suốt, trọn con) thì thêm lại img, giữ nguyên skel.
-  boss_tinhhoa:   { name:'Xoáy Lá Nguyền',      lv:72,  hp:40000,  atk:240, def:95,  xp:28000, silver:[2000,2800], speed:88, aggro:9999, range:48, atkCd:1.15, size:26, color:'#2a1218', eye:'#7ec850', boss:true, elite:true, bossKind:'dgn', bossId:'boss_tinhhoa', moves:['vong','xung','daovung','vogiap'], drop:1, el:'Mộc', skel:'wraith', skelPal:{main:'#7fbf8f',dark:'#2e4a38',cloth:'#3f6a4e',bone:'#dff0d8',glow:'#7ec850'}, poisonHit:true },
-  boss_dothong:   { name:'Chúa Sói Thảo Nguyên',   lv:92,  hp:68000,  atk:340, def:130, xp:45000, silver:[3200,4200], speed:84, aggro:9999, range:50, atkCd:1.1,  size:27, color:'#1a1410', eye:'#ffd76a', boss:true, elite:true, bossKind:'dgn', bossId:'boss_dothong', moves:['vach','xung','goi','cuong','vogiap'], drop:1, el:'Kim', skel:'hound', skelPal:{main:'#6a6050',dark:'#443c30',trim:'#c8a84a',glow:'#ffd76a',bone:'#e8dcc0'}},
-  boss_thienbinh: { name:'Thống Soái Thiên Giáp', lv:108, hp:100000, atk:420, def:160, xp:70000, silver:[4500,6000], speed:92, aggro:9999, range:52, atkCd:1.0,  size:27, color:'#101018', eye:'#ff3a3a', boss:true, elite:true, bossKind:'dgn', bossId:'boss_thienbinh', moves:['vong','vach','xung','goi','cuong','daovung','vogiap'], drop:1, el:'Hỏa', skel:'knight', skelPal:{main:'#d0c8b0',dark:'#8a8068',trim:'#ffe9a8',cloth:'#c04a2a',glow:'#ffb15c'}},
+  boss_tinhhoa:   { name:'Xoáy Lá Nguyền',      lv:72,  hp:40000,  atk:240, def:95,  xp:28000, silver:[2000,2800], speed:88, aggro:9999, range:48, atkCd:1.15, size:26, color:'#2a1218', eye:'#7ec850', boss:true, elite:true, bossKind:'dgn', bossId:'boss_tinhhoa', moves:['vong','xung','daovung','vogiap'], drop:1, el:'Plant', skel:'wraith', skelPal:{main:'#7fbf8f',dark:'#2e4a38',cloth:'#3f6a4e',bone:'#dff0d8',glow:'#7ec850'}, poisonHit:true },
+  boss_dothong:   { name:'Chúa Sói Thảo Nguyên',   lv:92,  hp:68000,  atk:340, def:130, xp:45000, silver:[3200,4200], speed:84, aggro:9999, range:50, atkCd:1.1,  size:27, color:'#1a1410', eye:'#ffd76a', boss:true, elite:true, bossKind:'dgn', bossId:'boss_dothong', moves:['vach','xung','goi','cuong','vogiap'], drop:1, el:'Beast', skel:'hound', skelPal:{main:'#6a6050',dark:'#443c30',trim:'#c8a84a',glow:'#ffd76a',bone:'#e8dcc0'}},
+  boss_thienbinh: { name:'Thống Soái Thiên Giáp', lv:108, hp:100000, atk:420, def:160, xp:70000, silver:[4500,6000], speed:92, aggro:9999, range:52, atkCd:1.0,  size:27, color:'#101018', eye:'#ff3a3a', boss:true, elite:true, bossKind:'dgn', bossId:'boss_thienbinh', moves:['vong','vach','xung','goi','cuong','daovung','vogiap'], drop:1, el:'Reptile', skel:'knight', skelPal:{main:'#d0c8b0',dark:'#8a8068',trim:'#ffe9a8',cloth:'#c04a2a',glow:'#ffb15c'}},
   // Boss Săn (MU Online-style): xuất hiện SAU khi hạ Cổng Vực phó bản — hoạt động phụ, không bắt
   // buộc để thông quan, thưởng Rương (xem DROP_SRC.box1..5 + grantHuntBox()). huntBoss:true → bỏ
   // qua bảng rơi đồ thường theo-kill (m.def.bossKind/boss) vì phần thưởng đã do grantHuntBox() lo.
   // bossKind:'hunt' mượn nguyên não moveset/lãnh địa/né đòn của Boss Vùng-Cổng Vực (telegraph AoE,
   // vòng lãnh địa đỏ nét đứt, tự hồi nếu người chơi bỏ chạy) — không cần xây hệ thống riêng. Size
   // lớn hơn hẳn Cổng Vực thường (24-30) để áng ngữ đúng không gian rộng của phòng phó bản.
-  boss_cotma1:   { name:'Cốt Tướng',  lv:18,  hp:5600,   atk:88,  def:32,  xp:5100,  silver:[550,800],   speed:82, aggro:9999, range:40, atkCd:1.2,  size:32, color:'#d8d0b8', eye:'#7ec850', huntBoss:true, bossKind:'hunt', bossId:'boss_cotma1', moves:['vach','xung','cuong'], drop:0, el:'Thổ', skel:'skeleton', skelPal:{main:'#9aa4b0',dark:'#3a4450',trim:'#6ff0c0',bone:'#e4ecf4',cloth:'#2e4a44',glow:'#6ff0c0'}},
-  boss_cotma2:   { name:'Cốt Tướng',  lv:24,  hp:9600,   atk:120, def:45,  xp:8300,  silver:[800,1100],  speed:82, aggro:9999, range:40, atkCd:1.2,  size:32, color:'#d8d0b8', eye:'#7ec850', huntBoss:true, bossKind:'hunt', bossId:'boss_cotma2', moves:['vach','xung','goi','cuong'], drop:0, el:'Thổ', skel:'skeleton', skelPal:{main:'#9aa4b0',dark:'#3a4450',trim:'#6ff0c0',bone:'#e4ecf4',cloth:'#2e4a44',glow:'#6ff0c0'}},
-  boss_hacnu1:   { name:'Nữ Vu Bóng Tối',   lv:36,  hp:17600,  atk:176, def:64,  xp:14400, silver:[1300,1750], speed:86, aggro:9999, range:44, atkCd:1.15, size:34, color:'#241428', eye:'#c07fe0', huntBoss:true, bossKind:'hunt', bossId:'boss_hacnu1', moves:['vong','goi','cuong'], drop:0, el:'Mộc', poisonHit:true, skel:'wraith', skelPal:{main:'#a88ae0',dark:'#3a2a5a',cloth:'#5a3a86',bone:'#e8dcff',glow:'#c07fe0'}},
-  boss_hacnu2:   { name:'Nữ Vu Bóng Tối',   lv:54,  hp:35200,  atk:272, def:112, xp:25600, silver:[2100,2900], speed:86, aggro:9999, range:44, atkCd:1.15, size:34, color:'#241428', eye:'#c07fe0', huntBoss:true, bossKind:'hunt', bossId:'boss_hacnu2', moves:['vong','vach','goi','cuong'], drop:0, el:'Mộc', poisonHit:true, skel:'wraith', skelPal:{main:'#a88ae0',dark:'#3a2a5a',cloth:'#5a3a86',bone:'#e8dcff',glow:'#c07fe0'}},
-  boss_hoangkim1:{ name:'Tướng Quân Vàng', lv:74,  hp:64000,  atk:384, def:152, xp:44800, silver:[3200,4500], speed:80, aggro:9999, range:48, atkCd:1.15, size:36, color:'#3a2e10', eye:'#ffd76a', huntBoss:true, bossKind:'hunt', bossId:'boss_hoangkim1', moves:['vach','xung','vong'], drop:0, el:'Kim', skel:'knight', skelPal:{main:'#c8a84a',dark:'#8a6a20',trim:'#ffe9a8',cloth:'#6a2a1a',glow:'#ffd76a'}},
-  boss_hoangkim2:{ name:'Tướng Quân Vàng', lv:94,  hp:108800, atk:544, def:208, xp:72000, silver:[5100,6700], speed:80, aggro:9999, range:48, atkCd:1.1,  size:38, color:'#3a2e10', eye:'#ffd76a', huntBoss:true, bossKind:'hunt', bossId:'boss_hoangkim2', moves:['vach','xung','vong','cuong'], drop:0, el:'Kim', skel:'knight', skelPal:{main:'#c8a84a',dark:'#8a6a20',trim:'#ffe9a8',cloth:'#6a2a1a',glow:'#ffd76a'}},
+  boss_cotma1:   { name:'Cốt Tướng',  lv:18,  hp:5600,   atk:88,  def:32,  xp:5100,  silver:[550,800],   speed:82, aggro:9999, range:40, atkCd:1.2,  size:32, color:'#d8d0b8', eye:'#7ec850', huntBoss:true, bossKind:'hunt', bossId:'boss_cotma1', moves:['vach','xung','cuong'], drop:0, el:'Mech', skel:'skeleton', skelPal:{main:'#9aa4b0',dark:'#3a4450',trim:'#6ff0c0',bone:'#e4ecf4',cloth:'#2e4a44',glow:'#6ff0c0'}},
+  boss_cotma2:   { name:'Cốt Tướng',  lv:24,  hp:9600,   atk:120, def:45,  xp:8300,  silver:[800,1100],  speed:82, aggro:9999, range:40, atkCd:1.2,  size:32, color:'#d8d0b8', eye:'#7ec850', huntBoss:true, bossKind:'hunt', bossId:'boss_cotma2', moves:['vach','xung','goi','cuong'], drop:0, el:'Mech', skel:'skeleton', skelPal:{main:'#9aa4b0',dark:'#3a4450',trim:'#6ff0c0',bone:'#e4ecf4',cloth:'#2e4a44',glow:'#6ff0c0'}},
+  boss_hacnu1:   { name:'Nữ Vu Bóng Tối',   lv:36,  hp:17600,  atk:176, def:64,  xp:14400, silver:[1300,1750], speed:86, aggro:9999, range:44, atkCd:1.15, size:34, color:'#241428', eye:'#c07fe0', huntBoss:true, bossKind:'hunt', bossId:'boss_hacnu1', moves:['vong','goi','cuong'], drop:0, el:'Plant', poisonHit:true, skel:'wraith', skelPal:{main:'#a88ae0',dark:'#3a2a5a',cloth:'#5a3a86',bone:'#e8dcff',glow:'#c07fe0'}},
+  boss_hacnu2:   { name:'Nữ Vu Bóng Tối',   lv:54,  hp:35200,  atk:272, def:112, xp:25600, silver:[2100,2900], speed:86, aggro:9999, range:44, atkCd:1.15, size:34, color:'#241428', eye:'#c07fe0', huntBoss:true, bossKind:'hunt', bossId:'boss_hacnu2', moves:['vong','vach','goi','cuong'], drop:0, el:'Plant', poisonHit:true, skel:'wraith', skelPal:{main:'#a88ae0',dark:'#3a2a5a',cloth:'#5a3a86',bone:'#e8dcff',glow:'#c07fe0'}},
+  boss_hoangkim1:{ name:'Tướng Quân Vàng', lv:74,  hp:64000,  atk:384, def:152, xp:44800, silver:[3200,4500], speed:80, aggro:9999, range:48, atkCd:1.15, size:36, color:'#3a2e10', eye:'#ffd76a', huntBoss:true, bossKind:'hunt', bossId:'boss_hoangkim1', moves:['vach','xung','vong'], drop:0, el:'Mech', skel:'knight', skelPal:{main:'#c8a84a',dark:'#8a6a20',trim:'#ffe9a8',cloth:'#6a2a1a',glow:'#ffd76a'}},
+  boss_hoangkim2:{ name:'Tướng Quân Vàng', lv:94,  hp:108800, atk:544, def:208, xp:72000, silver:[5100,6700], speed:80, aggro:9999, range:48, atkCd:1.1,  size:38, color:'#3a2e10', eye:'#ffd76a', huntBoss:true, bossKind:'hunt', bossId:'boss_hoangkim2', moves:['vach','xung','vong','cuong'], drop:0, el:'Mech', skel:'knight', skelPal:{main:'#c8a84a',dark:'#8a6a20',trim:'#ffe9a8',cloth:'#6a2a1a',glow:'#ffd76a'}},
   // ── DRUE — người thứ bảy. Trùm NHIỆM VỤ của chương VIII, đứng dưới Nhát Gọi ở Trũng Nứt.
   //
   // ⚠ Vì sao hắn tồn tại: đo chuỗi 46 nhiệm vụ ra DRUE chỉ được nhắc **2 lần**, cả hai đều là
@@ -28214,8 +31372,8 @@ Object.assign(MOBS, {
   //
   // Art: vẽ bằng khung xương `fiend` như boss_amthan, KHÔNG thêm tệp ảnh nào. Bảng màu riêng và
   // `eye` trắng đục không tròng — đúng dấu của hắn trong manh mối `manh_lenh`.
-  drue:          { name:'DRUE, Người Thứ Bảy', lv:120, hp:260000, atk:820, def:300, xp:190000, silver:[12000,16000], speed:96, aggro:520, range:50, atkCd:0.95, size:46, color:'#0a0a12', eye:'#e8e8f0', boss:true, elite:true, bossId:'drue', moves:['vach','xung','vong','goi','cuong'], drop:1, el:'Kim', skel:'fiend', skelPal:{main:'#2a2a38',dark:'#15151f',trim:'#8e8ea8',bone:'#d8d8e4',glow:'#e8e8f0'}},
-  boss_amthan:   { name:'Ác Thần Bóng Tối',     lv:112, hp:180000, atk:680, def:260, xp:126000,silver:[8000,11000],speed:90, aggro:9999, range:52, atkCd:1.0,  size:44, color:'#0c0810', eye:'#ff2a2a', huntBoss:true, bossKind:'hunt', bossId:'boss_amthan', moves:['vach','xung','vong','goi','cuong'], drop:0, el:'Hỏa', skel:'fiend', skelPal:{main:'#5a2a3a',dark:'#331824',trim:'#ff6a5a',bone:'#e8c0b0',glow:'#ff4a3a'}},
+  drue:          { name:'DRUE, Người Thứ Bảy', lv:120, hp:260000, atk:820, def:300, xp:190000, silver:[12000,16000], speed:96, aggro:520, range:50, atkCd:0.95, size:46, color:'#0a0a12', eye:'#e8e8f0', boss:true, elite:true, bossId:'drue', moves:['vach','xung','vong','goi','cuong'], drop:1, el:'Mech', skel:'fiend', skelPal:{main:'#2a2a38',dark:'#15151f',trim:'#8e8ea8',bone:'#d8d8e4',glow:'#e8e8f0'}},
+  boss_amthan:   { name:'Ác Thần Bóng Tối',     lv:112, hp:180000, atk:680, def:260, xp:126000,silver:[8000,11000],speed:90, aggro:9999, range:52, atkCd:1.0,  size:44, color:'#0c0810', eye:'#ff2a2a', huntBoss:true, bossKind:'hunt', bossId:'boss_amthan', moves:['vach','xung','vong','goi','cuong'], drop:0, el:'Dusk', skel:'fiend', skelPal:{main:'#5a2a3a',dark:'#331824',trim:'#ff6a5a',bone:'#e8c0b0',glow:'#ff4a3a'}},
 });
 // Ảnh boss nạp thủ công — chạy SAU khi MOBS đã có đủ mob boss (MOB_IMGS ở đầu file chỉ
 // load được các mob khai báo trong literal đầu tiên). Boss vẽ khung xương thì bỏ qua,
@@ -28393,6 +31551,333 @@ function updateDeep(){   // không dùng dt: mỗi tầng chỉ chuyển khi S�
   deepNextFloor();
 }
 
+// ═══════════ LÒ KHẮC — mini-game roguelite chọn thẻ ═══════════
+// Đặc tả đầy đủ: docs/DAC_TA_LO_KHAC.md. Nguồn cảm hứng: Wanderburg (Randwerk) — nhưng chỉ
+// nửa "Vampire Survivors" của nó (tự đánh + chồng module). Nửa vật lý xe cộ CỐ Ý không làm:
+// engine này không có vận tốc, di chuyển là click-to-move dời thẳng toạ độ (xem §9 đặc tả).
+//
+// Khác Tầng Sâu ở TRỤC, không chỉ ở con số: Tầng Sâu hỏi "xuống thêm không?" (tham/rút), Lò
+// Khắc hỏi "khắc nếp nào?" (build). Chết ở đây GIỮ phần thưởng đã ăn — đúng để hai mode không
+// đè lên nhau. Trần 3 lượt/ngày giữ cho nó là một sự kiện, không phải bãi cày thứ tám.
+let LK = null; // { dot, the:[id…], dotT, thuong, cho, choN }
+const LK_MAP = 'lokhac';
+// MỘT sảnh mở, không phải ba phòng DGN_ROOMS. Lý do đã ghi ở khối Tầng Sâu: tầm quét AUTO là
+// 430px, ba tâm phòng cách nhau tới 960px ⇒ AUTO neo ở phòng 1 không bao giờ với tới phòng 3.
+const LK_HALL = { cx: 1300, cy: 1000, r: 380 };
+// ⚠ RẢI THEO ĐĨA, KHÔNG THEO HỘP — và đây là một lỗi ĐO ĐƯỢC, không phải cẩn thận thừa.
+// `spawnMob(type, zone)` đặt quái ở `zone.x + rnd(-r, r)`, tức một HỘP: góc hộp cách tâm
+// r·√2 = 1,41 lần bán kính. Ở r=420 thì góc hộp xa tâm 594px, cộng 560px từ điểm thả tới tâm
+// sảnh ⇒ con xa nhất cách người chơi tới 1.154px, gấp 2,7 lần tầm quét 430 của AUTO.
+// Đo được bằng probe chạy thật: **3 trong 7 con của đợt 1 không bao giờ bị đụng tới**, đợt
+// không bao giờ sạch, và cả lượt TREO VĨNH VIỄN — không lỗi nào in ra, không bài kiểm lái
+// -bằng-hàm nào thấy. Nay đĩa bán kính 380 (nén 0,85 theo trục sâu, cùng lối bóng đổ) nên
+// con xa nhất cách tâm đúng 380, dưới tầm 430.
+function lkDatQuai(m, bk){
+  const a = Math.random() * Math.PI * 2, d = Math.sqrt(Math.random()) * bk;
+  m.x = clamp(LK_HALL.cx + Math.cos(a) * d, 380, MAP.w - 380);
+  m.y = clamp(LK_HALL.cy + Math.sin(a) * d * 0.85, 350, MAP.h - 350);
+  if (inObstacle(curMap, m.x, m.y, 16)){ const f = nearestFree(curMap, m.x, m.y); m.x = f.x; m.y = f.y; }
+  m.homeX = m.x; m.homeY = m.y;
+}
+const LK_DOT_TONG = 15;
+const LK_TRUM_MOI = 5;      // đợt 5 · 10 · 15 là đợt trùm
+const LK_LUOT_NGAY = 3;
+const LK_CAP_MIN = 15;
+const LK_TRUMS = ['boss_hacphong', 'boss_mochu', 'boss_thienbinh'];
+const NEP_KHAC = window.NEP_KHAC || [];
+const NEP_MAP = {}; for (const _c of NEP_KHAC) NEP_MAP[_c.id] = _c;
+const LK_BAC_MAU = { 1:'#9aa8d4', 2:'#7ecbff', 3:'#ff9a4d' };
+const LK_BAC_TEN = { 1:'Thường', 2:'Hiếm', 3:'Cổ Vật' };
+const LK_BAC_W   = { 1:70, 2:25, 3:5 };
+
+// ⚠ CỬA ĐỌC DUY NHẤT của cả bộ thẻ. Trả 0 khi LK null — đó là thứ giữ cho khối trong
+// calcDerived() vô hại với 100% thời gian người chơi ở NGOÀI mini-game. Đừng đọc NEP_MAP
+// thẳng ở chỗ khác: hai chỗ cộng là hai chỗ sẽ lệch nhau sau vài đợt sửa.
+function lkCong(khoa){
+  if (!LK) return 0;
+  let s = 0;
+  for (const id of LK.the){ const c = NEP_MAP[id]; if (c && c[khoa]) s += c[khoa]; }
+  return s;
+}
+// Hai lá Cổ Vật đổi sát thương theo THỜI GIAN và theo ĐỢT, nên chúng không thể nằm trong
+// calcDerived() (chỉ chạy khi đổi trang bị). Nhân ở hurtMob, đúng một dòng.
+function lkDmgMul(){
+  if (!LK) return 1;
+  let m = 1;
+  const nong = lkCong('nongLo');
+  if (nong) m *= 1 + Math.min(0.60, nong / 100 * (LK.dotT || 0));
+  const cc = lkCong('chongChat');
+  if (cc) m *= 1 + cc / 100 * Math.max(0, LK.dot - 1);
+  return m;
+}
+let _lkNhat2 = false;   // chặn đệ quy của lá Hai Lưỡi
+let _lkNoXac = false;   // chặn đệ quy dây chuyền của lá Nổ Xác
+
+function lkNgay(){
+  const d = new Date().toDateString();
+  if (!player.lokhac || player.lokhac.day !== d) player.lokhac = { day: d, luot: 0 };
+  return player.lokhac;
+}
+function lkConLuot(){ return Math.max(0, LK_LUOT_NGAY - lkNgay().luot); }
+
+window.lkStart = function(){
+  if (!player || LK || DEEP) return;
+  if (player.level < LK_CAP_MIN){
+    addFloat(player.x, player.y - 50, `Cần cấp ${LK_CAP_MIN} để vào Lò Khắc`, '#ff9a6a', 13); return;
+  }
+  if (lkConLuot() <= 0){
+    addFloat(player.x, player.y - 50, `Hết lượt Lò Khắc hôm nay (${LK_LUOT_NGAY}/ngày)`, '#ff9a6a', 13); return;
+  }
+  lkNgay().luot++;
+  LK = { dot: 0, the: [], dotT: 0, cho: null, choN: 0,
+         thuong: { silver: 0, khi: 0, hap: {} }, batDau: Date.now() };
+  DGN = null; navInvalidate();   // sảnh Lò Khắc gỡ hết tường ngăn ⇒ lưới cũ còn ghi tường
+  travelTo(LK_MAP);
+  lkDotMoi();
+  saveGame();
+};
+
+function lkDotMoi(){
+  if (!LK) return;
+  LK.dot++; LK.dotT = 0;
+  mobs = []; groundLoot = [];
+  const w = LK.dot, lv = player.level;
+  if (w % LK_TRUM_MOI === 0){
+    const key = LK_TRUMS[clamp(Math.floor(w / LK_TRUM_MOI) - 1, 0, LK_TRUMS.length - 1)];
+    const b = spawnMob(key, { x: LK_HALL.cx, y: LK_HALL.cy, r: 30, count: 1 }, null);
+    b.zone = null;
+    b.def = Object.assign({}, b.def, { hp: Math.round(b.def.hp * (1 + w * 0.22)),
+      atk: Math.round(b.def.atk * (1 + w * 0.07)), lkMob: true, drop: 0 });
+    b.hp = b.maxHp = b.def.hp;
+    // Não moveset boss cần bốn field này — spawnMob() không tự khởi tạo, thiếu là NaN và chiêu
+    // không bao giờ tung ra (cùng cái bẫy đã ghi ở spawnHuntBoss).
+    b.x = LK_HALL.cx; b.y = LK_HALL.cy;
+    b.homeX = b.x; b.homeY = b.y; b.moveT = 3; b.punishT = 0; b.introduced = false;
+    zoneBanner = { text: `ĐỢT ${w} — ${b.def.name}`,
+      sub: w >= LK_DOT_TONG ? 'ĐỢT CUỐI. Hạ nó là trọn lượt.' : 'Đợt trùm — hạ nó để được chọn HAI lá',
+      color: '#ff5a4a', t: 4 };
+    AudioSys.sfx('crit', 0.9);
+    lkNeoAuto();
+    // ⚠ AUTO mặc định KHÔNG đánh trùm (`autoCfg.boss` = false), nên để AUTO bật ở đợt trùm là
+    // người chơi đứng im trước một con trùm VÔ THỜI HẠN và không có gì nói cho họ biết vì sao —
+    // đo được bằng probe chạy thật: kẹt ở đợt 5 suốt 24 phút mô phỏng. Tắt và NÓI RA, đúng
+    // khuôn spawnHuntBoss() đã dùng cho Trùm Săn của phó bản.
+    if (player.auto){
+      player.auto = false; updateAutoBtn();
+      addFloat(player.x, player.y - 70, 'Đợt trùm cần tự tay chiến — TỰ ĐÁNH đã tắt!', '#ff9a5a', 13);
+    }
+    return;
+  }
+  // ⚠ CHỈ LẤY LOÀI TỪ CẤP NGƯỜI CHƠI TRỞ XUỐNG. Tầng Sâu lọc `|lv − cấp| ≤ 22` vì nó có 20
+  // tầng để leo dần; ở đây lọc hai chiều nghĩa là ngay ĐỢT 1 người chơi cấp 40 đã có thể gặp
+  // loài cấp 62. Độ khó phải đến từ SỐ ĐỢT, không từ việc bốc trúng loài trên cấp.
+  const pool = DEEP_MOBS.filter(k => MOBS[k] && (MOBS[k].lv || 1) <= lv && (MOBS[k].lv || 1) >= lv - 26);
+  const use = pool.length ? pool : [DEEP_MOBS[0]];
+  const n = Math.min(18, 4 + w);
+  for (let i = 0; i < n; i++){
+    const m = spawnMob(use[Math.floor(Math.random() * use.length)],
+                       { x: LK_HALL.cx, y: LK_HALL.cy, r: LK_HALL.r, count: n }, null);
+    m.zone = null;
+    m.def = Object.assign({}, m.def, { hp: Math.round(m.def.hp * (1 + w * 0.14)),
+      atk: Math.round(m.def.atk * (1 + w * 0.07)), lkMob: true, drop: 0 });
+    m.hp = m.maxHp = m.def.hp;
+    lkDatQuai(m, LK_HALL.r);
+  }
+  zoneBanner = { text: `ĐỢT ${w}/${LK_DOT_TONG}`,
+    sub: `${n} quái · máu ×${(1 + w * 0.14).toFixed(1)} — dọn sạch để khắc một nếp mới`,
+    color: '#ff9a4d', t: 3 };
+  lkNeoAuto();
+}
+// ⚠ ĐẶT VÔ ĐIỀU KIỆN, đừng gác sau `if (player.auto)`. Người chơi bật AUTO SAU khi đã vào lò
+// thì neo còn null, AUTO tự neo tại chỗ đứng — mà chỗ đứng là điểm thả, cách tâm sảnh 560px.
+// Neo là vô nghĩa khi AUTO tắt và travelTo() xoá nó lúc rời map, nên đặt sẵn không tốn gì.
+function lkNeoAuto(){
+  if (!player) return;
+  player._autoAX = LK_HALL.cx; player._autoAY = LK_HALL.cy;
+  player._autoPack = null; player._autoZoneLocked = false; player._autoEmptyT = 0;
+}
+
+function lkThuongDot(){
+  const w = LK.dot, T = LK.thuong;
+  const sv = Math.round(80 * w * (1 + player.level / 40)), kh = 25 * w;
+  T.silver += sv; T.khi += kh;
+  // Đợt trùm trả thêm một Box Kundun, tầng theo cấp NGƯỜI CHƠI (shopBaoHapTier) — không theo
+  // đợt: tính theo đợt thì người chơi cấp 120 nhận hạp tầng I ở đợt 5.
+  // Tầng hạp LEO THEO ĐỢT rồi mới kẹp bởi cấp người chơi — cùng hình dạng Tầng Sâu đã dùng
+  // (tầng 5·10·15·20 cho hạp bậc 1·2·3·4). Lấy thẳng `shopBaoHapTier()` thì một lượt trả BA
+  // hạp bậc cao nhất game, ×3 lượt/ngày = 9 hạp đỉnh mỗi ngày — đo được ở cấp 80 là 3× bậc VII.
+  if (w % LK_TRUM_MOI === 0){
+    const t = Math.max(1, Math.min(shopBaoHapTier(), Math.floor(w / LK_TRUM_MOI) + 2));
+    T.hap[t] = (T.hap[t] || 0) + 1;
+  }
+  addFloat(player.x, player.y - 70, `Đợt ${w} sạch — +${sv.toLocaleString('vi-VN')}◈ · +${kh} Bản Năng`, '#ffd76a', 15);
+  AudioSys.sfx('coin', 0.7);
+}
+
+// Bày BA lá không trùng nhau. Lá đã chạm trần `lap` bị loại khỏi kho trước khi bốc, nên không
+// bao giờ bày ra một lá bấm vào không có tác dụng gì.
+function lkBayThe(){
+  if (!LK) return;
+  const tranBac = LK.dot >= 8 ? 3 : LK.dot >= 4 ? 2 : 1;
+  const dem = {}; for (const id of LK.the) dem[id] = (dem[id] || 0) + 1;
+  const con = NEP_KHAC.filter(c => c.bac <= tranBac && (dem[c.id] || 0) < c.lap);
+  const bay = [];
+  while (bay.length < 3 && con.length){
+    let tong = 0; for (const c of con) tong += (LK_BAC_W[c.bac] || 1);
+    let r = Math.random() * tong, pick = con[con.length - 1];
+    for (const c of con){ r -= (LK_BAC_W[c.bac] || 1); if (r <= 0){ pick = c; break; } }
+    bay.push(pick); con.splice(con.indexOf(pick), 1);
+  }
+  if (!bay.length){ LK.cho = null; LK.choN = 0; lkDotMoi(); return; }   // kho cạn — đi tiếp, đừng treo
+  LK.cho = bay.map(c => c.id);
+  const inner = lopPhuMo(true);   // khoá: phải chọn mới đi tiếp
+  if (!inner) return;
+  inner.innerHTML = `
+    <h2 style="letter-spacing:2px">◆ KHẮC MỘT NẾP</h2>
+    <p style="margin-bottom:10px"><b style="color:#ffd76a">Đợt ${LK.dot}/${LK_DOT_TONG}</b> đã sạch.<br>
+    <span>Chọn một lá Nếp Khắc — nếp chồng lên nhau và tan khi rời lò.</span>
+    ${LK.choN > 1 ? `<br><span style="color:#ff9a4d">Đợt trùm — còn ${LK.choN} lượt chọn.</span>` : ''}</p>
+    <div style="display:flex;gap:12px;justify-content:center;flex-wrap:wrap">
+      ${bay.map(c => `
+        <button class="choice-card" style="max-width:220px;font-size:13px;line-height:1.6;text-align:left"
+                onclick="window.lkChonThe('${c.id}')">
+          <span style="font-size:10px;letter-spacing:1px;color:${LK_BAC_MAU[c.bac]}">${LK_BAC_TEN[c.bac]}</span><br>
+          <b style="font-size:15px;color:${LK_BAC_MAU[c.bac]}">${c.ten}</b><br>
+          <span style="font-weight:400;opacity:.9">${c.mo}</span>
+          ${c.lap > 1 ? `<br><span style="font-size:10px;opacity:.6">chồng tối đa ${c.lap}</span>` : ''}
+        </button>`).join('')}
+    </div>`;
+}
+
+window.lkChonThe = function(id){
+  if (!LK || !LK.cho || LK.cho.indexOf(id) < 0) return;
+  const c = NEP_MAP[id]; if (!c) return;
+  LK.the.push(id);
+  LK.cho = null;
+  lopPhuDong(true);
+  addFloat(player.x, player.y - 58, `◆ Nếp Khắc — ${c.ten}!`, LK_BAC_MAU[c.bac], 14);
+  addEffect({ type:'ring', x: player.x, y: player.y, r: 80, color: LK_BAC_MAU[c.bac] });
+  AudioSys.sfx('levelup', 0.6);
+  calcDerived();   // thẻ đi qua calcDerived, không có bảng chỉ số thứ hai
+  LK.choN--;
+  if (LK.choN > 0){ lkBayThe(); return; }
+  lkDotMoi();
+};
+
+function lkTick(dt){
+  if (!LK || dead) return;
+  if (LK.cho) return;            // đang mở bảng chọn thẻ — đóng băng nhịp đợt
+  LK.dotT += dt;                 // lá Lò Chưa Nguội đọc số này
+  if (mobs.some(m => !m.dead)) return;
+  lkThuongDot();
+  // ⚠ NHỊP HỒI NỀN 25% GIỮA HAI ĐỢT — không phải quà, là thứ làm mode này chạy được.
+  // Không có nó thì 15 đợt liên tiếp là một trận tiêu hao mà người chơi CHẮC CHẮN thua: đo được
+  // nhân vật cấp 40/60/90 trang bị đúng cấp đều gục ở đợt 4, tức 11/15 nội dung không ai thấy.
+  // Lá `nep_vua` nâng nó lên hồi ĐẦY — nên lá đó vẫn đáng một ô Cổ Vật.
+  if (lkCong('hoiDot')){
+    player.hp = player.maxHp; player.qi = player.maxQi;
+    addFloat(player.x, player.y - 86, '◆ Nếp Vừa — hồi đầy', '#6ae88a', 13);
+  } else {
+    player.hp = Math.min(player.maxHp, player.hp + player.maxHp * 0.25);
+    player.qi = Math.min(player.maxQi, player.qi + player.maxQi * 0.25);
+  }
+  if (LK.dot >= LK_DOT_TONG){ lkXong(true); return; }
+  LK.choN = (LK.dot % LK_TRUM_MOI === 0) ? 2 : 1;
+  lkBayThe();
+}
+
+// Trao thưởng + dọn lượt. `dest` là map về; để trống thì về thành.
+function lkXong(win, dest){
+  if (!LK) return;
+  const T = LK.thuong, dot = LK.dot;
+  if (win) T.silver = Math.round(T.silver * 1.5);
+  player.silver += T.silver;
+  player.khi = (player.khi || 0) + T.khi;
+  if (!player.baohap) player.baohap = {};
+  for (const t in T.hap) player.baohap[t] = (player.baohap[t] || 0) + T.hap[t];
+  const hapTxt = Object.keys(T.hap).map(t => `${T.hap[t]}× ${BAOHAP_TIERS[t].name}`).join(' · ');
+  // ⚠ ĐÓNG BẢNG CHỌN THẺ TRƯỚC KHI DỌN `LK`. Bảng ấy mở bằng `lopPhuMo(true)` — lớp phủ KHOÁ,
+  // chỉ `lopPhuDong(true)` tắt được. Mà phím G vẫn ăn khi lớp phủ đang mở, nên đứng ở cổng bấm
+  // G đúng lúc bảng vừa bày ra là: lượt kết thúc, `LK` thành null, `lkChonThe` thoát sớm ở mọi
+  // nút — và người chơi ngồi sau một lớp phủ phủ kín màn hình với ba cái nút đã chết.
+  if (LK.cho) lopPhuDong(true);
+  LK = null;                      // đặt TRƯỚC travelTo: travelTo bail sớm khi LK còn sống
+  if (win){ chiVe(1, 'trọn Lò Khắc', 'gk'); themShard(3, 'trọn Lò Khắc'); }
+  AudioSys.sfx('levelup', 1);
+  calcDerived(); saveGame();
+  travelTo(dest || 'ardhaven');
+  // ⚠ BANNER ĐẶT SAU `travelTo`, KHÔNG TRƯỚC. travelTo() tự ghi đè `zoneBanner` bằng banner
+  // tên vùng nó vừa tới, nên đặt trước là bảng tổng kết bị nuốt trọn — đo được bằng probe:
+  // thứ hiện ra cuối lượt là đoạn mô tả Sapidae Chiefdom, không một chữ nào về phần thưởng.
+  // Trao thưởng và HIỆN thưởng là hai việc; sửa một cái mà quên cái kia thì không lỗi nào báo.
+  zoneBanner = { text: win ? '◆ TRỌN LÒ KHẮC' : `◆ RỜI LÒ Ở ĐỢT ${dot}`,
+    sub: `+${T.silver.toLocaleString('vi-VN')}◈ Lumen · +${T.khi} Bản Năng${hapTxt ? ' · ' + hapTxt : ''}${win ? ' · +1 ✦ Ấn Giao Kết · +3 ♦ Shard' : ''}`,
+    color: win ? '#ffd76a' : '#ff9a4d', t: 7 };
+}
+// Rời lò bằng BẤT KỲ đường nào (cổng G · nút Rời Lò · dịch chuyển từ bảng Bản Đồ). Đây chính
+// là cái bẫy DEEP đã dẫm: chỉ updateGate() có chốt, nên teleport ra ngoài để DEEP sống và quái
+// Tầng Sâu sinh ra giữa thành. Cửa duy nhất là travelTo() — xem chốt ở đầu hàm đó.
+window.lkRoi = function(dest){ if (LK) lkXong(false, dest); };
+
+// Chết trong lò: GIỮ phần thưởng đã ăn. Khác hẳn Tầng Sâu, và đó là chủ ý — hai mode phải hỏi
+// hai câu khác nhau, nếu không thì mode thứ hai chỉ là mode thứ nhất đổi tên.
+function lkOnDeath(){
+  if (!LK) return;
+  if (LK.cho) lopPhuDong(true);   // cùng lý do với lkXong — xem chú thích ở đó
+  const T = LK.thuong, dot = LK.dot;
+  player.silver += T.silver;
+  player.khi = (player.khi || 0) + T.khi;
+  if (!player.baohap) player.baohap = {};
+  for (const t in T.hap) player.baohap[t] = (player.baohap[t] || 0) + T.hap[t];
+  LK = null;
+  mobs = []; groundLoot = [];   // respawn() giữ nguyên map cho md.dungeon — đừng để nguyên bầy
+  zoneBanner = { text: `☠ GỤC Ở ĐỢT ${dot}`,
+    sub: `Nếp Khắc tan hết, nhưng phần thưởng đã ăn thì giữ: +${T.silver.toLocaleString('vi-VN')}◈ · +${T.khi} Bản Năng.`,
+    color: '#ff5a4a', t: 6 };
+}
+
+// Lá Nổ Xác + Thu Hồn. Gọi TRƯỚC nhánh thoát sớm `lkMob` trong killMob.
+function lkOnKill(m){
+  if (!LK) return;
+  const nx = lkCong('noXac');
+  if (nx > 0 && !_lkNoXac){
+    _lkNoXac = true;
+    try {
+      const R = 120, d = Math.max(1, Math.round(m.maxHp * nx / 100));
+      addEffect({ type:'ring', x: m.x, y: m.y, r: R, color:'#ff9a4d', big: true });
+      // aoeHit: nổ diện rộng KHÔNG được hất lùi — nó tự phá tan đội hình cho chính nó.
+      aoeHit(() => { for (const o of mobs) if (!o.dead && o !== m && dist(o.x, o.y, m.x, m.y) < R) hurtMob(o, d, 'tp'); });
+    } finally { _lkNoXac = false; }
+  }
+  const hq = lkCong('honQi');
+  if (hq > 0 && player.qi < player.maxQi) player.qi = Math.min(player.maxQi, player.qi + player.maxQi * hq / 100);
+}
+
+function drawLoKhacHUD(){
+  if (!LK || !player) return;
+  ctx.textAlign = 'center';
+  ctx.font = 'bold 13px "Be Vietnam Pro", sans-serif';
+  ctx.strokeStyle = 'rgba(0,0,0,.7)'; ctx.lineWidth = 3;
+  const con = mobs.filter(m => !m.dead).length;
+  const t1 = `LÒ KHẮC · Đợt ${LK.dot}/${LK_DOT_TONG} · còn ${con} quái · ${LK.the.length} nếp`;
+  ctx.fillStyle = '#ff9a4d'; ctx.strokeText(t1, W/2, 46); ctx.fillText(t1, W/2, 46);
+  const T = LK.thuong;
+  const t2 = `Kho: ${T.silver.toLocaleString('vi-VN')}◈ · ${T.khi} Bản Năng — chết vẫn giữ`;
+  ctx.font = '11.5px "Be Vietnam Pro", sans-serif'; ctx.fillStyle = '#ffd76a';
+  ctx.strokeText(t2, W/2, 63); ctx.fillText(t2, W/2, 63);
+  // Danh sách nếp đang cầm, gom theo lá — 15 đợt có thể chồng tới 16 lá, in rời là tràn màn hình.
+  if (LK.the.length){
+    const dem = {}; for (const id of LK.the) dem[id] = (dem[id] || 0) + 1;
+    // Tiền tố `Nếp: ` không phải trang trí — nó là thứ neo cho lớp dịch. Một chuỗi tên thẻ nối
+    // bằng ` · ` thì không quy tắc nào bắt được mà không đồng thời nuốt nửa số chữ khác trong
+    // game; có tiền tố thì lang.js bắt đúng dòng này rồi dịch từng tên một.
+    const txt = 'Nếp: ' + Object.keys(dem).map(id => `${NEP_MAP[id].ten}${dem[id] > 1 ? '×' + dem[id] : ''}`).join(' · ');
+    ctx.font = '11px "Be Vietnam Pro", sans-serif'; ctx.fillStyle = '#c9c6b4';
+    ctx.strokeText(txt, W/2, 80); ctx.fillText(txt, W/2, 80);
+  }
+  ctx.textAlign = 'left';
+}
+
 // Engine phó bản: DGN = trạng thái lượt chạy hiện tại
 let DGN = null; // { id, def, wave, bossRef, cleared }
 function startDungeonRun(mapId){
@@ -28469,7 +31954,7 @@ function updateDungeon(dt){
     chiVe(1, 'thông quan phó bản', 'cx');
     // ── ~~Cốt Chimera mỗi lượt thông quan~~ — gỡ cùng hệ Cốt. Phòng vẫn trả Ấn Cổ Xưa,
     //    Tu La và rương cuối phòng; không cần bù thêm một dòng nữa.
-    if (tl > 0) player.gems.tuLa += tl;
+    if (tl > 0) player.silver += tl * GO_TULA;   // Tu La đã gỡ — trả bằng Lumen đúng giá tiệm cũ
     if (hn > 0) player.gems.honNguyen += hn;
     zoneBanner = { text:'PHÓ BẢN THÔNG QUAN!',
       sub:`+${td} 📜 Sách Kỹ Năng · +${r.khi} Bản Năng · +${(sv + r.bacThem*2).toLocaleString('vi-VN')}◈ Lumen`,
@@ -28699,6 +32184,7 @@ const HD_BANG = [
     ['M',   'help.k.map'],
     ['Q',   'help.k.quest'],
     ['U',   'help.k.minimap'],
+    ['L',   'help.k.amthanh'],
     ['P',   'help.k.party'],
     ['H',   'help.k.friend'],
     ['O',   'help.k.settings'],
@@ -28752,12 +32238,16 @@ function hdNoiDung(){
 //
 // Ba ô đếm tiền ở đầu bảng lấy đúng khuôn hàng WCoinC/WCoinP/GoblintP trong ảnh — và ba loại
 // tiền ở đây đã có sẵn, không bịa thêm cái nào.
+// `anh` là TRANH THẬT cắt từ bộ UI gothic; `mat` giữ lại làm nấc lui khi tệp chưa có.
+// ⚠ Đừng bỏ `mat` đi: `sysMat()` dựa vào nó để một nút mới thêm vẫn hiện được cái gì đó trong
+// lúc chờ art, thay vì hiện ra một ô trống — đúng nếp "ô chờ art" của Quy tắc số 3.
 const SYS_NUT = [
-  { mat:'⚙',  ten:'Cài Đặt',         phim:'O',  lam:"togglePanel('settings')" },
-  { mat:'⏱', ten:'Sự Kiện',          phim:'',   lam:"openEventBoard()" },
-  { mat:'◈',  ten:'Ngân Hàng Ngọc',  phim:'N',  lam:"togglePanel('ngocbank')" },
-  { mat:'✋', ten:'Lệnh Nhặt',        phim:'',   lam:"togglePanel('nhat')" },
+  { anh:'gt_ic_caidat', mat:'⚙',  ten:'Cài Đặt',         phim:'O',  lam:"togglePanel('settings')" },
+  { anh:'gt_ic_laban',  mat:'⏱', ten:'Sự Kiện',          phim:'',   lam:"openEventBoard()" },
+  { anh:'gt_ic_ruong',  mat:'◈',  ten:'Ngân Hàng Ngọc',  phim:'N',  lam:"togglePanel('ngocbank')" },
+  { anh:'gt_ic_tui',    mat:'✋', ten:'Lệnh Nhặt',        phim:'',   lam:"togglePanel('nhat')" },
 ];
+const sysMat = n => n.anh ? `<img src="assets/ui/${n.anh}.webp" alt="">` : n.mat;
 function renderHelpPanel(){
   const p = el('panel-help'); if (!p) return;
   const vi = [
@@ -28766,10 +32256,14 @@ function renderHelpPanel(){
     ['♦', 'Shard',        (player && player.shard) || 0,                          '#7ecbff'],
   ];
   let h = moBang({ tieu:'Menu Hệ Thống', mat:'≡' });
+  // Ba loại tiền ở đây phải dùng ĐÚNG icon của ví trên HUD. Để hai nơi vẽ hai kiểu là người
+  // chơi phải học hai lần cho một thứ — cùng bài học đã ghi cho `NGOC_ANH` / `JEWEL_COLORS`.
+  const VI_ANH = { '◈':'gt_xu_vang', '✦':'gt_xu_bac', '♦':'gt_ngoc_lam' };
   h += `<div class="sys-vi">${vi.map(([g, ten, so, mau]) =>
-      `<span><i style="color:${mau}">${g}</i> ${ten}: <b style="color:${mau}">${so.toLocaleString('vi-VN')}</b></span>`).join('')}</div>`;
+      `<span>${VI_ANH[g] ? `<img class="vi-ic" src="assets/ui/${VI_ANH[g]}.webp" alt="">`
+                         : `<i style="color:${mau}">${g}</i>`} ${ten}: <b style="color:${mau}">${so.toLocaleString('vi-VN')}</b></span>`).join('')}</div>`;
   h += `<div class="sys-luoi">${SYS_NUT.map(n =>
-      `<button class="sys-nut" onclick="${n.lam}"><i>${n.mat}</i><span>${n.ten}</span>${
+      `<button class="sys-nut" onclick="${n.lam}"><i>${sysMat(n)}</i><span>${n.ten}</span>${
         n.phim ? `<kbd>${n.phim}</kbd>` : ''}</button>`).join('')}</div>`;
   p.innerHTML = h;
 }
@@ -28811,14 +32305,44 @@ const DAILY_META = {
 };
 // Bảy dải, cùng mốc với TRUYNA_BANDS. `thuong` nhân vào phần thưởng ngày — cày 50 con ở cấp 100
 // mà vẫn lấy đúng 300 Lumen như hồi cấp 5 thì mục tiêu ngày là một cái bẫy thời gian.
+// ⚠⚠ Ô `kills` CŨ LÀ 30-90 GIÂY Ở MỌI DẢI — đo được, và đó là cả tầng nội dung NGÀY.
+// Nhịp hạ quái thật (AUTO, 60 giây trong game, đo bằng chính vòng `update`):
+//     cấp 5 → **14** mạng/phút · cấp 11 → **24** · cấp 20 → **37** · cấp 30 → **39**
+// ⇒ `kills:10` ở dải 1 tốn **25-43 giây**; `kills:15` ở dải 2 tốn **24 giây**. Người chơi mới
+// đóng xong toàn bộ tầng NGÀY trong 2 phút rồi không còn gì của hôm đó để làm.
+// Nay đặt ô `kills` theo mốc **~3 phút cày** ở nhịp của chính dải ấy.
+//
+// ⚠ TRÊN CẤP 30 LÀ GIẢ ĐỊNH, KHÔNG PHẢI SỐ ĐO — nói thẳng ra chứ không giấu. Nhịp đo được
+// phẳng lại ở ~39 mạng/phút từ cấp 20→30, nên bốn dải cuối lấy đúng cái mốc phẳng đó. Đo lại
+// được thì chỉnh; `tools/do_nhipcap.cjs` hiện KHÔNG chạy được từ cấp 60 trở lên (xem mục nhịp cấp).
+//
+// ⚠⚠ CHỈ NÂNG SỐ LƯỢNG, ĐỪNG THÊM Ô VÀO DẢI 1 — tôi đã làm sai đúng chỗ này và
+// `test_earlygame` bắt được. Bản đầu tôi cho dải 1 thành `{kills:45, forge:1}` cho "đỡ trống",
+// và thế là dải 1 (2 ô) BẰNG dải 2 (2 ô) — phá đúng cái tính chất mà bảng này sinh ra để có:
+// **số ô lớn dần theo cấp** (cấp 1 < cấp 12 < cấp 120). Bài kiểm cũ chốt `daily1 === ['kills']`
+// nhìn thì giống một hằng số chép cứng, nhưng nó đang gác một thiết kế thật — tôi đọc nhầm nó
+// thành lời nói dối rồi suýt sửa bài kiểm cho vừa ý mình.
+// ⇒ Hình dạng thang giữ nguyên (1 · 2 · 3 · 4 · 5 · 5 · 5 ô); CHỈ con số `kills` đổi.
+//
+// ⚠ VÀ TUYỆT ĐỐI KHÔNG THÊM `via` VÀO DẢI 1 — đây là một phép đo, không phải một
+// linh cảm. `viaHomNay()` bốc ba vùng trong bảy vùng có Dòng; đo một ngày thật ra
+// `trungnut · chungnam · caungam`, giao với map mà nhân vật cấp ≤11 tới được
+// (`ardhaven · ngoai · corran · pvp`) là **RỖNG**. Mà thưởng ngày đòi xong HẾT ⇒ một ô bất khả
+// là khoá câm cả phần thưởng, không lỗi nào báo. Đúng bài học "CỬA CƠ CHẾ MỞ Ở CẤP NÀO": hỏi
+// *đếm được không* rồi phải hỏi tiếp *ai cũng làm được không*.
+//
+// ⚠ NỢ ĐÃ BIẾT, ghi ra chứ không lặng: `via` ở dải 4 (cấp 40-59) vẫn có cửa hẹp rơi vào đúng
+// cái bẫy trên — người chơi cấp 40-59 tới được 4/7 vùng có Dòng, nên ~3% số ngày cả ba vỉa nằm
+// ngoài tầm. Đây là lỗi CÓ SẴN, không phải của đợt này; chữa đúng là cho `dailyReset` bốc mục
+// tiêu theo cấp người chơi, và đó là một đợt riêng.
 const DAILY_BANDS = [
-  { max:11,  muc:{ kills:10 },                                          thuong:1 },
-  { max:24,  muc:{ kills:15, forge:1 },                                 thuong:1.5 },
-  { max:39,  muc:{ kills:20, forge:1, dungeon:1 },                      thuong:2.5 },
-  { max:59,  muc:{ kills:30, forge:1, dungeon:1, via:1 },               thuong:4 },
-  { max:79,  muc:{ kills:40, forge:2, dungeon:1, via:1, truyna:1 },     thuong:6 },
-  { max:99,  muc:{ kills:50, forge:2, dungeon:2, via:2, truyna:1 },     thuong:9 },
-  { max:999, muc:{ kills:60, forge:3, dungeon:2, via:2, truyna:1 },     thuong:13 },
+  { max:11,  muc:{ kills:60 },                                          thuong:1 },
+  { max:24,  muc:{ kills:90,  forge:1 },                                thuong:1.5 },
+  { max:39,  muc:{ kills:110, forge:1, dungeon:1 },                     thuong:2.5 },
+  { max:59,  muc:{ kills:120, forge:1, dungeon:1, via:1 },              thuong:4 },
+  { max:79,  muc:{ kills:130, forge:2, dungeon:1, via:1, truyna:1 },    thuong:6 },
+  { max:99,  muc:{ kills:140, forge:2, dungeon:2, via:2, truyna:1 },    thuong:9 },
+  { max:999, muc:{ kills:150, forge:3, dungeon:2, via:2, truyna:1 },    thuong:13 },
 ];
 function dailyBand(){
   const lv = lvPeak();
@@ -29109,19 +32633,27 @@ window.useJewel = function(kind, uid){
     addFloat(player.x, player.y-40, `◎ +${it.plus} (Chúc Phúc)`, '#7ec850', 14);
     AudioSys.sfx('forge_ok', 0.9);
   } else if (kind === 'linhHon'){
-    if (J.linhHon < 1 || it.noForge || it.plus >= 11) return;
+    // ⚠ TRẦN ĐỌC TỪ `NGOC_EP`, KHÔNG CHÉP CỨNG. Đường này trước đây chép cứng `>= 11`, tức
+    // Linh Hồn một mình lên tới +11 — ăn đứt Phá Thiên Kiếp ở cả hai mốc cuối. Lần hạ trần
+    // trước chỉ sửa `NGOC_EP` nên chỗ này sót lại, vì nó KHÔNG đi qua `ngocEpDuoc()`.
+    if (J.linhHon < 1 || it.noForge || it.plus >= NGOC_EP.linhHon.tran) return;
     J.linhHon--;
     if (Math.random() < 0.5){
       it.plus++;
       say(`◉ Linh Hồn — ${it.name} lên +${it.plus}!`, '#8fd18f');
       addFloat(player.x, player.y-40, `◉ +${it.plus} (Linh Hồn)`, '#b08ae8', 14);
-      if (it.plus === 10) addFloat(player.x, player.y-58, `☆ Thức tỉnh: ${it.awakened.name}`, '#f39c3d', 13);
-      if (it.plus === 11){ player.forged11 = true; addFloat(player.x, player.y-76, '☀ KHAI QUANG +11 — Sấm Thép Bừng Sáng!', '#ffd76a', 16); }
+      // Hai nhánh +10/+11 dưới đây KHÔNG còn với tới được (trần ngọc là +9) — giữ lại thì
+      // người sau đọc tưởng ngọc vẫn lên được mốc đó. Thay bằng một dòng chỉ đường.
+      if (it.plus === NGOC_EP.linhHon.tran)
+        addFloat(player.x, player.y-58, '◉ Hết đường ngọc — lên +10 phải tới Lò Rèn Hoàng Gia', '#ffb15c', 13);
       AudioSys.sfx('forge_ok', 0.9);
     } else {
-      it.plus = Math.max(0, it.plus - 1);
-      say(`✘ Linh Hồn thất bại — ${it.name} tụt còn +${it.plus}`, '#ff7a6a');
-      addFloat(player.x, player.y-40, `◉ Xịt — tụt còn +${it.plus}`, '#ff7a6a', 13);
+      const _truoc = it.plus;
+      it.plus = ngocXit('linhHon', _truoc);          // cùng cửa với epNgoc — xem ngocXit()
+      const _veKhong = it.plus === 0 && _truoc > 1;
+      say(_veKhong ? `✘ Linh Hồn thất bại — ${it.name} VỀ +0`
+                   : `✘ Linh Hồn thất bại — ${it.name} tụt còn +${it.plus}`, '#ff7a6a');
+      addFloat(player.x, player.y-40, _veKhong ? '◉ Xịt — VỀ +0' : `◉ Xịt — tụt còn +${it.plus}`, '#ff7a6a', 13);
       AudioSys.sfx('forge_fail', 0.85);
     }
   } else if (kind === 'sinhMenh'){
@@ -29384,7 +32916,7 @@ function spawnMaTonMob(){
   const lv = Math.min(110, md.min + 12);
   const def = { name:'Hung Thần · Hỗn Độn', lv, hp: 5000 + lv*lv*7, atk: 10 + Math.round(lv*3), def: Math.round(lv*0.8),
     xp: lv*150, silver:[lv*8, lv*12], speed: 70, aggro: 9999, range: 46, atkCd: 1.3, size: 30,
-    color:'#2a0a24', eye:'#ff3a6a', boss:true, elite:true, drop:1, el:'Hỏa', img:'assets/mobs/boss.png' };
+    color:'#2a0a24', eye:'#ff3a6a', boss:true, elite:true, drop:1, el:'Beast', img:'assets/mobs/boss.png' };
   const m = { type:'maton', def, name: def.name,
     x: MAP.w*0.55, y: MAP.h*0.42, zone: null, pack: null,
     hp: mobHp(def), maxHp: mobHp(def), atkT: rnd(0,1), dead: false, face: 0,
@@ -29569,7 +33101,7 @@ function spawnRiftBoss(){
   const lv = clamp(Math.max(md.min + 10, player.level + 6), RIFT_MIN_LV, 120);
   const def = { name:'Chúa Tể Vực Nứt', lv, hp: 9000 + lv*lv*11, atk: 14 + Math.round(lv*3.4), def: Math.round(lv*1.0),
     xp: lv*260, silver:[lv*14, lv*20], speed: 74, aggro: 420, range: 50, atkCd: 1.25, size: 34,
-    color:'#1a0a2e', eye:'#c07fe0', boss:true, elite:true, drop:1, el:'Thủy',
+    color:'#1a0a2e', eye:'#c07fe0', boss:true, elite:true, drop:1, el:'Mech',
     // Dựng bằng khung xương 'fiend' thay vì boss.png: Hung Thần và boss vùng đã dùng chung ảnh
     // đó rồi — boss thế giới lớn nhất mà đụng hàng thì mất hết cảm giác "thứ này khác hẳn".
     skel:'fiend', skelPal:{ main:'#4a2a6e', dark:'#1a0a2e', trim:'#a06aff', cloth:'#2e1450',
@@ -29827,7 +33359,7 @@ function spawnTruyNaMob(){
   const lv = player.level;
   const def = { name:'⚖ ' + band.name, lv, hp: Math.round(1200 + lv*lv*3.5), atk: Math.round(8 + lv*2.1), def: Math.round(lv*0.7),
     xp: lv*120, silver:[lv*6, lv*9], speed: 74, aggro: 220, range: 40, atkCd: 1.2, size: 24,
-    color:'#3a2a10', eye:'#ffd76a', boss:true, elite:true, drop:1, el:'Thổ', img:'assets/mobs/boss.png' };
+    color:'#3a2a10', eye:'#ffd76a', boss:true, elite:true, drop:1, el:'Dusk', img:'assets/mobs/boss.png' };
   const m = { type:'truyna', def, name: def.name,
     x: rnd(300, MAP.w-300), y: rnd(300, MAP.h-300), zone: null, pack: null,
     hp: mobHp(def), maxHp: mobHp(def), atkT: rnd(0,1), dead: false, face: 0,
@@ -29945,7 +33477,7 @@ function renderVanDuyen(){
     <b style="color:#e84a6a">5%</b> — Cổ thư hiếm: Mảnh Cổ Thư · Huyết Ma Thôn Phệ (đã thành tựu → ● Hỗn Độn Châu)<br>
     <b style="color:#b08ae8">15%</b> — Tứ Châu ngẫu nhiên (Chúc Phúc / Linh Hồn / Sinh Mệnh / Hỗn Độn)<br>
     <b style="color:#5aa0e8">25%</b> — Trang bị theo cấp (phẩm Lam trở lên)<br>
-    <b style="color:#7ec850">30%</b> — Vật liệu rèn (Tu La / Hỗn Nguyên) hoặc Sách Kỹ Năng<br>
+    <b style="color:#7ec850">30%</b> — Vật liệu rèn (Hỗn Nguyên) hoặc Sách Kỹ Năng<br>
     <b style="color:#9aa8d4">25%</b> — Lumen</div>`;
   html += `<div class="forge-actions"><button class="mini-btn" style="font-size:13px;padding:8px 22px" ${player.silver >= GO_CONGHUAN ? '' : 'disabled'} onclick="rollVanDuyen()">◑ Quay Vận May — ${GO_CONGHUAN.toLocaleString('vi-VN')}◈</button></div>
     <div id="vd-result" style="min-height:20px;font-size:12.5px;line-height:1.8;margin-top:6px"></div>`;
@@ -29977,7 +33509,7 @@ window.rollVanDuyen = function(){
     else { player.silver += 600; out.push('Túi đầy — trang bị quy đổi 600◈'); }
   } else if (key === 'vatlieu'){
     const jr = Math.random()*100;
-    if (jr < 30){ const n2 = 2 + Math.floor(Math.random()*3); player.gems.tuLa += n2; out.push(`◆ Tu La Tinh Thạch ×${n2}`); }
+    if (jr < 30){ const n2 = 1 + Math.floor(Math.random()*2); player.gems.honNguyen += n2; out.push(`❖ Hỗn Nguyên Thạch ×${n2}`); }
     else if (jr < 50){ const n2 = 1 + Math.floor(Math.random()*2); player.gems.honNguyen += n2; out.push(`❖ Hỗn Nguyên Thạch ×${n2}`); }
     else if (jr < 75){ player.bikipVH = (player.bikipVH || 0) + 3; out.push('📜 Sách Kỹ Năng ×3'); }
     else { player.bikipVH = (player.bikipVH || 0) + 4; out.push('📜 Sách Kỹ Năng ×4'); }
