@@ -1191,6 +1191,21 @@ một danh sách tên vào bài kiểm là thứ sẽ âm thầm nuốt mục th
 > `assets/iso/ct_cong.png` **vẫn còn** — chúng chỉ ngủ. Cổng nào muốn dựng lại bộ vòm đá thì
 > khai `vom:true` trong `GATES`; gỡ mã hay gỡ tấm art đi là đóng luôn cửa đó.
 
+**⚠ BA BÀI KIỂM CŨ ĐỎ THEO, và cả ba sửa bằng cách ĐI THEO nội dung — không bài nào bị xoá
+mệnh đề cho xanh.** Chúng đỏ vì cơ chế mới làm đúng việc của nó, đúng cái kiểu đã ghi ở mục
+`test_hethong`:
+
+| bài | đỏ vì | sửa thế nào |
+|---|---|---|
+| `test_cong` | không còn vòm nào để mà che ai | **tự bật `vom:true`** lên cổng đo rồi mới chấm ⇒ bộ vòm đang ngủ vẫn có người gác |
+| `test_vatcan §2` | đi tới cổng là **sang map khác**, vòng cũ chạy tiếp 900 nhịp trên map MỚI rồi đo khoảng cách tới cổng của map CŨ (ra 2.727px) | dừng ngay khi `curMap` đổi — **đi XUYÊN QUA** là bằng chứng mạnh hơn hẳn "tới gần cổng" |
+| `test_sandat` | cùng nguyên nhân, 16 mệnh đề đỏ | `diThu` trả `false` khi đổi map · thêm `veLai(m)` dựng lại cảnh |
+
+⚠ **`test_cong` phải đứng cách cổng > `LOIRA_TAM`.** Hai chỗ đo cách cổng 72px và 77px — vừa
+ngoài 70. Dời vào gần hơn một chút là nhân vật TỰ ĐI SANG MAP KHÁC giữa lúc đo, và thứ bài đọc
+được là một ô đất của map bên kia. Nên nó có chốt tự kiểm `oMap === 'ardhaven'` **và** `coVom`
+trước khi chấm.
+
 Chủ dự án chốt: *"dẹp luôn cổng của 4 hướng đi. Thay vào, mở map lại ở hướng cho nó bo góc rồi
 ghi chữ kiểu hướng đi ra map xxx sẽ hợp lý hơn. Và người chơi không cần phải bấm nút để có thể
 tự đi ra khỏi map nữa, nhân vật sẽ tự động đi ra khi đến khoảng đó."*

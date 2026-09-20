@@ -62,19 +62,26 @@ let bad = 0; const fail = m => { bad++; console.log('FAIL ' + m); };
   // ---- 2. BỐN CỔNG THÀNH VẪN PHẢI ĐI BỘ QUA ĐƯỢC ----
   // Đây là vế dễ mất nhất khi siết vật cản, và mất thì ba vùng thành nội dung chết mà không một
   // lỗi nào in ra. Lái bằng hàm thật: đặt nhân vật giữa thành rồi bấm đi tới từng cổng.
+  // ⚠ TỪ ĐỢT LỐI RA, ĐI TỚI MỘT CỔNG RÌA LÀ TỰ SANG MAP KHÁC. Vòng cũ chạy tiếp 900 nhịp
+  // trên map MỚI rồi đo `Math.hypot(player - g)` với `g` là cổng của map CŨ — ra 2.727px và
+  // 3.335px, và bài kết luận "bị công trình chắn đường" trong khi nhân vật tới nơi rồi đi
+  // luôn. Dừng ngay khi đổi map: đi XUYÊN QUA cổng là bằng chứng mạnh hơn hẳn "tới gần cổng".
   const r2 = await p.evaluate(() => {
     const ra = [];
     for (const g of GATES.filter(g => g.map === 'ardhaven' && g.to)){
+      if (curMap !== 'ardhaven') travelTo('ardhaven');
       player.x = 3200; player.y = 1600; player.auto = false;
       setMoveTarget(g.x, g.y);
-      for (let i = 0; i < 900; i++) update(0.05);
-      ra.push({ to: g.to, chan: inObstacle('ardhaven', g.x, g.y, 14),
-                con: Math.round(Math.hypot(player.x - g.x, player.y - g.y)) });
+      let qua = false;
+      for (let i = 0; i < 900; i++){ update(0.05); if (curMap !== 'ardhaven'){ qua = true; break; } }
+      ra.push({ to: g.to, qua, chan: inObstacle('ardhaven', g.x, g.y, 14),
+                con: qua ? 0 : Math.round(Math.hypot(player.x - g.x, player.y - g.y)) });
     }
+    if (curMap !== 'ardhaven') travelTo('ardhaven');
     const sf = MAPS.ardhaven.spawnFrom || {};
     return { cong: ra, spawn: Object.keys(sf).filter(k => inObstacle('ardhaven', sf[k].x, sf[k].y, 14)) };
   });
-  for (const o of r2.cong) console.log(`   cổng → ${o.to.padEnd(11)} còn cách ${o.con}px`);
+  for (const o of r2.cong) console.log(`   cổng → ${o.to.padEnd(11)} ` + (o.qua ? 'ĐI XUYÊN QUA ĐƯỢC' : `còn cách ${o.con}px`));
   for (const o of r2.cong){
     if (o.chan) fail(`② cổng đi ${o.to} nằm TRONG vật cản — cửa ra vào thành bị bịt`);
     if (o.con > 60) fail(`② đi bộ tới cổng ${o.to} còn hụt ${o.con}px — bị công trình chắn đường`);
