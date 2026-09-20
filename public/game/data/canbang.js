@@ -1034,25 +1034,34 @@ window.MAPS = {
                 chungnam:{ x:6150, y:1600 }, tuyettinh:{ x:3200, y:120 } },
     trees:0, rocks:0, herbs:true,
     desc:'Khu phố Ardhaven đi qua Nhát Gọi còn nguyên khối — nguyên mái, nguyên giếng, nguyên cả cái lò. Lunacia khắc Rune lên trời để xin đúng cái lò này, nên thành không phải đống đổ nát: nó là câu trả lời. Dân bản địa dựng tường quanh và gọi chỗ này là Sapidae Chiefdom. Trong tường: Quảng Trường Atia, Phố Chợ, Phố Lò, Sân Chuồng, Sảnh Lệnh, Vách Gió và Xóm Trọ. Không Chimera nào vào được. Bốn cổng ra bốn hướng.',
+    // ⚠ BỐN CÁI MIỆNG ĐÃ BO GÓC — sinh bằng máy (`bo cung Bézier bậc hai, r=90, 2 đỉnh chèn`),
+    // đừng chấm tay. Chọn đỉnh nào để bo thì theo KHOẢNG CÁCH TỚI ĐIỂM CỔNG (≤560px ⇒ đúng
+    // 16 đỉnh = 4 cuống × 4 góc; đỉnh gần thứ 17 cách 1.036px). Bản đầu chọn theo "cách rìa
+    // map ≤260px" và nó bắt 28/36 đỉnh — tức bo tròn cả đường tường thành, vì tường vốn chạy
+    // sát rìa. 36 → 68 đỉnh.
     diTrong: [
-              [3480,3150], [2920,3150], [2900,2990], [600,2990], [400,2930], [270,2800],
-              [230,2720], [230,2620], [210,2600], [210,1900], [50,1880], [50,1320],
-              [210,1300], [210,600], [270,400], [400,270], [600,210], [2900,210],
-              [2920,50], [3480,50], [3500,210], [5800,210], [6000,270], [6130,400],
-              [6170,480], [6170,580], [6190,600], [6190,1300], [6350,1320], [6350,1880],
-              [6190,1900], [6190,2600], [6130,2800], [6000,2930], [5800,2990], [3500,2990] ],
+              [3489,3078], [3464,3132], [3407,3150], [2993,3150], [2936,3132], [2911,3078],
+              [2909,3062], [2884,3008], [2827,2990], [600,2990], [400,2930], [270,2800],
+              [230,2720], [230,2620], [210,2600], [210,1973], [192,1916], [138,1891],
+              [122,1889], [68,1864], [50,1807], [50,1393], [68,1336], [122,1311],
+              [138,1309], [192,1284], [210,1227], [210,600], [270,400], [400,270],
+              [600,210], [2827,210], [2884,192], [2909,138], [2911,122], [2936,68],
+              [2993,50], [3407,50], [3464,68], [3489,122], [3491,138], [3516,192],
+              [3573,210], [5800,210], [6000,270], [6130,400], [6170,480], [6170,580],
+              [6190,600], [6190,1227], [6208,1284], [6262,1309], [6278,1311], [6332,1336],
+              [6350,1393], [6350,1807], [6332,1864], [6278,1889], [6262,1891], [6208,1916],
+              [6190,1973], [6190,2600], [6130,2800], [6000,2930], [5800,2990], [3573,2990],
+              [3516,3008], [3491,3062] ],
   vatTo: [
-    // ── BỐN CỔNG THÀNH ────────────────────────────────────────────────────────
-    // Đặt LỆCH hẳn sang MỘT BÊN cuống cổng, mép trong của ảnh CHẠM ĐÚNG mép cuống
-    // (chồng lấn 0 px2 — đã đo). Cuống cổng đọc thẳng từ `diTrong`:
-    //   Bắc  x 2920-3480, y   50- 210      Nam   x 2920-3480, y 2990-3150
-    //   Tây  x   50- 210, y 1320-1880      Đông  x 6190-6350, y 1320-1880
-    // Bốn tháp lệch theo một chiều KIM ĐỒNG HỒ: Bắc lệch đông · Đông lệch nam ·
-    // Nam lệch tây · Tây lệch bắc. Người chơi luôn đi lọt giữa cuống.
-    { img:'ct_cong',  x:3520, y:14,   w:472, h:435 },  // Cổng Bắc  — lệch ĐÔNG, chân y=449
-    { img:'ct_cong',  x:5878, y:1880, w:472, h:435 },  // Cổng Đông — lệch NAM,  chân y=2315
-    { img:'ct_cong',  x:2448, y:2680, w:472, h:435 },  // Cổng Nam  — lệch TÂY,  chân y=3115
-    { img:'ct_cong',  x:140,  y:854,  w:472, h:435 },  // Cổng Tây  — lệch BẮC,  chân y=1289
+    // ── ~~BỐN CỔNG THÀNH~~ — ĐÃ GỠ, và đừng cắm lại ─────────────────────────
+    // Bốn sprite `ct_cong` từng đứng lệch sang một bên mỗi cuống cổng. Chủ dự án chốt gỡ:
+    // *"dẹp luôn cổng của 4 hướng đi. Thay vào, mở map lại ở hướng cho nó bo góc rồi ghi chữ
+    // kiểu hướng đi ra map xxx sẽ hợp lý hơn."* Nay phần nhìn thấy do `veLoiRa()` lo — một
+    // vũng đá mòn tắt dần về mép, ba mũi chevron bò ra ngoài, và dòng `⟶ <tên map>`; còn
+    // hình dạng cái miệng thì nằm ngay trong `diTrong` ở trên (đã bo góc).
+    //
+    // ⚠ Tấm `assets/iso/ct_cong.png` và mục `MAP_VAT_SRC.ct_cong` GIỮ LẠI — cổng nào muốn
+    // dựng lại bộ vòm thì khai `vom:true` trong `GATES`. Gỡ tấm art đi là đóng luôn cửa đó.
 
     // ── BA CÔNG TRÌNH CÓ ẢNH ──────────────────────────────────────────────────
     // Cả ba đặt trên HÀNG NHÀ BẮC (khối y 520-860), CHÂN ảnh trùng đúng mép dưới

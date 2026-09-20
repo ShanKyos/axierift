@@ -3480,13 +3480,129 @@ function drawAiPasses(){
   }
 }
 
+// ═══════════ LỐI RA — bốn hướng của map, KHÔNG CÒN CỔNG VÒM ═══════════
+// Chủ dự án chốt: *"dẹp luôn cổng của 4 hướng đi. Thay vào, mở map lại ở hướng cho nó bo góc
+// rồi ghi chữ kiểu hướng đi ra map xxx… người chơi không cần phải bấm nút để có thể tự đi ra
+// khỏi map nữa, nhân vật sẽ tự động đi ra khi đến khoảng đó."*
+//
+// Cái vòm đá vẽ tay (`drawGateStatic`) nay CHỈ còn dùng cho cổng nào khai `vom:true`. Mặc
+// định một cổng rìa vẽ ra một CÁI MIỆNG: vũng đá mòn tắt dần về mép, ba mũi chevron bò ra
+// ngoài, và một dòng chữ nói thẳng nó dẫn đi đâu.
+//
+// ⚠ CHỈ CỔNG RÌA, KHÔNG PHẢI PORTAL. Sàn Đấu · Tầng Sâu · Lò Khắc là những chuyến đi CÓ CHỦ
+// Ý (một cái còn là một lượt roguelite), và `ardhaven→pvp` hạ cánh cách cổng về ĐÚNG 0px —
+// tự đi ra ở đó là vào sàn rồi bị bắn ngược ra ngay lập tức. Đo cả 27 cặp map: khoảng cách
+// điểm-hạ-cánh ↔ cổng-về nhỏ nhất trong nhóm RÌA là **127px**, nên bán kính 70 còn dư 57px.
+const LOIRA_TAM = 70;        // chạm tới đây là tự đi ra
+const LOIRA_RONG = 170;      // nửa bề ngang cái miệng vẽ ra
+let _loiRaCho = null;        // cổng đã chạm — `update()` đầu khung SAU mới đi, xem chú thích ở đó
+let _loiRaKhoa = null;       // CỔNG mà điểm hạ cánh đè lên — KHÔNG phải toạ độ, xem `travelTo`
+
+// Hướng RA: cạnh map gần cổng nhất. Suy từ hình học, không khai tay — thêm một cổng rìa mới
+// là nó tự có hướng đúng, và không có bảng thứ hai nào để mà lệch.
+function loiRaHuong(g){
+  const md = MAPS[g.map] || {};
+  const w = md.w || 4000, h = md.h || 3000;
+  const can = [ { v:[0,-1], k:g.y }, { v:[0,1], k:h - g.y }, { v:[-1,0], k:g.x }, { v:[1,0], k:w - g.x } ];
+  can.sort((a, b) => a.k - b.k);
+  return can[0].v;
+}
+function loiRaTen(g){
+  const md = MAPS[g.to];
+  return md && md.name ? md.name : (g.label || g.to || '');
+}
+// Vẽ trên MẶT ĐẤT (trước mọi thực thể) — người chơi đi ĐÈ LÊN cái miệng, không chui sau nó.
+//
+// ⚠ ĐO NỀN TRƯỚC KHI CHỌN TÔNG. Bản đầu tô một vũng `rgba(232,224,203,.42)` và chụp ra thì
+// **gần như không thấy gì**: nền ở bốn cổng đo được sáng 103-181, phần lớn 143-157, tức chỉ
+// cách tông ấy chừng 30 điểm sau khi hoà. Cùng bài học đã ghi cho viên tuyết Bird Tribe Heights
+// (*"mặt phẳng sáng đều không mốc thì đọc ra khoảng không"*) — thứ cứu được là một **cặp
+// tương phản**: vành SẪM ôm ngoài + lòng SÁNG, chứ không phải một mảng sáng đơn độc.
+//
+// ⚠ VÀ ĐÂY LÀ CHỖ TRỐNG CÓ NHÃN, KHÔNG PHẢI ART. Thứ đáng ra phải nhìn thấy ở một lối ra là
+// KHOẢNG HỞ TRONG TƯỜNG THÀNH, mà bảy tấm `tuong_*`/`cong_*` còn nằm trong `MAP_VAT_CHO`.
+// Khi art tường về thì cái miệng đã bo góc trong `diTrong` tự đọc ra thành một cái cổng mở,
+// và vệt sáng này chỉ còn là vết mòn dưới chân. Đừng nâng cấp nó thành một cái cổng vẽ tay —
+// đó đúng là thứ vừa gỡ.
+function veLoiRa(g){
+  const [hx, hy] = loiRaHuong(g);
+  const doc = Math.abs(hy) > 0.5;                       // ra bắc/nam hay đông/tây
+  const rx = doc ? LOIRA_RONG : 135;
+  const ry = (doc ? 135 : LOIRA_RONG) * 0.55;           // nén trục sâu — cùng lối với bóng đổ
+  const t = performance.now() / 1000;
+  ctx.save();
+  ctx.translate(g.x, g.y); ctx.scale(1, ry / rx);
+  // ① vành SẪM ôm ngoài — cái mốc cho mắt bám, và nó chạy được trên cả nền sáng lẫn nền tối
+  const vg = ctx.createRadialGradient(0, 0, rx * 0.55, 0, 0, rx);
+  vg.addColorStop(0, 'rgba(38,30,20,0)');
+  vg.addColorStop(0.72, 'rgba(38,30,20,.20)');
+  vg.addColorStop(0.93, 'rgba(38,30,20,.26)');
+  vg.addColorStop(1, 'rgba(38,30,20,0)');
+  ctx.fillStyle = vg; ctx.beginPath(); ctx.arc(0, 0, rx, 0, 7); ctx.fill();
+  // ② lòng SÁNG — đá bị đế giày mài nhẵn, đúng lối `nen_sanmai` của sàn đấu
+  const lg = ctx.createRadialGradient(0, 0, rx * 0.10, 0, 0, rx * 0.82);
+  lg.addColorStop(0, 'rgba(250,244,226,.50)');
+  lg.addColorStop(0.55, 'rgba(250,244,226,.24)');
+  lg.addColorStop(1, 'rgba(250,244,226,0)');
+  ctx.fillStyle = lg; ctx.beginPath(); ctx.arc(0, 0, rx * 0.82, 0, 7); ctx.fill();
+  ctx.restore();
+  // ③ ba mũi chevron BÒ RA NGOÀI — thứ nói "đi tiếp hướng này thì ra khỏi map".
+  // Viền sẫm dưới nét sáng: cùng lý do ở ①, nền bốn cổng sáng 103-181 nên một nét trắng trơn
+  // chìm ở nửa số chỗ.
+  const px = -hy, py = hx * 0.55;
+  for (let i = 0; i < 3; i++){
+    const k = (t * 0.5 + i / 3) % 1;
+    const d = 20 + k * 78, a = 1 - Math.abs(k * 2 - 1);
+    const cx = g.x + hx * d, cy = g.y + hy * d * 0.55, S = 30, L = 13;
+    const p0 = [cx - px * S - hx * L, cy - py * S - hy * L * 0.55];
+    const p2 = [cx + px * S - hx * L, cy + py * S - hy * L * 0.55];
+    ctx.lineCap = 'round'; ctx.lineJoin = 'round';
+    for (const [w, col] of [[9, `rgba(30,22,12,${(a * 0.42).toFixed(3)})`],
+                            [5, `rgba(255,250,232,${(a * 0.92).toFixed(3)})`]]){
+      ctx.strokeStyle = col; ctx.lineWidth = w;
+      ctx.beginPath(); ctx.moveTo(p0[0], p0[1]); ctx.lineTo(cx, cy); ctx.lineTo(p2[0], p2[1]); ctx.stroke();
+    }
+  }
+  // ④ dòng chữ: nói THẲNG nó dẫn đi đâu, không bắt người chơi đoán từ một cái vòm
+  const ten = loiRaTen(g);
+  if (ten){
+    ctx.font = 'bold 16px "Be Vietnam Pro", sans-serif'; ctx.textAlign = 'center';
+    const txt = '⟶  ' + ten, ty = g.y - (doc ? 92 : 78);
+    ctx.strokeStyle = 'rgba(0,0,0,.72)'; ctx.lineWidth = 4.5;
+    ctx.strokeText(txt, g.x, ty);
+    ctx.fillStyle = '#f7efd8'; ctx.fillText(txt, g.x, ty);
+  }
+}
+function veMoiLoiRa(){
+  for (const g of gatesHere()) if (!g.portal) veLoiRa(g);
+}
 function updateGate(){
   nearGate = null;
   if (!player || dead) return;
+  // ⚠ KHOÁ THEO **CỔNG**, KHÔNG THEO TOẠ ĐỘ HẠ CÁNH — và đây là chỗ bản đầu sai.
+  // Bản đầu nhớ chỗ hạ cánh rồi nhả khi người chơi đi xa quá `LOIRA_TAM*1.8` = 126px. Nhưng
+  // điểm hạ cánh thật cách cổng về **128px** (đo cả 27 cặp map; nhỏ nhất trong nhóm rìa là
+  // 127) ⇒ khoá nhả ngay ở khung ĐẦU TIÊN, tức nó là mã chết. Phép thử ngược gỡ nó ra cũng
+  // IM LẶNG — đúng dấu hiệu *"que dò không chạm đúng chỗ"* đã ghi ở mục `test_hethong`.
+  //
+  // Nay khoá đúng CÁI CỔNG mà điểm hạ cánh đè lên (nếu có), nhả khi người chơi rời xa cổng
+  // ấy. Với dữ liệu hiện nay không cặp map nào rơi vào ca đó nên khoá KHÔNG BAO GIỜ BẬT —
+  // và đó là đúng. `test_loira §4b` dựng thẳng cái ca ấy ra để chứng minh nó còn chạy.
+  if (_loiRaKhoa){
+    if (_loiRaKhoa.map !== curMap || dist(player.x, player.y, _loiRaKhoa.x, _loiRaKhoa.y) > LOIRA_TAM * 1.6)
+      _loiRaKhoa = null;
+  }
   for (const g of GATES){
     if (g.map !== curMap) continue;
     if (dist(player.x, player.y, g.x, g.y) < 90){ nearGate = g; break; }
   }
+  // ⚠ CHỈ ARM MỘT CỜ, ĐỪNG GỌI `travelTo` TỪ ĐÂY. `updateGate()` chạy GIỮA `update(dt)`, mà
+  // `travelTo` dựng lại cả thế giới (`buildWorld`) — phần còn lại của khung sẽ đi trên mảng
+  // `mobs`/`decor` vừa bị thay. Đúng cái bẫy "return giữa update(dt)" đã ghi cho PvP.
+  if (nearGate && !nearGate.portal && !DEEP && !LK &&
+      !(_loiRaKhoa && _loiRaKhoa.g === nearGate) &&
+      dist(player.x, player.y, nearGate.x, nearGate.y) < LOIRA_TAM)
+    _loiRaCho = nearGate;
 }
 function drawPortal(g){
   const t = performance.now()/1000;
@@ -3619,7 +3735,10 @@ function drawOneGate(g0){
   // những map mà nền chỉ là cỏ đất; dán nó lên một cổng thành đã vẽ sẵn trong tranh isometric
   // là hai cái cổng chồng nhau, cái vẽ tay nhỏ hơn và lệch phối cảnh. Map như thế thì cổng
   // thành ĐIỂM DỊCH CHUYỂN VÔ HÌNH: không vẽ gì, chỉ giữ vòng sáng khi lại gần và dòng "G — …".
-  if (!g0.anGiau){
+  // `anGiau` giữ nguyên nghĩa cũ (tranh nền ĐÃ CÓ cổng). Nay thêm một cửa nữa: từ đợt
+  // LỐI RA, cổng rìa mặc định KHÔNG vẽ vòm — `veLoiRa()` lo phần nhìn thấy. Chỉ cổng
+  // nào khai `vom:true` mới dựng lại bộ vòm đá + hai ngọn đuốc.
+  if (g0.vom && !g0.anGiau){
     ctx.drawImage(gateSprite(), g0.x - GATE_SPRW/2, oy);
     for (const s of [-1, 1]) drawGateFlame(g0.x + s * GATE_FX, oy + GATE_BOWL, t, s);
     drawCalligraphy((g0.name || 'Cổng Thành').split(' → ')[0], g0.x, oy - 8, '#c9c6b4', 15);
@@ -3629,8 +3748,12 @@ function drawOneGate(g0){
     ctx.beginPath(); ctx.ellipse(g0.x, g0.y, 78 + Math.sin(t * 3) * 6, 22, 0, 0, 7); ctx.stroke();
     ctx.font = 'bold 14px "Be Vietnam Pro", sans-serif'; ctx.textAlign = 'center';
     ctx.strokeStyle = 'rgba(0,0,0,.65)'; ctx.lineWidth = 3; ctx.fillStyle = '#7ecbff';
-    const txt = 'G — ' + g0.name;
-    ctx.strokeText(txt, g0.x, oy - 28); ctx.fillText(txt, g0.x, oy - 28);
+    // ⚠ ĐỪNG ĐỂ LẠI "G — …" Ở CỔNG RÌA. Phím G vẫn chạy (đường cũ, và bài kiểm nào lái nó
+    // vẫn phải lái được), nhưng nói với người chơi rằng PHẢI bấm G trong khi nhân vật tự đi
+    // ra là một dòng chữ nói dối — đúng cái kiểu "lời mời suông" đã ghi ở mục upBtnHtml.
+    const txt = (g0.portal || g0.vom ? 'G — ' : '') + g0.name;
+    const ny = (g0.portal || g0.vom) ? oy - 28 : g0.y - 96;
+    ctx.strokeText(txt, g0.x, ny); ctx.fillText(txt, g0.x, ny);
   }
 }
 function gatesHere(){ return GATES.filter(g => g.map === curMap); }
@@ -12551,6 +12674,11 @@ document.addEventListener('click', e=>{
 let _zoneAliveCache = null; // per-frame memo for zoneAliveCount(), reset every update() tick
 function update(dt){
   if (!player) return;
+  // LỐI RA tự đi: xử ở ĐẦU khung, trước khi bất cứ gì đọc `mobs`/`decor` — xem `updateGate()`.
+  if (_loiRaCho){
+    const g = _loiRaCho; _loiRaCho = null;
+    if (g.map === curMap && !dead){ travelTo(g.to, curMap); return; }
+  }
   netMaNhip(dt);           // bóng giả của `/net ma` — trên nhánh `dead` để chúng còn thở lúc mình nằm
   _zoneAliveCache = null;
   _gtiCache = null; // gameTimeInfo() per-frame memo — reset once per tick, see its own comment
@@ -13702,6 +13830,7 @@ function render(){
   if (md.village) drawCalligraphy('Sapwood Hamlet', 430, 340, '#6a5836', 18);
   // cổng KHÔNG vẽ ở đây nữa — nó đi vào danh sách sắp theo y bên dưới (xem drawOneGate)
 
+  veMoiLoiRa();        // miệng lối ra: vẽ trên MẶT ĐẤT, người chơi đi đè lên (xem veLoiRa)
   drawObstacleRim();   // hàng đá dọc mép vùng chặn — vẽ trước decor để cây/đá rải phủ lên tự nhiên
 
   // decor (behind entities)
@@ -27797,6 +27926,15 @@ window.travelTo = function(mapId, from){
   const sp = (md.pvp && pvpGoc(md)) || (from && md.spawnFrom && md.spawnFrom[from]) || md.spawn;
   player.x = sp.x; player.y = sp.y;
   const _fp = nearestFree(curMap, player.x, player.y); player.x = _fp.x; player.y = _fp.y; // GDD Đợt 2 A: không spawn vào vùng cấm
+  // KHOÁ CHỖ VỪA HẠ CÁNH — xem `updateGate()`. Đặt ở ĐÂY chứ không ở chỗ gọi: mọi đường
+  // vào một map (cổng, dịch chuyển, nút 'Đi ngay' của băng-rôn) đều đổ về hàm này, nên
+  // một chỗ đặt phủ hết. Rải ra từng chỗ gọi là chỗ thứ tư thêm sau sẽ lặng lẽ thiếu.
+  _loiRaCho = null;
+  _loiRaKhoa = null;
+  for (const g of GATES){
+    if (g.map !== curMap || g.portal) continue;
+    if (dist(player.x, player.y, g.x, g.y) < LOIRA_TAM){ _loiRaKhoa = { map: curMap, x: g.x, y: g.y, g }; break; }
+  }
   player.hintOff = {}; // B3: qua map mới → các Nhắc Việc đã tắt hiện lại
   snapCamera(); // đổi map: camera đặt thẳng vào vị trí mới, không pan từ map cũ
   if (md.type === 'safe') player.pk = false;
