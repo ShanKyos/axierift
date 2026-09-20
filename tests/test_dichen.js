@@ -110,6 +110,19 @@ const BANG = ['char','inv','bag','skill','quest','qlog','map','settings','help',
     kq.phutuyen   = await dem([].concat(...(window.SIDE_QUESTS || []).map(q => [q.name, q.desc])));
     kq.npc_ten    = await dem((window.NPCS || []).map(n => n.name));
     kq.lop_mota   = await dem(Object.values(window.SECTS || {}).map(x => x.desc));
+    // ⚠ TÊN MÓN dựng lúc CHẠY từ `ITEM_DB`, nên không bộ quét tĩnh nào thấy chúng — chúng chỉ
+    // tồn tại khi có một món rơi ra. Bot QA chơi thật mới lôi ra: 266 tên, dịch được 0. Nay 0
+    // còn tiếng Việt, và mục này giữ nó ở 0. Đi sâu vì `ITEM_DB` lồng nhiều tầng.
+    const tenMon = new Set();
+    (function goi(v){ if (!v) return;
+      if (Array.isArray(v)) return v.forEach(goi);
+      if (typeof v === 'object'){ if (typeof v.name === 'string') tenMon.add(v.name); Object.values(v).forEach(goi); }
+    // ⚠ `ITEM_DB` là `const` ở tầng cao nhất ⇒ KHÔNG gắn vào `window` (cùng vết sẹo `player`
+    // và `curMap` đã ghi ở mục online). Hỏi `window.ITEM_DB` ra `undefined`, và mục này báo
+    // `0/0` — một phép đo XANH VĨNH VIỄN vì nó không đo gì. Phải gọi tên trần.
+    })(typeof ITEM_DB !== 'undefined' ? ITEM_DB : {});
+    if (tenMon.size < 200) throw new Error('CANH DUNG HONG: chi doc duoc ' + tenMon.size + ' ten mon, doi >=200');
+    kq.ten_mon    = await dem([...tenMon]);
     // dẫn truyện: bơm HTML rồi duyệt node, không bơm nguyên chuỗi
     let dt = 0, dtT = 0;
     for (const pg of (window.INTRO_PAGES || [])) {
@@ -124,7 +137,7 @@ const BANG = ['char','inv','bag','skill','quest','qlog','map','settings','help',
   });
   // Trần đặt bằng ĐÚNG số đo hôm nay, không phải một số tròn — mỗi lần dịch thêm thì hạ nó
   // xuống. Bốn mặt dưới đã về 0 và phải Ở LẠI 0.
-  const TRAN = { chieu_mota: 43, nhiemvu: 81, phutuyen: 64, npc_ten: 2, lop_mota: 0, dantruyen: 0 };
+  const TRAN = { chieu_mota: 43, nhiemvu: 81, phutuyen: 64, npc_ten: 2, lop_mota: 0, dantruyen: 0, ten_mon: 0 };
   let no = 0;
   for (const [k, v] of Object.entries(lore)) {
     no += v.con;

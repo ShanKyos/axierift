@@ -1833,6 +1833,129 @@ RULES.unshift(
 );
 Object.assign(EXACT, { 'Lực Chiến': 'Combat Power' });
 
+/* ═══ Bot QA tìm ra: 9 chuỗi canvas còn tiếng Việt trong 79.976 lượt vẽ ═══
+   Sáu cái đầu là TÊN VÙNG trên bản đồ thế giới (`TG_VUNG`) — nhãn to nhất trên tấm bản đồ,
+   mà mọi bộ quét trước đều mù với chúng vì chúng chỉ vẽ ra khi mở bảng Bản Đồ thế giới.
+   Đây đúng là lý do phải có một con bot CHƠI THẬT chứ không chỉ quét mã. */
+Object.assign(EXACT, {
+  'Vành Corran':        'The Corran Rim',
+  'Quần Đảo Thú':       'The Beast Shoals',
+  'Bình Nguyên Nắng':   'The Sunlit Flats',
+  'Vỉa Ngọc Nứt':       'The Riven Seams',
+  'Sống Băng':          'The Ice Spine',
+  'Lò Tro':             'The Ash Forge',
+  'Rẻo rừng nơi Nhát Gọi mở ra, và khu phố đá đi qua nó.':
+    'The woodland strip where the Summoning Cut opened, and the stone quarter that came through it.',
+  'Bãi cạn và rừng thấp — nơi đàn thú còn chưa tan.':
+    'Shallows and low forest — where the herds have not yet scattered.',
+  'Luống ấp và con đường mòn vắt qua vùng đất khô.':
+    'Hatching beds and a trail slung across the dry country.',
+  'Đất nứt dưới Nhát Gọi, và những đường hầm ăn sâu vào vỉa.':
+    'Ground split beneath the Summoning Cut, and tunnels eating deep into the seams.',
+  'Nhịp đá không nền, rồi dốc tuyết nơi khúc hát chưa tắt.':
+    'Unfooted stepping stones, then the snow slope where the song has not died.',
+  'Lò chưa nguội, và đầm lầy nơi đường về Cây Hồn tắt đèn.':
+    'A forge not yet cold, and the marsh where the road to the Soul Tree went dark.',
+  'Không có quái trong tầm — mở M hoặc Chọn Trận để tới bãi quái':
+    'Nothing in range — press M or open Choose Battle to reach a hunting ground',
+});
+// Dải cấp dưới tên vùng, và dòng báo mở khoá công trình — cả hai dựng bằng template.
+RULES.unshift(
+  [/^cấp (\d+) - (\d+)$/,                    (m, a, b) => `level ${a} – ${b}`],
+  [/^(.+) mở khóa ở cấp (\d+)!$/,            (m, a, b) => `${tr(a)} unlocks at level ${b}!`]
+);
+Object.assign(EXACT, { 'Mana đã đầy!': 'Mana is full!' });
+
+/* ═══ 266 TÊN MÓN — khoản nợ dịch LỚN NHẤT, và bot QA mới lôi ra được ═══
+   Không bộ quét tĩnh nào thấy chúng: tên món dựng lúc CHẠY từ `ITEM_DB` (`assignDef`), nên
+   chúng chỉ tồn tại khi có một món rơi ra. Hỏi game đang chạy ⇒ 266 tên, dịch được 0.
+
+   Chúng có CẤU TRÚC: `[Hoàn Hảo ]<ô><bộ>` — 16 từ chỉ ô × 60 tên bộ. Nên chỗ này là hai
+   bảng nhỏ cộng một luật, không phải 266 khoá chép tay: thêm một bộ giáp mới vào `HERO_SETS`
+   là chỉ phải thêm MỘT dòng vào `BO_DO`, không phải bốn dòng cho bốn ô. */
+const O_DO = {
+  'Mũ Trụ':'Helm', 'Giáp':'Armor', 'Găng':'Gauntlets', 'Ủng':'Boots',
+  'Dây Chuyền':'Amulet', 'Nhẫn':'Ring', 'Đại Kiếm':'Greatsword', 'Ma Kiếm':'Runeblade',
+  'Song Đao':'Twin Blades', 'Lệnh Trượng':'Command Rod', 'Trường Cung':'Longbow',
+  'Kiếm':'Sword', 'Gậy':'Staff', 'Cung':'Bow', 'Nỏ':'Crossbow', 'Rìu':'Axe',
+  'Búa':'Hammer', 'Chùy':'Mace', 'Kích':'Halberd',
+};
+const BO_DO = {
+  'Thiết Phiến':'Ironplate', 'Giáp Đồng':'Bronzeplate', 'Ngân Giáp':'Silverplate',
+  'Vảy Rồng':'Drakescale', 'Bạo Long':'Tyrant Drake', 'Lôi Đình':'Thunderfall',
+  'Long Vương':'Dragon King', 'Vải Thô':'Homespun', 'Nhân Sư':'Sphinx',
+  'Triệu Hồn':'Summoner', 'Hư Vô':'The Void', 'Thần Ma':'God-Fiend',
+  'Tinh Vân':'Nebula', 'Da Rừng':'Wildhide', 'Lá Thép':'Steelleaf',
+  'Gai Rừng':'Thornwood', 'Lông Cú':'Owlfeather', 'Sương Mai':'Morningmist',
+  'Nguyệt Quế':'Laurel', 'Bạch Phượng':'White Phoenix', 'Bán Giáp':'Halfplate',
+  'Da Nung':'Scorched Hide', 'Dung Nham':'Magma', 'Lửa Dữ':'Wildfire',
+  'Hoả Ngục':'Inferno', 'Long Diễm':'Dragonflame', 'Viêm Đế':'Flame Sovereign',
+  'Lệnh Giáp':'Warrant Plate', 'Cận Vệ':'Honor Guard', 'Kim Miện':'Gilt Crown',
+  'Bạo Chúa':'Despot', 'Ngai Đen':'Black Throne', 'Hắc Đế':'Black Sovereign',
+  'Đế Vương':'Imperator', 'Thân Vệ':'Bodyguard', 'Quỷ Vương':'Demon King',
+  'Cốt Vương':'Bone King', 'Tro Tàn':'Ashfall',
+  'Thô':'Crude', 'Thô Sơ':'Rough', 'Gỗ':'Wooden', 'Sồi':'Oak',
+  'Đồng':'Bronze', 'Thép':'Steel', 'Bạc':'Silver', 'Pha Lê':'Crystal',
+  'Ngọc Lam':'Azurite', 'Ngọc Lục':'Emerald', 'Hoả':'Flame',
+  'Cổ Ngữ':'Old Tongue', 'Khai Thiên':'Skyrender', 'Vĩnh Hằng':'Everlasting',
+  'Vương Quyền':'Regalia',
+  'Nanh Đồng':'Bronze Fang', 'Nanh Thép':'Steel Fang', 'Nanh Bạc':'Silver Fang',
+  'Nanh Rồng':'Drake Fang', 'Nanh Lửa':'Flame Fang', 'Nanh Lôi Đình':'Thunder Fang',
+  'Nanh Long Vương':'Dragon King Fang',
+};
+// ⚠ TIỀN TỐ DÀI NHẤT THẮNG. 'Đại Kiếm' và 'Kiếm', 'Trường Cung' và 'Cung', 'Ma Kiếm' và
+// 'Kiếm' — so theo thứ tự khai là 'Kiếm' ăn trước và 'Đại Kiếm X' ra 'Đại Sword X'.
+const O_DO_SAP = Object.keys(O_DO).sort((a, b) => b.length - a.length);
+// ⚠⚠ REGEX PHẢI CHỈ KHỚP ĐÚNG HÌNH DẠNG TÊN MÓN — TUYỆT ĐỐI KHÔNG `/^(.+)$/` rồi trả `null`
+// khi không phải tên món. Đã viết đúng cái sai ấy và nó là một lỗi NẶNG: `trCompute` trả
+// thẳng `null` ra ngoài, nên MỌI chuỗi chưa dịch biến thành rỗng — tên nhiệm vụ, lời thoại,
+// mô tả chiêu đều thành chữ trắng. Và nó làm `test_dichen §④` XANH TOÀN TẬP (190 → 0 nợ), vì
+// một chuỗi rỗng thì không còn ký tự tiếng Việt nào để mà đếm.
+// *Một con số nợ tụt thẳng về 0 sau một thay đổi không đụng tới nó là dấu hiệu que dò hỏng,
+// không phải dấu hiệu vừa làm xong việc.*
+const _reMon = new RegExp('^(Hoàn Hảo )?(' + O_DO_SAP.map(k => k.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')).join('|') + ')(?: (.+))?$');
+RULES.unshift([_reMon, (m, hh, o, duoi) => {
+  if (duoi && !BO_DO[duoi]) return m;         // bộ lạ ⇒ trả NGUYÊN chuỗi, đừng dịch nửa vời
+  const ten = duoi ? `${BO_DO[duoi]} ${O_DO[o]}` : O_DO[o];
+  return hh ? `Excellent ${ten}` : ten;
+}]);
+// 28 cây vũ khí có tên RIÊNG, không theo khuôn ô+bộ.
+// ⚠ Bảy cái trong số này còn là TÀN DƯ KIẾM HIỆP (Cửu Thế Phục Sinh · Huyền Cổ Thần · Mãng Xà
+// · Mỹ Xà Quyền · Thiên Linh Quyền · Thiên Lôi · Cốt Linh). Dịch sang tên MU trung tính là
+// chữa được nửa tiếng Anh; nửa tiếng Việt vẫn phạm Quy tắc số 1 và cần một đợt ĐỔI TÊN riêng.
+Object.assign(EXACT, {
+  'Cốt Linh Trượng':'Bonespirit Staff', 'Thiên Linh Quyền Trượng':'Skyspirit Rod',
+  'Mãng Xà Trượng':'Serpent Staff', 'Thiên Lôi Trượng':'Thunder Staff',
+  'Mỹ Xà Quyền Trượng':'Viper Rod', 'Huyền Cổ Thần Trượng':'Elder God Staff',
+  'Cửu Thế Phục Sinh Trượng':'Ninefold Revival Staff',
+});
+
+/* Chuỗi chỉ hiện ra khi ĐANG ĐÁNH NHAU — bot QA phải chơi thật 60 giây, lên 6 cấp và hạ 63
+   con mới gặp. Quét mã không thấy vì phần lớn dựng bằng template lúc chạy. */
+RULES.unshift(
+  [/^THĂNG CẤP (\d+)!$/,                    (m, a) => `LEVEL ${a}!`],
+  [/^→ Chạy tới (.+)$/,                      (m, a) => `→ Running to ${tr(a)}`],
+  [/^✦ Dọn sạch bãi \+(\d+) EXP$/,           (m, a) => `✦ Camp cleared +${a} EXP`],
+  [/^⛊ ĐỠ! -(\d+)$/,                         (m, a) => `⛊ BLOCK! -${a}`],
+  [/^Nhiệm vụ hoàn thành — về gặp (.+)$/,   (m, a) => `Quest complete — report to ${tr(a)}`],
+  [/^Mở khóa: (.+?) — (.+)$/,                (m, a, b) => `Unlocked: ${tr(a)} — ${tr(b)}`],
+  [/^⚙ Hiệu ứng: (.+?) \(tự chỉnh theo máy — đổi tay ở Cài Đặt\)$/,
+    (m, a) => `⚙ Effects: ${tr(a)} (auto-tuned to your machine — change it in Settings)`],
+  [/^⚙ Độ nét: (\d+)% \(tự chỉnh theo máy — đổi tay ở Cài Đặt\)$/,
+    (m, a) => `⚙ Sharpness: ${a}% (auto-tuned to your machine — change it in Settings)`]
+);
+Object.assign(EXACT, {
+  'Né!': 'Dodge!',
+  'TÂN BINH RƠI XUỐNG!': 'A NEWCOMER HAS FALLEN THROUGH!',
+  'Vừa': 'Medium', 'Thấp': 'Low', 'Cao': 'High',
+  'xem góc trái màn hình, xong hết nhận thưởng lớn!':
+    'check the left of your screen — clear them all for a big reward!',
+  'tới gặp Thợ Rèn (phím F dẫn đường)': 'go see the Blacksmith (press F and it leads you there)',
+  'quay thân Axie làm hình dáng của bạn (C → Khế Ước)':
+    'roll an Axie body to be your form (C → Pact)',
+  'Mục Tiêu Hôm Nay': "Today's Goals",
+});
+
 function tr(s) {
   if (lang !== 'en' || !s || typeof s !== 'string') return s;
   const cached = _trCache.get(s);
