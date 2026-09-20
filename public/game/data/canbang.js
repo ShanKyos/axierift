@@ -1532,6 +1532,14 @@ window.MAPS = {
     // Ba lối rìa cũ (Werebear Woods · Lối Mòn · Trũng Nứt) đã theo dải cấp sang Plant Tribe
     // Glade. Còn đúng MỘT cửa: Cổng Tây của thành. Điểm tới dùng lại chỗ (311,973) mà bộ sinh
     // đã dò cho cổng tây cũ — nó nằm trong đa giác sàn và cách cổng 127px.
+    // ĐÀN THÚ HOANG. Corran là map hoang DUY NHẤT không có đàn — mà nó lại là map ĐẦU TIÊN,
+    // tức ấn tượng đầu tiên về cả thế giới là "một cái sân có mấy bầy địch". Đúng cái mà khối
+    // ĐÀN THÚ HOANG sinh ra để chữa; corran bị bỏ sót khi làm 7 map kia.
+    //
+    // ⚠ Loài CHỦ ĐẠO phải riêng: `soc_hat` đang là loài THỨ BA của `ngoai` nên lấy làm chủ đạo
+    // ở đây không cướp bản sắc map nào. `reu_xanh` · `cuu_bong` là loài chia sẻ — trùng loài
+    // giữa hai map là CỐ Ý (sinh cảnh chồng nhau thật hơn bảy tập loài rời tăm tắp).
+    thu: { loai:['soc_hat','reu_xanh','cuu_bong'], dan: 14 },
     spawnFrom:{ ardhaven:{ x:311, y:973 } },
     spawn:{ x:506, y:1158 }, village:true, spring:true, herbs:true, boss:true, trees:0, rocks:0,
     desc:'Khoảnh rừng có người giữ riêng — bãi săn của người mới. Chimera yếu, đồ rơi nhập môn, chỗ hiền lành để học cách chơi. Không phiến Rune nào cắm ở đây: rễ Cây Hồn chạy ngầm dưới đất này, và không ai dám khắc đá lên rễ.',
