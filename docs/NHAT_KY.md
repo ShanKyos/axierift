@@ -508,3 +508,26 @@ thứ duy nhất bắt được nó.
 
 *Bài học: một bài đỏ theo xúc xắc vẫn phải TRUY tới nguyên nhân. Lần này "xúc xắc" hoá ra là một
 que dò hỏng, và chính nó đang che một mệnh đề rỗng suốt nhiều phiên.*
+
+## 2026-09-20 · Khắc Thân — hai que dò hỏng và một bài kiểm cũ làm đúng việc của nó
+
+**Đoán sai 1:** đặt `CHAR_TABS.lv = KHAC_LV` (25) cho tab mới, tưởng là "tab mở đúng lúc cơ chế
+mở". Chụp màn hình ra mới thấy `renderCharPanel` tự đá tab đang chọn về Thông Tin khi nó bị khoá
+⇒ chip `🔒 ✦ Khắc Thân` là một nút bấm vào KHÔNG RA GÌ, và nhánh "chưa mở" tôi vừa viết trong
+`renderKhacThan` là **mã chết**. Nay tab hiện ở cấp 6, cơ chế gác ở `khacMo()`.
+
+**Đoán sai 2 (que dò):** hạ `player.level = 30` để thử cửa cấp. `khacCan` hỏi `lvPeak()` — mốc
+DÍNH, cố ý sống qua Tái Sinh — nên cảnh chưa bao giờ dựng được và bài báo *"khắc được Dấu Khắc
+chưa tới cấp"* trên mã đúng.
+
+**Đoán sai 3 (que dò):** `delete raw.khac` ở GỐC bản lưu để dựng cảnh "save đời trước". Bản lưu
+có nhiều ô nhân vật — dữ liệu ở `slots[active].player`. Phép xoá xoá một thứ chưa bao giờ ở đó,
+nên mệnh đề ⑤ **XANH mà chưa kiểm được gì**. Suýt tính là đã gác. Chốt `daXoa` bắt được.
+
+**Và một bài kiểm cũ làm đúng việc:** `test_nowuxia2` mục D quét cả CHÚ THÍCH. Khối chú thích của
+tôi giải thích luật bằng cách nêu đích danh mấy từ tu tiên bị cấm ⇒ đỏ 3 chỗ. Sửa bằng cách trỏ
+về danh sách ở CLAUDE.md thay vì chép lại — vừa qua bài kiểm, vừa bỏ được một bản sao thứ hai.
+
+*Bài học gộp: ba lần đều là CẢNH DỰNG sai chứ không phải cơ chế sai, và cả ba đều đọc ra y hệt
+một cơ chế hỏng. Trước khi tin một mệnh đề (xanh hay đỏ), hỏi xem phép dựng cảnh của nó có chạm
+đúng chỗ không.*

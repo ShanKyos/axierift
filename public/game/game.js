@@ -8511,6 +8511,10 @@ function calcDerived(){
   // ra ngoài mà không báo gì — đúng như applyLine() vẫn làm — nên chúng có đường đi riêng ở trên
   // và ở cuối hàm.
   for (const k in MZ) if (k in P) P[k] += MZ[k];
+  // Khắc Thân: cùng một lối — mọi khoá TRÙNG TÊN với sổ P đổ thẳng vào. Khoá lạ rơi ra ngoài
+  // trong im lặng y như mastery, nên sáu khoá của KHAC_DUONG đều được chọn từ sổ P.
+  const KZ = khacAgg();
+  for (const k in KZ) if (k in P) P[k] += KZ[k];
   // ⚠ BA NGUỒN CHỈ SỐ TỪ CON AXIE ĐÃ GỠ Ở ĐÂY, và chỗ trống này là CHỦ Ý:
   //   · bị động `thu` của từng con (× chiThuMul theo Huyết Thống)
   //   · bốn kỹ năng đồng hành mở theo cấp Chimera
@@ -9092,6 +9096,16 @@ function loadGame(idx){
     if (!player.vohoc) player.vohoc = {};
     if (!player.skillLv) player.skillLv = {};
     if (!player.skillTn) player.skillTn = {};   // save đời trước không có trục điểm tiềm năng
+    // Khắc Thân: save đời trước không có trường này. Thiếu dòng vá là cú bấm KHẮC đầu tiên đọc
+    // `player.khac[id]` trên `undefined` — cùng vết sẹo đã ghi cho `player.skillTn`.
+    if (!player.khac || typeof player.khac !== 'object') player.khac = {};
+    // ⚠ KẸP LẠI khi nạp, đừng tin con số trong save: một bản lưu sửa tay (hoặc một lỗi đời
+    // trước) ghi 999 vào đây là `khacAgg()` cộng thẳng 999 nấc thuộc tính mà không gì chặn —
+    // `khacDaKhac()` có kẹp nhưng nó chỉ kẹp lúc ĐỌC, còn bảng thì vẫn hiện số gốc.
+    for (const _d of KHAC_DUONG){
+      const _v = Math.floor(player.khac[_d.id] || 0);
+      if (_v > 0) player.khac[_d.id] = Math.min(KHAC_MOI_DUONG, _v); else delete player.khac[_d.id];
+    }
     // ⚠ PHẢI đứng SAU `player.vohoc` — `knRaSoat` hỏi `knDaNgo()`, mà bị động thì `knDaNgo` đọc
     // `player.vohoc`. Save đời cũ không có trường đó, nên rà soát sớm một dòng là mọi bị động
     // trên thanh bị coi như chưa ngộ và bị gỡ sạch, im lặng.
@@ -20476,6 +20490,342 @@ window.buyCharm = function(){
 // bỏ, và tới vòng Tái Sinh thứ năm thì trang bị lại thành đồ trang trí. Nên phần lớn nút nhân
 // vào chỉ số CỦA MÓN ĐỒ (wpnPct/armPct/plusStep/excPct): cày mastery làm việc đập đồ lên +9
 // càng đáng giá hơn, chứ không thay thế nó.
+// ═══════════════════════════════════════════════════════════════════════════════════════════
+// ✦ KHẮC THÂN — sáu ĐƯỜNG KHẮC trên thân người chơi
+// ═══════════════════════════════════════════════════════════════════════════════════════════
+// Chủ dự án đưa ảnh mẫu một bảng "mạch" của game kiếm hiệp và muốn một thứ tương tự. Cơ chế
+// thì mượn được; TỪ VỰNG thì không — bộ từ tu tiên của ảnh mẫu nằm nguyên trong danh sách cấm
+// của QUY TẮC SỐ 1 (danh sách đầy đủ ở CLAUDE.md — đừng chép nó ra đây thành bản sao thứ hai,
+// và `tests/test_nowuxia2.js` mục D quét cả CHÚ THÍCH chứ không chỉ chuỗi người chơi thấy, vì
+// chú thích là thứ dạy từ vựng cho người viết mã tiếp theo).
+// Nên hệ này đổi hẳn sang thứ canon của chính game đã có sẵn:
+//
+//   Vaeldra khắc Rune vào THÉP — mỗi lần rèn là một lần khắc.
+//   DRUE không khắc vào đá, không khắc vào thép: HẮN KHẮC VÀO CHÍNH MÌNH.
+//
+// Người chơi qua Nhát Gọi thì mất ký ức chứ không mất NGHỀ, nên họ biết khắc. Khắc lên thân
+// mình là đi đúng con đường DRUE đã đi — đó vừa là lý do nó mạnh, vừa là lý do nó có giá, và
+// nó nối thẳng vào kẻ thù chính của cốt truyện mà không phải bịa thêm một danh từ nào.
+//
+// ⚠ SÁU, KHÔNG PHẢI TÁM. Ảnh mẫu có tám, và tám cái tên ấy là một khái niệm y học Trung Hoa —
+// đúng thứ Quy tắc số 1 cấm, nên không mượn cả cấu trúc lẫn tên. Sáu ĐƯỜNG KHẮC ở đây là
+// sáu VÙNG THÂN mà một thợ khắc phương Tây sẽ khắc lên: sống lưng, nắm tay, gân chân, lồng
+// ngực, vầng trán, lòng tay. Giải phẫu, không phải huyền học.
+//
+// ⚠ MỖI ĐƯỜNG MỘT THUỘC TÍNH, và cả sáu khoá đều NẰM TRONG sổ P của calcDerived — đúng lối
+// masteryAgg() đã đi. Khoá lạ thì `applyLine()`/vòng đổ sổ lặng lẽ bỏ qua: dòng hiện trên bảng
+// mà không có tác dụng gì, không lỗi nào báo.
+//
+// ⚠ KHÔNG DÙNG `crit` VÀ `eva` LÀM PHẦN THƯỞNG CHÍNH. Cả hai là TỈ LỆ CÓ TRẦN (0,65 / 0,45) và
+// ở full BiS chúng đã kịch trần từ trang bị — đo được ngay trong phiên này: crit 0,650 · eva
+// 0,450. Cộng thêm ở đó là cộng vào 0. Đây đúng là "nợ đã biết" mà khối bị động chỉ số đã ghi
+// (`ps_defrate` và `ps_crit` cộng 0 ở full BiS); đừng dựng lại nó ở một hệ mới. Vầng Trán vì
+// thế trả `critDmg` (Sát Thương Bạo — KHÔNG trần) chứ không trả `crit`.
+const KHAC_TEN = 'Khắc Thân';
+const KHAC_LV = 25;              // cấp mở — xem chú thích "CỬA CƠ CHẾ MỞ Ở CẤP NÀO" ở CLAUDE.md
+const KHAC_MOI_DUONG = 12;       // số Dấu Khắc mỗi Đường; layout SUY TỪ con số này, đừng chép tay
+// Nhãn thuộc tính dùng chung với Đại Thành — hai bảng cùng gọi một khoá thì phải cùng một tên,
+// nếu không người chơi đọc "Công Kích" ở bảng này và "Sức Đánh" ở bảng kia rồi tưởng là hai thứ.
+const KHAC_NHAN = k => (typeof MASTERY_LABEL !== 'undefined' && MASTERY_LABEL[k]) || k;
+const KHAC_DV = { dmgred:'', pierce:'' };        // khoá nào KHÔNG phải phần trăm thì khai ở đây
+const khacDv = k => (k in KHAC_DV) ? KHAC_DV[k] : '%';
+// ── SÁU ĐƯỜNG ─────────────────────────────────────────────────────────────────────────────
+// `tong` là TỔNG thuộc tính khi khắc trọn đường (gồm cả thưởng trọn đường). Giá trị từng Dấu
+// Khắc SUY RA từ đây, không khai tay: khai tay 72 con số là 72 chỗ để lệch.
+//
+// Ngân sách chọn theo SỐ ĐO, không theo cảm giác. Đo trong phiên này (Dark Knight, traits rỗng):
+//   trần cấp 120 tay không   atk    81 · máu  2.299
+//   full BiS cấp 120         atk 1.717 · máu 28.845
+// tức trang bị là ×21 công và ×12,5 máu. Khắc trọn cả sáu đường cho khoảng +12% — ngang một bậc
+// trang bị, đủ để đáng cày mà không thay được trang bị. Đó là cùng một luật đã ghi cho mastery:
+// hệ nuôi-lớn KHUẾCH ĐẠI trang bị, không dựng một trục song song nuốt nó.
+const KHAC_DUONG = [
+  { id:'song',  ten:'Sống Lưng',  vung:'lưng',      k:'hpPct',   tong:12, glyph:'▮',
+    moTa:'Khắc dọc từng đốt sống. Nét sâu nhất, và cũng là nét đau nhất — thợ khắc cũ gọi đây là đường phải khắc đầu tiên, vì ai chịu nổi nó thì chịu được năm đường còn lại.' },
+  { id:'nam',   ten:'Nắm Tay',    vung:'tay phải',  k:'atkPct',  tong:12, glyph:'✊',
+    moTa:'Bốn nét trên khớp ngón, một nét trong lòng nắm. Khắc xong thì cú đấm mang theo một phần sức của phiến đá — và tay không bao giờ duỗi thẳng hẳn được nữa.' },
+  { id:'gan',   ten:'Gân Chân',   vung:'chân',      k:'aspdPct', tong:8,  glyph:'⟂',
+    moTa:'Chạy theo gân kheo xuống gót. Đường duy nhất khắc được lúc đang đứng — và là đường mà kẻ đi trước nào cũng khắc lại vài lần vì nét cũ mòn theo bước chân.' },
+  { id:'nguc',  ten:'Lồng Ngực',  vung:'ngực',      k:'dmgred',  tong:5,  glyph:'⛨',
+    moTa:'Vòng quanh xương sườn, khép lại ở ức. Nếp Khắc Vừa dạy: khắc vừa đúng cái phiến đá gánh nổi. Ở đây phiến đá là lồng ngực của ngươi.' },
+  { id:'tran',  ten:'Vầng Trán',  vung:'đầu',       k:'critDmg', tong:15, glyph:'◈',
+    moTa:'Một nét ngang, ba nét dọc cắt qua. Khắc ở đây thì mắt tìm được chỗ mỏng nhất của giáp đối phương — nhưng cũng tìm được ở người quen.' },
+  { id:'long',  ten:'Lòng Tay',   vung:'tay trái',  k:'pierce',  tong:10, glyph:'✋',
+    moTa:'Nét mảnh nhất trong sáu đường, khắc ngược vào lòng bàn tay trái. Đường mà DRUE khắc trước tiên, theo manh mối còn lại ở Trũng Nứt.' },
+];
+const KHAC_MAP = Object.fromEntries(KHAC_DUONG.map(d => [d.id, d]));
+// Tên từng Dấu Khắc. ⚠ TÊN LÀ NỘI DUNG, PHẢI VIẾT TAY — sinh bằng máy ("Dấu Khắc 7") thì cả
+// bảng đọc ra một cái bảng tính. Còn SỐ thì ngược lại: suy bằng công thức, xem `khacNut()`.
+const KHAC_TEN_NUT = {
+  song: ['Chân Cột','Đốt Thấp','Eo Sau','Gáy Dưới','Cánh Vai','Đỉnh Cột','Rãnh Sâu','Nút Thắt','Bản Lề','Trụ Giữa','Khớp Trên','Chóp Sống'],
+  nam:  ['Đốt Út','Đốt Áp','Đốt Giữa','Đốt Trỏ','Gốc Cái','Mu Bàn','Cổ Tay','Ức Nắm','Khớp Siết','Gân Nắm','Viền Ngón','Đỉnh Nắm'],
+  gan:  ['Gót Sau','Bắp Dưới','Khoeo','Gân Kheo','Đùi Sau','Hông Ngoài','Mắt Cá','Mu Chân','Ống Trước','Đầu Gối','Bẹn Ngoài','Chóp Hông'],
+  nguc: ['Sườn Cuối','Sườn Dưới','Hông Sườn','Sườn Giữa','Ức Thấp','Ức Giữa','Sườn Trên','Hõm Vai','Xương Đòn','Ức Cao','Vành Ngực','Khoá Ức'],
+  tran: ['Chân Mày','Ấn Giữa','Thái Dương','Hốc Mắt','Gò Má','Trán Thấp','Trán Giữa','Trán Cao','Đỉnh Đầu','Sau Tai','Gáy Trên','Vòng Khắc'],
+  long: ['Mô Út','Mô Cái','Rãnh Giữa','Nếp Gấp','Gốc Ngón','Lòng Sâu','Cổ Tay Trong','Mạch Quay','Cẳng Trong','Khuỷu Trong','Nách Trong','Tâm Bàn'],
+};
+// Hình học của một Đường: 12 Dấu Khắc xếp ZIGZAG hai cột — đúng hình ảnh mẫu, và nó có lý do
+// chứ không phải bắt chước: một cột thẳng 12 ô thì bảng cao gấp đôi và phải cuộn, còn zigzag
+// vừa đọc ra "một sợi dây chạy dọc thân" vừa gói gọn trong khung.
+// Hai CỘT CHẤM cách nhau KHAC_COT; tên chữ nằm ra ngoài hai bên (cột trái canh phải, cột phải
+// canh trái) nên sợi dây chấm chạy ở GIỮA khung — đúng hình ảnh mẫu, và nhờ thế bề ngang khung
+// đủ hẹp để còn chỗ cho dải bóng thân bên phải trong một bảng chỉ rộng ~464px.
+const KHAC_COT = 54, KHAC_HANG = 34, KHAC_LE_X = 104, KHAC_LE_Y = 22, KHAC_TEN_RONG = 96;
+const khacX = c => KHAC_LE_X + c * KHAC_COT;
+const khacY = h => KHAC_LE_Y + h * KHAC_HANG;
+// ⚠ BỀ RỘNG/CAO SUY TỪ HÌNH, đừng chép cứng. Đổi KHAC_MOI_DUONG là khung tự giãn — chép cứng
+// thì thêm hai Dấu Khắc là hai ô cuối rơi ra ngoài SVG và biến mất không một lỗi nào.
+function khacKho(){
+  const hangCuoi = Math.floor((KHAC_MOI_DUONG - 1) / 2);
+  return { w: khacX(1) + KHAC_TEN_RONG + 8, h: khacY(hangCuoi) + KHAC_LE_Y + 10 };
+}
+function khacViTri(i){ return { c: i % 2, h: Math.floor(i / 2) }; }
+// Giá và giá trị của Dấu Khắc thứ i (0-based) trên đường `d`.
+// ⚠ GIÁ TRỊ CHIA ĐỀU, THƯỞNG TRỌN ĐƯỜNG LÀ PHẦN CÒN LẠI. Nút cuối không được to bất thường:
+// người chơi nhìn bảng phải đọc được "mỗi nét thêm chừng này", còn cục thưởng thì nằm ở chỗ
+// KHẮC TRỌN — đó mới là thứ kéo người ta đi hết một đường thay vì rải mỏng cả sáu.
+const KHAC_THUONG_TRON = 0.30;          // 30% tổng nằm ở thưởng trọn đường
+function khacGiaTriNut(d){ return d.tong * (1 - KHAC_THUONG_TRON) / KHAC_MOI_DUONG; }
+function khacThuongTron(d){ return d.tong * KHAC_THUONG_TRON; }
+// Cấp yêu cầu: trải đều từ KHAC_LV tới MAX_LV qua CẢ SÁU đường, nên người chơi luôn có vài Dấu
+// Khắc mở sẵn ở mọi cấp thay vì mở ồ ạt rồi tắc. Đây chính là chỗ lấp "99 cấp không có hệ thống
+// mới" mà mục chẩn đoán gốc trong CLAUDE.md đã đo ra.
+function khacCapNut(d, i){
+  const b = KHAC_DUONG.findIndex(x => x.id === d.id);
+  const buoc = (MAX_LV - KHAC_LV) / (KHAC_MOI_DUONG * KHAC_DUONG.length);
+  return Math.min(MAX_LV, Math.round(KHAC_LV + (i * KHAC_DUONG.length + b) * buoc));
+}
+// Giá Lumen neo vào CẤP yêu cầu, không vào chỉ số thứ tự — nên một Dấu Khắc mở ở cấp 100 đắt
+// đúng theo túi tiền của một người cấp 100. Mũ 1,35 thoải hơn giá nâng chiêu (1,45) vì đây là
+// đường đi MỘT CHIỀU, không nâng lại được.
+function khacGiaNut(d, i){ return Math.round(120 * Math.pow(khacCapNut(d, i), 1.35)); }
+function khacBanNangNut(d, i){ return Math.round(14 * Math.pow(khacCapNut(d, i), 1.1)); }
+function khacNut(d, i){
+  return { duong:d.id, i, ten:(KHAC_TEN_NUT[d.id] || [])[i] || `Dấu ${i + 1}`,
+    k:d.k, v:khacGiaTriNut(d), lv:khacCapNut(d, i),
+    gia:khacGiaNut(d, i), bn:khacBanNangNut(d, i), ...khacViTri(i) };
+}
+function khacNuts(d){ return Array.from({ length:KHAC_MOI_DUONG }, (_, i) => khacNut(d, i)); }
+// ── TRẠNG THÁI ────────────────────────────────────────────────────────────────────────────
+// `player.khac = { <đường>: <số Dấu Khắc đã khắc> }`. Một con số mỗi đường, không phải một mảng
+// cờ: đường đi MỘT CHIỀU và theo THỨ TỰ, nên số lượng đã nói đủ. Mảng cờ là mở cửa cho trạng
+// thái không hợp lệ (khắc nút 5 mà chưa khắc nút 4) mà không cơ chế nào chặn được.
+function khacDaKhac(id){ return Math.min(KHAC_MOI_DUONG, Math.max(0, (player && player.khac && player.khac[id]) || 0)); }
+function khacTronDuong(id){ return khacDaKhac(id) >= KHAC_MOI_DUONG; }
+function khacTongDaKhac(){ return KHAC_DUONG.reduce((t, d) => t + khacDaKhac(d.id), 0); }
+function khacTongNut(){ return KHAC_MOI_DUONG * KHAC_DUONG.length; }
+function khacTronHet(){ return KHAC_DUONG.every(d => khacTronDuong(d.id)); }
+function khacMo(){ return !!player && lvPeak() >= KHAC_LV; }
+// Dấu Khắc kế tiếp của một đường — `null` khi đã trọn.
+function khacNutKe(id){
+  const d = KHAC_MAP[id]; if (!d) return null;
+  const n = khacDaKhac(id);
+  return n >= KHAC_MOI_DUONG ? null : khacNut(d, n);
+}
+// ⚠ CỬA DUY NHẤT hỏi "khắc được chưa", dùng chung cho cả nút bấm lẫn phần vẽ — đúng lối
+// `masteryKhoa` và `knOHopLe`. Viết lại luật ở phần vẽ là thứ người chơi ĐỌC và thứ máy THỰC
+// THI lệch nhau, mà kiểu lệch đó không lỗi nào báo.
+// Trả `null` khi khắc được, hoặc một chuỗi LÝ DO.
+// ⚠ `player.khi` (Bản Năng) là SỐ THỰC — nó hồi liên tục nên gần như lúc nào cũng có phần lẻ.
+// Đọc thẳng là bảng in ra "5.000.000,05 Bản Năng", đúng rác dấu phẩy động mà ô Thể Lực đã phơi
+// ra mặt bảng một lần rồi. Làm tròn XUỐNG ở CỬA ĐỌC, không phải ở từng chỗ in: làm ở chỗ in thì
+// con số người chơi THẤY và con số máy TRỪ lệch nhau đúng một nấc.
+function khacBanNang(){ return Math.floor((player && player.khi) || 0); }
+function khacCan(id){
+  if (!khacMo()) return `Mở ở cấp ${KHAC_LV}`;
+  const nut = khacNutKe(id);
+  if (!nut) return 'Đã khắc trọn đường này';
+  if (lvPeak() < nut.lv) return `Cần cấp ${nut.lv}`;
+  if ((player.silver || 0) < nut.gia) return `Thiếu ${(nut.gia - (player.silver || 0)).toLocaleString('vi-VN')}◈`;
+  if (khacBanNang() < nut.bn) return `Thiếu ${(nut.bn - khacBanNang()).toLocaleString('vi-VN')} Bản Năng`;
+  return null;
+}
+// ── SỔ HIỆU LỰC ───────────────────────────────────────────────────────────────────────────
+// Gom về một sổ đúng khuôn `masteryAgg()`. Mọi khoá ở đây PHẢI có mặt trong sổ P của
+// calcDerived; vòng đổ sổ ở đó bỏ qua khoá lạ trong im lặng.
+const KHAC_TRON_HET_EXP = 5;   // khắc trọn cả sáu đường → +5% EXP
+function khacAgg(){
+  const A = {};
+  for (const d of KHAC_DUONG) A[d.k] = A[d.k] || 0;
+  A.expPct = A.expPct || 0;
+  if (!player || !khacMo()) return A;
+  for (const d of KHAC_DUONG){
+    const n = khacDaKhac(d.id);
+    if (n <= 0) continue;
+    A[d.k] += khacGiaTriNut(d) * n;
+    if (n >= KHAC_MOI_DUONG) A[d.k] += khacThuongTron(d);
+  }
+  // Khắc trọn CẢ SÁU: một khoản chung. Đây là chỗ trả lời cho câu hỏi "vì sao đi hết đường thứ
+  // sáu khi năm đường đầu đã đủ dùng" — và nó cố ý là EXP, tức thứ rút ngắn chặng còn lại chứ
+  // không phải thêm một nấc sức mạnh nữa.
+  if (khacTronHet()) A.expPct += KHAC_TRON_HET_EXP;
+  for (const k in A) A[k] = Math.round(A[k] * 100) / 100;
+  return A;
+}
+// ⚠ KHẮC LÀ MỘT CHIỀU — KHÔNG CÓ NÚT TẨY. Đại Thành có `masteryRespec` vì ở đó người chơi chọn
+// HƯỚNG (hai nhánh loại trừ nhau) nên chọn sai là có thật. Ở đây không có hướng nào để chọn
+// sai: sáu đường rồi ai cũng khắc trọn cả sáu, thứ duy nhất người chơi quyết là THỨ TỰ. Thêm
+// nút tẩy vào một hệ không có lựa chọn sai là thêm một nút không ai bấm — và canon thì nói
+// thẳng: nét khắc trên thân không gỡ ra được.
+window.khacThem = function(id){
+  if (khacCan(id)) { AudioSys.sfx('ui', 0.4); return; }
+  const nut = khacNutKe(id); if (!nut) return;
+  if (!player.khac) player.khac = {};
+  player.khac[id] = khacDaKhac(id) + 1;
+  player.silver -= nut.gia;
+  player.khi = (player.khi || 0) - nut.bn;
+  const d = KHAC_MAP[id];
+  const tron = khacTronDuong(id);
+  addFloat(player.x, player.y - 60,
+    tron ? `✦ Khắc trọn ${d.ten}` : `✦ ${nut.ten} — +${khacGiaTriNut(d).toFixed(2)}${khacDv(d.k)} ${KHAC_NHAN(d.k)}`,
+    tron ? '#ffd76a' : '#9ef2ff', tron ? 16 : 13);
+  AudioSys.sfx(tron ? 'levelup' : 'ui', tron ? 0.7 : 0.55);
+  if (tron) logCombat(`✦ ${KHAC_TEN}: khắc trọn ${d.ten} — thêm ${khacThuongTron(d).toFixed(1)}${khacDv(d.k)} ${KHAC_NHAN(d.k)}`, '#ffd76a');
+  calcDerived(); saveGame(); renderKhacThan();
+};
+window.khacChon = function(id){ window._khacTab = id; renderKhacThan(); };
+
+// ── LAYOUT ────────────────────────────────────────────────────────────────────────────────
+// Bố cục theo ảnh mẫu chủ dự án đưa, ba khối trên một hàng rồi một khung đọc ở dưới:
+//
+//   ┌ đầu bảng: tiến độ N/72 · ví Lumen · ví Bản Năng ───────────────────────┐
+//   ├─ rail ──────┬─ sợi Dấu Khắc (zigzag) ──────┬─ bóng thân (ô chờ art) ──┤
+//   │ Toàn Bộ     │      ○──                     │   ┌──────────┐           │
+//   │ Sống Lưng   │        ╲                     │   │  <art>   │           │
+//   │ Nắm Tay     │         ──○                  │   └──────────┘           │
+//   │ …           │                              │                          │
+//   ├─────────────┴──────────────────────────────┴──────────────────────────┤
+//   │ khung đọc: Dấu Khắc kế tiếp · thuộc tính · giá · [ KHẮC ]              │
+//   └────────────────────────────────────────────────────────────────────────┘
+//
+// ⚠ Ô ART CHƯA CÓ THÌ VẼ Ô CHỜ CÓ NHÃN, đừng dựng hình bằng `ctx`/SVG rồi để đó. Quy tắc số 3
+// cấm vector cho ART; một ô chờ có nhãn thì không ai tưởng là art thật rồi để nguyên — đúng
+// lối `iaChuaArt`. Chấm và đường nối thì KHÔNG phải art: chúng là khung giao diện, cùng loại
+// với mũi tên SVG của cây kỹ năng đang chạy.
+const KHAC_ART = d => `assets/ui/khac_${d.id}.webp`;
+function khacBongThan(d){
+  // `onerror` ẩn hẳn thẻ ảnh để lộ ô chờ bên dưới — art thả vào đúng đường dẫn là tự hiện,
+  // không phải sửa một dòng mã nào.
+  return `<div class="khac-than">
+    <img src="${KHAC_ART(d)}" alt="" onerror="this.style.display='none'">
+    <div class="khac-than-cho"><b>${d.glyph}</b><span>${d.ten}</span><i>${d.vung}</i></div>
+  </div>`;
+}
+// Sợi Dấu Khắc: một polyline qua 12 chấm theo đúng thứ tự khắc. Phần ĐÃ khắc tô sáng, phần còn
+// lại để mờ — nên nhìn một cái là biết mình đang ở đâu trên đường, không phải đếm chấm.
+function khacSoiHtml(d){
+  const n = khacDaKhac(d.id), nuts = khacNuts(d), K = khacKho();
+  const cx = u => khacX(u.c), cy = u => khacY(u.h);
+  let duong = '';
+  for (let i = 1; i < nuts.length; i++){
+    const a = nuts[i - 1], b = nuts[i], xong = i <= n - 1;
+    duong += `<line x1="${cx(a)}" y1="${cy(a)}" x2="${cx(b)}" y2="${cy(b)}"
+      stroke="${xong ? '#ffd76a' : '#39406a'}" stroke-width="${xong ? 3 : 2}" stroke-linecap="round"
+      opacity="${xong ? .95 : .55}"/>`;
+  }
+  let cham = '', chu = '';
+  const ke = khacNutKe(d.id);
+  for (let i = 0; i < nuts.length; i++){
+    const u = nuts[i], xong = i < n, laKe = !!ke && ke.i === i;
+    const mau = xong ? '#ffd76a' : laKe ? '#9ef2ff' : '#39406a';
+    cham += `<circle cx="${cx(u)}" cy="${cy(u)}" r="${laKe ? 6.5 : 5}" fill="${xong ? mau : '#12152a'}"
+      stroke="${mau}" stroke-width="2"${laKe ? ' class="khac-nhay"' : ''}/>`;
+    // Tên chữ: cột trái canh PHẢI (kết ở sát chấm), cột phải canh TRÁI. Nhờ thế sợi chấm nằm
+    // đúng giữa và hai mảng chữ không bao giờ đụng nhau dù tên dài ngắn khác nhau.
+    const tx = u.c === 0 ? cx(u) - 11 : cx(u) + 11;
+    chu += `<text x="${tx}" y="${cy(u) + 3.5}" text-anchor="${u.c === 0 ? 'end' : 'start'}"
+      class="khac-chu${xong ? ' da' : laKe ? ' ke' : ''}">${u.ten}</text>`;
+  }
+  return `<svg class="khac-soi" width="${K.w}" height="${K.h}" viewBox="0 0 ${K.w} ${K.h}">${duong}${cham}${chu}</svg>`;
+}
+// Khung đọc dưới cùng — Dấu Khắc KẾ TIẾP của đường đang xem, kèm cái giá và một lý do khi chưa
+// khắc được. ⚠ Lý do lấy từ `khacCan()`, tức ĐÚNG hàm mà nút bấm hỏi: thứ người chơi đọc và
+// thứ máy thực thi không thể lệch nhau.
+function khacKhungDoc(d){
+  const ke = khacNutKe(d.id), ly = khacCan(d.id);
+  if (!ke) return `<div class="khac-doc tron">
+    <b>✦ ${d.ten} — đã khắc trọn</b>
+    <span>Thưởng trọn đường: <b>+${khacThuongTron(d).toFixed(1)}${khacDv(d.k)}</b> ${KHAC_NHAN(d.k)}</span></div>`;
+  const du = !ly;
+  return `<div class="khac-doc">
+    <div class="khac-doc-l">
+      <b>${ke.ten}</b>
+      <span>+${khacGiaTriNut(d).toFixed(2)}${khacDv(d.k)} ${KHAC_NHAN(d.k)} · Dấu Khắc ${ke.i + 1}/${KHAC_MOI_DUONG}</span>
+      <span class="khac-gia">Cần: <b class="${(player.silver||0) >= ke.gia ? 'du' : 'thieu'}">${ke.gia.toLocaleString('vi-VN')}◈</b>
+        · <b class="${khacBanNang() >= ke.bn ? 'du' : 'thieu'}">${ke.bn.toLocaleString('vi-VN')} Bản Năng</b>
+        · <b class="${lvPeak() >= ke.lv ? 'du' : 'thieu'}">cấp ${ke.lv}</b></span>
+    </div>
+    <button class="khac-nut${du ? '' : ' mo'}" onclick="khacThem('${d.id}')"${du ? '' : ' disabled'}>
+      ${du ? 'KHẮC' : ly}</button>
+  </div>`;
+}
+// Trang TOÀN BỘ — đúng vai của ảnh số 1: tiến độ tổng, sáu dòng thuộc tính đang có, và lý do
+// hệ này tồn tại. ⚠ Sáu dòng SUY TỪ `khacAgg()`, không cộng tay ở đây: cộng tay là bảng nói một
+// đằng còn `calcDerived` làm một nẻo, mà kiểu lệch đó không lỗi nào báo.
+function khacToanBoHtml(){
+  const A = khacAgg(), tong = khacTongNut(), da = khacTongDaKhac();
+  let h = `<div class="khac-tien">
+    <div class="khac-tien-bar"><i style="width:${(da / tong * 100).toFixed(1)}%"></i></div>
+    <span>${da}/${tong} Dấu Khắc</span></div>`;
+  h += `<div class="khac-tong">`;
+  for (const d of KHAC_DUONG){
+    const n = khacDaKhac(d.id), tron = n >= KHAC_MOI_DUONG;
+    const v = khacGiaTriNut(d) * n + (tron ? khacThuongTron(d) : 0);
+    h += `<div class="khac-tong-d${tron ? ' tron' : ''}">
+      <b>${d.glyph}</b><span>${d.ten}</span>
+      <i>${v > 0 ? '+' + v.toFixed(1) + khacDv(d.k) : '—'}</i>
+      <u>${KHAC_NHAN(d.k)}</u><s>${n}/${KHAC_MOI_DUONG}</s></div>`;
+  }
+  h += `</div>`;
+  h += `<div class="khac-loi">
+    Vaeldra khắc Rune vào <b>thép</b> — mỗi lần rèn là một lần khắc. Người thứ bảy không khắc vào
+    đá, không khắc vào thép: <b>hắn khắc vào chính mình</b>.<br>
+    Qua Nhát Gọi thì mất ký ức chứ không mất <b>nghề</b>. Ngươi biết cầm mũi khắc, và ngươi biết
+    nó sẽ ăn gì của ngươi.<br>
+    <em>Khắc trọn cả sáu đường: thêm <b>+${KHAC_TRON_HET_EXP}%</b> EXP${A.expPct >= KHAC_TRON_HET_EXP ? ' <b style="color:#7ec850">— đã nhận</b>' : ''}.</em><br>
+    <em style="color:#ff9a6a">Nét khắc trên thân không gỡ ra được — không có nút tẩy.</em></div>`;
+  return h;
+}
+function renderKhacThan(){
+  const C = CE(); if (!C) return;
+  let html = `<div class="stat-sec">${KHAC_TEN}</div>`;
+  if (!khacMo()){
+    html += `<div class="bonus-list" style="line-height:1.8">
+      ◆ <b style="color:#ffd76a">${KHAC_TEN}</b> khai mở ở <b style="color:#ffd76a">cấp ${KHAC_LV}</b>.<br>
+      ◆ Sáu <b>Đường Khắc</b> trên sáu vùng thân, mỗi đường <b>${KHAC_MOI_DUONG}</b> Dấu Khắc —
+        tổng <b>${khacTongNut()}</b> nét, trải từ cấp ${KHAC_LV} tới ${MAX_LV}.<br>
+      ◆ Khắc bằng <b>Lumen</b> và <b>Bản Năng</b>, theo thứ tự, <b style="color:#ff9a6a">một chiều</b>.<br>
+      ◆ Khắc trọn một đường có thưởng riêng; trọn cả sáu thì thêm <b>+${KHAC_TRON_HET_EXP}%</b> EXP.</div>
+      <div style="font-size:12px;color:#9aa8d4;margin-top:6px">Hiện tại: cấp đỉnh <b>${lvPeak()}</b>/${KHAC_LV}</div>`;
+    C.innerHTML = html; return;
+  }
+  const tab = window._khacTab || 'all';
+  html += `<div class="khac-head">
+    <span>Đã khắc <b>${khacTongDaKhac()}</b>/${khacTongNut()}</span>
+    <span>${(player.silver || 0).toLocaleString('vi-VN')}◈</span>
+    <span>${khacBanNang().toLocaleString('vi-VN')} Bản Năng</span></div>`;
+  html += `<div class="khac-khung"><div class="khac-rail">`;
+  html += `<button class="${tab === 'all' ? 'on' : ''}" onclick="khacChon('all')">Toàn Bộ</button>`;
+  for (const d of KHAC_DUONG){
+    const n = khacDaKhac(d.id), tron = n >= KHAC_MOI_DUONG;
+    const san = !khacCan(d.id);      // khắc được NGAY → chấm mời gọi, đúng lối dấu + của cây kỹ năng
+    html += `<button class="${d.id === tab ? 'on' : ''}${tron ? ' tron' : ''}" onclick="khacChon('${d.id}')"
+      title="${d.ten} — ${KHAC_NHAN(d.k)}">${d.ten}<i>${tron ? '✓ trọn' : n + '/' + KHAC_MOI_DUONG}</i>${san ? '<u>+</u>' : ''}</button>`;
+  }
+  html += `</div>`;
+  if (tab === 'all'){
+    html += `<div class="khac-giua toanbo">${khacToanBoHtml()}</div></div>`;
+  } else {
+    const d = KHAC_MAP[tab] || KHAC_DUONG[0];
+    html += `<div class="khac-giua">${khacSoiHtml(d)}</div>`;
+    html += khacBongThan(d);
+    html += `</div>`;
+    html += `<div class="khac-mota">${d.moTa}</div>`;
+    html += khacKhungDoc(d);
+  }
+  C.innerHTML = html;
+}
+
 const MASTERY_NAME = 'Đại Thành';
 // Khoá hiệu lực của mastery ↔ tên hiển thị. Đây cũng là DANH SÁCH KHOÁ dùng để dựng sổ trong
 // masteryAgg(), nên phải khai trước mọi thứ đọc nó (calcDerived gọi masteryAgg — xem bẫy TDZ cũ
@@ -23117,6 +23467,16 @@ const CHAR_TABS = [
   // `window.doTayTuy()` GIỮ NGUYÊN: `player.resetCount` đang nằm trong mọi bản lưu và còn cộng
   // chỉ số vĩnh viễn trong `calcDerived()`. Trả tab về = thêm lại đúng dòng này.
   // Đại Thành ló tab ở cấp MASTERY_LV (120); bên trong còn cần xong chính tuyến — xem masteryOpen().
+  // ✦ Khắc Thân — mở ở cấp KHAC_LV. Đặt TRƯỚC Đại Thành vì nó mở sớm hơn gần 100 cấp: hàng
+  // tab con đọc theo thứ tự khai, và một tab mở ở cấp 25 nằm sau một tab mở ở cấp 120 thì
+  // người chơi cấp 30 thấy một cái khoá đứng trước thứ mình vừa mở được.
+  // ⚠ `lv` ở đây là cấp HIỆN TAB, không phải cấp mở cơ chế — cơ chế gác ở `khacMo()` (cấp
+  // KHAC_LV). Để `lv:KHAC_LV` thì `renderCharPanel` đá tab về Thông Tin, nên cái chip "🔒 ✦ Khắc
+  // Thân" thành một nút bấm vào KHÔNG RA GÌ — đúng vết sẹo `openEvoPanel` của `test_cayky`. Và
+  // nhánh "chưa mở" trong `renderKhacThan` khi ấy là mã chết: không đường nào tới được nó.
+  // Mở tab cùng cấp với Thân Axie (6) ⇒ cấp mở của cả nhóm KHÔNG đổi, mà người chơi đọc được
+  // hệ này tồn tại và mở ở đâu từ rất sớm — đúng thứ mục "HAI TRỤC AXIE PHẢI ĐƯỢC DẠY" đòi.
+  { id:'khacthan', name:'✦ Khắc Thân', lv:6 },
   { id:'mastery',  name:'✦ Đại Thành', lv:MASTERY_LV },
 ];
 // Sáu tab trên một hàng là quá nhiều: ở bề rộng bảng 464px, hàng tab xuống hai dòng và cái thứ
@@ -23125,7 +23485,7 @@ const CHAR_TABS = [
 //   MÃ TAB GIỮ NGUYÊN. sysUnlocked(), refreshCharTab() và các bài kiểm cũ đều tra theo mã
 //   ('mount', 'mastery'); đổi mã là làm hỏng cả hai. Đây chỉ là cách BÀY.
 const CHAR_NHOM_ID = 'nangcap';
-const CHAR_NHOM = ['mount', 'mastery'];
+const CHAR_NHOM = ['mount', 'khacthan', 'mastery'];
 const charTabDef = id => CHAR_TABS.find(t => t.id === id);
 // Tab mẹ mở khi có ÍT NHẤT MỘT con mở — khoá cả bốn mới khoá nó.
 function charNhomMo(){ return CHAR_NHOM.some(id => sysUnlocked(id)); }
@@ -23163,6 +23523,7 @@ function renderCharPanel(){
   if (tab==='info') renderChar();
   else if (tab==='mount') renderMount();
   else if (tab==='taytuy') renderTayTuy();
+  else if (tab==='khacthan') renderKhacThan();
   else if (tab==='mastery') renderMastery();
   else renderForge();
 }

@@ -2699,3 +2699,88 @@ i.chi-anh {
   border:none; background-color:transparent; pointer-events:none;
   filter:drop-shadow(0 3px 6px rgba(0,0,0,.55)); }
 @media (max-width:720px){ .cc-card .cc-ava-ke { display:none; } }
+
+/* ══════════════════════════════════════════════════════════════════════════════════════════
+   ✦ KHẮC THÂN — sáu Đường Khắc
+   ──────────────────────────────────────────────────────────────────────────────────────────
+   Bố cục ba khối trên một hàng (rail · sợi Dấu Khắc · bóng thân) rồi một khung đọc dưới cùng.
+   ⚠ BẢNG CHỈ RỘNG ~464px nên ba khối phải khít: rail 84 + sợi ~262 + bóng thân co lại phần
+   còn dư. Dùng `minmax(0,…)` cho cột giữa — thiếu nó thì SVG đẩy cả hàng tràn ra ngoài bảng,
+   đúng cái lỗi bản đồ góc màn đã dẫm (tràn cột rồi bị `overflow:hidden` xén mất).
+   ⚠ Chấm và đường nối là KHUNG GIAO DIỆN, không phải art — cùng loại với mũi tên SVG của cây
+   kỹ năng. Ô chờ art (`.khac-than-cho`) mới là chỗ Quy tắc số 3 nói tới, và nó cố ý vẽ thô. */
+.khac-head { display:flex; justify-content:space-between; align-items:center; gap:8px;
+  font-size:12px; color:#9aa8d4; margin:2px 0 8px; }
+.khac-head b { color:var(--gold); font-size:14px; }
+.khac-khung { display:grid; grid-template-columns:84px minmax(0,1fr) auto; gap:6px; align-items:start; }
+.khac-rail { display:flex; flex-direction:column; gap:3px; }
+.khac-rail button { position:relative; text-align:left; padding:5px 6px; font-size:11px; line-height:1.15;
+  background:rgba(20,17,12,.72); color:#cfd6f2; border:1px solid rgba(90,84,60,.55); border-radius:3px;
+  cursor:pointer; }
+.khac-rail button:hover { border-color:var(--vien-dong); background:rgba(48,40,26,.8); }
+.khac-rail button.on { background:rgba(86,68,30,.92); color:#ffe9b0; border-color:var(--vien-dong-manh); }
+.khac-rail button.tron { color:var(--gold); }
+.khac-rail button i { display:block; font-style:normal; font-size:9.5px; color:#8b93b8; }
+.khac-rail button.on i { color:#d8c088; }
+/* Dấu + xanh = khắc được NGAY. Cùng quy ước với dấu + của cây kỹ năng, nên nó không phải một
+   ký hiệu mới người chơi phải học. */
+.khac-rail button u { position:absolute; right:4px; top:4px; text-decoration:none;
+  color:#7ec850; font-weight:700; font-size:13px; line-height:1; }
+.khac-giua { min-width:0; overflow:hidden; }
+.khac-giua.toanbo { grid-column:2 / -1; }
+.khac-soi { display:block; max-width:100%; }
+.khac-soi .khac-chu { font:10.5px "Be Vietnam Pro",sans-serif; fill:#7c85ab; }
+.khac-soi .khac-chu.da { fill:#e7c987; }
+.khac-soi .khac-chu.ke { fill:#9ef2ff; }
+.khac-nhay { animation:khacNhay 1.5s ease-in-out infinite; }
+@keyframes khacNhay { 0%,100% { opacity:1 } 50% { opacity:.45 } }
+/* ── Ô CHỜ ART: bóng thân, mỗi Đường một tấm ──────────────────────────────────────────────
+   Vẽ THÔ có chủ ý (gạch chéo + nhãn) để không ai tưởng là art thật rồi để nguyên — đúng lối
+   `iaChuaArt`. Thả tệp vào `assets/ui/khac_<id>.webp` là ảnh tự đè lên, không sửa mã. */
+.khac-than { position:relative; width:104px; height:224px; }
+.khac-than img { position:absolute; inset:0; width:100%; height:100%; object-fit:contain; z-index:1; }
+.khac-than-cho { position:absolute; inset:0; display:flex; flex-direction:column;
+  align-items:center; justify-content:center; gap:4px; border:1px dashed rgba(120,112,80,.6);
+  border-radius:4px; color:#6f7699; text-align:center; padding:6px;
+  background:repeating-linear-gradient(45deg,rgba(255,255,255,.022) 0 7px,transparent 7px 14px); }
+.khac-than-cho b { font-size:26px; color:#8a93bb; line-height:1; }
+.khac-than-cho span { font-size:11px; color:#aab2d6; }
+.khac-than-cho i { font-size:9.5px; font-style:normal; color:#636a8c; }
+.khac-mota { margin:7px 0 6px; font-size:11px; line-height:1.55; color:#9aa2c6;
+  border-left:2px solid rgba(198,158,74,.45); padding-left:8px; }
+/* ── Khung đọc ───────────────────────────────────────────────────────────────────────────── */
+.khac-doc { display:flex; align-items:center; gap:8px; padding:7px 9px; border-radius:4px;
+  background:rgba(14,12,20,.78); border:1px solid rgba(90,84,60,.5); }
+.khac-doc-l { flex:1; min-width:0; display:flex; flex-direction:column; gap:2px; }
+.khac-doc-l b { color:#ffe9b0; font-size:12.5px; }
+.khac-doc-l span { font-size:10.5px; color:#9aa2c6; }
+.khac-doc .khac-gia b { font-size:10.5px; }
+.khac-doc .khac-gia b.du { color:#9fdc8a; } .khac-doc .khac-gia b.thieu { color:#ff9a6a; }
+.khac-doc.tron { flex-direction:column; align-items:flex-start; gap:3px; }
+.khac-doc.tron b { color:var(--gold); }
+.khac-nut { flex:0 0 auto; padding:8px 14px; border-radius:4px; cursor:pointer; font-weight:700;
+  font-size:12px; letter-spacing:.4px; color:#1b1508; border:1px solid var(--vien-dong-manh);
+  background:linear-gradient(180deg,#e8c777,#b9902f); }
+.khac-nut:hover { filter:brightness(1.1); }
+.khac-nut.mo { background:rgba(40,36,30,.85); color:#7e8099; border-color:rgba(90,84,60,.5);
+  cursor:not-allowed; font-weight:500; letter-spacing:0; }
+/* ── Trang Toàn Bộ ───────────────────────────────────────────────────────────────────────── */
+.khac-tien { display:flex; align-items:center; gap:8px; margin-bottom:8px; }
+.khac-tien-bar { flex:1; height:12px; border-radius:6px; overflow:hidden;
+  background:rgba(10,10,20,.8); border:1px solid rgba(90,84,60,.55); }
+.khac-tien-bar i { display:block; height:100%; background:linear-gradient(90deg,#8a6a20,#ffd76a); }
+.khac-tien span { font-size:11px; color:#c8cbe6; white-space:nowrap; }
+.khac-tong { display:grid; grid-template-columns:1fr 1fr; gap:4px; }
+.khac-tong-d { display:grid; grid-template-columns:18px 1fr auto; grid-template-areas:'g n v' 'g u s';
+  gap:0 5px; align-items:center; padding:5px 7px; border-radius:3px;
+  background:rgba(20,17,12,.68); border:1px solid rgba(90,84,60,.42); }
+.khac-tong-d.tron { border-color:var(--vien-dong); background:rgba(58,46,26,.62); }
+.khac-tong-d b { grid-area:g; font-size:15px; color:#8a93bb; }
+.khac-tong-d.tron b { color:var(--gold); }
+.khac-tong-d span { grid-area:n; font-size:11px; color:#d4d9f0; }
+.khac-tong-d i { grid-area:v; font-style:normal; font-size:11.5px; font-weight:700; color:var(--gold); }
+.khac-tong-d u { grid-area:u; text-decoration:none; font-size:9.5px; color:#7c85ab; }
+.khac-tong-d s { grid-area:s; text-decoration:none; font-size:9.5px; color:#7c85ab; }
+.khac-loi { margin-top:8px; font-size:11px; line-height:1.6; color:#9aa2c6;
+  border-left:2px solid rgba(198,158,74,.45); padding-left:8px; }
+.khac-loi b { color:#e7c987; } .khac-loi em { color:#b7bddb; }
