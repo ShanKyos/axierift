@@ -1185,6 +1185,36 @@ cho `vatToObs` quên đọc `v.can` ⇒ đỏ) và **góc khung ảnh** phải �
 KHÔNG KHÍ (nên `test_vatcan §1` không đòi nó chặn ≥75% khung). Hai bài đọc CÙNG một cờ; chép
 một danh sách tên vào bài kiểm là thứ sẽ âm thầm nuốt mục thứ hai thêm sau.
 
+### ⛲ ĐÀI PHUN NƯỚC ĐÃ VÀO GAME — ba bài học của đường VIDEO → BẢNG KHUNG
+
+`ct_dainuoc` đứng giữa Quảng Trường Atia (`ardhaven 2991,1425` · ô **418×360** · bảng khung
+`4×3, 12 khung, fps 12`). Đặt hàng + prompt: `docs/PROMPT_DAINUOC_VA_HANGRAO.md`.
+
+**⚠ "GẦN TÂM MAP" VÀ "THẤY ĐƯỢC LÚC VÀO GAME" LÀ HAI RÀNG BUỘC KHÁC NHAU.** Bản quét đầu ra
+(3300,1020) — ô gần tâm map nhất — và nó nằm **ngoài khung hình**: ở zoom mặc định (`xa`, 1,0×)
+trên màn 1920×1080, khung lúc mới vào game là `x 2240..4160 · y 1360..2440` quanh điểm thả, còn
+cái đài ở `y 1020..1380`. Người chơi mới tạo nhân vật sẽ không thấy gì. Phải **dựng khung hình
+thật rồi mới chấm**, đừng chấm theo khoảng cách tới một điểm.
+
+**⚠ `--do` CỦA `nuong_video.py` ĐO TÂM KHỐI ĐẶC, nên nó BÁO ĐỘNG GIẢ với thứ tự phình xẹp.**
+Bản đầy đủ báo *"máy quay động 91px"* — con số đúng, kết luận sai: một cột nước phồng lên xẹp
+xuống thì tâm khối dịch dù máy quay khoá cứng. Phải bám theo phần **PHẢI ĐỨNG YÊN** (ở đây là bề
+ngang bể đá) mới tách được "máy quay động" với "vật động". Đo thế thì lộ ra chuyện thật: video
+**zoom vào rồi zoom ra**, bể 274px → 532px → 274px, và chỉ **120/240 khung đầu** dùng được.
+
+**⚠ LÒ SINH VIDEO NƯỚNG BÓNG ĐỔ THÀNH MẢNG ĐẶC — phải gỡ.** Trên nền magenta thì bóng là
+magenta-TỐI: bộ tách gỡ đúng nền phẳng, mảng tối ở lại rồi qua bước khử viền hồng thành **một
+vũng xanh-tím ĐỤC (alpha 255)** cạnh vật. Đo ba công trình đang chạy (`ct_duoc` · `ct_quantro` ·
+`ct_loren`) ra **0,0-0,4%** điểm bóng ⇒ quy ước của dự án là **cắt SÁT VẬT**. Công cụ:
+`tools/iso/bo_bong.py`, chạy trên **cả** tấm tĩnh lẫn bảng khung.
+
+**⚠⚠ VÀ PHÉP GỠ BÓNG BẢN ĐẦU ĂN THỦNG MẶT NƯỚC.** Cửa nhận diện theo MÀU (lam · tối · G≥R) cũng
+khớp vùng nước sẫm trong lòng bể: **thủng 5,2%**, và trong game thì NPC đứng phía sau lộ qua mặt
+nước. Chữa bằng một ràng buộc HÌNH HỌC: bóng thì **chạm nền trong suốt**, nước thì bị thành đá
+bao kín ⇒ `noi_ra_ngoai()` chỉ giữ mảng lan ra được tới nền. Sau khi sửa: **0,00%**.
+*Một cửa nhận diện theo MÀU sẽ luôn bắt nhầm một vùng cùng màu ở chỗ khác; thêm một ràng buộc
+hình học mới tách được chúng.*
+
 ### ⚠⚠ NPC CỦA ARDHAVEN KHAI Ở **HAI** TỆP — mọi phép quét đọc tệp đều MÙ
 
 `window.NPCS` dựng trong `data/canbang.js`, rồi `game.js` **`NPCS.push(...)` hai lượt nữa**

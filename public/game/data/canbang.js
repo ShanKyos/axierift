@@ -1106,11 +1106,23 @@ window.MAPS = {
     // (`y + h`) của `vatTo` làm. Đã thử một lớp "vật sàn" vẽ trước mọi thực thể và đã gỡ:
     // ở đó người chơi sẽ vẽ ĐÈ LÊN cột nước ngay cả khi đang đứng sau nó.
     //
-    // Chỗ đặt QUÉT BẰNG MÁY: bốn góc + tim bể trong đa giác sàn · lề ≥50px tới mọi khối nhà
-    // và mọi `vatTo` · không nuốt NPC nào (lề 90, vì `test_capnha §2` cấm NPC lọt trong hình)
-    // · cách mọi cổng/portal ≥220px · không đè điểm thả · không chắn ngang `isoDuong` nào.
-    // Cả thành có 1.094 ô thoả ở khổ 384×360; lấy ô GẦN ĐIỂM THẢ NHẤT (681px) vì một đài phun
-    // nước là mốc định hướng của quảng trường — chôn nó ở góc map là phí đúng cái nó giỏi.
+    // CHỖ ĐẶT: chủ dự án chốt *"đặt ở giữa map, nhân vật khi tạo xong sẽ ở map này và THẤY
+    // ĐƯỢC"*. Nên đây không phải "ô nào thoả cũng được" — nó là một ràng buộc ĐO ĐƯỢC:
+    // ở zoom mặc định (`xa`, 1,0×) trên màn 1920×1080, khung hình lúc mới vào game là
+    // `x 2240..4160 · y 1360..2440` quanh điểm thả (3200,1900). Đài chiếm `2991..3409 ×
+    // 1425..1785` ⇒ lọt TRỌN trong khung, ngay phía bắc chỗ nhân vật rơi xuống.
+    //
+    // ⚠ BẢN QUÉT ĐẦU RA (3300,1020) — "gần tâm map nhất" — VÀ NÓ NẰM NGOÀI KHUNG HÌNH.
+    // Mép trên khung là y=1360, đài thì ở y 1020..1380: người chơi mới tạo nhân vật sẽ không
+    // thấy gì cả. *"Gần tâm map" và "thấy được lúc vào game" là HAI ràng buộc khác nhau, và
+    // chỉ cái thứ hai là thứ chủ dự án hỏi.* Phải dựng khung hình thật rồi mới chấm.
+    //
+    // Cái chặn tâm quảng trường chỉ là HAI NPC, không nhà nào và không cổng nào — nên dời
+    // chúng ra hai bên đài (quét lại chỗ mới, lề 70px tới đài, ≥220px tới mọi NPC khác):
+    //   `quachtinh`  (3200,1600) → (2920,1620)   — Trưởng Lão Rell, phía TÂY đài
+    //   `ah_hatrong` (3200,1300) → (3480,1680)   — Kẻ Hát Rong,     phía ĐÔNG đài
+    // Một trưởng lão và một kẻ hát rong đứng hai bên bể nước đọc ra đúng một quảng trường,
+    // hơn hẳn hai người đứng giữa chỗ trống.
     //
     // ⚠⚠ QUÉT PHẢI ĐỌC `NPCS` LÚC CHẠY, ĐỪNG ĐỌC TỆP. NPC của ardhaven khai ở HAI nơi — bảng
     // trong tệp này VÀ hai lượt `NPCS.push(...)` trong game.js (9 con, trong đó có `monkhach`
@@ -1123,16 +1135,33 @@ window.MAPS = {
     // Bể chiếm 41% khung — `test_vatcan §4` gác cả hai đầu (tâm bể phải chặn, góc khung ảnh
     // phải đi được).
     //
-    // ⚠ KHI CÓ VIDEO: `tools/nuong_video.py` in ra mục `{cot,hang,khung,oRong,oCao,fps}` —
-    // dán vào trường `khung:` dưới đây, bảng đặt ở assets/iso/kh/ct_dainuoc.webp. TẤM TĨNH
-    // ct_dainuoc.png VẪN BẮT BUỘC (bảng khung nạp lười; thiếu tấm lùi là giữa quảng trường
-    // thủng một lỗ trong mấy trăm mili giây đầu).
+    // ⚠ VIDEO GỐC ZOOM VÀO RỒI ZOOM RA — chỉ 120/240 khung đầu dùng được. Đo bằng BỀ NGANG
+    // BỂ ĐÁ qua cả đoạn: nó đứng yên ở 274px suốt khung 0-119, rồi phình 274→532 (khung
+    // 120-150), nằm sát ở 532 tới khung ~215, rồi rút về 274. Viền nền đi theo đúng nhịp đó:
+    // magenta 134-144 ở đoạn khoá, tụt xuống −29 khi máy quay áp sát (hết nền để mà cắt).
+    // ⇒ cắt lấy 24 khung đầu (điểm nối vòng mượt nhất: lệch 4,26 so với sàn nhiễu 0,44 —
+    // thử mọi N từ 24 tới 116, N=24 là nhỏ nhất), nướng 12 khung, phát ở fps 12 = đúng tốc
+    // độ gốc (24fps, lấy cách khung).
+    //
+    // ⚠ `--do` BÁO "MÁY QUAY ĐỘNG 91px" TRÊN BẢN ĐẦY ĐỦ, và con số đó đúng nhưng KHÔNG đủ để
+    // kết luận. Nó đo tâm khối ĐẶC, mà một cột nước phồng lên xẹp xuống thì tâm khối dịch dù
+    // máy quay khoá cứng. Phải bám theo phần PHẢI đứng yên (bể đá) mới phân biệt được hai
+    // chuyện. Trên đoạn đã cắt: trôi 17px, và `chân từng khung lệch 0px` — máy quay khoá thật.
+    //
+    // TẤM TĨNH assets/iso/ct_dainuoc.png VẪN BẮT BUỘC (bảng khung nạp lười; thiếu tấm lùi là
+    // giữa quảng trường thủng một lỗ trong mấy trăm mili giây đầu).
+    //
+    // `can` ĐO TỪ CHÍNH TẤM ẢNH, không chấm tay: quét điểm ảnh ĐÁ (đặc · nhạt · ấm · ít bão
+    // hoà) rồi lấy dải hàng có bề ngang ≥62% hàng rộng nhất = vành bể (y 147..334, x 1..356),
+    // thu vào 8%/10% cho mềm mép. Dải 62px bên phải là BÓNG ĐỔ — cố ý không chặn.
     // ⚠ `thoang:true` — KHÔNG phải một ngôi nhà. Hai bài kiểm đọc cờ này: `test_capnha §1`
     // (mọi công trình phải có NPC chức năng đứng trước cửa — đài phun nước thì không bán
     // gì) và `test_vatcan §1` (≤25% diện tích hình được phép đi vào — một đài phun nước
     // gần như toàn là KHÔNG KHÍ, người chơi phải đi sát được tới thành bể). Miễn trừ bằng
     // một cờ TRONG DỮ LIỆU, đừng bằng một danh sách tên chép trong bài kiểm.
-    { img:'ct_dainuoc', x:3300, y:1020, w:384, h:360, thoang:true, can:[[70, 170, 244, 170]] },
+    { img:'ct_dainuoc', x:2991, y:1425, w:418, h:360, thoang:true,
+      can:[[29, 165, 299, 151]],
+      khung:{ cot:4, hang:3, khung:12, oRong:418, oCao:360, fps:12 } },
   ],
     // ── CHÍN KHỐI CÒN TRỐNG · ĐANG CHỜ ART ───────────────────────────────────
     // 16 khối, nay 7 có ảnh (ct_cong dùng hết cho bốn cuống cổng). Khuôn đặt cho mọi khối
@@ -2307,7 +2336,7 @@ window.NPCS = [
     barks:['"Đừng chạm vào, vải chưa khô."','"Màu chàm phải nhuộm bảy lượt mới ăn."',
            '"Nước nhuộm đổ ra rãnh kia, đừng giẫm vào."'] },
 
-  { id:'ah_hatrong', name:'Kẻ Hát Rong', map:'ardhaven', x:3200, y:1300, img:'assets/npcs/quachtinh.png', talk:'quest',
+  { id:'ah_hatrong', name:'Kẻ Hát Rong', map:'ardhaven', x:3480, y:1680, img:'assets/npcs/quachtinh.png', talk:'quest',
     lore:'"Ta hát bài nào cũng được, trừ bài về cái đêm trời nứt. Hát bài đó thì có người bỏ về, có người ngồi lại khóc — mà cả hai hạng đều không bỏ tiền."',
     barks:['"Nghe một bài không mất gì cả."','"Dây thứ ba lại chùng rồi."',
            '"Hôm qua có người trả ta bằng một quả táo. Ta vẫn hát."'] },

@@ -110,55 +110,47 @@ half. Everything above the basin rim is water and air — the object must read a
 not as a solid tower.
 ```
 
-### ⚠ Và nếu định LÀM VIDEO từ tấm này — đọc trước khi bấm render
+### ✅ ĐÃ VÀO GAME — và đây là những gì video thật đã dạy
 
-Đường nướng `tools/nuong_video.py` **ĐO trước rồi mới nhận** (`--do` in ra `nền±` · `trôi` ·
-`vụn`) và nó **từ chối** video không phải nền phông. Video con goblin đợt trước trượt đúng ba
-chỗ này. Bốn điều kiện, thiếu một là tấm nướng ra hỏng:
+Video chủ dự án gửi (`24fps · 10,01s · 1280×720`) **dùng được, nhưng chỉ 120/240 khung đầu**.
 
-1. **Nền phải GIỮ NGUYÊN tím phẳng `#FF00FF` suốt mọi khung.** Công cụ tách theo sắc
-   (`min(R,B) − G`), nên một nền "được vẽ thêm mây/ánh sáng cho đẹp" là mất sạch đường cắt.
-2. **Máy quay ĐỨNG YÊN TUYỆT ĐỐI.** Không zoom, không pan, không rung. Mọi khung cắt vào **một
-   hộp chung**; máy quay trôi là con vật nhảy chỗ mỗi khung.
-3. **ĐÁ KHÔNG ĐƯỢC ĐỘNG.** Bể, thành bể và cái bệ giữa phải đứng im từng điểm ảnh — không đổi
-   cỡ, không dời chỗ, không vẽ lại. Chỉ **NƯỚC** động.
-4. **Lặp liền mạch** — khung cuối phải nối được vào khung đầu. Đài phun nước chạy 100% thời gian
-   trên màn giữa quảng trường; một cú giật mỗi vòng lặp thì mắt bắt ngay.
+| đo cái gì | kết quả |
+|---|---|
+| bề ngang BỂ ĐÁ qua cả đoạn | **274px đứng yên** khung 0-119 → phình 274→532 (khung 120-150) → sát ở 532 tới ~215 → rút về 274 |
+| viền nền (magenta) | 134-144 ở đoạn khoá · **tụt xuống −29** lúc máy quay áp sát (hết nền để cắt) |
+| điểm nối vòng mượt nhất | **N=24 (1,00s)** — lệch 4,26 so với sàn nhiễu 0,44; thử mọi N từ 24 tới 116 |
 
-Câu lệnh cho công cụ làm video:
+⇒ cắt 24 khung đầu → nướng 12 khung → phát ở **fps 12** = đúng tốc độ gốc.
 
-```
-Animate ONLY the water. Locked-off camera: no zoom, no pan, no camera shake, no parallax.
-The stone basin, its rim and the central pedestal must stay pixel-for-pixel identical in every
-frame — do not redraw them, do not move them, do not change their size. The magenta background
-must stay flat #FF00FF and must not be animated, lit or clouded.
+**⚠ `--do` BÁO "MÁY QUAY ĐỘNG 91px" TRÊN BẢN ĐẦY ĐỦ, và con số đó ĐÚNG nhưng không đủ để kết
+luận.** Nó đo tâm khối ĐẶC — mà một cột nước phồng lên xẹp xuống thì tâm khối dịch dù máy quay
+khoá cứng. Phải bám theo phần **phải đứng yên** (bể đá) mới tách được hai chuyện. Trên đoạn đã
+cắt: trôi 17px và **chân từng khung lệch 0px** — máy quay khoá thật.
 
-The jet rises from the pedestal, arcs outward in all directions and falls back into the basin
-in a continuous steady plume — the shape of the plume stays the same, only the water flows
-through it. Droplets travel down the falling ribbons, a light mist drifts where they break, and
-small concentric ripples spread across the basin where the water lands. The flow is calm and
-even: no surging, no splashing bursts, no change in height.
+**⚠ LÒ SINH VIDEO NƯỚNG BÓNG ĐỔ THÀNH MỘT MẢNG ĐẶC, và nó sống sót qua bộ tách nền.** Trên nền
+magenta thì cái bóng là magenta-TỐI; bộ tách gỡ đúng nền phẳng, mảng tối kia ở lại rồi qua bước
+khử viền hồng thành **một vũng xanh-tím ĐỤC (alpha 255)** nằm cạnh bể. Chụp ra là một vết mực
+trên nền đá. Đo ba công trình đang chạy (`ct_duoc` · `ct_quantro` · `ct_loren`): điểm bóng chiếm
+**0,0-0,4%** — tức quy ước của dự án là **cắt SÁT VẬT, không nướng bóng**. Gỡ bằng
+`python3 tools/iso/bo_bong.py <tệp…>` (chạy trên cả tấm tĩnh lẫn bảng khung).
 
-Seamless loop: the last frame must flow back into the first. 2-3 seconds.
-```
+**⚠ VÀ PHÉP GỠ BÓNG BẢN ĐẦU ĂN THỦNG MẶT NƯỚC.** Cửa nhận diện theo MÀU (lam · tối · G≥R) cũng
+khớp với vùng nước sẫm trong lòng bể: đo được **lòng bể thủng 5,2%**, và trong game thì NPC đứng
+phía sau **lộ qua mặt nước**. Bóng thì CHẠM nền trong suốt, nước thì bị thành đá bao kín — nên
+`noi_ra_ngoai()` chỉ giữ mảng nối ra được nền. Sau khi sửa: thủng **0,00%**.
 
-⚠ **Mạch nước phải ĐỀU.** Một cú phụt mạnh rồi yếu trông rất hay trong 3 giây, nhưng bảng khung
-lặp vô hạn — chu kì càng "có cao trào" thì càng lộ ra là một đoạn băng đang tua lại.
+*Luật chung: một cửa nhận diện theo MÀU sẽ luôn bắt nhầm một vùng cùng màu ở chỗ khác. Thêm một
+ràng buộc HÌNH HỌC (nối ra ngoài / bị bao kín) là thứ tách được hai vùng ấy.*
 
-Nhận video xong:
+### ⚠ Nếu phải render lại video — ba điều kiện
 
-```bash
-python3 tools/nuong_video.py <video.mp4> --do                       # ĐO TRƯỚC — đừng bỏ bước này
-python3 tools/nuong_video.py <video.mp4> \
-        public/game/assets/iso/kh/ct_dainuoc.webp --ten ct_dainuoc
-```
-
-⚠ Công cụ in ra dòng *"dán vào **NPC_KHUNG**"* — với cái đài thì **KHÔNG** dán vào đó. Lấy đúng
-phần `{ cot, hang, khung, oRong, oCao, fps }` (bỏ `neoY` — `vatTo` neo bằng `y + h` của chính
-mục, không bằng một tỉ lệ) rồi dán thành trường `khung:` của mục `ct_dainuoc` trong `vatTo` của
-`data/canbang.js`. **Tấm tĩnh `ct_dainuoc.png` vẫn bắt buộc**: bảng khung nạp lười, thiếu tấm lùi
-là giữa quảng trường thủng một lỗ trong mấy trăm mili giây đầu — cùng hợp đồng với `MOB_KHUNG`
-và `NPC_KHUNG`.
+1. **Nền GIỮ NGUYÊN tím phẳng `#FF00FF` suốt mọi khung** — và **máy quay ĐỨNG YÊN cả đoạn**,
+   không zoom vào rồi zoom ra như bản vừa rồi. Cái đó ăn mất một nửa số khung.
+2. **ĐỪNG vẽ bóng đổ** — nó nướng thành mảng đặc rồi phải gỡ bằng máy. Bỏ câu
+   *"Include its cast shadow inside the frame"* khỏi khối kỹ thuật §1 khi đặt hàng thứ CÓ
+   BÓNG TO (đài phun nước, cây); giữ nó cho vật nhỏ thì vô hại.
+3. **Mạch nước ĐỀU, lặp liền mạch.** Bảng khung lặp vô hạn: chu kì càng có cao trào thì càng
+   lộ ra là một đoạn băng đang tua lại.
 
 ---
 

@@ -1275,7 +1275,8 @@ const MAP_VAT_SRC = {
   cong_nam:          'assets/iso/cong_nam.png',            // 720×700 · Cổng Nam
   cong_doc:          'assets/iso/cong_doc.png',            // 400×960 · Cổng Tây, lật cho Đông
   // ── ĐÀI PHUN NƯỚC · ĐANG CHỜ ART ──────────────────────────────────────────
-  ct_dainuoc:        'assets/iso/ct_dainuoc.png',           // 384×360 · Đài Phun Nước Atia (có `khung`)
+  ct_dainuoc:        'assets/iso/ct_dainuoc.png',           // 418×360 · Đài Phun Nước Atia — TẤM LÙI của
+                                                           // bảng khung assets/iso/kh/ct_dainuoc.webp
 };
 // ⚠ DANH SÁCH "CHƯA VỀ". Khai tên trong MAP_VAT_SRC mà tệp chưa có thì trình duyệt nạp hụt và
 // ném 404 — bảy dòng đỏ trong devtools trên BẢN PHÁT HÀNH, cho một thứ cố ý chưa tồn tại.
@@ -1286,7 +1287,6 @@ const MAP_VAT_SRC = {
 const MAP_VAT_CHO = new Set([
   'tuong_ngang_trong', 'tuong_ngang_ngoai', 'tuong_doc', 'tuong_goc',
   'cong_bac', 'cong_nam', 'cong_doc',
-  'ct_dainuoc',
 ]);
 const _vatIm = {};
 function vatTai(ten){
@@ -27475,7 +27475,7 @@ NPCS.push(
     barks:['"Rễ này mọc ngược từ hôm trời nứt."','"Ai ho ba ngày thì tới đây, đừng để tới ngày thứ tư."',
            '"Thuốc hay cứu người, thuốc độc cũng cứu người — tuỳ ai dùng."','"Đừng giẫm lên luống kia."'] },
 
-  { id:'quachtinh', name:'Trưởng Lão Rell',      map:'ardhaven', x:3200, y:1600,  img:'assets/npcs/quachtinh.png', talk:'quest',
+  { id:'quachtinh', name:'Trưởng Lão Rell',      map:'ardhaven', x:2920, y:1620,  img:'assets/npcs/quachtinh.png', talk:'quest',
     lore:{
       idle:  '"Ta dẫn sáu người qua Nhát Gọi. Ngươi là người duy nhất còn đứng."',
       offer: '"Ngồi xuống. Ngươi chưa đủ sức cho việc ta định giao, và ta đã chôn đủ người rồi."',
