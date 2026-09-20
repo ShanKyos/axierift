@@ -13933,8 +13933,12 @@ function drawSpring(){
   ctx.strokeStyle = 'rgba(35,35,40,.6)'; ctx.lineWidth = 1.5; ctx.stroke();
   ctx.fillStyle = '#5a5a60'; ctx.fillRect(bx-15, by+2, 30, 5); // đế bia
   ctx.save(); ctx.translate(bx, by-8); ctx.rotate(-0.03);
-  ctx.fillStyle = '#2e3438'; ctx.font = '11px "Ma Shan Zheng", serif'; ctx.textAlign = 'center';
-  ctx.fillText('Tịnh', 0, -4); ctx.fillText('Tâm', 0, 9);
+  // ⚠ TÀN DƯ WUXIA ĐÃ DỌN (Quy tắc số 1). Bia này từng khắc 'Tịnh Tâm' bằng phông thư pháp
+  // Trung Hoa "Ma Shan Zheng" — hai chữ tu tiên, và là chỗ DUY NHẤT trong game gọi phông đó
+  // (nó còn chưa từng được nạp, nên máy nào cũng lui về serif). Nay khắc đúng giáo lý Rune của
+  // canon — Nếp Khắc Vừa — bằng phông chữ của chính game.
+  ctx.fillStyle = '#2e3438'; ctx.font = '11px serif'; ctx.textAlign = 'center';
+  ctx.fillText('Khắc', 0, -4); ctx.fillText('Vừa', 0, 9);
   ctx.restore();
   drawCalligraphy('Suối Ký Ức', x, y - r - 14, '#2e6e60', 15);
 }

@@ -1295,6 +1295,334 @@ RULES.unshift(
 );
 
 const _trCache = new Map();
+/* ═══ ĐỢT PHỦ TIẾNG ANH — sinh từ PHÉP ĐO, không từ cảm giác ═════════════════════════════
+   Quét `?lang=en` bằng recorder cài TRƯỚC lang.js (addInitScript) nên nó đọc được chữ ĐÃ dịch,
+   tức thứ người chơi thật sự thấy. ⚠ Bọc `fillText` lúc chạy là bọc NGOÀI lớp vá này ⇒ chỉ đọc
+   được chuỗi NGUỒN, và nó báo 84,3% tiếng Việt trong khi con số thật là 61,4%. Một que dò sai
+   thứ tự thì cho ra một con số trông rất thuyết phục.
+   Đo được trước đợt này: canvas 43/70 chuỗi · DOM 48 dòng còn tiếng Việt. */
+RULES.push(
+  // 22 chiêu tự ngộ dùng CHUNG một câu ⇒ một mẫu trả 22 chuỗi, không phải 22 mục từ điển.
+  [/^✦ Ngộ được: (.+)!$/,                        (m, a) => `✦ Learned: ${tr(a)}!`],
+  [/^🚩 Đã mở khoá điểm dịch chuyển: (.+)$/,      (m, a) => `🚩 Waypoint unlocked: ${tr(a)}`],
+  [/^🚩 Săn (.+)$/,                               (m, a) => `🚩 Hunt ${tr(a)}`],
+  // ⚠ Băng-rôn vào map và tiêu đề bảng Bản Đồ mang TIỀN TỐ, nên tên map đã có trong EXACT vẫn
+  // trượt. Bóc tiền tố rồi gọi lại `tr` là một mẫu phục vụ mọi map, kể cả map thêm sau.
+  [/^⟶\s+(.+)$/,                                  (m, a) => `⟶  ${tr(a)}`],
+  [/^🗺 (.+)$/,                                   (m, a) => `🗺 ${tr(a)}`],
+  [/^(Công Kích|Sức Mạnh Phép Thuật) ×([\d.]+) · tầm (\d+) · phạm vi (\d+) · hồi ([\d.]+)s · (\d+) Mana$/,
+    (m, a, b, c, d, e, f) =>
+      `${a === 'Công Kích' ? 'ATK' : 'Magic Power'} ×${b} · range ${c} · area ${d} · cd ${e}s · ${f} Mana`],
+  [/^Thuần (\d)\/6$/,                             (m, a) => `Pure ${a}/6`],
+  [/^Tiềm Năng:$/,                                () => 'Potential:'],
+  [/^Vaeldra · (.+) — \+([\d.]+)% Công Kích vĩnh viễn \(xem ở bảng Kỹ Năng — phím K\)$/,
+    (m, a, b) => `Vaeldra · ${tr(a)} — +${b}% permanent ATK (see the Skills panel — K)`]
+);
+
+Object.assign(EXACT, {
+  // ── nhãn công trình vẽ THẲNG lên canvas (`NHAN_NHA`) ──
+  'Chuồng': 'Stable',
+  'Truy Nã': 'Bounty',
+  'Quán Trọ': 'Inn',
+  'Vực Thẳm': 'The Abyss',
+  'Tiệm Thuốc': 'Apothecary',
+  'Cầu May': 'Fortune',
+  'Quán Sách': 'Bookshop',
+  'Lò Rèn': 'Forge',
+  'Sàn Đấu': 'Arena',
+
+  // ── Menu Hệ Thống (F6) ──
+  'Menu Hệ Thống': 'System Menu',
+  'Sự Kiện': 'Events',
+  'Ngân Hàng Ngọc': 'Jewel Bank',
+  'Lệnh Nhặt': 'Pickup Rules',
+  'Ấn Giao Kết:': 'Covenant Seals:',
+
+  // ── mảnh rời của bảng Nhân Vật / Kỹ Năng ──
+  '✦ Nâng Cấp': '✦ Upgrade',
+  '📜 Dùng Sách': '📜 Use Book',
+  '+1 Tiềm Năng': '+1 Potential',
+  'Hệ phòng thủ': 'Defense element',
+  'Hệ đòn đánh': 'Attack element',
+  'Cấu tạo Axie': 'Axie build',
+  '(sáu bộ phận)': '(six parts)',
+  '(vũ khí)': '(weapon)',
+  'DI SẢN': 'LEGACY',
+
+  // ⚠ SÁU MẢNH RỜI CỦA DÒNG BẢN SẮC — `banSacHtml()` dựng câu bằng template literal có thẻ
+  // <b>/<span> chen vào, nên MutationObserver thấy SÁU text-node rời chứ không thấy một câu.
+  // Thiếu chúng thì dòng ra nửa Anh nửa Việt ("◆ Land of Brooding Wraith 35% · lớp ♣ Plant 71%
+  // · mang Beast · Bug · Mech tới · nơi source of Bone Petal") — tệ hơn hẳn chưa dịch, vì nó
+  // đọc ra như một lỗi chứ không ra như một chỗ chưa làm.
+  'lớp': 'class',
+  'mang': 'bring',
+  'tới': 'here',
+
+  // ── băng-rôn chế độ thử + câu dẫn đầu game ──
+  'Chế độ test — mặc sẵn nguyên bộ giai 1 và vũ khí của lớp':
+    'Test mode — you start wearing a full tier-1 set and your class weapon',
+  'TEST MODE — nhấn ` (phím dưới Esc) mở console, gõ /help xem lệnh':
+    'TEST MODE — press ` (below Esc) for the console, type /help for commands',
+  'Sapidae Chiefdom — hãy đến gặp Trưởng Lão Rell (lại gần, nhấn E)!':
+    'Sapidae Chiefdom — go and find Elder Rell (walk up, press E)!',
+  'Hộ thể tái tụ!': 'Barrier reformed!',
+});
+
+
+Object.assign(EXACT, {
+  // ⚠ Node thật là "tới · nơi" (dấu · là chỗ `bits.join(' · ')` nối hai mệnh đề), nên mục
+  // '· nơi' có sẵn không khớp. Và ĐỪNG thêm 'duy nhất'/'nơi' rời: dòng 797 đã khai
+  // 'duy nhất':'source', đè lên nó là câu ra "the only of Bone Petal" — tôi đã làm đúng thế
+  // một lần, và nó chỉ lộ ra ở lượt ĐO LẠI chứ không ném lỗi nào.
+  'tới · nơi': 'here · only',
+  'Lò Hỗn Độn': 'Chaos Forge',
+  // hạng cấu tạo Axie (`bpHang()`), vẽ rời khỏi số nên phải dịch riêng
+  'Thuần': 'Pure',
+  'Tạp': 'Mixed',
+  // bia đá cạnh Suối Ký Ức — xem chú thích ở `game.js`, chỗ này từng khắc chữ kiếm hiệp
+  'Khắc': 'Cut',
+  'Vừa': 'Even',
+});
+RULES.push(
+  [/^Điểm tiềm năng còn: (\d+) \(mỗi cấp \+5\) — cộng chỉ số bên dưới, hoặc rót vào chiêu ở bảng Kỹ Năng \(K, trần (\d+) điểm mỗi chiêu\)$/,
+    (m, a, b) => `Potential points left: ${a} (+5 per level) — spend them on the stats below, or pour them into a skill in the Skills panel (K, cap ${b} per skill)`],
+  [/^💡 (.+) ra Công Kích từ (.+) — dồn điểm vào đó là hiệu quả nhất\.$/,
+    (m, a, b) => `💡 ${tr(a)} draws ATK from ${tr(b)} — pouring points there is the most efficient.`],
+  [/^(.+) thì lớp nào cũng cần — khoảng 50-100 điểm là phòng thủ chạm trần, phần còn lại dồn vào dòng sát thương\.$/,
+    (m, a) => `${tr(a)} is worth it on every class — about 50-100 points caps your defense, put the rest into your damage stat.`],
+  [/^\(\+(\d+)% sát thương · còn (\d+) điểm\)$/, (m, a, b) => `(+${a}% damage · ${b} points left)`],
+  [/^(.+) \(Phòng thủ, tốc đánh, bạo kích, né tránh \+ Công kích \(tùy lớp\)\)$/,
+    (m, a) => `${tr(a)} (Defense, attack speed, crit, dodge + ATK (class-dependent))`]
+);
+
+
+/* ⚠ DỊCH THEO **MẢNH**, KHÔNG THEO CÂU GHÉP. Năm luật viết cho câu đầy đủ ở khối trên KHÔNG
+   bắn một lần nào: chuỗi nguồn có <b>/<span> chen giữa, nên MutationObserver thấy nhiều
+   text-node rời. `innerText` thì nối chúng lại, nên phép đo đọc ra một câu — và tôi viết luật
+   cho cái câu ấy, thứ chưa bao giờ tồn tại dưới dạng một node. */
+Object.assign(EXACT, {
+  '(mỗi cấp +5) — cộng chỉ số bên dưới, hoặc rót vào chiêu ở bảng Kỹ Năng (':
+    '(+5 per level) — spend them on the stats below, or pour them into a skill in the Skills panel (',
+  ', trần': ', cap',
+  'điểm mỗi chiêu)': 'points per skill)',
+  '— dồn điểm vào đó là hiệu quả nhất.': '— pouring points there is the most efficient.',
+  'thì lớp nào cũng cần — khoảng 50-100 điểm là phòng thủ chạm trần, phần còn lại dồn vào dòng sát thương.':
+    'is worth points on every class — 50-100 caps your defense, put the rest into your damage stat.',
+  '(Phòng thủ, tốc đánh, bạo kích, né tránh + Công kích (tùy lớp))':
+    '(Defense, attack speed, crit, dodge + ATK (class-dependent))',
+  '(Công kích (tùy lớp), sát thương phi tiêu)': '(ATK (class-dependent), throwing damage)',
+  '(Máu tối đa và tốc hồi phục)': '(Max HP and regen rate)',
+  'điểm)': 'points)',
+});
+RULES.push(
+  [/^💡 (.+) ra Công Kích từ$/,        (m, a) => `💡 ${tr(a)} draws ATK from`],
+  [/^\(\+(\d+)% sát thương · còn$/,    (m, a) => `(+${a}% damage ·`]
+);
+
+
+/* ═══ LORE CỦA MAP + BỘ DANH TỪ RIÊNG CANON ══════════════════════════════════════════════
+   Bảng Bản Đồ là chỗ giám khảo đọc nhiều nhất sau màn chờ, và trước đợt này nó ra 18 dòng
+   tiếng Việt nguyên khối. Khoá ở đây là chuỗi ĐÚNG NHƯ DOM ĐANG CHỨA — lấy từ bản quét, không
+   chép tay từ `canbang.js`: hai chỗ đó có thể lệch nhau một dấu cách và không gì báo.
+   Giọng giữ MU S6: mộc, hơi cổ, không một chữ kiếm hiệp. Danh từ riêng chốt một lần ở đây. */
+Object.assign(EXACT, {
+  // ── danh từ riêng canon ──
+  'Nhát Gọi': 'the Summoning Cut',
+  'Cây Hồn': 'the Soul Tree',
+  'Nếp Khắc Vừa': 'the Measured Cut',
+  'Rune Giữ Đàn': 'the Rune of the Herd',
+  'Rune Giữ Bờ': 'the Rune of the Bound',
+  'Rune Giữ Mùa': 'the Rune of Seasons',
+  'Rune Giữ Tên': 'the Rune of Names',
+  'Rune Giữ Khúc': 'the Rune of the Song',
+  'Rune Giữ Lửa': 'the Rune of the Flame',
+  'Rune Giữ Đường': 'the Rune of the Way',
+
+  // ── lore từng vùng ──
+  'Luống ấp Plant Tribe lẽ ra nở tháng trước — Rune Giữ Mùa ở đây đã mỏng. Nay là đất PK, hạ người khác được mà bị hạ cũng được. Axie Sa Ngã dạt về từ phía rẻo rừng, Golem thì ngủ ngay trên luống cũ.':
+    'The Plant Tribe hatching beds should have opened a month ago — the Rune of Seasons here has worn thin. This is PK ground now: you can cut others down, and be cut down. Fallen Axies drift in from the woodstrip, and Golems sleep right on the old beds.',
+
+  'Khu phố Ardhaven đi qua Nhát Gọi còn nguyên khối — nguyên mái, nguyên giếng, nguyên cả cái lò. Lunacia khắc Rune lên trời để xin đúng cái lò này, nên thành không phải đống đổ nát: nó là câu trả lời. Dân bản địa dựng tường quanh và gọi chỗ này là Sapidae Chiefdom. Trong tường: Quảng Trường Atia, Phố Chợ, Phố Lò, Sân Chuồng, Sảnh Lệnh, Vách Gió và Xóm Trọ. Không Chimera nào vào được. Bốn cổng ra bốn hướng.':
+    'The Ardhaven district came through the Summoning Cut in one piece — roofs, well and forge intact. Lunacia carved a Rune into the sky asking for exactly that forge, so the town is not wreckage: it is the answer. The locals walled it round and named it Sapidae Chiefdom. Inside the wall: Atia Square, Market Row, Forge Row, the Stable Yard, the Writ Hall, Windwall and the Lodging Quarter. No Chimera gets in. Four gates, four directions.',
+
+  'Rune Giữ Đàn cắm giữa đồng cỏ này, và đàn gia súc đã bắt đầu tan mỗi lần có tiếng động — phiến đá đầu tiên mỏng đi là phiến đá này. Trại Gloam chặn đường, bầy Gai Tím rình rập ven rừng. Không PK, đất an toàn để luyện cấp.':
+    'The Rune of the Herd stands in this grassland, and the herds have begun to scatter at every loud noise — this is the first slab to wear thin. A Gloam camp blocks the road and Thornspine packs lurk at the treeline. No PK; safe ground to level on.',
+
+  'Rune Giữ Bờ đứng ở đây để rừng không lấn qua bờ vào đất người ở — và rừng đang lấn. Từ đây là đất PK: hạ người khác được, bị hạ cũng được. Chimera ở đây rơi Cốt bậc đầu.':
+    'The Rune of the Bound stands here so the forest does not cross the line into settled land — and the forest is crossing. From here on it is PK ground: you can cut others down, and be cut down. The Chimera here drop first-tier Bone.',
+
+  'Lối mòn men theo rẻo rừng, chạy mãi về đông. Một lối mòn không phải một nơi, nên không có cái luật nào để mà khắc — cây khép hai bên, không đường tắt.':
+    'A trail hugging the woodstrip, running east without end. A trail is not a place, so there is no law here to carve — trees close on both sides, and there is no shortcut.',
+
+  'Khoảnh rừng có người giữ riêng — bãi săn của người mới. Chimera yếu, đồ rơi nhập môn, chỗ hiền lành để học cách chơi. Không phiến Rune nào cắm ở đây: rễ Cây Hồn chạy ngầm dưới đất này, và không ai dám khắc đá lên rễ.':
+    'A kept strip of woodland — the beginners’ hunting ground. Weak Chimera, starter drops, a gentle place to learn the game. No Rune is set here: the roots of the Soul Tree run beneath this soil, and nobody dares carve stone over a root.',
+
+  'Đất trũng xuống ngay dưới Nhát Gọi — cắm đá xuống đây thì đá nứt, nên không phiến Rune nào giữ chỗ này. Không luật nào giữ thì ai cũng lấy được, kể cả lấy của nhau.':
+    'A hollow directly beneath the Summoning Cut — set a slab here and the stone splits, so no Rune holds this ground. Where no law holds, anyone may take — including from each other.',
+
+  'Nghề khắc Rune bắt đầu ở đây: Rune Giữ Tên nằm dưới ổ ấp, trứng nào nở cũng phải xin nó một cái tên. Hang ổ hẹp, ngoằn ngoèo, bầy Chimera dày đặc rơi nguyên liệu thăng giai — bãi săn tranh chấp.':
+    'The Rune-carving craft began here: the Rune of Names lies under the hatchery, and every egg that opens must ask it for a name. Tight winding burrows, dense Chimera packs dropping tier-up materials — contested hunting ground.',
+
+  'Nhịp đá vắt qua một hồ ngầm không đáy — không có nền để cắm phiến Rune nào, nên thứ dưới đó trồi lên lúc nào cũng được. Một lối, không đường vòng: thứ chặn đường bạn phải dọn, không né được.':
+    'A stone span over a bottomless underground lake — no bed to set a Rune into, so whatever is down there may surface at any time. One path, no way around: whatever blocks it, you clear, you do not dodge.',
+
+  'Ba tổ trên cao đã ngừng hát — Rune Giữ Khúc mỏng thì khúc hát tắt theo người hát. Bãi EXP khổng lồ; mang theo kháng độc, Chimera ở đây cắn có nọc.':
+    'The three high roosts have stopped singing — when the Rune of the Song wears thin, the song dies with the singer. Enormous EXP ground; bring poison resistance, the Chimera here bite with venom.',
+
+  'Tướng Quân dựng lều ngay trên Rune Giữ Lửa, nên mỏ nào cũng tắt lửa qua đêm. Thảo nguyên mở rộng, Chimera trâu bò đánh đau, rơi nguyên liệu nâng chiêu tầm xa và đao pháp.':
+    'A Warden pitched camp directly on the Rune of the Flame, so every forge here goes cold overnight. Wide open flats, heavy-hitting Chimera, dropping materials for ranged and blade skill upgrades.',
+
+  'Phiến thứ bảy — Rune Giữ Đường — cắm ở cửa Cây Hồn, và nó là thứ chỉ đường cho hồn quay về. Bãi luyện cuối game; PK ở đây không cộng Tội Ác, Chimera rơi trang bị bậc vàng.':
+    'The seventh slab — the Rune of the Way — is set at the door of the Soul Tree, and it is what lights the road home for the dead. End-game grinding ground; PK here adds no Outlaw status, and the Chimera drop gold-tier gear.',
+
+  'Đường nứt ăn thẳng xuống dưới lớp đá nền, mọc ra từ hôm Nhát Gọi khắc lên trời. Càng xuống sâu càng xa mọi phiến Rune, nên không tầng nào giống tầng nào — và không tầng nào có luật.':
+    'A fissure driving straight down through the bedrock, opened the day the Summoning Cut was carved into the sky. The deeper you go the further from any Rune, so no floor is like another — and no floor has a law.',
+
+  'Bảy người lính Vaeldra qua Nhát Gọi mang theo một cái lò và một thói quen: sáng nào cũng có hai người xuống sân mà thử nhau. Sân ấy còn đây. Không có gì để đào, không có gì để giết — chỉ có người đứng đối diện.':
+    'Seven Vaeldra soldiers came through the Summoning Cut carrying a forge and a habit: every morning two of them went down to the yard and tested each other. The yard is still here. Nothing to mine, nothing to kill — only the person standing opposite you.',
+});
+RULES.push(
+  [/^(.+) · Lv — PHÓ BẢN$/,                  (m, a) => `${tr(a)} · Lv — DUNGEON`],
+  [/^(.+) · Lv — Bloodbath · Free PK$/,       (m, a) => `${tr(a)} · Lv — Bloodbath · Free PK`],
+  [/^🧭 On foot: (.+)$/,                      (m, a) => `🧭 On foot: ${a.split(' · ').map(x => tr(x)).join(' · ')}`]
+);
+
+
+/* ── vét nốt bốn chỗ cuối. ⚠ Ba trong bốn TRƯỢT ở lượt trước vì tôi neo `^…$`: node thật còn
+   dính số hoặc dính phần đuôi của template (`<b>K</b>, trần 5 điểm mỗi chiêu)`), nên luật
+   neo hai đầu không bao giờ khớp. Luật KHÔNG neo thì `s.replace` chỉ thay đúng đoạn khớp. */
+RULES.push(
+  [/, trần (\d+) điểm mỗi chiêu\)/,  ', cap $1 per skill)'],
+  [/PHÓ BẢN/,                        'DUNGEON'],
+  [/Sàn Đấu Ardhaven/,               'Ardhaven Arena']
+);
+Object.assign(EXACT, {
+  'Sàn Đấu Ardhaven': 'Ardhaven Arena',
+  // băng-rôn lúc vào map: `REGION_UNLOCK_LORE` + lời nhắc hệ phòng thủ, nối bằng ' · '
+  'Rẻo Rừng Corran — khoảnh rừng đầu tiên ngoài tường thành. Không phiến Rune nào ở đây: rễ Cây Hồn chạy ngầm dưới đất này.':
+    'Corran Woodstrip — the first stretch of forest outside the wall. No Rune is set here: the roots of the Soul Tree run beneath this soil.',
+});
+RULES.push(
+  // Lời nhắc "nên cầm con Axie nào tới đây" — một mẫu phục vụ cả 11 vùng × 9 lớp Axie.
+  [/^⚠ Axie (\S+) (\w+) ăn đòn NẶNG hơn (\d+)% ở đất (\w+) — đổi sang (.+) thì chịu đòn nhẹ hơn \(phím C → Khế Ước\)$/,
+    (m, g, a, n, d, ds) =>
+      `⚠ A ${g} ${a} Axie takes ${n}% MORE damage on ${d} ground — switch to ${ds} to take less (press C → Covenant)`],
+  // Băng-rôn ghép hai mệnh đề bằng ' · ' — dịch từng vế rồi nối lại, để thêm vế thứ ba sau này
+  // không phải viết thêm luật nào.
+  [/^(.+) · (⚠ Axie .+)$/, (m, a, b) => `${tr(a)} · ${tr(b)}`]
+);
+
+
+/* ── SÁU BẢNG BỘ QUÉT ĐẦU KHÔNG BIẾT TỚI ─────────────────────────────────────────────────
+   `bag · qlog · settings · ngocbank · nhat · stage` — bộ quét đầu chỉ biết chín bảng nên nó
+   báo "0 dòng còn tiếng Việt" trong khi sáu bảng này còn nguyên 42 dòng. Đó là lý do
+   `tests/test_dichen.js` liệt kê tên bảng ra ĐỦ rồi mới chấm, và đỏ ngay khi thiếu một cái. */
+Object.assign(EXACT, {
+  // ── Nhật Ký / Mục Tiêu Hôm Nay ──
+  'Đang Làm': 'Active', 'Chính': 'Main', 'Phụ': 'Side', 'Ký Sự': 'Chronicle',
+  '▾ Thu gọn': '▾ Collapse',
+  'Hạ 1 Trùm Vùng': 'Kill 1 Zone Warden',
+  'Khai 1 Vỉa Cốt': 'Open 1 Bone Vein',
+  'Xong Truy Nã Lệnh': 'Finish a Bounty Writ',
+  'Rèn / nâng tầng / khảm ngọc 2 lần': 'Forge / tier up / socket a jewel 2 times',
+
+  // ── Cài Đặt ──
+  'Thiết Lập': 'Settings', 'Phím Tắt': 'Hotkeys',
+  '—  ÂM THANH —': '—  AUDIO —',
+  'Toàn bộ âm thanh (phím L · cũng có nút loa cạnh đồng hồ góc trái)':
+    'All audio (press L · there is also a speaker button by the clock, top left)',
+  'Nhạc nền': 'Music', 'Hiệu ứng âm thanh': 'Sound effects',
+  'GẦN VỪA XA': 'NEAR MID FAR',
+  'OFF GỌN FULL': 'OFF LEAN FULL',
+  'OFF NHẸ FULL': 'OFF LIGHT FULL',
+
+  // ── Ngân Hàng Ngọc ──
+  'đang cất 0': '0 stored',
+  'Chúc Phúc Châu': 'Jewel of Bless', 'Linh Hồn Châu': 'Jewel of Soul',
+  'Sinh Mệnh Châu': 'Jewel of Life', 'Hỗn Độn Châu': 'Jewel of Chaos',
+  '⬇ Gửi hết': '⬇ Deposit all',
+  'Tự động gửi ngọc khi nhặt': 'Auto-deposit jewels on pickup',
+  'Ngọc đang cất không tiêu được — Lò Hỗn Độn và phép ép ngọc chỉ đọc số trong túi. Đó là điều làm cái ngăn này có nghĩa thật chứ không phải chuyển số qua lại.':
+    'Stored jewels cannot be spent — the Chaos Forge and direct socketing only read what is in your bag. That is what makes this vault mean something instead of shuffling a number back and forth.',
+
+  // ── Lệnh Nhặt / Túi Đồ ──
+  'game tự làm gì với thứ vừa rơi ra': 'what the game does with whatever just dropped',
+  '◈ Tự gửi ngọc vào Ngân Hàng khi nhặt (nhặt xong vào thẳng ngăn cất)':
+    '◈ Auto-send jewels to the Bank on pickup (straight into the vault)',
+  '💰 Tự bán đồ trơn khi nhặt (đồ không Vận, không Hoàn Hảo, chưa rèn)':
+    '💰 Auto-sell plain gear on pickup (no Luck, not Excellent, unforged)',
+  '🛡 Tự mặc món mạnh hơn (chỉ đổi khi lực chiến cao hơn rõ rệt)':
+    '🛡 Auto-equip stronger gear (only swaps on a clear power gain)',
+  '🗑 Mức dọn túi hàng loạt': '🗑 Bulk bag-clear level',
+  'chỉ đồ trơn': 'plain gear only',
+  'đồ trơn + đồ có Vận': 'plain gear + Luck gear',
+  'mọi món chưa rèn, trừ Hoàn Hảo': 'everything unforged, except Excellent',
+  '⚙ Mở Cài Đặt': '⚙ Open Settings',
+
+  // ── chỉ đường tới thợ rèn (canvas) ──
+  '🚩 Thợ Rèn Lưu Vong': '🚩 Exiled Smith',
+  '⚒ Phải đứng cạnh Thợ Rèn mới rèn được — đang chỉ đường':
+    '⚒ You must stand by the Smith to forge — guiding you there',
+});
+RULES.push(
+  [/^Hạ (\d+) Chimera$/,        (m, a) => `Kill ${a} Chimera`],
+  [/^(\d+) bước$/,              (m, a) => `${a} steps`],
+  [/^×(\d+) trong túi$/,        (m, a) => `×${a} in bag`],
+  [/^đang cất (\d+)$/,          (m, a) => `${a} stored`],
+  [/Khi bật Tự Đánh \(Z\), tầm hút đồ nới gấp ba/, 'With Auto-Attack (Z) on, pickup range triples'],
+  [/Lớp tầm xa giết quái cách 200px, nên không nới thì cày cả tiếng xong bỏ lại nguyên bãi đồ dưới đất\./,
+    'Ranged classes kill 200px away, so without that you grind for an hour and leave the whole field of loot behind.'],
+  [/đang quét quanh điểm neo (\d+)px/, (m, a) => `currently sweeping ${a}px around the anchor`]
+);
+
+
+/* ── KHOÁ LẤY TỪ TỪNG **TEXT-NODE**, không lấy từ `innerText` ────────────────────────────
+   `innerText` NỐI các node lại, nên chuỗi nó trả về là một câu chưa từng tồn tại dưới dạng
+   một node — viết khoá theo nó thì không mục nào bắn. Đây là lần thứ BA cùng một cái bẫy
+   trong đợt này. Bảng dưới lấy bằng TreeWalker trên chính bảng đang mở. */
+Object.assign(EXACT, {
+  // ── Cài Đặt ──
+  'ÂM THANH —': 'AUDIO —',
+  'Toàn bộ âm thanh': 'All audio',
+  '(phím L · cũng có nút loa cạnh đồng hồ góc trái)':
+    '(press L · there is also a speaker button by the clock, top left)',
+  'GẦN': 'NEAR', 'VỪA': 'MID', 'GỌN': 'LEAN', 'NHẸ': 'LIGHT',
+  '🇻🇳 Tiếng Việt': '🇻🇳 Vietnamese',
+  'Tắt âm thanh (phím L)': 'Mute (press L)',
+  'Bản đồ thu nhỏ (U)': 'Minimap (U)',
+  '👁 Ẩn': '👁 Hide',
+  'Vùng': 'Zone',
+  '⬆ RÚT LUI mang kho tạm về': '⬆ WITHDRAW and keep the run stash',
+
+  // ── màn chờ: thứ giám khảo thấy TRƯỚC TIÊN ──
+  'Vào Game': 'Enter',
+  'Tạo Nhân Vật Mới': 'New Character',
+  '← Quay Lại Danh Sách': '← Back to Roster',
+  'Mở Khế Ước': 'Open Covenant',
+
+  // ── Ngân Hàng Ngọc ──
+  'Ngọc đang cất': 'Stored jewels',
+  'không tiêu được': 'cannot be spent',
+  '— Lò Hỗn Độn và phép ép ngọc chỉ đọc số trong túi. Đó là điều làm cái ngăn này có nghĩa thật chứ không phải chuyển số qua lại.':
+    '— the Chaos Forge and direct socketing only read what is in your bag. That is what makes this vault mean something instead of shuffling a number back and forth.',
+
+  // ── Lệnh Nhặt ──
+  '◈ Tự gửi ngọc vào Ngân Hàng khi nhặt': '◈ Auto-send jewels to the Bank on pickup',
+  '(nhặt xong vào thẳng ngăn cất)': '(straight into the vault)',
+  '💰 Tự bán đồ trơn khi nhặt': '💰 Auto-sell plain gear on pickup',
+  '(đồ không Vận, không Hoàn Hảo, chưa rèn)': '(no Luck, not Excellent, unforged)',
+  '🛡 Tự mặc món mạnh hơn': '🛡 Auto-equip stronger gear',
+  '(chỉ đổi khi lực chiến cao hơn rõ rệt)': '(only swaps on a clear power gain)',
+  'Khi bật': 'With',
+  'Tự Đánh (Z)': 'Auto-Attack (Z)',
+  ', tầm hút đồ nới gấp ba — đang quét quanh điểm neo':
+    ' on, pickup range triples — currently sweeping around the anchor at',
+});
+// ⚠ PHẢI `unshift`, KHÔNG `push`. Luật có sẵn `/^×(\d+) (.*)$/` khớp trước và trả về
+// `×0 ` + trFrag('trong túi') — mà 'trong túi' không có trong TERMS, nên nó đi qua nguyên vẹn.
+// RULES quét theo THỨ TỰ và cái khớp đầu tiên thắng: thêm vào cuối là thêm một luật chết.
+RULES.unshift([/^×(\d+) trong túi$/, (m, a) => `×${a} in bag`]);
+
 function tr(s) {
   if (lang !== 'en' || !s || typeof s !== 'string') return s;
   const cached = _trCache.get(s);
