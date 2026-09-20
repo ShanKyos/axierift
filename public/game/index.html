@@ -54,14 +54,27 @@
       </div>
       <div id="cd-phai">
         <div id="cd-dau"><div id="hud-name">—</div><b id="hud-lv">LV.1</b></div>
+        <!-- NÚT LỰC CHIẾN nằm NGAY TRÊN thanh máu, sát mép trái của nó — chủ dự án chốt
+             "gần bên trái thanh máu". Đặt trong `#cd-phai` chứ không nổi tự do: nó phải trôi
+             theo khung chân dung khi khung đổi cỡ, chứ không neo vào một toạ độ px.
+             Nút quà bám ngay cạnh vì hai thứ đọc chung một câu — "mình mạnh tới đâu" và
+             "có gì để nhận" — và chấm đỏ trên nó là cửa DUY NHẤT báo có quà. -->
+        <div id="cd-nut">
+          <button id="btn-lc" title="Đánh Giá Sức Chiến Đấu — bấm xem phân rã" onclick="moLucChien()">
+            <i>◉</i><b id="lc-so-hud">0</b></button>
+          <button id="btn-qua" title="Nhận Quà" onclick="togglePanel('qua')">
+            <i>🎁</i><b id="lc-cham-qua" class="hidden">0</b></button>
+        </div>
         <div class="cd-thanh cd-hp" id="orb-hp" title="Sinh Lực"><i class="fill" id="bar-hp"></i><span id="txt-hp"></span></div>
         <div class="cd-thanh cd-qi" id="orb-qi" title="Mana"><i class="fill" id="bar-qi"></i><span id="txt-qi"></span></div>
       </div>
     </div>
     <!-- Số Bình Thuốc đã dời xuống ô thuốc trong thanh chiến đấu (#sk-thuoc) — cùng một con
          số bày hai chỗ thì chỗ nào cũng bị liếc qua, mà không chỗ nào được tin. -->
-    <div id="hud-buff" title="Rượu Hổ Cốt — tạm thời +12% công lực" style="display:none">🍶</div>
-    <div id="hud-loidon" title="Bùa Chắn Sét — giảm 40% sát thương sét" style="display:none">⚡</div>
+    <!-- ⚠ `#hud-buff` / `#hud-loidon` ĐÃ GỠ — chúng nói ra đúng 2/13 trạng thái và đứng ở
+         góc trái, xa chỗ mắt đang nhìn. Cả mười ba nay ở dải `#trang-thai` trong cột PHẢI.
+         Gỡ khối HTML thì phải soát mọi `getElementById` trỏ vào nó: hai chỗ trong
+         `updateHud()` đã gỡ cùng lượt (vết sẹo `btn-music` đã ghi trong CLAUDE.md). -->
     <!-- Đồng hồ và nút loa đứng CÙNG MỘT HÀNG: cả hai là chip trạng thái nền (giờ thế giới ·
          có tiếng hay không), và xếp ngang thì không tốn thêm một dòng chiều cao nào của HUD. -->
     <div id="hud-chip">
@@ -86,6 +99,10 @@
          chỗ tiếp giáp đổi sáng-tối theo địa hình đang đứng, và hai tấm lúc đọc ra một khối,
          lúc đọc ra hai. Cùng lý do đã ghi ở #bottom-hud và ở khung chân dung. -->
     <div id="cot-phai">
+      <!-- DẢI TRẠNG THÁI đứng TRÊN bản đồ nhỏ, không phải dưới: nó là thứ phải liếc thấy
+           giữa lúc đánh nhau, mà mắt đi từ trên xuống. Dưới bản đồ đã là hàng nút, và một
+           dải icon nhấp nháy xen giữa hai hàng nút thì đọc ra như một hàng nút thứ ba. -->
+      <div id="trang-thai" class="trong"></div>
       <div id="minimap-wrap">
         <canvas id="minimap" width="200" height="146" title="Bản đồ thu nhỏ (U)"></canvas>
       </div>
@@ -238,6 +255,8 @@
 <div id="panel-skill" class="panel hidden"></div>
 <div id="panel-map" class="panel hidden"></div>
 <div id="panel-ngocbank" class="panel hidden"></div>
+<div id="panel-lucchien" class="panel hidden"></div>
+<div id="panel-qua" class="panel hidden"></div>
 <div id="panel-nhat" class="panel hidden"></div>
 <div id="panel-party" class="panel hidden"></div>
 <div id="panel-friend" class="panel hidden"></div>
