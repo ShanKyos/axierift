@@ -135,6 +135,33 @@ const BANG = ['char','inv','bag','skill','quest','qlog','map','settings','help',
     hop.remove();
     return kq;
   });
+  // ── ⑤ HUD — QUÉT TOÀN BỘ DOCUMENT, không chỉ 15 bảng ────────────────────────────────
+  // ⚠ §③ quét `#panel-*`, mà hộp hướng dẫn · thẻ Nhiệm Vụ · Nhật Ký · nút bản đồ nhỏ đều
+  // KHÔNG phải panel. Chúng là HUD và nằm trên màn gần như 100% thời gian chơi — tức đúng
+  // thứ người chơi nhìn nhiều nhất lại là thứ không phép đo nào chạm tới. Chủ dự án gửi ảnh
+  // chụp đầy tiếng Việt trong lúc bài này báo "0 dòng". Nay quét cả `document.body`.
+  const hud = await p.evaluate(() => {
+    const VN = /[àáảãạăằắẳẵặâầấẩẫậèéẻẽẹêềếểễệìíỉĩịòóỏõọôồốổỗộơờớởỡợùúủũụưừứửữựỳýỷỹỵđ]/i;
+    const hien = el => { for (let n = el; n && n !== document.body; n = n.parentElement) {
+      const st = getComputedStyle(n);
+      if (st.display === 'none' || st.visibility === 'hidden' || n.hidden) return false; }
+      return true; };
+    const ra = [];
+    const w = document.createTreeWalker(document.body, NodeFilter.SHOW_TEXT);
+    let x;
+    while (x = w.nextNode()) {
+      const t = (x.nodeValue || '').trim();
+      if (!t || !VN.test(t)) continue;
+      const el = x.parentElement;
+      if (!el || !hien(el)) continue;
+      let id = ''; for (let n = el; n && n !== document.body; n = n.parentElement) if (n.id) { id = n.id; break; }
+      ra.push((id || el.tagName) + ' :: ' + t.slice(0, 70));
+    }
+    return ra;
+  });
+  if (hud.length) { hud.slice(0, 12).forEach(h => fail('⑤ HUD còn tiếng Việt — ' + h)); }
+  else pass('⑤ HUD: 0 dòng tiếng Việt trên toàn bộ document');
+
   // Trần đặt bằng ĐÚNG số đo hôm nay, không phải một số tròn — mỗi lần dịch thêm thì hạ nó
   // xuống. Bốn mặt dưới đã về 0 và phải Ở LẠI 0.
   const TRAN = { chieu_mota: 43, nhiemvu: 81, phutuyen: 64, npc_ten: 2, lop_mota: 0, dantruyen: 0, ten_mon: 0 };

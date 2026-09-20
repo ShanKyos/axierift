@@ -1956,6 +1956,68 @@ Object.assign(EXACT, {
   'Mục Tiêu Hôm Nay': "Today's Goals",
 });
 
+/* ═══ HUD — chỗ phép đo trước MÙ HOÀN TOÀN ═══
+   `test_dichen §③` quét 15 bảng `#panel-*`, mà hộp hướng dẫn · thẻ Nhiệm Vụ · nhãn bản đồ
+   nhỏ · Nhật Ký thì KHÔNG phải panel — chúng là HUD, luôn nằm trên màn trong lúc chơi. Nên
+   bài kiểm báo "0 dòng tiếng Việt" trong khi ảnh chụp game thật đầy tiếng Việt.
+   *Một phép đo quét đúng cái danh sách nó tự đặt ra thì luôn xanh, và cái nó bỏ ngoài danh
+   sách là cái người chơi nhìn nhiều nhất.*
+
+   ⚠ SÁU BƯỚC HƯỚNG DẪN VỠ THÀNH MẢNH quanh thẻ `<b>`. MutationObserver dịch TỪNG text-node,
+   nên chuỗi nguyên văn trong `TUT_STEPS` không bao giờ khớp một khoá nào — đó chính là lý do
+   ảnh chụp cho thấy tên NPC đã sang tiếng Anh (`West Gate Guard`) còn câu bao quanh thì chưa.
+   Phải khai theo đúng MẢNH mà thẻ `<b>` cắt ra. */
+Object.assign(EXACT, {
+  'Nhật Ký': 'Log',
+  'Mở ra': 'Expand',
+  'Thu lại': 'Collapse',
+  'Ẩn': 'Hide',
+  'Hiện': 'Show',
+  // — bước 1: di chuyển —
+  'Bấm': 'Click',
+  'chuột phải': 'right-click',
+  'trên nền đất hoặc bấm vào': 'on the ground, or click the',
+  'bản đồ thu nhỏ': 'minimap',
+  '— nhân vật sẽ tự chạy tới đó, hãy thử một lần':
+    '— your character runs there on its own. Give it a try',
+  // — bước 2: gặp NPC —
+  'Nhiệm vụ đầu đã chạy sẵn rồi — tới gần': 'Your first quest is already running — walk up to the',
+  '(phía tây thành) rồi nhấn': '(west side of town) and press',
+  'để nghe giao việc — ai có dấu': 'to hear them out. Anyone with a',
+  '(việc mới) hay': '(new quest) or a',
+  '(đang làm dở) trên đầu là người đang có việc cho ngươi':
+    '(in progress) over their head has work for you',
+  // — bước 3: đèn hiệu —
+  'Nhiệm vụ đầu nằm sẵn ở': 'Your first quest sits in the',
+  'góc phải màn hình': 'right-hand corner',
+  '. Bấm': '. Press',
+  'trên dải nhiệm vụ (hoặc': 'on the quest strip (or',
+  'ở khung nhiệm vụ) để tới': 'in the quest panel) to reach',
+  '— hoặc tự đi bộ ra': '— or walk out through the',
+  'rồi nhấn': 'yourself and press',
+  // — bước 4: đánh —
+  'Nhấn': 'Press',
+  '— nhân vật tự chạy tới con quái gần nhất và đánh. Hãy hạ 1 con':
+    '— your character runs to the nearest monster and attacks. Take down one',
+  // — bước 5: nhặt đồ —
+  'Quái chết có thể rơi đồ hoặc': 'A dead monster may drop gear or',
+  'xuống đất —': 'on the ground —',
+  'đi ngang qua': 'walk over it',
+  ', bấm': ', press',
+  'hoặc': 'or',
+  'bấm chuột trúng món': 'click the item itself',
+  'để nhặt. Giữ': 'to pick it up. Hold',
+  'xem tên mọi món trên màn': 'to see the name of every item on screen',
+  // — bước 6: bảng —
+  'Mở thử bảng': 'Try opening the',
+  '(phím': '(key',
+  ') để xem chỉ số và con Axie đang đeo ·': ') to see your stats and the Axie you are wearing ·',
+  'kỹ năng ·': 'skills ·',
+  'túi đồ ·': 'bag ·',
+  'bản đồ': 'map',
+});
+Object.assign(EXACT, { 'Châu': 'Jewels', 'Tứ Châu': 'the Four Jewels', 'Ngọc': 'Jewel' });
+
 function tr(s) {
   if (lang !== 'en' || !s || typeof s !== 'string') return s;
   const cached = _trCache.get(s);
