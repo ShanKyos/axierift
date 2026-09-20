@@ -1676,6 +1676,64 @@ cuối trùng). Đúng bệnh nhân bản mà mục chẩn đoán ở đầu tà
   Nay là `QUEST_BOSS_IDX = QUESTS.findIndex(q => q.type === 'boss')`, fallback `Infinity` chứ
   không phải `-1` (vì `questIdx >= -1` là luôn đúng ⇒ trùm hiện ra từ cấp 1).
 
+### 🐣 HƯỚNG DẪN TÂN THỦ — TRẦN THỜI GIAN KHÔNG ĐƯỢC ĐẨY NGƯỜI VÀO VIỆC BẤT KHẢ
+
+`TUT_STEPS` (6 bước) · `tutTick` · `tutGhi` · `tutAdvance` · `tutLamDuoc`, trong `game.js`.
+Gác: **`tests/test_tanthu.js`** (6 mục, **cả sáu cơ chế đã thử ngược và đều đỏ**).
+
+**⚠⚠ CÁI TRẦN 90 GIÂY ĐẺ RA MỘT LỖI TỆ HƠN THỨ NÓ CHỮA.** Trần sinh ra vì bước cũ treo mãi
+("còn nguyên ở cấp 120") — đúng vấn đề, sai thuốc: hết giờ thì nó **đẩy sang bước kế** bất kể
+bước ấy có làm được ở chỗ người chơi đang đứng hay không. Đo được, đứng YÊN trong thành từ giây 0:
+
+```
+90s → npc · 180s → map · 270s → kill · 360s → loot → quest · 385s → "Hướng dẫn hoàn tất"
+```
+
+Nặng nhất là mốc 270: hộp nói *"Nhấn SPACE — hạ 1 con Axie Heo Rừng"* trong khi
+`packsOf('ardhaven').length === 0`. Bấm SPACE 90 lần trong 67 giây rồi bật AUTO 3 phút ⇒
+`kills 0 · xp 0 · bạc 0`, toạ độ không nhích một pixel, và game không nói một câu nào. Rồi ở
+giây 385 nó tự **tuyên bố hoàn tất** cho một người chưa đi, chưa nói, chưa đánh gì.
+
+⇒ **`duocO()`** — bước này làm được ở đây không, hỏi qua cửa duy nhất `tutLamDuoc(s)`. **Chỉ gác
+nhánh HẾT GIỜ**; tiến bộ THẬT (`xong`) thì luôn được đi tiếp — hỏi `duocO` ở đường LÀM XONG là
+có ngày bỏ qua vĩnh viễn bước `kill` vì một cuộc đua khung hình với `buildWorld`. Hết giờ thì
+**bỏ qua mọi bước bất khả ở chỗ đang đứng**; hết bước làm được thì đóng hẳn. Nay đứng yên trong
+thành ra `npc → map → panel → ĐÓNG`, không còn chạm vào `kill`/`loot`.
+⚠ `tutLamDuoc` trả **`true`** khi `duocO()` ném — đo hỏng thì đừng khoá hướng dẫn của người ta lại.
+⚠ **`player._tutHetGio` — hết giờ dù MỘT lần thì cuối chuỗi TẮT LẶNG LẼ.** Không có cờ này thì
+người ngồi yên trong thành vẫn trôi hết sáu bước bằng trần thời gian rồi được báo *"Hướng dẫn hoàn
+tất"* — đúng cái mốc 385 giây ở trên. `test_tanthu ②` gác.
+⚠ **`duocO` của `kill`/`loot` đọc `packsOf(curMap)`, không đọc `mobs.length`.** Vừa dọn sạch một
+bãi thì `mobs` rỗng vài giây trong khi map vẫn có quái để đánh. `packsOf` là cửa đọc chính chủ của
+dữ liệu map, không phải một bản sao thứ hai.
+
+**⚠ CỜ TRẠNG THÁI, KHÔNG PHẢI SỰ KIỆN — `TUT_CO` + `tutGhi(key)`.** `tutAdvance` chỉ ăn khi đang
+đứng ĐÚNG bước ấy, nên ai nói chuyện / nhặt đồ / mở bảng TRƯỚC lúc hộp trôi tới bước đó sẽ kẹt
+lại đủ 90 giây ở một việc đã làm xong. Cùng luật đã ghi cho `MOC_NV.dem()`. Ba cờ:
+`tutNoi` (`tryTalk`) · `tutNhat` (`takeLoot`) · `tutBang` (`togglePanel('char')`).
+
+**Bốn thứ khác cùng đợt, mỗi thứ im lặng một kiểu:**
+
+| | đã hỏng thế nào |
+|---|---|
+| bước `npc` bảo *"gặp **Trưởng Lão Rell** … nhận nhiệm vụ đầu tiên"* | SAI cả ba vế: `c0q1` đã `active` từ giây 0; người giao là **Lính Gác Cổng Tây** (`ah_gac_tay`, cách điểm thả 2540px) còn Rell (cách 300px) tới cấp 14 mới có `c1q1` — đo `npcMark()`: Gác Tây ra `…`, Rell ra chuỗi RỖNG; và `xong` là `level >= 3`, chẳng dính gì tới nói chuyện. Nay dạy **cái dấu trên đầu NPC**, thứ luôn đúng dù ai giao gì |
+| bước `loot` khai `xong: inv.length > 0` | nhân vật vừa tạo ĐÃ CÓ đồ khởi đầu ⇒ nó và bước kế cùng nhảy trong MỘT nhịp (đo: cả hai ở giây 360,1). Cả bước dạy nhặt đồ **chưa từng hiện ra một lần nào** |
+| hai lời gọi `tutAdvance('panel')` trong `togglePanel` | **không bước nào mang khoá `panel`** (bước cuối là `quest`) ⇒ hai lời gọi chết, và bước cuối không có hành động nào đóng được nó. Nay bước cuối LÀ `panel` |
+| hai khối chép **chỉ số cứng** trong `update()` | `tutStep === 0` cộng quãng đường lần thứ HAI (tutTick đã cộng theo toạ độ thật, và nó đếm được cả AUTO lẫn bấm bản đồ nhỏ) ⇒ bước 1 chạy gấp đôi; `tutStep === 4` gọi `tutAdvance('quest')` trong khi ô thứ 4 nay mang khoá `loot` ⇒ không bao giờ khớp. **Chỉ số cứng vào một mảng khai ở chỗ khác là một quả mìn hẹn giờ cho đợt thêm/bớt bước kế tiếp** |
+
+**⚠ VÀ MỘT CỜ CẤP `window` SỐNG SÓT QUA LƯỢT DỰNG LẠI NGƯỜI CHƠI:** `trackerHtml()` chỉ ghim đèn
+hiệu khi `window._beaconQuestId !== q.id`, mà cờ đó không ai đặt lại ⇒ nhân vật thứ hai dựng
+trong cùng một trang có `player.beacon` đứng `null`: mất cả dải **"Đi ngay"** lẫn mũi tên định
+hướng — đúng cái dải mà bước 3 của hướng dẫn trỏ vào. Hôm nay mọi đường đổi nhân vật đều
+`location.reload()` nên chưa ai gặp; xoá một lời gọi reload là gặp ngay. `startGame()` nay đặt
+lại. Cùng họ với dòng `loadGame()` từng nuốt thanh chiêu người chơi tự gán.
+
+**⚠ LỖI CỦA CHÍNH BÀI KIỂM, ghi lại vì nó cho một mệnh đề XANH VÔ NGHĨA:** mục ⑤ đặt
+`player.x += 200` rồi tick MỘT lượt — mà `tutTick` cộng quãng đường theo HIỆU hai khung và khung
+đầu chỉ ghi mốc, nên nó cộng **đúng 0**. Người chơi kẹt ở `move` suốt, và mệnh đề *"không kẹt ở
+npc"* xanh vì một lý do chẳng liên quan gì tới cờ trạng thái. Phép thử ngược lộ ra. Nay dời qua
+nhiều khung và **tự kiểm** là đã rời bước `move` trước khi chấm.
+
 ### 🧭 NỐI MAP BẰNG RÌA (B1) + ĐIỂM DỊCH CHUYỂN MỞ BẰNG ĐI BỘ (B2)
 
 **⚠ Đây trước hết là một BẢN VÁ LỖI.** Trước bản này, **Bug Tribe Tunnels (40) · Reptile Sunstone Flats (80) ·
@@ -2534,6 +2592,134 @@ gác — và nó **không đặt ngưỡng phần trăm**, nó dựng lại chí
   `0.16` cũ — `shakeT` được đặt tới 0,25 ở nhiều chỗ nên biên độ từng vượt trần 1,56×.
 
 Test: `node <scratchpad>/test_feel.js`.
+
+## 👁 ĐỌC ĐƯỢC TRÊN MÀN + ☠ RỦI RO — hai mảng thấp nhất bảng QA, và cả bốn lỗi đều ĐO ĐƯỢC
+
+Gác: **`tests/test_docduoc.js`** (6 mệnh đề) · **`tests/test_ruiro.js`** (13 mệnh đề).
+**Cả tám cơ chế đã thử ngược và đều đỏ.**
+
+### ① Nhật ký cắt cụt ĐÚNG phần thưởng — và ba dòng tần suất cao nuốt phần còn lại
+
+Cột `#combat-log` rộng 186px + `white-space:nowrap` + `text-overflow:ellipsis` ⇒ đo được
+**30/31 dòng bị cắt**, và phần bị cắt LUÔN là phần thưởng:
+`☠ Hạ Axie Heo Rừng — Nhận: +28 EXP +17◈` cụt đúng ở chữ *"Nhận"*. Nhật ký tồn tại để nói
+*ngươi vừa được gì*; cắt đúng chỗ đó thì nó chỉ còn là tiếng ồn. Nay **cho xuống dòng**
+(`overflow-wrap:anywhere`) — `max-height:22vh` + `overflow-y:auto` vốn đã lo phần cao. Đo lại:
+**0/41 dòng bị cắt.**
+
+**`logCombat(text, color, gop)` — GỘP, KHÔNG BỎ.** Cùng khoá với dòng ĐANG ĐỨNG ĐẦU thì cộng dồn
+vào chính nó (`×N · tổng M`). Đo được 8 cú liên tiếp cùng mục tiêu: **8 dòng → 1**.
+
+- ⚠ **CHỈ gộp vào dòng ĐẦU**, đừng đi tìm khắp hộp: gộp vào một dòng nằm giữa là thứ tự thời gian
+  của nhật ký nói dối.
+- ⚠⚠ **GỘP THEO (TIỀN TỐ × MỤC TIÊU), ĐỪNG LOẠI TRỪ ĐÒN ĐẶC BIỆT.** Bản đầu tôi chỉ gộp đòn
+  THƯỜNG và để `KHẮC HỆ`/`HOÀN HẢO`/bạo kích mỗi cú một dòng — nghe hợp lý, và phép đo bắt ngay:
+  ở Rẻo Rừng Corran vũ khí khắc hệ đàn heo nên **8/8 cú đều mang tiền tố** ⇒ phép gộp thành vô
+  dụng đúng ở chỗ nó cần nhất. Tiền tố nằm TRONG khoá (hai loại không trộn) và vẫn nằm trong chữ
+  hiện ra, nên người chơi vẫn đọc được "đòn này khắc hệ" — chỉ là một dòng thay vì tám.
+
+### ② Quái chìm vào ĐẤT — không phải chìm vào hòn đá
+
+`Axie Heo Rừng` là khối NÂU (110,76,58) đứng trên **lối mòn NÂU**; chênh sáng với decor quanh đó
+đo được **29/255**. ⚠ Báo cáo QA đổ cho *"thanh máu chỉ hiện khi đã bị đánh"* — **SAI**: thanh máu
+vẽ vô điều kiện, lệnh `return` của nhãn nằm SAU nó. Kết luận của họ đúng, nguyên nhân họ nêu thì
+không. *Một triệu chứng đọc đúng không bảo đảm cái nguyên nhân đi kèm nó cũng đúng.*
+
+Hai lớp, cả hai **nằm ngoài** đường bao con vật (cùng nguyên lý rìa sáng và viền +N):
+
+| | |
+|---|---|
+| **vòng chân** | một nét tối + một nét theo HỆ, vẽ cho **MỌI con còn sống**. Cây và đá không có vòng nào ⇒ chính cái vòng tách sinh vật khỏi địa hình |
+| **viền tối** | bóng đơn sắc của chính tấm đó vẽ lệch bốn hướng, NẰM DƯỚI thân |
+
+- ⚠ **Vòng chân KHÔNG được gắn vào `mobHe`.** Bản cũ là hào quang hệ `alpha 0.14` (dưới ngưỡng
+  đọc được) và **chỉ vẽ khi con đó có hệ** — con chưa khai hệ mất hẳn tín hiệu.
+- ⚠ **Viền đi qua `tintedImg`** nên trả giá lọc đúng một lần mỗi tấm. **KHÔNG `ctx.filter` trong
+  vòng vẽ, KHÔNG `shadowBlur`** (cả hai đã bị cấm tại chỗ), và **đừng phóng to sprite** — đó là
+  đúng cái đã phải gỡ ở mục Trụ Đá.
+- ⚠ **Viền gác sau `SETTINGS.lowFx`, vòng chân thì không.** Bốn `drawImage` thêm cho mỗi con đo
+  được **69 → 51 FPS** ở headless-CPU (14,4 → 19,7 ms/khung). Vòng chân là một nét ellipse và nó
+  mới là thứ trả lời *"đây là sinh vật"*. Đừng đẻ cờ thứ hai — `lowFx` là công tắc ĐÃ CÓ.
+
+### ③ Chết không mất gì ⇒ nay mất **5% ngân sách XP của chính cấp đang đứng**
+
+Đo một cái chết THẬT rồi `respawn()`: `cấp 5 · 796 XP · 1.588◈ · 15 mạng · túi 2` ⇒ **y hệt,
+không lệch một trường nào.** `chetMatXp()` là cửa DUY NHẤT, nên con số người chơi ĐỌC trên màn bại
+trận và con số máy TRỪ không thể lệch nhau.
+
+Chọn EXP vì ba lẽ: một con số đọc được ngay · **không bao giờ tụt cấp** (kẹp ở `player.xp`) · tự
+nhạt đi khi người chơi mạnh lên.
+
+**⚠⚠ ĐỪNG HỎI `md.type === 'safe'` — tôi viết đúng cái sai ấy trước, và phép đo bắt được:** cấp 25
+chết ở Beast Herd Camp (`ngoai`) mất **0 EXP**. `ngoai` khai `safe` (không PK) nhưng nó là **bãi
+săn 8 bãi**, tức đúng chỗ người chơi cày nhiều nhất lại thành chỗ không có rủi ro. Cùng cái bẫy đã
+ghi nguyên văn hai lần trong tài liệu này (Rương Canh · Axie nhập vào): **cửa duy nhất đúng là CÓ
+BÃI QUÁI**. Thành thật không có bãi nào nên nó tự được miễn, không cần hỏi cờ `safe` lần nào.
+
+Bốn chỗ miễn, mỗi chỗ một lý do — đừng gộp cho gọn: dưới cấp 10 (tân thủ phải tha) · map không có
+bãi quái · `md.pvp` (**luật đã chốt**: *"Thua một trận đấu không được phép đụng vào bản lưu"*) ·
+`md.dungeon` (Tầng Sâu đã có giá riêng, cộng thêm là phạt hai lần).
+
+⚠ **Khoản phạt đặt SAU hai nhánh hồi sinh** (THIÊN MỆNH `traitRevive` · Bản Nguyên Công
+`tienthiencong`), và đó là đúng: hai cái đó nghĩa là *ngươi không chết thật*, nên không phạt.
+Hệ quả cho bài kiểm: cảnh đo phải **tắt cả hai** trước khi giết, không thì nó đỏ theo xúc xắc —
+`startGame` bốc thiên phú ngẫu nhiên nên cái chết đầu có khi miễn phí, và phép đo ra 0 trong khi
+mã hoàn toàn đúng. `test_ruiro` đỏ 1/5 lượt trước khi thêm ba dòng tắt ấy, và nay nó tự kiểm
+(`hoiSinh`) rồi mới chấm.
+
+⚠ **Và phải NÓI RA — kể cả khi KHÔNG mất gì, kèm lý do.** Im lặng ở chỗ được miễn thì người chơi
+không phân biệt được *"chỗ này tha"* với *"cơ chế hỏng"*.
+
+### ④ Mục Tiêu Hôm Nay xong trong 2 phút ⇒ đặt lại theo NHỊP HẠ QUÁI ĐO ĐƯỢC
+
+Nhịp thật (AUTO, 60 giây trong game, đo bằng chính vòng `update`):
+**cấp 5 → 14 mạng/phút · cấp 11 → 24 · cấp 20 → 37 · cấp 30 → 39.**
+⇒ `kills:10` ở dải 1 tốn **25-43 giây**, `kills:15` ở dải 2 tốn **24 giây** — cả tầng NGÀY là một
+dòng và nó đóng trước khi người chơi kịp ngồi xuống. Nay ô `kills` đặt theo mốc **~3 phút cày**:
+`60 → 90 → 110 → 120 → 130 → 140 → 150`.
+
+⚠ **Trên cấp 30 là GIẢ ĐỊNH, không phải số đo** — nói thẳng chứ không giấu. Nhịp phẳng lại ở
+~39 mạng/phút từ cấp 20→30 nên bốn dải cuối lấy đúng mốc phẳng đó; `tools/do_nhipcap.cjs` hiện
+không chạy được từ cấp 60 trở lên.
+
+**⚠⚠ CHỈ NÂNG SỐ LƯỢNG, ĐỪNG THÊM Ô VÀO DẢI 1 — tôi làm sai đúng chỗ này và `test_earlygame`
+bắt được.** Bản đầu tôi cho dải 1 thành `{kills:45, forge:1}` cho "đỡ trống", và thế là dải 1
+(2 ô) **BẰNG** dải 2 (2 ô) — phá đúng tính chất mà bảng này sinh ra để có: **số ô lớn dần theo
+cấp**. Bài kiểm cũ chốt `daily1 === ['kills']` nhìn thì giống một hằng số chép cứng, nhưng nó
+đang gác một thiết kế thật; tôi đọc nhầm nó thành lời nói dối rồi suýt sửa bài kiểm cho vừa ý
+mình. *Trước khi gọi một khẳng định cũ là "chốt cứng đã mục", hỏi xem nó đang gác TÍNH CHẤT gì.*
+Hình dạng thang giữ nguyên (**1 · 2 · 3 · 4 · 5 · 5 · 5** ô); chỉ con số `kills` đổi. Thứ cần
+chữa là ĐỘ DÀI, không phải số dòng.
+
+**⚠ VÀ TUYỆT ĐỐI KHÔNG THÊM `via` VÀO DẢI 1 — đó là một phép đo.** `viaHomNay()` bốc ba
+trong bảy vùng có Dòng; đo một ngày thật ra `trungnut · chungnam · caungam`, giao với map mà nhân
+vật cấp ≤11 tới được (`ardhaven · ngoai · corran · pvp`) là **RỖNG**. Mà thưởng ngày đòi xong HẾT
+⇒ một ô bất khả là **khoá câm cả phần thưởng**, không lỗi nào báo. Đúng bài học "CỬA CƠ CHẾ MỞ Ở
+CẤP NÀO": hỏi *đếm được không* rồi phải hỏi tiếp *ai cũng làm được không*.
+
+**Nợ có sẵn, ghi ra chứ không lặng:** `via` ở dải 4 (cấp 40-59) vẫn dính cửa hẹp của đúng cái bẫy
+đó — cấp 40-59 tới được 4/7 vùng có Dòng, nên ~3% số ngày cả ba vỉa nằm ngoài tầm. Chữa đúng là
+cho `dailyReset` bốc mục tiêu theo cấp người chơi; đó là một đợt riêng.
+
+### ⚠ BỐN LỖI CỦA CHÍNH BÀI KIỂM — cả bốn cho một kết quả trông rất thuyết phục
+
+1. **Lệch chuẩn trong ô 26px là phép đo MÙ cho việc "quái có tách khỏi nền không".** Nó đo tương
+   phản BÊN TRONG con vật, thứ vốn đã cao: **42,1 → 41,6** sau khi sửa, tức nói ngược. Phải đo
+   **năng lượng biên** (`|∇L|` trung bình).
+2. **Rồi so biên-tại-quái với biên-tại-NỀN cũng hỏng, hai lần.** Ô nền chọn cứng thì rơi trúng đồ
+   (map có **102 con quái**); ô "chắc chắn trống" thì vướng đường ghép viên lát. Nền đo ra 1,8 hay
+   4,9 tuỳ chỗ lấy mẫu ⇒ **nó không phải một cái mốc**. Cách đúng: **A/B trên cùng một khung, cùng
+   những điểm ảnh ấy**, bật/tắt chính cơ chế (`SETTINGS.lowFx`) — nền là hằng số nên tự triệt tiêu.
+   Đo được **+42% năng lượng biên**.
+3. **Đếm lời gọi `ctx.ellipse` để kiểm vòng chân là một cái chốt đúng ở MỌI trạng thái** — riêng
+   bóng đổ đã hai ellipse mỗi con. Phép thử ngược **đỏ lặng**. Nay `drawMob` phơi
+   **`window.__vongChan`** (chỉ khi `TEST_MODE`) — cùng lối `__veChet` · `__avaKhoi` · `__veVuKhi`.
+4. **`camera.x` là góc TRÊN-TRÁI, không phải tâm.** `Math.abs(m.x - camera.x) < VW` gom cả con nằm
+   ngoài mép trái rồi đòi chúng phải có vòng ⇒ đỏ 17/21 trên mã ĐÚNG.
+
+⚠ Và một mệnh đề **đỏ theo xúc xắc**: `HOÀN HẢO` bốc ngẫu nhiên mỗi cú nên tám cú tự nhiên bị cắt
+thành hai ba cụm. Ghim `Math.random` trong lúc đo — cái cần gác là *hai cú LIÊN TIẾP CÙNG LOẠI thì
+phải gộp*, không phải xúc xắc.
 
 ## Sự kiện thế giới — neo theo GIỜ THẬT
 
@@ -5114,7 +5300,10 @@ trước mỗi lượt đo — tức dời người chơi ra xa đúng con quái
 suýt kết luận "giả thuyết sai". Bỏ hai dòng đặt lại ấy thì ra `quaiGan: 2, gần nhất 8px`.
 | `test_canbanglop §2` | *"chênh ST cao/thấp 4,42× > trần 3,6×"* | **xanh 3/3 trên cây đang làm VÀ 3/3 trên cây trước** — tức xúc xắc, không phải commit nào. Đo TB 3 lượt ra **2,63×** (cây nay) và **2,32×** (cây trước), đều sâu trong trần. Gốc: đồ rơi NGẪU NHIÊN + số lần chết là hàm bậc thang (mỗi lần chết `buildWorld()` hồi đầy cả bãi), nên ST tuy "trơn" hơn số mạng vẫn thừa hưởng phi tuyến ấy. Lượt đỏ bốc trúng DK 88.385 (dải thường 53-58k) và DW 19.999 ⇒ 4,42×. Chính đầu tệp bài ấy đã ghi ±22% tản — con số đó đo khi chưa ai chết 11 lần |
 | `test_sandat` (nhanmon) | *"sau 3600 khung đuổi, 1 con nằm ngoài sàn: Cao Thủ Lang Thang — nhánh di chuyển nào đó thiếu collideObstacles"* | ⚠ **ĐÂY KHÔNG PHẢI NHIỄU, đây là một LỖI THẬT bắn thưa.** Xanh 3/3 chạy riêng · xanh ở lượt hồi quy liền trước ⇒ rất dễ đọc nhầm là xúc xắc rồi bỏ qua. Nhưng chính mệnh đề ấy sinh ra để bắt *một nhánh dời chỗ quái quên gọi `collideObstacles`*, và nó chỉ nổ khi hình học truy đuổi rơi đúng chỗ. Cần một đợt riêng: quét NĂM nhánh dời quái trong `update()` (xem cảnh báo `mobDoBuoc()`) rồi đối chiếu nhánh nào thiếu. Đừng nới ngưỡng, và đừng ghi nó vào đây rồi quên |
+| `test_uigothic ⑥` | *"ở 30% máu, đầu TRÁI thanh cũng tối theo (đỏ 35 vs 74)"* | **đỏ 1/3 trên cây đang làm VÀ 1/3 trên `origin/main`** ⇒ không phải của commit nào. Gốc: mẫu **"đầy"** ở đầu trái TỰ NÓ đổi giữa các lượt — `(81,10,4)` · `(87,54,51)` · `(87,54,51)` — tức thanh máu có thành phần đập theo thời gian, nên lấy MỘT mẫu ở một khoảnh khắc là đo nhiễu, và bài so hai mục tiêu đều đang động. Chữa dứt điểm: ghìm hoạt cảnh (hoặc lấy **trung vị** nhiều mẫu, lối `test_dongbodo` đã làm), đừng nới ngưỡng |
 | `test_qablock` | *"dựng cảnh sai: người chơi không ăn đòn nào"* rồi kéo theo 2 FAIL nữa | **xanh 8/8 lượt liên tiếp** khi chạy riêng · chính chú thích trong bài đã ghi nó nhạy với mạch ngẫu nhiên (*"từng xanh chỉ vì may"*) — con quái phải kịp đánh trúng trong 40 khung, máy bận là trượt. Phân biệt bằng `git diff -U0 … | grep '^@@'`: nếu diff không chạm `update`/`hurtPlayer`/`swingFeel`/`shakeDir` thì nó không thể là của mình |
+
+⚠ **VÀ QUE DÒ CỦA CHÍNH PHÉP PHÂN BIỆT ẤY CŨNG HỎNG ĐƯỢC — tôi vừa dẫm.** Nhiều bài đọc `../public/game/game.js` bằng đường dẫn TƯƠNG ĐỐI, nên chạy chúng từ một thư mục không có `public/` bên cạnh là chết `ENOENT` **trước khi một khẳng định nào chạy** — mà `rc=1`, nên nó đọc ra đúng như *"đỏ 3/3, tất định"*. Tôi đã suýt kết luận ngược hẳn. Dựng cảnh cho đúng: một thư mục có `tests/` **và** `public/` (symlink là đủ) cạnh nhau. Cùng luật với ba bài chép cứng cổng ở trên: *trước khi tin một lượt chạy lẻ, hỏi log xem nó có tới được trang không.*
 
 **Cách phân biệt "đỏ do mình" với "đỏ do xúc xắc", làm theo thứ tự này:** chạy riêng bài đó
 **3 lượt** trên cây của mình → rồi chạy trên cây **trước commit của mình** (`git worktree add`).
