@@ -552,3 +552,25 @@ mới biết dáng cần nằm sẵn trong khối đi. Đo trước khi nướng
 - Bốn bảng còn vướng phụ thuộc, chưa tách được (xem trên).
 - Bộ giáp Dark Wizard dạng ảnh phẳng (2 gói `image2godot4_8/9`) chưa mặc lên người được — cần
   Meowa xuất lại dạng gói Spine trên cùng bản mẫu `spine四头身人物模板`.
+
+## 2026-09-20 · `test_uigothic §⑥` — que dò đọc thẳng vào con số máu
+
+**Đoán sai:** khi hồi quy trên `d498ad0` trả về đúng một bài đỏ (`test_uigothic`), phản xạ đầu
+là xếp nó vào nhóm "đỏ theo xúc xắc" rồi đi tiếp. Chạy lại ba lượt thì đúng là 1/3 đỏ — nhưng
+**nguyên nhân truy được, không phải nhiễu thống kê**: mệnh đề lấy đúng MỘT điểm ảnh ở
+`(0,08 · giữa)` của thanh máu, mà `.cd-thanh span` (con số máu) canh giữa dọc và bắt đầu ở 10px
+⇒ điểm đo rơi thẳng vào chữ số, và chữ số đổi theo lượng máu. Ba lượt cùng trạng thái ra
+`{81,10,4}` · `{87,54,51}` · `{118,98,96}`.
+
+⇒ Đọc **đỉnh độ đỏ của cả CỘT** thay cho một điểm: chữ trắng và bóng đen chỉ kéo độ đỏ xuống,
+không bao giờ thắng phần tô. Năm lượt sau khi sửa ra đúng cùng một bộ số.
+
+**Và nó lôi ra một lỗ thật:** cả `style.css` lẫn CLAUDE.md đều ghi rằng §⑥ gác lỗi
+`background-size:100% 100%`. Thử ngược cho thấy **bản cũ chỉ đỏ 1/3 lượt, và đỏ vì đúng cái que
+dò hỏng kia** — mệnh đề "cỡ thanh bất biến" đo hộp `#orb-hp`, trong khi thứ co lại là `.fill`
+bên trong nó. Đo ở 30% thì hai bản gần như trùng nhau (100 vs 90) vì mũi nhọn nén còn ~7px;
+phải đo ở **60%**, nơi màu tắt sớm trước mép phần đã tô — **138 vs 34**. Mệnh đề `§⑥b` mới là
+thứ duy nhất bắt được nó.
+
+*Bài học: một bài đỏ theo xúc xắc vẫn phải TRUY tới nguyên nhân. Lần này "xúc xắc" hoá ra là một
+que dò hỏng, và chính nó đang che một mệnh đề rỗng suốt nhiều phiên.*

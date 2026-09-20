@@ -253,14 +253,27 @@ const errs = [];
       const d = g.getImageData(0, 0, cv.width, cv.height).data;
       const lay = (fx, fy) => { const x = Math.round(cv.width * fx), y = Math.round(cv.height * fy);
         const i = (y * cv.width + x) * 4; return { r: d[i], g: d[i+1], b: d[i+2] }; };
-      const giua = cv.height / 2 / cv.height;
+      // ⚠ ĐỌC ĐỈNH ĐỘ ĐỎ CỦA CẢ CỘT, ĐỪNG ĐỌC MỘT ĐIỂM Ở GIỮA. `.cd-thanh span` (con số máu)
+      // canh giữa DỌC và bắt đầu ở 10px, nên một điểm ở giữa thanh rơi thẳng vào chữ số — mà
+      // chữ số đổi theo lượng máu ("22194 / 22194" → "7313 / 22194"), tức phép đo đổi theo một
+      // thứ chẳng liên quan gì tới cơ chế tô đầy. Đo được ba lượt liên tiếp ra `{81,10,4}` ·
+      // `{87,54,51}` · `{118,98,96}` ở CÙNG một trạng thái máu ⇒ đỏ 1/3 lượt.
+      // Đỉnh cột thì miễn nhiễm: chữ TRẮNG và bóng ĐEN đều kéo độ đỏ XUỐNG, không bao giờ đẩy
+      // lên. Đo trên cột: đầy 91/147 · 30% 88/39 — vẫn tách bạch đúng cái cần tách.
+      const cot = (fx) => { const x = Math.round(cv.width * fx); let best = null, bd = -1e9;
+        for (let y = 0; y < cv.height; y++){ const i = (y * cv.width + x) * 4;
+          const c = { r: d[i], g: d[i+1], b: d[i+2] }, v = c.r - (c.g + c.b) / 2;
+          if (v > bd){ bd = v; best = c; } }
+        return best; };
       return { rong: cv.width, cao: cv.height,
-               trai: lay(0.08, giua), phai: lay(0.82, giua),
-               // rail vàng ở mép TRÊN, lấy ở cùng chỗ x với `phai`
+               trai: cot(0.08), phai: cot(0.82),
+               // chỉ có nghĩa ở mức 60% — xem mệnh đề ⑥b ngay dưới
+               mep: cot(0.58),
+               // rail vàng ở mép TRÊN (hàng 1) — nằm trên cả chữ lẫn phần tô, nên một điểm là đủ
                rail: lay(0.82, 0.06) };
     }, anh.toString('base64'));
   };
-  const day = await doThanh(1), vua = await doThanh(0.3);
+  const day = await doThanh(1), vua = await doThanh(0.3), sau = await doThanh(0.6);
   const do_ = c => c.r - (c.g + c.b) / 2;          // độ "đỏ"
   const sang = c => (c.r + c.g + c.b) / 3;
   console.log('⑥ đầy :', JSON.stringify(day));
@@ -279,6 +292,19 @@ const errs = [];
   if (rVua < rDay * 0.62)
     fail(`khung vàng TỐI THEO lượng máu (sáng ${rVua.toFixed(0)} vs ${rDay.toFixed(0)}) — bản rỗng phải chỉ dìm PHẦN MÀU, giữ nguyên khung`);
   else ok(`thanh vơi đúng kiểu: đầu phải ${do_(day.phai).toFixed(0)}→${do_(vua.phai).toFixed(0)}, khung vàng giữ nguyên ${rDay.toFixed(0)}→${rVua.toFixed(0)}`);
+
+  // ── ⑥b `background-size:100% 100%` — LỖI ③ MÀ CẢ CSS LẪN CLAUDE.md NÓI LÀ ĐÃ GÁC, NHƯNG CHƯA
+  // Mệnh đề "cỡ thanh phải bất biến" ở trên KHÔNG gác được nó: phép đo lấy hộp của `#orb-hp`,
+  // mà cái co lại là `.fill` BÊN TRONG nó — `#orb-hp` không bao giờ đổi cỡ. Thử ngược bản cũ ra
+  // đỏ 1/3 lượt, và đúng lượt đỏ là lượt que dò rơi trúng chữ số, tức bắt vì MAY.
+  //
+  // ⚠ ĐO Ở 60%, KHÔNG ĐO Ở 30%. Nén cả tấm xuống 30% thì cái mũi nhọn chỉ còn ~7px và bị khử
+  // răng cưa nuốt mất — đo được hai bản gần như TRÙNG NHAU (0,30: 100 vs 90). Ở 60% mũi nhọn
+  // còn ~12px và lề trong suốt bên phải của tấm art cũng nén theo, nên màu TẮT SỚM trước mép
+  // phần đã tô. Đó mới là chữ ký đọc được: đúng 138 · sai 34, cách nhau hơn ba lần.
+  if (do_(sau.mep) < do_(sau.phai) * 2.2)
+    fail(`ở 60% máu, màu KHÔNG chạy tới sát mép phần đã tô (đỏ ${do_(sau.mep).toFixed(0)} vs nền rỗng ${do_(sau.phai).toFixed(0)}) — ảnh đang CO theo \`.fill\` chứ không giữ nguyên cỡ`);
+  else ok(`ảnh tô giữ nguyên cỡ: ở 60% màu còn ${do_(sau.mep).toFixed(0)} sát mép, nền rỗng ${do_(sau.phai).toFixed(0)}`);
   await p3.close();
 
   console.log('errors:', JSON.stringify(errs));
