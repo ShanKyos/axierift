@@ -21674,6 +21674,207 @@ document.addEventListener('click', () => {
   else if (_kuPha === 'the') kuTiep();
 });
 
+// ═══════════ BANNER NHÂN VẬT — key art kiểu Genshin / Honkai ═══════════
+// Bảng Khế Ước trước bản này là một khối CHỮ: tên con 5★, một dòng mô tả, danh sách 4★, bộ đếm
+// bảo đảm. Đúng thông tin, nhưng nó không trả lời được câu mà một banner sinh ra để trả lời —
+// *"thứ đang bày bán trông NHƯ THẾ NÀO"*. Genshin và Honkai đều mở màn quay bằng một tấm key
+// art to, và đó là thứ người chơi nhớ, không phải tỉ lệ 0,6%.
+//
+// **MỌI THỨ SUY TỪ DỮ LIỆU, KHÔNG CHÉP CỨNG.** Bảng dưới chỉ khai *ai* được bày; tên bộ giáp,
+// tên Trấn Phái, hệ, màu, tranh chiêu đều tra từ nguồn đang sống (`heroSet` · `SECTS[].tp` ·
+// `ELEM` · `CHIEU_TRANH`). Chép tên bộ vào đây là bảng banner nói dối ngay lần đầu ai đó đổi
+// `HERO_SETS` — cùng lý do `mapBanSac()` suy từ `packs`.
+// Hai lớp bày ra CHỌN BẰNG ẢNH CHỤP, không bằng cảm tính — dựng đủ cả năm rồi nhìn:
+//   · `toanchan` Ngũ Tiễn — quạt tên vàng xoè sau lưng, đọc ra ngay ở cỡ 150px  ✔ chọn
+//   · `baidasan` Meteorite — vầng thiên thạch tím, màu tách hẳn khỏi bốn lớp kia  ✔ chọn
+//   · `bug` Bão Quạ — tạm được, hơi mờ
+//   · `thieulam` Death Stab — **art là một mũi thương XÁM nằm ngang**; nghiêng chéo rồi vẫn đọc
+//     ra một cái ống, không ra hào quang. Đây là giới hạn của ART, không sửa được bằng mã.
+//   · `minhgiao` Flame Strike — **chưa có tranh Trấn Phái nào** (`CHIEU_TRANH` không khai).
+// ⚠ Năm thân nhìn thoáng qua thì hao hao nhau vì cùng nướng từ một bản mẫu bốn-đầu-thân. Tôi đã
+// đọc nhầm ảnh thu nhỏ đúng một lần và tưởng bốn banner dùng chung một bộ giáp; đo pixel thì cả
+// MƯỜI cặp lệch 33-55%. *Ảnh thu nhỏ không phải một phép đo.*
+const KU_BANNER = {
+  gk: { lop:'toanchan', giai:7, ren:9 },   // Giao Kết — Sylvan Ranger, bộ Ngọc Bích
+  cx: { lop:'baidasan', giai:7, ren:9 },   // Vĩnh Cửu — Dark Wizard, bộ Grand Soul
+};
+const KB_CAO = 208;            // bề cao khung banner (CSS px)
+// ⚠ 150, KHÔNG PHẢI 168. `KB_THAN` đo THÂN người, mà vũ khí thì vượt lên TRÊN đầu — cây đại
+// kiếm của Dark Knight dựng đứng cao hơn đỉnh đầu chừng 30px ở cỡ này. Đo bằng cách nào cũng
+// không ra: phải chụp khung rồi nhìn, và ở 168 thì mũi kiếm bị mép trên cắt cụt.
+const KB_THAN = 150;           // bề cao THÂN người trong khung
+const KB_VFX_NHIP = 1.9;       // giây một vòng hoạt cảnh Trấn Phái
+
+// Thông tin banner, suy hết từ nguồn đang sống. Trả `null` khi lớp không có trong `SECTS` —
+// gọi là banner trỏ vào một lớp đã bị gỡ, và im lặng ở đó là một khung trống không ai hiểu.
+function kbTin(bid){
+  const b = KU_BANNER[bid]; if (!b) return null;
+  const sc = SECTS[b.lop]; if (!sc) return null;
+  const bo = heroSet(b.lop, b.giai);
+  const ct = CHIEU_TRANH['sx_' + b.lop + '_c'];
+  const he = ELEM[sc.element];
+  return { ...b, sc, boTen: bo ? bo.name : '', tp: (sc.tp && sc.tp.name) || '',
+           atlas: (ct && ct.atlas) || null, mau: (he && he.color) || sc.color, he: sc.element };
+}
+// Thân GIẢ mặc trọn bộ, dựng qua ĐÚNG `netApTrangBi` — cùng cửa mà thân người từ xa đi qua.
+// ⚠ TUYỆT ĐỐI KHÔNG ĐỤNG VÀO `player`. Cách "dễ" là tráo `player.equip` rồi trả lại; một lần
+// ném lỗi giữa chừng là người chơi mất sạch đồ, và kiểu hỏng đó không có đường nào lần ra.
+// ⚠ Và phải NHỚ LẠI: `gearVisual()` cấp phát một đối tượng mỗi lần gọi, còn khung banner vẽ
+// 60 lần một giây.
+const _kbThan = {};
+function kbThan(bid){
+  if (_kbThan[bid]) return _kbThan[bid];
+  const t = kbTin(bid); if (!t) return null;
+  const band = bandOfTier(t.giai), g = {};
+  for (const o of NET_O_DO){
+    const ds = itemDefsFor(o, t.lop, band).filter(d => d.sect === t.lop);
+    const d = ds[0] || itemDefsFor(o, t.lop, band)[0];
+    if (d) g[o] = [d.id, t.giai, t.ren, 2];      // 2 = Hoàn Hảo, để hào quang lên đúng bậc
+  }
+  const than = { sect: t.lop };
+  window.netApTrangBi(than, g);
+  return (_kbThan[bid] = than);
+}
+
+let _kbRaf = 0;
+function kbCv(){ return [...document.querySelectorAll('canvas.ku-art')]; }
+// ⚠ VÒNG VẼ PHẢI TỰ TẮT KHI BẢNG ĐÓNG. Không có vế đó thì mở Khế Ước một lần là hai canvas vẽ
+// mãi tới hết phiên — không lỗi nào báo, nó chỉ ăn CPU, đúng cái bẫy đã ghi cho `titleAlive()`.
+function kbDung(){ if (_kbRaf) cancelAnimationFrame(_kbRaf); _kbRaf = 0; }
+function kbChay(){ if (!_kbRaf) _kbRaf = requestAnimationFrame(kbVe); }
+function kbVe(){
+  // ⚠ ĐẾM VÒNG LẶP, KHÔNG ĐẾM LƯỢT VẼ — và đây là một lỗi của chính bài kiểm mà phép thử ngược
+  // lôi ra. Bộ đếm đặt trong `kbVeMot` thì sau khi đóng bảng `ds` rỗng ⇒ thân vòng không chạy ⇒
+  // bộ đếm ĐỨNG IM y hệt lúc vòng đã tắt. Tức nó mù với đúng cái rò nó sinh ra để bắt: gỡ phép
+  // tự tắt đi thì mục ⑤ vẫn XANH. Đặt ở đây thì mỗi khung rAF là một nhịp, tắt hay không đọc ra.
+  if (window.TEST_MODE) window.__kbVong = (window.__kbVong || 0) + 1;
+  const ds = kbCv().filter(c => c.offsetParent !== null);
+  if (!ds.length){ _kbRaf = 0; return; }          // bảng đã đóng ⇒ thôi hẳn
+  const t = performance.now() / 1000;
+  for (const cv of ds) kbVeMot(cv, t);
+  _kbRaf = requestAnimationFrame(kbVe);
+}
+function kbVeMot(cv, t){
+  const tin = kbTin(cv.dataset.bn); if (!tin) return;
+  // Que dò cho bài kiểm — ĐẾM SỐ LẦN VẼ, khoá theo banner. Đây là cách duy nhất chứng minh
+  // được vòng rAF ĐÃ TẮT sau khi đóng bảng: đếm điểm ảnh thì chỉ thấy canvas đứng im, mà một
+  // canvas vẽ lại đúng cùng một hình cũng đứng im y hệt. Cùng lối `__veChet`/`__avaKhoi`.
+  if (window.TEST_MODE){
+    const d = (window.__kbDem || (window.__kbDem = {}));
+    d[cv.dataset.bn] = (d[cv.dataset.bn] || 0) + 1;
+  }
+  const d = Math.min(2, window.devicePixelRatio || 1);
+  const W = cv.clientWidth || 480, H = cv.clientHeight || KB_CAO;
+  if (cv.width !== Math.round(W*d) || cv.height !== Math.round(H*d)){
+    cv.width = Math.round(W*d); cv.height = Math.round(H*d);
+  }
+  const g = cv.getContext('2d');
+  g.setTransform(d, 0, 0, d, 0, 0);
+  g.clearRect(0, 0, W, H);
+
+  // Seam cho bài kiểm (chỉ TEST_MODE): vẽ CHỈ THÂN, bỏ nền và tranh Trấn Phái. Cần vì cả hai
+  // lớp ấy cũng đổi theo lớp nhân vật — đo cả khung thì một mình chúng đã vượt mọi ngưỡng, và
+  // mệnh đề "đổi lớp thì key art đổi" XANH kể cả khi thân bị ghim cứng một lớp.
+  const _chiThan = window.TEST_MODE && window.__kbChiThan;
+  // ① Nền — vũng sáng theo HỆ của lớp, tắt dần về mọi phía trước khi chạm mép.
+  // ⚠ Bán kính lấy theo `min(cx, W-cx)` chứ không lấy một số cố định: vầng sáng rộng hơn khung
+  // bị mép canvas cắt ngang và thứ hiện ra là một HÌNH CHỮ NHẬT sáng hơn nền, mép thẳng đứng
+  // thấy rõ mồn một. Đã dẫm đúng bẫy này hai lần ở sân khấu màn chờ.
+  const cx = W * 0.70, fy = H * 0.94, r = Math.min(cx, W - cx, H * 0.95);
+  const gr = g.createRadialGradient(cx, H * 0.55, 0, cx, H * 0.55, r);
+  gr.addColorStop(0, _kbAlpha(tin.mau, 0.30));
+  gr.addColorStop(0.55, _kbAlpha(tin.mau, 0.10));
+  gr.addColorStop(1, 'rgba(0,0,0,0)');
+  if (!_chiThan){ g.fillStyle = gr; g.fillRect(0, 0, W, H); }
+
+  // ② Tranh Trấn Phái — art THẬT, cùng atlas mà chiêu ấy nổ ra trong màn. Vẽ SAU lưng nhân vật.
+  // Lớp nào chưa có tranh (Spellblade) thì bỏ qua, banner vẫn dựng — thiếu art thì thiếu một
+  // lớp, không phải hỏng cả khung.
+  // ⚠⚠ KHÔNG DÙNG `veVfxAtlas()` Ở ĐÂY, và lý do là một hiểu nhầm về Ý NGHĨA của mỏ neo.
+  // `anchorX/anchorY` là **mỏ neo CHIẾN ĐẤU**: nó tồn tại để hiệu ứng khớp với chỗ người niệm
+  // đứng trong màn. Banner thì KHÔNG CÓ người niệm — căn theo mỏ neo ấy là căn theo một thứ
+  // không có mặt. Đo được: `death_stab` neo ở `anchorX 46/384`, tức gần sát mép trái khung, nên
+  // toàn bộ thân hiệu ứng đổ về BÊN PHẢI và chạy thẳng ra khỏi khung banner — trên ảnh chụp nó
+  // đọc ra một vệt sáng lạc, không ra một vầng hào quang. Ở đây phải căn GIỮA khung atlas.
+  if (tin.atlas && !_chiThan){
+    const dd = VFX_ATLAS_DEFS[tin.atlas];
+    const im = getVfxAtlasImg(tin.atlas);        // gọi cả khi chưa sẵn: đó là cách XIN tệp
+    if (dd && chiSan(im)){
+      const i = Math.floor((t % KB_VFX_NHIP) / KB_VFX_NHIP * dd.frames) % dd.frames;
+      const sx = (i % dd.cols) * dd.frameW, sy = Math.floor(i / dd.cols) * dd.frameH;
+      const co = (H * 0.92) / dd.frameH, w = dd.frameW * co, h = dd.frameH * co;
+      g.save();
+      // Gói nào khai `cong:false` là gói CÓ VIỀN ĐEN — cộng sáng ở đó ăn mất đường viền (đen
+      // cộng vào nền ra chính nền) và hình mất hẳn dáng. Cùng luật đã ghi cho `fire_scream`.
+      if (dd.cong !== false) g.globalCompositeOperation = 'lighter';
+      g.globalAlpha = 0.62;
+      g.translate(cx, H * 0.52);
+      // ⚠ NGHIÊNG GÓI CÓ HƯỚNG, và cờ để hỏi thì ĐÃ CÓ SẴN — `xoay:true` trong `CHIEU_TRANH`
+      // nghĩa đúng là *"tranh này có hướng"*. Trong màn nó xoay theo hướng nhân vật; ở banner
+      // không có hướng nào để theo, nên để nguyên là nằm NGANG — đo trên ảnh chụp: `death_stab`
+      // đọc ra một cái ống xám vắt ngang khung, không ra một vầng hào quang. Nghiêng chéo thì
+      // nó thành một nhát chém sau lưng. Gói KHÔNG có hướng (mưa thiên thạch) phải để nguyên:
+      // xoay một cái hố rơi xuống đất là nghiêng cả vạch nền — cùng lý do `test_xoayvfx §0` gác.
+      if (CHIEU_TRANH['sx_' + tin.lop + '_c'] && CHIEU_TRANH['sx_' + tin.lop + '_c'].xoay)
+        g.rotate(-32 * Math.PI / 180);
+      g.drawImage(im, sx, sy, dd.frameW, dd.frameH, -w/2, -h/2, w, h);
+      g.restore();
+    }
+  }
+
+  // ③ Nhân vật mặc trọn bộ — dựng SỐNG bằng `heroSprite`, đúng đường mà trong màn dùng.
+  // ⚠ `ccArtSan()` LÀ CÁI VAN, ĐỪNG GỠ. `heroSprite()` LUÔN trả về một canvas: chưa có art thì
+  // nó dựng hình bằng ĐƯỜNG — hiệp sĩ xám, mũ sừng, áo choàng đỏ, tức đúng "nhân vật fake" mà
+  // Quy tắc số 3 cấm, và ở đây còn tệ hơn: banner là chỗ HỨA HẸN, hứa bằng một hình không phải
+  // thứ người chơi sẽ nhận là nói dối. Chưa tải xong thì để trống một nhịp.
+  const than = kbThan(cv.dataset.bn);
+  if (than){
+    const gv = gearVisual(than), tier = heroTier(than);
+    if (ccArtSan(tin.lop, tier, gv)){
+      // ⚠ Seam cũng GHIM KHUNG THỞ. Không có vế đó thì hai lần đo rơi vào hai khung khác nhau
+      // và ảnh đổi vì NHỊP THỞ chứ không vì đổi lớp — mệnh đề "đổi lớp thì key art đổi" xanh
+      // kể cả khi thân bị ghim cứng vào một lớp. Đã thử ngược đúng thế, hai lượt.
+      const spr = heroSprite(tin.lop, tier, gv, 'i', _chiThan ? 0 : ccKhung(t), '', false, 0, 'i', '');
+      if (spr){
+        const k = KB_THAN / CAO_THAN_NUONG;
+        g.save();
+        g.translate(cx, fy); g.scale(k, k); g.translate(-HERO_W / 2, -HERO_GOT);
+        heroBlit(g, spr);
+        g.restore();
+      }
+    }
+  }
+
+  // ④ Vệt tối hai mép để chữ bên trái đọc được trên mọi nền.
+  if (!_chiThan){
+    const md = g.createLinearGradient(0, 0, W * 0.62, 0);
+    md.addColorStop(0, 'rgba(8,9,22,.92)'); md.addColorStop(1, 'rgba(8,9,22,0)');
+    g.fillStyle = md; g.fillRect(0, 0, W * 0.62, H);
+  }
+}
+function _kbAlpha(hex, a){
+  const m = /^#?([0-9a-f]{6})$/i.exec(hex || ''); if (!m) return `rgba(120,140,255,${a})`;
+  const n = parseInt(m[1], 16);
+  return `rgba(${(n>>16)&255},${(n>>8)&255},${n&255},${a})`;
+}
+// Khối HTML của một banner. Chữ nằm ở DOM chứ không vẽ lên canvas: canvas không tự xuống dòng,
+// không chọn được để chép, và không đổi cỡ theo cài đặt chữ của trình duyệt.
+function kbHtml(bid){
+  const t = kbTin(bid); if (!t) return '';
+  return `<div class="ku-key">
+    <canvas class="ku-art" data-bn="${bid}"></canvas>
+    <div class="ku-key-chu">
+      <div class="ku-key-sao" style="color:${t.mau}">★★★★★</div>
+      <div class="ku-key-bo">${t.boTen}</div>
+      <div class="ku-key-lop">${t.sc.name} · Giai ${t.giai} <b style="color:${t.mau}">+${t.ren}</b></div>
+      ${t.tp ? `<div class="ku-key-tp"><span style="color:${t.mau}">⚔ Trấn Phái</span> ${t.tp}</div>` : ''}
+    </div></div>`;
+}
+window.kbChay = kbChay; window.kbDung = kbDung;
+// Cửa xoá nhớ thân giả. Cần cho bài kiểm (trỏ `KU_BANNER` sang lớp khác rồi đòi banner ĐỔI
+// THEO — không có nó thì bài đang chấm một tấm ảnh nhớ từ lượt trước và xanh vô nghĩa), và
+// cũng cần khi ai đó đổi bảng lúc đang chạy để so hai lớp.
+window.kbXoaNho = function(){ for (const k of Object.keys(_kbThan)) delete _kbThan[k]; };
 // ── Màn Khế Ước ──────────────────────────────────────────────────────────────
 function renderKheUoc(){
   const C = chiState(), p2 = el('panel-quest');
@@ -21682,7 +21883,7 @@ function renderKheUoc(){
   let html = moBang({ tieu:'✦ Khế Ước' });
   html += `<div style="font-size:12px;color:#9aa8d4;margin-bottom:8px">Ấn Giao Kết <b style="color:#ffd76a">${C.ve.gk||0}</b> · Ấn Cổ Xưa <b style="color:#7ecbff">${C.ve.cx||0}</b> · Nguyệt Trần <b>${C.nguyet||0}</b> · Tinh Trần <b>${C.tinh||0}</b></div>`;
 
-  html += `<div class="ku-banner"><h4>Giao Kết — ${ke5.ten} <span style="color:#ffb15c">★★★★★</span></h4>
+  html += `<div class="ku-banner">${kbHtml('gk')}<h4>Giao Kết — ${ke5.ten} <span style="color:#ffb15c">★★★★★</span></h4>
     <div style="font-size:11.5px;color:#9aa8d4">${ke5.moTa}</div>
     <div class="ku-ke">${ke4.map(c => `<span style="color:${c.mau};border-color:${c.mau}">${c.ten} ★★★★</span>`).join('')}</div>
     <div class="ku-bd">Đã quay <b>${C.pity5}</b> lượt từ 5★ gần nhất — còn <b>${conBd}</b> lượt tới bảo đảm.
@@ -21692,7 +21893,7 @@ function renderKheUoc(){
       <button class="mini-btn" onclick="window.kheUocQuay('gk',1)" ${(C.ve.gk||0)<1?'disabled':''}>Quay ×1</button>
       <button class="mini-btn" style="font-size:13px;padding:7px 18px" onclick="window.kheUocQuay('gk',10)" ${(C.ve.gk||0)<10?'disabled':''}>Quay ×10</button></div></div>`;
 
-  html += `<div class="ku-banner"><h4 style="color:#7ecbff">Vĩnh Cửu — sáu Chimera 5★, không 50/50</h4>
+  html += `<div class="ku-banner">${kbHtml('cx')}<h4 style="color:#7ecbff">Vĩnh Cửu — sáu Chimera 5★, không 50/50</h4>
     <div class="ku-bd">Đã quay <b>${C.pity5s}</b> lượt — còn <b>${Math.max(0, GACHA_HARD5 - C.pity5s)}</b> lượt tới bảo đảm.</div>
     <div class="forge-actions">
       <button class="mini-btn" onclick="window.kheUocQuay('cx',1)" ${(C.ve.cx||0)<1?'disabled':''}>Quay ×1</button>
@@ -21714,6 +21915,11 @@ function renderKheUoc(){
   }
   p2.innerHTML = html;
   closePanels(); p2.classList.remove('hidden');
+  // ⚠ GỌI SAU `remove('hidden')`, không gọi trước: `kbVe()` lọc canvas bằng `offsetParent`, mà
+  // phần tử trong một bảng còn `display:none` thì `offsetParent` là `null` ⇒ vòng vẽ tự tắt
+  // NGAY ở khung đầu và banner đứng im như một ô trống. Cùng họ với luật "hàm vẽ không được tự
+  // chặn theo `.hidden`", chỉ khác là ở đây thứ hỏng nằm ở chỗ GỌI chứ không ở chỗ vẽ.
+  kbChay();
 }
 window.renderKheUoc = renderKheUoc;
 window.openKheUoc = function(){
@@ -21725,6 +21931,14 @@ window.openKheUoc = function(){
   // Phim mở đầu 2,9 MB — cùng lý do với hai atlas trên, chỉ nặng hơn hẳn. Xin từ lúc mở màn thì
   // người chơi còn đọc tỉ lệ công khai vài giây trước khi bấm Quay, đủ để tải xong.
   kuPhimNap(5);
+  // Key art của hai banner: bộ giáp giai 7 (lớp rời, ~5 tệp mỗi bộ) và một atlas Trấn Phái mỗi
+  // bên. Xin từ lúc MỞ MÀN vì `ccArtSan()` là một cái VAN — chưa tải xong thì banner để trống,
+  // và một khung trống ở đúng chỗ đáng nhìn nhất thì đọc ra là hỏng.
+  for (const bid of Object.keys(KU_BANNER)){
+    const t = kbTin(bid), th = kbThan(bid);
+    if (t && t.atlas) getVfxAtlasImg(t.atlas);
+    if (th) ccArtSan(t.lop, heroTier(th), gearVisual(th));
+  }
   if (document.fonts && document.fonts.load) document.fonts.load('700 27px "Baloo 2"');
   renderKheUoc();
 };

@@ -162,7 +162,6 @@ const { chromium } = require('playwright');
     o.npcMoMay = { panelForge: !el('panel-forge').classList.contains('hidden'),
                    panelChar: !el('panel-char').classList.contains('hidden'),
                    panelQuest: !el('panel-quest').classList.contains('hidden') };
-    o.__soKetKhoa = soKetKhoa;
     return o;
   });
 
@@ -186,12 +185,14 @@ const { chromium } = require('playwright');
   if (r.chucPhuc.ngocTru !== 1) fail(`Chúc Phúc trừ ${r.chucPhuc.ngocTru} viên, phải là 1`);
   if (r.chucPhuc.khayConNgoc !== 0) fail('khay chưa nhả viên ngọc đã dùng');
   if (r.chucPhuc.khayConDo !== 1) fail('khay nhả luôn món đồ — phải giữ lại để khảm tiếp');
-  // ⓪ tự kiểm cảnh dựng TRƯỚC khi chấm bất cứ công thức nào: khoá lò còn giữ thì `doChaos()`
-  // `return` ngay và MỌI mệnh đề dưới đây đọc ra "công thức không chạy" — sai chỗ, sai lý do.
-  if (r.__khoaKet) fail(`cảnh dựng hỏng — ${r.__khoaKet} lần lò VẪN khoá sau 8 giây chờ; `
-                      + 'mọi mệnh đề công thức bên dưới không đo được gì');
-  else if (r.__soKetKhoa) console.log(`  (đã phải chờ khoá lò ${r.__soKetKhoa} lần — `
-                                    + 'ngủ cố định 2400ms là không đủ)');
+  // ⓪ Tự kiểm cảnh dựng KHÔNG còn ở đây, và đó là một bước LÊN chứ không phải một guard bị xoá:
+  // `xong()` nay HỎI THẲNG `window.loDangBan()` và NÉM khi lò chưa nhả khoá sau 6 giây, nên
+  // điều kiện ấy được bảo đảm theo CẤU TRÚC — không cách nào chạy tiếp mà khoá còn giữ. Bản cũ
+  // chỉ đếm số lần phải chờ rồi chấm SAU, tức vẫn để mọi mệnh đề dưới chạy trên một cảnh hỏng.
+  // ⚠ Hai dòng đọc `r.__khoaKet`/`r.__soKetKhoa` đã phải gỡ theo: chúng đọc một biến mà chỉ bản
+  // CŨ của `xong()` khai. `git merge` ghép êm ru bản mới của hàm với chỗ ĐỌC của bản cũ — ngoài
+  // khối xung đột nên không ai được hỏi — và bài nổ `ReferenceError: soKetKhoa is not defined`
+  // giữa `page.evaluate`. Cùng đúng vết sẹo của `test_hopve` trong chính đợt trộn này.
   if (!r.doiHe.doi) fail(`Đổi Hệ không đổi được hệ (${r.doiHe.heCu} → ${r.doiHe.heMoi})`);
   if (r.doiHe.nhanGiap) fail('Đổi Hệ vẫn nhận GIÁP — giáp không có hệ, ăn 1 Hỗn Độn Châu cho không');
   // 50% PHẲNG mọi bậc, dùng chung con số với đường ép thẳng trong túi (NGOC_EP.sinhMenh.rate).

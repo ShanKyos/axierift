@@ -4007,6 +4007,82 @@ vào, gộp lại là lần sau phải dựng lại chính nó.
 `libvpx-vp9 -crf 32 -row-mt 1 -cpu-used 2` + `libopus -b:a 96k` ra bản WebM.
 
 
+## 🖼 BANNER NHÂN VẬT (Khế Ước) — key art kiểu Genshin/Honkai
+
+Bảng Khế Ước trước bản này là một khối CHỮ: tên con 5★, một dòng mô tả, danh sách 4★, bộ đếm bảo
+đảm. Đúng thông tin, nhưng nó không trả lời được câu mà một banner sinh ra để trả lời — *"thứ
+đang bày bán trông NHƯ THẾ NÀO"*.
+
+| | |
+|---|---|
+| Bảng | **`KU_BANNER`** — chỉ khai `{ lop, giai, ren }`, mỗi banner một mục |
+| Máy | `kbTin()` · `kbThan()` · `kbVe()` / `kbVeMot()` · `kbHtml()` · `kbXoaNho()` |
+| Khung | `.ku-key` + `canvas.ku-art` trong `style.css` |
+| Gác | **`tests/test_kubanner.js`** (6 mệnh đề, **bốn phép thử ngược đều đỏ**) |
+
+**⚠ MỌI THỨ SUY TỪ DỮ LIỆU.** Bảng chỉ khai *ai* được bày; tên bộ giáp ← `heroSet()`, tên Trấn
+Phái ← `SECTS[].tp`, màu ← `ELEM[]`, tranh chiêu ← `CHIEU_TRANH['sx_<lop>_c']`. Chép tên bộ vào
+bảng banner là nó nói dối ngay lần đầu ai đó đổi `HERO_SETS` — cùng lý do `mapBanSac()` suy từ
+`packs`.
+
+**⚠⚠ TUYỆT ĐỐI KHÔNG ĐỤNG VÀO `player` ĐỂ DỰNG THÂN MẪU.** Cách "dễ" là tráo `player.equip` /
+`player.sect` rồi trả lại; một lần ném lỗi giữa chừng là người chơi **mất sạch đồ**, và kiểu hỏng
+đó không có đường nào lần ra. `kbThan()` dựng một đối tượng RIÊNG qua **`netApTrangBi()`** — đúng
+cái cửa mà thân người từ xa đi qua, tức một đường đã có người gác sẵn.
+
+**⚠ `ccArtSan()` LÀ CÁI VAN, ĐỪNG GỠ.** `heroSprite()` **luôn** trả về một canvas: chưa có art
+thì nó dựng hình bằng ĐƯỜNG — hiệp sĩ xám, mũ sừng, áo choàng đỏ. Ở màn chờ đó đã là lỗi; ở
+banner còn nặng hơn, vì **banner là chỗ HỨA HẸN** — hứa bằng một hình không phải thứ người chơi
+sẽ nhận. Chưa tải xong thì để trống một nhịp, và `openKheUoc()` xin art từ lúc MỞ MÀN.
+
+**⚠ MỎ NEO CỦA ATLAS LÀ MỎ NEO *CHIẾN ĐẤU*, KHÔNG DÙNG ĐƯỢC Ở BANNER.** `anchorX/anchorY` tồn
+tại để hiệu ứng khớp với chỗ người niệm đứng trong màn; banner **không có người niệm**. Đo được:
+`death_stab` neo ở `anchorX 46/384` — sát mép trái — nên gọi `veVfxAtlas()` là toàn bộ thân hiệu
+ứng đổ sang phải và chạy ra khỏi khung. Ở đây phải **căn GIỮA khung atlas** và tự vẽ.
+Gói khai `xoay:true` (*tranh có hướng*) thì nghiêng chéo — để ngang nó đọc ra một cái ống; gói
+không có hướng (mưa thiên thạch) phải để nguyên, xoay một cái hố rơi xuống đất là nghiêng cả
+vạch nền.
+
+**⚠ VÒNG rAF PHẢI TỰ TẮT KHI BẢNG ĐÓNG.** `kbVe()` lọc canvas theo `offsetParent` và `return`
+khi rỗng. Thiếu vế đó là mở Khế Ước một lần rồi vòng vẽ quay tới hết phiên — không lỗi nào báo,
+chỉ ăn CPU. Cùng bẫy đã ghi cho `titleAlive()`. Và `kbChay()` phải gọi **SAU** `remove('hidden')`:
+phần tử trong bảng còn `display:none` có `offsetParent` là `null` ⇒ vòng tự tắt ngay khung đầu.
+
+**Chọn lớp bày ra bằng ẢNH CHỤP, không bằng cảm tính** — dựng đủ cả năm rồi nhìn:
+`toanchan` Ngũ Tiễn (quạt tên vàng) và `baidasan` Meteorite (vầng tím) đọc ra ngay ở cỡ 150px;
+`thieulam` Death Stab là **một mũi thương XÁM nằm ngang** — nghiêng chéo rồi vẫn ra một cái ống,
+đây là **giới hạn của ART, không sửa được bằng mã**; `minhgiao` Flame Strike **chưa có tranh Trấn
+Phái nào**.
+
+**⚠ ẢNH THU NHỎ KHÔNG PHẢI MỘT PHÉP ĐO.** Năm thân nhìn thoáng qua thì hao hao nhau vì cùng nướng
+từ một bản mẫu bốn-đầu-thân. Tôi đã đọc nhầm một tấm sheet và tưởng **bốn banner dùng chung một
+bộ giáp**; đo pixel thì cả **mười cặp lệch 33-55%**. Cơ chế vẫn đúng từ đầu.
+
+### ⚠ BỐN LỖI CỦA CHÍNH BÀI KIỂM — cả bốn cho một bài XANH VÌ LÝ DO SAI
+
+Phép thử ngược lôi ra cả bốn. Ghi lại vì mỗi cái là một họ riêng:
+
+1. **Que dò đếm SAI THỨ.** Bộ đếm đặt trong `kbVeMot` (số lượt VẼ) thì sau khi đóng bảng danh
+   sách canvas rỗng ⇒ thân vòng không chạy ⇒ bộ đếm **đứng im y hệt lúc vòng đã tắt**. Nó mù với
+   đúng cái rò nó sinh ra để bắt. Phải đếm **nhịp rAF** (`window.__kbVong`), đặt trong `kbVe`.
+2. **Chụp ảnh SAU khi ô nhiễm đã xảy ra.** Mục "không đụng `player`" chụp `player` sau khi bước
+   dựng cảnh đã gọi `kbThan` một lượt — nên nếu hàm ấy làm bẩn `player` thì nó **bẩn sẵn từ lúc
+   chụp**, hai ảnh trùng nhau, bài xanh. Phải `startGame` lại rồi mới chụp.
+3. **Mỏ neo của phép thử ngược là VĂN XUÔI, không phải MÃ.** Mục gác cái van `ccArtSan` `grep`
+   chữ `ccArtSan(` trong thân `kbVeMot` — và nó xanh cả khi đã gỡ hẳn cái van, vì chuỗi ấy còn
+   nằm trong một dòng **chú thích** ngay trên. Nay đo HÀNH VI: chặn `**/assets/nv/**` ở tầng
+   mạng rồi đòi chỗ nhân vật phải TRỐNG.
+4. **Đo được một thứ ĐỔI, nhưng đổi vì lý do khác.** Mục "đổi lớp thì key art đổi" đo cả khung —
+   mà nền và tranh Trấn Phái cũng đổi theo lớp, nên một mình chúng đã vượt ngưỡng. Thu về vùng
+   THÂN thì lại vướng **nhịp thở**: hai lần đo rơi vào hai khung khác nhau. ⇒ Seam `__kbChiThan`
+   (chỉ `TEST_MODE`) tắt nền + tranh chiêu **và ghim khung thở về 0**.
+
+⚠ **Và hai phép thử ngược ĐẦU của tôi cũng sai**, ghi lại vì chúng tốn hai vòng: ghim
+`heroSprite('thieulam', …)` **không đổi được thân** — bộ giáp lớp-rời vẽ theo `gv.oLop`, không
+theo tham số lớp; còn `kbThan('cx')` dựng một trạng thái **không có thật** (lớp A đeo trang bị
+lớp B). Phép thử ngược ĐÚNG là kiểu hỏng thật sẽ xảy ra: **nhớ lại ảnh đã vẽ** (một "tối ưu" rất
+dễ ai đó thêm vào) ⇒ `lechMau` về **0** và mục ③ đỏ.
+
 ## Hai lối vẽ nhân vật — ĐỪNG TRỘN VÀO NHAU
 
 Game có **ba** bộ dựng nhân vật, mỗi bộ một việc. Nhầm chỗ là ra hình lạc quẻ.
