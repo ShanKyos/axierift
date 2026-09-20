@@ -2018,6 +2018,24 @@ Object.assign(EXACT, {
 });
 Object.assign(EXACT, { 'Châu': 'Jewels', 'Tứ Châu': 'the Four Jewels', 'Ngọc': 'Jewel' });
 
+// ⚠ CHIP ĐAI CẤP TRÊN HUD — `test_dichen §⑤` (mục HUD mới) bắt được, và nó là bằng chứng
+// mục ấy đáng có: bộ quét TAY của tôi chạy trước đó báo "0 dòng" vì nó quét lúc người chơi
+// còn đứng trong THÀNH, mà thành không có bãi quái nên `bandOfDist` trả −1 và chip không vẽ.
+// Luật có sẵn ở trên khớp `Ngoại Vi C1–4`, còn chuỗi THẬT là `Đai Ngoại Vi · C1–4` — thừa
+// chữ "Đai" và một dấu `·`. Một luật khớp gần đúng thì im lặng y như không có luật nào.
+RULES.unshift([/^Đai (Ngoại Vi|Trung Tâm|Hạt Nhân) · (.+)$/, (m, v, b) =>
+  `${({ 'Ngoại Vi':'Outer', 'Trung Tâm':'Middle', 'Hạt Nhân':'Core' })[v]} Belt · ${tr(b)}`]);
+RULES.unshift([/^ĐAI (NGOẠI VI|TRUNG TÂM|HẠT NHÂN)$/, (m, v) =>
+  `${({ 'NGOẠI VI':'OUTER', 'TRUNG TÂM':'MIDDLE', 'HẠT NHÂN':'CORE' })[v]} BELT`]);
+RULES.unshift([/^Quái C(\d+)–(\d+) — (.+)$/, (m, a, b, c) => `Monsters Lv${a}–${b} — ${tr(c)}`]);
+Object.assign(EXACT, {
+  'mạnh nhất vùng, cẩn thận!': 'the strongest here — be careful!',
+  'cấp trung bình': 'mid-level',
+  'yếu nhất, hợp luyện công': 'the weakest — good for grinding',
+});
+// `bandLvText` trả riêng phần dải cấp (`C1–4`); hai luật trên gọi lại `tr()` cho nó.
+RULES.unshift([/^C(\d+)–(\d+)$/, (m, x, y) => `Lv${x}–${y}`]);
+
 function tr(s) {
   if (lang !== 'en' || !s || typeof s !== 'string') return s;
   const cached = _trCache.get(s);
