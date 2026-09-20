@@ -67,7 +67,7 @@ const pass = m => console.log('PASS ' + m);
   });
   if (troi.map !== 'ardhaven') fail(`② cảnh dựng: phải còn đứng trong thành, đang ở ${troi.map}`);
   if (troi.qua.includes('kill')) fail(`② đứng yên trong thành mà hộp vẫn trôi tới bước "kill" (Ardhaven 0 bãi quái) — chuỗi: ${troi.qua.join(' → ')}`);
-  else pass(`② hết giờ mà bước kế bất khả ⇒ tắt, không đẩy vào "kill" — chuỗi: ${troi.qua.join(' → ')}`);
+  else pass(`② hết giờ thì BỎ QUA bước bất khả, không đẩy vào "kill" — chuỗi: ${troi.qua.join(' → ')}`);
   if (troi.hoanTat) fail('② tuyên bố "Hướng dẫn hoàn tất" cho người chơi chưa làm gì');
   else pass('② không tuyên bố hoàn tất khi người chơi không làm theo');
   if (troi.qua[troi.qua.length - 1] !== 'TAT') fail(`② hướng dẫn không bao giờ tắt — treo ở ${troi.qua[troi.qua.length - 1]}`);
