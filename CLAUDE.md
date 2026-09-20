@@ -3756,6 +3756,124 @@ với luật `≤60% là kill` và với *"đúng 7 NPC có trang thoại"*.
 phép thử ngược phải DUY NHẤT**, và phải đếm số lần xuất hiện trước khi thay.
 
 
+## ⚔ LỰC CHIẾN · 🎁 NHẬN QUÀ · ✹ DẢI TRẠNG THÁI
+
+Ba thứ ship cùng một đợt theo ảnh mẫu chủ dự án đưa. Gác chung: **`tests/test_lucchien.js`**
+(9 mệnh đề, ba phép thử ngược đều đỏ).
+
+| | ở đâu |
+|---|---|
+| Công thức | `LC_HE` + **`lucChien(p)`** — cửa DUY NHẤT |
+| Phân rã | `LC_NGUON` + **`lcPhanRa()`** · chi tiết `lcChiTiet(id, tongDong)` |
+| Bảng | `renderLucChien()` → `#panel-lucchien` · nút HUD `#btn-lc` trong `#cd-nut` |
+| Quà | `QUA_DK` · `QUA_SK` · `renderQua()` → `#panel-qua` · `quaNhanMoc()` · `quaNhanHet()` |
+| Trạng thái | **`TT_DINH`** + `capNhatTrangThai()` → `#trang-thai` (cột PHẢI, trên bản đồ nhỏ) |
+
+### ⚠ NĂM DÒNG PHÂN RÃ SUY TỪ HỆ ĐANG CHẠY, KHÔNG CHÉP TỪ ẢNH MẪU
+
+Ảnh mẫu là một game kiếm hiệp và có hai dòng dự án này **không có**:
+- *"Lực chiến thú cưỡi"* — Ragoon đã gỡ, con Axie thay chỗ nó thì luật Đổi Vai nói thẳng
+  **0 chỉ số**. Trục sức mạnh từ phía Axie đã bị tháo BA lần và lần nào cũng quay lại dưới dạng
+  "chỉ vài dòng nhỏ thôi"; một dòng "Lực chiến Axie" trên bảng này là lần thứ tư, chỉ khác tên.
+- *"Lực Chiến Thần Binh"* — đã gỡ; chỉ còn khoản NỀN tầng 1 mà ai cũng có sẵn từ cấp 1, nên nó
+  thuộc dòng CƠ BẢN.
+
+Năm nguồn THẬT: **cấp+chỉ số · trang bị · kỹ năng · Đại Thành · Tái Sinh**.
+
+### ⚠⚠ MỞ BẢNG TỪNG LÀM MẤT 82% MÁU — và nó im lặng tuyệt đối
+
+`lcPhanRa()` đo từng dòng bằng cách **TẮT nguồn ấy rồi chạy lại `calcDerived()`**. Mà
+`calcDerived()` **kẹp `player.hp` xuống `maxHp`** (dòng ~8532): tắt trang bị là máu trần tụt
+hàng chục nghìn ⇒ máu hiện tại bị kẹp theo, và lượt `calcDerived()` cuối trả lại máu TRẦN chứ
+không trả lại máu ĐANG CÓ. Thử ngược (bỏ hai dòng cất/trả) đo được **35.999 → 6.757**.
+
+⇒ Cất `hp`/`qi` trước, trả lại **SAU** lượt `calcDerived()` cuối cùng. `test_lucchien §3` mở
+bảng ba lượt rồi đòi máu không suy suyển một điểm.
+
+### ⚠ TẮT RIÊNG TỪNG NGUỒN RỒI CỘNG LẠI THÌ **VƯỢT TỔNG** — đo được, không phải lo xa
+
+Bốn nguồn NHÂN vào nhau: Đại Thành nhân vào trang bị, Tái Sinh nhân vào tổng, cấp kỹ năng nhân
+vào Công Kích mà trang bị đã đẩy lên. Tắt riêng từng cái thì phần **giao thoa** bị đếm nhiều lần
+— đo được lệch **−133** ở cấp 120 đã đầu tư cả bốn trục, và **−5.022** ở full BiS.
+
+Bản đầu để phần dư `max(0, tong − Σ)` nuốt chỗ lệch: nó kẹp về 0 và **mất trắng** ngần ấy điểm
+khỏi bảng, tức năm dòng không cộng đúng tổng — thứ người chơi cộng nhẩm ra ngay.
+
+⇒ Cách đúng: đo **NỀN** bằng cách tắt CẢ BỐN cùng lúc (đó là dòng "nhân vật", một con số đo
+trực tiếp), rồi chia `tong − nen` cho bốn trục **theo tỉ lệ đóng góp thô**, sai số làm tròn dồn
+vào dòng lớn nhất. Năm dòng cộng đúng bằng tổng, **không xấp xỉ**.
+
+⚠ **Chi tiết trang bị cũng vậy, một tầng dưới.** Mười một món cũng nhân vào nhau: tháo riêng
+từng món rồi cộng ra **14.087** trong khi dòng tổng ghi **5.895**. Và bản đầu còn tệ hơn — nó in
+thẳng `itemPower()`, một **ĐƠN VỊ khác hẳn** (thang nội bộ để xếp hạng món trong túi), nên mười
+ô cộng ra hơn 43.000 dưới một dòng ghi 6.499. `lcChiTiet(id, tongDong)` nhận tổng của dòng rồi
+chia lại theo đúng tỉ lệ ấy.
+
+### ⚠ CẤP KỸ NĂNG KHÔNG ĐI QUA `calcDerived()` — nên dòng đó từng bằng ĐÚNG 0
+
+`skLvMult` × `skTnMult` nhân vào sát thương ở **trong `castSkill()`**, không chạm một trường nào
+trên `player`. Phép phân rã chỉ đo `calcDerived` nên dòng "kỹ năng" ra **0** kể cả với người đã
+rót 40 cấp vào cả bốn ô — và một dòng luôn bằng 0 thì tệ hơn không có dòng đó.
+
+⇒ Đưa `lcSkMul()` **thẳng vào `lucChien()`**, đừng tính riêng rồi trừ khỏi phần dư: trừ khỏi
+phần dư là **dán nhãn lại** phần sức mạnh cơ bản chứ không đo thêm được gì. Cho vào công thức
+tổng thì phép tắt-nguồn tự đo được nó, y hệt bốn dòng kia, không cần nhánh đặc biệt nào.
+Trung bình trên các ô **ĐANG CẮM**, không trên mọi chiêu đã học: chiêu ngoài thanh không bấm
+được thì nâng nó không làm ai mạnh hơn trong trận.
+
+### ⚠⚠ `⚔` ĐỌC RA DẤU `✕` Ở MỌI CỠ TỪ 11 TỚI 19 PX
+
+Bộ ký hiệu phương Tây trong Quy tắc số 1 liệt `⚔`, nên tôi lấy nó làm mặt Lực Chiến. Chụp ra
+thì nút HUD đọc thành **"✕ 12.616"** — tức "đóng". Dựng bảng thử glyph ở đúng năm cỡ đang dùng
+(11·13·15·17·19 px) rồi chụp: `⚔` (U+2694, hai thanh kiếm bắt chéo) là **hai nét chéo mảnh**,
+dưới 20px chúng dính vào nhau. Ở 30px thì nó hoàn toàn rõ.
+
+| | |
+|---|---|
+| **Rõ từ 11px** — ký hiệu ĐẶC | `◉ ★ ◆ ✦ ▲ ● ◈ ✚ ⚑ ☾ ♦` |
+| **Mù dưới ~15px** — nhiều nét mảnh | `⚔ ☠ ❄ ✽ ✹ ☼ ⚙` |
+
+⇒ Lực Chiến dùng **`◉`**. Ký hiệu nhiều nét (`☠` trúng độc, `❄` tê liệt) chỉ dùng ở dải trạng
+thái và ô ở đó để **16px**, không phải 14. *Đọc bảng ký hiệu trong tài liệu mà không thử Ở CỠ
+THẬT là chọn nhầm — cùng lối với luật "vẽ xong phải render ra ảnh mà nhìn".*
+
+### ✹ Dải trạng thái: MỘT BẢNG, không mười ba khối `if`
+
+Trước bản này chỉ có ĐÚNG HAI trạng thái nhìn thấy được, và cả hai là `<div>` chép cứng ở góc
+TRÁI: `#hud-buff` (🍶) và `#hud-loidon` (⚡) — **đã gỡ cả hai**. Mười một cái còn lại (trúng độc,
+tê liệt, trọng thương, sáu buff của chiêu, cửa sổ Liên Trảm, Sa Đọa) **không có một cửa nào nói
+ra**: người chơi đứng yên mất máu mà không biết mình trúng độc, bị khoá chân thì đọc ra "lag".
+
+- ⚠ **`con(p)` trả SỐ GIÂY, và mỗi đồng hồ một đơn vị.** `poisonT`/`dinhT`/`buffAtkT` đếm ngược
+  bằng giây; **`tenuiTT` là một MỐC `Date.now()`** — đọc thẳng ra giây thì được một con số nghìn
+  tỉ. Quy đổi tại chỗ khai, đừng để chỗ vẽ phải biết.
+- ⚠ **`maDao` KHÔNG có đồng hồ** (bật/tắt theo `player.toiac`), nên `con` trả `Infinity` và cờ
+  `vinh:true` nói cho chỗ vẽ biết đừng in số giây. Bài kiểm nào bật `maDao` mà quên đặt
+  `toiac >= 5` thì `update()` tắt nó ngay khung sau — đã dẫm.
+- ⚠ **Rỗng thì `display:none`, đừng để nó chiếm chỗ.** Còn chiếm chỗ thì bản đồ nhỏ tụt xuống
+  5px lúc có buff rồi nhảy lên lúc hết — giật mỗi lần một buff tắt.
+- ⚠ **Khoá so sánh làm tròn tới GIÂY.** `updateHud()` chạy mỗi khung; viết lại `innerHTML` của
+  dải này 60 lần/giây cho một thứ đổi vài giây một lần là đúng cái `_lastHudName` sinh ra để
+  tránh.
+
+### 🎁 Nhận Quà: phần thưởng TẠM, nhưng cái MÁY thì thật
+
+Chủ dự án chốt *"quà gì thì mình chưa biết, cứ có UI/UX trước đã"*. Nên `QUA_SK` mang nhãn
+**TẠM** hiện thẳng trên bảng — nhưng bấm Nhận là nhận được đồ thật, cờ vào save, mở lại thì nút
+đã mờ. *Một bảng đẹp mà nút bấm không ra gì là đúng cái lỗi `openEvoPanel` đã ghi ở mục
+`test_cayky`.*
+
+- ⚠ **Trao quà đi qua `traoThuong(rew)`, KHÔNG cộng tay.** Đó là cửa duy nhất của cả chính tuyến
+  lẫn phụ tuyến và nó đã lo đủ bốn nhánh (kể cả *túi chật thì thả xuống đất*). Cộng thẳng
+  `player.silver += …` là đường thứ hai, và đường thứ hai sẽ quên đúng cái nhánh ấy.
+- ⚠ **Điều kiện đếm từ TRẠNG THÁI, không từ sự kiện** — cùng luật `MOC_NV.dem()`. Móc vào "vừa
+  lên cấp" thì người đã ở cấp đó trước khi bảng ra đời không bao giờ nhận được.
+- ⚠ **Chấm đỏ trên nút có HÃM NHỊP 500 ms.** `quaChoNhan()` quét 16 mốc và mốc Lực Chiến gọi lại
+  `lucChien()` — bốn lượt tính thừa mỗi khung cho một con số đổi vài phút một lần.
+- ⚠ **Đừng mượn biến `_now` của khối Đồng Hồ Thế Giới.** Nó khai ở một khối DƯỚI chỗ này, nên
+  tham chiếu tới nó ném `ReferenceError` **mỗi khung**; `node --check` xanh, chỉ mở trang mới
+  thấy. Cùng vết sẹo `NV_CAO`/`VONGKIEM_TAM`.
+
 ## 🌐 `?lang=en` — HAI LỚP DỊCH PHẢI TỰ ĐỌC, KHÔNG LỚP NÀO ĐỌC KÉ LỚP NÀO
 
 `?lang=en` / `?lang=vi` thắng `localStorage`, rồi **ghi lại** vào đó — để đưa được một đường link
