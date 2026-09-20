@@ -9,14 +9,10 @@
 // bắt được ca "tệp có thật nhưng trình duyệt không tải nổi" (sai hoa/thường trên máy chủ phân
 // biệt chữ hoa, tệp rỗng, PNG hỏng).
 const { chromium } = require('playwright');
-const fs = require('fs');
-const path = require('path');
 
-const G = path.join(__dirname, '..', 'public', 'game');
 let bad = 0;
 const fail = m => { bad++; console.log('FAIL ' + m); };
 const pass = m => console.log('  ok  ' + m);
-const co = p => { try { return fs.statSync(path.join(G, p)).size > 0; } catch { return false; } };
 
 (async () => {
   const port = process.argv[2] || '8853';
@@ -30,6 +26,17 @@ const co = p => { try { return fs.statSync(path.join(G, p)).size > 0; } catch { 
   await p.waitForFunction(() => window.__gameReady).catch(() => {});
   await p.waitForTimeout(700);
 
+  // ⚠ HỎI QUA HTTP, ĐỪNG HỎI ĐĨA. Hai lý do, và cái thứ hai mới là cái đã cắn:
+  //  • `reg.sh` chạy bài từ `$OUT/src/` nên `__dirname/../public/game` trỏ vào **thư mục kết quả**,
+  //    không vào repo ⇒ đỏ 32/32 trong khi tệp nào cũng có thật. Triệu chứng tự tố cáo: ④ (hỏi
+  //    trình duyệt) xanh cả 27 tấm trong khi ① (hỏi đĩa) báo thiếu hết — hai con số mâu thuẫn nhau.
+  //  • `reg.sh` phục vụ một **bản đóng băng** của `public/game`, nên hỏi repo sống là hỏi một cây
+  //    KHÁC với cây trình duyệt đang đọc. HTTP là cách duy nhất hỏi đúng thứ sẽ ship.
+  const co = async u => {
+    try { const r = await p.request.fetch('http://localhost:' + port + '/' + u, { method: 'HEAD' });
+          return r.ok(); } catch { return false; }
+  };
+
   const kho = await p.evaluate(() => {
     window.TEST_MODE = true; startGame('thieulam', null);
     return {
@@ -40,14 +47,20 @@ const co = p => { try { return fs.statSync(path.join(G, p)).size > 0; } catch { 
     };
   });
 
+  // ⚠ CHỐT TỰ KIỂM: hỏi không được cả `index.html` thì mọi mệnh đề dưới đây đỏ vì lý do sai.
+  if (!(await co('index.html'))) fail('cảnh dựng hỏng: không hỏi được index.html qua HTTP');
+
   // ── ① mọi MOBS[].img phải có tệp thật ────────────────────────────────────────────────
-  const thieu = kho.mobs.filter(m => m.img && !co(m.img));
+  const thieu = [];
+  for (const m of kho.mobs) if (m.img && !(await co(m.img))) thieu.push(m);
   if (thieu.length) fail(`① ${thieu.length} loài trỏ vào tệp KHÔNG có: ` +
     thieu.map(m => `${m.k}→${m.img}`).join(', '));
   else pass(`① cả ${kho.mobs.filter(m => m.img).length} loài khai img đều có tệp thật`);
 
   // ── ② mọi BOSS_DEFS[].anh phải có tệp thật ───────────────────────────────────────────
-  const bThieu = kho.boss.filter(x => x.anh && !co('assets/mobs/' + x.anh) && !co(x.anh));
+  const bThieu = [];
+  for (const x of kho.boss)
+    if (x.anh && !(await co('assets/mobs/' + x.anh)) && !(await co(x.anh))) bThieu.push(x);
   if (bThieu.length) fail(`② trùm trỏ vào tranh KHÔNG có: ` + bThieu.map(x => `${x.k}→${x.anh}`).join(', '));
   else pass(`② ${kho.boss.filter(x => x.anh).length} trùm khai tranh riêng đều có tệp thật`);
 
@@ -58,8 +71,8 @@ const co = p => { try { return fs.statSync(path.join(G, p)).size > 0; } catch { 
   for (const ten of kho.khung) {
     // ⚠ KHOÁ `MOB_KHUNG` KHÔNG CÓ ĐUÔI — đường dẫn dựng thành `assets/mobs/kh/<tên>.png` (xem
     // `mobKhungAnh`). Kiểm thẳng chính chuỗi khoá là báo thiếu cả hai tệp đang có thật.
-    if (!co('assets/mobs/kh/' + ten + '.png')) kThieu.push(`kh/${ten}.png (bảng khung)`);
-    if (!co('assets/mobs/' + ten + '.png')) kThieu.push(`${ten}.png (tấm tĩnh lùi)`);
+    if (!(await co('assets/mobs/kh/' + ten + '.png'))) kThieu.push(`kh/${ten}.png (bảng khung)`);
+    if (!(await co('assets/mobs/' + ten + '.png'))) kThieu.push(`${ten}.png (tấm tĩnh lùi)`);
   }
   if (kThieu.length) fail('③ MOB_KHUNG thiếu tệp: ' + kThieu.join(', '));
   else pass(`③ cả ${kho.khung.length} khoá MOB_KHUNG đều đủ bảng khung + tấm tĩnh lùi`);
