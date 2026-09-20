@@ -1151,6 +1151,195 @@ Công cụ: `tools/nuong_khungquai.py` (nhận khung đã render — dải, thư
 — rồi **đo** hộp ô và `neoY`, in ra mục dán thẳng). Bài kiểm: `tests/test_khungquai.js` (28 mục).
 Đặc tả đặt hàng: `docs/DAT_HANG_ART_3_4_5.md` · prompt: `docs/PROMPT_QUAI_VA_TUONGQUAN.md`.
 
+### ⛲ ~~LỚP "VẬT SÀN" RIÊNG CHO NƯỚC~~ — ĐÃ DỰNG RỒI GỠ TRONG CÙNG MỘT ĐỢT
+
+> ⚠ Giữ đúng cái tiêu đề gạch ngang này để cảnh báo, thay vì xoá trắng rồi để người sau đọc
+> `veVatSan` trong lịch sử git mà tưởng nó còn. Cùng kiểu bẫy đã ghi ở mục "~~Khắc Ấn~~".
+
+Yêu cầu ban đầu nghe là *"một cái hồ nước"*, nên tôi dựng hẳn một lớp `vatSan`: vẽ ngay sau mặt
+đất, **trước** mọi thực thể, không xếp lớp. Lý do đúng cho một thứ BẸT — một vũng nước không có
+chiều cao nào để che ai, nên xếp nó theo chân ảnh là người đứng ở bờ **BẮC** bị mặt nước vẽ đè
+lên, tức đứng dưới đáy hồ.
+
+Rồi chủ dự án nói rõ hơn: *"nước có khả năng bắn lên không trung rồi toả ra các hướng khác
+nhau"* — tức một **ĐÀI PHUN NƯỚC**. Cột nước là thứ **CÓ CHIỀU CAO**, nên người đứng phía bắc
+nó phải bị che, và lớp phẳng kia làm đúng điều NGƯỢC LẠI. `vatSan` vì thế đã gỡ hẳn, và cái
+đài đi chung đường `vatTo` với nhà cửa.
+
+**Đừng dựng lại lớp phẳng ấy cho nước.** Cửa quyết định là một câu: *"đứng sau nó thì có bị nó
+che không?"* — có thì `vatTo`, và `vatTo` là thứ duy nhất đang có.
+
+Hai thứ giữ lại từ đợt đó, vì chúng đúng cho MỌI công trình:
+
+| | |
+|---|---|
+| **`vatKhung(v)` + `veVatTo(v)`** | mục `vatTo` khai thêm `khung:{cot,hang,khung,oRong,oCao,fps}` là chạy hoạt ảnh từ `assets/iso/kh/<tên>.webp` — **cùng hợp đồng với `MOB_KHUNG`/`NPC_KHUNG`**, nên một đường nướng video phục vụ cả ba |
+| **`can:[[dx,dy,w,h]]` khai ngay trong mục** | thắng bảng `VAT_CAN`. Bảng kia do `tools/iso/can_vatto.py` sinh ra từ chính tấm art (mái, tường, hiên — hình thù không mô tả tay nổi); một cái bể tròn thì đúng một hộp, và chờ art về mới có vật cản là để người chơi đi xuyên qua nó suốt thời gian chờ |
+
+⚠ **TẤM TĨNH VẪN BẮT BUỘC** kể cả khi khai `khung`. Bảng khung nạp lười; thiếu tấm lùi là chỗ
+đó **thủng một lỗ** giữa map trong mấy trăm mili giây đầu — và vì nó tự hết sau một nhịp nên
+rất dễ nghiệm thu nhầm là xong.
+
+⚠ **HỘP `can` PHẢI NHỎ HƠN HẲN TẤM ẢNH** (đài phun nước: **30% khung**). Cột nước và tia bắn
+nằm trên cao, không chặn chân ai; chặn đúng khung ảnh là người chơi khựng lại giữa không khí
+cách thành bể cả gang tay. `test_vatcan §4` gác cả hai đầu — **tâm** hộp phải chặn (thử ngược:
+cho `vatToObs` quên đọc `v.can` ⇒ đỏ) và **góc khung ảnh** phải đi được.
+
+⚠ **`thoang:true` LÀ MIỄN TRỪ KHAI TRONG DỮ LIỆU, không phải một danh sách tên trong bài kiểm.**
+Đài phun nước không bán gì (nên `test_capnha §1` không đòi NPC đứng cửa) và gần như toàn là
+KHÔNG KHÍ (nên `test_vatcan §1` không đòi nó chặn ≥75% khung). Hai bài đọc CÙNG một cờ; chép
+một danh sách tên vào bài kiểm là thứ sẽ âm thầm nuốt mục thứ hai thêm sau.
+
+### 🚪 ~~CỔNG VÒM BỐN HƯỚNG~~ — ĐÃ GỠ. Nay là LỐI RA, và nhân vật TỰ ĐI RA
+
+> ⚠ Giữ đúng cái tiêu đề gạch ngang này để cảnh báo. `drawGateStatic()` · `gateSprite()` ·
+> `assets/iso/ct_cong.png` **vẫn còn** — chúng chỉ ngủ. Cổng nào muốn dựng lại bộ vòm đá thì
+> khai `vom:true` trong `GATES`; gỡ mã hay gỡ tấm art đi là đóng luôn cửa đó.
+
+**⚠ BA BÀI KIỂM CŨ ĐỎ THEO, và cả ba sửa bằng cách ĐI THEO nội dung — không bài nào bị xoá
+mệnh đề cho xanh.** Chúng đỏ vì cơ chế mới làm đúng việc của nó, đúng cái kiểu đã ghi ở mục
+`test_hethong`:
+
+| bài | đỏ vì | sửa thế nào |
+|---|---|---|
+| `test_cong` | không còn vòm nào để mà che ai | **tự bật `vom:true`** lên cổng đo rồi mới chấm ⇒ bộ vòm đang ngủ vẫn có người gác |
+| `test_vatcan §2` | đi tới cổng là **sang map khác**, vòng cũ chạy tiếp 900 nhịp trên map MỚI rồi đo khoảng cách tới cổng của map CŨ (ra 2.727px) | dừng ngay khi `curMap` đổi — **đi XUYÊN QUA** là bằng chứng mạnh hơn hẳn "tới gần cổng" |
+| `test_sandat` | cùng nguyên nhân, 16 mệnh đề đỏ | `diThu` trả `false` khi đổi map · thêm `veLai(m)` dựng lại cảnh |
+
+⚠ **`test_cong` phải đứng cách cổng > `LOIRA_TAM`.** Hai chỗ đo cách cổng 72px và 77px — vừa
+ngoài 70. Dời vào gần hơn một chút là nhân vật TỰ ĐI SANG MAP KHÁC giữa lúc đo, và thứ bài đọc
+được là một ô đất của map bên kia. Nên nó có chốt tự kiểm `oMap === 'ardhaven'` **và** `coVom`
+trước khi chấm.
+
+Chủ dự án chốt: *"dẹp luôn cổng của 4 hướng đi. Thay vào, mở map lại ở hướng cho nó bo góc rồi
+ghi chữ kiểu hướng đi ra map xxx sẽ hợp lý hơn. Và người chơi không cần phải bấm nút để có thể
+tự đi ra khỏi map nữa, nhân vật sẽ tự động đi ra khi đến khoảng đó."*
+
+| | |
+|---|---|
+| hình dạng cái miệng | **`diTrong` đã bo góc** — sinh bằng máy, xem ngay dưới |
+| phần nhìn thấy | **`veLoiRa(g)`** — vẽ trên MẶT ĐẤT, trước mọi thực thể |
+| tự đi ra | `LOIRA_TAM` **70px** · cờ `_loiRaCho` · khoá `_loiRaKhoa` |
+| gác | **`tests/test_loira.js`** (9 mệnh đề, ba cơ chế thử ngược đều đỏ) |
+
+**⚠ CHỈ CỔNG RÌA, KHÔNG PHẢI PORTAL.** Sàn Đấu · Tầng Sâu · Lò Khắc là những chuyến đi CÓ CHỦ
+Ý (một cái còn là một lượt roguelite), và **`ardhaven→pvp` hạ cánh cách cổng về ĐÚNG 0px** — tự
+đi ra ở đó là vào sàn rồi bị bắn ngược ra ngay lập tức. Đo cả 27 cặp map: khoảng cách điểm-hạ-
+cánh ↔ cổng-về nhỏ nhất **trong nhóm rìa** là 127px, nên bán kính 70 còn dư 57px.
+
+**⚠ CHỈ ARM MỘT CỜ, ĐỪNG GỌI `travelTo` TỪ `updateGate()`.** Nó chạy GIỮA `update(dt)`, mà
+`travelTo` dựng lại cả thế giới (`buildWorld`) — phần còn lại của khung sẽ đi trên mảng
+`mobs`/`decor` vừa bị thay. Đúng cái bẫy *"return giữa update(dt)"* đã ghi cho PvP. Cờ được xử
+ở **đầu** `update()` khung sau, trước khi bất cứ gì đọc thế giới.
+
+**⚠⚠ KHOÁ CHỐNG DỘI PHẢI KHOÁ THEO **CỔNG**, KHÔNG THEO TOẠ ĐỘ HẠ CÁNH — bản đầu sai, và phép
+thử ngược IM LẶNG.** Bản đầu nhớ chỗ hạ cánh rồi nhả khi đi xa quá `LOIRA_TAM*1.8` = 126px;
+nhưng điểm hạ cánh thật cách cổng về **128px**, nên khoá nhả ngay ở khung ĐẦU TIÊN — nó là mã
+chết. Gỡ hẳn nó ra thì bài kiểm vẫn xanh, và *một phép thử ngược im lặng là bằng chứng cái QUE
+DÒ hỏng, không phải bằng chứng mệnh đề yếu* (luật đã ghi ở mục `test_hethong`).
+
+⇒ Và mệnh đề gác nó cũng phải đổi theo: **`test_loira §4b` TỰ DỰNG RA CÁI CA NGUY HIỂM** — dời
+`spawnFrom` về đúng chỗ cổng về rồi mới đo. Mệnh đề cũ (§4a) đo cảnh THẬT, mà cảnh thật không
+có cặp map nào nguy hiểm, nên nó xanh dù cơ chế có hay không. *Một cơ chế chỉ bật ở cảnh chưa
+tồn tại thì bài kiểm phải tự dựng cảnh ấy ra, không thì nó không gác gì cả.*
+
+**⚠ BO GÓC: CHỌN ĐỈNH THEO KHOẢNG CÁCH TỚI ĐIỂM CỔNG, KHÔNG THEO KHOẢNG CÁCH TỚI RÌA MAP.**
+Bản đầu lấy *"cách cạnh map ≤260px"* và nó bắt **28/36 đỉnh** — tức bo tròn cả đường tường
+thành, vì tường vốn chạy sát rìa. Lấy *"cách một trong bốn điểm cổng ≤560px"* thì đúng **16
+đỉnh = 4 cuống × 4 góc**, và đỉnh gần thứ 17 cách 1.036px — hai cụm tách hẳn nhau. Cung Bézier
+bậc hai, r=90, chèn 2 đỉnh mỗi góc ⇒ `diTrong` 36 → **68 đỉnh**.
+
+**⚠ ĐO NỀN TRƯỚC KHI CHỌN TÔNG CỦA CÁI MIỆNG.** Bản đầu tô một vũng `rgba(232,224,203,.42)` và
+chụp ra thì **gần như không thấy gì**: nền ở bốn cổng đo được sáng **103-181** (phần lớn
+143-157). Thứ cứu được là một **cặp tương phản** — vành SẪM ôm ngoài + lòng SÁNG — chứ không
+phải một mảng sáng đơn độc; cùng bài học đã ghi cho viên tuyết Bird Tribe Heights.
+
+**Và nói thẳng chỗ còn thiếu:** thứ đáng ra phải nhìn thấy ở một lối ra là **khoảng hở trong
+tường thành**, mà bảy tấm `tuong_*`/`cong_*` vẫn nằm trong `MAP_VAT_CHO`. Khi art tường về thì
+cái miệng đã bo góc tự đọc ra thành một cổng mở, và vệt sáng dưới chân chỉ còn là vết mòn.
+**Đừng nâng cấp vệt sáng ấy thành một cái cổng vẽ tay** — đó đúng là thứ vừa gỡ, và Quy tắc số 3.
+
+### ⛲ ĐÀI PHUN NƯỚC ĐÃ VÀO GAME — ba bài học của đường VIDEO → BẢNG KHUNG
+
+`ct_dainuoc` đứng giữa Quảng Trường Atia (`ardhaven 2991,1425` · ô **418×360** · bảng khung
+`4×3, 12 khung, fps 12`). Đặt hàng + prompt: `docs/PROMPT_DAINUOC_VA_HANGRAO.md`.
+
+**⚠ "GẦN TÂM MAP" VÀ "THẤY ĐƯỢC LÚC VÀO GAME" LÀ HAI RÀNG BUỘC KHÁC NHAU.** Bản quét đầu ra
+(3300,1020) — ô gần tâm map nhất — và nó nằm **ngoài khung hình**: ở zoom mặc định (`xa`, 1,0×)
+trên màn 1920×1080, khung lúc mới vào game là `x 2240..4160 · y 1360..2440` quanh điểm thả, còn
+cái đài ở `y 1020..1380`. Người chơi mới tạo nhân vật sẽ không thấy gì. Phải **dựng khung hình
+thật rồi mới chấm**, đừng chấm theo khoảng cách tới một điểm.
+
+**⚠ `--do` CỦA `nuong_video.py` ĐO TÂM KHỐI ĐẶC, nên nó BÁO ĐỘNG GIẢ với thứ tự phình xẹp.**
+Bản đầy đủ báo *"máy quay động 91px"* — con số đúng, kết luận sai: một cột nước phồng lên xẹp
+xuống thì tâm khối dịch dù máy quay khoá cứng. Phải bám theo phần **PHẢI ĐỨNG YÊN** (ở đây là bề
+ngang bể đá) mới tách được "máy quay động" với "vật động". Đo thế thì lộ ra chuyện thật: video
+**zoom vào rồi zoom ra**, bể 274px → 532px → 274px, và chỉ **120/240 khung đầu** dùng được.
+
+**⚠ LÒ SINH VIDEO NƯỚNG BÓNG ĐỔ THÀNH MẢNG ĐẶC — phải gỡ.** Trên nền magenta thì bóng là
+magenta-TỐI: bộ tách gỡ đúng nền phẳng, mảng tối ở lại rồi qua bước khử viền hồng thành **một
+vũng xanh-tím ĐỤC (alpha 255)** cạnh vật. Đo ba công trình đang chạy (`ct_duoc` · `ct_quantro` ·
+`ct_loren`) ra **0,0-0,4%** điểm bóng ⇒ quy ước của dự án là **cắt SÁT VẬT**. Công cụ:
+`tools/iso/bo_bong.py`, chạy trên **cả** tấm tĩnh lẫn bảng khung.
+
+**⚠⚠ VÀ PHÉP GỠ BÓNG BẢN ĐẦU ĂN THỦNG MẶT NƯỚC.** Cửa nhận diện theo MÀU (lam · tối · G≥R) cũng
+khớp vùng nước sẫm trong lòng bể: **thủng 5,2%**, và trong game thì NPC đứng phía sau lộ qua mặt
+nước. Chữa bằng một ràng buộc HÌNH HỌC: bóng thì **chạm nền trong suốt**, nước thì bị thành đá
+bao kín ⇒ `noi_ra_ngoai()` chỉ giữ mảng lan ra được tới nền. Sau khi sửa: **0,00%**.
+*Một cửa nhận diện theo MÀU sẽ luôn bắt nhầm một vùng cùng màu ở chỗ khác; thêm một ràng buộc
+hình học mới tách được chúng.*
+
+### ⚠⚠ NPC CỦA ARDHAVEN KHAI Ở **HAI** TỆP — mọi phép quét đọc tệp đều MÙ
+
+`window.NPCS` dựng trong `data/canbang.js`, rồi `game.js` **`NPCS.push(...)` hai lượt nữa**
+(9 con của ardhaven, trong đó có `monkhach` ở `2870,2100`). Bộ quét chấm chỗ đặt đài phun nước
+của tôi đọc thẳng `canbang.js` ⇒ nó thấy **19 trên 28 con**, và nó chấm cái đài **đè thẳng lên
+`monkhach`**. `test_capnha §2` bắt được vì bài kiểm đọc `NPCS` LÚC CHẠY.
+
+⇒ **Quét chỗ đặt thì lái trong trình duyệt và đọc `NPCS`/`MAPS`/`GATES` thật**, đừng `vm.runInContext`
+một tệp rồi tin kết quả. Cùng một luật với *"màn chờ phải hỏi cùng cái hàm mà trong màn dùng"*,
+và cùng họ với bẫy `QUESTS` khai hai nơi đã ghi ở trên — chỉ khác là lần này nạn nhân là một
+**phép đo**, không phải một tính năng. *Một phép quét đọc tệp, khi dữ liệu thật được ghép từ hai
+tệp, là một phép quét mù — và nó trả về những con số trông hoàn toàn bình thường.*
+
+### 🏘 MỖI CÔNG TRÌNH PHẢI CÓ NGƯỜI ĐỨNG TRƯỚC CỬA — và "có NPC ở gần" là cái chốt KHÔNG CHỐT GÌ
+
+Trước đợt chấm lại, cả bảy ngôi nhà của Sapidae Chiefdom **đều đã có** một NPC trong bán kính
+400px. Nên một mệnh đề kiểu *"nhà nào cũng có NPC ở gần"* sẽ **XANH** trong khi `ah_vachgio`
+đứng **480px phía SAU lưng** Chòi Trông Vách và bị chính công trình vẽ đè lên. Cùng bệnh với
+luật `≤60% là kill` và với *"đúng 7 NPC có trang thoại"*: **một cái chốt đúng ở mọi trạng thái
+là một cái chốt không chốt gì.**
+
+⇒ Đo **ĐỘ LỆCH NGANG so với tim nhà** và **đứng trước hay sau**, không đo khoảng cách trần.
+Một luật cho cả bảy, và nó chấm bằng máy:
+
+| hàng | mặt tiền quay đâu | NPC đứng ở |
+|---|---|---|
+| BẮC (`khoi.y` 520) | xuống đại lộ y≈1600 | ( tim nhà , **chân nhà + 130** ) |
+| NAM (`khoi.y` 2340) | ra tường thành | ( tim nhà , **mép trên khối − 130** ) |
+
+Hàng nam cố ý đặt NPC ở phía **BẮC** vì người chơi tới từ đại lộ; đứng đúng mặt tiền thì họ
+khuất sau nhà — đúng cái vừa phải sửa. Sau khi chấm: cả bảy cặp lệch ngang **đúng 0px**.
+
+⚠ **Đẩy một NPC chức năng vào chỗ thì phải QUÉT LẠI chỗ cho con bị đẩy ra**, đừng dịch tay.
+Hai NPC phố (`ah_chimera`, `ah_thonhuom`) rơi vào tầm 200px và phải tìm chỗ mới; ràng buộc là
+trong đa giác sàn · lề ≥60px tới mọi khối và mọi `vatTo` · cách mọi NPC ≥220px · cách cổng
+≥300px.
+
+⚠ **NPC đứng lọt trong một khối `MAP_OBSTACLES` là một cửa hàng đóng VĨNH VIỄN.** Khối là vật
+cản đặc kể cả khi chưa có tấm art nào, nên người chơi không bao giờ tới đủ gần để mở bảng — và
+không một lỗi nào in ra. `test_capnha §3` gác riêng chuyện đó, tách khỏi §2 (bị **hình** công
+trình vẽ đè) vì hai thứ hỏng theo hai kiểu khác nhau.
+
+⚠ **ĐỪNG đòi "NPC chức năng nào cũng phải có nhà"** — art chưa về thì đó là một bài đỏ vĩnh
+viễn, đúng cái ngưỡng bất khả đã ghi ở mục `AXIE_CORE.md`. Đòi thứ kiểm được: con chưa có nhà
+phải **đã đứng đúng khuôn của một khối còn trống**, nên thả tệp ảnh vào là cặp khít ngay, không
+phải dời ai. Hiện còn hai con như vậy: `ah_phapsu` (Quán Sách, khối #1) và `thantoan`
+(Sảnh Cầu May, khối #9).
+
+Gác: **`tests/test_capnha.js`** (6 mệnh đề, cả năm cơ chế đã thử ngược và đều đỏ).
+Đặt hàng art đài phun nước + hàng rào: **`docs/PROMPT_DAINUOC_VA_HANGRAO.md`**.
+
 ### 🗺 BẢN SẮC MAP SUY RA TỪ DỮ LIỆU, KHÔNG CHÉP CỨNG
 
 `mapBanSac(id)` tính **loài chủ đạo · hệ trội · Dòng Cốt độc quyền** từ chính `packs`, và
@@ -3274,6 +3463,29 @@ một BẢNG KHAI (`VK_ANH` cho vũ khí, `NV_GIAP` cho giáp, `NV_BO` cho thân
 
 Và KHÔNG ngồi dựng hình bằng `ctx.beginPath()` trong mọi trường hợp.
 
+### 📐 ĐO ART BẰNG MÁY TRƯỚC KHI BÀN VỀ PHONG CÁCH
+
+`python3 tools/do_art.py` quét toàn bộ `public/game/assets` và đo **sáu chỉ số** mỗi tấm, gom
+theo *"thứ người chơi nhìn thấy CẠNH NHAU trong một khung hình"* — không gom theo thư mục.
+Kết quả máy đọc: `docs/DO_ART.json`. Kết luận + danh sách cần sinh: **`docs/KIEM_ART.md`**.
+
+| chỉ số | nó trả lời câu gì |
+|---|---|
+| `sang` | độ sáng trung bình trên điểm ảnh ĐẶC (alpha > 0,78) |
+| `bh` | bão hoà — **chỉ số tách hai ngôn ngữ art rõ nhất** (nền 0,31 vs thân 0,55-0,61) |
+| `lech` | lệch chuẩn độ sáng TRONG thân; dưới ~0,12 là đọc ra một cái bóng ở cỡ nhỏ |
+| `vien` | tỉ lệ điểm ảnh có `L < 0,18` — **chữ ký của nét bao đen** (nền iso = 0,000 tuyệt đối) |
+| `am` | R−B, nóng hay lạnh |
+| `trong` | tỉ lệ điểm trong suốt; **`0` nghĩa là một tấm THẺ ĐỤC, không phải sprite** |
+
+⚠ **Gom nhóm theo CHỖ ĐỨNG, không theo thư mục.** Một viên lát sáng 0,72 đứng cạnh một con quái
+sáng 0,13 là một vấn đề thật; hai icon nằm ở hai bảng khác nhau thì không.
+
+⚠ **`vien` mới là thứ tách được hai ngôn ngữ, `sang` thì không** — cùng bài học đã ghi ở mục art
+tối (*"lệch chuẩn quyết định, không phải sáng trung bình"*). Nền map và vật thể iso đo ra
+`vien` trung vị **0,000**, còn mọi thứ đứng trên nó đo 0,09-0,23. Đó là chỗ gãy lớn nhất của
+toàn bộ art hiện tại, và nó vô hình với mắt cho tới khi đo.
+
 Sandbox KHÔNG gọi được meowa.ai (chặn egress), nên bước sinh ảnh là việc của chủ dự án.
 Nếu có khoá API, truyền qua **biến môi trường** — không bao giờ ghi vào tệp trong repo.
 
@@ -4813,6 +5025,7 @@ bằng 0) — bỏ bước dọn ra thì chốt tự kiểm đỏ ngay, đã th�
 trước mỗi lượt đo — tức dời người chơi ra xa đúng con quái cần quan sát, rồi đọc ra `quaiGan: 0` và
 suýt kết luận "giả thuyết sai". Bỏ hai dòng đặt lại ấy thì ra `quaiGan: 2, gần nhất 8px`.
 | `test_canbanglop §2` | *"chênh ST cao/thấp 4,42× > trần 3,6×"* | **xanh 3/3 trên cây đang làm VÀ 3/3 trên cây trước** — tức xúc xắc, không phải commit nào. Đo TB 3 lượt ra **2,63×** (cây nay) và **2,32×** (cây trước), đều sâu trong trần. Gốc: đồ rơi NGẪU NHIÊN + số lần chết là hàm bậc thang (mỗi lần chết `buildWorld()` hồi đầy cả bãi), nên ST tuy "trơn" hơn số mạng vẫn thừa hưởng phi tuyến ấy. Lượt đỏ bốc trúng DK 88.385 (dải thường 53-58k) và DW 19.999 ⇒ 4,42×. Chính đầu tệp bài ấy đã ghi ±22% tản — con số đó đo khi chưa ai chết 11 lần |
+| `test_sandat` (nhanmon) | *"sau 3600 khung đuổi, 1 con nằm ngoài sàn: Cao Thủ Lang Thang — nhánh di chuyển nào đó thiếu collideObstacles"* | ⚠ **ĐÂY KHÔNG PHẢI NHIỄU, đây là một LỖI THẬT bắn thưa.** Xanh 3/3 chạy riêng · xanh ở lượt hồi quy liền trước ⇒ rất dễ đọc nhầm là xúc xắc rồi bỏ qua. Nhưng chính mệnh đề ấy sinh ra để bắt *một nhánh dời chỗ quái quên gọi `collideObstacles`*, và nó chỉ nổ khi hình học truy đuổi rơi đúng chỗ. Cần một đợt riêng: quét NĂM nhánh dời quái trong `update()` (xem cảnh báo `mobDoBuoc()`) rồi đối chiếu nhánh nào thiếu. Đừng nới ngưỡng, và đừng ghi nó vào đây rồi quên |
 | `test_qablock` | *"dựng cảnh sai: người chơi không ăn đòn nào"* rồi kéo theo 2 FAIL nữa | **xanh 8/8 lượt liên tiếp** khi chạy riêng · chính chú thích trong bài đã ghi nó nhạy với mạch ngẫu nhiên (*"từng xanh chỉ vì may"*) — con quái phải kịp đánh trúng trong 40 khung, máy bận là trượt. Phân biệt bằng `git diff -U0 … | grep '^@@'`: nếu diff không chạm `update`/`hurtPlayer`/`swingFeel`/`shakeDir` thì nó không thể là của mình |
 
 **Cách phân biệt "đỏ do mình" với "đỏ do xúc xắc", làm theo thứ tự này:** chạy riêng bài đó

@@ -1041,25 +1041,34 @@ window.MAPS = {
                 chungnam:{ x:6150, y:1600 }, tuyettinh:{ x:3200, y:120 } },
     trees:0, rocks:0, herbs:true,
     desc:'Khu phố Ardhaven đi qua Nhát Gọi còn nguyên khối — nguyên mái, nguyên giếng, nguyên cả cái lò. Lunacia khắc Rune lên trời để xin đúng cái lò này, nên thành không phải đống đổ nát: nó là câu trả lời. Dân bản địa dựng tường quanh và gọi chỗ này là Sapidae Chiefdom. Trong tường: Quảng Trường Atia, Phố Chợ, Phố Lò, Sân Chuồng, Sảnh Lệnh, Vách Gió và Xóm Trọ. Không Chimera nào vào được. Bốn cổng ra bốn hướng.',
+    // ⚠ BỐN CÁI MIỆNG ĐÃ BO GÓC — sinh bằng máy (`bo cung Bézier bậc hai, r=90, 2 đỉnh chèn`),
+    // đừng chấm tay. Chọn đỉnh nào để bo thì theo KHOẢNG CÁCH TỚI ĐIỂM CỔNG (≤560px ⇒ đúng
+    // 16 đỉnh = 4 cuống × 4 góc; đỉnh gần thứ 17 cách 1.036px). Bản đầu chọn theo "cách rìa
+    // map ≤260px" và nó bắt 28/36 đỉnh — tức bo tròn cả đường tường thành, vì tường vốn chạy
+    // sát rìa. 36 → 68 đỉnh.
     diTrong: [
-              [3480,3150], [2920,3150], [2900,2990], [600,2990], [400,2930], [270,2800],
-              [230,2720], [230,2620], [210,2600], [210,1900], [50,1880], [50,1320],
-              [210,1300], [210,600], [270,400], [400,270], [600,210], [2900,210],
-              [2920,50], [3480,50], [3500,210], [5800,210], [6000,270], [6130,400],
-              [6170,480], [6170,580], [6190,600], [6190,1300], [6350,1320], [6350,1880],
-              [6190,1900], [6190,2600], [6130,2800], [6000,2930], [5800,2990], [3500,2990] ],
+              [3489,3078], [3464,3132], [3407,3150], [2993,3150], [2936,3132], [2911,3078],
+              [2909,3062], [2884,3008], [2827,2990], [600,2990], [400,2930], [270,2800],
+              [230,2720], [230,2620], [210,2600], [210,1973], [192,1916], [138,1891],
+              [122,1889], [68,1864], [50,1807], [50,1393], [68,1336], [122,1311],
+              [138,1309], [192,1284], [210,1227], [210,600], [270,400], [400,270],
+              [600,210], [2827,210], [2884,192], [2909,138], [2911,122], [2936,68],
+              [2993,50], [3407,50], [3464,68], [3489,122], [3491,138], [3516,192],
+              [3573,210], [5800,210], [6000,270], [6130,400], [6170,480], [6170,580],
+              [6190,600], [6190,1227], [6208,1284], [6262,1309], [6278,1311], [6332,1336],
+              [6350,1393], [6350,1807], [6332,1864], [6278,1889], [6262,1891], [6208,1916],
+              [6190,1973], [6190,2600], [6130,2800], [6000,2930], [5800,2990], [3573,2990],
+              [3516,3008], [3491,3062] ],
   vatTo: [
-    // ── BỐN CỔNG THÀNH ────────────────────────────────────────────────────────
-    // Đặt LỆCH hẳn sang MỘT BÊN cuống cổng, mép trong của ảnh CHẠM ĐÚNG mép cuống
-    // (chồng lấn 0 px2 — đã đo). Cuống cổng đọc thẳng từ `diTrong`:
-    //   Bắc  x 2920-3480, y   50- 210      Nam   x 2920-3480, y 2990-3150
-    //   Tây  x   50- 210, y 1320-1880      Đông  x 6190-6350, y 1320-1880
-    // Bốn tháp lệch theo một chiều KIM ĐỒNG HỒ: Bắc lệch đông · Đông lệch nam ·
-    // Nam lệch tây · Tây lệch bắc. Người chơi luôn đi lọt giữa cuống.
-    { img:'ct_cong',  x:3520, y:14,   w:472, h:435 },  // Cổng Bắc  — lệch ĐÔNG, chân y=449
-    { img:'ct_cong',  x:5878, y:1880, w:472, h:435 },  // Cổng Đông — lệch NAM,  chân y=2315
-    { img:'ct_cong',  x:2448, y:2680, w:472, h:435 },  // Cổng Nam  — lệch TÂY,  chân y=3115
-    { img:'ct_cong',  x:140,  y:854,  w:472, h:435 },  // Cổng Tây  — lệch BẮC,  chân y=1289
+    // ── ~~BỐN CỔNG THÀNH~~ — ĐÃ GỠ, và đừng cắm lại ─────────────────────────
+    // Bốn sprite `ct_cong` từng đứng lệch sang một bên mỗi cuống cổng. Chủ dự án chốt gỡ:
+    // *"dẹp luôn cổng của 4 hướng đi. Thay vào, mở map lại ở hướng cho nó bo góc rồi ghi chữ
+    // kiểu hướng đi ra map xxx sẽ hợp lý hơn."* Nay phần nhìn thấy do `veLoiRa()` lo — một
+    // vũng đá mòn tắt dần về mép, ba mũi chevron bò ra ngoài, và dòng `⟶ <tên map>`; còn
+    // hình dạng cái miệng thì nằm ngay trong `diTrong` ở trên (đã bo góc).
+    //
+    // ⚠ Tấm `assets/iso/ct_cong.png` và mục `MAP_VAT_SRC.ct_cong` GIỮ LẠI — cổng nào muốn
+    // dựng lại bộ vòm thì khai `vom:true` trong `GATES`. Gỡ tấm art đi là đóng luôn cửa đó.
 
     // ── BA CÔNG TRÌNH CÓ ẢNH ──────────────────────────────────────────────────
     // Cả ba đặt trên HÀNG NHÀ BẮC (khối y 520-860), CHÂN ảnh trùng đúng mép dưới
@@ -1084,22 +1093,121 @@ window.MAPS = {
     // chuồng. Hai con này cũng CỐ Ý đặt hàng kiểu KHÔNG CÓ MẶT TIỀN MẠNH — chuồng hở
     // bốn bề, sảnh nhận diện bằng cái tháp và mấy lá cờ.
     //
-    // ⚠ ĐÃ QUÉT MÁY: không một NPC nào trong 24 con của ardhaven rơi vào bốn hình chữ
-    // nhật dưới đây, kể cả với lề 30px. `bodau` (4150,2100) nằm trên mép trên Sảnh Lệnh
-    // 193px, `ah_mucdong` (2160,2450) nằm bên trái chuồng 100px — cả hai đứng NGOÀI khối
-    // nên không phải dời ai. Đừng dịch tay bốn số này mà không quét lại: `vatTo` vào
-    // `ents` theo y = v.y + v.h, nên NPC nào lọt trong hình là bị nhà vẽ đè lên.
+    // ⚠ CẶP NHÀ–NPC NAY CHẤM BẰNG MÁY, KHÔNG ĐẶT TAY. Trước đợt này bảy ngôi nhà đều
+    // CÓ npc, nhưng năm trong bảy cặp lệch tới mức đọc không ra là một cặp: `ah_vachgio`
+    // đứng ở (2160,380) — tức 480px PHÍA TRÊN chân Chòi Trông Vách, nằm HẲN SAU lưng
+    // công trình và bị chính nó che; `trachu` lệch 240px khỏi tim Quán Trọ, `ah_hondon`
+    // lệch 192px, `bodau` và `ah_mucdong` mỗi con lệch ~330px. Nhìn ra là "mấy người
+    // đứng lung tung quanh mấy cái nhà", không ra "người bán hàng đứng trước cửa tiệm".
+    //
+    // Khuôn chấm, một luật cho cả bảy:
+    //   hàng BẮC (mặt tiền quay xuống phố lớn): NPC ở ( tim nhà , chân nhà + 130 )
+    //   hàng NAM (mặt tiền quay ra tường):      NPC ở ( tim nhà , mép trên khối − 130 )
+    // Hàng nam cố ý đặt NPC ở phía BẮC vì người chơi tới từ đại lộ y≈1600; đứng đúng
+    // mặt tiền thì họ khuất sau nhà, đúng cái vừa phải sửa cho `ah_vachgio`.
+    //
+    // Sau khi chấm: cả bảy cặp lệch ngang ĐÚNG 0px. Hai NPC phố bị đẩy ra đã quét lại
+    // chỗ mới (`ah_chimera` → 2560,2000 · `ah_thonhuom` → 1140,1040), và cả 26 NPC của
+    // ardhaven đều thoả: trong đa giác sàn · lề ≥40px tới mọi khối và mọi `vatTo` ·
+    // cách nhau ≥200px. Đừng dịch tay mấy số này mà không quét lại: `vatTo` vào `ents`
+    // theo y = v.y + v.h, nên NPC nào lọt trong hình là bị nhà vẽ đè lên.
     { img:'ct_quantro',   x:3654, y:350,  w:512, h:510 },  // Quán Trọ        — khối #8  (3680, 520) · hàng BẮC
     { img:'ct_thapvach',  x:2234, y:388,  w:511, h:472 },  // Chòi Trông Vách — khối #3  (2260, 520) · hàng BẮC
     { img:'ct_saanhlenh', x:3654, y:2293, w:512, h:387 },  // Sảnh Lệnh       — khối #12 (3680,2340) · hàng NAM
     { img:'ct_chuong',    x:2260, y:2286, w:460, h:394 },  // Dãy Chuồng      — khối #7  (2260,2340) · hàng NAM
+
+    // ── ĐÀI PHUN NƯỚC ATIA · ĐANG CHỜ ART ────────────────────────────────────
+    // ⚠ NÓ ĐI `vatTo`, KHÔNG ĐI MỘT LỚP PHẲNG. Cột nước bắn lên rồi toả ra là thứ CÓ CHIỀU
+    // CAO, nên người đứng phía BẮC nó phải bị che — đúng việc mà phép xếp theo chân ảnh
+    // (`y + h`) của `vatTo` làm. Đã thử một lớp "vật sàn" vẽ trước mọi thực thể và đã gỡ:
+    // ở đó người chơi sẽ vẽ ĐÈ LÊN cột nước ngay cả khi đang đứng sau nó.
+    //
+    // CHỖ ĐẶT: chủ dự án chốt *"đặt ở giữa map, nhân vật khi tạo xong sẽ ở map này và THẤY
+    // ĐƯỢC"*. Nên đây không phải "ô nào thoả cũng được" — nó là một ràng buộc ĐO ĐƯỢC:
+    // ở zoom mặc định (`xa`, 1,0×) trên màn 1920×1080, khung hình lúc mới vào game là
+    // `x 2240..4160 · y 1360..2440` quanh điểm thả (3200,1900). Đài chiếm `2991..3409 ×
+    // 1425..1785` ⇒ lọt TRỌN trong khung, ngay phía bắc chỗ nhân vật rơi xuống.
+    //
+    // ⚠ BẢN QUÉT ĐẦU RA (3300,1020) — "gần tâm map nhất" — VÀ NÓ NẰM NGOÀI KHUNG HÌNH.
+    // Mép trên khung là y=1360, đài thì ở y 1020..1380: người chơi mới tạo nhân vật sẽ không
+    // thấy gì cả. *"Gần tâm map" và "thấy được lúc vào game" là HAI ràng buộc khác nhau, và
+    // chỉ cái thứ hai là thứ chủ dự án hỏi.* Phải dựng khung hình thật rồi mới chấm.
+    //
+    // Cái chặn tâm quảng trường chỉ là HAI NPC, không nhà nào và không cổng nào — nên dời
+    // chúng ra hai bên đài (quét lại chỗ mới, lề 70px tới đài, ≥220px tới mọi NPC khác):
+    //   `quachtinh`  (3200,1600) → (2920,1620)   — Trưởng Lão Rell, phía TÂY đài
+    //   `ah_hatrong` (3200,1300) → (3480,1680)   — Kẻ Hát Rong,     phía ĐÔNG đài
+    // Một trưởng lão và một kẻ hát rong đứng hai bên bể nước đọc ra đúng một quảng trường,
+    // hơn hẳn hai người đứng giữa chỗ trống.
+    //
+    // ⚠⚠ QUÉT PHẢI ĐỌC `NPCS` LÚC CHẠY, ĐỪNG ĐỌC TỆP. NPC của ardhaven khai ở HAI nơi — bảng
+    // trong tệp này VÀ hai lượt `NPCS.push(...)` trong game.js (9 con, trong đó có `monkhach`
+    // ở 2870,2100). Bộ quét đầu của tôi chỉ đọc tệp này ⇒ thấy 19/28 con, và nó chấm đài phun
+    // nước đè thẳng lên `monkhach`. `test_capnha §2` bắt được, nhưng bài học thì lớn hơn:
+    // *một phép quét đọc tệp khi dữ liệu thật được ghép từ hai tệp là một phép quét mù.*
+    //
+    // ⚠ `can` là CÁI BỂ, không phải khung ảnh. Cột nước và tia bắn nằm TRÊN cao, không chặn
+    // chân ai; chặn đúng khung 384×360 là người chơi khựng lại giữa không khí cách bể cả gang.
+    // Bể chiếm 41% khung — `test_vatcan §4` gác cả hai đầu (tâm bể phải chặn, góc khung ảnh
+    // phải đi được).
+    //
+    // ⚠ VIDEO GỐC ZOOM VÀO RỒI ZOOM RA — chỉ 120/240 khung đầu dùng được. Đo bằng BỀ NGANG
+    // BỂ ĐÁ qua cả đoạn: nó đứng yên ở 274px suốt khung 0-119, rồi phình 274→532 (khung
+    // 120-150), nằm sát ở 532 tới khung ~215, rồi rút về 274. Viền nền đi theo đúng nhịp đó:
+    // magenta 134-144 ở đoạn khoá, tụt xuống −29 khi máy quay áp sát (hết nền để mà cắt).
+    // ⇒ cắt lấy 24 khung đầu (điểm nối vòng mượt nhất: lệch 4,26 so với sàn nhiễu 0,44 —
+    // thử mọi N từ 24 tới 116, N=24 là nhỏ nhất), nướng 12 khung, phát ở fps 12 = đúng tốc
+    // độ gốc (24fps, lấy cách khung).
+    //
+    // ⚠ `--do` BÁO "MÁY QUAY ĐỘNG 91px" TRÊN BẢN ĐẦY ĐỦ, và con số đó đúng nhưng KHÔNG đủ để
+    // kết luận. Nó đo tâm khối ĐẶC, mà một cột nước phồng lên xẹp xuống thì tâm khối dịch dù
+    // máy quay khoá cứng. Phải bám theo phần PHẢI đứng yên (bể đá) mới phân biệt được hai
+    // chuyện. Trên đoạn đã cắt: trôi 17px, và `chân từng khung lệch 0px` — máy quay khoá thật.
+    //
+    // TẤM TĨNH assets/iso/ct_dainuoc.png VẪN BẮT BUỘC (bảng khung nạp lười; thiếu tấm lùi là
+    // giữa quảng trường thủng một lỗ trong mấy trăm mili giây đầu).
+    //
+    // `can` ĐO TỪ CHÍNH TẤM ẢNH, không chấm tay: quét điểm ảnh ĐÁ (đặc · nhạt · ấm · ít bão
+    // hoà) rồi lấy dải hàng có bề ngang ≥62% hàng rộng nhất = vành bể (y 147..334, x 1..356),
+    // thu vào 8%/10% cho mềm mép. Dải 62px bên phải là BÓNG ĐỔ — cố ý không chặn.
+    // ⚠ `thoang:true` — KHÔNG phải một ngôi nhà. Hai bài kiểm đọc cờ này: `test_capnha §1`
+    // (mọi công trình phải có NPC chức năng đứng trước cửa — đài phun nước thì không bán
+    // gì) và `test_vatcan §1` (≤25% diện tích hình được phép đi vào — một đài phun nước
+    // gần như toàn là KHÔNG KHÍ, người chơi phải đi sát được tới thành bể). Miễn trừ bằng
+    // một cờ TRONG DỮ LIỆU, đừng bằng một danh sách tên chép trong bài kiểm.
+    { img:'ct_dainuoc', x:2991, y:1425, w:418, h:360, thoang:true,
+      // ⚠⚠ CHÍN HỘP BẬC THANG, KHÔNG PHẢI MỘT — vành bể là một hình ELIP.
+      // Bản một-hộp cũ `[[29,165,299,151]]` chỉ ôm MẶT NƯỚC, đo được **30% thân bể
+      // đi được**: 43px vành TRƯỚC · 13px vành SAU · 12-28px mỗi bên. Chủ dự án chụp
+      // màn hình và bắt đúng nó — nhân vật đứng lọt lên vành phải, chỉ còn nửa người
+      // trên nhô lên khỏi thành bể.
+      //
+      // ⚠ MỘT CHỮ NHẬT KHÔNG BAO GIỜ ÔM ĐƯỢC MỘT HÌNH ELIP: nới cho kín hai bên là
+      // chặn lấn bốn góc (dựng tường vô hình — đúng lỗi NGƯỢC mà `test_vatcan §3`
+      // gác), thu cho chừa góc là hở hai bên. Ba bậc đo ra vẫn 23% hở. Chín bậc
+      // (mỗi bậc 23px, bề ngang = GIAO của mọi hàng trong bậc) ⇒ **9,1% hở · chặn
+      // lấn ĐÚNG 0 px**, và phần hở còn lại là mấy mẩu tam giác ở mép elip.
+      //
+      // ⚠ Sinh bằng máy trên chính tấm art, đừng chấm tay. Và xếp hộp RỘNG NHẤT
+      // TRƯỚC: `test_vatcan §4` đọc `can[0]` để chấm tâm hộp và tỉ lệ khung (5%).
+      //
+      // ⚠ Dải bên phải KHÔNG chặn là CỐ Ý — đó là tia nước bắn ra ngoài thành bể,
+      // tức không khí. Chặn nó là người chơi khựng lại giữa khoảng trống.
+      can:[[3, 244, 352, 23], [5, 221, 349, 23], [5, 198, 348, 23], [7, 267, 344, 23],
+           [19, 175, 321, 23], [26, 290, 306, 23], [48, 152, 262, 23], [61, 313, 236, 23],
+           [162, 336, 33, 23]],
+      khung:{ cot:4, hang:3, khung:12, oRong:418, oCao:360, fps:12 } },
   ],
     // ── CHÍN KHỐI CÒN TRỐNG · ĐANG CHỜ ART ───────────────────────────────────
     // 16 khối, nay 7 có ảnh (ct_cong dùng hết cho bốn cuống cổng). Khuôn đặt cho mọi khối
     // 460×340:  x = khoi.x − (w − 460)/2   ·   y = khoi.y + 340 − h (chân trùng mép dưới khối)
     //
-    // CÒN ĐÚNG MỘT KHỐI CÓ NPC ĐỨNG SẴN MÀ THIẾU NHÀ:
-    //   #9  (4340, 520) hàng BẮC · ct_caumay — Sảnh Cầu May (NPC `thantoan` ở 4570,990)
+    // HAI KHỐI CÓ NPC CHỨC NĂNG ĐỨNG SẴN MÀ THIẾU NHÀ — đây là chỗ hụt DUY NHẤT còn lại
+    // của cặp nhà↔NPC, và cả hai chỉ thiếu ĐÚNG MỘT TẤM ẢNH:
+    //   #1  ( 940, 520) hàng BẮC · ct_quansach — Quán Sách    (NPC `ah_phapsu` ở 1340,940)
+    //   #9  (4340, 520) hàng BẮC · ct_caumay   — Sảnh Cầu May (NPC `thantoan`  ở 4570,990)
+    // Thả tệp vào assets/iso/ + khai tên trong MAP_VAT_SRC + thêm một dòng `vatTo` theo
+    // khuôn trên là xong; không sửa một dòng mã nào.
     //
     // CHƯA GÁN VAI — nhà dân nền, một hai kiểu lặp lại là đủ:
     //   #0 (280,520)  #1 (940,520)              hàng bắc, đầu tây
@@ -2084,10 +2192,14 @@ window.NPCS = [
   // đứng ở thành. Lore của bốn người dưới đây viết cho ra chuyện đó: mỗi cái cửa
   // phải nói được vì sao nó tồn tại, không chỉ là một cái nút bấm.
 
-  { id:'thoren', name:'Thợ Rèn · Lò Rèn Hoàng Gia', map:'ardhaven', x:5230, y:990, img:'assets/npcs/thoren_lun.png', talk:'forge', nhan:'Lò Rèn',
-    lore:'"Lò này nhóm lại lần thứ ba rồi. Hai lần trước tắt vì hết than — lần này ta dặn xe than đi hai chuyến một tuần, tắt nữa thì là lỗi của ta."',
-    barks:['"Đợi lò đỏ đã, đừng giục."','"Đồ mẻ thì mang đây, đừng vứt."',
-           '"Búa nhỏ để khảm, búa lớn để nắn. Cầm nhầm là hỏng cả món."','"Nghe tiếng thép là biết đồ thật hay giả."'] },
+  // ⚠ NPC `thoren` (Thợ Rèn · Lò Rèn Hoàng Gia) ĐÃ GỠ KHỎI ARDHAVEN — đừng cắm lại.
+  // Nó trùng chức năng KHÍT với `ah_hondon` ngay bên cạnh: cùng `talk:'forge'`, cùng mở một
+  // bảng, đứng cách nhau 190px. Hai con cho một việc thì con thứ hai chỉ là một cái tên thừa.
+  // Tranh người lùn của nó chuyển sang `binhkhi` (Vũ Khí Phường) theo yêu cầu của chủ dự án —
+  // một thợ rèn cầm búa đứng bán binh khí là đúng vai hơn hẳn hình vector cũ.
+  // ⚠ `thoren_dao` (corran) VẪN CÒN và vẫn dùng tranh ấy, nên đừng xoá `thoren_lun.png`.
+  // Mọi thứ hỏi lò rèn ở Ardhaven vẫn chạy: `forgeNpcHere()` lấy con GẦN NHẤT trên map, và
+  // `NPCS.find(x => x.talk === 'forge')` (mấy bài kiểm dùng) vẫn ra một con có thật.
 
   // ⚠ CON THỨ HAI MANG talk:'forge', VÀ ĐÓ LÀ CHỦ Ý. `forgeNpcHere()` nay trả về con GẦN
   // NHẤT trên map chứ không phải con ĐẦU MẢNG (xem game.js) — nếu không thì thêm con này
@@ -2095,7 +2207,7 @@ window.NPCS = [
   // bị báo "chưa tới Lò Rèn Hoàng Gia". Lỗi đó không ném gì, chỉ làm nút KẾT HỢP mờ đi.
   // Đứng cách Thợ Rèn 190px, cùng hàng y — hai con đọc ra một CẶP, đúng lối MU đặt máy
   // hỗn độn cạnh lò rèn. Chỗ đứng quét bằng máy (ngoài khối Lò, cách mọi NPC ≥180px).
-  { id:'ah_hondon', name:'Yêu Tinh Hỗn Độn · Lò Hỗn Độn', map:'ardhaven', x:5420, y:980, img:'assets/npcs/hondon_yt.png', talk:'forge', nhan:'Lò Hỗn Độn',
+  { id:'ah_hondon', name:'Yêu Tinh Hỗn Độn · Lò Hỗn Độn', map:'ardhaven', x:5228, y:970, img:'assets/npcs/hondon_yt.png', talk:'forge', nhan:'Lò Hỗn Độn',
     lore:'"Trên +9 thì búa của lão Thợ Rèn hết việc — thép không nhận thêm nét khắc nào bằng sức người nữa. Từ đó trở lên là việc của cái lò này, và cái lò này không hứa gì cả."',
     barks:['"+10 là nửa ăn nửa thua. Ta nói trước rồi đấy."','"Đưa đồ đây. Đừng đưa đồ ngươi tiếc."',
            '"Vỡ thì đừng trách lò. Trách cái tay bỏ nó vào."','"Thiên Mệnh Phù giữ được món, không giữ được nét khắc."'] },
@@ -2113,28 +2225,28 @@ window.NPCS = [
     barks:['"Bình đỏ pha sáng nay, còn ấm."','"Ra khỏi cổng thì mang hai lọ, đừng mang một."',
            '"Đừng uống lúc đang chạy, sặc thì phí cả lọ."','"Nút bần bịt kín rồi, nhưng đừng để nghiêng trong túi."'] },
 
-  { id:'binhkhi', name:'Binh Khí Chủ · Vũ Khí Phường', map:'ardhaven', x:5890, y:990, img:'assets/npcs/binhkhi.png', talk:'shop', nhan:'Vũ Khí',
+  { id:'binhkhi', name:'Binh Khí Chủ · Vũ Khí Phường', map:'ardhaven', x:5890, y:990, img:'assets/npcs/thoren_lun.png', talk:'shop', nhan:'Vũ Khí',
     lore:'"Giá gỗ này ta đóng lại tuần trước — cây cũ mọt ăn, gãy làm đôi lúc nửa đêm, đổ hết cả hàng xuống sân. Cầm thử đi, cây nào cũng còn nguyên lưỡi."',
     barks:['"Cầm thử đi, đừng ngắm."','"Cây rìu kia nặng hơn nó nhìn."',
            '"Chuôi quấn da mới, chưa trơn tay đâu."','"Đồ cũ nhưng chưa gãy lần nào."'] },
 
   // talk:'stable' — CỬA ĐẦU TIÊN của hệ Trại Ngựa / Mã Thầu / Khế Ước Ragoon đứng
   // trong tường thành. Trước đây hệ này chỉ có một cửa duy nhất ở Beast Herd Camp.
-  { id:'ah_mucdong', name:'Người Giữ Chuồng', map:'ardhaven', x:2160, y:2450, img:'assets/npcs/traichu.png', talk:'stable', nhan:'Chuồng',
+  { id:'ah_mucdong', name:'Người Giữ Chuồng', map:'ardhaven', x:2490, y:2210, talk:'stable', nhan:'Chuồng',
     lore:'"Chuồng trong thành có bốn ô, mà ngoài đồng thì cả bầy chạy hoang. Ai rượt được con nào thì dắt về đây — ta ghi tên, ta cho ăn, và ta không hỏi trước đó nó thuộc về ai."',
     barks:['"Rượt cho nó mệt, đừng rượt cho mình mệt."','"Con nâu ô ngoài cùng cắn người lạ, nhớ đấy."',
            '"Cỏ ngoài thành ngọt hơn cỏ trong sân, nên chúng nó mới không chịu về."','"Dây thừng ta cho mượn, nhớ trả."'] },
 
   // talk:'trunya' — Truy Nã Lệnh mỗi ngày một tên. ⚠ XEM CHÚ Ý KỸ THUẬT cuối tệp:
   // renderTruyNa() đang tìm CỨNG id 'bodau'.
-  { id:'bodau', name:'Quan Truy Nã', map:'ardhaven', x:4150, y:2100, img:'assets/npcs/bodau.png', talk:'trunya', nhan:'Truy Nã',
+  { id:'bodau', name:'Quan Truy Nã', map:'ardhaven', x:3910, y:2210, img:'assets/npcs/laotuong.png', talk:'trunya', nhan:'Truy Nã',
     lore:'"Vách này mỗi sáng ta dán một tờ, mỗi chiều gỡ một tờ. Trước đây gỡ vì hết hạn. Dạo này thì gỡ vì có người mang việc về xong — ta thích cách gỡ đó hơn."',
     barks:['"Lệnh hôm nay dán rồi đấy."','"Một ngày một tên, không hơn. Ta cũng phải ngủ."',
            '"Tiền thưởng trả bằng Lumen, đếm tại chỗ, đếm xong đừng kêu thiếu."','"Đừng vác nguyên con về sân ta. Kể lại là đủ."'] },
 
   // talk:'vanduyen' — Sảnh Cầu May. Tỉ lệ công khai, không cộng dồn may mắn.
   // ⚠ renderVanDuyen() đang tìm CỨNG id 'thantoan' — xem chú ý kỹ thuật cuối tệp.
-  { id:'thantoan', name:'Chủ Sảnh Cầu May', map:'ardhaven', x:4570, y:990, img:'assets/npcs/thantoan.png', talk:'vanduyen', nhan:'Cầu May',
+  { id:'thantoan', name:'Chủ Sảnh Cầu May', map:'ardhaven', x:4570, y:990, talk:'vanduyen', nhan:'Cầu May',
     lore:'"Tỉ lệ ta dán trên vách, chữ to bằng bàn tay, ai đứng ngoài cửa cũng đọc được. Đọc xong mà vẫn quay thì đó là việc của ngươi, không phải lỗi của ta."',
     barks:['"Tỉ lệ dán trên vách kia kìa, đọc trước đi."','"Ta không hứa gì cả. Ta chỉ quay."',
            '"Người vừa nãy quay chín lượt rồi về tay không. Ngươi vẫn muốn quay chứ?"','"Lumen đặt lên bàn, đừng đưa tận tay ta."'] },
@@ -2142,7 +2254,7 @@ window.NPCS = [
   // talk:'tenui' — Vực Thẳm. Trước nay ba cái vách duy nhất đều nằm ở vùng ngoài;
   // đây là cái đầu tiên nằm ngay trong tường thành, nên nó phải giải thích được vì
   // sao giữa một cái thành lại có một cái vực.
-  { id:'ah_vachgio', name:'Kẻ Trông Vách', map:'ardhaven', x:2160, y:380, img:'assets/npcs/vachda.png', talk:'tenui', nhan:'Vực Thẳm',
+  { id:'ah_vachgio', name:'Kẻ Trông Vách', map:'ardhaven', x:2489, y:990, img:'assets/npcs/vachda.png', talk:'tenui', nhan:'Vực Thẳm',
     lore:'"Vết nứt xé qua chỗ này thì kéo đi một mảng đất, và chỗ đất mất đi để lại cái vực đằng sau lưng ta. Ta ngồi đây đếm người nhảy xuống. Ai đủ cứng — từ cấp 60 trở lên — thì còn leo lên lại được."',
     barks:['"Nhìn xuống trước, rồi hẵng quyết."','"Gió dưới đáy thổi ngược lên. Lạ, mà ta quen rồi."',
            '"Ta trông cái vách, không trông người. Ngươi nhảy hay không là chuyện của ngươi."','"Sáng nay hai đứa nhảy. Một đứa về."'] },
@@ -2219,7 +2331,7 @@ window.NPCS = [
     barks:['"Đuổi kịp cháu thì cháu cho cái này!"','"Chú đừng mách mẹ cháu nhé."',
            '"Chú cao thế, chú nhìn qua nóc nhà kia được không?"'] },
 
-  { id:'ah_linhtuan', name:'Lính Tuần Phố', map:'ardhaven', x:2560, y:1600, img:'assets/npcs/bodau.png', talk:'quest',
+  { id:'ah_linhtuan', name:'Lính Tuần Phố', map:'ardhaven', x:2560, y:1600, img:'assets/npcs/laotuong.png', talk:'quest',
     lore:'"Ta đi từ Cổng Tây sang Cổng Đông rồi quay lại, mỗi vòng đúng một khắc. Việc chán lắm. Nhưng chán là dấu hiệu tốt, ngươi cứ tin ta."',
     barks:['"Trong tường thì yên."','"Ai còn để xe hàng giữa lòng phố nữa là ta thu."',
            '"Đi qua đi lại mỏi chân hơn đánh nhau."'] },
@@ -2229,7 +2341,7 @@ window.NPCS = [
     barks:['"Dịch sang bên một tí, ta quét."','"Lá năm nay rụng nhiều hơn mọi năm."',
            '"Chổi này ta tự bó, bền hơn chổi mua ngoài chợ."'] },
 
-  { id:'trachu', name:'Cô Hầu Bàn · Quán Trọ', map:'ardhaven', x:4150, y:1010, img:'assets/npcs/hauban_yt.png', talk:'shop', nhan:'Quán Trọ',
+  { id:'trachu', name:'Cô Hầu Bàn · Quán Trọ', map:'ardhaven', x:3910, y:990, img:'assets/npcs/hauban_yt.png', talk:'shop', nhan:'Quán Trọ',
     lore:'"Chủ quán ngồi trong đếm tiền, ta chạy bàn. Mười hai phòng thì tám phòng có người, và cả tám đều biết tên ta còn ta chẳng biết tên ai."',
     barks:['"Còn phòng, đừng lo."','"Cơm dọn lúc trời chạng vạng, đừng tới trễ."',
            '"Khay này nặng đấy, tránh ra một chút."','"Ai ngáy to thì ta xếp lên gác. Không giận nhé."'] },
@@ -2239,7 +2351,7 @@ window.NPCS = [
     barks:['"Tránh đường, ta đang vội."','"Lá này để ba ngày rồi, chưa ai tới lấy."',
            '"Ta chạy nhanh hơn ngươi đấy, cá không?"'] },
 
-  { id:'ah_banhoa', name:'Bà Bán Hoa', map:'ardhaven', x:3400, y:1930, img:'assets/npcs/duoclao.png', talk:'quest',
+  { id:'ah_banhoa', name:'Bà Bán Hoa', map:'ardhaven', x:3400, y:1930, talk:'quest',
     lore:'"Hoa của ta trồng ở luống sau nhà, không phải hàng gánh từ ngoài đồng vào. Cành ngắn hơn thật, nhưng cắm trong nhà được bảy ngày."',
     barks:['"Mua một bó về cắm, nhà sáng hẳn ra."','"Cành trắng hết rồi, còn cành đỏ thôi."',
            '"Cắt buổi sáng thì tươi lâu hơn cắt buổi chiều."'] },
@@ -2249,17 +2361,17 @@ window.NPCS = [
     barks:['"Ngồi xuống đi, ghế còn chỗ."','"Trước đây chỗ này là bãi đất trống."',
            '"Cứ đi đi. Ta không giữ ai lại bao giờ."'] },
 
-  { id:'ah_chimera', name:'Người Luyện Chimera', map:'ardhaven', x:2500, y:2100, img:'assets/npcs/traichu.png', talk:'quest',
+  { id:'ah_chimera', name:'Người Luyện Chimera', map:'ardhaven', x:2560, y:2000, talk:'quest',
     lore:'"Con này ta nhặt lúc nó còn nhỏ bằng bàn tay. Nó không hiền đâu — nó chỉ quen ta thôi. Quen với hiền là hai chuyện khác nhau, nhớ cho kỹ."',
     barks:['"Đừng đưa tay ra trước mặt nó."','"Nó ăn hai bữa, sáng và tối. Cho ăn thêm là nó lười."',
            '"Con này nghe tiếng huýt, không nghe tên."'] },
 
-  { id:'ah_thonhuom', name:'Thợ Nhuộm', map:'ardhaven', x:1170, y:1010, img:'assets/npcs/daosi.png', talk:'quest',
+  { id:'ah_thonhuom', name:'Thợ Nhuộm', map:'ardhaven', x:1140, y:1040, img:'assets/npcs/daosi.png', talk:'quest',
     lore:'"Tay ta xanh tới khuỷu, rửa cách gì cũng không ra. Khách nhìn tay ta rồi mới tin mấy tấm vải treo kia là màu thật chứ không phải màu quét."',
     barks:['"Đừng chạm vào, vải chưa khô."','"Màu chàm phải nhuộm bảy lượt mới ăn."',
            '"Nước nhuộm đổ ra rãnh kia, đừng giẫm vào."'] },
 
-  { id:'ah_hatrong', name:'Kẻ Hát Rong', map:'ardhaven', x:3200, y:1300, img:'assets/npcs/quachtinh.png', talk:'quest',
+  { id:'ah_hatrong', name:'Kẻ Hát Rong', map:'ardhaven', x:3480, y:1680, img:'assets/npcs/quachtinh.png', talk:'quest',
     lore:'"Ta hát bài nào cũng được, trừ bài về cái đêm trời nứt. Hát bài đó thì có người bỏ về, có người ngồi lại khóc — mà cả hai hạng đều không bỏ tiền."',
     barks:['"Nghe một bài không mất gì cả."','"Dây thứ ba lại chùng rồi."',
            '"Hôm qua có người trả ta bằng một quả táo. Ta vẫn hát."'] },
