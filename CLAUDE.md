@@ -3284,6 +3284,73 @@ dung của bộ kit. Cơ chế: **`background-size: auto 100%`** — ảnh thu t
    trong lúc bài báo "đang kéo giãn cả tấm". ⇒ so điểm ảnh CÓ DUNG SAI (giải mã bằng canvas
    trong trang, không cần thư viện), đừng so byte.
 
+### 🗺 BẢN ĐỒ GÓC MÀN — MỘT bộ vẽ cho HAI khổ, và nó từng bị XÉN MẤT 23%
+
+Chủ dự án mở bản đồ lên và nói đúng một câu: *"nhìn rất rối"*, kèm yêu cầu cho nó giống tấm bản
+đồ thành và **đồng nhất** với nó. Đo ra **ba lỗi chồng lên nhau**, không lỗi nào in ra một dòng:
+
+| | đo được |
+|---|---|
+| **tràn cột, bị xén** | `capNhatKhungMinimap()` chốt trần bề rộng **240px chép tay**, trong khi `#cot-phai` rộng 190 (lòng **180**) và mang `overflow:hidden` ⇒ **mất 23% bên phải ở CẢ BA độ phân giải** — đúng góc có Lò Hỗn Độn và Vũ Khí |
+| **không vẽ hình cái thành** | Ardhaven có sẵn **68 đỉnh `diTrong` · 8 đường phố · 16 khối nhà**; bản đồ LỚN vẽ hết, bản đồ GÓC vẽ **0** — một mảng màu phẳng rồi rải 28 chấm lên |
+| **26 NPC một màu** | 17 trong số đó là người lore, nhưng cả 26 ra cùng một chấm vàng cỡ 3 ⇒ Lò Rèn không phân biệt nổi với một người đứng kể chuyện |
+
+**⚠ `style.css` VỐN KHAI ĐÚNG** (`#minimap { width:180px }`) — thứ phá nó là **style NỘI TUYẾN**
+mà `capNhatKhungMinimap()` ghi đè lên. *Một bảng kiểu đúng không cứu được gì khi có mã ghi thẳng
+`style.width`; và kiểu hỏng ấy không hiện trong CSS, phải đo trong DOM mới thấy.*
+
+**⇒ `veNenThanh()` là bộ vẽ DUY NHẤT của hình cái thành** (đa giác sàn · phố · khối nhà), dùng
+chung cho cả `drawMinimapStatic()` lẫn `veBanDoThanh()`; `mauCong()` là cửa duy nhất cho màu cổng.
+
+> ⚠ Mục cũ ghi *"KHÔNG dùng lại `drawMinimapStatic()`"* và nó **vẫn đúng với thứ nó nói** — bộ vẽ
+> ấy chép cứng cỡ chấm/cỡ chữ theo ô 240×120. Nhưng kết luận rút ra hồi đó — *dựng hẳn hai bộ vẽ*
+> — là cái GIÁ phải trả, không phải lời giải. Cách đúng là tách phần **không phụ thuộc khổ** ra
+> dùng chung, và cho mọi con số còn lại **suy từ bề rộng khung**.
+
+**⚠ MÀU SÀN LẤY TỪ `md.ground`.** Nay **mọi** map đều có `diTrong` (12 map ngoài trời đã lát viên),
+nên tô cứng một sắc ô-liu là mười hai vùng ra cùng một màu — xoá đúng bản sắc mà `mapBanSac()`
+dựng ra để nói.
+
+**⚠ CHẤM VẼ HẾT TRƯỚC, NHÃN VẼ SAU, DẤU NHIỆM VỤ SAU CÙNG — ba lượt.** Gộp một vòng thì nhãn của
+người này bị chấm của người đứng sau trong mảng vẽ đè lên: không lỗi, chỉ là một chữ khuyết góc.
+
+**⚠ NHÃN XẾP THEO KHOẢNG CÁCH TỚI NGƯỜI CHƠI, không theo thứ tự mảng `NPCS`.** Đo ở Ardhaven khổ
+180×90: **bảy** người có chức năng nằm gần như cùng một hàng (y≈27), tổng bề rộng nhãn **~250px
+trên một hàng rộng 180** — tức không phải thiếu chỗ thử mà là vật lý. Ai bị bỏ mà quyết bằng thứ
+tự khai trong dữ liệu thì đó là quyết định ngẫu nhiên; quyết bằng khoảng cách thì kẻ bị bỏ luôn
+là kẻ ở XA, và bản đồ góc màn vốn để trả lời *"quanh mình có gì"*.
+
+**⚠ HAI NẤC TÊN.** Tám hướng đặt nhãn vẫn rớt đúng một người, và người rớt là **Lò Hỗn Độn**
+(nhãn 42px, còn 33px tới mép). Nấc hai là tên CHUNG ngắn (`Lò Rèn`, 25px) ⇒ đủ **9/9**. Nó mơ hồ
+khi ba cửa hàng cùng ra "Cửa Hàng" — đúng cảnh báo đã ghi ở `veBanDoThanh` — nên **chỉ dùng khi
+nấc một không lọt**: một chấm ghi "Cửa Hàng" vẫn nói được *ở đây có tiệm*, chấm trần thì không.
+
+**Sửa cái xén cũng vá luôn một chỗ chồng lấn sát nút:** khe giữa bảng Nhiệm Vụ và Nhật Ký ở
+1280×720 đi từ **−1 lên +29** (minimap 120 → 90px cao).
+
+**Cố ý KHÔNG làm: nhãn tên CỔNG trên bản đồ góc.** `Bird Tribe Heights · c60` dài 96px trên khung
+180px; bốn cổng thành là hết chỗ của cả tấm. Cổng vẫn là chấm đúng màu, tên thì ở bản đồ lớn.
+
+Gác: **`tests/test_bandonho.js`** (5 mệnh đề, **cả năm đã thử ngược và đều đỏ**) — ① không tràn cột
+(đo ở BA bề rộng) · ② có vẽ khối nhà và phố (đếm điểm ảnh) · ③ mọi người có chức năng được gọi tên
+· ④ `textAlign` không rò · ⑤ hai bản đồ cùng bảng màu. Và `test_uxdo §②` đổi mệnh đề *"bản đồ nhỏ
+≥100px cao"* — một con số phụ thuộc TỈ LỆ MAP đang đứng — sang *"không tràn khỏi cột"* + sàn DIỆN
+TÍCH, tức gác đúng cái lỗi mà bản cũ mù.
+
+#### ⚠ BA LẦN QUE DÒ SAI Ở MỆNH ĐỀ ⑤ — cùng một họ, ghi lại
+
+1. **Đọc đúng MỘT điểm ảnh ở tâm mỗi NPC** ⇒ báo 6/9 lệch màu. Sai: nhãn chữ (nét viền đen
+   2,5px), chấm người đứng cạnh, khung nhìn camera và dấu nhiệm vụ đều vẽ **đè** lên tâm ấy — phép
+   đo bắt lớp TRÊN CÙNG chứ không bắt cái chấm.
+2. **Đọc mảng 9×9 quanh tâm** ⇒ còn 3/9 lệch. Vẫn sai, và lần này vì THIẾT KẾ chứ không vì lỗi:
+   ở khổ này nhãn của người bên cạnh phủ kín cả chấm 6px, mà nhãn thì **tô đúng cùng màu ấy** —
+   thông tin không mất, chỉ phép đo mất.
+3. **Đếm màu trên TOÀN khung** ⇒ đúng. Mệnh đề muốn biết *hai bản đồ có dùng chung một bảng màu
+   không*, nên hỏi "màu của hạng này có XUẤT HIỆN ở cả hai không" là miễn nhiễm với chuyện ai vẽ
+   đè lên ai.
+
+*Luật chung: trước khi tin một phép đo điểm ảnh, hỏi đã có ai vẽ đè lên chỗ mình đang đọc chưa.*
+
 ### Ngân Hàng Ngọc: sáu ICON TRANH THẬT, không phải một hình vẽ đổi màu
 
 `NGOC_ANH` → `assets/ui/ngoc_*.webp`, nướng bằng `tools/ui/nuong_ngoc.py` từ kit Axie chính chủ

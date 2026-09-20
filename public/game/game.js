@@ -27437,17 +27437,29 @@ let _miniStaticCache = null, _miniStaticKey = null;
 // bấm vào minimap để chạy tới sẽ trỏ sai chỗ theo đúng tỉ lệ bóp ấy.
 // Giữ DIỆN TÍCH gần như cũ rồi chia lại hai cạnh theo tỉ lệ map, nên map 2600x1900 vẫn ra đúng
 // 200x146 như trước — không map cũ nào đổi hình.
+// ⚠⚠ TRẦN BỀ RỘNG PHẢI LÀ BỀ RỘNG CỘT, KHÔNG PHẢI MỘT CON SỐ CHÉP TAY.
+// Bản cũ chốt trần 240px trong khi `#cot-phai` rộng 190px (padding 5 ⇒ lòng **180px**) và mang
+// `overflow:hidden`. Đo được ở CẢ BA độ phân giải (1920 · 1440 · 1280): canvas 240px, cột cắt
+// còn 184px ⇒ **23% bên phải của bản đồ bị xén mất, im lặng**. Đúng cái góc có Lò Hỗn Độn và
+// Vũ Khí — tức phần người chơi mở bản đồ ra để tìm. `style.css` vốn khai đúng
+// (`#minimap { width:180px }`), nhưng style NỘI TUYẾN mà hàm này ghi thì thắng bảng kiểu.
+// ⇒ Hỏi thẳng khối chứa. Chép 180 vào đây là dựng bản sao thứ hai của một con số CSS, và nó sẽ
+// lệch ngay lần đầu ai đó nới cột — đúng họ với `ISO_NEO` và `mapBanSac()`.
 function capNhatKhungMinimap(){
   if (!miniCvs) return;
   const ti = MAP.w / MAP.h;
+  const hop = miniCvs.parentElement;
+  const tran = Math.max(120, (hop && hop.clientWidth) || 180);
   let w = Math.round(Math.sqrt(200 * 146 * ti));
   let h = Math.round(w / ti);
-  if (w > 240){ w = 240; h = Math.round(w / ti); }
+  if (w > tran){ w = tran; h = Math.round(w / ti); }
   if (h > 170){ h = 170; w = Math.round(h * ti); }
   if (miniCvs.width !== w || miniCvs.height !== h){
     miniCvs.width = w; miniCvs.height = h;
-    miniCvs.style.width = w + 'px'; miniCvs.style.height = h + 'px';
   }
+  // Bitmap và bề rộng hiện ra ĐỂ BẰNG NHAU (1:1). Vẽ ở khổ lớn hơn rồi thu bằng CSS thì chữ
+  // 8px cũng thu theo — ở tỉ lệ 0,75 nó ra 6px, tức đọc không nổi đúng thứ vừa thêm vào.
+  miniCvs.style.width = w + 'px'; miniCvs.style.height = h + 'px';
 }
 
 function drawMinimapStatic(mw, mh, sx, sy, md){
@@ -27455,9 +27467,15 @@ function drawMinimapStatic(mw, mh, sx, sy, md){
   if (_miniStaticCache && _miniStaticKey === key) return _miniStaticCache;
   const off = document.createElement('canvas'); off.width = mw; off.height = mh;
   const sc = off.getContext('2d');
-  // nền: ưu tiên ảnh map vẽ tay (thu nhỏ + phủ tối 40%), fallback màu đất phẳng
+  // nền. Map có ĐA GIÁC SÀN (thành) thì vẽ đúng hình cái thành — cùng bộ vẽ với bản đồ lớn,
+  // xem `veNenThanh()`. Trước bản này minimap tô một mảng màu phẳng rồi rải 28 chấm vàng lên,
+  // nên Ardhaven — vốn có sẵn 68 đỉnh sàn, 8 đường phố và 16 khối nhà trong dữ liệu — đọc ra
+  // một đám chấm không có chỗ bám. Chủ dự án gọi đúng tên: *"nhìn rất rối"*.
   const _bg = mapBgOf(curMap);
-  if (_bg && _bg.complete && _bg.naturalWidth > 0){
+  if (md.diTrong && md.diTrong.length > 2){
+    sc.fillStyle = '#12150d'; sc.fillRect(0, 0, mw, mh);
+    veNenThanh(sc, md, curMap, v => v * sx, v => v * sy, 1);
+  } else if (_bg && _bg.complete && _bg.naturalWidth > 0){
     sc.drawImage(_bg, 0, 0, mw, mh);
     sc.fillStyle = 'rgba(22,18,12,.40)';
     sc.fillRect(0, 0, mw, mh);
@@ -27524,12 +27542,13 @@ function drawMinimapStatic(mw, mh, sx, sy, md){
     sc.fillStyle = 'rgba(60,54,44,.65)';
     for (const pt of _rimPts) sc.fillRect(pt.x*sx - 1, pt.y*sy - 1, 2, 2);
   }
+  // Cổng — CHẤM TRÒN cùng màu với bản đồ lớn (`mauCong`), không còn ô vuông cam/tím riêng.
+  // Hai bản đồ vẽ cùng một thứ bằng hai ký hiệu khác nhau thì người chơi phải học hai lần.
   for (const g of GATES){
     if (g.map !== curMap) continue;
-    sc.fillStyle = g.portal ? '#b08ae8' : '#d8963a';
-    sc.fillRect(g.x*sx-3, g.y*sy-3, 6, 6);
-    sc.strokeStyle = 'rgba(0,0,0,.6)'; sc.lineWidth = 1;
-    sc.strokeRect(g.x*sx-3, g.y*sy-3, 6, 6);
+    sc.fillStyle = mauCong(g);
+    sc.strokeStyle = 'rgba(0,0,0,.7)'; sc.lineWidth = 1;
+    sc.beginPath(); sc.arc(g.x*sx, g.y*sy, 3.2, 0, 7); sc.fill(); sc.stroke();
   }
   _miniStaticCache = off; _miniStaticKey = key;
   return off;
@@ -27573,57 +27592,114 @@ function drawMinimap(){
   const qNow = (typeof currentQuest === 'function') ? currentQuest() : null;
   const mapNpcs = NPCS.filter(n => n.map === curMap);
   const placedLabels = []; // chống chồng nhãn khi NPC đứng gần nhau
-  for (const n of mapNpcs){
-    const nx = n.x*sx, ny = n.y*sy;
-    // dấu nhiệm vụ (đồng bộ logic với drawNpc)
-    let mark = '';
-    if (n.talk === 'quest'){
-      if ((qNow && qNow.npc === n.id && questState === 'done') ||
-          (typeof SIDE_QUESTS !== 'undefined' && SIDE_QUESTS.some(sq => sq.npc === n.id && sideStates[sq.id] && sideStates[sq.id].st === 'done')))
-        mark = '!';
-      else if ((qNow && qNow.npc === n.id) ||
-               (typeof SIDE_QUESTS !== 'undefined' && SIDE_QUESTS.some(sq => sq.npc === n.id && (sideAvail(sq) === 'avail' || sideAvail(sq) === 'active'))))
-        mark = '…';
+
+  // Dấu nhiệm vụ của một NPC (đồng bộ logic với drawNpc): ! = trả được · … = đang có việc.
+  const dauNV = n => {
+    if (n.talk !== 'quest') return '';
+    if ((qNow && qNow.npc === n.id && questState === 'done') ||
+        (typeof SIDE_QUESTS !== 'undefined' && SIDE_QUESTS.some(sq => sq.npc === n.id && sideStates[sq.id] && sideStates[sq.id].st === 'done')))
+      return '!';
+    if ((qNow && qNow.npc === n.id) ||
+        (typeof SIDE_QUESTS !== 'undefined' && SIDE_QUESTS.some(sq => sq.npc === n.id && (sideAvail(sq) === 'avail' || sideAvail(sq) === 'active'))))
+      return '…';
+    return '';
+  };
+  const ds = mapNpcs.map(n => ({
+    n, tk: THANH_TALK[n.talk], mark: dauNV(n),
+    ghim: !!(player.beacon && player.beacon.npcId === n.id),
+    x: n.x*sx, y: n.y*sy, d: dist(n.x, n.y, player.x, player.y),
+  }));
+
+  // ── LƯỢT 1: CHẤM. Người có chức năng nổi, người lore mờ ─────────────────────────────
+  // Đo trước khi sửa: Ardhaven có 26 NPC, **17 là người lore** (`talk:'quest'`), và cả 26 vẽ ra
+  // CÙNG một chấm vàng cỡ 3. Tức 2/3 số chấm là nhiễu, và cái Lò Rèn thì không phân biệt nổi
+  // với một người đứng kể chuyện. Bản đồ lớn đã tách hai hạng đó từ lâu (`THANH_TALK`); bản đồ
+  // góc thì chưa, nên hai bản đồ dạy hai thứ khác nhau.
+  // ⚠ CHẤM VẼ HẾT TRƯỚC, NHÃN VẼ SAU. Gộp một vòng thì nhãn của người này bị chấm của người
+  // đứng sau trong mảng vẽ đè lên — không lỗi nào báo, chỉ là một chữ bị khuyết một góc.
+  for (const o of ds){
+    if (o.tk){
+      mc.fillStyle = o.tk.mau;
+      mc.strokeStyle = 'rgba(0,0,0,.7)'; mc.lineWidth = 1;
+      mc.beginPath(); mc.arc(o.x, o.y, 3, 0, 7); mc.fill(); mc.stroke();
+    } else if (o.mark || o.ghim){
+      mc.fillStyle = '#ffd76a';                       // người lore ĐANG có việc: vẫn nổi
+      mc.strokeStyle = 'rgba(0,0,0,.65)'; mc.lineWidth = 1;
+      mc.beginPath(); mc.arc(o.x, o.y, 3, 0, 7); mc.fill(); mc.stroke();
+    } else {
+      mc.fillStyle = 'rgba(255,215,106,.45)';         // người lore rảnh: chấm mờ, cỡ 2
+      mc.beginPath(); mc.arc(o.x, o.y, 2, 0, 7); mc.fill();
     }
-    mc.fillStyle = '#ffd76a';
-    mc.strokeStyle = 'rgba(0,0,0,.65)'; mc.lineWidth = 1;
-    mc.beginPath(); mc.arc(nx, ny, 3, 0, 7); mc.fill(); mc.stroke();
-    // ── NHÃN TÊN: CHỈ CHO NGƯỜI ĐÁNG GỌI TÊN ────────────────────────────────────────────
-    // Ardhaven có 26 NPC nhồi trong ô 150×110: gắn tên cho tất thì ra một mảng chữ đặc, không
-    // đọc nổi CHỮ NÀO — tệ hơn hẳn là không ghi gì. Luật tránh chồng bên dưới vẫn đúng, nó chỉ
-    // bó tay ở mật độ này. Nên lọc trước: chỉ gọi tên người ĐANG có việc (dấu ! hoặc …) và
-    // người đang được đèn hiệu ghim. Còn lại là chấm vàng — rê chuột lên bản đồ vẫn đọc được,
-    // và người chơi tới gần thì nhãn trong màn hiện đủ tên.
-    const dongDuc = mapNpcs.length > 8;
-    const dangGhim = player.beacon && player.beacon.npcId === n.id;
-    if (!dongDuc || mark || dangGhim){
-    mc.font = '8px "Be Vietnam Pro", sans-serif';
-    const lw = mc.measureText(n.name).width;
+  }
+
+  // ── LƯỢT 2: NHÃN, ưu tiên theo KHOẢNG CÁCH TỚI NGƯỜI CHƠI ───────────────────────────
+  // ⚠ NGƯỜI CÓ CHỨC NĂNG LUÔN ĐƯỢC XÉT, kể cả map đông. Luật cũ "map quá 8 NPC thì chỉ gắn tên
+  // cho ai đang có việc" sinh ra để chặn 26 cái tên nhồi vào một ô bé — đúng với người LORE,
+  // nhưng nó nuốt luôn Lò Rèn và Tiệm Thuốc, tức nuốt đúng thứ người chơi mở bản đồ ra để tìm.
+  //
+  // ⚠ VÀ THỨ TỰ LÀ THEO KHOẢNG CÁCH, KHÔNG PHẢI THỨ TỰ MẢNG `NPCS`. Đo ở Ardhaven: 9 người có
+  // chức năng, khổ 180×90, chỉ **7** nhãn đặt lọt — bốn người ở góc trên-phải (Quán Trọ · Cầu
+  // May · Lò Hỗn Độn · Vũ Khí) chen trong ~50px. Ai bị bỏ mà quyết bằng thứ tự khai trong dữ
+  // liệu thì đó là một quyết định ngẫu nhiên; quyết bằng khoảng cách thì kẻ bị bỏ luôn là kẻ
+  // ở XA, và bản đồ góc màn vốn để trả lời *"quanh mình có gì"*.
+  const dsNhan = ds.filter(o => o.tk || o.mark || o.ghim || mapNpcs.length <= 8)
+                   .sort((a, b) => (b.tk ? 1 : 0) - (a.tk ? 1 : 0) || a.d - b.d);
+  mc.font = '7.5px "Be Vietnam Pro", sans-serif';
+  for (const o of dsNhan){
+    // Tên NGẮN (`n.nhan`) trước, đúng lý do đã ghi ở `veBanDoThanh`: ở khổ này "Nhà Giả Kim ·
+    // Tiệm Thuốc" dài gấp ba chỗ có, mà ba người cùng in "Cửa Hàng" thì bằng không gắn nhãn.
+    // ⚠ HAI NẤC TÊN. Đo ở Ardhaven, khổ 180×90: **bảy** người có chức năng nằm gần như cùng
+    // một hàng (y≈27), tổng bề rộng nhãn ~250px trên một hàng rộng 180 — tức không phải thiếu
+    // chỗ thử mà là vật lý. Thử đủ tám hướng vẫn rớt đúng một người, và người rớt là **Lò Hỗn
+    // Độn** (nhãn 42px, chỉ còn 33px tới mép phải).
+    // Nấc hai là tên CHUNG ngắn (`Lò Rèn` 25px). Nó mơ hồ với ba cửa hàng cùng ra "Cửa Hàng" —
+    // đúng cảnh báo đã ghi ở `veBanDoThanh` — nên chỉ dùng khi nấc một KHÔNG lọt: một chấm ghi
+    // "Cửa Hàng" vẫn nói được *ở đây có tiệm*, còn một chấm trần thì không nói gì.
+    const tenDai = (o.tk && (o.n.nhan || o.tk.ten)) || o.n.name;
+    const tenNgan = o.tk ? o.tk.ten : tenDai;
+    for (const ten of (tenDai === tenNgan ? [tenDai] : [tenDai, tenNgan])){
+    const lw = mc.measureText(ten).width;
+    // BỐN hướng, không phải ba — thêm hướng LÊN. Bản cũ chỉ thử phải/trái/xuống, nên hai người
+    // đứng cạnh nhau theo chiều ngang là người thứ hai mất tên dù ngay trên đầu còn trống.
+    // ⚠ Và phải CHỪA MÉP: nhãn tràn ra ngoài canvas bị `overflow:hidden` của cột xén mất đuôi —
+    // đo được "Lò Hỗn Độn" ra "Lò Hỗn Độ". Thà bỏ nhãn còn hơn in một cái tên cụt.
     const spots = [
-      { x: nx + 5, y: ny + 3, align: 'left' },
-      { x: nx - 5, y: ny + 3, align: 'right' },
-      { x: nx, y: ny + 11, align: 'center' },
+      { x: o.x + 5, y: o.y + 3, align: 'left' },
+      { x: o.x - 5, y: o.y + 3, align: 'right' },
+      { x: o.x, y: o.y + 10, align: 'center' },
+      { x: o.x, y: o.y - 6, align: 'center' },
+      // Bốn hướng CHÉO — nấc cuối cho cụm chật. Đo ở Ardhaven: bốn hướng thẳng đặt được 8/9,
+      // và kẻ bị bỏ là **Lò Hỗn Độn** (góc trên-phải, chen với Quán Trọ và Vũ Khí) — tức đúng
+      // cái người chơi mở bản đồ ra để tìm. Thêm chéo là đủ 9/9.
+      { x: o.x + 5, y: o.y - 5, align: 'left' },
+      { x: o.x - 5, y: o.y - 5, align: 'right' },
+      { x: o.x + 5, y: o.y + 10, align: 'left' },
+      { x: o.x - 5, y: o.y + 10, align: 'right' },
     ];
     for (const sp of spots){
       const lx = sp.align === 'left' ? sp.x : sp.align === 'right' ? sp.x - lw : sp.x - lw/2;
-      const hit = placedLabels.some(r => lx < r.x + r.w && lx + lw > r.x && Math.abs(sp.y - 4 - r.y) < 9);
-      if (hit) continue;
-      placedLabels.push({ x: lx, y: sp.y - 4, w: lw });
+      if (lx < 1 || lx + lw > mw - 1 || sp.y < 7 || sp.y > mh - 9) continue;
+      if (placedLabels.some(r => lx < r.x + r.w + 2 && lx + lw + 2 > r.x && Math.abs(sp.y - 4 - r.y) < 8)) continue;
+      placedLabels.push({ x: lx, y: sp.y - 4, w: lw, tk: !!o.tk, ten });
       mc.textAlign = sp.align;
-      mc.strokeStyle = 'rgba(0,0,0,.75)'; mc.lineWidth = 2;
-      mc.strokeText(n.name, sp.x, sp.y);
-      mc.fillStyle = '#ffe9a8';
-      mc.fillText(n.name, sp.x, sp.y);
+      mc.strokeStyle = 'rgba(0,0,0,.85)'; mc.lineWidth = 2.5;
+      mc.strokeText(ten, sp.x, sp.y);
+      mc.fillStyle = o.tk ? o.tk.mau : '#ffe9a8';
+      mc.fillText(ten, sp.x, sp.y);
       break;
     }
+    if (placedLabels.length && placedLabels[placedLabels.length-1].ten === ten) break;
     }
-    if (mark){
-      mc.font = 'bold 11px "Be Vietnam Pro", sans-serif'; mc.textAlign = 'center';
-      mc.fillStyle = mark === '!' ? '#ffd76a' : '#9fd0ff';
-      mc.shadowColor = mc.fillStyle; mc.shadowBlur = 4;
-      mc.fillText(mark, nx, ny - 5);
-      mc.shadowBlur = 0;
-    }
+  }
+
+  // ── LƯỢT 3: DẤU NHIỆM VỤ, vẽ trên cùng ──────────────────────────────────────────────
+  for (const o of ds){
+    if (!o.mark) continue;
+    mc.font = 'bold 11px "Be Vietnam Pro", sans-serif'; mc.textAlign = 'center';
+    mc.fillStyle = o.mark === '!' ? '#ffd76a' : '#9fd0ff';
+    mc.shadowColor = mc.fillStyle; mc.shadowBlur = 4;
+    mc.fillText(o.mark, o.x, o.y - 5);
+    mc.shadowBlur = 0;
   }
   // quái vật — thường đỏ nhỏ, tinh anh cam, boss tím nhấp nháy, Du Hiệp lam viền trắng
   const _blink = Math.sin(performance.now()/260) > 0;
@@ -27657,10 +27733,33 @@ function drawMinimap(){
   mc.moveTo(4.5, 0); mc.lineTo(-3, -2.8); mc.lineTo(-1.5, 0); mc.lineTo(-3, 2.8);
   mc.closePath(); mc.fill();
   mc.restore();
-  // tên map
+  // Cờ cho bài kiểm đọc: đã gắn được mấy nhãn trên tổng số người ĐÁNG gắn. Đo chỉ số, đừng đo
+  // điểm ảnh — cùng lối `__avaKhoi`/`__veChet`, và vì hai lượt vẽ liên tiếp của minimap lệch
+  // nhau theo quái đang chạy nên đếm pixel ở đây là đếm nhiễu.
+  // ⚠ ĐẾM RIÊNG HAI HẠNG. Gộp lại thì một nhãn của người LORE che lấp việc một người CÓ CHỨC
+  // NĂNG bị bỏ — mà chính hạng sau mới là thứ mệnh đề cần gác.
+  if (window.TEST_MODE) window.__miniNhan = {
+    chucNangCan: mapNpcs.filter(n => THANH_TALK[n.talk]).length,
+    chucNangDat: placedLabels.filter(r => r.tk).length,
+    tongNhan: placedLabels.length,
+    ten: placedLabels.filter(r => r.tk).map(r => r.ten),
+    khung: [mw, mh],
+  };
+  // Tên map.
+  // ⚠ PHẢI ĐẶT LẠI `textAlign`. Vòng NPC ngay trên để nó ở `'center'` (dấu nhiệm vụ) hoặc
+  // `'right'`, và canvas thì giữ trạng thái — nên dòng này căn giữa tại x=6 và **mất đầu tên**:
+  // ảnh chụp ra `…Chiefdom` thay vì `Sapidae Chiefdom`. Một thuộc tính canvas rò từ vòng lặp
+  // phía trên không ném lỗi và không ai thấy cho tới khi soi ảnh.
+  mc.textAlign = 'left';
   mc.font = '9px "Be Vietnam Pro", sans-serif';
-  mc.fillStyle = 'rgba(255,240,200,.9)';
+  mc.lineWidth = 3; mc.strokeStyle = 'rgba(0,0,0,.85)';
+  mc.strokeText(md.name, 6, mh - 6);
+  mc.fillStyle = 'rgba(255,240,200,.95)';
   mc.fillText(md.name, 6, mh - 6);
+  if (window.TEST_MODE) window.__miniTen = {
+    ten: md.name, canLe: mc.textAlign, x: 6,
+    rong: Math.round(mc.measureText(md.name).width), khung: mw,
+  };
 }
 
 // ════════════════════════════════════════════════════════════════════════════
@@ -28260,6 +28359,52 @@ const THANH_TALK = {
   vanduyen: { ten:'Cầu May',    mau:'#c07fe0' },
   tenui:    { ten:'Vực Thẳm',   mau:'#7fb8c4' },
 };
+// ═══ NỀN THÀNH — MỘT bộ vẽ, HAI khổ ═══════════════════════════════════════════════
+//
+// ⚠ Mục "KHÔNG dùng lại `drawMinimapStatic()`" ở ngay trên vẫn ĐÚNG với thứ nó nói: bộ vẽ ấy
+// chép cứng cỡ chấm và cỡ chữ theo ô 240×120, phóng lên 560 thì chấm bé như hạt bụi. Nhưng kết
+// luận rút ra hồi đó — *dựng hẳn hai bộ vẽ* — là cái giá phải trả, không phải lời giải. Đo được
+// cái giá ấy: bản đồ lớn vẽ **đa giác sàn + 8 đường phố + 16 khối nhà** của Ardhaven, còn bản đồ
+// góc màn vẽ **không một cái nào** — 28 chấm vàng như nhau rải trên một mảng tối phẳng. Chủ dự
+// án gọi đúng tên: *"nhìn rất rối"*.
+//
+// ⇒ Tách phần KHÔNG phụ thuộc khổ (hình cái thành) ra đây, và mọi con số còn lại thì **suy từ
+// bề rộng khung** thay vì chép cứng. Hai khổ dùng chung một hình, nên chúng không thể nói hai
+// đằng — đúng luật `mapBanSac()` suy từ `packs`.
+//
+// ⚠ ĐỪNG chép ba khối vẽ này sang chỗ thứ hai. Thêm một lớp (ví dụ vỉa hè, quảng trường) mà chỉ
+// sửa một bên là hai bản đồ lệch nhau, và kiểu lệch đó người chơi đọc ra thành "bản đồ sai".
+function veNenThanh(g, md, mid, X, Y, day){
+  // mặt sàn = đúng đa giác đi được, nên hình cái thành đọc ra được ngay
+  g.beginPath();
+  md.diTrong.forEach((pt, i) => i ? g.lineTo(X(pt[0]), Y(pt[1])) : g.moveTo(X(pt[0]), Y(pt[1])));
+  g.closePath();
+  // ⚠ MÀU SÀN LẤY TỪ `md.ground`, ĐỪNG CHÉP MỘT MÃ MÀU. Mọi map nay đều có `diTrong` (cả 12 map
+  // ngoài trời đã lát viên), nên tô cứng một sắc ô-liu là **mười hai vùng ra cùng một màu** —
+  // xoá đúng cái bản sắc mà `mapBanSac()` dựng ra để nói. Ardhaven `#3a4230` gần như trùng sắc
+  // cũ nên bản đồ thành không đổi hình; thứ đổi là Rẻo Rừng, Trũng Nứt, Dusk Marsh…
+  g.fillStyle = md.ground || '#39402c'; g.fill();
+  g.strokeStyle = '#8a8768'; g.lineWidth = Math.max(1, day * 0.9); g.stroke();
+  // phố
+  g.save();
+  g.strokeStyle = 'rgba(120,118,92,.85)'; g.lineCap = 'round';
+  for (const d of (md.isoDuong || [])){
+    g.lineWidth = Math.max(1.5, X(110));
+    g.beginPath(); g.moveTo(X(d[0][0]), Y(d[0][1])); g.lineTo(X(d[1][0]), Y(d[1][1])); g.stroke();
+  }
+  g.restore();
+  // khối nhà
+  g.fillStyle = '#6d6a52'; g.strokeStyle = '#8a8768'; g.lineWidth = Math.max(0.5, day * 0.45);
+  for (const o of ((window.MAP_OBSTACLES || {})[mid] || [])){
+    if (!o.wd) continue;
+    g.fillRect(X(o.x), Y(o.y), X(o.wd), Y(o.ht));
+    g.strokeRect(X(o.x), Y(o.y), X(o.wd), Y(o.ht));
+  }
+}
+// Cổng/dịch chuyển: MÀU phải giống nhau ở hai bản đồ. Tím = cổng dịch chuyển (Tầng Sâu, Lò Khắc,
+// Sàn Đấu), trắng ngà = lối ra đi bộ. Bản đồ lớn trước đây tô trắng cho cả hai nên ba cổng dịch
+// chuyển đọc ra y hệt bốn cổng thành.
+function mauCong(gt){ return gt.portal ? '#c07fe0' : '#e9ebda'; }
 function veBanDoThanh(mid, W0, H0){
   const md = MAPS[mid];
   if (!md || !md.diTrong) return null;
@@ -28270,26 +28415,7 @@ function veBanDoThanh(mid, W0, H0){
   const X = v => v * sx, Y = v => v * sy;
 
   g.fillStyle = '#12150d'; g.fillRect(0, 0, W0, H0);
-  // mặt sàn = đúng đa giác đi được, nên hình cái thành đọc ra được ngay
-  g.beginPath();
-  md.diTrong.forEach((pt, i) => i ? g.lineTo(X(pt[0]), Y(pt[1])) : g.moveTo(X(pt[0]), Y(pt[1])));
-  g.closePath();
-  g.fillStyle = '#39402c'; g.fill();
-  g.strokeStyle = '#8a8768'; g.lineWidth = 2; g.stroke();
-
-  // phố
-  g.strokeStyle = 'rgba(120,118,92,.85)'; g.lineCap = 'round';
-  for (const d of (md.isoDuong || [])){
-    g.lineWidth = Math.max(1.5, X(110));
-    g.beginPath(); g.moveTo(X(d[0][0]), Y(d[0][1])); g.lineTo(X(d[1][0]), Y(d[1][1])); g.stroke();
-  }
-  // khối nhà
-  g.fillStyle = '#6d6a52'; g.strokeStyle = '#8a8768'; g.lineWidth = 1;
-  for (const o of ((window.MAP_OBSTACLES || {})[mid] || [])){
-    if (!o.wd) continue;
-    g.fillRect(X(o.x), Y(o.y), X(o.wd), Y(o.ht));
-    g.strokeRect(X(o.x), Y(o.y), X(o.wd), Y(o.ht));
-  }
+  veNenThanh(g, md, mid, X, Y, 2);
 
   // ── NHÃN: vẽ SAU cùng, và tránh chồng bằng cách thử bốn chỗ quanh chấm ──────────
   const daDat = [];
@@ -28319,10 +28445,10 @@ function veBanDoThanh(mid, W0, H0){
     if (gt.map !== mid || !gt.to) continue;
     const dm = MAPS[gt.to]; if (!dm) continue;
     const px = X(gt.x), py = Y(gt.y);
-    g.fillStyle = '#e9ebda'; g.strokeStyle = 'rgba(0,0,0,.7)'; g.lineWidth = 1.5;
+    g.fillStyle = mauCong(gt); g.strokeStyle = 'rgba(0,0,0,.7)'; g.lineWidth = 1.5;
     g.beginPath(); g.arc(px, py, 5, 0, 7); g.fill(); g.stroke();
     const du = !player || player.level >= (dm.min || 1);
-    nhan(px, py, `${dm.name} · c${dm.min}`, du ? '#e9ebda' : '#9aa07f', 6);
+    nhan(px, py, `${dm.name} · c${dm.min}`, du ? mauCong(gt) : '#9aa07f', 6);
   }
   // NPC có chức năng
   for (const n of NPCS){
