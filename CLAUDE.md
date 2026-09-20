@@ -1897,6 +1897,32 @@ trúng bộ `traits`/`personality` khác, mà cả hai đều cộng chỉ số 
 | Dark Lord | +2,1% | −1,3% |
 | **Spellblade** | **+8,6%** | **+8,7%** |
 
+**⚠⚠ VÀ HAI CON SỐ TRÊN CHỈ ĐÚNG CHO CẢNH ĐÃ ĐO — ĐỪNG TRÍCH CHÚNG NHƯ KẾT QUẢ CHUNG.**
+Bảng ngay trên đo nhân vật **rót hết điểm** vào dòng chính, `traits` rỗng, `personality` trung
+tính. Đo lại trên cảnh của `test_canbanglop` — nhân vật **0 điểm rót**, **đồ rơi ngẫu nhiên +0**,
+3 lượt × 30 giây game mỗi cây:
+
+| lớp | atk TB trước | atk TB sau | ST TB trước | ST TB sau |
+|---|--:|--:|--:|--:|
+| **Dark Wizard** | 151 | **120** (−21%) | 26.109 | **21.477** (−18%) |
+| **Spellblade** | 107 | **164** (+53%) | 26.448 | **36.661** (+39%) |
+| Dark Knight | 102 | 97 | 60.520 | 56.453 |
+| Sylvan Ranger | 189 | 196 | 54.318 | 53.558 |
+| Dark Lord | 96 | 85 | 32.375 | 27.575 |
+
+Chênh tới 6 lần so với `+5,0%` / `+8,6%` đã ghi. Lý do **không** phải phép đo cũ sai, mà là nó
+đo một cảnh khác: khi người chơi chưa rót điểm thì `atkSrc` ăn gần như trọn vẹn từ **chỉ số do
+TRANG BỊ cộng vào**, nên đổi trọng số sang một dòng mà đồ rơi ít cho là tụt thẳng. DW mất vế
+`agi` (đồ cho nhiều `agi`), Spellblade nhận được vế `agi` ấy.
+
+*Đo một cảnh rồi gọi nó là kết quả thì lúc nào cũng ra con số mình muốn* — cùng vết sẹo đã ghi
+cho con số 32,4% ở mục hệ phòng thủ Axie. Cả hai bảng đều đúng; phải nói rõ **đo ở đâu**.
+
+**Được thêm, không phải chủ ý:** Spellblade chết **7,0 → 3,0** lần mỗi 30 giây, tức trả một phần
+"nợ đã biết" ghi ở đầu `test_canbanglop` (*"Spellblade GÂY được sát thương nhưng không KẾT LIỄU
+được"*). Dark Wizard vẫn là lớp mỏng nhất ở **cả hai** cây (10,7 → 8,7 lần chết) — nợ CÓ SẴN,
+không phải do đợt này.
+
 **⚠ Spellblade +8,6% là CÓ CHỦ Ý, và nó KHÔNG phải một cú buff lén.** Bản cũ `{str:1.1,
 ene:1.1}` là một thế chia đều, mà công thức dùng **căn bậc hai** (`sqrt(_ptSum)`) nên chia đều
 là thế **bị phạt**: Spellblade vì thế là lớp có đỉnh công **thấp nhất** trong năm. Cho nó một
@@ -4786,6 +4812,7 @@ bằng 0) — bỏ bước dọn ra thì chốt tự kiểm đỏ ngay, đã th�
 ⚠ **Và đừng tin phép đo đầu tiên của chính mình.** Lượt dò đầu tôi đặt lại `player.x/y` về giữa map
 trước mỗi lượt đo — tức dời người chơi ra xa đúng con quái cần quan sát, rồi đọc ra `quaiGan: 0` và
 suýt kết luận "giả thuyết sai". Bỏ hai dòng đặt lại ấy thì ra `quaiGan: 2, gần nhất 8px`.
+| `test_canbanglop §2` | *"chênh ST cao/thấp 4,42× > trần 3,6×"* | **xanh 3/3 trên cây đang làm VÀ 3/3 trên cây trước** — tức xúc xắc, không phải commit nào. Đo TB 3 lượt ra **2,63×** (cây nay) và **2,32×** (cây trước), đều sâu trong trần. Gốc: đồ rơi NGẪU NHIÊN + số lần chết là hàm bậc thang (mỗi lần chết `buildWorld()` hồi đầy cả bãi), nên ST tuy "trơn" hơn số mạng vẫn thừa hưởng phi tuyến ấy. Lượt đỏ bốc trúng DK 88.385 (dải thường 53-58k) và DW 19.999 ⇒ 4,42×. Chính đầu tệp bài ấy đã ghi ±22% tản — con số đó đo khi chưa ai chết 11 lần |
 | `test_qablock` | *"dựng cảnh sai: người chơi không ăn đòn nào"* rồi kéo theo 2 FAIL nữa | **xanh 8/8 lượt liên tiếp** khi chạy riêng · chính chú thích trong bài đã ghi nó nhạy với mạch ngẫu nhiên (*"từng xanh chỉ vì may"*) — con quái phải kịp đánh trúng trong 40 khung, máy bận là trượt. Phân biệt bằng `git diff -U0 … | grep '^@@'`: nếu diff không chạm `update`/`hurtPlayer`/`swingFeel`/`shakeDir` thì nó không thể là của mình |
 
 **Cách phân biệt "đỏ do mình" với "đỏ do xúc xắc", làm theo thứ tự này:** chạy riêng bài đó
