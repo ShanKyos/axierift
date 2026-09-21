@@ -2714,6 +2714,92 @@ gác — và nó **không đặt ngưỡng phần trăm**, nó dựng lại chí
 
 Test: `node <scratchpad>/test_feel.js`.
 
+## ⏱ BỘ TỰ CHỈNH CHẤT LƯỢNG — **KHUNG HÌNH LƯỢNG TỬ HOÁ, ĐỪNG LẤY TRUNG VỊ MILI-GIÂY**
+
+Gác: **`tests/test_resscale.js`** (9 mục) · cửa duy nhất là `fxAutoTune(ms)`.
+
+Chủ dự án mở link chơi thử ra và nói đúng một câu — *"lag quá"*. Truy ra **ba lỗi cùng một họ**,
+cả ba đều im lặng tuyệt đối, và cả ba đều là hệ quả của một hiểu nhầm duy nhất: **`ms` không
+phải một đại lượng liên tục.**
+
+`ms` là khoảng cách giữa hai lần `requestAnimationFrame`, mà rAF khoá theo nhịp quét màn hình —
+nên nó chỉ nhận **bội số của chu kỳ quét**. Bọc chính `fxAutoTune` lại rồi đọc dòng `ms` thật ở
+cảnh 130 quái (`?max=1` · cấp 120 · full +11 · cánh bậc 3): **2.241 mẫu, đúng HAI giá trị —
+33,3 và 16,7**, không một mẫu nào nằm giữa.
+
+| lỗi | nó hỏng thế nào |
+|---|---|
+| ① **trung vị trên phân bố hai đỉnh** | `med` nhảy về 16,7 ngay khi **51%** khung kịp nhịp ⇒ ở đúng trạng thái giật 60/30, bộ tự chỉnh đọc ra *"ổn rồi"* và DỪNG. Đo được: dừng ở nét 85% rồi nằm im **80 giây** với một nửa số khung vẫn trượt |
+| ② **bánh cóc một chiều** | nhánh nâng hỏi `med < 13`, mà trên màn 60Hz `ms` **không bao giờ** dưới 16,7 ⇒ chất lượng chỉ có đường đi XUỐNG. Vào một bãi đông quái một lần là cả phiên còn lại ngồi ở mức thấp, kể cả lúc về thành đứng không |
+| ③ **chiều nâng đi sai thứ tự** | nâng hiệu ứng TRƯỚC rồi mới tới độ nét — cùng thứ tự với chiều hạ chứ không phải gương của nó, mâu thuẫn với chính câu *"hạ độ nét là trả giá sau cùng"* viết ngay bên cạnh |
+
+⇒ Cả hai chiều nay hỏi **TỈ LỆ KHUNG TRƯỢT NHỊP** (`truot`, ngưỡng `TRUOT_MS` 20ms), thống kê
+duy nhất còn đọc được trên một phân bố đã bị lượng tử hoá.
+
+**⚠ ĐỪNG "chỉnh cho nhạy hơn" bằng cách hạ ngưỡng 19 xuống 17.** 16,7 là SÀN VẬT LÝ của màn
+60Hz; mọi ngưỡng nằm giữa 16,7 và 19 chỉ là một cách khác để hỏi cùng một câu hỏi mù.
+
+**⚠ MỘT NGƯỠNG KHÔNG BAO GIỜ CHỐNG ĐƯỢC DAO ĐỘNG Ở CHIỀU NÂNG, và lý do là vật lý.** Chạm 60 FPS
+rồi thì rAF trả về 16,7 bất kể máy còn dư 5% hay dư 300% — **không đo được phần dư**. Mà nhảy một
+nấc `0,60 → 0,75` là nhân số điểm ảnh lên `(0,75/0,60)² = 1,56` lần. Đo được: đang 60,2 FPS với
+1% khung trượt, nâng một nấc ⇒ tụt còn **48,3 FPS với 76% khung trượt**, rồi hạ lại — nhấp nháy
+chừng 15 giây một vòng, mà độ nét là thứ mắt bắt ngay (chữ mềm rồi lại nét).
+⇒ Chặn bằng **TRÍ NHỚ** (`_resHong`), không bằng ngưỡng: mức nét nào đã thử và không gánh nổi thì
+phiên này không tự leo lại. `setRes('auto')` xoá trí nhớ đó.
+
+**⚠ `_resHong` phải là `Math.min`, KHÔNG phải `Math.max` — bản đầu tôi viết `max` và phép đo bắt
+ngay.** Chuỗi hạ đi `1,0 → 0,85 → 0,75 → 0,60`, nên `max` giữ lại **1,0** (mức hỏng ĐẦU TIÊN) và
+điều kiện *"chỉ leo lên mức thấp hơn 1,0"* hoá ra cho phép leo lại đúng 0,75 vừa bỏ. Đo được:
+xuống 0,60 ở giây 25 rồi lên lại 0,75 ở giây 45 — y hệt lúc chưa có trí nhớ. Thứ cần nhớ là mức
+**THẤP NHẤT** đã từng thất bại, vì mọi mức trên nó cũng thất bại theo.
+
+**Đo được sau khi sửa**, cùng cảnh, cùng máy:
+
+| | trước | sau |
+|---|---|---|
+| lắng ở | nét 0,85 · hiệu ứng Thấp | nét 0,60 · hiệu ứng **Vừa** |
+| FPS | ~47 | ~53 |
+| khung trượt nhịp | **~50%** | **~18%** |
+| trả lại chất lượng khi về thành | **không bao giờ** | nét 0,6 → 1,0 trong 30 giây |
+
+**⚠ CẦN GẠT DUY NHẤT LÀ ĐỘ NÉT — hai thứ tôi nghi đều bị phép đo bác bỏ.** `?max=1` bật
+`TEST_MODE` (kèm `window.__vongChan`, một `Set` không ai xoá): đo ra **31,3 vs 30,3 FPS**, nằm
+trong nhiễu, và Set ấy chỉ tới 24 phần tử. Zoom vào GẦN thì **chậm hơn** (33,9 vs 40,5): ít vật
+thể hơn nhưng mỗi cái vẽ to hơn ⇒ nhiều điểm ảnh hơn.
+
+**⚠ MẠNG KHÔNG NẰM Ở FPS, NHƯNG NÓ CÓ NẰM Ở CÚ KHỰNG.** Đếm request phát ra **sau** khi đã vào
+game, qua ba lần đổi map: **58 request / 3,39 MB** (cây, đàn thú, bảng khung Axie — đều nạp lười).
+Đó là thứ chơi local chữa được; nó **không** đổi lấy một khung hình nào.
+
+**⚠ §7 CỦA BÀI KIỂM TỪNG NEO VÀO `1000/21`** — trung vị mili-giây, đúng cái vừa bị gỡ. *Một con
+số chép từ ngưỡng cũ vào bài kiểm là một mỏ neo chỉ vào chỗ không còn gì.* Nay §7 hỏi thẳng
+`TRUOT_HA` và `window.__fxTruotMax` (phơi ra khi `TEST_MODE`) — cùng thống kê với tính năng, đúng
+luật "đừng dựng bản sao thứ hai của một luật đang sống".
+
+**⚠ VÀ §7 GÁC CHIỀU HẠ QUA VẾT ĐI, KHÔNG QUA TRẠNG THÁI CUỐI.** Bản cũ chốt `res < 1 ⇒ fxq === 0`,
+đúng hồi chiều nâng đi cùng thứ tự với chiều hạ. Từ lúc chiều nâng thành GƯƠNG thì trạng thái
+*"nét 0,6 · hiệu ứng Vừa"* là hợp lệ và thường gặp. Bất biến còn lại là về CHUYỂN TIẾP: không bao
+giờ HẠ độ nét trong lúc hiệu ứng chưa kịch đáy.
+
+**⚠ GÁC BẰNG CÁCH BƠM THẲNG DÒNG `ms` VÀO HÀM, ĐỪNG ĐO QUA CẢNH THẬT.** Bản đầu của §8/§9 vào
+map 130 quái chờ 50 giây, rồi ép chất lượng xuống đáy và về thành chờ 30 giây. Chúng chạy được,
+in ra số đẹp, và **thử ngược CẢ HAI ĐỀU XANH** — vì trình duyệt headless không khoá vsync như một
+màn hình thật nên nó không dựng lại nổi đúng cái điều kiện sinh ra lỗi. Cộng 80 giây chờ ⇒ vừa
+đắt vừa không gác gì. Nay §8 bơm thẳng 90 mẫu vào `fxAutoTune`: tất định, tức thì, và **cả hai
+phép thử ngược đều đỏ ở đúng mệnh đề của mình**. *Phép quyết định là một hàm thuần của dòng số —
+không cần một cái máy có màn hình để hỏi nó.*
+
+**⚠ `[45]` TRÊN 90 MẪU LÀ TRUNG VỊ **TRÊN**, nên cảnh thử phải 46/44 chứ không 45/45.** Chia đôi
+chẵn thì trung vị rơi vào 33,3 và bản cũ cũng hạ ⇒ mệnh đề thành vô nghĩa. Chốt tự kiểm của §8
+(đòi trung vị phải đúng bằng 16,7) bắt được ngay ở lượt viết đầu.
+
+**⚠⚠ VÀ `test_resscale` CHÉP CỨNG `localhost:8853`, BỎ QUA `argv[2]` — đây là bài THỨ NĂM cùng
+bệnh** (bốn bài kia đã ghi ở mục `rc=124`). Ba lượt thử ngược đầu của đợt này vì thế chạy vào
+server đang có ở 8853 chứ không vào cổng được truyền, ra **ba kết quả giống hệt nhau và đều
+xanh** — và tôi suýt kết luận là mệnh đề yếu. `reg.sh` thì `sed` cổng nên nó không bao giờ lộ ở
+đó. Đã sửa để đọc `argv[2]`. *Ba lượt thử ngược ra cùng một con số là dấu hiệu QUE DÒ hỏng, không
+phải dấu hiệu mã đúng — luật này đã ghi hai lần trong tệp và tôi vẫn dẫm lại.*
+
 ## 👁 ĐỌC ĐƯỢC TRÊN MÀN + ☠ RỦI RO — hai mảng thấp nhất bảng QA, và cả bốn lỗi đều ĐO ĐƯỢC
 
 Gác: **`tests/test_docduoc.js`** (6 mệnh đề) · **`tests/test_ruiro.js`** (13 mệnh đề).

@@ -23628,6 +23628,50 @@ window.cheatExec = function(raw){
 let FXQ = 2;
 let FXQ_AUTO = true;          // người chơi chọn tay trong Cài Đặt thì thôi tự dò
 const _fxT = []; let _fxHold = 0;
+// ⚠⚠ KHUNG HÌNH KHÔNG LIÊN TỤC — và đó là lý do bản trước của `fxAutoTune` MÙ với đúng thứ nó
+// sinh ra để bắt. `ms` là khoảng cách giữa hai lần rAF, mà rAF khoá theo nhịp quét màn hình,
+// nên nó chỉ nhận BỘI SỐ của chu kỳ quét. Bọc chính hàm này lại rồi đọc dòng `ms` thật ở cảnh
+// 130 quái (?max=1 · cấp 120 · full +11 · cánh bậc 3): 2.241 mẫu, và chỉ có HAI giá trị —
+// **33,3 và 16,7**, không một mẫu nào nằm giữa.
+//
+// Lấy TRUNG VỊ trên một phân bố hai đỉnh như thế là hỏng theo kiểu tệ nhất: nó nhảy về 16,7
+// ngay khi 51% số khung kịp nhịp. Tức ở đúng trạng thái giật 60/30 — nửa số khung rớt, thứ
+// người chơi thấy rõ nhất — bộ tự chỉnh đọc ra "ổn rồi" và DỪNG. Đo được: dừng ở nét 85% rồi
+// nằm im 80 giây, trong khi bên ngoài đo ra 20-21 ms/khung.
+//
+// Và nhánh NÂNG còn hỏng nặng hơn: nó hỏi `med < 13`, mà trên màn 60Hz `ms` KHÔNG BAO GIỜ
+// xuống dưới 16,7. Nên chất lượng chỉ có một chiều đi xuống — vào một bãi đông quái một lần là
+// cả phiên còn lại ngồi ở mức thấp, kể cả lúc đứng trong thành. Một bánh cóc một chiều, và
+// không ai từng thấy vì cả hai đầu đều im lặng.
+//
+// ⇒ Cả hai chiều nay hỏi **TỈ LỆ KHUNG TRƯỢT NHỊP**, thống kê duy nhất còn đọc được trên một
+// phân bố đã bị lượng tử hoá. Đừng đổi lại về trung vị, và đừng "chỉnh cho nhạy hơn" bằng cách
+// hạ ngưỡng 19 xuống 17: 16,7 là SÀN vật lý của màn 60Hz, mọi ngưỡng nằm giữa 16,7 và 19 đều
+// chỉ là một cách khác để hỏi cùng một câu hỏi mù.
+const TRUOT_MS   = 20;    // trên mức này là đã trượt một nhịp quét 60Hz (16,7 + dung sai)
+const TRUOT_HA   = 0.30;  // >30% khung trượt ⇒ hạ một nấc
+const TRUOT_NANG = 0.01;  // <1% ⇒ dư sức THẬT, trả lại một nấc
+// ⚠ 1% chứ không phải 3%, và con số này là kết quả đo chứ không phải chọn cho đẹp. Ở mức 3%
+// (≈3 khung trong cửa sổ 90 — đúng tầm nhiễu) bộ tự chỉnh trả lại hiệu ứng ở một trạng thái đang
+// trượt 10% khung, và ngay sau đó tỉ lệ trượt vọt lên 29%: nó tự đẩy mình về sát ngưỡng hạ rồi
+// nằm đó. Đo được 60,2 FPS trước khi nâng, 51,0 sau khi nâng. Dải chết phải đủ rộng để lần NÂNG
+// không tự sinh ra lần HẠ kế tiếp.
+// Nghỉ sau mỗi lần HẠ. Bản cũ để 240 khung, cộng 90 mẫu mỗi lượt quyết định ⇒ mỗi nấc tốn
+// (90+240)/30 ≈ 11 giây, và đo được là phải tới giây 45 mới lắng. Với một bản dựng mà phần lớn
+// người chỉ mở ra xem vài phút thì 20 giây đầu LÀ ấn tượng. Giữ 90 mẫu (thống kê không được
+// mỏng đi) và cắt phần nghỉ — nó chỉ để chống nhấp nháy, mà dải chết 3%↔30% đã rộng sẵn.
+const FX_NGHI_HA = 120;
+// ⚠⚠ MỘT NGƯỠNG KHÔNG BAO GIỜ CHỐNG ĐƯỢC DAO ĐỘNG Ở ĐÂY, và lý do là vật lý chứ không phải
+// tham số. Khi đã chạm 60 FPS thì rAF trả về đúng 16,7 ms bất kể máy còn dư 5% hay dư 300% —
+// **không có cách nào đo được phần dư**. Nên mọi lần NÂNG độ nét đều là một canh bạc, mà cái
+// giá của nó thì lớn: nhảy một nấc 0,60 → 0,75 là nhân số điểm ảnh lên (0,75/0,60)² = 1,56 lần.
+// Đo được đúng cảnh đó: đang 60,2 FPS với 1% khung trượt, nâng một nấc ⇒ tụt còn 48,3 FPS với
+// 76% khung trượt, rồi hạ lại — một vòng nhấp nháy chừng 15 giây một lần, mà độ nét thì là thứ
+// mắt bắt ngay (chữ mềm rồi lại nét).
+// ⇒ Chặn bằng TRÍ NHỚ, không bằng ngưỡng: mức nét nào đã thử và không gánh nổi thì phiên này
+// không tự leo lại lên nữa. Hiệu ứng vẫn được trả lại bình thường — nó rẻ và không nhấp nháy
+// thành chữ. Người chơi chọn tay ở Cài Đặt thì `setRes('auto')` xoá trí nhớ này.
+let _resHong = 0;
 function fxShadow(color, blur){   // mọi quầng sáng trong lượt vẽ THẾ GIỚI đi qua đây
   if (FXQ >= 2){ ctx.shadowColor = color; ctx.shadowBlur = blur; }
 }
@@ -23636,30 +23680,62 @@ function fxAutoTune(ms){
   if (!FXQ_AUTO || !player || dead) return;
   if (_fxHold > 0){ _fxHold--; return; }
   _fxT.push(ms); if (_fxT.length < 90) return;
-  const med = _fxT.slice().sort((a,b)=>a-b)[45];
+  let _n = 0; for (const v of _fxT) if (v > TRUOT_MS) _n++;
+  const truot = _n / _fxT.length;          // tỉ lệ khung TRƯỢT NHỊP — xem khối chú thích ở TRUOT_MS
   _fxT.length = 0;
+  // Phơi ra cho bài kiểm hỏi ĐÚNG cái thống kê mà tính năng dùng, thay vì dựng một bản sao thứ
+  // hai của luật rồi để hai bên lệch nhau. `Max` vì sau khi hạ xong thì tỉ lệ tụt về thấp — lấy
+  // giá trị CUỐI để phán "đáng lẽ phải hạ" là lấy kết quả của việc hạ để phủ nhận rằng đã hạ,
+  // đúng cái bẫy mà chính test_resscale §7 đã ghi lại một lần.
+  if (window.TEST_MODE){ window.__fxTruot = truot;
+    window.__fxTruotMax = Math.max(window.__fxTruotMax || 0, truot); }
   // Hạ nhanh, nâng chậm và phải dư sức RÕ RỆT — không thì FXQ nhấp nháy quanh ngưỡng, mà đổi
   // chất lượng giữa trận còn khó chịu hơn là thấp đều.
   // Độ nét trên MỨC NỀN (mức nét bằng bản cũ) là phần THÊM, nên đuối thì trả nó lại
   // TRƯỚC KHI hi sinh hiệu ứng. Không có nhánh này thì bộ tự chỉnh leo lên 2× rồi tắt
   // sạch quầng sáng để nuôi độ nét — đúng ngược thứ tự ưu tiên đã đặt ra bên dưới.
-  if (RES_AUTO && med > 19){
+  if (RES_AUTO && truot > TRUOT_HA){
     const floor = resFloorForDpr(), ri0 = RES_STEPS.indexOf(RES);
     if (RES > floor + 1e-6 && ri0 >= 0 && ri0 < RES_STEPS.length - 1){
       resSet(RES_STEPS[ri0 + 1], true); return;
     }
   }
-  const was = FXQ;
-  if (med > 30 && FXQ > 0) FXQ--;
-  else if (med > 21 && FXQ > 1) FXQ--;
-  else if (med < 13 && FXQ < 2) FXQ++;
-  if (FXQ !== was){ SETTINGS.lowFx = FXQ === 0; _fxHold = FXQ > was ? 600 : 240; fxApply(); fxNote(); return; }
-  // Hiệu ứng đã kịch mức Thấp mà vẫn không đủ 60 → hạ độ phân giải. Đây là thứ tự CỐ Ý: hiệu ứng
-  // mất đi thì người chơi không thấy thiếu, còn hạ độ phân giải là chữ mềm đi — trả giá sau cùng.
+  // ── CHIỀU HẠ: hiệu ứng trước, độ nét sau ──────────────────────────────────────────────
+  // MỘT luật cho chiều hạ, không phải hai bậc như bản cũ (`med>30` hạ từ mọi mức · `med>21` chỉ
+  // hạ từ Đầy). Hai bậc để lại một khe chết: ở mức Vừa với độ nặng nằm giữa hai ngưỡng thì không
+  // nhánh nào ăn, mà nhánh độ nét bên dưới lại đòi FXQ === 0 ⇒ kẹt cứng ở Vừa, không bao giờ
+  // đụng tới đúng cái cần gạt mạnh nhất. Đo được: độ nét mới là thứ đổi 40,5 → 59,9 FPS.
+  if (truot > TRUOT_HA && FXQ > 0){
+    FXQ--; SETTINGS.lowFx = FXQ === 0; _fxHold = FX_NGHI_HA; fxApply(); fxNote(); return;
+  }
   if (!RES_AUTO) return;
   const ri = RES_STEPS.indexOf(RES), i = ri < 0 ? 0 : ri;
-  if (med > 19 && FXQ === 0 && i < RES_STEPS.length - 1) resSet(RES_STEPS[i + 1], true);
-  else if (med < 13 && i > 0 && FXQ >= 2) resSet(RES_STEPS[i - 1], true);
+  // Hiệu ứng đã kịch mức Thấp mà vẫn không đủ 60 → hạ độ phân giải. Đây là thứ tự CỐ Ý: hiệu ứng
+  // mất đi thì người chơi không thấy thiếu, còn hạ độ phân giải là chữ mềm đi — trả giá sau cùng.
+  if (truot > TRUOT_HA && FXQ === 0 && i < RES_STEPS.length - 1){
+    // ⚠ MIN, KHÔNG PHẢI MAX — và bản đầu tôi viết `Math.max` rồi phép đo bắt ngay. Chuỗi hạ đi
+    // 1,0 → 0,85 → 0,75 → 0,60, nên `max` giữ lại 1,0 (mức hỏng ĐẦU TIÊN) và điều kiện chặn
+    // "chỉ leo lên mức thấp hơn 1,0" thành ra cho phép leo lại đúng 0,75 vừa bỏ. Đo được: xuống
+    // 0,60 ở giây 25 rồi lên lại 0,75 ở giây 45 — y hệt lúc chưa có trí nhớ. Thứ cần nhớ là mức
+    // THẤP NHẤT đã từng thất bại, vì mọi mức trên nó cũng thất bại theo.
+    _resHong = _resHong ? Math.min(_resHong, RES) : RES;
+    resSet(RES_STEPS[i + 1], true); return;
+  }
+
+  // ── CHIỀU NÂNG: độ nét trước, hiệu ứng sau — GƯƠNG của chiều hạ ───────────────────────
+  // ⚠ Bản cũ nâng hiệu ứng TRƯỚC rồi mới tới độ nét, tức cùng thứ tự với chiều hạ chứ không
+  // phải ngược lại. Nó mâu thuẫn với chính câu "hạ độ nét là trả giá sau cùng" viết ngay trên:
+  // thứ đắt nhất phải là thứ lấy lại ĐẦU TIÊN. Hậu quả đo được ở cảnh 130 quái — máy dư sức một
+  // chút là nó bật lại quầng sáng trong khi chữ vẫn đang mềm ở nét 60%.
+  // Chỉ leo lên mức CHƯA từng thất bại: `_resHong` là mức đã thử và không gánh nổi (xem chú
+  // thích ở chỗ khai nó). Chưa thất bại lần nào thì leo tự do — đó là đường máy khoẻ trên màn
+  // HiDPI đi lên 2× trong vài giây.
+  if (truot < TRUOT_NANG && i > 0 && (!_resHong || RES_STEPS[i - 1] < _resHong - 1e-6)){
+    resSet(RES_STEPS[i - 1], true); return;
+  }
+  if (truot < TRUOT_NANG && FXQ < 2){
+    FXQ++; SETTINGS.lowFx = false; _fxHold = 600; fxApply(); fxNote();
+  }
 }
 // Đổi độ phân giải. `auto` chỉ để phân biệt người chơi tự chọn (ghi vào Cài Đặt) với bộ tự chỉnh.
 function resSet(v, auto){
@@ -23668,14 +23744,14 @@ function resSet(v, auto){
   if (!auto){ RES_AUTO = false; SETTINGS.res = RES; saveSettings(); }
   if (RES !== was){
     resize();
-    _fxHold = RES > was ? 600 : 240;   // nâng lên thì giữ lâu hơn, tránh nhấp nháy quanh ngưỡng
+    _fxHold = RES > was ? 600 : FX_NGHI_HA;   // nâng lên thì giữ lâu hơn, tránh nhấp nháy quanh ngưỡng
     if (auto && player) addFloat(player.x, player.y - 86,
       `⚙ Độ nét: ${Math.round(RES*100)}% (tự chỉnh theo máy — đổi tay ở Cài Đặt)`, '#8ab4ff', 12);
   }
   if (!auto) renderSettings();
 }
 window.setRes = function(v){
-  if (v === 'auto'){ RES_AUTO = true; SETTINGS.res = 'auto'; saveSettings(); renderSettings(); return; }
+  if (v === 'auto'){ RES_AUTO = true; _resHong = 0; SETTINGS.res = 'auto'; saveSettings(); renderSettings(); return; }
   resSet(+v, false);
 };
 window.setFxq = function(v){
