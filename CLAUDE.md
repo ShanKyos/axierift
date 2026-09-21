@@ -4780,7 +4780,7 @@ chạm được vào mọi hệ thống trong ba mươi giây. Muốn xem nhịp
 
 ## 🎬 PHIM MỞ ĐẦU KHẾ ƯỚC — nhịp 0, và **HAI ĐUÔI LÀ BẮT BUỘC**
 
-Hoạt ảnh quay vốn có sáu nhịp vẽ bằng canvas (`comet · no · hien · the · luoi`). Nay có thêm
+Hoạt ảnh quay vốn có năm nhịp vẽ bằng canvas (`comet · no · hien · the · luoi`). Nay có thêm
 **nhịp 0: `phim`** — một clip 10,7 giây dựng bằng Veo, đứng TRƯỚC sao băng, có tiếng.
 
 | | |
@@ -4842,6 +4842,55 @@ tiếp lần nữa mới bỏ nốt.
 
 **⚠ HẠ NHẠC NỀN THÌ PHẢI TRẢ LẠI.** `kuPhimXong()` gọi `refreshBgmVol()`; quên vế đó là nhạc nền
 câm hẳn từ cú quay đầu tiên tới hết phiên, và không lỗi nào báo.
+
+### ⚠⚠ XEM HẾT CLIP RỒI THÌ ĐỪNG KỂ LẠI — clip ĐÃ CHỨA nhịp `comet` + `no`
+
+Chủ dự án bấm quay rồi nói đúng một câu: *"nó đã bị trùng với animation / hiệu ứng trước đó rồi"*.
+Đúng, và đo được. Quét clip 0,2 giây một mẫu (độ sáng trung bình + tỉ lệ điểm ảnh vàng-cam):
+
+| giây | nội dung | sáng | %vàng |
+|---|---|--:|--:|
+| 0,2 – 6,2 | đảo đá · lò rèn · bóng Axie | 57 | 5 |
+| **6,4 – 7,0** | **cắt sang đen** | 42→0 | 0 |
+| **7,1 – 9,6** | **tia vàng hội tụ rồi nổ** | | 10→**22** |
+| **9,8 – 10,24** | **CHỚP TRẮNG kín màn** | 137→226→**247** | 0 |
+| 10,45 – 10,72 | đen sạch | 0 | 0 |
+
+Ba giây rưỡi cuối **chính là** thứ `comet` (tia bay vào) + `no` (nổ + `fillRect('#fff')` kín màn)
+vẽ ra. Nên bản cũ cho người chơi xem:
+
+> nổ → **chớp trắng** → đen → trời sao → sao băng bay vào → nổ → **chớp trắng** → mới hiện hình
+
+tức lặp **1,57 giây** (`comet` 1,15 + `no` 0,42) và chớp trắng **hai lần**.
+
+⇒ **`kuPhimXong(tron)`**: xem TRỌN thì nhảy thẳng `'hien'`; bỏ qua / hỏng / nghẽn quá trần thì
+vẫn `'comet'`.
+
+**⚠ HAI ĐẦU, THIẾU ĐẦU NÀO CŨNG LỌT MỘT CÁCH SỬA SAI.** Lúc nào cũng `'hien'` thì người bấm bỏ
+qua ở giây đầu **mất sạch** nhịp nổ — họ chưa xem clip thì phải vẽ lại cho họ. `test_kuphim ④`
+gác nửa đó, `⑤` gác nửa kia; thử ngược từng nửa đều đỏ ĐÚNG mục của nó.
+
+**⚠ ĐỪNG CẮT ĐUÔI CLIP ĐỂ CHỮA.** Nhịp nổ của clip là thứ trả vé — cái vẽ tay mới là bản sao. Mà
+nướng lại là thêm một bản **ĐẦY ĐỦ** vào lịch sử git vĩnh viễn (webm/mp4 không nén delta được,
+xem `.gitignore`), tức trả một cái giá thật cho một việc sửa được bằng một dòng mã.
+
+**⚠ TIẾNG ĐẬP PHẢI GIỮ LẠI.** `AudioSys.sfx('levelup'/'ui')` vốn nổ ở cuối `comet` và là **tín
+hiệu PHẨM duy nhất** của cả hai nhịp vừa bỏ — clip dùng chung một tệp cho mọi bậc nên tự nó
+không nói được bậc nào. Nay nó nổ ở `kuPhimXong(true)`.
+
+**⚠ `_kuPhimTron` CÒN SỬA MỘT CHỖ NỮA: hào quang 5★.** `hien` truyền `e + _KU_NHIP.no` cho
+`power_awaken` để *chạy tiếp* từ nhịp nổ. Không có nhịp nổ mà vẫn bù 0,42 giây là hiệu ứng hiện
+ra ở giữa chừng. ⇒ `e + (_kuPhimTron ? 0 : _KU_NHIP.no)`.
+
+**⚠⚠ VÀ CỬA ĐỌC CHO BÀI KIỂM PHẢI LÀ MỘT HÀM.** `_kuPha` khai bằng `let` ở tầng cao nhất nên
+**không gắn vào `window`** — cùng bẫy đã ghi cho `player`/`curMap`. `test_kuphim ⑦` đã in
+`"pha":null` suốt nhiều phiên mà không ai thấy, vì nó không CHẤM trường đó. Nay là
+**`window.__kuTrangThai()`**, một hàm đóng trên chính hai biến sống: không có bản sao nào để
+lệch, và thêm trạng thái mới là sửa đúng một chỗ. *Một trường đo rồi không chấm thì nó không
+phải một khẳng định, nó là một dòng log* — cùng vết sẹo `questPanel` của `test_story`.
+
+⚠ `⑤` gom **MỌI nhịp đi qua** (lấy mẫu 60ms) chứ không chỉ hỏi nhịp lúc thoát vòng: `no` chỉ dài
+0,42 giây, hỏi một lần là có ngày bỏ lọt. Số đo sau khi sửa: `phim → hien → the`.
 
 **⚠ BA BẬC TRONG `KU_PHIM` HIỆN CÙNG TRỎ MỘT TỆP** — đó là sự thật (mới nướng được bản CẤP CAO),
 không phải sơ suất. **Đừng "dọn" thành một hằng số**: bảng này là chỗ clip Thường/Hiếm sẽ cắm

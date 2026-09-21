@@ -11,7 +11,13 @@
 //     `_kuPha === 'phim'` là chưa đủ, một thẻ video 404 vẫn vào đúng nhịp đó rồi đứng im.
 //  ④ Bấm bỏ qua lúc đang chiếu thì CHỈ bỏ phim: lớp phủ còn đó, cú quay chạy tiếp sang 'comet'.
 //     Nuốt luôn cả cú quay là lấy mất đúng thứ người chơi trả vé để xem.
-//  ⑤ Phim hết thì TỰ sang 'comet' — không có nó thì lớp phủ treo đen vĩnh viễn, mất cả cú quay.
+//  ⑤ Phim hết thì TỰ sang nhịp sau — không có nó thì lớp phủ treo đen vĩnh viễn, mất cả cú
+//     quay — và nhịp sau phải là 'hien', KHÔNG phải 'comet'. Xem ⑧.
+//  ⑧ XEM HẾT CLIP RỒI THÌ ĐỪNG KỂ LẠI. Ba giây rưỡi cuối của clip đúng là nhịp 'comet' + 'no'
+//     (đo 0,2s một mẫu: 7,1→9,6s tia vàng hội tụ rồi nổ, điểm ảnh vàng 10%→22%; 9,8→10,24s
+//     chớp trắng kín màn, sáng 137→226→247/255). Chạy tiếp 'comet' là lặp 1,57 giây và chớp
+//     trắng HAI lần. Mệnh đề này kẹp HAI ĐẦU, và thiếu đầu nào cũng lọt một cách sửa sai:
+//     xem TRỌN ⇒ 'hien' · BỎ QUA giữa chừng ⇒ vẫn 'comet' (chưa xem nổ thì phải vẽ lại).
 //  ⑥ Tiếng đi qua SETTINGS.sfx, và nhạc nền được hạ xuống rồi TRẢ LẠI. Quên vế trả lại là nhạc
 //     nền câm hẳn từ cú quay đầu tiên tới hết phiên.
 //  ⑦ ?test=1 thì VẪN chiếu. Cửa tắt phim phải hỏi "bài kiểm đặt cờ" chứ không phải "cờ đang
@@ -126,12 +132,17 @@ const SRC = ['assets/video/summon_mo_dau.webm', 'assets/video/summon_mo_dau.mp4'
     const v = document.getElementById('ku-phim');
     return { anPhim: !v || v.classList.contains('hidden'),
              conPhu: !document.getElementById('gacha-wrap').classList.contains('hidden'),
+             pha: window.__kuTrangThai().pha, tron: window.__kuTrangThai().phimTron,
              dung: !v || v.paused };
   });
   console.log('④', JSON.stringify(r4));
   if (!r4.anPhim || !r4.dung) fail('bấm bỏ qua mà phim vẫn chạy');
   else if (!r4.conPhu) fail('bấm bỏ qua lúc đang chiếu lại nuốt luôn cả cú quay — phải chỉ bỏ phim');
-  else pass('bỏ qua lúc đang chiếu: tắt phim, cú quay vẫn chạy tiếp');
+  // ⑧ nửa BỎ QUA: chưa xem nhịp nổ thì phải vẽ lại nó. Thiếu vế này thì cách "sửa" dễ nhất —
+  // lúc nào cũng nhảy sang 'hien' — vẫn xanh, và người bấm bỏ qua ở giây đầu mất sạch nhịp nổ.
+  else if (r4.pha !== 'comet') fail(`bỏ qua giữa chừng mà nhịp sau là '${r4.pha}' — chưa xem nổ thì phải vẽ lại 'comet'`);
+  else if (r4.tron) fail('bỏ qua giữa chừng mà _kuPhimTron vẫn bật — cờ đang nói dối');
+  else pass("bỏ qua lúc đang chiếu: tắt phim, cú quay chạy tiếp sang 'comet'");
 
   // ── ⑥b nhạc nền được TRẢ LẠI ─────────────────────────────────────────────
   const r6b = await p.evaluate(() => AudioSys.bgm
@@ -158,16 +169,33 @@ const SRC = ['assets/video/summon_mo_dau.webm', 'assets/video/summon_mo_dau.mp4'
     if (!v || v.classList.contains('hidden')) return { dungCanh:false };
     v.muted = true; v.playbackRate = 16;
     const het = Date.now() + 9000;
-    while (Date.now() < het && !v.classList.contains('hidden')) await new Promise(r => setTimeout(r, 120));
+    let banGiao = null;
+    // Gom MỌI nhịp đi qua, không chỉ nhịp lúc thoát vòng: 'comet' dài 1,15s và 'no' 0,42s nên
+    // nhịp lấy mẫu 60ms bắt được cả hai. Hỏi mỗi nhịp-lúc-thoát thì một lượt lấy mẫu chậm là
+    // bỏ lọt đúng thứ cần bắt.
+    const daQua = new Set();
+    while (Date.now() < het && !v.classList.contains('hidden')){
+      const _p = window.__kuTrangThai().pha; if (_p) daQua.add(_p);
+      await new Promise(r => setTimeout(r, 60));
+    }
+    banGiao = window.__kuTrangThai().pha;
+    for (let i = 0; i < 12; i++){ const _p = window.__kuTrangThai().pha; if (_p) daQua.add(_p); await new Promise(r => setTimeout(r, 60)); }
     return { dungCanh:true, ended: v.ended, t:+v.currentTime.toFixed(2),
-             anPhim: v.classList.contains('hidden'),
+             anPhim: v.classList.contains('hidden'), banGiao,
+             tron: window.__kuTrangThai().phimTron, daQua:[...daQua],
              conPhu: !document.getElementById('gacha-wrap').classList.contains('hidden') };
   });
   console.log('⑤', JSON.stringify(r5));
   if (!r5.dungCanh) fail('dựng cảnh ⑤ hỏng: cú quay thứ hai không vào nhịp phim');
+  else if (!r5.ended) fail(`dựng cảnh ⑤ hỏng: clip chưa chạy tới hết (t=${r5.t}) — mục này đang chấm một cảnh khác`);
   else if (!r5.anPhim) fail('phim chạy hết mà không tự tắt — lớp phủ treo đen, mất cả cú quay');
   else if (!r5.conPhu) fail('phim hết mà lớp phủ đóng luôn — phải sang nhịp báo phẩm');
-  else pass('phim chạy hết thì tự sang nhịp sau');
+  // ⑧ nửa XEM TRỌN: clip vừa chiếu xong nhịp nổ + chớp trắng, kể lại là lặp.
+  else if (r5.banGiao !== 'hien') fail(`xem hết clip mà nhịp sau là '${r5.banGiao}' — clip đã nổ + chớp trắng rồi, phải sang thẳng 'hien'`);
+  else if (!r5.tron) fail('xem hết clip mà _kuPhimTron không bật — hào quang 5★ sẽ bù nhầm 0,42s của nhịp nổ không hề chạy');
+  else if (r5.daQua.includes('comet') || r5.daQua.includes('no'))
+    fail(`xem hết clip rồi vẫn đi qua ${r5.daQua.filter(x => x==='comet'||x==='no').join('+')} — lặp lại nhịp nổ của chính clip`);
+  else pass(`phim chạy hết thì sang thẳng 'hien', không kể lại nhịp nổ (đi qua: ${r5.daQua.join(' → ')})`);
 
   await p.evaluate(() => { try { kuBoQua(); kuBoQua(); } catch(e){} });
 
@@ -187,7 +215,7 @@ const SRC = ['assets/video/summon_mo_dau.webm', 'assets/video/summon_mo_dau.mp4'
     const v = document.getElementById('ku-phim');
     return { tm: !!window.TEST_MODE, turl: !!window.TEST_URL,
              hien: !!v && !v.classList.contains('hidden'),
-             pha: window._kuPha || null,
+             pha: window.__kuTrangThai().pha,
              phu: !document.getElementById('gacha-wrap').classList.contains('hidden') };
   });
   await p7.evaluate(() => { try { kuBoQua(); kuBoQua(); } catch(e){} });

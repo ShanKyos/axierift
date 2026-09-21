@@ -21788,6 +21788,15 @@ function lopHuyHieu(lop){
 // Nhịp 2 là nhịp giữ người chơi: nó báo kết quả TRƯỚC khi thấy mặt Chimera. Bỏ nó thì quay 5★ và
 // quay 3★ chỉ khác nhau ở cái thẻ cuối.
 let _kuKq = [], _kuI = 0, _kuPha = 'cho', _kuT0 = 0, _kuHat = [], _kuSao = 0, _kuChay = false, _kuRaf = 0;
+// Clip có chạy HẾT hay không — xem ghi chú ở kuPhimXong(). Để ngoài `player` vì nó là
+// trạng thái của MỘT cú quay, không phải của nhân vật; nhét vào player là nó chui vào save.
+let _kuPhimTron = false;
+// Cửa đọc DUY NHẤT cho bài kiểm. ⚠ `let` ở tầng cao nhất KHÔNG gắn vào `window` (cùng bẫy đã
+// ghi cho `player`/`curMap`), nên `window._kuPha` đọc ra `undefined` — và nó đọc ra thế trong
+// IM LẶNG: test_kuphim ⑦ đã in `"pha":null` suốt nhiều phiên mà không ai thấy, vì nó không
+// chấm trường đó. Một HÀM đóng trên chính hai biến sống thì không có bản sao nào để lệch;
+// phơi hai biến ra thành hai khoá `window.__` là hai chỗ phải nhớ cập nhật.
+window.__kuTrangThai = () => ({ pha: _kuPha, phimTron: _kuPhimTron, i: _kuI, chay: _kuChay });
 const _KU_NHIP = { comet:1.15, no:0.42, hien:0.95, the:0.75 };
 function kuCv(){ return document.getElementById('gacha-cv'); }
 function kuFit(){
@@ -21859,18 +21868,42 @@ function kuPhimChay(){
     // lần trượt đầu là mất phim ở đúng mấy trình duyệt khó tính nhất.
     v.muted = true;
     const pr2 = v.play();
-    if (pr2 && pr2.catch) pr2.catch(() => kuPhimXong());
+    // Trượt cả lượt CÂM ⇒ không một khung nào tới mắt người chơi, nên phải vẽ lại nhịp nổ.
+    if (pr2 && pr2.catch) pr2.catch(() => kuPhimXong(false));
   });
   kuPha('phim');
   return true;
 }
-function kuPhimXong(){
+// `tron` = clip chạy tới hết, KHÔNG phải bị bỏ qua giữa chừng hay hỏng. Hai ca đó đi hai
+// đường khác nhau và đó là cả điểm của tham số này.
+function kuPhimXong(tron){
   const v = kuPhimEl();
   if (v){ try { v.pause(); } catch { /* chưa chạy thì không có gì để dừng */ } v.classList.add('hidden'); }
   const sk = document.getElementById('gacha-skip');
   if (sk) sk.textContent = 'Bấm phím bất kỳ để bỏ qua';
   AudioSys.refreshBgmVol && AudioSys.refreshBgmVol();
-  if (_kuChay && _kuPha === 'phim') kuPha('comet');
+  if (!_kuChay || _kuPha !== 'phim') return;
+  if (tron){
+    // ⚠ XEM HẾT CLIP RỒI THÌ ĐỪNG KỂ LẠI. Ba giây rưỡi cuối của clip ĐÚNG LÀ nhịp 'comet' +
+    // 'no': quét 0,2s một mẫu trên chính tệp ra giây 7,1→9,6 là tia vàng hội tụ rồi nổ (điểm
+    // ảnh vàng 10%→22%), giây 9,8→10,24 là CHỚP TRẮNG kín màn (sáng 137→226→247/255), rồi về
+    // đen. Chạy tiếp 'comet' ở đây là người chơi xem nổ → chớp trắng → đen → trời sao → sao
+    // băng bay vào → nổ → chớp trắng → mới hiện hình: lặp 1,57 giây và chớp trắng HAI lần.
+    // Clip kết ở nền đen sạch nên nhảy thẳng sang 'hien' nối liền, không hở một khung nào.
+    //
+    // ⚠ ĐỪNG "sửa" bằng cách cắt đuôi clip. Nhịp nổ mới là thứ trả vé — cái vẽ tay mới là bản
+    // sao. Mà cắt rồi nướng lại là thêm một bản ĐẦY ĐỦ vào lịch sử git vĩnh viễn (webm/mp4
+    // không nén delta được — xem .gitignore), tức trả một cái giá thật cho một việc sửa được
+    // bằng một dòng mã.
+    _kuPhimTron = true;
+    // Tiếng đập giữ lại: nó vốn nổ ở cuối 'comet' và là TÍN HIỆU PHẨM DUY NHẤT của cả hai nhịp
+    // vừa bỏ (clip dùng chung một tệp cho mọi bậc nên tự nó không nói được bậc nào).
+    AudioSys.sfx(kuPhamCao() === 5 ? 'levelup' : 'ui', kuPhamCao() === 5 ? 0.9 : 0.5);
+    kuPha('hien');
+  } else {
+    // Bỏ qua giữa chừng, tệp hỏng, hoặc nghẽn quá trần: CHƯA xem nhịp nổ ⇒ phải vẽ lại nó.
+    kuPha('comet');
+  }
 }
 function kuPha(x){ _kuPha = x; _kuT0 = performance.now(); if (x === 'the') _kuSao = 0; }
 function kuPhamCao(){ return Math.max(..._kuKq.map(k => k.sao)); }
@@ -21893,7 +21926,7 @@ function kuBoQua(){
   // Bỏ qua lúc đang chiếu phim thì CHỈ bỏ phim, không bỏ cả cú quay. Nhịp báo phẩm và cái thẻ
   // mới là thứ người chơi bấm nút Quay để xem; nuốt luôn cả hai vì một cú bấm sốt ruột ở giây
   // đầu là lấy mất đúng thứ họ trả vé để có. Bấm tiếp lần nữa mới bỏ nốt.
-  if (_kuPha === 'phim'){ kuPhimXong(); return; }
+  if (_kuPha === 'phim'){ kuPhimXong(false); return; }
   if (_kuKq.length > 1){ _kuI = _kuKq.length; kuPha('luoi'); }
   else { _kuI = 0; kuPha('the'); _kuSao = 9; }
 }
@@ -21977,7 +22010,7 @@ function kuVe(){
     // Hai cái chốt dưới là cho ca tệp không tới: 'error' bắt được 404/hỏng mã, còn TRẦN CỨNG bắt
     // ca nghẽn mạng — cả hai đều phải có, vì mạng chậm thì không ném lỗi nào, nó chỉ đứng im.
     const v = kuPhimEl();
-    if (!v || v.error || v.ended || e > KU_PHIM_TRAN) kuPhimXong();
+    if (!v || v.error || v.ended || e > KU_PHIM_TRAN) kuPhimXong(!!(v && v.ended && !v.error));
     _kuRaf = requestAnimationFrame(kuVe);
     return;
   }
@@ -22061,7 +22094,7 @@ function kuVe(){
     // gọn sau lưng nó — vẽ mà như không vẽ.
     const _tyFx = Math.min(W2, H2) / 350;
     if (cur.sao === 5)
-      veVfxAtlas(g2, 'power_awaken', cx, cy, e + _KU_NHIP.no, _tyFx, 1 - k*0.55);
+      veVfxAtlas(g2, 'power_awaken', cx, cy, e + (_kuPhimTron ? 0 : _KU_NHIP.no), _tyFx, 1 - k*0.55);
     veVfxAtlas(g2, 'summon_on_cast', cx, cy + 70, e, _tyFx, 0.95);
     if (cc) kuVeChi(g2, cx, cy, sc, cc, k < 0.45, _kh);
     else { g2.fillStyle = mau; g2.globalAlpha = 0.9;
@@ -22161,7 +22194,7 @@ window.kheUocQuay = function(banner, n){
     return;
   }
   const kq = gachaQuay(banner, n); if (!kq) return;
-  _kuKq = kq; _kuI = 0; _kuChay = true;
+  _kuKq = kq; _kuI = 0; _kuChay = true; _kuPhimTron = false;
   // Nạp trước NGAY: bảng quay của con đầu (và con thứ hai, để lượt sau khỏi chờ), hai atlas
   // hiệu ứng, và mặt chữ hiển thị — canvas không chờ font như DOM, không gọi thì khung đầu
   // rơi về chữ dự phòng rồi nhảy cỡ giữa chừng.
@@ -22176,7 +22209,7 @@ window.kheUocQuay = function(banner, n){
 addEventListener('keydown', e2 => { if (_kuChay){ e2.preventDefault(); e2.stopPropagation(); kuBoQua(); } }, true);
 document.addEventListener('click', () => {
   if (!_kuChay) return;
-  if (_kuPha === 'phim') kuPhimXong();
+  if (_kuPha === 'phim') kuPhimXong(false);
   else if (_kuPha === 'the') kuTiep();
 });
 
