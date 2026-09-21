@@ -14,7 +14,11 @@ const { chromium } = require('playwright');
   const errs = [];
   p.on('pageerror', e => errs.push(String(e)));
   p.on('console', m => { if (m.type() === 'error' && !/404|ERR_CONNECTION/.test(m.text())) errs.push(m.text()); });
-  await p.goto('http://localhost:8853/index.html?test=1');
+  // ⚠ ĐỌC CỔNG TỪ argv — chép cứng 8853 là mọi lượt chạy lẻ đều trỏ vào server đang có ở
+  //   8853 chứ không vào cây được truyền, nên PHÉP THỬ NGƯỢC IM LẶNG và người sau kết luận
+  //   là mệnh đề yếu. Đã dẫm đúng thế; CLAUDE.md đã ghi bốn bài cùng bệnh trước bài này.
+  const CONG = process.argv[2] || '8853';
+  await p.goto(`http://localhost:${CONG}/index.html?test=1`);
   await p.waitForFunction(() => window.__gameReady).catch(()=>{});
   await p.waitForTimeout(500);
   await p.evaluate(() => { startGame('thieulam', null); });
@@ -129,6 +133,73 @@ const { chromium } = require('playwright');
   const veo = Object.entries(r5).filter(([, v]) => v !== 'sprite');
   if (veo.length) fail(`rơi về hình vẽ đường: ${veo.map(x => x[0]).join(', ')}`);
   else pass('cả 5 lớp vẽ bằng bảng khung art');
+
+  // ── 6. KHỐI BAY: nửa dưới thân phải TRÙNG KHÍT khung đầu ──────────────────
+  //
+  // ⚠⚠ ĐÂY LÀ THỨ DUY NHẤT ĐỨNG GIỮA MỘT LƯỢT NƯỚNG LẠI VÀ **CÁI CHÂN THỨ BA**.
+  //   `nuong_tam_render.py` dựng bảng HAI bằng cách chép tệp đang có trên đĩa lên (cố ý —
+  //   để giữ 9 khối mà đợt nướng không đụng), rồi `dat_o` thì `alpha_composite`. Tức khung
+  //   MỚI đè LÊN khung CŨ chứ không thay nó: chỗ nào khung mới trong suốt thì khung cũ còn
+  //   nguyên ở đó. Nướng lại khối BAY ba lượt ⇒ mỗi ô cõng thêm 361-769 điểm ảnh của lượt
+  //   trước, và thứ hiện ra là một bàn chân thứ ba lơ lửng. Chủ dự án gọi đúng tên nó:
+  //   *"nhìu khả năng bạn input 2 hoạt ảnh trên cùng 1 nhân vật"*. Đã ship một lượt.
+  //   Bộ nướng nay `xoa_o()` từng ô trước khi ghi; mục này là cái gác cho việc đó.
+  //
+  // ⚠ ĐO Ở BẢNG, KHÔNG ĐO BẰNG ẢNH CHỤP. Khối bay chạy theo `performance.now()` (BAY_NHIP
+  //   95ms) nên hai lượt chụp là hai khung khác nhau — cùng bẫy đã ghi ở đầu tệp này.
+  //
+  // ⚠ SUY BỘ TỪ `NV_BO_CO_BAY` VÀ NẠP BẰNG `nvTai()` — cửa nạp CHÍNH CHỦ của game. Đường
+  //   qua `startGame` + trang bị thì bậc do hệ trang bị quyết: nhân vật mới nay được phát
+  //   sẵn bộ giai 7 (`phatDoKhoiDau`) ⇒ thân ra `dwsm1`, bộ KHÔNG có khối bay, và mục này
+  //   lặng lẽ tự bỏ qua chính thứ nó sinh ra để gác. Đã dẫm đúng thế hai lượt.
+  //
+  // ⚠ DẢI ĐO LẤY y=210, KHÔNG LẤY 236 (mốc ghim của bộ nướng). Chép mốc ghim vào đây là
+  //   dựng bản sao thứ hai của một hằng đang sống: đổi mốc ghim là bài xanh oan. 210 suy từ
+  //   PHÉP ĐO — đôi cánh của gói art dừng ở y≈181 trong ô, dưới đó là thân thuần — nên nó
+  //   đúng với mọi mốc ghim nằm trong vùng chân.
+  const r6 = await p.evaluate(async () => {
+    const bos = Object.keys(window.NV_BO_CO_BAY || {});
+    const o = { bos, ra: [] };
+    for (const bo of bos) {
+      const img = nvTai(bo + '2', 'webp');
+      for (let i = 0; i < 60 && !(img && img.width); i++) await new Promise(r => setTimeout(r, 100));
+      if (!(img && img.width)) { o.ra.push({ bo, chuaTai: true }); continue; }
+      const Y0 = 210, moc = NV_MOC2.f, n = nvSoKhung(bo, 'f');
+      const cv = document.createElement('canvas');
+      cv.width = NV_OW; cv.height = NV_OH - Y0;
+      const cx = cv.getContext('2d');
+      const doc = (k) => {
+        const c = k % NV_COT, r = Math.floor(k / NV_COT);
+        cx.clearRect(0, 0, cv.width, cv.height);
+        cx.drawImage(img, c * NV_OW, r * NV_OH + Y0, NV_OW, NV_OH - Y0,
+                     0, 0, NV_OW, NV_OH - Y0);
+        return cx.getImageData(0, 0, cv.width, cv.height).data;
+      };
+      const g0 = doc(moc);
+      let dac0 = 0, oLech = 0, tong = 0;
+      for (let i = 3; i < g0.length; i += 4) if (g0[i] > 8) dac0++;
+      for (let i = 1; i < n; i++) {
+        const g = doc(moc + i);
+        let d = 0;
+        for (let j = 3; j < g.length; j += 4) if ((g[j] > 8) !== (g0[j] > 8)) d++;
+        if (d) oLech++;
+        tong += d;
+      }
+      o.ra.push({ bo, n, dac0, oLech, tong });
+    }
+    return o;
+  });
+  console.log('6.', JSON.stringify(r6));
+  if (!r6.bos.length) fail('NV_BO_CO_BAY rỗng — không bộ nào có khối bay, mục 6 không gác gì');
+  else for (const x of r6.ra) {
+    if (x.chuaTai) fail(`${x.bo}: bảng hai chưa tải — mục 6 không dựng được cảnh, đừng tin nó`);
+    else if (!x.dac0 || x.dac0 < 500)
+      fail(`${x.bo}: dựng cảnh hỏng — dải chân khung đầu chỉ có ${x.dac0} điểm ảnh đặc`);
+    else if (x.oLech)
+      fail(`${x.bo}: ${x.oLech}/${x.n - 1} khung bay lệch nửa dưới ${x.tong} điểm ảnh — lượt `
+         + 'nướng cũ còn nằm dưới (chân thứ ba), hoặc xoa_o() đã bị gỡ khỏi bộ nướng');
+    else pass(`${x.bo}: cả ${x.n} khung bay trùng khít nửa dưới — chỉ đôi cánh động`);
+  }
 
   console.log('errors:', JSON.stringify(errs.slice(0, 3)));
   if (errs.length) fail('có pageerror');

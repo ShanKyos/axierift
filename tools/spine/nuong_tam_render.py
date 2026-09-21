@@ -97,6 +97,28 @@ def tach_blob(path):
     return [im.crop((x0, 0, x1 + 1, H)) for (x0, x1) in doan(al.any(axis=0))]
 
 
+def xoa_o(sheet, k):
+    """XOÁ TRẮNG ô k trước khi ghi khung mới vào.
+
+    ⚠⚠ ĐÂY LÀ THỨ GIỮ CHO MỘT LƯỢT NƯỚNG LẠI KHÔNG ĐẺ RA HAI NHÂN VẬT CHỒNG NHAU.
+      Bảng HAI cố ý dựng bằng cách chép tệp đang có trên đĩa lên (xem chú thích ở `ra2`) —
+      để giữ 9 khối mà đợt này không đụng. Nhưng `dat`/`dat_o` thì `alpha_composite`, tức
+      khung MỚI đè LÊN khung CŨ chứ không thay nó: chỗ nào khung mới trong suốt thì khung
+      cũ còn nguyên ở đó. Nướng lại khối BAY ba lượt ⇒ mỗi ô cõng thêm 361-769 điểm ảnh của
+      những lượt trước, và thứ hiện ra là **một cái chân thứ ba** lơ lửng cạnh hai chân thật.
+      Chủ dự án gọi đúng tên nó: *"nhìu khả năng bạn input 2 hoạt ảnh trên cùng 1 nhân vật"*.
+
+    ⚠ XOÁ THEO Ô, ĐỪNG DỰNG LẠI CẢ BẢNG TỪ TRẮNG. Ô nào lượt này không ghi thì phải còn
+      nguyên — đó chính là lý do bảng hai chép tệp cũ lên. Xoá cả bảng là xoá sạch 9 khối
+      kia trong im lặng, đúng kiểu hỏng mà `ISO_NEO` đã ghi.
+
+    ⚠ VÀ NÓ KHÔNG BAO GIỜ LỘ RA Ở LƯỢT NƯỚNG ĐẦU. Tệp chưa có trên đĩa thì không có gì để
+      mà chồng lên; lỗi chỉ sinh ra từ lượt SỬA thứ hai trở đi — tức đúng lúc không ai ngờ.
+    """
+    cx, cy = (k % COT) * O_W, (k // COT) * O_H
+    sheet.paste((0, 0, 0, 0), (cx, cy, cx + O_W, cy + O_H))
+
+
 def dat(sheet, k, anh, nhun=0.0, lat=False):
     """Đặt MỘT khung vào ô k, chuẩn hoá cỡ + neo bàn chân + tâm ngang.
 
@@ -105,6 +127,7 @@ def dat(sheet, k, anh, nhun=0.0, lat=False):
     """
     if anh is None:
         return
+    xoa_o(sheet, k)
     if lat:
         anh = anh.transpose(Image.FLIP_LEFT_RIGHT)
     h = max(1, int(round(CAO_THAN * (1 + nhun))))
@@ -132,6 +155,7 @@ def dat_o(sheet, k, o, cao_goc, nen, lat=False):
     """
     if o is None:
         return
+    xoa_o(sheet, k)
     if lat:
         o = o.transpose(Image.FLIP_LEFT_RIGHT)
     tl = CAO_THAN / float(cao_goc)
