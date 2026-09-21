@@ -86,25 +86,22 @@ const LOP = ['thieulam', 'minhgiao', 'toanchan', 'baidasan', 'bug'];
   // khí", còn bản này bắt cả hai kiểu hỏng. `test_axiedanh §5` gác đúng cùng ba ca ấy — hai bài
   // sinh ra ở hai nhánh và từng nói ngược nhau; nay chúng nói một điều.
   //
-  // ⚠⚠ MIỄN TRỪ THỨ BA, thêm 2026-09-21: bộ nào TỰ MANG vũ khí trong tranh (`NV_BO_CO_VK`) thì
-  //   không được vẽ thêm cây nào, kể cả lúc đứng — chủ dự án chốt *"đừng có nhét gậy khác vào
-  //   nữa, mình đang làm sẵn 1 bộ sprite sheet đính vào rồi"*. Với chúng, "tay không" là SAI
-  //   phép đo chứ không phải sai sản phẩm: cây gậy nằm trong chính khung hình.
-  // ⚠ Miễn trừ này SUY TỪ DỮ LIỆU (`tuMang`), không phải một danh sách tên lớp chép trong bài.
-  //   Chép tên vào đây là bộ thứ hai thêm sau sẽ lặng lẽ lọt qua — cùng lý do `thoang:true` là
-  //   một cờ trong dữ liệu chứ không phải một danh sách trong `test_vatcan`.
+  // ⚠ MỘT MIỄN TRỪ ĐÃ DỰNG RỒI GỠ (2026-09-21): bộ TỰ MANG vũ khí trong tranh (`NV_BO_CO_VK`)
+  //   từng được miễn cả ở đây, để `dwsl1` không vẽ thêm cây nào ở BẤT KỲ khối nào. Gỡ vì khối
+  //   ĐI/ĐỨNG của gói art hiện tại vẽ TAY KHÔNG ⇒ Dark Wizard đứng giữa thành tay trắng. Khi
+  //   bộ sprite sheet có gậy về thì dựng lại miễn trừ ấy — và nhớ SUY TỪ DỮ LIỆU (`NV_BO_CO_VK`),
+  //   đừng chép một danh sách tên lớp vào bài.
   const thua2 = LOP.filter(l => !r1[l].oThanh);
-  const hong2 = LOP.filter(l => r1[l].thanh && (r1[l].thanh.vkLop || r1[l].tuMang) && r1[l].thanh.hien);
-  const mat2  = LOP.filter(l => r1[l].thanh && !r1[l].thanh.vkLop && !r1[l].tuMang && !r1[l].thanh.hien);
+  const hong2 = LOP.filter(l => r1[l].thanh &&  r1[l].thanh.vkLop && r1[l].thanh.hien);
+  const mat2  = LOP.filter(l => r1[l].thanh && !r1[l].thanh.vkLop && !r1[l].thanh.hien);
   if (thua2.length)
     fail(`② dựng cảnh hỏng — ${thua2.join(' · ')} không ở trạng thái "trong thành, đi theo"`);
   else if (hong2.length)
-    fail(`② trong thành: ${hong2.join(' · ')} có CẢ cây trong tranh LẪN cây vẽ thêm — hai cây trên màn`);
+    fail(`② trong thành: ${hong2.join(' · ')} có CẢ cây cầm tay LẪN thần khí — hai cây trên màn`);
   else if (mat2.length)
     fail(`② trong thành: ${mat2.join(' · ')} đứng TAY KHÔNG — hai lớp này không có vũ khí cầm `
        + `tay, cây trượng bay chính LÀ vũ khí của chúng`);
-  else pass('② trong thành: bộ tự mang vũ khí (' + LOP.filter(l=>r1[l].tuMang).join(',')
-       + ') và ba lớp cầm tay thì KHÔNG vẽ thêm · lớp còn lại thì phải có');
+  else pass('② trong thành: ba lớp cầm tay thì thần khí tắt · hai lớp còn lại thì bật');
 
   // ── ③ nấc lùi bịt hết mọi dòng ───────────────────────────────────────────────────────
   const r3 = await p.evaluate(() => {
