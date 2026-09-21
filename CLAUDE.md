@@ -5188,6 +5188,78 @@ tự gác. Thử ngược: bảng khung cũ **27 FAIL**, gỡ nấc lùi theo l�
 chơi, nên bản đầu chỉ quét 21/63 món mà vẫn xanh — tức âm thầm bỏ qua hai lớp. Chốt tự kiểm
 đòi ≥50 món mới cho chấm.
 
+## 🖼 BẢNG KHUNG TỪ ẢNH RENDER (`nuong_tam_render.py`) — và **BẢNG HAI CÕNG LƯỢT NƯỚNG CŨ**
+
+Art tới từ máy sinh ảnh là tranh **đã dẹp**, không tách lớp được, nên nó đi đường **TẤM LIỀN**
+(`nvBo`/`nvBang`, không khai trong `NV_LOP_HOP`). Bộ đầu tiên đi đủ đường này là `dwsl1`
+(Dark Wizard · Soul Lord) — giữ nó làm khuôn.
+
+| | |
+|---|---|
+| bộ nướng | `tools/spine/nuong_tam_render.py` · cấu hình là một tệp JSON |
+| hai đường neo | `dat()` chuẩn hoá theo **hộp bao** · `dat_o()` + `neo:'o'` neo theo **Ô** |
+| khối riêng của đường này | `f` = BAY · `g` = BAY + ĐÁNH (gói Spine không có hoạt cảnh bay) |
+| cửa hỏi bộ nào có | `NV_BO_CO_BAY` · `NV_BO_CO_BAYDANH` — **hỏi bảng, đừng hỏi "ô có rỗng không"** |
+
+**⚠ `neo:'o'` LÀ BẮT BUỘC khi trong khung có VŨ KHÍ hay CÁNH.** Hộp bao lúc ấy là
+(thân + cây gậy), mà cây gậy quét từ trên đầu xuống ngang hông ⇒ hộp bao phình co theo nó. Đo
+trên gói tấn công: hộp bao cao 244..296 px (lệch 21%) trong khi nhân vật gần như không đổi cỡ.
+Thu theo hộp bao ở đó là **nhân vật to lên đúng lúc hạ gậy xuống**.
+
+### ⚠⚠ MỘT LƯỢT NƯỚNG LẠI ĐẺ RA **CÁI CHÂN THỨ BA** — đã ship, và nó im lặng tuyệt đối
+
+Bảng **HAI** cố ý dựng bằng cách **chép tệp đang có trên đĩa lên** (`if os.path.exists(ra2)`),
+để giữ 9 khối mà đợt nướng không đụng tới (trúng đòn · chết · ngồi · nói · nhảy múa…). Dựng
+lại từ trắng là xoá sạch chúng trong im lặng — đúng kiểu hỏng mà `ISO_NEO` đã ghi.
+
+Nhưng `dat`/`dat_o` thì **`alpha_composite`** — khung MỚI đè LÊN khung CŨ chứ không **thay** nó.
+Chỗ nào khung mới trong suốt thì khung cũ **còn nguyên ở đó**. Đo trên bảng đã ship:
+
+| ô (khối BAY) | 84 | 85 | 86 | 87 | 88 | 89 | 90 | 91 |
+|---|--:|--:|--:|--:|--:|--:|--:|--:|
+| điểm ảnh THỪA so với một lượt sạch | +361 | +769 | +573 | +595 | +768 | +662 | +430 | +739 |
+
+Thứ hiện ra là **một bàn chân thứ ba** lơ lửng cạnh hai chân thật. Chủ dự án gọi đúng tên nó:
+*"nhìu khả năng bạn input 2 hoạt ảnh trên cùng 1 nhân vật"*.
+
+⇒ **`xoa_o(sheet, k)` xoá trắng ô trước khi ghi.** Ba luật:
+
+- **XOÁ THEO Ô, ĐỪNG DỰNG LẠI CẢ BẢNG TỪ TRẮNG.** Ô nào lượt này không ghi thì phải còn
+  nguyên — đó chính là lý do bảng hai chép tệp cũ lên. Đo sau khi vá: 9 khối không đụng lệch
+  **0 điểm ảnh**, chỉ `f` và `g` đổi.
+- **NÓ KHÔNG BAO GIỜ LỘ RA Ở LƯỢT NƯỚNG ĐẦU.** Tệp chưa có trên đĩa thì không có gì để mà
+  chồng lên; lỗi chỉ sinh ra từ lượt SỬA thứ hai trở đi — tức đúng lúc không ai ngờ.
+- **BẢNG MỘT KHÔNG DÍNH** (`Image.new` mỗi lượt), và **`nuong_nv.py` cũng không** — nó dựng
+  mọi bảng từ trắng, không đọc tệp cũ. Chỉ đường bảng-hai của `nuong_tam_render.py` có bệnh này.
+
+**Gác: `tests/test_khoihinh.js §6`.** Nó suy bộ từ `NV_BO_CO_BAY`, nạp bằng `nvTai()` (cửa nạp
+chính chủ), rồi đòi **nửa dưới thân của cả 8 khung bay phải TRÙNG KHÍT khung đầu** — đó là lời
+hứa "chỉ đôi cánh động", và residue phá nó ngay. Hai phép thử ngược đều đỏ: bảng cũ ⇒ 7/7 khung
+lệch 1.400 điểm ảnh; gỡ `xoa_o` rồi nướng hai lượt (đổi mốc ghim giữa hai lượt) ⇒ lệch 2.975.
+
+- ⚠ **DẢI ĐO LẤY y=210, KHÔNG LẤY 236** (mốc ghim của bộ nướng). Chép mốc ghim vào bài kiểm là
+  dựng bản sao thứ hai của một hằng đang sống. 210 suy từ PHÉP ĐO: đôi cánh của gói art dừng ở
+  **y≈181** trong ô, dưới đó là thân thuần.
+- ⚠ **ĐỪNG dựng cảnh bằng `startGame` + trang bị.** Bậc do hệ trang bị quyết, mà nhân vật mới
+  nay được phát sẵn bộ **giai 7** (`phatDoKhoiDau`) ⇒ thân ra `dwsm1`, bộ KHÔNG có khối bay, và
+  mục này **lặng lẽ tự bỏ qua chính thứ nó sinh ra để gác**. Đã dẫm đúng thế hai lượt.
+- ⚠ **`test_khoihinh` từng CHÉP CỨNG cổng 8853 và bỏ qua `argv[2]`** — bài thứ năm cùng bệnh
+  (bốn bài kia đã ghi ở mục `rc=124`). Phép thử ngược vì thế **IM LẶNG** ở lượt đầu: nó đo cây
+  ở 8853 chứ không đo cây được truyền, và tôi suýt kết luận là mệnh đề yếu. Đã sửa.
+
+### ⚠ GHIM NỬA DƯỚI (`ghim_duoi`) — mốc phải nằm DƯỚI tầm với của cánh, và ĐO mới biết
+
+Chủ dự án chốt cho khối bay: *"chỉ cần cho cánh chuyển động thôi"*. `ghim_nua_duoi()` ghim nửa
+dưới mọi khung về khung đầu, có vờn mép (`ghim_hoa`).
+
+**Mốc suy từ số đo, không từ cảm giác.** Quét bề ngang từng hàng qua cả 8 khung nguồn: dưới
+`y≈240` (ô nguồn 384px) thì dao động tụt từ ~90px xuống ~25px — đó là chỗ cánh hết với tới,
+phần dao động còn lại là chân đưa qua đưa lại. Quy về ô nướng 300px thì **y≈181**.
+
+⚠ **ĐỪNG ghim theo BÓNG THÂN của khung đầu** — phần dư lòi ra thành một vương miện THỨ HAI trên
+đầu cùng mấy mảnh chi ma. Và **đừng tách cánh theo MÀU**: cửa nhận diện theo màu bắt luôn kẽ
+giáp (tối) và nẹp vàng (vàng) — cùng vết sẹo đã ghi cho phép gỡ bóng của đài phun nước.
+
 ## Art nướng sẵn từ Spine — có SKILL riêng, đọc trước khi đụng vào
 
 Art nhân vật do Meowa sinh ra là rig Spine. Game này không có runtime Spine và sẽ không có

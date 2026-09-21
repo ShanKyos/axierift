@@ -1929,6 +1929,19 @@ const VONGKIEM_XET = 5;                      // biên độ giật ngang của t
 // thì chỗ này thành lỗ thủng hẳn: ba lớp cầm vũ khí bằng lớp nướng sẵn không còn thân người để
 // mà cầm, nên trên màn KHÔNG có vũ khí nào cả.
 const TK_LOP = { thieulam:'kiem', toanchan:'no', minhgiao:'makiem', baidasan:'gay', bug:'lenhtruong' };
+
+// ✋ ~~VŨ KHÍ CẦM TRÊN TAY (`NV_TAY_VK`)~~ — ĐÃ DỰNG RỒI GỠ TRONG CÙNG MỘT NGÀY
+//
+// Giữ đúng cái tiêu đề gạch ngang này để cảnh báo, thay vì xoá trắng rồi để người sau đọc
+// `NV_TAY_VK` trong lịch sử git mà tưởng nó còn. Cùng kiểu bẫy đã ghi ở mục "~~Khắc Ấn~~".
+//
+// Nó từng neo cây vũ khí vào một điểm bàn tay (không hào quang, không vệt đuôi) để bộ `dwsl1`
+// — gói art có khối ĐI/ĐỨNG vẽ TAY KHÔNG — vẫn mang gậy lúc đứng. Chủ dự án chốt 2026-09-21:
+// *"bạn cứ làm by default đi đừng có nhét gậy khác vào nữa. Mình đang làm sẵn 1 bộ sprite
+// sheet đính vào rồi"* — tức cây gậy sẽ nằm SẴN trong tranh ở mọi khối.
+//
+// ⇒ Bộ nào khai trong `NV_BO_CO_VK` thì KHÔNG vẽ thêm cây nào nữa, ở mọi khối, không chỉ lúc
+//   ra đòn. Đừng dựng lại lớp chồng: hai cây trên màn là kiểu hỏng mà `_tkHien` sinh ra để chặn.
 function thanKhiNguon(p){
   const it = p.equip && p.equip.vukhi;
   const d  = it && itemDef(it);
@@ -6185,6 +6198,13 @@ function avaCo(id){
   const cao = than / A.thanCao, rong = cao * (A.nhoRong / A.nhoCao);
   const qua = Math.max(cao, rong) / tran;
   return qua > 1 ? than / qua : than;     // vượt trần thì tự thu đúng phần vượt
+}
+// Bề NGANG hộp vẽ của con Axie. 16 con có tỉ lệ rộng/cao 1,07-1,52 nên con bè nhất rộng hơn con
+// thon nhất gần 1,5 lần — chép một con số chung là ngưỡng đứng-rời sai ở một nửa số con.
+function avaRong(id){
+  const A = CHI_ANH.o[id];
+  const cao = avaCo(id);
+  return A ? cao * (A.nhoRong / A.nhoCao) : cao;
 }
 const CHI_CHAY_IMGS = {};
 function chiChayImg(id){
@@ -19051,6 +19071,10 @@ function drawPlayer(p){
   // Bay theo thì gỡ cả ba: một tấm 9 KB, đặt ở toạ độ thế giới, chuyển động do mã quyết định.
   // Và bỏ vũ khí ra khỏi khung hình KHÔNG để lại bàn tay hụt — bộ xương nắm đấm rồi vung theo
   // cung, đọc thành "ra hiệu điều khiển" chứ không phải "quên cầm đồ". Đã chụp lại đối chiếu.
+  // ⚠ `_tier`/`_gv` khai SỚM ở đây (trước nó nằm dưới ~100 dòng): cả socket bàn tay lẫn
+  //   khối bay đều cần biết đang vẽ BỘ nào. `gearVisual` không rẻ nên gọi một lần rồi dùng
+  //   lại, đừng gọi thêm lượt thứ hai cho gọn mã.
+  const _tier = heroTier(p), _gv = gearVisual(p);
   const _tk = thanKhiTuThe(p, (p.atkAnim || 0) / NV_DANH_GIAY, (p.castT || 0) / NV_CHU_GIAY, p.walkPh || 0, now);
   // ⚠ CHỖ VẼ cũng dời xuống, cùng lý do với cánh: nó bám neo người chơi nên bật avatar lên là
   // cây vũ khí lơ lửng trên đầu con Axie.
@@ -19108,8 +19132,26 @@ function drawPlayer(p){
   // còn ý nghĩa với nhánh không-avatar.
   const _lopCo = _coAva ? (_oThanh ? AVA_THANH_CO
                          : _lopHien ? AVA_DANH_CO : AVA_THEO_CO) : 1;
-  const _avaDx = _coAva ? Math.cos(p.face)*_lopT - Math.sin(p.face)*_lopB : 0;
-  const _avaDy = _coAva ? (Math.sin(p.face)*_lopT + Math.cos(p.face)*_lopB)*0.55 : 0;
+  let _avaDx = _coAva ? Math.cos(p.face)*_lopT - Math.sin(p.face)*_lopB : 0;
+  let _avaDy = _coAva ? (Math.sin(p.face)*_lopT + Math.cos(p.face)*_lopB)*0.55 : 0;
+  // ⚠⚠ PHÉP NÉN TRỤC ĐỨNG ×0,55 ĂN MẤT KHOẢNG CÁCH, và ba hằng chỗ đứng ở trên KHÔNG bù được
+  //   — chúng đo trong hệ toạ độ THẾ GIỚI, còn thứ mắt đọc là khoảng cách trên MÀN. Đo qua tám
+  //   hướng với `tidewarden` (hộp vẽ 97,9 px ngang ⇒ ngưỡng đứng-rời 68 px):
+  //
+  //        trong thành 51,6 · đi theo 47,8 · ra đòn 51,0   ⇒ THẤP HƠN NGƯỠNG ở CẢ BA,
+  //        và 2/8 hướng thì hai hình chồng hẳn lên nhau.
+  //
+  //   Hướng nào dồn độ lệch vào trục đứng thì bị nén mạnh nhất, nên lỗi chỉ hiện ở vài hướng —
+  //   đọc ra "lúc thì rời lúc thì dính" chứ không ra một lỗi.
+  // ⇒ Giữ nguyên HƯỚNG, chỉ kéo dài ra cho đủ ngưỡng. Ngưỡng SUY TỪ hộp vẽ thật của con Axie
+  //   đang đeo (`avaRong`) chứ không chép một con số: 16 con có tỉ lệ rộng/cao 1,07-1,52.
+  // ⚠ ĐỪNG "sửa gọn" bằng cách nới ba hằng `AVA_*_BEN`: chúng cũng bị nén ở đúng mấy hướng ấy,
+  //   nên nới đủ cho hướng xấu nhất là hướng tốt nhất văng ra xa lơ.
+  if (_coAva){
+    const _ng = avaRong(avatarId(p)) / 2 + (NV_THAN_PX * _lopCo * 0.40) / 2;
+    const _d  = Math.hypot(_avaDx, _avaDy);
+    if (_d > 0.01 && _d < _ng){ const k = _ng / _d; _avaDx *= k; _avaDy *= k; }
+  }
   // Thu quanh BÀN CHÂN, không quanh tâm hộp. Hộp 160x220 vẽ quanh tâm nên gót nằm thấp hơn neo
   // đúng ngần này; thu thẳng là hai bàn chân nhấc khỏi đất mà nhìn chỉ thấy "hơi lửng lơ".
   const _lopChan = (HERO_GOT - HERO_H/2) * (NV_CAO / HERO_H) * (1 - _lopCo);
@@ -19159,7 +19201,6 @@ function drawPlayer(p){
   // ⚠ VÀ NÓ CHỈ TẮT Ở KHỐI RA ĐÒN (`_lopHien`), KHÔNG TẮT CẢ ĐỜI. Khối đi/đứng của `dwsl1`
   // KHÔNG có cây nào trong tay, nên tắt thẳng là đứng trong thành TAY KHÔNG — đúng cái lỗi mà
   // vế `(!_coAva || _lopHien)` đã phải gỡ một lần rồi ("khoác lên vai thì phải thấy lúc ĐỨNG").
-  const _tier = heroTier(p), _gv = gearVisual(p);
   const _boCoVk = !!NV_BO_CO_VK[nvBoGoc(p.sect, _tier, _gv) || ''];
   // ⚠ KHỐI BAY CỦA BỘ NÀY ĐÃ NƯỚNG SẴN ĐÔI CÁNH. Bật `veCanh()` cùng lúc là HAI đôi cánh trên
   // màn — cùng một kiểu hỏng với hai cây vũ khí ở `_boCoVk`. Khai sớm ở đây vì chỗ vẽ cánh nằm
@@ -19186,7 +19227,10 @@ function drawPlayer(p){
   // kia có lớp `vk` nướng sẵn nên không ai để ý. Chủ dự án chốt: *"trong thành cho vũ khí khoác
   // lên vai (kiểu khu an toàn)"* — khoác lên vai thì phải thấy lúc ĐỨNG, không phải lúc vung.
   // `test_axiedanh §5` gác cả hai chiều (trong thành phải BẬT · ngoài thành đứng yên phải TẮT).
-  const _tkHien = _tkNhap || (!_nhap && !_coVkLop && !(_boCoVk && _lopHien));
+  // ⚠ `_boCoVk` nay TẮT LUÔN, không còn kèm `_lopHien`. Gói art của bộ ấy mang sẵn vũ khí ở
+  //   MỌI khối (chủ dự án đang nướng bộ sprite sheet có gậy), nên vẽ thêm một cây là hai cây
+  //   trên màn — ở khối đứng thì lỗi ấy còn dễ thấy hơn lúc ra đòn vì người chơi đứng yên mà nhìn.
+  const _tkHien = _tkNhap || (!_nhap && !_coVkLop && !_boCoVk);
   // Đã nhập thì vũ khí thuộc về CON AXIE, nên nó neo vào chỗ Axie đứng (độ lệch 0), không neo
   // vào chỗ lớp nhân vật LẼ RA đứng — chỗ đó nay không có ai, cây vũ khí sẽ trôi lơ lửng cách
   // con Axie gần một thân người. Cùng lỗi mà `_nhap` sinh ra để chặn, chỉ đổi vai.
@@ -34933,7 +34977,7 @@ function renderTeNui(n){
       Cần đạt <b style="color:#b08ae8">Radiant Core</b> (cảnh 5, tự động ở cấp 60) để Thăng Linh,<br>
       khi ấy mới đủ sức <b style="color:#ffb15c">nhảy vào Vực Thẳm</b>.</div>`;
   } else {
-    html += `<div class="stat-sec">TỈ LỆ CÔNG KHAI — KHÔNG CỘNG DỒN MAY MẮN${gold ? ' · <b style="color:#ffd76a">⚡ GIỜ VÀNG: 2 ô hiếm ×2!</b>' : ''}</div>
+    html += `<div class="stat-sec">TỈ LỆ CÔNG KHAI — KHÔNG CỘNG DỒN MAY MẮN${gold ? '<b style="color:#ffd76a"> · ⚡ GIỜ VÀNG: 2 ô hiếm ×2!</b>' : ''}</div>
       <div style="font-size:12px;line-height:1.9;opacity:.9">
       <b style="color:#9aa8d4">${gold ? 50 : 60}%</b> — Rơi vào lùm cây / dòng suối: 1-2 📜 Sách Kỹ Năng + 450-900◈ Lumen<br>
       <b style="color:#7ec850">20%</b> — Lọt vào hang động: 3-5 📜 Sách Kỹ Năng<br>

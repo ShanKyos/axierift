@@ -510,6 +510,11 @@ Object.assign(EXACT, {
   'Kẻ Báo Thù': 'Avenger',
   'Khách Lạ Lunacia': 'Stranger to Lunacia',
   'TỈ LỆ CÔNG KHAI — KHÔNG CỘNG DỒN MAY MẮN': 'PUBLISHED RATES — NO PITY',
+  // ⚠ Chuỗi này CHỈ hiện trong khung Giờ Vàng của Vực Thẳm (12h & 20h GIỜ MÁY), nên nó
+  //   tàng hình ~92% thời gian và `test_dichen §②` chỉ bắt được khi lượt chạy rơi đúng
+  //   khung ấy. Cùng họ với lỗ băng-rôn Đàn Vàng đã ghi trong CLAUDE.md: một bài i18n đỏ
+  //   thì HỎI GIỜ trước khi đổ cho commit.
+  '· ⚡ GIỜ VÀNG: 2 ô hiếm ×2!': '· ⚡ GOLDEN HOUR: 2 rare slots ×2!',
   'Suối Ký Ức': 'Spring of Memory',
   'Kẻ Được Định Mệnh Chọn': 'Chosen by Fate',
 });

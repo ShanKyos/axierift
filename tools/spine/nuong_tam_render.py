@@ -97,6 +97,28 @@ def tach_blob(path):
     return [im.crop((x0, 0, x1 + 1, H)) for (x0, x1) in doan(al.any(axis=0))]
 
 
+def xoa_o(sheet, k):
+    """XOÁ TRẮNG ô k trước khi ghi khung mới vào.
+
+    ⚠⚠ ĐÂY LÀ THỨ GIỮ CHO MỘT LƯỢT NƯỚNG LẠI KHÔNG ĐẺ RA HAI NHÂN VẬT CHỒNG NHAU.
+      Bảng HAI cố ý dựng bằng cách chép tệp đang có trên đĩa lên (xem chú thích ở `ra2`) —
+      để giữ 9 khối mà đợt này không đụng. Nhưng `dat`/`dat_o` thì `alpha_composite`, tức
+      khung MỚI đè LÊN khung CŨ chứ không thay nó: chỗ nào khung mới trong suốt thì khung
+      cũ còn nguyên ở đó. Nướng lại khối BAY ba lượt ⇒ mỗi ô cõng thêm 361-769 điểm ảnh của
+      những lượt trước, và thứ hiện ra là **một cái chân thứ ba** lơ lửng cạnh hai chân thật.
+      Chủ dự án gọi đúng tên nó: *"nhìu khả năng bạn input 2 hoạt ảnh trên cùng 1 nhân vật"*.
+
+    ⚠ XOÁ THEO Ô, ĐỪNG DỰNG LẠI CẢ BẢNG TỪ TRẮNG. Ô nào lượt này không ghi thì phải còn
+      nguyên — đó chính là lý do bảng hai chép tệp cũ lên. Xoá cả bảng là xoá sạch 9 khối
+      kia trong im lặng, đúng kiểu hỏng mà `ISO_NEO` đã ghi.
+
+    ⚠ VÀ NÓ KHÔNG BAO GIỜ LỘ RA Ở LƯỢT NƯỚNG ĐẦU. Tệp chưa có trên đĩa thì không có gì để
+      mà chồng lên; lỗi chỉ sinh ra từ lượt SỬA thứ hai trở đi — tức đúng lúc không ai ngờ.
+    """
+    cx, cy = (k % COT) * O_W, (k // COT) * O_H
+    sheet.paste((0, 0, 0, 0), (cx, cy, cx + O_W, cy + O_H))
+
+
 def dat(sheet, k, anh, nhun=0.0, lat=False):
     """Đặt MỘT khung vào ô k, chuẩn hoá cỡ + neo bàn chân + tâm ngang.
 
@@ -105,6 +127,7 @@ def dat(sheet, k, anh, nhun=0.0, lat=False):
     """
     if anh is None:
         return
+    xoa_o(sheet, k)
     if lat:
         anh = anh.transpose(Image.FLIP_LEFT_RIGHT)
     h = max(1, int(round(CAO_THAN * (1 + nhun))))
@@ -132,6 +155,7 @@ def dat_o(sheet, k, o, cao_goc, nen, lat=False):
     """
     if o is None:
         return
+    xoa_o(sheet, k)
     if lat:
         o = o.transpose(Image.FLIP_LEFT_RIGHT)
     tl = CAO_THAN / float(cao_goc)
@@ -141,6 +165,35 @@ def dat_o(sheet, k, o, cao_goc, nen, lat=False):
     cx, cy = (k % COT) * O_W, (k // COT) * O_H
     sheet.alpha_composite(o, (cx + TAM_X - int(round(w / 2)),
                               cy + CHAN_Y - int(round(nen * tl))))
+
+
+def ghim_nua_duoi(imgs, cat, fea):
+    """⚠ GHIM NỬA DƯỚI VỀ KHUNG ĐẦU — sinh ra cho khối BAY, và nó là một PHÉP ĐO.
+
+    Gói bay v1 cho nhân vật SẢI CHÂN giữa không trung: bề ngang hông đi 73→98 px
+    (34%) qua 8 khung, trong khi chiều cao chân đứng yên (132-140) — tức không
+    phải phóng to thu nhỏ, mà là bước chân. Chủ dự án nhìn ra ngay: *"thân người
+    chuyển động quá nhiều, chỉ cần cho cánh chuyển động thôi"*.
+
+    Cắt ngang ở `cat` rồi lấy nửa dưới của khung ĐẦU đắp cho mọi khung. Đo trên
+    gói v1: điểm ảnh đổi ở nửa dưới 9.837 → 2.133 mỗi khung (−78%).
+
+    ⚠ `cat` PHẢI nằm DƯỚI tầm với của cánh, và tầm ấy đo được chứ đừng đoán: bề
+      ngang theo hàng còn dao động 113 px ở y=220 rồi tụt còn 31 ở y=240, nên
+      236 là chỗ cao nhất còn an toàn. Cắt cao hơn là XÉN VÀO CÁNH.
+    ⚠ Phải có dải hoà `fea`, cắt cứng là một đường kẻ ngang chạy qua bụng.
+    ⚠ ĐỪNG ghim theo BÓNG THÂN của khung đầu thay vì theo một đường ngang: đã
+      thử, và vì thân mỗi khung một khác nên phần dư lòi ra thành một vương miện
+      THỨ HAI trên đầu cùng mấy mảnh chi ma. Bản render dẹp không tách lớp được.
+    """
+    base = np.array(imgs[0]).astype(float)
+    h = base.shape[0]
+    w = np.zeros((h, 1, 1))
+    w[cat:, 0, 0] = 1.0
+    for k in range(fea):
+        w[cat - fea + k, 0, 0] = k / float(fea)
+    return [Image.fromarray((np.array(im).astype(float) * (1 - w) + base * w).astype('uint8'))
+            for im in imgs]
 
 
 def main():
@@ -187,11 +240,16 @@ def main():
         n = (SO2 if b2 else SO)[khoi]; moc = (MOC2 if b2 else MOC)[khoi]
         khung = sp['khung']                       # danh sách ref, sẽ kéo giãn cho đủ n
         lat = sp.get('lat', False)
+        srcs = [khung[int(i * len(khung) / n)] for i in range(n)]
+        if sp.get('neo') == 'o':
+            imgs = [lay_o(x) for x in srcs]
+            if sp.get('ghim_duoi'):
+                imgs = ghim_nua_duoi(imgs, sp['ghim_duoi'], sp.get('ghim_hoa', 14))
+            for i, o in enumerate(imgs):
+                dat_o(tam, moc + i, o, sp['cao_goc'], sp['nen'], lat)
+            continue
         for i in range(n):
-            src = khung[int(i * len(khung) / n)]
-            if sp.get('neo') == 'o':
-                dat_o(tam, moc + i, lay_o(src), sp['cao_goc'], sp['nen'], lat)
-                continue
+            src = srcs[i]
             nh = 0.0
             if sp.get('nhun'):
                 nh = -NHUN_BIEN * abs(np.sin(np.pi * 2 * i / n))

@@ -53,10 +53,11 @@ it is measured: at level 120 in Dusk Marsh with 130 monsters on screen, 1600×90
 auto-tuner has already dropped them to Low by then — and zooming *in* is worse, not better
 (**33.9 fps**), because fewer objects each drawn larger is still more pixels.
 
-The game does auto-tune, but too slowly to save a first impression: measured on the live build, the
-first 15 seconds run at full detail, effects drop to Low at 20s, detail reaches 85% at 25s and
-75% at 45s — and then it stops there and never reaches 50%. So the worst-looking 20 seconds of
-the build are the first 20 seconds anyone sees. Setting it by hand skips all of that.
+The game auto-tunes on its own, and it does now arrive at the same place: measured on the live
+build in that same scene, effects drop to Low at 11s, detail steps 100% → 85% at 16s → 75% at 22s
+→ **50% at 27s**, and then holds at **57.9 fps with 4% of frames missing their refresh**. It also
+gives the quality back once the load drops, which it previously never did. But half a minute is
+still the first half-minute anyone sees, so setting it by hand skips the climb down.
 
 **▶ With other people: https://14-225-204-107.nip.io/?net=1** — open it in two browsers and you are in the
 same world. Details in [Playing together](#playing-together) below.
@@ -278,7 +279,7 @@ not play well.
 | | |
 |---|---|
 | **The interface is Vietnamese first.** English comes from a dictionary-and-pattern layer, not from a full `t()` migration | measured across four independent sweeps — drawn text, all 15 panels, 1,044 real NPC panel opens, and the mid-screen banner — all now **0** Vietnamese. The remaining risk is structural, not a known gap: a dictionary layer is only as good as the surface someone thought to sweep, and three whole surfaces had gone unswept until this pass. A regex rule can also shadow a more specific one and produce *different English* rather than Vietnamese, which no Vietnamese-detector can see; the 1,216-string before/after diff in the scratchpad is the guard against that class, and it is not yet a committed test |
-| **Performance is a manual setting, not a good default.** At level 120 with ~130 monsters on screen the build runs 40.5 fps at full detail | measured, and the fix is one toggle: Settings → Detail 50% → 59.9 fps. The auto-tuner gets there on its own but takes 45 seconds and stops at 75%, so the first 20 seconds of any session are the worst the game ever looks. The honest read is that the defaults are tuned for looks and the auto-tuner is too cautious — both are code changes, neither is done |
+| **Performance is a manual setting, not a good default.** At level 120 with ~130 monsters on screen the build runs 40.5 fps at full detail | measured, and the fix is one toggle: Settings → Detail 50% → 59.9 fps. The auto-tuner reaches that same setting on its own — effects Low at 11s, detail 50% at 27s, then 57.9 fps with 4% of frames missed — but half a minute is still the first half-minute anyone sees. What remains is a judgement call, not a bug: the default is tuned for looks rather than for the heaviest scene in the game, and it has not been changed |
 | **The world streams assets while you play** — 58 requests / 3.39 MB measured across three map transitions | trees, wildlife and Axie animation sheets load on demand, so entering a new map over a slow link hitches. It does not affect frame rate once loaded; running the static folder locally removes it entirely |
 | **Walk and run cycles slide.** Measured: the planted foot only carries ~49% of the visual stride, so 51% of the distance is slide baked into the drawings | no code value fixes it; the cycles have to be redrawn. Spec and acceptance thresholds: [`docs/DAT_HANG_TUONG_DI.md`](docs/DAT_HANG_TUONG_DI.md) |
 | **Armour art covers 3 of 35** class × tier combinations; the rest fall back to the bare body | adding one is a data row, not code — the debt is art, not engineering |
