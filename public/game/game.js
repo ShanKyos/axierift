@@ -16027,9 +16027,16 @@ const NV_ANH = {};
 // Cả năm lớp nay cùng một hợp đồng: không mảnh nào rủ xuống dưới hông, tóc khớp tranh anh
 // hùng, 0/96 khung có mảnh rời khi nướng.
 const NV_BO = {                                    // lớp|giai -> tệp bảng khung THÂN
-  'thieulam|1': 'dkcw1', 'baidasan|1': 'dwsc1', 'minhgiao|1': 'sbhd1',
+  'thieulam|1': 'dkcw1', 'baidasan|1': 'dwsl1', 'minhgiao|1': 'sbhd1',
   'toanchan|1': 'elfar1', 'bug|1': 'dlcm1',
 };
+// ⚠ `dwsl1` (Dark Wizard · Soul Lord) đi đường TẤM LIỀN, không phải năm lớp rời — nên nó
+// KHÔNG khai trong `NV_LOP_HOP`, và đó là chủ ý chứ không phải sót. Art tới đây là ảnh render
+// ĐÃ DẸP, tách lớp từ một tấm dẹp thì không có cách nào (cùng lý do 7 bộ đời cũ vẫn đi đường
+// cũ — xem chú thích ở `NV_LOP_HOP`). Cái giá: bốn ô trang bị chưa vẽ tách được trên thân này.
+// Nướng lại: `python3 tools/spine/nuong_tam_render.py <cấu-hình>.json`
+// ⚠ Thân cũ `dwsc1` GIỮ NGUYÊN trên đĩa và vẫn còn trong `NV_LOP_HOP`/`NV_KHUNG_R`. Đừng xoá:
+// nó là đường lui còn chạy được, và `test_lopdo` vẫn đọc bảng lớp của nó.
 // Art BỘ GIÁP, tách hẳn khỏi NV_BO. NV_BO là THÂN TRẦN của từng lớp — thứ hiện ra khi chưa
 // mặc gì. Còn đây là từng bộ giáp, tra theo `lớp|giai` của CHÍNH MÓN ĐỒ chứ không phải của
 // người chơi: trong túi có thể nằm một cái nón giai 3 của lớp khác, và nó phải hiện đúng nón
@@ -16396,7 +16403,12 @@ function nvMoc(kind){ return NV_BANG2[kind] ? NV_MOC2[kind] : NV_MOC[kind]; }
 // HS_FRAMES.r mặc định. Kiểm bằng phép chia: bềRộngBảng/bềRộngÔ = 16 và bềCao/caoÔ = 7.
 // Quên khai là lớp đó chỉ đọc NỬA ĐẦU vòng chạy — chân lệch nhịp so với lớp khai đủ.
 const NV_KHUNG_R = { dkcw1: 32, dwsc1: 32, elfar1: 32, dlcm1: 32,
-                     dkph1: 32, dlbc1: 32, elnb1: 32, sbsm1: 32 };
+                     dkph1: 32, dlbc1: 32, elnb1: 32, sbsm1: 32,
+                     // ⚠ `dwsl1` khai 8 chứ không phải 16, và đó là nói THẬT chứ không phải hạ
+                     // chuẩn: nguồn chỉ có 8 pha. Khai 16 thì ô 88-95 là bản chép của 80-87,
+                     // tức nửa sau vòng chạy trùng khít nửa trước — đúng cái `test_khungchay`
+                     // sinh ra để bắt. Thà 8 khung thật còn hơn 16 khung có 8 cái giả.
+                     dwsl1: 8 };
 // Số khung của một khối, tính trên MỌI bộ đang góp lớp — không chỉ thân nền.
 //
 // ⚠ `nvBoTen()` trả THÂN NỀN cho bộ đã cắt lớp (vì `nvBoGiap()` cố ý trả null), nên hỏi nó số
@@ -16416,8 +16428,13 @@ function nvSoKhungBo(sectKey, tier, gv, kind, hw){
   }
   return n;
 }
+// Khối ĐI cũng khai được theo bộ, cùng khuôn `NV_KHUNG_R` — bộ nào nguồn chỉ có N pha thì
+// khai N, đừng để bảng chép khung cho đủ 32. Lý do y hệt khối chạy: 32 ô mà 24 ô là bản chép
+// thì bàn chân đứng im ba khung rồi nhảy một cái, và không bài kiểm nào đọc ra là "thiếu art".
+const NV_KHUNG_W = { dwsl1: 8 };
 function nvSoKhung(ten, kind){
   if (kind === 'r' && ten && NV_KHUNG_R[ten]) return NV_KHUNG_R[ten];
+  if (kind === 'w' && ten && NV_KHUNG_W[ten]) return NV_KHUNG_W[ten];
   return HS_FRAMES[kind] || 1;
 }
 // ĐƯỜNG VŨ KHÍ NƯỚNG SẴN ĐÃ GỠ. Trước đây `nvVuKhi()` trả bảng khung <bộ>_vk<N>.png để đắp
@@ -16698,7 +16715,17 @@ function heroSprite(sectKey, tier, gv, kind, idx, act, back, sw, blk, hw){
     else nvVeKhung(g, _nvIm, _blkVe, idx, nvBoTen(sectKey, tier, gv, hw));  // bộ giáp đổi cả tấm
     nvHaoQuangTruoc(g, sectKey, tier, gv, _now, _nvIm, kind, idx);   // viền + quét + tàn lửa
   }
-  else drawHeroFigureLit(g, sectKey, tier, heroFrameNow(kind, idx, _nk), ps, canhBoRa(gv));
+  // ⚠ BỘ ĐÃ KHAI ART THÌ KHÔNG BAO GIỜ RƠI VỀ HÌNH DỰNG BẰNG ĐƯỜNG — chủ dự án chốt
+  // ("dẹp bỏ khung xương đi"). Trước bản này, mấy trăm mili giây đầu lúc bảng khung chưa về
+  // thì `_nvIm` còn null và nhánh dưới vẽ ra một hiệp sĩ xám mũ sừng áo choàng đỏ — tức MỘT
+  // NHÂN VẬT KHÁC HẲN, đúng thứ Quy tắc số 3 và mục "nhân vật fake" của màn chờ nói không.
+  // `_choArt` vốn đã chặn việc NHỚ khung ấy; nay chặn luôn việc VẼ nó.
+  //
+  // Cái giá, nói thẳng: bộ nào khai art mà tệp 404 thật thì nhân vật TÀNG HÌNH chứ không hiện
+  // hình vẽ thay thế. Đổi lại là không bao giờ chớp ra một nhân vật khác. Cùng đánh đổi mà
+  // `ccArtSan()` của màn chờ đã chốt — "thà thân trần còn hơn một nhân vật khác hẳn".
+  // Bộ KHÔNG khai art (chưa nướng bao giờ) vẫn đi đường cũ, không đổi một điểm ảnh.
+  else if (!_coArt) drawHeroFigureLit(g, sectKey, tier, heroFrameNow(kind, idx, _nk), ps, canhBoRa(gv));
   // ── CHẾ ĐỘ TÔ PHẲNG, CHỈ DÀNH CHO PHÉP ĐO ──────────────────────────────────────────────
   // Bài kiểm nào cần biết "nhân vật có nằm ở chỗ này của khung hình không" đều phải nhận ra
   // nhân vật bằng MÀU — không có cách nào khác rẻ hơn (trừ khung, so byte, dựng lại thế giới:
