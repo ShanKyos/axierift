@@ -12,7 +12,7 @@ Axie carries none of it, so any Axie can be any class.
 
 ## Play it
 
-**▶ Live build: http://14.225.204.107/?test=1&lang=en** — nothing to install, nothing to sign up for.
+**▶ Live build: https://14-225-204-107.nip.io/?test=1&lang=en** — nothing to install, nothing to sign up for.
 
 The game is Vietnamese-first; `&lang=en` puts it in English before the first frame, so you never
 have to find a settings toggle to read it. Drop the parameter (or use `&lang=vi`) for Vietnamese.
@@ -43,20 +43,40 @@ the game underneath is the normal one.
 If you would rather see the end of the game than play up to it, `?max=1` gives you level 120 with
 every system unlocked and maxed: end-game gear at +11, wings, jewels, Box Kundun.
 
-**▶ With other people: http://14.225.204.107/?net=1** — open it in two browsers and you are in the
+**If it runs rough, press `O` and set Detail to 50%.** That is the only lever that matters, and
+it is measured: at level 120 in Dusk Marsh with 130 monsters on screen, 1600×900, detail 100% →
+**40.5 fps**, 75% → 46.9, **50% → 59.9** (the 60 cap). Effects are not worth touching — the
+auto-tuner has already dropped them to Low by then — and zooming *in* is worse, not better
+(**33.9 fps**), because fewer objects each drawn larger is still more pixels.
+
+The game does auto-tune, but too slowly to save a first impression: measured on `?max=1`, the
+first 15 seconds run at full detail, effects drop to Low at 20s, detail reaches 85% at 25s and
+75% at 45s — and then it stops there and never reaches 50%. So the worst-looking 20 seconds of
+the build are the first 20 seconds anyone sees. Setting it by hand skips all of that.
+
+**▶ With other people: https://14-225-204-107.nip.io/?net=1** — open it in two browsers and you are in the
 same world. Details in [Playing together](#playing-together) below.
 
-Or run it locally. `public/game/` is a self-contained static app — canvas 2D + vanilla JS, no build
-step, no backend, no `.env`, no database:
+Or run it locally — and this is worth doing if the hosted build hitches on you, because the world
+streams assets while you play: measured, **58 requests / 3.39 MB** across three map transitions, as
+trees, wildlife and Axie animation sheets load on demand. Locally that goes away entirely. It will
+not change your frame rate, though; that is the detail setting above.
+
+`public/game/` is a self-contained static app — canvas 2D + vanilla JS, no build step, no backend,
+no `.env`, no database:
 
 ```bash
-git clone https://github.com/ShanKyos/axierift.git
+git clone --depth 1 https://github.com/ShanKyos/axierift.git
 cd axierift/public/game
 python3 -m http.server 8850     # or: npx serve -l 8850
 ```
 
-Open `http://localhost:8850/`. Auth and cloud-save calls to `/api/*` will fail behind a plain static
-server; the game degrades to local-only play, which is enough to see everything below.
+Open `http://localhost:8850/?max=1&lang=en`. No git? The ZIP is
+[main.zip](https://github.com/ShanKyos/axierift/archive/refs/heads/main.zip) — about 180 MB, of
+which `public/game/` is 114 MB and the rest is tooling, tests and docs.
+
+Auth and cloud-save calls to `/api/*` will fail behind a plain static server; the game degrades to
+local-only play, which is enough to see everything below.
 
 ![In the world — the Axie avatar with its class layer materialising mid-swing](docs/img/world.webp)
 
@@ -254,7 +274,8 @@ not play well.
 | | |
 |---|---|
 | **The interface is Vietnamese first.** English comes from a dictionary-and-pattern layer, not from a full `t()` migration | measured across four independent sweeps — drawn text, all 15 panels, 1,044 real NPC panel opens, and the mid-screen banner — all now **0** Vietnamese. The remaining risk is structural, not a known gap: a dictionary layer is only as good as the surface someone thought to sweep, and three whole surfaces had gone unswept until this pass. A regex rule can also shadow a more specific one and produce *different English* rather than Vietnamese, which no Vietnamese-detector can see; the 1,216-string before/after diff in the scratchpad is the guard against that class, and it is not yet a committed test |
-| **The live link is a raw IP over plain HTTP.** No TLS, no domain | browsers will flag it as not secure; there is nothing to enter, so nothing is at risk, but it looks worse than it is |
+| **Performance is a manual setting, not a good default.** At level 120 with ~130 monsters on screen the build runs 40.5 fps at full detail | measured, and the fix is one toggle: Settings → Detail 50% → 59.9 fps. The auto-tuner gets there on its own but takes 45 seconds and stops at 75%, so the first 20 seconds of any session are the worst the game ever looks. The honest read is that the defaults are tuned for looks and the auto-tuner is too cautious — both are code changes, neither is done |
+| **The world streams assets while you play** — 58 requests / 3.39 MB measured across three map transitions | trees, wildlife and Axie animation sheets load on demand, so entering a new map over a slow link hitches. It does not affect frame rate once loaded; running the static folder locally removes it entirely |
 | **Walk and run cycles slide.** Measured: the planted foot only carries ~49% of the visual stride, so 51% of the distance is slide baked into the drawings | no code value fixes it; the cycles have to be redrawn. Spec and acceptance thresholds: [`docs/DAT_HANG_TUONG_DI.md`](docs/DAT_HANG_TUONG_DI.md) |
 | **Armour art covers 3 of 35** class × tier combinations; the rest fall back to the bare body | adding one is a data row, not code — the debt is art, not engineering |
 | **Spellblade is missing a sprite row** — 96 cells where the other four classes have 112 | its run block only reads the first half of the cycle |
