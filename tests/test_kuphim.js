@@ -75,18 +75,32 @@ const SRC = ['assets/video/summon_mo_dau.webm', 'assets/video/summon_mo_dau.mp4'
   // Cú bấm THẬT trên trang: vài trình duyệt đòi một cử chỉ người dùng mới cho chạy có tiếng.
   await p.mouse.click(5, 5);
   await p.evaluate(() => { window.kheUocQuay('gk', 1); });
-  // ⚠ ĐỪNG lấy MỘT mẫu ở một mốc cố định. Đo được: khung đầu của clip mất tới ~1,6 giây mới
-  // giải xong ở máy bận, nên chốt "sau 1,8s phải chạy được 0,3s" đỏ theo xúc xắc — và nó đã đỏ
-  // thật một lần trong lúc thử ngược, ở đúng một bản mã KHÔNG hề đụng tới đường chạy phim. Thứ
-  // cần chứng minh là clip có NHÍCH hay không, nên chờ tới khi nó nhích, có hạn.
+  // ⚠⚠ ĐO CLIP CÓ **NHÍCH** KHÔNG, ĐỪNG ĐO NÓ CHẠY ĐƯỢC BAO XA. Hai bản trước đều sai cùng
+  // một kiểu, và bản thứ hai mất một lượt hồi quy mới lộ:
+  //   · bản 1 lấy MỘT mẫu ở một mốc cố định ("sau 1,8s phải chạy được 0,3s") ⇒ đỏ theo xúc xắc,
+  //     vì khung đầu mất tới ~1,6 giây mới giải xong ở máy bận;
+  //   · bản 2 chờ tới khi `currentTime > 0.25`, có hạn 8 giây — nhưng `0.25` vừa là cửa THOÁT
+  //     vòng vừa là NGƯỠNG CHẤM, nên nó lặng lẽ biến thành một đòi hỏi về TỐC ĐỘ GIẢI MÃ. Máy
+  //     này không có GPU; trong một lượt hồi quy đầy đủ, VP9 1120×630 giải chậm tới mức 8 giây
+  //     thật không đủ cho 0,25 giây phim. Đo được: chạy riêng ra 0,27-0,40 (xanh 3/3), trong
+  //     hồi quy ra **đúng 0,25** ⇒ đỏ. Cơ chế hoàn hảo, ngưỡng nằm trong dải nhiễu.
+  // ⇒ Đếm số lần `currentTime` TĂNG giữa hai mẫu liên tiếp. Đứng im thật thì con số ấy là 0 dù
+  //   chờ bao lâu; chạy chậm thì vẫn tăng. Không còn ngưỡng tốc độ nào để mà trượt.
   const r3 = await p.evaluate(async () => {
     const v = document.getElementById('ku-phim');
     const het = Date.now() + 8000;
-    while (Date.now() < het && !(v && (v.error || v.currentTime > 0.25)))
+    let truoc = -1, tang = 0, dinh = 0;
+    while (Date.now() < het && !(v && v.error) && tang < 3){
+      if (v){
+        const t = v.currentTime;
+        if (t > truoc){ if (truoc >= 0) tang++; truoc = t; }
+        if (t > dinh) dinh = t;
+      }
       await new Promise(r => setTimeout(r, 120));
+    }
     return { hien: !!v && !v.classList.contains('hidden'),
              dung: v ? (v.currentSrc || '').split('/').pop() : '',
-             t: v ? +v.currentTime.toFixed(2) : -1,
+             t: v ? +v.currentTime.toFixed(2) : -1, tang, dinh: +dinh.toFixed(2),
              loi: v && v.error ? v.error.code : 0,
              dai: v ? +(v.duration || 0).toFixed(2) : 0,
              tat: v ? v.muted : null, vol: v ? +v.volume.toFixed(2) : -1,
@@ -95,9 +109,9 @@ const SRC = ['assets/video/summon_mo_dau.webm', 'assets/video/summon_mo_dau.mp4'
   console.log('③', JSON.stringify(r3));
   if (r3.loi) fail(`thẻ video báo lỗi mã ${r3.loi} — tệp không tới nơi hoặc trình duyệt không giải được`);
   else if (!r3.hien || !r3.phu) fail('bấm Quay mà phim không hiện');
-  else if (r3.t <= 0.25) fail(`phim vào đúng nhịp nhưng ĐỨNG IM (currentTime ${r3.t}s sau 8 giây chờ)`);
+  else if (r3.tang < 2) fail(`phim vào đúng nhịp nhưng ĐỨNG IM (currentTime nhích ${r3.tang} lần trong 8 giây, đỉnh ${r3.dinh}s)`);
   else if (r3.dai < 9) fail(`phim chỉ dài ${r3.dai}s — nghi là tệp cụt`);
-  else pass(`phim chạy thật: ${r3.t}s / ${r3.dai}s, vol ${r3.vol}, muted ${r3.tat}`);
+  else pass(`phim chạy thật: nhích ${r3.tang} lần, tới ${r3.dinh}s / ${r3.dai}s, vol ${r3.vol}, muted ${r3.tat}`);
 
   // ── ⑥a nhạc nền bị hạ trong lúc chiếu ────────────────────────────────────
   const r6a = await p.evaluate(() => AudioSys.bgm

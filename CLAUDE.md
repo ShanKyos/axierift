@@ -4631,6 +4631,19 @@ vào, gộp lại là lần sau phải dựng lại chính nó.
    giây"* đã đỏ thật ở một bản mã **không hề đụng tới đường chạy phim** — khung đầu mất tới
    ~1,6 giây mới giải xong ở máy bận. Thứ cần chứng minh là clip có NHÍCH hay không, nên **chờ
    tới khi nó nhích**, có hạn.
+3. **⚠ VÀ BẢN VÁ CHO (2) CŨNG SAI — cùng một bệnh, đội lốt khác, mất một lượt hồi quy mới lộ.**
+   Bản ấy chờ tới khi `currentTime > 0.25` với hạn 8 giây, nhưng `0.25` vừa là cửa **THOÁT vòng**
+   vừa là **NGƯỠNG CHẤM** ⇒ nó lặng lẽ biến thành một đòi hỏi về **TỐC ĐỘ GIẢI MÃ**. Máy này
+   không có GPU, nên trong một lượt hồi quy đầy đủ, VP9 1120×630 giải chậm tới mức 8 giây thật
+   không đủ cho 0,25 giây phim. Đo được: chạy riêng ra `0,27 · 0,36 · 0,40` (xanh 3/3), trong
+   hồi quy ra **đúng 0,25** ⇒ đỏ. Cơ chế hoàn hảo, ngưỡng nằm trong dải nhiễu — đúng hình dạng
+   của `test_canbanglop`.
+   ⇒ Nay đếm **số lần `currentTime` TĂNG** giữa hai mẫu liên tiếp (đòi ≥2). Đứng im thật thì con
+   số ấy là 0 dù chờ bao lâu; chạy chậm thì vẫn tăng. **Không còn ngưỡng tốc độ nào để mà trượt.**
+   Thử ngược (bỏ `v.play()`) ra `tang: 0` và đỏ.
+   *Luật chung: một ngưỡng đo trên MỘT ĐẠI LƯỢNG TÍCH LUỸ trong một khoảng thời gian có hạn là
+   một ngưỡng về TỐC ĐỘ, dù nó không trông giống thế. Đo HƯỚNG (có tăng không) thì miễn nhiễm
+   với tải; đo ĐỘ LỚN thì không.*
 
 **Nướng clip** (giữ nguyên hai lệnh này, tiếng đã cân khớp hai nguồn — đỉnh −5,0 dB):
 `ffmpeg` ghép intro + mở đầu bằng `concat` có cả `v` lẫn `a`, cắt watermark Gemini bằng
@@ -5967,6 +5980,7 @@ suýt kết luận "giả thuyết sai". Bỏ hai dòng đặt lại ấy thì r
 | `test_sandat` (nhanmon) | *"sau 3600 khung đuổi, 1 con nằm ngoài sàn: Cao Thủ Lang Thang — nhánh di chuyển nào đó thiếu collideObstacles"* | ⚠ **ĐÂY KHÔNG PHẢI NHIỄU, đây là một LỖI THẬT bắn thưa.** Xanh 3/3 chạy riêng · xanh ở lượt hồi quy liền trước ⇒ rất dễ đọc nhầm là xúc xắc rồi bỏ qua. Nhưng chính mệnh đề ấy sinh ra để bắt *một nhánh dời chỗ quái quên gọi `collideObstacles`*, và nó chỉ nổ khi hình học truy đuổi rơi đúng chỗ. Cần một đợt riêng: quét NĂM nhánh dời quái trong `update()` (xem cảnh báo `mobDoBuoc()`) rồi đối chiếu nhánh nào thiếu. Đừng nới ngưỡng, và đừng ghi nó vào đây rồi quên |
 | ~~`test_uigothic ⑥`~~ | *"ở 30% máu, đầu TRÁI thanh cũng tối theo"* | ✅ **ĐÃ SỬA TẬN GỐC, không còn trong bảng này.** Dòng cũ ghi *"thanh máu có thành phần đập theo thời gian"* — **sai**: thanh không đập. Mẫu "đầy" đổi giữa các lượt vì `applyTestBoost()` bốc đồ NGẪU NHIÊN ⇒ `maxHp` khác ⇒ **chữ số khác**, mà que dò đọc đúng một điểm ở `(0,08 · giữa)` — tức đọc thẳng vào con số máu do `.cd-thanh span` vẽ đè. Nay đọc **đỉnh độ đỏ của cả CỘT** (chữ trắng và bóng đen chỉ kéo độ đỏ xuống) ⇒ năm lượt ra đúng cùng một bộ số. Xem mục thanh máu/mana ở khối UI Gothic. *Một bài đỏ theo xúc xắc vẫn phải TRUY tới nguyên nhân — lần này "xúc xắc" là một que dò hỏng, và chính nó che một mệnh đề rỗng suốt nhiều phiên.* |
 | `test_gearlook` | *"cache chân dung không đổi khi thay đồ"* (`cache_doiTheoDo: false`) | **xanh 13/13 lượt chạy lẻ** — 3 trên cây này · 3 trên cây trước · 3 trên chính BẢN ĐÓNG BĂNG của lượt hồi quy đã đỏ · 4 lượt nữa dưới tải CPU giả (6 vòng bận trên 4 lõi) — mà chỉ đỏ **bên trong** một lượt hồi quy đầy đủ. Xanh ở `reg-mg`(236 bài) và `reg-now`. Nó là một cuộc đua TẢI ART: hai thẻ so nhau là *đủ giáp giai 7* với *trần trụi giai 1*, và nếu lớp giáp giai 7 chưa về kịp thì cả hai cùng vẽ ra thân trần ⇒ hai data-URL trùng khít. **Chưa dựng lại được cảnh đỏ**, nên đừng chép câu này như một kết luận đã đóng; thứ đã chứng minh được là nó không đến từ một diff chỉ chạm `MOBS`/`vung` |
+| `test_dichen §②` | *"CANVAS còn 2/76 chuỗi tiếng Việt: `✦ ĐÀN VÀNG SẮP XÂM LĂNG` · `10 min: nữa — …`"* | ⚠ **KHÔNG phải nhiễu, và cũng KHÔNG phải xúc xắc — nó phụ thuộc ĐỒNG HỒ.** Băng-rôn Xâm Lăng Vàng chỉ hiện trong cửa sổ ~22 phút quanh mốc **2h·6h·10h·14h·18h·22h UTC** (10 phút báo trước + 12 phút sự kiện). Ngoài cửa sổ đó bài ra `0/74` và xanh — đo được: đỏ lúc 01:50-02:12 UTC, chạy lại lúc 02:21 thì xanh ngay. Tức đây là một lỗ i18n **CÓ THẬT** còn sót, chỉ là nó tàng hình 90% thời gian. `sau_tron.sh` chạy cùng bài ấy 40 phút trước đó cũng xanh. ⇒ Sửa là dịch hai chuỗi băng-rôn sự kiện, đừng nới bài kiểm; và **đừng kết luận "đỏ do phép trộn" khi một bài i18n đỏ — hỏi giờ UTC trước** |
 | `test_qablock` | *"dựng cảnh sai: người chơi không ăn đòn nào"* rồi kéo theo 2 FAIL nữa | **xanh 8/8 lượt liên tiếp** khi chạy riêng · chính chú thích trong bài đã ghi nó nhạy với mạch ngẫu nhiên (*"từng xanh chỉ vì may"*) — con quái phải kịp đánh trúng trong 40 khung, máy bận là trượt. Phân biệt bằng `git diff -U0 … | grep '^@@'`: nếu diff không chạm `update`/`hurtPlayer`/`swingFeel`/`shakeDir` thì nó không thể là của mình |
 | `test_canbanglop` | *"chênh ST cao/thấp 3.63× > trần 3.6× (Dark Knight vs Dark Wizard)"* | **đỏ 2/10 trên CẢ HAI cây** trong một phép A/B ghép đôi: cùng một `game.js` byte-cho-byte, chỉ khác layout HUD ⇒ không phải của ai cả. Giá trị đo trải **2,26 – 4,27×** quanh một cái trần đặt ở **3,6** — tức ngưỡng nằm GIỮA dải nhiễu, nên nó đỏ theo xúc xắc vĩnh viễn. Đỉnh tệ nhất (4,27) rơi vào cây ĐỐI CHỨNG. Muốn dứt điểm thì cộng dồn nhiều lượt rồi lấy trung vị (lối `test_hethu §2`), đừng nới trần — nới trần là bỏ luôn thứ nó gác |
 
