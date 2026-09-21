@@ -34,9 +34,12 @@ SO       = {'i': 16, 'w': 32, 'a': 16, 'c': 16, 'r': 16}
 #   `nuong_nv.py`: gói Spine không có hoạt cảnh bay. Bộ nào có nó thì khai trong
 #   `NV_BO_CO_BAY` bên game.js — hỏi bảng ấy, đừng hỏi chỉ số ô có rỗng không.
 MOC2     = {'h': 0, 'p': 8, 's': 20, 'd': 36, 'j': 46, 'q': 56, 'n': 62, 't': 68,
-            'e': 74, 'f': 84}
+            'e': 74, 'f': 84, 'g': 96}
 SO2      = {'h': 8, 'p': 12, 's': 16, 'd': 10, 'j': 10, 'q': 6, 'n': 6, 't': 6,
-            'e': 10, 'f': 8}
+            'e': 10, 'f': 8, 'g': 8}
+# ⚠ 'g' (BAY + ĐÁNH) rơi sang HÀNG THỨ BẢY: hàng sáu chỉ còn 4 ô trống (92-95), không đủ
+#   cho 8 khung. Phần vẽ tính hàng bằng `k // NV_COT` nên bảng cao thêm là chạy ngay —
+#   không có hằng "6 hàng" nào trong game.js. Bảng cao bao nhiêu thì SUY từ moc lớn nhất.
 # nhún hai bước một vòng, biên độ 3,1% — đúng bằng khối đi thật của game
 NHUN_BIEN = 0.031
 
@@ -152,8 +155,14 @@ def main():
     ra2 = cfg.get('ra2')
     sheet2 = None
     if ra2:
-        sheet2 = (Image.open(ra2).convert('RGBA') if os.path.exists(ra2)
-                  else Image.new('RGBA', (COT * O_W, 6 * O_H), (0, 0, 0, 0)))
+        # Số hàng SUY từ khối nằm xa nhất, không chép cứng — thêm một khối ở hàng bảy thì bảng
+        # tự cao thêm, và bảng đang có trên đĩa được CHÉP LÊN bảng mới chứ không bị vứt.
+        can = max([MOC2[k] + SO2[k] for k, v in cfg['khoi'].items()
+                   if v.get('bang') == 2] or [0])
+        hang = max(6, -(-can // COT))
+        sheet2 = Image.new('RGBA', (COT * O_W, hang * O_H), (0, 0, 0, 0))
+        if os.path.exists(ra2):
+            sheet2.alpha_composite(Image.open(ra2).convert('RGBA'), (0, 0))
 
     # ── nguồn ──────────────────────────────────────────────────────────────────
     ngd, ngo = {}, {}

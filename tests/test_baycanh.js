@@ -45,10 +45,33 @@ const PORT = process.argv[2] || 8853;
       }
       out.bac[bac] = { khoi: [...khoi], canhRoi: [...canh], soKhung: khung.size };
     }
-    // và khi THÁO cánh ra thì cánh vẽ rời phải sống lại (không tắt vĩnh viễn)
+    // ④ BAY + RA ĐÒN ⇒ khối 'g', và nó phải chạy XUÔI (0 → n-1).
+    // ⚠ `castK` đếm NGƯỢC nên dùng thẳng là khối chạy ngược — lỗi đã có với cả năm lớp trước
+    //   khi gói art mới làm nó lộ ra. Đo CHUỖI, không đo một mẫu: một mẫu thì chiều nào cũng
+    //   nằm trong dải hợp lệ.
     player.equip.canh = genWing(player.sect, 3); calcDerived();
     for (let i = 0; i < 400; i++) { update(1 / 60); render(); }
     out.dangBay_canhRoi = !!window.__veCanhRoi;
+    const chuoi = (nhan) => {
+      // ⚠ CẮT NGAY KHI KHỐI ĐỔI. Cú niệm hết thì khối rơi về 'i'/'f' và chỉ số nhảy lung
+      // tung — gom cả mấy mẫu ấy vào là bài báo "chỉ số TỤT" trên một cơ chế hoàn toàn đúng.
+      const seq = [];
+      player.castT = NV_CHU_GIAY; player.castAct = 'raise';
+      let dau = null;
+      for (let i = 0; i < 26; i++) {
+        render();
+        const v = String(window.__khungVe || ''), k = v.split(':')[0];
+        if (dau === null) dau = k;
+        if (k !== dau) break;
+        seq.push(v);
+        player.castT = Math.max(0, player.castT - NV_CHU_GIAY / 22);
+      }
+      return seq;
+    };
+    out.bayDanh = chuoi();
+    player.equip.canh = null; calcDerived();
+    for (let i = 0; i < 400; i++) { update(1 / 60); render(); }
+    out.datDanh = chuoi();
     return out;
   });
 
@@ -64,6 +87,20 @@ const PORT = process.argv[2] || 8853;
     if (k.soKhung < 4)
       fail.push(`bậc ${bac}: chỉ ${k.soKhung} khung khác nhau trong 30 lượt vẽ ⇒ không vỗ cánh`);
   }
+  // ④ + ⑤ — khối ra đòn: đúng khối, và chạy XUÔI
+  const xuoi = (seq, nhan, khoiMong) => {
+    if (seq.length < 6) { fail.push(`${nhan}: chỉ bắt được ${seq.length} mẫu — cảnh dựng hỏng`); return; }
+    const kh = [...new Set(seq.map(x => String(x).split(':')[0]))];
+    if (kh.length !== 1 || kh[0] !== khoiMong)
+      fail.push(`${nhan}: khối vẽ là [${kh}], phải là ['${khoiMong}']`);
+    const so = seq.map(x => +String(x).split(':')[1]);
+    if (so[so.length - 1] <= so[0])
+      fail.push(`${nhan}: khối chạy NGƯỢC — ${so[0]} → ${so[so.length - 1]}`);
+    if (so.some((v, i) => i && v < so[i - 1]))
+      fail.push(`${nhan}: chỉ số khung có lúc TỤT — ${so.join(' ')}`);
+  };
+  xuoi(r.bayDanh, 'BAY + ra đòn', 'g');
+  xuoi(r.datDanh, 'ĐẤT + ra đòn', 'c');
   if (bad.length) fail.push('404 art: ' + bad.join(' · '));
 
   console.log(JSON.stringify(r, null, 1));

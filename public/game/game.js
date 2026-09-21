@@ -15837,15 +15837,22 @@ const NHOA_DUOC = { i:1, w:1, r:1 };
 const NHOA_MS   = 140;   // trong hoạt hình chuyên nghiệp, transition lặp thường 150-300ms
 const HS_FRAMES = { i: 16, w: 32, a: 16, c: 16, r: 16,          // BẢNG MỘT
                     h: 8, p: 12, s: 16, d: 10, j: 10, q: 6, n: 6, t: 6, e: 10,
-                    f: 8 };  // BẢNG HAI ('f' = BAY, xem NV_BO_CO_BAY)
+                    f: 8, g: 8 };  // BẢNG HAI ('f' = BAY · 'g' = BAY + ĐÁNH)
 // Khối nào nằm ở bảng hai. Thứ tự trong NV_MOC2 phải trùng KHUNG2 của tools/spine/nuong_nv.py.
-const NV_BANG2 = { h:1, p:1, s:1, d:1, j:1, q:1, n:1, t:1, e:1, f:1 };
-const NV_MOC2  = { h:0, p:8, s:20, d:36, j:46, q:56, n:62, t:68, e:74, f:84 };
+const NV_BANG2 = { h:1, p:1, s:1, d:1, j:1, q:1, n:1, t:1, e:1, f:1, g:1 };
+// ⚠ 'g' rơi sang HÀNG THỨ BẢY của bảng hai: hàng sáu chỉ còn 4 ô trống (92-95), không đủ 8
+// khung. Phần vẽ tính hàng bằng `k // NV_COT` nên không có hằng "6 hàng" nào phải sửa — bảng
+// cao thêm 300px là chạy. Bộ nướng suy số hàng từ moc lớn nhất, không chép cứng.
+const NV_MOC2  = { h:0, p:8, s:20, d:36, j:46, q:56, n:62, t:68, e:74, f:84, g:96 };
 // ⚠ KHỐI 'f' (BAY) KHÔNG CÓ TRONG `KHUNG2` của `nuong_nv.py` — gói Spine không có hoạt cảnh
 // bay, nên mọi bộ nướng từ Spine chỉ có 84 khung ở bảng hai và ô 84-91 của chúng RỖNG. Đọc ô
 // rỗng thì không ném lỗi, nó chỉ vẽ ra khoảng không — tức nhân vật BIẾN MẤT lúc bay, im lặng.
 // ⇒ Hỏi bảng này, đừng hỏi "ô có rỗng không".
 const NV_BO_CO_BAY = { dwsl1: true };
+// Bộ có khối BAY + ĐÁNH riêng ('g'). Tách khỏi NV_BO_CO_BAY vì một bộ có thể có khối bay mà
+// chưa có khối đánh-lúc-bay — lúc đó nó lui về 'f' (lơ lửng) thay vì đọc ô RỖNG.
+const NV_BO_CO_BAYDANH = { dwsl1: true };
+window.NV_BO_CO_BAYDANH = NV_BO_CO_BAYDANH;
 window.NV_BO_CO_BAY = NV_BO_CO_BAY;
 // Nhịp vỗ cánh: 8 khung × 95ms ≈ 10,5 khung/giây, đúng dải 10-12 mà gói art đề nghị.
 const BAY_NHIP = 95;
@@ -16056,8 +16063,15 @@ const NV_GIAP = {
   // thế mà KHÔNG chỗ nào được ghi cứng số giai: dùng giaiCoArt() để hỏi bảng này.
   'baidasan|7': 'dwsm1',
   'thieulam|1': 'dkgs1',
-  // Bộ ĐẦU TIÊN đi đường LỚP RỜI (xem NV_LOP_HOP): bốn ô vẽ tách nhau, không cần đủ bộ.
-  'baidasan|1': 'dwvt1',
+  // ⚠ 'baidasan|1': 'dwvt1' ĐÃ GỠ — art của nó thuộc về THÂN CŨ (`dwsc1`), không thuộc về
+  // thân mới `dwsl1`. Chụp ra thì thấy ngay: mặc bộ ấy vào là nhân vật hoá thành một NGƯỜI
+  // KHÁC — áo choàng xám nhạt, mặt khác, không còn giáp tím vai bè nào. Tệp `dwvt1_*.webp`
+  // vẫn nằm trên đĩa; cắm lại một dòng là nó sống lại, ngày nào có thân nền hợp với nó.
+  //
+  // Cái giá, nói thẳng: Dark Wizard giai 1 nay mặc giáp vào trông y hệt thân trần, và bốn
+  // icon trong túi (`dwvt1_icon`) cũng mất theo — `nvIconUrl` đọc chính bảng này. Đổi lại là
+  // không có cú tráo nhân vật nào. Đây là bộ lớp-rời DUY NHẤT, nên đường `nvKhungGop` tạm thời
+  // không còn ai đi; giữ nguyên nó, đừng gỡ.
   // Phoenix — bộ ĐỈNH của Dark Knight, nên giai 7 chứ không phải giai 1 (cùng lý do dwsm1).
   'thieulam|7': 'dkph1',
   'bug|7': 'dlbc1',        // Dark Lord — trượng bay, không có lớp vũ khí cầm tay
@@ -16536,7 +16550,15 @@ function nvKhungGop(sectKey, tier, gv, kind, idx, hw){
   if (nvBoGiap(sectKey, gv)) return null;
   hw = hw || '';
   const than = nvTen(sectKey, tier, hw);
-  if (!than || !NV_LOP_HOP[than]) return null;      // thân chưa cắt lớp
+  if (!than) return null;
+  // ⚠ THÂN NỀN KHÔNG NHẤT THIẾT PHẢI CÓ LỚP. Trước bản này gate là `!NV_LOP_HOP[than]`, đúng
+  // hồi mọi thân trần đều đã cắt lớp. Từ lúc `dwsl1` (thân dựng từ ảnh render) đi đường TẤM
+  // LIỀN thì gate ấy giết luôn bộ giáp lớp-rời duy nhất: `dwvt1` không vẽ được một lớp nào,
+  // và mặc nó vào trông y hệt thân trần — `test_sets` đo ra ĐÚNG 0 px khác biệt.
+  // Nay chỉ cần CÓ NGUỒN cho ít nhất một lớp; lớp nào không ai cấp thì bỏ qua (vòng dưới đã
+  // có `continue`). Bộ giáp phủ đủ 5 lớp thì thân nền không cần góp gì cả.
+  if (!NV_LOP_HOP[than] && !((gv && gv.oLop) &&
+      Object.values(gv.oLop).some(bo => NV_LOP_HOP[bo + hw]))) return null;
   const b2 = !!NV_BANG2[kind];
   // `idx` do người gọi tính theo số khung của THÂN. Mỗi lớp có thể lấy từ một bộ khác — và
   // hai bộ có thể khác số khung ở khối chạy (xem NV_KHUNG_R). Nên quy về PHA 0..1 ở đây rồi
@@ -16555,7 +16577,9 @@ function nvKhungGop(sectKey, tier, gv, kind, idx, hw){
     // không thì lớp ấy lui về thân — thà một ô về thân trần còn hơn một ô quay mặt đi hướng khác.
     const ml = NV_LOP[i][0], bo = oL[NV_LOP[i][1]] ? oL[NV_LOP[i][1]] + hw : null;
     const ten = (bo && NV_LOP_HOP[bo] && NV_LOP_HOP[bo][ml]) ? bo : than;
-    const H = NV_LOP_HOP[ten][ml];
+    // ⚠ `NV_LOP_HOP[ten]` có thể KHÔNG tồn tại (thân nền đi đường tấm liền) — đọc thẳng
+    // `NV_LOP_HOP[ten][ml]` là ném TypeError giữa vòng vẽ, mỗi khung một lần.
+    const HT = NV_LOP_HOP[ten], H = HT && HT[ml];
     if (!H) continue;                               // lớp RỖNG ở bộ đó (tóc sau) — bỏ qua
     const im = nvTai(ten + '_' + ml + (b2 ? '2' : ''), 'webp');
     if (!im) return null;
@@ -19349,7 +19373,10 @@ function drawPlayer(p){
     // nên ràng buộc `_lopHien === (_kind==='a'||'c')` ở khối trên không đổi — chỉ khối VẼ đổi.
     // Bộ có khối BAY riêng thì bay đọc khối ấy, không còn ghim một khung của khối ĐI nữa.
     // `_kind` giữ nguyên 'w'/'r' ⇒ ràng buộc `_lopHien === (_kind==='a'||'c')` không đổi.
-    const _blk = _bayBo ? 'f'
+    // Đang bay mà đang ra đòn ⇒ khối BAY+ĐÁNH. Không có khối ấy thì lui về 'f' (lơ lửng) —
+    // thà mất động tác đánh còn hơn mất đôi cánh giữa lúc bay.
+    const _blk = (_bayBo && _lopHien && NV_BO_CO_BAYDANH[nvBoGoc(p.sect, _tier, _gv) || '']) ? 'g'
+               : _bayBo ? 'f'
                : _kind === 'c' ? (KHOI_THEO_ACT[p.castAct] || 'c')
                : _kind !== 'a' ? _kind
                : !(p.equip && p.equip.vukhi) ? 'p'
@@ -19361,8 +19388,13 @@ function drawPlayer(p){
     const _n = nvSoKhungBo(p.sect, _tier, _gv, _blk, p._hw) || HS_FRAMES[_kind];
     const _TAU = Math.PI * 2;
     const _idx = _blk === 'f' ? ((now / BAY_NHIP) | 0) % _n
-               : _kind === 'c' ? clamp((Math.min(1, castK) * _n) | 0, 0, _n - 1)
-               : _kind === 'a' ? clamp((atkK * _n) | 0, 0, _n - 1)
+               // ⚠⚠ `castK`/`atkK` ĐẾM NGƯỢC (1 ở khung ĐẦU, 0 ở khung cuối — xem chỗ khai).
+               // Dùng thẳng là khối chạy NGƯỢC: đo được `c:15 c:14 … c:0`, tức nhân vật thu
+               // chiêu về rồi mới giơ trượng lên. Nhánh 'h' ngay dưới VỐN ĐÃ tính xuôi
+               // (`(dài − t)/dài`) — người trước sửa một nhánh và bỏ sót hai nhánh này.
+               // Lỗi CÓ SẴN với cả năm lớp, chỉ lộ ra khi gói art mới có thứ tự đọc được.
+               : _kind === 'c' ? clamp(((1 - Math.min(1, castK)) * _n) | 0, 0, _n - 1)
+               : _kind === 'a' ? clamp(((1 - atkK) * _n) | 0, 0, _n - 1)
                : _kind === 'h' ? clamp((((NV_GIAT_GIAY - (p.hurtT || 0)) / NV_GIAT_GIAY) * _n) | 0, 0, _n - 1)
                : _kind === 'd' ? clamp((((p.deadT || 0) / 1.2) * _n) | 0, 0, _n - 1)
                : _kind === 'j' ? clamp((bayK / 0.5 * _n) | 0, 0, _n - 1)
