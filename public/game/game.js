@@ -1949,7 +1949,10 @@ const TK_LOP = { thieulam:'kiem', toanchan:'no', minhgiao:'makiem', baidasan:'ga
 //   tranh, vẽ thêm một cây nữa là HAI cây trên màn.
 // ⚠ CHỈ ÁP KHI CHƯA NHẬP. Ngoài thành lớp nhân vật nhập vào Axie ⇒ không còn bàn tay nào để
 //   mà cầm; ở đó luật *"vũ khí LUÔN hiện lúc ra đòn"* vẫn dùng đường bay cũ (`_tkNhap`).
-const NV_TAY_VK = { dwsl1: { dx: 8, dy: -34, goc: -0.65, co: 0.60 } };
+// ⚠ GÓC DƯƠNG = cán ở TRÊN-TRÁI, đầu vuốt ở DƯỚI-PHẢI — khớp đúng tư thế `ready` mà gói
+//   đánh đã vẽ sẵn, nên đứng và ra đòn đọc ra MỘT tư thế chứ không phải hai. Đảo dấu là cây
+//   quay ngược so với lúc đánh, và chỗ lệch ấy chỉ lộ ra khi chụp hai khung cạnh nhau.
+const NV_TAY_VK = { dwsl1: { dx: 0, dy: -38, goc: 0.65, co: 0.90 } };
 window.NV_TAY_VK = NV_TAY_VK;
 function thanKhiNguon(p){
   const it = p.equip && p.equip.vukhi;
