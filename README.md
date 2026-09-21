@@ -12,7 +12,7 @@ Axie carries none of it, so any Axie can be any class.
 
 ## Play it
 
-**▶ Live build: https://14-225-204-107.nip.io/?test=1&lang=en** — nothing to install, nothing to sign up for.
+**▶ Live build: https://14-225-204-107.nip.io/?lang=en** — nothing to install, nothing to sign up for.
 
 The game is Vietnamese-first; `&lang=en` puts it in English before the first frame, so you never
 have to find a settings toggle to read it. Drop the parameter (or use `&lang=vi`) for Vietnamese.
@@ -36,12 +36,16 @@ is in [`docs/CHUA_HOAN_THIEN.md`](docs/CHUA_HOAN_THIEN.md).
 No wallet, no platform account, no token, nothing onchain — not as a fallback, but because none
 of it is in the build. Progress is saved to `localStorage` in your own browser.
 
-That `?test=1` starts you wearing a full set of real art gear instead of bare-skinned, so the
-character and equipment art is visible from the first second. It grants no levels and no currency —
-the game underneath is the normal one.
+**You arrive at level 120 with everything unlocked** — end-game gear at +11, tier-3 wings, all
+16 Axie bodies, every currency and consumable, every progression gate open. No flag needed; that
+is what the link above does. It is deliberate: this is a demo build, and the alternative is asking
+a first-time visitor to grind three hours before most of the systems are even reachable.
 
-If you would rather see the end of the game than play up to it, `?max=1` gives you level 120 with
-every system unlocked and maxed: end-game gear at +11, wings, jewels, Box Kundun.
+The trade-off, stated plainly: you cannot feel the **pacing** that way — the climb to 60, mechanics
+opening chapter by chapter, the starter quest chain. `?thuong=1` turns the boost off and drops you
+in at level 1 on the real progression, tutorial included.
+
+Every link, and what each one is for, is in [`docs/PLAY_LINKS.md`](docs/PLAY_LINKS.md).
 
 **If it runs rough, press `O` and set Detail to 50%.** That is the only lever that matters, and
 it is measured: at level 120 in Dusk Marsh with 130 monsters on screen, 1600×900, detail 100% →
@@ -49,7 +53,7 @@ it is measured: at level 120 in Dusk Marsh with 130 monsters on screen, 1600×90
 auto-tuner has already dropped them to Low by then — and zooming *in* is worse, not better
 (**33.9 fps**), because fewer objects each drawn larger is still more pixels.
 
-The game does auto-tune, but too slowly to save a first impression: measured on `?max=1`, the
+The game does auto-tune, but too slowly to save a first impression: measured on the live build, the
 first 15 seconds run at full detail, effects drop to Low at 20s, detail reaches 85% at 25s and
 75% at 45s — and then it stops there and never reaches 50%. So the worst-looking 20 seconds of
 the build are the first 20 seconds anyone sees. Setting it by hand skips all of that.
@@ -71,7 +75,7 @@ cd axierift/public/game
 python3 -m http.server 8850     # or: npx serve -l 8850
 ```
 
-Open `http://localhost:8850/?max=1&lang=en`. No git? The ZIP is
+Open `http://localhost:8850/?lang=en`. No git? The ZIP is
 [main.zip](https://github.com/ShanKyos/axierift/archive/refs/heads/main.zip) — about 180 MB, of
 which `public/game/` is 114 MB and the rest is tooling, tests and docs.
 
