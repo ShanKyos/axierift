@@ -6199,6 +6199,13 @@ function avaCo(id){
   const qua = Math.max(cao, rong) / tran;
   return qua > 1 ? than / qua : than;     // vượt trần thì tự thu đúng phần vượt
 }
+// Bề NGANG hộp vẽ của con Axie. 16 con có tỉ lệ rộng/cao 1,07-1,52 nên con bè nhất rộng hơn con
+// thon nhất gần 1,5 lần — chép một con số chung là ngưỡng đứng-rời sai ở một nửa số con.
+function avaRong(id){
+  const A = CHI_ANH.o[id];
+  const cao = avaCo(id);
+  return A ? cao * (A.nhoRong / A.nhoCao) : cao;
+}
 const CHI_CHAY_IMGS = {};
 function chiChayImg(id){
   if (!CHI_MAP[id]) return null;
@@ -19125,8 +19132,26 @@ function drawPlayer(p){
   // còn ý nghĩa với nhánh không-avatar.
   const _lopCo = _coAva ? (_oThanh ? AVA_THANH_CO
                          : _lopHien ? AVA_DANH_CO : AVA_THEO_CO) : 1;
-  const _avaDx = _coAva ? Math.cos(p.face)*_lopT - Math.sin(p.face)*_lopB : 0;
-  const _avaDy = _coAva ? (Math.sin(p.face)*_lopT + Math.cos(p.face)*_lopB)*0.55 : 0;
+  let _avaDx = _coAva ? Math.cos(p.face)*_lopT - Math.sin(p.face)*_lopB : 0;
+  let _avaDy = _coAva ? (Math.sin(p.face)*_lopT + Math.cos(p.face)*_lopB)*0.55 : 0;
+  // ⚠⚠ PHÉP NÉN TRỤC ĐỨNG ×0,55 ĂN MẤT KHOẢNG CÁCH, và ba hằng chỗ đứng ở trên KHÔNG bù được
+  //   — chúng đo trong hệ toạ độ THẾ GIỚI, còn thứ mắt đọc là khoảng cách trên MÀN. Đo qua tám
+  //   hướng với `tidewarden` (hộp vẽ 97,9 px ngang ⇒ ngưỡng đứng-rời 68 px):
+  //
+  //        trong thành 51,6 · đi theo 47,8 · ra đòn 51,0   ⇒ THẤP HƠN NGƯỠNG ở CẢ BA,
+  //        và 2/8 hướng thì hai hình chồng hẳn lên nhau.
+  //
+  //   Hướng nào dồn độ lệch vào trục đứng thì bị nén mạnh nhất, nên lỗi chỉ hiện ở vài hướng —
+  //   đọc ra "lúc thì rời lúc thì dính" chứ không ra một lỗi.
+  // ⇒ Giữ nguyên HƯỚNG, chỉ kéo dài ra cho đủ ngưỡng. Ngưỡng SUY TỪ hộp vẽ thật của con Axie
+  //   đang đeo (`avaRong`) chứ không chép một con số: 16 con có tỉ lệ rộng/cao 1,07-1,52.
+  // ⚠ ĐỪNG "sửa gọn" bằng cách nới ba hằng `AVA_*_BEN`: chúng cũng bị nén ở đúng mấy hướng ấy,
+  //   nên nới đủ cho hướng xấu nhất là hướng tốt nhất văng ra xa lơ.
+  if (_coAva){
+    const _ng = avaRong(avatarId(p)) / 2 + (NV_THAN_PX * _lopCo * 0.40) / 2;
+    const _d  = Math.hypot(_avaDx, _avaDy);
+    if (_d > 0.01 && _d < _ng){ const k = _ng / _d; _avaDx *= k; _avaDy *= k; }
+  }
   // Thu quanh BÀN CHÂN, không quanh tâm hộp. Hộp 160x220 vẽ quanh tâm nên gót nằm thấp hơn neo
   // đúng ngần này; thu thẳng là hai bàn chân nhấc khỏi đất mà nhìn chỉ thấy "hơi lửng lơ".
   const _lopChan = (HERO_GOT - HERO_H/2) * (NV_CAO / HERO_H) * (1 - _lopCo);
