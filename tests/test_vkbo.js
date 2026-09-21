@@ -4,12 +4,13 @@
 // tách lớp `vk` được như `NV_VK_LOP`, vì art tới đây đã dẹp. Nên lúc ra đòn mà thần khí vẫn
 // bật là HAI cây trên màn: một cây trong tay, một cây bay trên đầu (đã chụp lại).
 //
-// ⚠ NHƯNG KHỐI ĐI/ĐỨNG CỦA NÓ KHÔNG CÓ CÂY NÀO. Tắt cả đời là đứng trong thành TAY KHÔNG —
-// đã thử đúng một lượt (2026-09-21, khi gói art mới sắp về) và `test_vukhihien ②` bắt ngay.
-// Nên bài này kẹp HAI ĐẦU: ra đòn phải TẮT, đứng yên phải BẬT.
+// ⚠ CHỦ DỰ ÁN CHỐT 2026-09-21: *"đừng có nhét gậy khác vào nữa. Mình đang làm sẵn 1 bộ sprite
+// sheet đính vào rồi"* — gói art sẽ mang gậy ở MỌI khối. Nên luật nay là TẮT Ở MỌI KHỐI, không
+// còn "ra đòn tắt · đứng yên bật".
 //
-// ⚠ Và một đầu THỨ BA: bộ KHÔNG khai trong `NV_BO_CO_VK` thì vẫn phải bật. Thiếu vế đó thì gỡ
-// hẳn thần khí khỏi game cũng xanh — mà bốn lớp kia vẫn đang sống nhờ nó.
+// ⚠ Bài vẫn phải kẹp HAI ĐẦU, chỉ là đổi đầu thứ hai: bộ CÓ trong bảng thì tắt sạch, bộ KHÔNG
+// có trong bảng thì vẫn phải bật. Bỏ vế sau là gỡ hẳn thần khí khỏi game cũng xanh — mà bốn
+// lớp kia vẫn đang sống nhờ nó.
 const { chromium } = require(process.env.PW || '/opt/node22/lib/node_modules/playwright');
 const PORT = process.argv[2] || 8853;
 
@@ -66,7 +67,7 @@ const PORT = process.argv[2] || 8853;
     if (!r.raDon.lopHien) fail.push('dựng cảnh sai: lớp nhân vật chưa vật chất hoá lúc đo ra đòn');
     if (r.raDon.hien)     fail.push('RA ĐÒN: vẽ thêm một cây nữa ⇒ hai cây vũ khí trên màn');
     if (r.dungYen.lopHien) fail.push('dựng cảnh sai: lớp nhân vật vẫn đang ra đòn lúc đo đứng yên');
-    if (!r.dungYen.hien)  fail.push('ĐỨNG YÊN: vũ khí tắt ⇒ đứng trong thành tay không');
+    if (r.dungYen.hien)   fail.push('ĐỨNG YÊN: vẫn vẽ thêm cây ⇒ chồng lên cây đã có trong tranh');
   }
   // đầu kia — bộ không khai trong bảng thì KHÔNG được tắt theo
   if (r.bang.includes(r.boKhac))

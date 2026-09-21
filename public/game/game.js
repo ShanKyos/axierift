@@ -19202,15 +19202,10 @@ function drawPlayer(p){
   // kia có lớp `vk` nướng sẵn nên không ai để ý. Chủ dự án chốt: *"trong thành cho vũ khí khoác
   // lên vai (kiểu khu an toàn)"* — khoác lên vai thì phải thấy lúc ĐỨNG, không phải lúc vung.
   // `test_axiedanh §5` gác cả hai chiều (trong thành phải BẬT · ngoài thành đứng yên phải TẮT).
-  // ⚠⚠ `_boCoVk` KÈM `_lopHien` — TẠM THỜI, và đây là một quyết định về SẢN PHẨM, không phải
-  //   về mã. Đã thử tắt LUÔN (gói art sắp tới mang sẵn gậy ở mọi khối), và `test_vukhihien ②`
-  //   bắt được cái giá ngay: khối ĐI/ĐỨNG của gói art HIỆN TẠI vẽ TAY KHÔNG, mà Dark Wizard
-  //   và Dark Lord thì CỐ Ý không có lớp `vk` cầm tay — nên tắt luôn là một pháp sư đứng
-  //   giữa thành tay trắng, đúng thứ người chơi thấy ở màn đầu tiên.
-  //   Chủ dự án chốt giữ cây lại cho tới khi bộ sprite sheet có gậy về.
-  // ⇒ KHI BỘ SHEET MỚI VỀ thì đổi vế này thành `!_boCoVk` (tắt ở mọi khối) và trả
-  //   `test_vkbo` + `test_vukhihien ②` về luật ấy — cả hai đã chạy qua một lượt rồi.
-  const _tkHien = _tkNhap || (!_nhap && !_coVkLop && !(_boCoVk && _lopHien));
+  // ⚠ `_boCoVk` nay TẮT LUÔN, không còn kèm `_lopHien`. Gói art của bộ ấy mang sẵn vũ khí ở
+  //   MỌI khối (chủ dự án đang nướng bộ sprite sheet có gậy), nên vẽ thêm một cây là hai cây
+  //   trên màn — ở khối đứng thì lỗi ấy còn dễ thấy hơn lúc ra đòn vì người chơi đứng yên mà nhìn.
+  const _tkHien = _tkNhap || (!_nhap && !_coVkLop && !_boCoVk);
   // Đã nhập thì vũ khí thuộc về CON AXIE, nên nó neo vào chỗ Axie đứng (độ lệch 0), không neo
   // vào chỗ lớp nhân vật LẼ RA đứng — chỗ đó nay không có ai, cây vũ khí sẽ trôi lơ lửng cách
   // con Axie gần một thân người. Cùng lỗi mà `_nhap` sinh ra để chặn, chỉ đổi vai.
