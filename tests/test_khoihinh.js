@@ -46,20 +46,33 @@ const { chromium } = require('playwright');
   else pass(`${r1.soKhoi} khối, ${r1.khoiBang2} khối ở bảng hai`);
 
   // ── 2. Mốc khung không được chồng nhau ────────────────────────────────────
+  // ⚠ SỐ HÀNG SUY TỪ BẢNG THẬT ĐÃ NẠP, đừng chốt cứng 96 (= 6 hàng × 16 cột).
+  // Bảng hai NỚI ĐƯỢC: `dwsl1` có 7 hàng vì khối bay `f` (84) và bay-đánh `g` (96).
+  // Và phải BỎ QUA khối mà chính bộ đang đo không dùng được — `f`/`g` gác sau
+  // `NV_BO_CO_BAY`/`NV_BO_CO_BAYDANH`, nên bộ không khai hai cờ đó thì hai khối
+  // ấy không có đường nào tới được, đòi nó chứa chúng là đòi một thứ bất khả.
   const r2 = await p.evaluate(() => {
+    const gv = gearVisual(player), t = heroTier(player);
+    const bo = nvBoTen('thieulam', t, gv) || '';
+    const boQua = new Set();
+    if (!(window.NV_BO_CO_BAY || {})[bo]) boQua.add('f');
+    if (!(window.NV_BO_CO_BAYDANH || {})[bo]) boQua.add('g');
     const doi = (bang) => {
-      const ks = Object.keys(HS_FRAMES).filter(k => !!NV_BANG2[k] === bang);
+      const ks = Object.keys(HS_FRAMES).filter(k => !!NV_BANG2[k] === bang && !boQua.has(k));
       const o = [];
       for (const k of ks) for (let i = 0; i < HS_FRAMES[k]; i++) o.push(nvMoc(k) + i);
-      return { n: o.length, rieng: new Set(o).size, dinh: Math.max(...o) };
+      const b = nvBang('thieulam', t, gv, bang ? 'h' : 'i');
+      return { n: o.length, rieng: new Set(o).size, dinh: Math.max(...o),
+               o: b ? Math.floor(b.height / NV_OH) * NV_COT : 0 };
     };
-    return { mot: doi(false), hai: doi(true) };
+    return { bo, boQua: [...boQua], mot: doi(false), hai: doi(true) };
   });
   console.log('2.', JSON.stringify(r2));
   for (const [ten, v] of [['MỘT', r2.mot], ['HAI', r2.hai]]){
-    if (v.n !== v.rieng) fail(`bảng ${ten}: ${v.n - v.rieng} khung bị hai khối cùng chiếm`);
-    else if (v.dinh >= 96) fail(`bảng ${ten}: khung cao nhất ${v.dinh}, tràn khỏi 6 hàng`);
-    else pass(`bảng ${ten}: ${v.n} khung, không khối nào chồng khối nào (đỉnh ${v.dinh})`);
+    if (!v.o) fail(`bảng ${ten}: không đo được cỡ bảng thật`);
+    else if (v.n !== v.rieng) fail(`bảng ${ten}: ${v.n - v.rieng} khung bị hai khối cùng chiếm`);
+    else if (v.dinh >= v.o) fail(`bảng ${ten}: khung cao nhất ${v.dinh}, tràn khỏi ${v.o} ô của bảng`);
+    else pass(`bảng ${ten}: ${v.n} khung / ${v.o} ô, không khối nào chồng khối nào (đỉnh ${v.dinh})`);
   }
 
   // ── 3. Mỗi trạng thái một khối ────────────────────────────────────────────
