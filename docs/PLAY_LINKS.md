@@ -39,19 +39,19 @@ Use link 3 if you want to see that.
 Same as link 1, with the interface in English.
 
 ⚠ The choice is **remembered in your browser.** To go back: `?lang=vi`.
-⚠ Known gap, stated up front: the **narrative layer is still partly Vietnamese.** HUD, panels,
-menus and all 266 item names are fully English; what is left is prose, and the counts are
-measured, not estimated:
 
-| still Vietnamese | |
+The translation is **complete** — measured, not claimed. `tests/test_dichen.js` drives a bot
+that plays for real (mouse and keyboard, no internal calls to skip ahead) and then sweeps the
+canvas, the DOM and every panel:
+
+| surface | Vietnamese strings left |
 |---|--:|
-| side-quest text | 64 / 64 |
-| main quest text | 81 / 102 |
-| skill descriptions | 43 / 49 |
-| NPC names | 2 / 41 |
-| class descriptions · intro pages · item names | **0** |
+| canvas during play | **0** / 74 sampled |
+| all 15 panels (DOM) | **0** |
+| whole document (HUD) | **0** |
+| narrative layer — quests, side quests, skill text, NPC names, class text, intro, 266 item names | **0** |
 
-A ratchet test (`tests/test_dichen.js`) holds that ceiling so it can only go down.
+That test is a ratchet: the number is held at 0 and can only be lowered, never raised.
 
 ---
 
