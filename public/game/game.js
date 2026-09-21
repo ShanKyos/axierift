@@ -1930,30 +1930,18 @@ const VONGKIEM_XET = 5;                      // biên độ giật ngang của t
 // mà cầm, nên trên màn KHÔNG có vũ khí nào cả.
 const TK_LOP = { thieulam:'kiem', toanchan:'no', minhgiao:'makiem', baidasan:'gay', bug:'lenhtruong' };
 
-// ✋ VŨ KHÍ CẦM TRÊN TAY — thay hẳn kiểu BAY LƠ LỬNG, cho bộ nào khai socket bàn tay.
+// ✋ ~~VŨ KHÍ CẦM TRÊN TAY (`NV_TAY_VK`)~~ — ĐÃ DỰNG RỒI GỠ TRONG CÙNG MỘT NGÀY
 //
-// Chủ dự án chốt 2026-09-21, nguyên văn: *"bỏ luôn thần khí đi. Mình bỏ ý định thần khí rồi,
-// với art này thì cầm gậy trực tiếp sẽ hay hơn"*. Bộ có tên ở đây thì cây vũ khí neo vào một
-// điểm BÀN TAY cố định, nghiêng một góc cố định, và KHÔNG có hào quang lẫn vệt đuôi.
+// Giữ đúng cái tiêu đề gạch ngang này để cảnh báo, thay vì xoá trắng rồi để người sau đọc
+// `NV_TAY_VK` trong lịch sử git mà tưởng nó còn. Cùng kiểu bẫy đã ghi ở mục "~~Khắc Ấn~~".
 //
-// ⚠ HÀO QUANG PHẢI TẮT, và đó không phải chuyện thẩm mỹ. Chú thích của `veThanKhi` ghi rõ lý
-//   do nó tồn tại: *"một thanh kiếm lơ lửng mà không phát sáng thì người chơi đọc thành LỖI
-//   HIỂN THỊ (vũ khí rớt khỏi tay)"*. Cây NẰM TRONG TAY thì lý do ấy đảo chiều — phát sáng mới
-//   là thứ làm nó đọc ra "rớt khỏi tay".
-// ⚠ ĐỪNG NƯỚNG CÂY GẬY VÀO TRANH cho gọn. `VK_ANH` đã có BẢY cây trượng riêng theo giai
-//   (`dw_truong1..7`); nướng chết một cây vào khung đứng là bảy mốc nâng cấp NHÌN THẤY ĐƯỢC
-//   rút còn một, và cầm rìu thì ra hình gậy ở MỌI lúc chứ không chỉ lúc ra đòn.
-// ⚠ Đã thử tách cây gậy khỏi gói đánh để nướng — hỏng: lọc theo màu thì "tối" bắt cả khe giáp
-//   khắp người, "vàng" bắt cả đường viền vàng. Cùng vết sẹo đã ghi cho phép gỡ bóng đài nước.
-// ⚠ Bộ khai ở đây BẮT BUỘC phải có trong `NV_BO_CO_VK`: khối RA ĐÒN đã nướng sẵn vũ khí vào
-//   tranh, vẽ thêm một cây nữa là HAI cây trên màn.
-// ⚠ CHỈ ÁP KHI CHƯA NHẬP. Ngoài thành lớp nhân vật nhập vào Axie ⇒ không còn bàn tay nào để
-//   mà cầm; ở đó luật *"vũ khí LUÔN hiện lúc ra đòn"* vẫn dùng đường bay cũ (`_tkNhap`).
-// ⚠ GÓC DƯƠNG = cán ở TRÊN-TRÁI, đầu vuốt ở DƯỚI-PHẢI — khớp đúng tư thế `ready` mà gói
-//   đánh đã vẽ sẵn, nên đứng và ra đòn đọc ra MỘT tư thế chứ không phải hai. Đảo dấu là cây
-//   quay ngược so với lúc đánh, và chỗ lệch ấy chỉ lộ ra khi chụp hai khung cạnh nhau.
-const NV_TAY_VK = { dwsl1: { dx: 0, dy: -38, goc: 0.65, co: 0.90 } };
-window.NV_TAY_VK = NV_TAY_VK;
+// Nó từng neo cây vũ khí vào một điểm bàn tay (không hào quang, không vệt đuôi) để bộ `dwsl1`
+// — gói art có khối ĐI/ĐỨNG vẽ TAY KHÔNG — vẫn mang gậy lúc đứng. Chủ dự án chốt 2026-09-21:
+// *"bạn cứ làm by default đi đừng có nhét gậy khác vào nữa. Mình đang làm sẵn 1 bộ sprite
+// sheet đính vào rồi"* — tức cây gậy sẽ nằm SẴN trong tranh ở mọi khối.
+//
+// ⇒ Bộ nào khai trong `NV_BO_CO_VK` thì KHÔNG vẽ thêm cây nào nữa, ở mọi khối, không chỉ lúc
+//   ra đòn. Đừng dựng lại lớp chồng: hai cây trên màn là kiểu hỏng mà `_tkHien` sinh ra để chặn.
 function thanKhiNguon(p){
   const it = p.equip && p.equip.vukhi;
   const d  = it && itemDef(it);
@@ -2066,20 +2054,9 @@ const TK_LOI = {
 //   chém — lấy đà ra sau rồi bổ vòng ra trước, cuối nhịp thu về. Đây là chỗ phải khớp với cú
 //          vung tay của bộ xương, nếu không thì tay vung một đằng kiếm bay một nẻo.
 //   niệm — dựng đứng trên đầu và xoay chậm. Không quét, vì chiêu phép không phải chiêu chém.
-function thanKhiTuThe(p, atkK, castK, wph, now, tay){
+function thanKhiTuThe(p, atkK, castK, wph, now){
   const S = thanKhiNguon(p);
   if (!S) return null;
-  // ✋ CẦM TAY — bỏ hẳn bốn nhịp bay ở dưới. Không thở, không đuổi theo, không quét: một cây
-  // nằm trong tay thì nó đứng yên so với thân người, mọi chuyển động là của chính thân người.
-  // ⚠ Lật theo hướng mặt phải lật CẢ góc nghiêng, nếu không thì quay sang trái là cây chúc
-  //   ngược đầu — cùng bẫy "chi tiết bất đối xứng nhảy sang bên kia khi lật" đã ghi ở mục tám
-  //   hướng nhìn.
-  if (tay){
-    const lat = Math.cos(p.face || 0) < 0 ? -1 : 1;
-    return { S, mo: 1, vet: 0, cam: true, co: tay.co,
-             x: p.x + tay.dx * lat, y: p.y + tay.dy,
-             xoay: lat < 0 ? Math.PI - tay.goc : tay.goc, truoc: true };
-  }
   const L = TK_LOI[S.art] || TK_LOI.weapon;
   const f = p.face || 0;
   let goc, ban, cao, xoay, truoc, vet = 0;
@@ -2125,18 +2102,6 @@ function veThanKhi(g, t, p){
   // HÀO QUANG — không phải trang trí. Một thanh kiếm lơ lửng mà không phát sáng thì người chơi
   // đọc thành LỖI HIỂN THỊ (vũ khí rớt khỏi tay), không đọc thành "thần khí đi theo". Vệt sáng
   // là thứ nói rằng chuyện này là cố ý.
-  //
-  // ⚠ VÀ CHÍNH LÝ DO ẤY ĐẢO CHIỀU KHI CÂY NẰM TRONG TAY (`t.cam`): ở đó hào quang mới là thứ
-  //   làm nó đọc ra "rớt khỏi tay". Vệt đuôi cũng vậy — một cây đang cầm thì không quét.
-  if (t.cam){
-    g.save();
-    g.globalAlpha = t.mo;
-    g.translate(t.x, t.y); g.rotate(t.xoay);
-    if (t.co) g.scale(t.co, t.co);
-    t.S.ve(g);
-    g.restore();
-    return;
-  }
   const mau = (SECTS[(p || player).sect] || {}).glow || '#9fd0ff';
   g.save();
   g.globalCompositeOperation = 'lighter';
@@ -19103,10 +19068,7 @@ function drawPlayer(p){
   //   khối bay đều cần biết đang vẽ BỘ nào. `gearVisual` không rẻ nên gọi một lần rồi dùng
   //   lại, đừng gọi thêm lượt thứ hai cho gọn mã.
   const _tier = heroTier(p), _gv = gearVisual(p);
-  // ✋ Socket bàn tay — CHỈ khi chưa nhập vào Axie (ngoài thành không còn bàn tay nào).
-  const _tayVk = (typeof avaNhap === 'function' && avaNhap()) ? null
-               : (NV_TAY_VK[nvBoGoc(p.sect, _tier, _gv) || ''] || null);
-  const _tk = thanKhiTuThe(p, (p.atkAnim || 0) / NV_DANH_GIAY, (p.castT || 0) / NV_CHU_GIAY, p.walkPh || 0, now, _tayVk);
+  const _tk = thanKhiTuThe(p, (p.atkAnim || 0) / NV_DANH_GIAY, (p.castT || 0) / NV_CHU_GIAY, p.walkPh || 0, now);
   // ⚠ CHỖ VẼ cũng dời xuống, cùng lý do với cánh: nó bám neo người chơi nên bật avatar lên là
   // cây vũ khí lơ lửng trên đầu con Axie.
 
@@ -19240,7 +19202,10 @@ function drawPlayer(p){
   // kia có lớp `vk` nướng sẵn nên không ai để ý. Chủ dự án chốt: *"trong thành cho vũ khí khoác
   // lên vai (kiểu khu an toàn)"* — khoác lên vai thì phải thấy lúc ĐỨNG, không phải lúc vung.
   // `test_axiedanh §5` gác cả hai chiều (trong thành phải BẬT · ngoài thành đứng yên phải TẮT).
-  const _tkHien = _tkNhap || (!_nhap && !_coVkLop && !(_boCoVk && _lopHien));
+  // ⚠ `_boCoVk` nay TẮT LUÔN, không còn kèm `_lopHien`. Gói art của bộ ấy mang sẵn vũ khí ở
+  //   MỌI khối (chủ dự án đang nướng bộ sprite sheet có gậy), nên vẽ thêm một cây là hai cây
+  //   trên màn — ở khối đứng thì lỗi ấy còn dễ thấy hơn lúc ra đòn vì người chơi đứng yên mà nhìn.
+  const _tkHien = _tkNhap || (!_nhap && !_coVkLop && !_boCoVk);
   // Đã nhập thì vũ khí thuộc về CON AXIE, nên nó neo vào chỗ Axie đứng (độ lệch 0), không neo
   // vào chỗ lớp nhân vật LẼ RA đứng — chỗ đó nay không có ai, cây vũ khí sẽ trôi lơ lửng cách
   // con Axie gần một thân người. Cùng lỗi mà `_nhap` sinh ra để chặn, chỉ đổi vai.
