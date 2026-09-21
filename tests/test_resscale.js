@@ -12,7 +12,13 @@ const measure = (p, ms=3000) => p.evaluate(async (ms) => {
   const b = await chromium.launch({ executablePath: '/opt/pw-browsers/chromium' });
   const p = await b.newPage({ viewport:{width:1280,height:900} });
   const errs = []; p.on('pageerror', e => errs.push(String(e).split('\n')[0]));
-  await p.goto('http://localhost:8853/index.html?max=1', { waitUntil:'load' });
+  // ⚠ CỔNG LẤY TỪ argv, ĐỪNG CHÉP CỨNG. Bản cũ ghi thẳng `localhost:8853` và bỏ qua argv[2],
+  //    nên `node test_resscale.js <cổng>` lặng lẽ chạy vào server ĐANG có ở 8853 chứ không vào
+  //    cổng được truyền. Ba lượt thử ngược của đợt này vì thế ra ba kết quả GIỐNG HỆT nhau và
+  //    đều xanh — que dò hỏng, không phải mã đúng. `reg.sh` thì `sed` cổng nên nó không lộ.
+  //    (Vết sẹo "bốn bài chép cứng cổng" đã ghi trong CLAUDE.md; đây là bài thứ năm.)
+  const PORT = process.argv[2] || '8853';
+  await p.goto(`http://localhost:${PORT}/index.html?max=1`, { waitUntil:'load' });
   await p.waitForFunction(() => window.__gameReady).catch(()=>{});
   await p.evaluate(() => { window.TEST_MODE = true; startGame('thieulam', null); });
   await p.waitForTimeout(700);
@@ -106,6 +112,7 @@ const measure = (p, ms=3000) => p.evaluate(async (ms) => {
     // 3 giây và so mọi thứ với nó — mà bộ tự chỉnh có thể đã hạ MỘT NẤC trong chính 3 giây ấy.
     // Bắt được thật: một lượt chạy ghi `before.fxq = 1` trong khi dòng ngay trên vừa đặt FXQ = 2,
     // rồi kết luận "không hạ gì cả". Lấy kết quả của việc hạ để phủ nhận rằng đã hạ.
+    window.__fxTruotMax = 0;   // §1-6 đã chạy game rồi; không xoá thì mốc này mang theo cảnh cũ
     window.__q0 = { fxq: FXQ, res: RES }; });
   //    Phải đo FPS *TRƯỚC* khi bộ tự chỉnh kịp làm gì. Bản cũ đo ở CUỐI 30 giây rồi lấy con số
   //    đó phán xét: máy chạy 59.9 FPS thì "không được hạ gì". Nhưng máy chạy được 59.9 CHÍNH LÀ
@@ -122,11 +129,12 @@ const measure = (p, ms=3000) => p.evaluate(async (ms) => {
   //    mẫu thấp nhất vẫn giữ được cú tụt đã gây ra việc hạ đó.
   await p.waitForTimeout(3000);
   const before = await p.evaluate(() => ({ fxq: FXQ, res: RES, fps: _perf.fps }));
-  const mau = [];
+  const mau = [], vet = [];
   for (let i = 0; i < 30; i++){
     await p.waitForTimeout(1000);
-    const f = await p.evaluate(() => _perf.fps);
-    if (f) mau.push(f);
+    const o = await p.evaluate(() => ({ f: _perf.fps, res: RES, fxq: FXQ }));
+    if (o.f) mau.push(o.f);
+    vet.push(o);
   }
   if (before.fps) mau.push(before.fps);
   const sx = mau.slice().sort((a,b)=>a-b);
@@ -138,17 +146,20 @@ const measure = (p, ms=3000) => p.evaluate(async (ms) => {
   console.log('7) tự chỉnh:', JSON.stringify(q0), '→', JSON.stringify(tuned),
               `· FPS trung vị = ${giua}, thấp nhất = ${day} (${mau.length} mẫu)`);
   // ⚠ ĐÒI HỎI PHẢI KHỚP VỚI ĐIỀU KIỆN KÍCH HOẠT CỦA CHÍNH TÍNH NĂNG, không được chặt hơn.
-  // fxAutoTune() gom 90 khung rồi xét TRUNG VỊ: hạ một nấc khi med > 21ms (≈47,6 FPS), và sau
-  // mỗi nấc còn nghỉ 240 khung. Nó CỐ Ý không phản ứng với một cú tụt lẻ — "hạ nhanh, nâng
-  // chậm" là để chất lượng đừng nhấp nháy quanh ngưỡng.
-  // Bản cũ lại bắt: hễ MỘT mẫu 1 giây bất kỳ trong 33 giây tụt dưới 55 thì bộ tự chỉnh BẮT BUỘC
-  // phải hạ. Đó là đòi hỏi chặt hơn thiết kế, nên nó đỏ đúng vào lúc tính năng hành xử đúng —
-  // và đỏ ngẫu nhiên theo tải của máy chạy bài kiểm. Nay dùng cùng một thống kê với tính năng.
-  const NGUONG_HA = 1000 / 21;   // ngưỡng hạ nấc của fxAutoTune, đọc thẳng từ mã
-  if (giua && giua < NGUONG_HA){
+  // Nó CỐ Ý không phản ứng với một cú tụt lẻ — "hạ nhanh, nâng chậm" là để chất lượng đừng
+  // nhấp nháy quanh ngưỡng. Bản cũ lại bắt: hễ MỘT mẫu 1 giây bất kỳ trong 33 giây tụt dưới 55
+  // thì bộ tự chỉnh BẮT BUỘC phải hạ — chặt hơn thiết kế, nên nó đỏ đúng vào lúc tính năng hành
+  // xử đúng, và đỏ ngẫu nhiên theo tải của máy chạy bài kiểm.
+  // ⚠ MỐC NAY LÀ TỈ LỆ KHUNG TRƯỢT NHỊP, hỏi thẳng `TRUOT_HA` trong mã. Bản trước neo vào
+  // `1000/21` — trung vị mili-giây — mà chính cái trung vị đó là thứ vừa bị gỡ: rAF khoá theo
+  // nhịp quét nên `ms` chỉ nhận 16,7 hoặc 33,3, và trung vị nhảy về 16,7 ngay khi 51% khung kịp
+  // nhịp. Một con số chép từ ngưỡng cũ vào bài kiểm là một mỏ neo chỉ vào chỗ không còn gì.
+  const tk = await p.evaluate(() => ({ max: window.__fxTruotMax, ng: TRUOT_HA }));
+  console.log(`   trượt nhịp cao nhất trong cửa sổ: ${(tk.max*100).toFixed(0)}% (ngưỡng hạ ${(tk.ng*100).toFixed(0)}%)`);
+  if (tk.max != null && tk.max > tk.ng){
     if (tuned.fxq >= q0.fxq && tuned.res >= q0.res)
-      fail(`FPS trung vị chỉ ${giua} (dưới ngưỡng hạ nấc ${NGUONG_HA.toFixed(1)}) mà bộ tự chỉnh không hạ gì cả`);
-    else console.log(`   (đuối bền, trung vị ${giua} FPS → đã hạ xuống fxq ${tuned.fxq} · res ${tuned.res}, nay ${tuned.fps} FPS)`);
+      fail(`đã có cửa sổ trượt nhịp ${(tk.max*100).toFixed(0)}% (trên ngưỡng ${(tk.ng*100).toFixed(0)}%) mà bộ tự chỉnh không hạ gì cả`);
+    else console.log(`   (đuối bền → đã hạ xuống fxq ${tuned.fxq} · res ${tuned.res}, nay ${tuned.fps} FPS)`);
   } else if (day >= 55){
     console.log(`   (chưa lúc nào tụt dưới 55 FPS — thấp nhất ${day} — nên không hạ gì là đúng)`);
     if (tuned.fxq < q0.fxq || tuned.res < q0.res)
@@ -158,10 +169,60 @@ const measure = (p, ms=3000) => p.evaluate(async (ms) => {
     // khẳng định gì ở đây — khẳng định bừa chính là chỗ bài này chập chờn bấy lâu.
     console.log(`   (tụt lẻ nhưng không bền — trung vị ${giua}, thấp nhất ${day} — bộ tự chỉnh hạ hay không đều hợp lệ)`);
   }
-  if (tuned.res < 1 && tuned.fxq !== 0)
-    fail(`hạ độ nét xuống ${tuned.res} khi hiệu ứng còn ở mức ${tuned.fxq} — phải hạ hiệu ứng trước`);
+  // ⚠ GÁC CHIỀU HẠ QUA VẾT ĐI, KHÔNG QUA TRẠNG THÁI CUỐI. Bản cũ chốt `res < 1 ⇒ fxq === 0`,
+  // đúng hồi chiều NÂNG đi cùng thứ tự với chiều hạ. Nay chiều nâng là GƯƠNG (độ nét trước,
+  // hiệu ứng sau), nên trạng thái "nét 0,6 · hiệu ứng 1" là hợp lệ và thường gặp: hạ hết cỡ rồi
+  // trả lại hiệu ứng vì còn dư. Bất biến còn lại là về CHUYỂN TIẾP: không bao giờ HẠ độ nét
+  // trong lúc hiệu ứng chưa kịch đáy.
+  for (let k = 1; k < vet.length; k++){
+    if (vet[k].res < vet[k-1].res - 1e-6 && vet[k-1].fxq > 0)
+      fail(`hạ độ nét ${vet[k-1].res} → ${vet[k].res} trong lúc hiệu ứng còn ở mức ${vet[k-1].fxq} — phải hạ hiệu ứng trước`);
+  }
   if (tuned.W !== 1280) fail('tự chỉnh làm co tầm nhìn');
   if (Math.abs(tuned.cw - 1280*tuned.res) > 2) fail('bộ đệm không khớp RES sau khi tự chỉnh');
+
+  // 8. LÁI THẲNG `fxAutoTune` BẰNG DÒNG DỮ LIỆU DỰNG SẴN — hai mệnh đề TẤT ĐỊNH.
+  //
+  //    ⚠ Bản đầu của hai mục này đo qua CẢNH THẬT (vào map 130 quái, chờ 50 giây; ép chất lượng
+  //    xuống đáy rồi về thành, chờ 30 giây). Chúng chạy được và nói ra số đẹp — nhưng THỬ NGƯỢC
+  //    CẢ HAI ĐỀU XANH: trả phép đo về trung vị mili-giây, bài vẫn PASS. Lý do là môi trường:
+  //    trình duyệt headless không khoá vsync như một màn hình thật, nên nó không dựng lại được
+  //    đúng cái điều kiện sinh ra lỗi (`ms` chỉ nhận bội số của chu kỳ quét). Cộng thêm 80 giây
+  //    chờ ⇒ hai mục vừa đắt vừa không gác gì.
+  //    *Một bài kiểm không thử ngược được thì nó chưa phải một bài kiểm.*
+  //
+  //    ⇒ Bơm thẳng dòng `ms` vào hàm. Cái cần gác là PHÉP QUYẾT ĐỊNH, mà phép ấy là hàm thuần
+  //    của dòng số — không cần một cái máy có màn hình để hỏi nó.
+  const bom = await p.evaluate(() => {
+    const kq = {};
+    const nap = (mang) => { _fxHold = 0; _fxT.length = 0; for (const v of mang) fxAutoTune(v); };
+    // ① HAI ĐỈNH 50/50 — nửa số khung trượt nhịp, nhưng TRUNG VỊ vẫn là 16,7.
+    //    Đây chính là trạng thái giật 60/30 mà bản cũ đọc ra "ổn rồi" rồi dừng.
+    setFxq('auto'); setRes('auto'); FXQ = 2; RES = 1; _resHong = 0; resize();
+    // ⚠ 46 nhanh / 44 chậm, KHÔNG phải 45/45. `fxAutoTune` lấy phần tử thứ [45] của 90 mẫu đã
+    //    sắp — tức trung vị TRÊN — nên chia đôi chẵn thì nó rơi vào 33,3 và bản cũ cũng hạ, mệnh
+    //    đề thành vô nghĩa. Chốt tự kiểm ngay dưới đã bắt đúng chuyện đó ở lượt viết đầu.
+    //    48,9% khung trượt mà trung vị vẫn đọc ra 16,7: đó chính xác là ca lỗi.
+    const hai = new Array(46).fill(16.7).concat(new Array(44).fill(33.3));
+    nap(hai);
+    kq.haiDinh = { fxq: FXQ, med: hai.slice().sort((a,b)=>a-b)[45] };
+    // ② KHÔNG KHUNG NÀO TRƯỢT, nhưng `ms` vẫn là 16,7 — sàn vật lý của màn 60Hz.
+    //    Bản cũ hỏi `med < 13` nên điều kiện nâng SAI VĨNH VIỄN: chất lượng chỉ đi xuống.
+    setFxq('auto'); setRes('auto'); FXQ = 0; RES = 1; _resHong = 0; resize();
+    nap(new Array(90).fill(16.7));
+    kq.muot = { fxq: FXQ };
+    setFxq('auto'); setRes('auto'); FXQ = 2; RES = 1; _resHong = 0; resize();
+    return kq;
+  });
+  console.log('8) bơm thẳng:', JSON.stringify(bom));
+  if (bom.haiDinh.med !== 16.7)
+    fail(`8) cảnh dựng hỏng: dòng hai đỉnh phải có trung vị 16,7 mới tái hiện được lỗi, đang là ${bom.haiDinh.med}`);
+  else if (bom.haiDinh.fxq !== 1)
+    fail(`8①) 50% khung trượt nhịp mà bộ tự chỉnh không hạ gì (hiệu ứng vẫn ${bom.haiDinh.fxq}) — `
+       + `đang xét trung vị mili-giây chứ không xét tỉ lệ trượt`);
+  if (bom.muot.fxq !== 1)
+    fail(`8②) không khung nào trượt nhịp mà chất lượng không hồi phục (hiệu ứng vẫn ${bom.muot.fxq}) — `
+       + `điều kiện nâng đang đòi một giá trị dưới sàn 16,7 của màn 60Hz, tức sai vĩnh viễn`);
 
   console.log('errors:', JSON.stringify(errs));
   if (errs.length) fail('có lỗi trang: ' + errs[0]);
