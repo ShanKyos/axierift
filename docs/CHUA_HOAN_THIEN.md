@@ -72,21 +72,40 @@ Còn lại đã ổn: repo **public**, `LICENSE` có và giải thích lý do so
 
 ## 🟠 P2 — nợ thật, không chặn khâu nộp
 
-### 5. Tầng kể chuyện còn **190 chuỗi** chưa dịch sang tiếng Anh
+### 5. ~~Tầng kể chuyện còn 190 chuỗi chưa dịch~~ — **ĐÃ TRẢ**, và nó lộ ra một mặt lớn hơn
 
-Đo bằng `tests/test_dichen.js §④`, và các con số này là **trần đã ghi thành số** nên chúng
-không tụt đi trong im lặng:
+> ⚠ Giữ đúng cái tiêu đề gạch ngang này thay vì xoá trắng: bảng số cũ dưới đây là **cách một
+> phép đo có thể xanh mà không gác gì**, và đó mới là phần đáng nhớ.
 
-| mặt | còn / tổng |
-|---|--:|
-| mô tả chiêu (`VOHOC_DEFS.desc`) | **43 / 49** |
-| nhiệm vụ chính (tên + mô tả) | **81 / 102** |
-| nhiệm vụ phụ (tên + mô tả) | **64 / 64** |
-| tên NPC | **2 / 41** |
-| mô tả 5 lớp · trang dẫn truyện · **266 tên món** | **0** |
+190 chuỗi kể chuyện (43 mô tả chiêu · 81 chính tuyến · 64 phụ tuyến · 2 tên NPC) đã dịch xong;
+bảy trần trong `test_dichen §④` nay **đều là 0** và là một **bánh cóc**, không còn là hạn mức —
+thêm một nhiệm vụ mà quên khai bản dịch là bài đỏ ngay, chứ không lặng lẽ ăn vào phần trần dư.
 
-Tức: mọi thứ người chơi **bấm** thì đã sang tiếng Anh; phần lớn thứ người chơi **đọc để hiểu
-câu chuyện** thì chưa. Đây là khoản nợ dịch lớn nhất còn lại.
+**Nhưng phép đo ấy đo sai thứ, và đây là bài học:** `§④` bơm từng chuỗi vào một `<div>` RỜI do
+chính nó dựng, nên nó chứng minh `lang.js` **DỊCH ĐƯỢC** chuỗi — không chứng minh chuỗi **tới
+được mắt người chơi**. Quét lại bằng cách mở đúng mấy cái bảng ra (5 lớp × 7 cấp × mọi NPC, lái
+bằng `tryTalk()` thật) thì lòi ra một tập hoàn toàn khác, **418 dòng**, mà cả năm mục cũ đều mù:
+
+| ở đâu | dòng | vì sao không mục nào thấy |
+|---|--:|---|
+| `#panel-quest` — thoại NPC, quầy thuốc, quầy rương, Trại Ngựa, Vực Thẳm, Truy Nã | **377** | bảng chỉ dựng ra khi đứng cạnh một người và bấm E |
+| `#forge-content` — Lò Hỗn Độn | 16 | mở được, nhưng `§③` đọc `innerText` của panel cha |
+| lời nhắc góc màn · thẻ nhiệm vụ · bảng Kỹ Năng · Nhật Ký | 25 | chúng là HUD, không phải `#panel-*` |
+
+⇒ Đã dịch hết, và **`test_dichen §⑥` nay mở bảng NPC THẬT** (hai map × hai cấp × mọi NPC) rồi
+quét trong đó, có chốt tự kiểm đòi ≥20 lượt bắt chuyện trước khi chấm. *Một phép quét không mở
+được cái bảng thì nó không gác được cái bảng ấy — và nó trả về những con số trông hoàn toàn
+bình thường.*
+
+Và một mặt thứ hai lộ ra ngay sau đó, lớn không kém: **băng-rôn giữa màn (`zoneBanner`) —
+59/65 chuỗi THUẦN chưa dịch**. `§②` bọc `fillText` nên chỉ thấy chuỗi nào tình cờ vẽ ra trong
+~30 giây bài chạy, mà băng-rôn thì phần lớn nổ ở một **mốc giờ thật** hoặc ở một sự kiện **một
+lần trong đời**. Nó lộ ra hoàn toàn do may: lượt chạy hôm nay rơi trúng mốc "10 phút nữa Đàn
+Vàng". Đã dịch hết (59 `EXACT` + 32 `RULES`).
+
+**Còn nợ, nói thẳng:** chưa có bài kiểm nào gác mặt băng-rôn — `§②` vẫn là một phép đo phụ
+thuộc giờ chạy. Cửa đúng là một mục mới quét thẳng `zoneBanner` trong `game.js` rồi hỏi bộ dịch,
+đúng lối `tools/` đang làm; chưa làm vì nó cần một bộ dựng thể hiện cho 43 khuôn có `${}`.
 
 ### 6. Tàn dư kiếm hiệp trong tên vật phẩm — Quy tắc số 1
 

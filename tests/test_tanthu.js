@@ -103,9 +103,23 @@ const pass = m => console.log('PASS ' + m);
     R.buoc.push(ten()); R.tutNhat = player.tutNhat || 0;
     togglePanel('char'); closePanels();                          // ⑥ mở bảng
     R.buoc.push(ten()); R.tutBang = player.tutBang || 0;
+    // ⑦ bước `than` — ĂN ĐÒN THẬT trên đất có hệ. Lái bằng `update()` chứ không gán thẳng
+    // `_tutHe`: chỗ dễ hỏng không phải phép so sánh trong `xong`, mà là SỢI DÂY từ `hurtPlayer`
+    // tới cái cờ — gán thẳng thì gỡ hẳn dòng đếm trong `hurtPlayer` bài này vẫn xanh.
+    R.datCoHe = !!((mapBanSac(curMap) || {}).he);
+    R.heTruoc = player._tutHe || 0;
+    for (let i = 0; i < 600 && (player._tutHe || 0) < 3; i++){
+      const q = mobs.find(x => x.hp > 0);
+      if (q){ q.x = player.x + 8; q.y = player.y; q.atkCd = 0; }
+      player.hp = player.maxHp;            // đòn quái phải ĐẾM, nhưng không được giết người đo
+      update(1 / 60);
+    }
+    R.heSau = player._tutHe || 0;
+    for (let i = 0; i < 4; i++) tutTick(1 / 60);
+    R.buoc.push(ten());
     return R;
   });
-  const mong = ['move', 'npc', 'map', 'kill', 'loot', 'panel', 'TAT'];
+  const mong = ['move', 'npc', 'map', 'kill', 'loot', 'panel', 'than', 'TAT'];
   if (di.buoc.join('>') !== mong.join('>')) fail(`③ đường thuận lệch: ${di.buoc.join(' → ')} · mong ${mong.join(' → ')}`);
   else pass(`③ sáu bước đi hết bằng hành động thật: ${di.buoc.join(' → ')}`);
   if (!di.coQuai || !di.kills) fail(`③ cảnh dựng: không hạ được con nào (quái ${di.coQuai} · kills ${di.kills})`);
@@ -121,7 +135,11 @@ const pass = m => console.log('PASS ' + m);
   if (di.tutNoi !== 1) fail(`⑤ tryTalk không ghi cờ tutNoi (đo ${di.tutNoi})`);
   else pass('⑤ tryTalk ghi tutNoi');
   if (di.tutBang !== 1) fail(`⑤ togglePanel('char') không ghi cờ tutBang (đo ${di.tutBang})`);
-  else pass("⑤ togglePanel('char') ghi tutBang — khoá bước cuối là 'panel', hai lời gọi cũ nay khớp");
+  else pass("⑤ togglePanel('char') ghi tutBang — khoá bước 'panel', hai lời gọi cũ nay khớp");
+  // ⑤b SỢI DÂY của bước `than`: `hurtPlayer` phải là chỗ đếm, không phải `tutTick` tự cộng.
+  if (!di.datCoHe) fail('⑤b cảnh dựng: map đo đáng lẽ có hệ trội (bước "than" mới có nghĩa ở đó)');
+  else if (di.heSau <= di.heTruoc) fail(`⑤b ăn đòn thật mà _tutHe không nhúc nhích (${di.heTruoc} → ${di.heSau}) — dây từ hurtPlayer tới cờ đứt`);
+  else pass(`⑤b hurtPlayer đếm trục phòng thủ Axie: _tutHe ${di.heTruoc} → ${di.heSau}`);
 
   const som = await page.evaluate(() => {
     localStorage.clear(); startGame('thieulam', null);
@@ -165,6 +183,13 @@ const pass = m => console.log('PASS ' + m);
   else pass('⑥ không còn hứa đi nhận một nhiệm vụ đã nằm sẵn trong tay');
   if (!di.bannerLucVao) fail('⑥ bước "map" bảo bấm "Đi ngay" nhưng dải nhiệm vụ không hiện lúc vào game');
   else pass('⑥ dải "Đi ngay" thật sự có mặt lúc vào game');
+  // ⑥b HƯỚNG DẪN PHẢI DẠY TRỤC AXIE. Cơ chế này gánh 35% barem Axie Core, chạy đúng và có bài
+  // gác từ lâu (`test_hethu` · `test_bophan`) — nhưng đếm lại các cửa NÓI RA nó thì sáu bước
+  // hướng dẫn cũ không bước nào nhắc, và nhiệm vụ dạy nó mở ở cấp 19. Mệnh đề này giữ cái cửa
+  // phút-đầu ấy khỏi bị dọn đi trong im lặng.
+  if (!/Axie/.test(chu.txt)) fail('⑥b hướng dẫn tân thủ không nhắc con Axie một lần nào — trục gánh 35% barem không có cửa dạy nào trong phút đầu');
+  else if (!/hệ/.test(chu.txt)) fail('⑥b hướng dẫn có nhắc Axie nhưng không nói tới HỆ — vế phòng thủ vẫn vô hình');
+  else pass('⑥b hướng dẫn tân thủ có dạy trục phòng thủ Axie');
 
   if (errors.length) fail('LỖI JS: ' + errors.slice(0, 3).join(' | '));
   else pass('không lỗi JS');

@@ -162,9 +162,61 @@ const BANG = ['char','inv','bag','skill','quest','qlog','map','settings','help',
   if (hud.length) { hud.slice(0, 12).forEach(h => fail('⑤ HUD còn tiếng Việt — ' + h)); }
   else pass('⑤ HUD: 0 dòng tiếng Việt trên toàn bộ document');
 
+  // ── ⑥ BẢNG NPC — mặt LỚN NHẤT của cả game, và không mục nào ở trên chạm tới nó ─────────
+  // §③ quét 15 bảng `#panel-*` và §⑤ quét cả `document.body`, nhưng CẢ HAI đều đo cái màn
+  // hình đang có sẵn — mà bảng NPC chỉ dựng ra khi đứng cạnh một người và bấm E. Quét rộng
+  // (5 lớp × 7 cấp × mọi NPC, lái bằng `tryTalk()` thật) đo được **377 dòng tiếng Việt**
+  // trong `#panel-quest` trong lúc cả năm mục trên đều xanh: thoại phố, quầy thuốc, quầy
+  // rương, Trại Ngựa, Vực Thẳm, Truy Nã. Đó là bảng người chơi mở nhiều nhất trong mười
+  // phút đầu. *Một phép quét không mở được cái bảng thì nó không gác được cái bảng ấy.*
+  //
+  // ⚠ ĐO Ở HAI CẤP, ĐỪNG ĐO MỘT. Quầy thuốc ghép máu và số lọ, quầy rương ghép khoảng cấp,
+  // Vực Thẳm đổi lời theo cấp — một cấp thì mọi khuôn có số đều lọt qua bằng đúng một trạng
+  // thái. Và đo ở HAI MAP: Ardhaven giữ 28 NPC phố, Rẻo Rừng Corran giữ NPC đồng quê.
+  const npcVn = await p.evaluate(async () => {
+    const nghi = ms => new Promise(r => setTimeout(r, ms));
+    const VN = /[àáâãèéêìíòóôõùúăđĩũơưƯĂĐĨŨƠẠ-ỹÀÁÂÃÈÉÊÌÍÒÓÔÕÙÚ]/;
+    const hien = el => { for (let n = el; n && n !== document.body; n = n.parentElement) {
+      const st = getComputedStyle(n);
+      if (st.display === 'none' || st.visibility === 'hidden' || n.hidden) return false; }
+      return true; };
+    const gom = new Map(); let moBang = 0;
+    for (const mid of ['ardhaven', 'corran']) {
+      for (const lv of [14, 80]) {
+        player.level = lv; player.lvPeak = lv; calcDerived();
+        travelTo(mid);
+        for (let i = 0; i < 30; i++) update(1 / 60);
+        const ds = (typeof NPCS !== 'undefined' ? NPCS.filter(x => x.map === mid) : []);
+        for (const q of ds) {
+          try { closePanels(); player.x = q.x + 30; player.y = q.y; tryTalk(); } catch (e) { continue; }
+          const bg = document.getElementById('panel-quest');
+          if (!bg || bg.classList.contains('hidden')) continue;
+          moBang++;
+          await nghi(180);                    // chờ MutationObserver của lang.js
+          const w = document.createTreeWalker(bg, NodeFilter.SHOW_TEXT); let x;
+          while (x = w.nextNode()) {
+            const t = (x.nodeValue || '').trim();
+            if (t && VN.test(t) && hien(x.parentElement) && !gom.has(t)) gom.set(t, q.name || q.id);
+          }
+        }
+      }
+    }
+    return { moBang, ds: [...gom].map(([t, ai]) => ai + ' :: ' + t.slice(0, 80)) };
+  });
+  // chốt tự kiểm: không mở nổi bảng nào thì mọi con số dưới đây là 0 VÌ KHÔNG ĐO GÌ
+  if (npcVn.moBang < 20) fail('⑥ cảnh dựng hỏng: chỉ mở được ' + npcVn.moBang + ' bảng NPC — đòi ≥20');
+  else if (npcVn.ds.length) {
+    npcVn.ds.slice(0, 10).forEach(s => fail('⑥ bảng NPC còn tiếng Việt — ' + s));
+    if (npcVn.ds.length > 10) fail('⑥ … và ' + (npcVn.ds.length - 10) + ' dòng nữa');
+  } else pass('⑥ bảng NPC: 0 dòng tiếng Việt qua ' + npcVn.moBang + ' lượt bắt chuyện');
+
+
   // Trần đặt bằng ĐÚNG số đo hôm nay, không phải một số tròn — mỗi lần dịch thêm thì hạ nó
-  // xuống. Bốn mặt dưới đã về 0 và phải Ở LẠI 0.
-  const TRAN = { chieu_mota: 43, nhiemvu: 81, phutuyen: 64, npc_ten: 2, lop_mota: 0, dantruyen: 0, ten_mon: 0 };
+  // xuống. NAY CẢ BẢY MẶT ĐỀU VỀ 0 và phải Ở LẠI 0: tầng kể chuyện là mặt cuối cùng còn nợ
+  // (43 mô tả chiêu · 81 chuỗi chính tuyến · 64 phụ tuyến · 2 tên NPC = 190), và nó đã trả.
+  // ⚠ Từ đây bảng này là một BÁNH CÓC, không còn là một hạn mức: thêm một nhiệm vụ hay một
+  // chiêu mà quên khai bản dịch là bài đỏ NGAY, chứ không lặng lẽ ăn vào phần trần còn dư.
+  const TRAN = { chieu_mota: 0, nhiemvu: 0, phutuyen: 0, npc_ten: 0, lop_mota: 0, dantruyen: 0, ten_mon: 0 };
   let no = 0;
   for (const [k, v] of Object.entries(lore)) {
     no += v.con;

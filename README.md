@@ -20,10 +20,17 @@ Either way the choice is remembered.
 
 How complete that is, measured rather than claimed: a QA bot played 150 seconds with real mouse and
 keyboard — 160 kills, level 1 to 8 — and came back with **0 Vietnamese strings across 76,505 drawn
-text calls** and **0 Vietnamese lines across all 15 panels**. Everything you *click* is English.
-The storytelling layer is not there yet: **190 strings** of skill, quest and side-quest prose still
-render in Vietnamese, counted per category and frozen as ceilings in
-[`tests/test_dichen.js`](tests/test_dichen.js) so they cannot quietly grow back. The full breakdown
+text calls** and **0 Vietnamese lines across all 15 panels**. The storytelling layer used to be the
+hole — 190 strings of skill, quest and side-quest prose — and it is closed: **0**, on four separate
+sweeps, each of which had to be built because the previous one was blind to a whole surface.
+A broad sweep (5 classes × 7 levels × every NPC) found **418** lines that the per-string test could
+not see, because it injected each string into a `<div>` it created itself — proving the translator
+*can* translate it, not that it reaches the player as one text node. A deep sweep opened **1,044**
+real NPC panels. A fourth covered the mid-screen banner, where **59 of 65** literals were still
+Vietnamese and had never been sampled, because most of them only fire on a real-clock boundary.
+All four are now 0, and a 1,216-string before/after diff proves the new rules changed exactly one
+thing — the one intended. Ceilings are frozen in
+[`tests/test_dichen.js`](tests/test_dichen.js) so they cannot quietly grow back; the full breakdown
 is in [`docs/CHUA_HOAN_THIEN.md`](docs/CHUA_HOAN_THIEN.md).
 
 No wallet, no platform account, no token, nothing onchain — not as a fallback, but because none
@@ -129,7 +136,7 @@ inventory, or you are building an economy on a server that believes whatever the
 reasoning is written out in [`docs/THIET_KE_ONLINE.md`](docs/THIET_KE_ONLINE.md).
 
 **Offline is the default and stays first-class.** With no server in the URL, `net.js` returns on its
-first line and the single-player build runs byte-identically. All 239 regressions run on that path,
+first line and the single-player build runs byte-identically. All 242 regressions run on that path,
 and one of them asserts the reverse direction: no server in the URL must mean no connection.
 
 The two guards worth reading are [`tests/test_wsnho.js`](tests/test_wsnho.js), which drives the
@@ -153,7 +160,7 @@ All numbers below are read out of the running game, not counted by hand.
 | Gear | 11 slots, per-class armour lines, +0…+11 forging, socketing, Chaos Machine, 3 wing tiers |
 | Story | Seven Ancient Runes, one per region — the Nhát Gọi canon ([`docs/LORE_RUNE.md`](docs/LORE_RUNE.md)) |
 | Multiplayer | shared world at `?net=1` — see other players move, fight and chat, on a dependency-free relay |
-| Tests | 239 Playwright regressions against real Chromium + 7 vitest units, all gated in CI |
+| Tests | 242 Playwright regressions against real Chromium + 7 vitest units, all gated in CI |
 
 ## Why it is an Axie game and not a reskin
 
@@ -232,7 +239,7 @@ believes the client cannot be allowed to mint anything. The seven-phase route is
 
 ## Browsers, devices, and known issues
 
-**Tested:** desktop **Chromium**, mouse and keyboard — 239 Playwright regressions drive the actual
+**Tested:** desktop **Chromium**, mouse and keyboard — 242 Playwright regressions drive the actual
 game in a real Chromium on every change, so that is the browser with evidence behind it. The engine
 is canvas 2D with no WebGL and no build step, so other modern desktop browsers should work, but
 Firefox and Safari have not been tested and I am not going to claim them. Settings has quality and
@@ -246,8 +253,7 @@ not play well.
 
 | | |
 |---|---|
-| **The interface is Vietnamese first.** English comes from a dictionary-and-pattern layer, not from a full `t()` migration | measured, not estimated: **0** Vietnamese strings in 76,505 drawn text calls and **0** across all 15 panels after 150 seconds of real play — but **190 strings** of skill, quest and side-quest *prose* are still Vietnamese. An English-speaking judge can play the whole game and will still meet Vietnamese when reading the story |
-| **Six tests printed `FAIL` while exiting 0**, so `tools/reg.sh` — which scores by exit code — counted them green | found and reproduced on `main` today: `test_story` and `test_mobbalance` have been failing in their own logs for a long time without any regression run saying so. Both turn out to be rotted *test scaffolding*, not broken product, but the point stands: a suite scored by exit code cannot see a test that forgets `process.exit`. Fix is written and merges clean; see [`docs/CHUA_HOAN_THIEN.md`](docs/CHUA_HOAN_THIEN.md) §1 |
+| **The interface is Vietnamese first.** English comes from a dictionary-and-pattern layer, not from a full `t()` migration | measured across four independent sweeps — drawn text, all 15 panels, 1,044 real NPC panel opens, and the mid-screen banner — all now **0** Vietnamese. The remaining risk is structural, not a known gap: a dictionary layer is only as good as the surface someone thought to sweep, and three whole surfaces had gone unswept until this pass. A regex rule can also shadow a more specific one and produce *different English* rather than Vietnamese, which no Vietnamese-detector can see; the 1,216-string before/after diff in the scratchpad is the guard against that class, and it is not yet a committed test |
 | **The live link is a raw IP over plain HTTP.** No TLS, no domain | browsers will flag it as not secure; there is nothing to enter, so nothing is at risk, but it looks worse than it is |
 | **Walk and run cycles slide.** Measured: the planted foot only carries ~49% of the visual stride, so 51% of the distance is slide baked into the drawings | no code value fixes it; the cycles have to be redrawn. Spec and acceptance thresholds: [`docs/DAT_HANG_TUONG_DI.md`](docs/DAT_HANG_TUONG_DI.md) |
 | **Armour art covers 3 of 35** class × tier combinations; the rest fall back to the bare body | adding one is a data row, not code — the debt is art, not engineering |
@@ -290,8 +296,9 @@ Two documents, both kept to the same standard as the rest of the numbers here:
 
 - **[`docs/CHUA_HOAN_THIEN.md`](docs/CHUA_HOAN_THIEN.md)** — everything not yet done, worst first,
   each item with a measurement or an explicit note that it has not been measured. It covers the
-  translation debt, three unmerged branches that still hold content, the wuxia item names that
-  Rule 1 has not caught yet, and the level-pacing tool that stopped working above level 60.
+  unmerged branches that still hold content, the wuxia item names that Rule 1 has not caught yet,
+  the level-pacing tool that stopped working above level 60, and — struck through, because it is
+  now paid — the translation debt, kept in place so the four sweeps that closed it stay on record.
 - **[`docs/CHAM_VIBEATHON.md`](docs/CHAM_VIBEATHON.md)** — a self-score against the judging
   criteria, **8.0/10**, with the reasoning for every mark and the weights it is guessing at
   flagged as guesses. The weakest section is the one this project has documented against itself
@@ -307,7 +314,7 @@ Not a self-assessment — just the shortest path to the evidence for each one.
 | **Gameplay** | [What you actually do](#what-you-actually-do) · the live build | Roles are set per camp, not per species. Loot lands on the ground. Chests open once per character. Seams move daily. Events run on the real clock |
 | **Product vision** | [Where this goes next](#where-this-goes-next) · [`docs/AXIE_CORE.md`](docs/AXIE_CORE.md) §7 | Three layers that deepen Axie identity without selling power, and a multiplayer roadmap with a stated stopping point |
 | **Feasibility** | this repo | It is already built and already running. No build step, no runtime dependencies, no database; the multiplayer server is two files and needs only `node` |
-| **Prototype & docs** | [`CLAUDE.md`](CLAUDE.md) · `tools/reg.sh` · [`docs/CHUA_HOAN_THIEN.md`](docs/CHUA_HOAN_THIEN.md) | 239 browser regressions plus CI on every push. Design decisions are recorded with the measurement that produced them, and the known-issues table above is the same standard applied to what is still wrong |
+| **Prototype & docs** | [`CLAUDE.md`](CLAUDE.md) · `tools/reg.sh` · [`docs/CHUA_HOAN_THIEN.md`](docs/CHUA_HOAN_THIEN.md) | 242 browser regressions plus CI on every push. Design decisions are recorded with the measurement that produced them, and the known-issues table above is the same standard applied to what is still wrong |
 
 ## How it's built
 
@@ -319,7 +326,7 @@ The part worth reviewing is the discipline around it:
 
 - **CI gates every push to `main`** — typecheck, lint, unit tests, and a syntax check of the engine
   ([`.github/workflows/ci.yml`](.github/workflows/ci.yml)).
-- **239 Playwright regressions** drive the real game in a real browser — they call `startGame()`,
+- **242 Playwright regressions** drive the real game in a real browser — they call `startGame()`,
   `castSkill()`, `turnInQuest()` and tick `update()`, rather than asserting against fixtures.
   `bash tools/reg.sh <outdir>`.
 - **Design decisions are measured, then written down with the measurement.** Level pacing was fitted
@@ -333,7 +340,7 @@ The part worth reviewing is the discipline around it:
 | Path | |
 |---|---|
 | `public/game/` | the game — engine, data, assets. Self-contained, no build |
-| `tests/` | 239 Playwright regressions |
+| `tests/` | 242 Playwright regressions |
 | `server/` | the multiplayer relay — two files, no dependencies, `node server/bongnguoi.js` |
 | `tools/` | asset bakers (Spine → sprite sheets, isometric tiles), measurement scripts, `reg.sh` |
 | `docs/` | decision journal. **Historical by design** — entries are not rewritten when things change, so read dates and cross-check against code. Current canon is `CLAUDE.md` + `docs/LORE_RUNE.md` |

@@ -13470,6 +13470,12 @@ function update(dt){
         // `SECTS[player.sect].element`, tức một hằng số người chơi không tác động được.
         const _hek = heThuKet(mobHe(m), heThu(player), axieSac(player));
         if (_hek) dmg *= _hek.mul;
+        // Bộ đếm "người chơi đã ĂN ĐÒN trên đất có hệ" — cửa DUY NHẤT nuôi bước hướng dẫn
+        // `than`. Đếm ở ĐÂY chứ không đếm chỗ bắn số bay: số bay có hồi 2,6 giây và CỐ Ý bỏ
+        // qua nhánh trung tính, nên lấy nó làm điều kiện là bước hướng dẫn không bao giờ xong
+        // với người đang đeo một con trung tính — đúng cái kiểu bất khả mà `duocO` sinh ra để
+        // chặn. `_hek` có mặt nghĩa là trục phòng thủ ĐÃ được hỏi cho cú đòn này.
+        if (_hek) player._tutHe = (player._tutHe || 0) + 1;
         const mobCounter = !!_hek && _hek.ket === -1;
         dmg = Math.max(1, Math.round(dmg));
         // ĐỠ ĐÒN — cơ chế chỉ đồ Hoàn Hảo có: chặn HẲN một đòn, không phải giảm %. Đặt SAU khi
@@ -28754,7 +28760,26 @@ const TUT_STEPS = [
   // ⚠ KHOÁ LÀ `panel`, KHÔNG PHẢI `quest`. Hai chỗ trong `togglePanel` gọi `tutGhi('panel')`
   // từ lâu, mà bước cuối lại mang khoá `quest` ⇒ hai lời gọi ấy KHÔNG BAO GIỜ khớp, và bước
   // cuối không có hành động nào đóng được nó (chỉ còn cái trần 25 giây).
-  { key:'panel', tran:25, xong:() => (player.tutBang || 0) > 0, txt:'Mở thử bảng <b>Nhân Vật</b> (phím <b>C</b>) để xem chỉ số và con Axie đang đeo · <b>K</b> kỹ năng · <b>B</b> túi đồ · <b>M</b> bản đồ' },
+  { key:'panel', tran:25, xong:() => (player.tutBang || 0) > 0, txt:'Mở thử bảng <b>Nhân Vật</b> (phím <b>C</b>) để xem chỉ số, hai dòng hệ và con Axie đang đeo · <b>K</b> kỹ năng · <b>B</b> túi đồ · <b>M</b> bản đồ' },
+  // ⚠ BƯỚC NÀY LÀ CỬA DẠY DUY NHẤT CỦA TRỤC AXIE TRONG PHÚT ĐẦU, và nó có mặt vì một phép
+  // đếm: sáu bước cũ (`move · npc · map · kill · loot · panel`) KHÔNG bước nào nhắc tới hệ
+  // phòng thủ, đổi thân hay cấu tạo; còn nhiệm vụ dạy nó (`c1q4` Thân Nào Cho Đất Nào) mở ở
+  // **cấp 19**. Tức cơ chế gánh 35% barem Axie Core chạy đúng, có bài gác, và người chơi mới
+  // không được ai nói cho biết là nó tồn tại — đúng cái "cơ chế vô hình là cơ chế không tồn
+  // tại" đã ghi hai lần trong tài liệu này.
+  //
+  // ⚠ ĐẶT SAU `panel`, KHÔNG đặt trước. Nó nói về HAI DÒNG HỆ mà bảng Nhân Vật vừa bày ra —
+  // nói trước khi người ta mở bảng là chỉ vào một thứ họ chưa từng thấy. Và đặt trước thì nó
+  // phải đọc chung cờ `tutBang` với `panel` ⇒ hai bước cùng nhảy trong MỘT nhịp và `panel`
+  // không bao giờ hiện, đúng vết sẹo `loot` + `inv.length > 0` đã ghi ngay trên.
+  //
+  // ⚠ `duocO` hỏi ĐẤT CÓ HỆ TRỘI KHÔNG, không hỏi "có bãi quái không". Trong thành và ở hành
+  // lang trộn hệ (Lối Mòn Corran) thì `mapBanSac().he` rỗng — ở đó câu này KHÔNG ĐÚNG, nên
+  // đừng nói. Cùng luật với `axieTaiDay` trả `null` thay vì in "trung tính".
+  { key:'than', tran:40,
+    duocO:() => { const b = (typeof mapBanSac === 'function') && mapBanSac(curMap); return !!(b && b.he); },
+    xong:() => (player._tutHe || 0) >= 3,
+    txt:'<b>Con Axie ngươi đang ĐEO</b> quyết định ngươi ăn đòn nặng hay nhẹ ở <b>đất này</b> — và nó KHÔNG cộng một điểm chỉ số nào. Ăn vài đòn rồi nhìn con số bay trên đầu mình; mỗi vùng một hệ khác nhau, đổi thân ở <b>Khế Ước</b> trong bảng Nhân Vật.' },
 ];
 function updateTut(){
   const box = el('tut-hint');
@@ -32353,7 +32378,11 @@ function ccAvaRender(){
         + ` title="${x.ten} · ${'★'.repeat(x.sao)} · ${x.lop}"`
         + ` aria-pressed="${x.id === dang}"`
         + ` onclick="window.ccAvaChon('${x.id}')">${chiOAnh(x, 38, 'cc-ava-hinh')}</button>`).join('')
-    + `</div><i class="cc-ava-ghi">Chỉ là hình dáng — mọi chỉ số, kỹ năng và trang bị đều tới từ lớp. Đổi lúc nào cũng được ở bảng Khế Ước.</i>`;
+    // ⚠ CÂU NÀY TỪNG VIẾT "Chỉ là hình dáng", và đó là lời tự bắn vào chân: màn tạo nhân vật
+    // là màn ĐẦU TIÊN người ta đọc, và nó đang nói đúng cái câu mà thể lệ trừ điểm —
+    // *"appear only as a cosmetic skin"*. Nửa đầu (0 chỉ số) thì đúng và phải giữ; nửa sau
+    // (lớp của con Axie quyết định hệ PHÒNG THỦ) thì bị bỏ mất. Nói đủ cả hai.
+    + `</div><i class="cc-ava-ghi">Không cộng một điểm chỉ số nào — chỉ số, kỹ năng và trang bị đều tới từ lớp nhân vật. Nhưng lớp của con Axie quyết định ngươi chịu đòn nặng hay nhẹ ở từng vùng đất. Đổi lúc nào cũng được ở bảng Khế Ước.</i>`;
 }
 
 function ccRender(){
