@@ -21838,7 +21838,9 @@ function kuPhimNap(sao){
 // Trả false khi KHÔNG chạy được — chỗ gọi phải tự lui về nhịp 'comet'. Một cú quay đứng im chờ
 // một tệp không tới là mất luôn cả cú quay, mà vé quay thì không hoàn lại được.
 function kuPhimChay(){
-  if (window.TEST_MODE) return false;   // 177 bài hồi quy lái thẳng kheUocQuay, đừng bắt chúng chờ 10,7 giây
+  // Chỉ tắt khi TEST_MODE do BÀI KIỂM đặt. Vào bằng ?test=1 là một con người mở link chơi thử,
+  // và họ phải thấy đúng thứ người chơi thấy — xem chú thích ở window.TEST_URL.
+  if (window.TEST_MODE && !window.TEST_URL) return false;
   const v = kuPhimNap(kuPhamCao());
   if (!v) return false;
   v.classList.remove('hidden');
@@ -22636,12 +22638,41 @@ function startGame(sectKey, quze){
   calcDerived(); player.hp = player.maxHp; player.qi = player.maxQi;
   spaceMacDinh();                 // nhân vật mới cũng phải có sẵn tuyệt chiêu trên phím Space
   applySkillIcons();
-  const maxMode = !RELEASE_BUILD && ((el('chk-max') && el('chk-max').checked) || (el('chk-max-intro') && el('chk-max-intro').checked) || /max=1/.test(location.search));
+  // ═══ BẢN CHƠI THỬ: NGƯỜI THẬT VÀO LÀ MAX CẤP + FULL TÀI NGUYÊN ═══
+  // Chủ dự án chốt: vào http://14.225.204.107/ là cảm được game ngay, không phải cày 3 giờ tới
+  // cấp 60 mới thấy hệ thống nào mở ra. `applyTestBoost()` vốn đã làm đúng việc đó (cấp 120 ·
+  // full Chí Tôn +11 · 16 thân Axie · 999 Shard · mọi cổng tiến trình mở) — chỉ là nó nấp sau
+  // ?max=1, tức sau một thứ không ai biết mà gõ.
+  //
+  // ⚠⚠ CỬA PHÂN BIỆT LÀ `navigator.webdriver`, KHÔNG PHẢI `TEST_MODE`. Đây là chỗ đã đo ba lần
+  // mới ra, và hai lối "hiển nhiên" đều sai:
+  //   · gác bằng `!window.TEST_MODE` ⇒ **38 bài** goto('/index.html') trơn rồi gọi thẳng
+  //     startGame mà không đặt cờ nào (test_points · test_walkrun · test_inv · test_lopdo ·
+  //     test_migration…) sẽ đột nhiên đo một nhân vật cấp 120 full BiS. Cả bộ cân bằng đổi mốc
+  //     trong im lặng — đúng cái bẫy mà chú thích `phatDoKhoiDau` ngay dưới đã cảnh báo.
+  //   · gác bằng `TEST_URL` (cờ của phim mở đầu) ⇒ 14 bài có ?test=1 trong URL cũng dính, trong
+  //     đó test_ruiro đo phạt EXP khi chết và test_tanthu đo hướng dẫn tân thủ.
+  // `navigator.webdriver` là **true ở MỌI phiên Playwright/CDP** và false ở trình duyệt người
+  // thật — đo được (`about:blank` trong chính /opt/pw-browsers/chromium ra `true`, kiểu boolean),
+  // nên nó tách đúng "một con người mở trang" khỏi "một bài kiểm đang lái" mà không đụng một
+  // bài nào trong 254 bài.
+  //
+  // ⚠ `?thuong=1` là đường LUI, đừng gỡ: không có nó thì trên production không còn cách nào xem
+  // lại đoạn mở đầu thật (phát bộ khởi đầu · hướng dẫn tân thủ · chuỗi nhiệm vụ từ ô số 1), tức
+  // một nhánh mã sống bị che khuất vĩnh viễn khỏi mắt người.
+  const _mayLai = (() => { try { return navigator.webdriver === true; } catch { return false; } })();
+  const _choiThuong = /([?&])thuong=1/.test(location.search);
+  const maxMode = !RELEASE_BUILD && !_choiThuong && (!_mayLai
+    || (el('chk-max') && el('chk-max').checked) || (el('chk-max-intro') && el('chk-max-intro').checked)
+    || /max=1/.test(location.search));
   if (maxMode){
     applyTestBoost();
     checkTitles();
-    addFloat(player.x, player.y-50, 'CHẾ ĐỘ THỬ NGHIỆM — Cấp 100, MỌI TÍNH NĂNG TỐI ĐA!', '#7ecbff', 16);
-    addFloat(player.x, player.y-72, 'Full Chí Tôn +11 · Linh Dực c2 · 99 châu · 70 Box Kundun', '#a0ffe9', 13);
+    // ⚠ Ba con số này SUY TỪ DỮ LIỆU, đừng chép tay. Bản cũ ghi "Cấp 100" (MAX_LV là 120) và
+    // "Linh Dực c2" (applyTestBoost cho bậc 3) — hai lời nói dối nằm im rất lâu vì hồi đó chỉ
+    // ai gõ ?max=1 mới đọc tới. Nay mọi người vào đều đọc, nên chúng phải đúng.
+    addFloat(player.x, player.y-50, `BẢN CHƠI THỬ — Cấp ${MAX_LV}, MỌI TÍNH NĂNG TỐI ĐA!`, '#7ecbff', 16);
+    addFloat(player.x, player.y-72, `Full Chí Tôn +11 · Linh Dực bậc 3 · 99 châu · ${(BAOHAP_TIERS.length-1)*10} Box Kundun · 16 thân Axie`, '#a0ffe9', 13);
     addFloat(player.x, player.y-94, 'C nhân vật · V trang bị · B túi đồ · O cài đặt · M bản đồ · K kỹ năng', '#ffd76a', 12);
   } else {
     // ?test=1 (không kèm ?max=1): không lên cấp, không phát tiền — chỉ mặc sẵn bộ giai 1 để
@@ -23034,6 +23065,14 @@ window.TEST_MODE = /([?&])(test|max)=1/.test(location.search);
 // Riêng ?test=1 (không tính ?max=1) còn phát sẵn nguyên bộ giai 1 — xem tangDoThuNghiem().
 // Cờ RIÊNG, suy thẳng từ URL: bài kiểm ghi đè TEST_MODE nên không dùng chung được.
 window.TEST_DO = /([?&])test=1/.test(location.search);
+// Cờ RIÊNG thứ hai, cùng lý do: "TEST_MODE bật TỪ URL" khác hẳn "một bài kiểm tự đặt TEST_MODE".
+// Chủ dự án dùng ?test=1 làm link chơi thử, nên ở đó phải thấy ĐÚNG thứ người chơi thấy — kể cả
+// phim mở đầu Khế Ước. Còn 240 bài hồi quy thì `goto('/index.html')` trơn rồi mới `window.TEST_MODE
+// = true` trong page.evaluate (đo được: cả ba bài chạm gacha — test_kheuoc · test_kubanner ·
+// test_kuphim — đều đi đường đó, và 14 bài có ?test=1 trong URL thì không bài nào quay Khế Ước).
+// ⚠ Đừng gộp vào TEST_DO: cái đó mang nghĩa "phát sẵn bộ giai 1", hai nghĩa trên một cờ là chỗ
+// sẽ lệch nhau ở đợt sửa kế tiếp.
+window.TEST_URL = window.TEST_MODE;
 // TEST_MODE: hiện checkbox "Chế độ thử nghiệm" trên các màn hình bắt đầu (mặc định ẩn trong index.html)
 if (window.TEST_MODE) setTimeout(() => {
   for (const id of ['max-mode', 'max-mode-intro']) { const l = el(id); if (l) l.style.display = 'block'; }

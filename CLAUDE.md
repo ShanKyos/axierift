@@ -4730,6 +4730,54 @@ hồi quy, và `rc` khác 0 thì script đọc thành "đỏ". Chạy lại lúc
 đỏ KÈM dòng `FAIL` thật. ⇒ **Một dòng "ĐỎ" không kèm thông báo của chính bài kiểm thì chưa phải
 một phép thử ngược**, và script thử ngược phải tách `rc=124` ra khỏi `rc=1`.
 
+## 🎪 BẢN CHƠI THỬ: NGƯỜI THẬT VÀO LÀ **MAX CẤP + FULL TÀI NGUYÊN**
+
+Chủ dự án chốt: *"ở bản http://14.225.204.107/ — khi vào game, hãy cho người chơi max cấp đi, và
+cho họ tài nguyên full để có thể cảm được game."*
+
+Máy làm việc đó **vốn đã có** — `applyTestBoost()`: cấp `MAX_LV` · full Chí Tôn giai 10 +11 Hoàn
+Hảo · Linh Dực bậc 3 · 16 thân Axie · 999 Shard · 999.999 Lumen/Bản Năng · 99 mỗi loại châu ·
+70 Box Kundun · mọi chiêu Lv120 · `moHetCong()` mở mọi cổng tiến trình. Nó chỉ nấp sau `?max=1`,
+tức sau một thứ không ai biết mà gõ. **Đừng dựng một đường boost thứ hai** — sửa cái CỬA, không
+sửa cái máy.
+
+| | |
+|---|---|
+| cửa | `_mayLai` + `_choiThuong` trong `startGame`, ngay trên khối `maxMode` |
+| đường lui | **`?thuong=1`** — vẫn vào được đoạn mở đầu thật |
+| gác | **`tests/test_choithu.js`** (3 mệnh đề, **hai phép thử ngược đều đỏ**) |
+
+### ⚠⚠ CỬA PHÂN BIỆT LÀ `navigator.webdriver`, KHÔNG PHẢI `TEST_MODE` — hai lối hiển nhiên đều sai
+
+Đây là chỗ phải **đo ba lần** mới ra, và cả hai lối đầu đều làm hỏng bộ kiểm **trong im lặng**:
+
+| gác bằng | vì sao sai — đo được |
+|---|---|
+| `!window.TEST_MODE` | **38 bài** `goto('/index.html')` trơn rồi gọi thẳng `startGame` mà không đặt cờ nào (`test_points` · `test_walkrun` · `test_inv` · `test_lopdo` · `test_migration`…) sẽ đột nhiên đo một nhân vật **cấp 120 full BiS** |
+| `TEST_URL` (cờ của phim mở đầu) | **14 bài** có `?test=1` trong URL cũng dính — trong đó `test_ruiro` đo phạt EXP khi chết và `test_tanthu` đo hướng dẫn tân thủ |
+| **`navigator.webdriver`** | **true ở MỌI phiên Playwright/CDP, false ở trình duyệt người thật** — đo trên chính `/opt/pw-browsers/chromium`: `about:blank` ra `true`, kiểu `boolean`. Tách đúng *"một con người mở trang"* khỏi *"một bài kiểm đang lái"*, **không đụng một bài nào trong 254 bài** |
+
+⚠ **`?thuong=1` là đường LUI, đừng gỡ.** Không có nó thì trên production không còn cách nào xem
+lại đoạn mở đầu thật — phát bộ khởi đầu · hướng dẫn tân thủ · chuỗi nhiệm vụ từ ô số 1 — tức một
+nhánh mã còn sống bị che khuất vĩnh viễn khỏi mắt người.
+
+⚠ **Bài kiểm chạy DƯỚI Playwright nên `navigator.webdriver` vốn là true.** Dựng cảnh "người thật"
+phải đè bằng `addInitScript` **trước khi trang nạp** (`Object.defineProperty(Navigator.prototype,
+'webdriver', …)`). Và mục ② **tự kiểm** rằng ở trang KHÔNG đè thì nó thật sự là `true` — nếu
+Playwright đời sau thôi đặt cờ ấy thì cả cửa này mất tác dụng, và ② phải đỏ ngay chứ không được
+xanh vì một lý do chẳng liên quan.
+
+⚠ **Chỉ áp cho NHÂN VẬT MỚI** (`startGame`), không đụng `loadGame`. Ai đã có save thì giữ nguyên
+tiến trình của họ — boost một bản lưu đang chơi là xoá mất thứ người ta đã cày.
+
+⚠ **Ba con số trên băng-rôn nay SUY TỪ DỮ LIỆU.** Bản cũ chép tay *"Cấp 100"* (`MAX_LV` là **120**)
+và *"Linh Dực c2"* (`applyTestBoost` cho **bậc 3**) — hai lời nói dối nằm im rất lâu vì hồi đó chỉ
+ai gõ `?max=1` mới đọc tới. Nay **mọi người vào đều đọc**, nên chúng phải đúng.
+
+**Cái giá, nói thẳng:** production không còn là nơi cảm được **nhịp tiến trình** (3 giờ tới cấp 60,
+cửa cơ chế mở dần theo chương). Đó là đánh đổi chủ dự án đã chốt — đổi chiều sâu lấy việc người lạ
+chạm được vào mọi hệ thống trong ba mươi giây. Muốn xem nhịp thật thì `?thuong=1`.
+
 ## 🎬 PHIM MỞ ĐẦU KHẾ ƯỚC — nhịp 0, và **HAI ĐUÔI LÀ BẮT BUỘC**
 
 Hoạt ảnh quay vốn có sáu nhịp vẽ bằng canvas (`comet · no · hien · the · luoi`). Nay có thêm
@@ -4771,8 +4819,22 @@ bắt ca **nghẽn mạng** — mạng chậm thì không ném lỗi nào, nó c
 **TRẠNG THÁI** `v.ended` mỗi khung chứ không nghe sự kiện `'ended'`: nghe sự kiện thì phải gỡ
 tay, mà một lần gắn sót là cú quay sau chạy hoạt ảnh hai lần.
 
-**⚠ `window.TEST_MODE` PHẢI TẮT PHIM.** 177 bài lái thẳng `kheUocQuay`; thiếu cửa đó là mỗi cú
-quay trong bộ kiểm chờ 10,7 giây.
+**⚠ CỬA TẮT PHIM HỎI `TEST_MODE && !TEST_URL`, KHÔNG HỎI `TEST_MODE` TRƠN.** Bản đầu hỏi trơn, và
+nó **giấu mất tính năng ở đúng chỗ chủ dự án hay xem**: `?test=1` là link chơi thử quen dùng, nên
+vào đó là không bao giờ thấy phim — mà triệu chứng đọc ra y hệt *"phim chưa lên production"*.
+
+⇒ `window.TEST_URL` là cờ RIÊNG suy thẳng từ URL (cùng lối `TEST_DO` đã có), nên phân biệt được
+**"một con người mở link chơi thử"** với **"một bài kiểm tự đặt cờ"**. Đo trước khi đổi chứ không
+đoán: cả ba bài chạm gacha (`test_kheuoc` · `test_kubanner` · `test_kuphim`) đều `goto('/index.html')`
+**trơn** rồi mới `window.TEST_MODE = true` trong `page.evaluate`, còn 14 bài có `?test=1` trong URL
+thì **không bài nào** quay Khế Ước ⇒ bộ kiểm không chậm thêm một giây nào.
+
+⚠ **Đừng gộp vào `TEST_DO`** — cờ đó mang nghĩa *"phát sẵn bộ giai 1"*. Hai nghĩa trên một cờ là
+chỗ sẽ lệch nhau ở đợt sửa kế tiếp.
+
+⚠ **Và `test_kuphim ②` vẫn phải giữ nguyên**: nó đặt cờ bằng `page.evaluate` nên `TEST_URL` rỗng ⇒
+phim vẫn phải tắt. Hai mệnh đề kẹp hai đầu — ② giữ tốc độ bộ kiểm, ⑦ giữ link chơi thử. Thử ngược
+(trả cửa về `TEST_MODE` trơn) làm ⑦ đỏ và ② **vẫn xanh**, đúng như nó phải thế.
 
 **⚠ BỎ QUA LÚC ĐANG CHIẾU thì CHỈ bỏ PHIM.** Nhịp báo phẩm và cái thẻ mới là thứ người chơi trả
 vé để xem; nuốt luôn cả hai vì một cú bấm sốt ruột ở giây đầu là lấy mất đúng thứ họ mua. Bấm
@@ -4794,6 +4856,19 @@ vào, gộp lại là lần sau phải dựng lại chính nó.
    giây"* đã đỏ thật ở một bản mã **không hề đụng tới đường chạy phim** — khung đầu mất tới
    ~1,6 giây mới giải xong ở máy bận. Thứ cần chứng minh là clip có NHÍCH hay không, nên **chờ
    tới khi nó nhích**, có hạn.
+3. **⚠ VÀ BẢN VÁ CHO (2) CŨNG SAI — cùng một bệnh, đội lốt khác, mất một lượt hồi quy mới lộ.**
+   Bản ấy chờ tới khi `currentTime > 0.25` với hạn 8 giây, nhưng `0.25` vừa là cửa **THOÁT vòng**
+   vừa là **NGƯỠNG CHẤM** ⇒ nó lặng lẽ biến thành một đòi hỏi về **TỐC ĐỘ GIẢI MÃ**. Máy này
+   không có GPU, nên trong một lượt hồi quy đầy đủ, VP9 1120×630 giải chậm tới mức 8 giây thật
+   không đủ cho 0,25 giây phim. Đo được: chạy riêng ra `0,27 · 0,36 · 0,40` (xanh 3/3), trong
+   hồi quy ra **đúng 0,25** ⇒ đỏ. Cơ chế hoàn hảo, ngưỡng nằm trong dải nhiễu — đúng hình dạng
+   của `test_canbanglop`.
+   ⇒ Nay đếm **số lần `currentTime` TĂNG** giữa hai mẫu liên tiếp (đòi ≥2). Đứng im thật thì con
+   số ấy là 0 dù chờ bao lâu; chạy chậm thì vẫn tăng. **Không còn ngưỡng tốc độ nào để mà trượt.**
+   Thử ngược (bỏ `v.play()`) ra `tang: 0` và đỏ.
+   *Luật chung: một ngưỡng đo trên MỘT ĐẠI LƯỢNG TÍCH LUỸ trong một khoảng thời gian có hạn là
+   một ngưỡng về TỐC ĐỘ, dù nó không trông giống thế. Đo HƯỚNG (có tăng không) thì miễn nhiễm
+   với tải; đo ĐỘ LỚN thì không.*
 
 **Nướng clip** (giữ nguyên hai lệnh này, tiếng đã cân khớp hai nguồn — đỉnh −5,0 dB):
 `ffmpeg` ghép intro + mở đầu bằng `concat` có cả `v` lẫn `a`, cắt watermark Gemini bằng
@@ -6130,6 +6205,7 @@ suýt kết luận "giả thuyết sai". Bỏ hai dòng đặt lại ấy thì r
 | `test_sandat` (nhanmon) | *"sau 3600 khung đuổi, 1 con nằm ngoài sàn: Cao Thủ Lang Thang — nhánh di chuyển nào đó thiếu collideObstacles"* | ⚠ **ĐÂY KHÔNG PHẢI NHIỄU, đây là một LỖI THẬT bắn thưa.** Xanh 3/3 chạy riêng · xanh ở lượt hồi quy liền trước ⇒ rất dễ đọc nhầm là xúc xắc rồi bỏ qua. Nhưng chính mệnh đề ấy sinh ra để bắt *một nhánh dời chỗ quái quên gọi `collideObstacles`*, và nó chỉ nổ khi hình học truy đuổi rơi đúng chỗ. Cần một đợt riêng: quét NĂM nhánh dời quái trong `update()` (xem cảnh báo `mobDoBuoc()`) rồi đối chiếu nhánh nào thiếu. Đừng nới ngưỡng, và đừng ghi nó vào đây rồi quên |
 | ~~`test_uigothic ⑥`~~ | *"ở 30% máu, đầu TRÁI thanh cũng tối theo"* | ✅ **ĐÃ SỬA TẬN GỐC, không còn trong bảng này.** Dòng cũ ghi *"thanh máu có thành phần đập theo thời gian"* — **sai**: thanh không đập. Mẫu "đầy" đổi giữa các lượt vì `applyTestBoost()` bốc đồ NGẪU NHIÊN ⇒ `maxHp` khác ⇒ **chữ số khác**, mà que dò đọc đúng một điểm ở `(0,08 · giữa)` — tức đọc thẳng vào con số máu do `.cd-thanh span` vẽ đè. Nay đọc **đỉnh độ đỏ của cả CỘT** (chữ trắng và bóng đen chỉ kéo độ đỏ xuống) ⇒ năm lượt ra đúng cùng một bộ số. Xem mục thanh máu/mana ở khối UI Gothic. *Một bài đỏ theo xúc xắc vẫn phải TRUY tới nguyên nhân — lần này "xúc xắc" là một que dò hỏng, và chính nó che một mệnh đề rỗng suốt nhiều phiên.* |
 | `test_gearlook` | *"cache chân dung không đổi khi thay đồ"* (`cache_doiTheoDo: false`) | **xanh 13/13 lượt chạy lẻ** — 3 trên cây này · 3 trên cây trước · 3 trên chính BẢN ĐÓNG BĂNG của lượt hồi quy đã đỏ · 4 lượt nữa dưới tải CPU giả (6 vòng bận trên 4 lõi) — mà chỉ đỏ **bên trong** một lượt hồi quy đầy đủ. Xanh ở `reg-mg`(236 bài) và `reg-now`. Nó là một cuộc đua TẢI ART: hai thẻ so nhau là *đủ giáp giai 7* với *trần trụi giai 1*, và nếu lớp giáp giai 7 chưa về kịp thì cả hai cùng vẽ ra thân trần ⇒ hai data-URL trùng khít. **Chưa dựng lại được cảnh đỏ**, nên đừng chép câu này như một kết luận đã đóng; thứ đã chứng minh được là nó không đến từ một diff chỉ chạm `MOBS`/`vung` |
+| `test_dichen §②` | *"CANVAS còn 2/76 chuỗi tiếng Việt: `✦ ĐÀN VÀNG SẮP XÂM LĂNG` · `10 min: nữa — …`"* | ⚠ **KHÔNG phải nhiễu, và cũng KHÔNG phải xúc xắc — nó phụ thuộc ĐỒNG HỒ.** Băng-rôn Xâm Lăng Vàng chỉ hiện trong cửa sổ ~22 phút quanh mốc **2h·6h·10h·14h·18h·22h UTC** (10 phút báo trước + 12 phút sự kiện). Ngoài cửa sổ đó bài ra `0/74` và xanh — đo được: đỏ lúc 01:50-02:12 UTC, chạy lại lúc 02:21 thì xanh ngay. Tức đây là một lỗ i18n **CÓ THẬT** còn sót, chỉ là nó tàng hình 90% thời gian. `sau_tron.sh` chạy cùng bài ấy 40 phút trước đó cũng xanh. ⇒ Sửa là dịch hai chuỗi băng-rôn sự kiện, đừng nới bài kiểm; và **đừng kết luận "đỏ do phép trộn" khi một bài i18n đỏ — hỏi giờ UTC trước** |
 | `test_qablock` | *"dựng cảnh sai: người chơi không ăn đòn nào"* rồi kéo theo 2 FAIL nữa | **xanh 8/8 lượt liên tiếp** khi chạy riêng · chính chú thích trong bài đã ghi nó nhạy với mạch ngẫu nhiên (*"từng xanh chỉ vì may"*) — con quái phải kịp đánh trúng trong 40 khung, máy bận là trượt. Phân biệt bằng `git diff -U0 … | grep '^@@'`: nếu diff không chạm `update`/`hurtPlayer`/`swingFeel`/`shakeDir` thì nó không thể là của mình |
 | `test_canbanglop` | *"chênh ST cao/thấp 3.63× > trần 3.6× (Dark Knight vs Dark Wizard)"* | **đỏ 2/10 trên CẢ HAI cây** trong một phép A/B ghép đôi: cùng một `game.js` byte-cho-byte, chỉ khác layout HUD ⇒ không phải của ai cả. Giá trị đo trải **2,26 – 4,27×** quanh một cái trần đặt ở **3,6** — tức ngưỡng nằm GIỮA dải nhiễu, nên nó đỏ theo xúc xắc vĩnh viễn. Đỉnh tệ nhất (4,27) rơi vào cây ĐỐI CHỨNG. Muốn dứt điểm thì cộng dồn nhiều lượt rồi lấy trung vị (lối `test_hethu §2`), đừng nới trần — nới trần là bỏ luôn thứ nó gác |
 
