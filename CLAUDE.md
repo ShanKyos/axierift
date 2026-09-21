@@ -1771,8 +1771,36 @@ cuối trùng). Đúng bệnh nhân bản mà mục chẩn đoán ở đầu tà
 
 ### 🐣 HƯỚNG DẪN TÂN THỦ — TRẦN THỜI GIAN KHÔNG ĐƯỢC ĐẨY NGƯỜI VÀO VIỆC BẤT KHẢ
 
-`TUT_STEPS` (6 bước) · `tutTick` · `tutGhi` · `tutAdvance` · `tutLamDuoc`, trong `game.js`.
-Gác: **`tests/test_tanthu.js`** (6 mục, **cả sáu cơ chế đã thử ngược và đều đỏ**).
+`TUT_STEPS` (**7 bước**) · `tutTick` · `tutGhi` · `tutAdvance` · `tutLamDuoc`, trong `game.js`.
+Gác: **`tests/test_tanthu.js`** (**8 mục**, **mọi cơ chế đã thử ngược và đều đỏ**).
+
+#### ⑦ BƯỚC `than` — CHUỖI HƯỚNG DẪN TỪNG KHÔNG NHẮC TRỤC AXIE LẤY MỘT CHỮ
+
+Thể lệ chấm **Axie Core 35%**, và trục phòng thủ (`heThuKet`) là thứ gánh nó. Đếm lại các cửa
+nói ra trục ấy thì có 8 kênh — mà **chuỗi hướng dẫn, thứ người chơi mới đọc ĐẦU TIÊN, không
+có kênh nào**. `grep` sáu bước cũ cho **0** lần nhắc `Axie` lẫn `hệ`. *Một cơ chế chiếm 35%
+barem mà chuỗi mở đầu không trỏ tới lấy một lần thì với người chơi mới nó ngang không tồn tại.*
+
+| | |
+|---|---|
+| bộ đếm | **`player._tutHe`** — cộng trong `hurtPlayer`, ngay sau nhánh `heThuKet` |
+| `xong` | `_tutHe >= 3` — ăn đủ ba đòn trên đất CÓ hệ trội |
+| `duocO` | `mapBanSac(curMap).he` có thật — trong thành thì bỏ qua, không treo |
+
+**⚠ ĐẾM Ở CHỖ ÁP HỆ SỐ, ĐỪNG ĐẾM Ở CHỖ BẮN SỐ BAY.** Số bay có hồi `HE_FLOAT_HOI` 2,6 giây và
+**cố ý bỏ qua nhánh trung tính**, nên lấy nó làm điều kiện là bước này **không bao giờ xong**
+với người đang đeo một con trung tính ở đất đó — đúng cái kiểu bất khả mà `duocO` sinh ra để
+chặn. `_hek` có mặt nghĩa là trục phòng thủ ĐÃ được hỏi cho cú đòn ấy, dù nhánh nào.
+
+**⚠ BƯỚC ĐỨNG SAU `panel`, KHÔNG ĐỨNG TRƯỚC.** Nó bảo người chơi "đổi thân ở Khế Ước trong
+bảng Nhân Vật" — mà bảng Nhân Vật là thứ bước `panel` vừa dạy mở. Đặt trước là chỉ đường tới
+một cái cửa chưa ai nói là có.
+
+**⚠ VÀ MÀN TẠO NHÂN VẬT ĐANG DẠY NGƯỢC LẠI.** `ccAvaRender()` ghi *"Chỉ là hình dáng"* — tức
+đúng câu thể lệ trừ điểm (*"appear only as a cosmetic skin"*), ở đúng màn đầu tiên người ta
+đọc. Nửa "0 chỉ số" thì đúng và phải giữ; nửa "lớp của con Axie quyết định hệ PHÒNG THỦ" thì
+bị bỏ mất. Nay nói đủ cả hai. `test_tanthu ⑥b` gác: chữ của chuỗi hướng dẫn phải nhắc `Axie`
+hoặc `hệ`, nếu không thì cả bước này là một cái nhãn rỗng.
 
 **⚠⚠ CÁI TRẦN 90 GIÂY ĐẺ RA MỘT LỖI TỆ HƠN THỨ NÓ CHỮA.** Trần sinh ra vì bước cũ treo mãi
 ("còn nguyên ở cấp 120") — đúng vấn đề, sai thuốc: hết giờ thì nó **đẩy sang bước kế** bất kể
@@ -4086,6 +4114,69 @@ trong bộ nhớ còn lang.js đọc ra rỗng ⇒ **màn hình lẫn hai thứ 
 ném) và là mục **duy nhất** trong D-H bắt được chuyện đó. *Bốn mục kia hỏi đúng thứ cần hỏi mà
 vẫn không gác được gì ở vế này — một bài kiểm chạy ở đúng một cấu hình môi trường thì nó chỉ gác
 được cấu hình ấy.*
+
+### ⚠⚠ BƠM CHUỖI VÀO MỘT `<div>` RỜI KHÔNG ĐO ĐƯỢC "NGƯỜI CHƠI CÓ ĐỌC RA TIẾNG ANH KHÔNG"
+
+`test_dichen §④` bơm từng chuỗi kể chuyện vào một `<div>` do **chính nó** dựng rồi đọc lại.
+Sau đợt dịch 190 chuỗi, cả bảy trần của nó về **0** và bài xanh. Nhưng nó chỉ chứng minh
+`lang.js` **DỊCH ĐƯỢC** chuỗi — không chứng minh chuỗi **tới được mắt người chơi** dưới dạng
+MỘT text-node. Quét lại bằng cách mở đúng mấy cái bảng ra (5 lớp × 7 cấp × mọi NPC, lái bằng
+`tryTalk()` thật) ra **418 dòng tiếng Việt** mà cả năm mục cũ đều mù:
+
+| ở đâu | dòng | vì sao không mục nào thấy |
+|---|--:|---|
+| **`#panel-quest`** — thoại phố, quầy thuốc, quầy rương, Trại Ngựa, Vực Thẳm, Truy Nã | **377** | bảng chỉ dựng ra khi **đứng cạnh một người và bấm E** |
+| `#forge-content` — Lò Hỗn Độn | 16 | `§③` đọc `innerText` của panel cha, không vào con |
+| lời nhắc góc màn · thẻ nhiệm vụ · bảng Kỹ Năng · Nhật Ký | 25 | chúng là HUD, không phải `#panel-*` |
+
+⇒ **`test_dichen §⑥` nay MỞ bảng NPC thật** — hai map × hai cấp × mọi NPC — rồi quét trong đó.
+
+**⚠ HAI CẤP, KHÔNG MỘT.** Quầy thuốc ghép máu và số lọ, quầy rương ghép khoảng cấp, Vực Thẳm
+đổi lời theo cấp: đo một cấp thì mọi khuôn CÓ SỐ đều lọt qua bằng đúng một trạng thái.
+
+**⚠ KHUÔN CÓ SỐ VÀO `RULES`, ĐỪNG VÀO `EXACT`.** Khai `Hồi đầy máu — đang 10.003/10.003` vào
+`EXACT` là dịch đúng ở **một** giá trị máu và trơ tiếng Việt ở mọi giá trị khác — mà bài kiểm
+đo ở một cấp thì nó vẫn xanh.
+
+**⚠ CHỐT TỰ KIỂM ĐÒI ≥20 LƯỢT BẮT CHUYỆN TRƯỚC KHI CHẤM.** `tryTalk()` không mở bảng thì vòng
+quét chạy trên một bảng `hidden` và trả về **0 dòng** — trông y hệt "đã dịch xong".
+
+*Luật chung: một phép quét không mở được cái bảng thì nó không gác được cái bảng ấy, và nó trả
+về những con số trông hoàn toàn bình thường.* Cùng vết sẹo đã ghi cho bộ quét đọc tệp của đài
+phun nước và cho `§③` (quét 15 bảng, bỏ qua HUD).
+
+### ⚠⚠ VÀ MẶT LỚN NHẤT LẠI LÀ BĂNG-RÔN GIỮA MÀN — 59/65 chuỗi THUẦN chưa dịch
+
+`test_dichen §②` bọc `fillText` rồi đọc lại, nên nó chỉ thấy chuỗi nào **tình cờ vẽ ra** trong
+~30 giây bài chạy. Mà `zoneBanner` — chữ to nhất trên màn hình, ngay giữa khung nhìn — phần lớn
+nổ ở một **mốc GIỜ THẬT** (Hung Thần 0/4/8/12/16/20h · Đàn Vàng 2/6/10/14/18/22h · Vực Nứt
+0/6/12/18h) hoặc ở một sự kiện **một lần trong đời** (Tái Sinh · thông quan Tầng Sâu · sáu
+băng-rôn DI TRÚ chỉ chạy đúng một lần cho save đời cũ).
+
+Nó lộ ra hoàn toàn do MAY: lượt chạy hôm nay rơi trúng mốc *"10 phút nữa Đàn Vàng"* ⇒ §② đỏ
+**2 chuỗi**. Quét thẳng `zoneBanner = {…}` trong `game.js` rồi hỏi từng chuỗi qua bộ dịch thật
+ra **59 / 65 chuỗi THUẦN chưa dịch**. Đã dịch hết, cộng 32 `RULES` cho phần có khuôn.
+
+**⚠ PROBE BẢN ĐẦU BÁO 102/108 VÀ ĐÓ LÀ BÁO ĐỘNG GIẢ.** Nó thay mọi `${…}` bằng một mốc `§` rồi
+hỏi — mà thay thế ấy **phá mọi luật `RULES` có `(\d+)`**, nên chuỗi có khuôn đều ra "chưa dịch"
+dù luật khớp hoàn hảo với bản THẬT. Chỉ chuỗi KHÔNG có `${}` mới kết luận được theo lối ấy; ba
+"chưa dịch" cuối cùng cũng là artefact (`'☠ GỤC Ở TẦNG ' + f` nối số ở ngoài · `\u2726` là
+chuỗi thoát trong MÃ NGUỒN, không phải ký tự lúc chạy). *Trước khi tin một con số, hỏi xem phép
+đo có dựng đúng cái thể hiện mà người chơi thấy không.*
+
+**⚠ NỬA DỊCH CÒN TỆ HƠN KHÔNG DỊCH.** `⏱ HẾT GIỜ — PHÓ BẢN THẤT BẠI` từng ra
+`⏱ HẾT GIỜ — DUNGEON THẤT BẠI`, và `5 phút giảm 40% sát thương thiên lôi…` ra
+`5 min: giảm 40% lightning damage…` — đó là `TERMS` thay lẻ từng từ khi không `EXACT` nào khớp.
+`EXACT` được hỏi TRƯỚC `RULES` và `TERMS`, nên khai ĐỦ CÂU là nó thắng.
+
+**⚠ VÀ TÔI VỪA DẪM LẠI BẪY "KHỚP ĐẦU TIÊN THẮNG" TRONG CHÍNH ĐỢT NÀY.** `unshift` một luật
+`/^ĐAI (.+)$/` lên trên luật `/^ĐAI (NGOẠI VI|TRUNG TÂM|HẠT NHÂN)$/` **đã có sẵn và đúng hơn
+hẳn** ⇒ `ĐAI TRUNG TÂM` ra `TRUNG TÂM BELT`. Đã gỡ. *Trước khi `unshift` một luật RỘNG, grep
+xem đã có luật HẸP nào cùng tiền tố chưa.*
+
+**⚠ ĐỒNG HỒ QUẦY CÓ HAI ĐỊNH DẠNG:** `13:58` khi còn dưới một giờ, `1h59m` khi còn trên. Luật
+viết cho một dạng thì xanh ở mọi lượt chạy rơi vào dạng ấy — mà rơi vào dạng nào là do GIỜ THẬT
+quyết định. Cùng họ với cả mặt băng-rôn.
 
 ## ⚠ QUY TẮC SỐ 3: KHÔNG DÙNG VECTOR. CHẤM HẾT.
 

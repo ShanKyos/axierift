@@ -2011,10 +2011,35 @@ Object.assign(EXACT, {
   // — bước 6: bảng —
   'Mở thử bảng': 'Try opening the',
   '(phím': '(key',
-  ') để xem chỉ số và con Axie đang đeo ·': ') to see your stats and the Axie you are wearing ·',
+  ') để xem chỉ số, hai dòng hệ và con Axie đang đeo ·':
+    ') to see your stats, your two element rows and the Axie you are wearing ·',
   'kỹ năng ·': 'skills ·',
   'túi đồ ·': 'bag ·',
   'bản đồ': 'map',
+  // — bước 7: TRỤC AXIE. Cửa dạy duy nhất của cơ chế gánh 35% barem trong phút đầu; câu này
+  //   vỡ thành sáu mảnh quanh ba thẻ <b>, và mảnh đầu CỐ Ý bắt đầu ngay bằng thẻ — một mảnh
+  //   đứng trước nó mà ngắn ('Con') sẽ thành khoá EXACT ăn vào mọi text-node 'Con' khác.
+  'Con Axie ngươi đang ĐEO': 'The Axie you are WEARING',
+  'quyết định ngươi ăn đòn nặng hay nhẹ ở': 'decides how hard hits land on you in',
+  'đất này': 'this land',
+  '— và nó KHÔNG cộng một điểm chỉ số nào. Ăn vài đòn rồi nhìn con số bay trên đầu mình; mỗi vùng một hệ khác nhau, đổi thân ở':
+    '— and it adds ZERO stat points. Take a few hits and watch the number float over your head; every region runs a different element, so swap bodies at the',
+  'trong bảng Nhân Vật.': 'tab in the Character panel.',
+  // ⚠ 'Khế Ước' đứng MỘT MÌNH trong một text-node chưa từng có khoá — chỉ có 'Mở Khế Ước' và
+  //   mấy mẫu ghép sẵn. Bước hướng dẫn mới bọc nó trong <b> nên nó thành một mảnh riêng, và
+  //   nó đã lọt ra tiếng Việt giữa một câu tiếng Anh. 'Covenant' là tên đã dùng ở hai chỗ kia.
+  'Khế Ước': 'Covenant',
+  /* ⚠ MÀN TẠO NHÂN VẬT — bốn dòng dưới đây lọt tiếng Việt suốt, và chúng nằm trên màn ĐẦU
+     TIÊN người chơi chạm vào. `test_dichen §⑤` quét cả `document.body` nhưng nó chạy SAU
+     `startGame`, tức sau khi màn này đã đóng ⇒ nó chưa bao giờ đo tới đây. Quét lại bằng cách
+     đi đúng đường người chơi đi (dẫn truyện → chọn máy chủ → chọn lớp) mới thấy.
+     *Một phép quét chạy sau một cái cửa thì mọi thứ trước cửa ấy là điểm mù của nó.* */
+  'Chiêu chính:': 'Main skill:',
+  '· Trấn Phái:': '· Signature Art:',
+  'Axie đại diện —': 'Representative Axie —',
+  'Axie đại diện': 'Representative Axie',
+  'Không cộng một điểm chỉ số nào — chỉ số, kỹ năng và trang bị đều tới từ lớp nhân vật. Nhưng lớp của con Axie quyết định ngươi chịu đòn nặng hay nhẹ ở từng vùng đất. Đổi lúc nào cũng được ở bảng Khế Ước.':
+    'Adds ZERO stat points — stats, skills and gear all come from your class. But the Axie\u2019s own class decides how hard each region hits you. Swap it any time from the Covenant tab.',
 });
 Object.assign(EXACT, { 'Châu': 'Jewels', 'Tứ Châu': 'the Four Jewels', 'Ngọc': 'Jewel' });
 
@@ -2035,6 +2060,823 @@ Object.assign(EXACT, {
 });
 // `bandLvText` trả riêng phần dải cấp (`C1–4`); hai luật trên gọi lại `tr()` cho nó.
 RULES.unshift([/^C(\d+)–(\d+)$/, (m, x, y) => `Lv${x}–${y}`]);
+
+/* ══ TẦNG KỂ CHUYỆN ══════════════════════════════════════════════════════════════════
+   190 chuỗi cuối cùng còn tiếng Việt khi chạy `?lang=en`, đo bằng `test_dichen §④`.
+   Giao diện đã sạch 100% từ mấy đợt trước; chỗ hở còn lại nằm đúng ở tầng KỂ CHUYỆN —
+   tức phần nói cho người chơi biết VÌ SAO một Dark Knight lại đứng giữa Lunacia. Với
+   giám khảo mở `?lang=en` rồi bấm nhận nhiệm vụ đầu tiên, đó là chỗ họ đâm vào đầu tiên.
+
+   ⚠ KHAI NGUYÊN CHUỖI, KHÔNG CẮT MẢNH. Khác sáu bước hướng dẫn ở khối trên: mấy chuỗi
+   này KHÔNG có thẻ HTML nào (đã quét: 0/190), nên mỗi cái nằm gọn trong MỘT text-node và
+   khớp thẳng `EXACT`. Cắt mảnh ở đây là tự đẻ ra hàng trăm khoá ngắn, mà khoá càng ngắn
+   thì càng dễ ăn nhầm một text-node chẳng liên quan ở chỗ khác.
+
+   ⚠ TÊN RIÊNG THEO ĐÚNG BẢNG ĐÃ CÓ Ở TRÊN, đừng đặt tên mới: Tướng Quân → Warden ·
+   Rương Canh → Warded Chest · Vỉa Cốt → Bone Vein · Lò Hỗn Độn → Chaos Forge ·
+   Tái Sinh → Reset · Tầng Sâu → The Deeps · Trũng Nứt Corran → Corran Riftbasin ·
+   Rẻo Rừng Corran → Corran Woodstrip. Một bản dịch thứ hai cho cùng một danh từ riêng là
+   hai cái tên cho một thứ, và người chơi không có cách nào biết chúng là một.
+
+   ⚠ `Bờ Đang Lấn` có mặt ở CẢ chính tuyến lẫn phụ tuyến — một khoá, một bản dịch. Bộ
+   sinh khối này dò trùng khoá trước khi ghi, vì hai bản dịch khác nhau cho cùng một khoá
+   thì `Object.assign` lấy cái sau và cái trước biến mất trong im lặng. */
+Object.assign(EXACT, {
+  // ── TÊN NPC ──
+  'Kỵ Sĩ Ronin': 'Ronin Knight',
+  'Kẻ Coi Luống': 'The Seedbed Keeper',
+  // ── MÔ TẢ CHIÊU (VOHOC_DEFS[].desc) ──
+  'Vũ khí rời tay, xoay tròn quanh thân trong một vòng lửa — lực ly tâm cuốn cả bầy.':
+    'The weapon leaves your hand and circles you inside a ring of fire — the spin drags the whole pack in.',
+  'Bị động: +15% Sinh Lực tối đa — sức vóc Dark Knight dày lên theo từng trận sống sót.':
+    'Passive: +15% Max HP — a Dark Knight\'s frame thickens with every fight survived.',
+  'Dựng thế thủ — một lớp khiên dày bằng 28% Sinh Lực tối đa bọc quanh thân, kèm +12% sát thương trong 8 giây.':
+    'Set your guard — a shield worth 28% of Max HP wraps the body, plus +12% damage for 8 seconds.',
+  'Mũi tên tẩm nhựa độc — trúng rồi thì vết thương tự lan.':
+    'An arrow steeped in poison resin — once it lands, the wound spreads on its own.',
+  'Phủ một lớp năng lượng lên giáp — đòn tới trượt đi thay vì ăn thẳng.':
+    'Sheathe the armour in energy — incoming blows glance off instead of landing clean.',
+  'Tụ ánh sáng lên đầu ngón tay rồi búng đi — không cần tên, không cần cung.':
+    'Gather light at the fingertip and flick it away — no arrow, no bow.',
+  'Kẹp năm mũi giữa các ngón, buông một lần — cả nan quạt tên phủ kín phía trước.':
+    'Five shafts held between the fingers, loosed at once — a fan of arrows covers everything ahead.',
+  'Ban phước: hồi ngay 25% Sinh Lực tối đa và +25% sát thương trong 8s.':
+    'Blessing: restore 25% of Max HP at once, and +25% damage for 8s.',
+  'Một mũi tên dồn hết lực xuyên thủng cả hàng địch — càng đứng thẳng hàng càng ăn đủ.':
+    'One arrow with every ounce behind it, punching through a whole line — the straighter they stand, the more they take.',
+  'Bị động: tự hồi 1% Sinh Lực tối đa mỗi giây, kể cả giữa trận.':
+    'Passive: regenerate 1% of Max HP every second, even in the middle of a fight.',
+  'Một tia sét đánh thẳng vào địch, có thể hất văng.':
+    'A bolt of lightning straight into the target; it can throw them back.',
+  'Băng giá xuyên thấu — trúng đòn làm chậm mục tiêu.': 'Piercing frost — a hit slows the target down.',
+  'Ba cơn lốc xuyên phá — quét qua mọi địch trên đường đi.':
+    'Three tearing whirlwinds — they sweep every enemy in their path.',
+  'Giơ trượng gọi một cột lửa dựng thẳng từ lòng đất lên giữa bầy quái, vòng dung nham loang ra quanh chân nó.':
+    'Raise the staff and a pillar of fire stands up out of the ground in the middle of the pack, lava spreading in a ring around its foot.',
+  'Gọi bầy long hồn xoáy ra từ bóng của chính mình rồi giăng thành vòng, quét sạch một vòng quanh người.':
+    'Call a flight of dragon spirits spiralling out of your own shadow, then string them into a ring that scours everything around you.',
+  'Khiên hồn ma bao bọc — hấp thụ sát thương bằng 45% Sinh Lực tối đa trong 6s.':
+    'A shroud of spectral shielding — absorbs damage equal to 45% of Max HP for 6s.',
+  'Một nhát chém quét ngang, sóng sáng rời khỏi lưỡi thép bay tiếp.':
+    'A cut sweeping sideways; a wave of light leaves the steel and keeps going.',
+  'Quả cầu lửa học lỏm từ pháp sư — Spellblade niệm được mà không cần bỏ kiếm.':
+    'A fireball picked up off the wizards — a Spellblade can cast it without putting the sword down.',
+  'Sóng lực dội thẳng theo hướng nhìn — chiêu nhập môn của pháp sư, trong tay kẻ cầm kiếm.':
+    'A wave of force straight along your facing — the wizard\'s first lesson, in a swordsman\'s hands.',
+  'Vòng chém quanh thân mượn của hiệp sĩ — thép nặng thay cho thép mỏng.':
+    'A spin cut borrowed from the knights — heavy steel instead of thin.',
+  'Bão lửa khổng lồ nuốt trọn cả một vùng — chiêu riêng, không lớp nào khác có.':
+    'A vast firestorm that swallows a whole area — this class alone has it.',
+  'Dồn cả nội lẫn ngoại lực — +20% sát thương và +22% tốc đánh trong 6s.':
+    'Everything you have, inside and out, poured into the swing — +20% damage and +22% attack speed for 6s.',
+  'Bị động: hút 6% sát thương gây ra thành Sinh Lực — càng đánh dồn càng khó chết.':
+    'Passive: 6% of the damage you deal comes back as HP — the harder you press, the harder you are to kill.',
+  'Nắm năng lượng lại thành một khối rồi đẩy đi — chiêu mặc định của quyền trượng.':
+    'Pack energy into a solid mass and shove it forward — the sceptre\'s default strike.',
+  'Tia điện từ quyền trượng — trúng đòn choáng nhẹ.': 'A current off the sceptre — a hit leaves the target reeling.',
+  'Bắn một chuỗi lửa ngắn liên tiếp — chiêu Dark Lord dùng nhiều nhất khi dọn bãi.':
+    'A short burst of fire, one shot after another — the Dark Lord\'s workhorse for clearing a camp.',
+  'Thúc chiến mã lao qua hàng địch — sức nặng của cả người lẫn ngựa dồn vào cú va.':
+    'Spur the warhorse through the enemy line — rider and mount put their whole weight into the impact.',
+  'Giậm quyền trượng xuống đất — nền nứt thành vòng, cả bầy bật ngửa.':
+    'Slam the sceptre into the ground — the floor cracks in a ring and the whole pack is thrown off its feet.',
+  'Hô hào toàn quân: mọi đòn đều bạo kích trong 4s, kèm +15% sát thương.':
+    'Call the whole company on: every blow crits for 4s, plus +15% damage.',
+  'Bị động: bầy quạ đen bám theo đánh hôi — +12% sát thương của MỌI chiêu thức.':
+    'Passive: a flock of black ravens trails you and picks off the wounded — +12% damage on EVERY skill.',
+  'Bị động: nới Sinh Lực tối đa — mỗi cấp +0,30%. Nền tảng của mọi lớp, không riêng lớp chịu đòn.':
+    'Passive: raises Max HP — +0.30% per level. Groundwork for every class, not only the one that takes the hits.',
+  'Bị động: nới Mana tối đa — mỗi cấp +0,30%. Càng nhiều Mana càng tung được nhiều chiêu trước khi phải lùi.':
+    'Passive: raises Max Mana — +0.30% per level. More Mana means more casts before you have to back off.',
+  'Bị động: rèn Thể Lực — mỗi cấp +0,10 điểm. Thể Lực nuôi Sinh Lực, nên nó cộng dồn với Increase Life.':
+    'Passive: forges Vitality — +0.10 points per level. Vitality feeds HP, so it stacks with Increase Life.',
+  'Bị động: nâng Công Kích tối đa — mỗi cấp +0,25%. Dark Wizard đọc dòng này thành Sức Mạnh Phép Thuật.':
+    'Passive: raises maximum Attack — +0.25% per level. A Dark Wizard reads this line as Magic Power.',
+  'Bị động: dày Phòng Thủ — mỗi cấp +0,30%. Mở muộn nhất trong bảy cái: nó là thứ giữ người ở map cấp cao.':
+    'Passive: thickens Defense — +0.30% per level. Last of the seven to open: it is what keeps you standing on high-level maps.',
+  'Bị động: tăng Né Tránh — mỗi cấp +0,05%. Đòn trượt hẳn thì không có giáp nào phải chịu.':
+    'Passive: raises Dodge — +0.05% per level. A blow that misses outright costs your armour nothing.',
+  'Bị động: tăng tỉ lệ Bạo Kích — mỗi cấp +0,05%. Khác Increase Critical Damage của Dark Lord: cái kia là SÁT THƯƠNG bạo kích, cái này là TỈ LỆ.':
+    'Passive: raises Crit rate — +0.05% per level. Not the Dark Lord\'s Increase Critical Damage: that one is crit DAMAGE, this one is the RATE.',
+  'Tâm pháp: đòn của võ công bộ 1 đẩy lùi mục tiêu và nện thêm sát thương bạo kích. Bị Steadfast của đối phương kháng lại.':
+    'Discipline: set-1 arts knock the target back and add crit damage on top. Countered by an opponent\'s Steadfast.',
+  'Tâm pháp: đứng vững trước đòn nện — kháng đẩy lùi và kháng sát thương bạo kích giáng xuống mình.':
+    'Discipline: keep your footing under a heavy blow — resists knockback and the crit damage aimed at you.',
+  'Tâm pháp: đòn của võ công bộ 2 khoá cứng mục tiêu — không đi được, không ra chiêu. Bị Unbound của đối phương kháng lại.':
+    'Discipline: set-2 arts lock the target down — no movement, no casting. Countered by an opponent\'s Unbound.',
+  'Tâm pháp: không gì khoá được chân mình — kháng mọi đòn định thân giáng xuống mình.':
+    'Discipline: nothing pins your feet — resists every root aimed at you.',
+  'Tâm pháp: đòn của võ công bộ 3 rải độc — mục tiêu mất máu dần theo tỉ lệ. Bị Antidote của đối phương kháng lại.':
+    'Discipline: set-3 arts leave poison behind — the target bleeds HP over time. Countered by an opponent\'s Antidote.',
+  'Tâm pháp: máu tự lọc lấy chất độc — kháng mọi loại độc giáng xuống mình.':
+    'Discipline: your blood filters the toxin out — resists every poison aimed at you.',
+  // ── CHÍNH TUYẾN (QUESTS[].name + .desc) ──
+  '"Chúng nó chỉ dạn thế từ hôm cái đèn cạnh giếng tắt. Ba đêm liền, mà dầu vẫn còn đầy." Người gánh nước qua đó mười hai chuyến một ngày — hỏi ông ta.':
+    '"They only turned that bold the night the lamp by the well went out. Three nights running, and the oil was still full." The water carrier passes that spot twelve times a day — ask him.',
+  'Trưởng Làng nhận ra ngay: đó là đèn dẫn hồn, Dawn axie trông coi. Nhưng thứ giữ cho đèn cháy không phải dầu — là một nét khắc nhỏ dưới chân đèn, do Bug axie khắc. Dược Sư từng phụ pha dầu cho họ; hỏi cho ra.':
+    'The Village Elder knows it at once: that is a soul lamp, tended by Dawn axies. But what keeps it burning is not the oil — it is a small carving at the foot of the lamp, cut by a Bug axie. The Apothecary used to help mix their oil; get it out of him.',
+  '"Dầu đèn không mua được. Nó là nhựa cây trong rừng thưa, mà chỉ Plant axie mới biết chỗ." Hái đủ năm bụi — rồi ngươi sẽ thấy dầu không phải thứ đang thiếu.':
+    '"Lamp oil is not something you buy. It is resin out of the open woods, and only a Plant axie knows where it runs." Gather five bushes of it — then you will see that oil is not what is missing.',
+  'Đèn tắt thì hồn không về được Cây Hồn, kẹt lại giữa đường. Lũ này tụ quanh chỗ hồn kẹt mà ăn. Dọn sạch.':
+    'With the lamps out the souls cannot reach the Soul Tree and are stranded on the road. These things gather where the souls are stuck, and they feed. Clear them out.',
+  'Nét Khắc Đầu Tiên': 'Your First Carving',
+  '"Đồ thường chém vào chúng như chém sương." Người Ardhaven không khắc lên đá — họ khắc vào thép, và thép giữ nét khắc lâu hơn đá rất nhiều. Mang một món tới lò, đập lên +3 rồi quay lại. Đó là nét khắc đầu tiên của ngươi.':
+    '"Ordinary gear cuts them the way you cut fog." The people of Ardhaven do not carve into stone — they carve into steel, and steel holds a carving far longer than stone. Take a piece to the forge, bring it to +3 and come back. That is your first carving.',
+  '"Miếu bên suối vẫn còn. Atia không cho ai vàng bạc — nhưng ngồi đủ lâu thì ngài cho ngươi biết ngọn đèn kế tiếp tắt ở đâu."':
+    '"The shrine by the stream is still standing. Atia hands out no silver and no gold — but sit there long enough and she will tell you where the next lamp goes out."',
+  'Kẻ Lấy Nét Khắc': 'The One Taking The Carvings',
+  'Kẻ ngồi trên nền miếu không phải quái đi lạc. Trong tay nó có ba nét khắc gỡ từ ba chân đèn, xếp gọn như người ta xếp mẫu vật. Nó biết chính xác ngọn nào cần dập — và nó đang HỌC cách khắc lại.':
+    'The thing sitting on the shrine floor is no stray monster. In its hands are three carvings stripped from three lamp bases, laid out neatly the way a person lays out specimens. It knows exactly which lamp to put out — and it is LEARNING how to cut them back.',
+  'Trưởng Lão Rell đọc xong ba nét khắc lấy từ xác kẻ kia thì im rất lâu. "Nét này gỡ từ chân đèn. Còn thứ đang dồn đàn gia súc ngoài trại chăn thì gỡ từ chỗ khác." Ra dọn chúng.':
+    'Elder Rell reads the three carvings taken off that corpse and then says nothing for a long while. "These came off a lamp base. Whatever is herding the cattle together out at the grazing camp came off somewhere else." Go and clear them.',
+  'Phiến Đá Giữa Đồng': 'The Slab In The Open Field',
+  'Trinh Sát Wren dẫn ngươi tới một phiến đá cắm giữa đồng cỏ, mặt khắc dày đặc. "Đây. Nó giữ cho đàn không tan khi hoảng — bảy trăm năm nay. Người khắc gọi nó là Rune Giữ Đàn." Gom nhựa cây quanh phiến để rửa lớp bụi trên mặt khắc.':
+    'Scout Wren leads you to a slab standing in the middle of the grassland, its face dense with carving. "Here. It has kept the herd from scattering when they panic — for seven hundred years. The ones who cut it called it the Rune of the Herd." Gather resin around the slab to wash the dust off the carved face.',
+  '"Sáu người qua Nhát Gọi cùng ngươi. Sáu người ĐEO một cái thân của đất này rồi mới đi được — Rune đòi trả bằng thứ nó dịch chuyển, và cái thân là thứ nó trả lại." Ký một Khế Ước đi. Cái thân đó là của ngươi, không phải con vật đi cạnh ngươi.':
+    '"Six came through the Summoning Cut with you. Six of them had to WEAR a body of this land before they could walk at all — a Rune demands payment in the very thing it moves, and the body is what it gives back." Sign a Covenant. That body is yours; it is not an animal walking beside you.',
+  'Thân Nào Cho Đất Nào': 'Which Body For Which Land',
+  '"Ngươi đeo cái thân Rune trả lại, nhưng ngươi chưa CHỌN nó." Wren vẽ xuống đất ba vòng nối nhau. "Đất này là đất của Beast. Ai mang thân Aquatic, Bird hay Dawn tới đây thì đòn của chúng găm vào nhẹ hơn hẳn — không phải vì mạnh hơn, mà vì hợp hơn. Sang đất khác thì vòng xoay, và cái thân hôm nay hợp sẽ thành cái thân ngày mai chịu nặng." Mở Khế Ước ra mà tự cắm lấy một cái thân. Bảng đó nói cho ngươi biết ngươi đang đứng trên đất hệ gì.':
+    '"You wear the body the Rune gave back, but you have not CHOSEN it." Wren draws three linked circles in the dirt. "This is Beast ground. Anyone who brings an Aquatic, Bird or Dawn body here takes their blows far lighter — not because it is stronger, but because it fits. Move to other ground and the circle turns, and the body that fits today is the body that takes it tomorrow." Open the Covenant and set a body yourself. That panel tells you what element the ground under you runs.',
+  '"Phiến đá mỏng thì phải khắc lại vào thép. Cái lò ta mang từ Ardhaven sang làm được đúng việc đó — bỏ đồ và ngọc vào khay, máy tự nói cho ngươi biết khay đó thoả công thức nào." Đập một món lên +5 rồi quay lại.':
+    '"When a slab wears thin the carving has to go back into steel. The forge we carried over from Ardhaven does exactly that — put gear and jewels on the tray and the machine tells you which recipe that tray satisfies." Bring a piece to +5 and come back.',
+  'Thu Phiến Thứ Nhất': 'Recover The First Slab',
+  'Con Ma Sói Sương Trắng đã ngồi lên phiến đá. Hạ nó và mang phiến về lò. ⚠ Rell nói thẳng cái giá: từ lúc phiến rời chỗ tới lúc thép nguội, KHÔNG CÓ AI giữ cho đàn khỏi tan.':
+    'The Whitemist Werewolf has settled onto the slab. Bring it down and carry the slab to the forge. ⚠ Rell states the price plainly: from the moment the slab leaves its place until the steel cools, NOBODY is holding the herd together.',
+  'Bờ Đang Lấn': 'The Boundary Is Creeping',
+  'Người Gác Rừng Corran giữ cái bờ giữa rừng già và đất người ở. "Ba đời nay bờ đứng yên. Tháng này nó lấn vào ba trượng." Dọn lũ tượng đá vỡ lệnh đang đi theo mép bờ.':
+    'The Corran Forest Keeper holds the line between the old wood and the land people live on. "For three generations that line has not moved. This month it came in by three fathoms." Clear the broken stone effigies walking the edge of it.',
+  'Bụi Đá Dưới Chân Phiến': 'Stone Dust At The Foot Of The Slab',
+  '"Phiến bị mài thì phải rụng ra cái gì. Cái đó chúng ta gọi là Cốt — và nó không nằm một chỗ: mỗi ngày đất trồi lên một vỉa ở một CHỖ KHÁC." Tìm vỉa hôm nay mà khai. Đi tới tận nơi, không có cách nào khác.':
+    '"If a slab is being ground away, something has to come off it. We call that Bone — and it does not stay put: every day the ground pushes a vein up in a DIFFERENT PLACE." Find today\'s vein and work it. You go there yourself; there is no other way.',
+  'Đòn Đủ Nặng Cho Rừng Già': 'A Blow Heavy Enough For The Old Wood',
+  '"Đòn thường chỉ làm chúng giận." Hạ mười hai con bằng chính Trấn Phái tuyệt kỹ của lớp ngươi — Corran muốn thấy tận mắt ngươi làm được trước khi ông dẫn ngươi tới phiến đá.':
+    '"An ordinary blow only makes them angry." Take down twelve of them with your own class\'s Signature Art — Corran wants to watch you manage it before he leads you to the slab.',
+  'Cốt Vào Thép': 'Bone Into Steel',
+  '"Cốt của rừng này là Rễ Gai — mỗi vùng rụng ra một loại khác nhau, vì mặt khắc mỗi phiến mỗi khác. Bỏ nó vào lò cùng miếng thép thì thép nhớ được cái luật." Đập một món lên +6.':
+    '"The Bone of this forest is Thornroot — every region sheds a different kind, because every slab carries a different face. Put it in the forge with a piece of steel and the steel remembers the law." Bring a piece to +6.',
+  'Thu Phiến Thứ Hai': 'Recover The Second Slab',
+  'Tướng Quân Werebear Woods ngồi lên Rune Giữ Bờ và không giấu chuyện đó. Hạ nó, mang phiến về lò. Corran nói đúng một câu rồi quay đi: "Đêm nay ta ngủ ngoài bờ."':
+    'The Warden of Werebear Woods has taken the Rune of the Boundary and makes no secret of it. Bring it down, carry the slab to the forge. Corran says exactly one thing and turns away: "Tonight I sleep out on the line."',
+  'Luống Ấp Không Nở': 'The Beds Will Not Hatch',
+  '"Luống ấp Plant Tribe lẽ ra nở tháng trước." Wren đưa ngươi một nhánh mầm đã đen đầu. Axie Sa Ngã dạt về chiếm nền trại cũ — mở đường vào.':
+    '"The Plant Tribe beds should have hatched last month." Wren hands you a sprout gone black at the tip. Fallen Axies have drifted in and taken the floor of the old camp — open the way in.',
+  'Ổ Ấp Bỏ Lại': 'The Abandoned Nursery',
+  'Oan hồn tụ trên luống cũ. Không con nào rời khỏi vạt đất ấy quá mười bước — chúng đang chờ một thứ mà chỗ này từng hứa với chúng.':
+    'Restless souls gather over the old beds. Not one of them strays more than ten paces off that patch of ground — they are waiting for something this place once promised them.',
+  'Thứ Đất Nhả Ra': 'What The Ground Gives Back',
+  '"Từ ngày phiến đá mỏng đi, đất bắt đầu nhả ra thứ nó giữ bảy trăm năm. Không phải của cải — là NGHỀ. Kẻ đi trước để lại, và ai đào lên thì nhặt được." Khai hai vỉa. Ngươi mất ký ức chứ không mất nghề; đây là chỗ lấy lại.':
+    '"Since the slabs wore thin the ground has begun giving back what it held for seven hundred years. Not riches — CRAFT. The ones before us left it behind, and whoever digs it up picks it up." Work two veins. You lost your memory, not your craft; this is where you take it back.',
+  'Thép Chịu Được Mùa': 'Steel That Can Carry A Season',
+  '"Phiến ở đây giữ cho luống nở đúng mùa. Cái luật ấy nặng hơn cái luật giữ một cái đàn." Đập một món lên +7 trước khi tới gần nó.':
+    '"The slab here keeps the beds hatching in season. That law is heavier than the one that holds a herd together." Bring a piece to +7 before you go anywhere near it.',
+  'Thu Phiến Thứ Ba': 'Recover The Third Slab',
+  'Thủ Lĩnh Đoàn Gloam ngồi trên Rune Giữ Mùa, và hắn từng mặc bộ giáp giống ngươi. Hắn sẽ nói thế, và hắn nói thật. Hạ hắn, mang phiến về lò.':
+    'The Gloam Warband Chieftain sits on the Rune of the Season, and he once wore armour like yours. He will say so, and he is telling the truth. Bring him down, carry the slab to the forge.',
+  'Hai Trăm Quả Chưa Nở': 'Two Hundred Eggs Unhatched',
+  'Sylas đếm trứng suốt ba năm. "Dưới ổ ấp này là phiến GỐC — Rune Giữ Tên. Trứng nào nở cũng phải xin nó một cái tên. Ba tuần nay không quả nào xin được." Dọn lũ Golem đang đè lên lối xuống.':
+    'Sylas has counted eggs for three years. "Under this nursery lies the ROOT slab — the Rune of Names. Every egg that hatches has to ask it for a name. For three weeks not one has managed to." Clear the Golems pressing down on the way below.',
+  'Hòm Có Người Canh': 'A Chest With Keepers',
+  '"Người vùng này không cất đồ trong nhà. Họ cất trong hòm, rồi để bốn con canh cái hòm — vì một cái tên mất thì tìm lại được, một cái hòm mất thì không." Mở hai cái. Trại canh còn sống thì hòm còn khoá.':
+    '"People here do not keep their goods in the house. They keep them in a chest, and they set four to watch the chest — because a lost name can be found again and a lost chest cannot." Open two. While the camp lives, the chest stays locked.',
+  'Thứ Không Ai Dạy Được': 'The Thing Nobody Can Teach',
+  '"Nét khắc không dán lên đồ, và nghề không dán lên người. Thứ người ta khoá trong hộp cũng vậy — mở ra rồi mới biết bên trong là nghề hay là rác." Mở một Box Kundun.':
+    '"A carving is not stuck onto gear, and a craft is not stuck onto a person. The same goes for whatever people lock in a box — you only find out whether it holds craft or rubbish once it is open." Open one Box Kundun.',
+  '"Vaeldra khắc vào thép, chúng ta khắc vào đá. Cùng một nghề, khác cái phiến." Đập một món lên +9 rồi mang xuống cho ta xem nét khắc.':
+    '"Vaeldra carves into steel, we carve into stone. The same craft, a different slab." Bring a piece to +9 and bring it down so I can look at the carving.',
+  'Thu Phiến Gốc': 'Recover The Root Slab',
+  'Tướng Quân ngồi trên phiến gốc và không cho trứng nào xin tên. Hạ nó. ⚠ Và nghe cho hết câu Sylas nói sau đó — ông ấy sẽ nói ai đã khắc nét trên trời.':
+    'The Warden sits on the root slab and lets no egg ask for a name. Bring it down. ⚠ And hear Sylas out afterwards — he will tell you who cut the carving in the sky.',
+  'Ba Tổ Ngừng Hát': 'Three Nests Have Stopped Singing',
+  'Liora sống ở độ cao Bird axie chọn để tránh Chimera. "Phiến dưới kia giữ cho một khúc hát không tắt theo người hát nó. Ba tổ trên cao đã ngừng hát." Năm nay lũ cuồng tín leo được lên tới nơi.':
+    'Liora lives at the height Bird axies chose to stay clear of the Chimera. "The slab down there keeps a song from dying with the one who sang it. Three of the high nests have stopped singing." This year the fanatics have managed to climb that far.',
+  '"Ngươi mất ký ức, không mất nghề. Cái nghề ấy không nằm trong đầu — nó nằm trong tay, và mỗi lần tay nhớ ra thêm một nhát thì ta gọi là Bản Năng." Nâng ba cấp kỹ năng. Bản Năng là thứ trả cho những nhát đó, và đánh quái là cách tay nhớ lại.':
+    '"You lost your memory, not your craft. That craft does not sit in the head — it sits in the hands, and every time the hands remember one more stroke, we call it Instinct." Raise three skill levels. Instinct is what pays for those strokes, and fighting is how the hands remember.',
+  'Bird axie hát những khúc chỉ chúng hiểu, có khúc dùng ngay trong lúc đánh. Thứ này cắt khúc giữa câu — và nó làm thế có chủ đích.':
+    'Bird axies sing songs only they understand, and some of them are sung mid-fight. This thing cuts the song off in the middle of a line — and it does that deliberately.',
+  '"Chỗ ngươi sắp tới không có đèn nào cả. Đừng mang thép nửa vời xuống đó." Đập một món lên +11. Muốn nhanh thì xuống Tầng Sâu — càng sâu càng xa mọi phiến Rune, nên không tầng nào có luật, và không tầng nào giống tầng nào.':
+    '"Where you are going there are no lamps at all. Do not take half-finished steel down there." Bring a piece to +11. If you want it quickly, go down into The Deeps — the deeper you go the further from every Rune, so no floor carries a law, and no two floors are alike.',
+  'Chúng không săn bừa. Chúng săn đúng những con còn biết thắp đèn, và còn biết khúc hát nào đi với ngọn nào. Mười bốn con.':
+    'They do not hunt at random. They hunt exactly the ones who still know how to light a lamp, and which song goes with which flame. Fourteen of them.',
+  'Thu Phiến Thứ Năm': 'Recover The Fifth Slab',
+  'Tướng Quân ngồi trên đúng cái phiến lẽ ra giữ khúc của ba tổ đã im. Hạ nó, mang phiến về lò. "Ta chép nhanh hơn," Liora nói. Bà biết bà đang chép cái gì.':
+    'The Warden sits on the very slab that should be holding the song of the three silent nests. Bring it down, carry the slab to the forge. "I will copy faster," Liora says. She knows what she is copying.',
+  'Xuống Vùng Đá Nóng': 'Down To The Hot Stone',
+  'Rell gọi ngươi về thành một lần nữa. "Dax nằm ngoài vùng đá ba năm để đếm quân. Hôm qua hắn gửi than viết lên đá: mỏ nào cũng tắt lửa qua đêm." Đi tìm hắn — và đừng đứng thẳng lưng khi tới.':
+    'Rell calls you back to town once more. "Dax has lain out on the stone flats for three years counting their numbers. Yesterday he sent word in charcoal on rock: every mine goes cold overnight." Go and find him — and do not walk in standing upright.',
+  'Reptile axie dựng nhà trên tảng lớn, mở ra đóng vào theo nắng — vì phiến Rune ở đây giữ cho lò không nguội qua đêm. Nay có thứ đóng chúng lại từ bên ngoài. Dọn lũ trinh sát trước.':
+    'Reptile axies build on the great slabs, opening and shutting with the sun — because the Rune here keeps a forge from going cold overnight. Now something is shutting them from the outside. Clear the scouts first.',
+  'Đôi Cánh': 'A Pair Of Wings',
+  '"Bình nguyên này rộng, và ngươi thì chạy bằng chân." Ghép một đôi cánh ở lò rồi quay lại hạ mười bốn con bằng Trấn Phái — Dax muốn thấy ngươi rời được mặt đất.':
+    '"These flats are wide, and you travel on foot." Craft a pair of wings at the forge, then come back and take down fourteen with your Signature Art — Dax wants to see you leave the ground.',
+  '"Reptile axie đào quặng và TẠO ra lửa, không mượn lửa. Mỏ tắt lửa nghĩa là không còn ai dưới đó — nhưng hòm của họ thì vẫn còn." Hung Thần thả hòm xuống đây. Ném hai cái ra mà mở.':
+    '"Reptile axies dig ore and MAKE fire; they do not borrow it. A mine gone cold means nobody is left down there — but their chests are still there." The Dread One drops boxes here. Throw two out and open them.',
+  'Bốn Nghìn Hai Trăm': 'Four Thousand Two Hundred',
+  '"Ta đếm được bốn nghìn hai trăm quân. Ngươi có một người." Dax vẫn nằm. Phá đúng một chỗ: hàng kỵ sĩ giữa lều Tướng Quân và phiến đá.':
+    '"I have counted four thousand two hundred of them. You have one of you." Dax does not get up. Break exactly one thing: the line of riders between the Warden\'s tent and the slab.',
+  'Thu Phiến Thứ Sáu': 'Recover The Sixth Slab',
+  'Tướng Quân dựng lều ngay trên Rune Giữ Lửa và ngồi lên nó như ngồi lên ghế. Hạ hắn, mang phiến về lò. Trên xác hắn có một bảng gỗ khắc bảy cái tên — bốn cái đã bị gạch.':
+    'The Warden has pitched his tent directly on the Rune of the Flame and sits on it like a chair. Bring him down, carry the slab to the forge. On his body is a wooden board carved with seven names — four already struck through.',
+  'Lão Tướng Brann gọi tên cả sáu người đã dẫn ngươi tới đây, rồi nói ông không có tên trên bảng gỗ kia. "Dusk axie canh Cây Hồn. Chúng chưa bỏ chạy — nghĩa là còn thứ đáng canh."':
+    'Old Brann names all six who brought you this far, then says his own name is not on that board. "Dusk axies watch the Soul Tree. They have not run — which means there is still something there worth watching."',
+  'Mang Bảng Tên Về Thành': 'Carry The Board Back To Town',
+  '"Bốn cái tên bị gạch. Cái thứ năm là RELL. Cái thứ sáu là tên ngươi. Còn cái thứ bảy thì khắc SAU sáu cái kia, bằng một bàn tay khác." Mang bảng về cho Rell. Ông ấy là người duy nhất còn nhớ đủ bốn cái tên đầu.':
+    '"Four names struck through. The fifth is RELL. The sixth is yours. And the seventh was cut AFTER the other six, by a different hand." Take the board back to Rell. He is the only one who still remembers all four of the first names.',
+  'Nhà Dusk axie tàng hình được, nên thứ vây quanh đây không tìm nhà — nó vây chính Cây Hồn. Phá vòng vây bằng Trấn Phái.':
+    'Dusk axie houses can hide themselves, so whatever is closing in here is not hunting for houses — it is closing on the Soul Tree itself. Break the ring with your Signature Art.',
+  '"Thép của ngươi tới trần rồi. Con đường còn lại thì không." Đập một món lên +11 và hỏi lò về Tái Sinh — trả lại cấp để đi lại từ đầu với một thân thể nặng hơn. Brann đã làm chuyện đó hai lần.':
+    '"Your steel has reached its ceiling. The road left to walk has not." Bring a piece to +11 and ask the forge about Reset — hand back your levels to start again in a heavier body. Brann has done it twice.',
+  '"Đường về Cây Hồn đi qua vòng trong cùng, và vòng đó đang bị chặn hai đầu. Ta lo đầu bên kia." Dọn đầu bên này. Kỳ Lân Bão Tố đứng thành hàng — không con nào rời chỗ, vì chúng được lệnh đứng đó.':
+    '"The road to the Soul Tree runs through the innermost ring, and that ring is blocked at both ends. I will take the far end." Clear this one. The storm-beasts stand in a line — not one of them leaves its place, because they were ordered to stand there.',
+  'Thu Phiến Thứ Bảy': 'Recover The Seventh Slab',
+  '⚠ Đọc hết trước khi đi. Rune Giữ Đường là thứ chỉ đường cho hồn quay về Cây Hồn — những ngọn đèn tắt ở Rẻo Rừng Corran hồi ngươi mới tới là đầu xa của chính phiến này. Gỡ nó ra thì suốt thời gian nó nằm trong lò, không một hồn nào ở Lunacia tìm được đường. Brann không cản. Ông chỉ xin ngươi làm chuyện đó trong lúc còn tỉnh táo.':
+    '⚠ Read all of this before you set out. The Rune of the Road is what lights the way for souls returning to the Soul Tree — the lamps that went out across Corran Woodstrip when you first arrived are the far end of this very slab. Pull it out, and for as long as it lies in the forge not one soul in Lunacia can find the way. Brann will not stop you. He asks only that you do it while your head is still clear.',
+  'Bảng Gỗ Bảy Cái Tên': 'The Board Of Seven Names',
+  '"Ta giữ cái bảng từ hôm hạ Tướng Quân Reptile Sunstone Flats. Bảy cái tên, bốn cái đã bị gạch. Cái thứ năm là RELL. Cái thứ sáu là ngươi." Brann đưa bảng gỗ, rồi ngồi xuống. "Cái thứ bảy chưa bị gạch, vì chưa ai chứng minh được là nó nên bị gạch. Mang xuống cho Sylas — ông ấy khắc, ông ấy đọc được nét ai."':
+    '"I have kept this board since the Warden of Reptile Sunstone Flats went down. Seven names, four struck through. The fifth is RELL. The sixth is you." Brann hands over the board, then sits down. "The seventh has not been struck, because nobody has yet proved that it should be. Take it down to Sylas — he carves, so he can read whose hand cut what."',
+  'Nét Khắc Trên Người': 'A Carving On Flesh',
+  '"Bảy cái tên này khắc bằng một tay. Sáu cái khắc lên gỗ. Cái thứ bảy…" Sylas dừng rất lâu. "…khắc lên chính nó. Ta chưa từng thấy ai làm thế, vì gỗ thì gánh được một cái luật, còn người thì không." Đoàn Gloam theo hắn đang rút về phía trũng — chặn chúng lại mà hỏi.':
+    '"These seven names were cut by one hand. Six of them into wood. The seventh…" Sylas stops for a long time. "…into itself. I have never seen anyone do that, because wood can carry one law and a person cannot." The Gloam Warband following him is pulling back toward the hollow — cut them off and ask.',
+  'Trả Bằng Thứ Nó Dịch Chuyển': 'Paid In The Thing It Moves',
+  '"Rune đòi trả bằng thứ nó dịch chuyển. Ngươi trả bằng ký ức, nên ngươi quên. Hắn giữ được ký ức vì hắn trả bằng ký ức của NGƯỜI KHÁC." Sylas nhìn cái thân ngươi đang đeo. "Muốn đứng nổi trước hắn thì phải biết cái thân này là thứ được TRẢ LẠI, không phải thứ mượn." Ký đủ ba Khế Ước trước khi xuống trũng.':
+    '"A Rune demands payment in the very thing it moves. You paid in memory, so you forgot. He kept his memory because he paid with SOMEONE ELSE\'S." Sylas looks at the body you are wearing. "If you mean to stand in front of him, you had better understand that this body was GIVEN BACK to you, not lent." Sign three Covenants before you go down into the hollow.',
+  'Dưới Nhát Gọi': 'Beneath The Summoning Cut',
+  'Hắn đợi ở đáy Trũng Nứt, ngay dưới vết cắt trên trời — chỗ duy nhất ở Lunacia không phiến đá nào cắm nổi, nên cũng là chỗ duy nhất không cái luật nào chạm tới hắn. Một con mắt không có tròng. "Ngươi gỡ bảy cái luật xuống rồi mang tới đây để hỏi ta vì sao?" ⚠ Đèn vẫn tắt sau trận này. Gỡ Rune là việc của ngươi, không phải của hắn.':
+    'He is waiting at the bottom of the Corran Riftbasin, directly under the cut in the sky — the one place in Lunacia where no slab will hold, and therefore the one place no law can reach him. An eye with no pupil. "You pulled seven laws down and carried them here to ask me why?" ⚠ The lamps stay out after this fight. Pulling the Runes down was your doing, not his.',
+  // ── PHỤ TUYẾN (SIDE_QUESTS[].name + .desc) ──
+  'Thứ Mọc Được Thì Còn Kịp': 'If It Still Grows, There Is Still Time',
+  '"Ngươi rơi xuống đây trần trụi, đúng không. Vậy thì học cái rẻ nhất trước: cúi xuống mà hái." Năm bụi quanh rẻo rừng. Không con nào cắn ngươi ở đó cả — đấy là chỗ duy nhất trong vùng ta dám nói câu ấy.':
+    '"You dropped in here with nothing on you, didn\'t you. Then learn the cheapest thing first: bend down and pick." Five bushes around the woodstrip. Nothing out there will bite you — that is the only place in this region I would say that about.',
+  'Bầy Tới Sớm Hơn Mọi Năm': 'The Packs Came Early This Year',
+  '"Sói xuống bìa rừng sớm hơn mọi năm hai tháng. Người ta bảo tại thời tiết. Ta trộn thuốc ba mươi năm, ta biết mùi thời tiết — cái này không phải." Dọn mười bốn con, rồi ta nói tiếp.':
+    '"The wolves came down to the treeline two months earlier than usual. People blame the weather. I have been mixing medicine for thirty years, I know what weather smells like — this is not it." Clear out fourteen of them, then we will talk.',
+  'Cái Lò Ở Đâu': 'Where The Forge Is',
+  '"Ngươi sẽ cần cái lò trước khi ngươi biết là mình cần nó. Đi hỏi Thoren ở lò rèn ngoài rẻo — nói ta gửi." Đi một chuyến, nhớ đường. Phần còn lại của cuộc đời ngươi ở đây sẽ đi đi lại lại con đường đó.':
+    '"You will need the forge before you know you need it. Go ask Thoren at the smithy out on the strip — tell him I sent you." Make the trip once and learn the road. The rest of your life here will be spent walking it back and forth.',
+  'Cỏ Đàn Không Chịu Ăn': 'Grass The Herd Will Not Touch',
+  '"Đàn của ta bỏ bảy vạt cỏ. Không phải cỏ độc — ta nếm rồi. Chúng chỉ không chịu ăn." Hái bảy bụi ở đúng bảy vạt đó mang về đây. Ta muốn biết đàn nó ngửi thấy cái gì mà ta thì không.':
+    '"My herd has walked away from seven patches of grass. It is not poison — I tasted it. They simply will not eat it." Pick seven bushes from exactly those seven patches and bring them here. I want to know what the herd smells that I cannot.',
+  'Kẻ Đi Theo Người Thứ Bảy': 'The Ones Who Follow The Seventh',
+  '"Đám Gloam cũ không cướp. Đám này thì cướp, mà không lấy gì ăn được — chúng lục tìm đá khắc." Mười sáu tên quanh trại. Lục túi chúng nếu ngươi muốn, ta thì hết muốn rồi.':
+    '"The old Gloam robbed people. This lot robs people too, but they never take anything you could eat — they go through a place looking for carved stone." Sixteen of them around the camp. Go through their pockets if you like; I have stopped wanting to.',
+  'Hòm Của Người Đã Không Về': 'Chests Of Those Who Never Came Back',
+  '"Khắp mấy vùng này có hòm chôn sẵn, đời trước để lại, và mỗi cái có một trại canh. Mở được một cái thì ngươi hiểu vì sao ta không bao giờ đi một mình." Tìm một Rương Canh bất kỳ, dọn trại canh, mở nó ra.':
+    '"There are chests buried all over these regions, left by the ones before us, and every one has a camp set to watch it. Open a single one and you will see why I never travel alone." Find any Warded Chest, clear the camp, open it.',
+  '"Phiến đá giữ cho rừng đừng lấn qua bờ. Nay bờ lấn, mà phiến vẫn đứng đó — nghĩa là phiến đã mỏng tới mức giữ không nổi nữa." Mười tám con đã qua bờ. Đẩy chúng lại chỗ của chúng.':
+    '"The Rune keeps the forest from crossing the boundary. Now the boundary is moving and the slab is still standing there — which means it has worn too thin to hold." Eighteen of them are already across. Push them back where they belong.',
+  'Thứ Người Ta Chôn Cùng Hòm': 'What They Buried With The Chest',
+  '"Đám buôn Ardhaven bán mấy cái hộp khoá kín, gọi là Box Kundun. Ta không tin thứ mình không mở ra xem được." Mở một cái. Ngươi mở, ta nhìn. Ta muốn biết bên trong là đồ thật hay là trò.':
+    '"The Ardhaven traders sell sealed boxes — Box Kundun, they call them. I do not trust anything I cannot open and look inside." Open one. You open it, I watch. I want to know whether what is inside is real goods or a trick.',
+  'Người Bên Kia Vực': 'The Man On The Far Side',
+  '"Có kẻ ngồi bên mép vực đông, ba năm nay không xuống. Ta không qua được — ta còn phải đi vòng quanh phiến đá." Mang câu này sang: *bờ đã lấn tới gốc cây thứ chín rồi.* Ông ta sẽ hiểu.':
+    '"Someone has sat on the eastern lip of the gorge for three years and never come down. I cannot get across — I still have my rounds to walk past the slab." Carry this over to him: *the boundary has reached the ninth tree.* He will understand.',
+  'Tám Dòng Giống Nhau': 'Eight Identical Lines',
+  '"Ta ghi ba mùa liền một dòng: NỞ SỚM. Ghi mà không hiểu thì cũng như không ghi." Hái tám bụi ở tám luống khác nhau mang về — ta muốn xem chúng có nở sớm giống nhau không, hay mỗi luống một kiểu.':
+    '"Three seasons running I have written down the same line: HATCHED EARLY. Writing a thing down without understanding it is the same as not writing it." Pick eight bushes from eight different beds and bring them back — I want to see whether they all run early the same way, or every bed does it differently.',
+  'Thứ Nở Ra Từ Luống Hỏng': 'What Hatches From A Ruined Bed',
+  '"Luống nở sai mùa thì thứ nở ra cũng sai. Mười tám con đang bò quanh mép bãi, và ta không nhận ra con nào trong số đó." Dọn chúng đi. Ta vẫn sẽ ghi lại, vì ghi là việc của ta.':
+    '"A bed that hatches out of season hatches the wrong things. Eighteen of them are crawling around the rim, and I do not recognise a single one." Clear them out. I will still write it down, because writing it down is my work.',
+  'Thứ Không Nằm Trong Sổ': 'The Thing That Is Not In The Ledger',
+  '"Ta ghi được mọi thứ trừ một chuyện: ngươi mạnh lên bằng cách nào. Người Vaeldra các ngươi không ăn, không ngủ thêm, mà tuần sau đánh khác tuần trước." Nâng hai chiêu lên một bậc rồi về đây. Ta muốn ghi đúng ngày nó xảy ra.':
+    '"I can record everything but one thing: how you grow stronger. You people of Vaeldra do not eat more, do not sleep more, and next week you fight differently than last week." Raise two skills by one rank and come back. I want the date written down correctly.',
+  'Kẻ Chặn Cuối Lối': 'What Blocks The End Of The Trail',
+  '"Lối mòn không có phiến đá nào giữ, nên không có Tướng Quân nào NÊN ngồi ở đấy. Vậy mà có một con ngồi ở cuối lối, và nó không giữ gì cả — nó chỉ chặn." Đi hết lối. Xem thứ chặn ở cuối là cái gì.':
+    '"No Rune holds a trail, so no Warden SHOULD be sitting on one. And yet there is one at the end of it, and it guards nothing — it only blocks." Walk the trail to the end. See what the thing at the end actually is.',
+  'Thứ Ngồi Trên Nhịp Đá': 'The Thing On The Stone Span',
+  '"Nhịp đá không có nền, nên không phiến nào cắm được, nên đáng lẽ không có gì phải canh ở đó." Nhưng có một con ngồi giữa nhịp, ngay trên hồ không đáy. Nó canh cái gì thì ngươi hỏi nó — ta thì không định hỏi.':
+    '"A span has no bed under it, so no Rune can be set there, so there should be nothing on it worth guarding." But something sits in the middle of the span, right over the bottomless lake. Ask it what it is guarding — I do not intend to.',
+  'Khúc Hát Tắt Theo Người Hát': 'The Song Dies With The Singer',
+  '"Phiến đá trên này giữ một cái luật mỏng nhất trong bảy cái: khúc hát không tắt theo người hát." Nay người hát chết là khúc tắt theo. Hai mươi con đang ở chỗ lẽ ra là chỗ tập hát. Dọn đi cho ta.':
+    '"The slab up here holds the thinnest of the seven laws: a song does not die with the one who sang it." Now the singer dies and the song goes with them. Twenty of them are standing where the singing ground used to be. Clear them out for me.',
+  'Đất Nhả Ra Mỗi Ngày Một Chỗ': 'The Ground Gives It Up Somewhere New Each Day',
+  '"Từ ngày phiến mỏng đi, đất nhả xương ra — mỗi ngày một chỗ khác, không bao giờ hai ngày cùng một nơi." Khai ba vỉa, ba ngày cũng được, ba vùng cũng được. Ta muốn biết đất chọn chỗ theo luật gì, hay là không theo gì cả.':
+    '"Since the slab thinned, the ground has been giving bone back up — somewhere different every day, never the same place twice." Work three veins. Three days is fine, three regions is fine. I want to know what rule the ground picks by, or whether there is no rule at all.',
+  'Người Ngồi Mép Vực Bắc': 'The Man On The North Rim',
+  '"Dưới mép vực bắc có kẻ ngồi đếm. Đếm cái gì thì ta không biết, nhưng ba năm nay chưa sai một ngày nào." Xuống hỏi giúp ta đúng một câu: *khúc hát cuối cùng ông nghe được là ngày nào.*':
+    '"Below the north rim someone sits and counts. What he counts I do not know, but in three years he has not missed a day." Go down and ask him exactly one question for me: *what day was the last song you heard.*',
+  'Lò Nguội Qua Đêm': 'The Forges Go Cold Overnight',
+  '"Cái luật trên đất này gọn lắm: lò không nguội qua đêm. Ba tuần nay đêm nào cũng nguội." Hai mươi hai tên trinh sát đang đếm số lò còn đỏ — đếm giúp ai thì ngươi tự đoán. Đừng để chúng đếm xong.':
+    '"The law on this ground is a short one: a forge does not go cold overnight. For three weeks now every one of them has." Twenty-two scouts are out there counting which forges are still lit — you can guess who they are counting for. Do not let them finish.',
+  'Sáu Cái Hòm Còn Nguyên': 'Six Chests Still Sealed',
+  '"Đời trước chôn hòm khắp Lunacia rồi để lại một trại canh trên mỗi cái. Trại thì mục, hòm thì còn." Mở đủ sáu cái, bất kể vùng nào. Ta không cần thứ bên trong — ta cần biết còn bao nhiêu cái chưa ai đụng tới.':
+    '"The ones before us buried chests across all of Lunacia and left a camp on top of each. The camps rotted; the chests did not." Open six of them, any region. I do not want what is inside — I want to know how many are still untouched.',
+  'Thứ Chỉ Cái Lò Làm Được': 'What Only The Forge Can Do',
+  '"Người Vaeldra khắc Rune vào THÉP. Bọn ta khắc vào đá, và đá thì mòn." Vào Lò Hỗn Độn hai lần — hỏng cũng được. Ta chỉ cần ngươi thấy tận mắt cái mà cả Lunacia này không làm nổi.':
+    '"The people of Vaeldra carve Runes into STEEL. We carve into stone, and stone wears away." Work the Chaos Forge twice — a failure counts. I only need you to see with your own eyes the thing all of Lunacia cannot do.',
+  'Đường Về Cây Hồn Đã Tối': 'The Road To The Soul Tree Has Gone Dark',
+  '"Ta đánh trận sáu mươi năm. Chuyện duy nhất ta sợ là chết ở chỗ không có đèn." Hai mươi bốn tên đang đứng chắn đúng đoạn đường hồn phải đi qua. Chúng không biết chúng đang chắn cái gì — nhưng kẻ sai chúng thì biết.':
+    '"I have fought for sixty years. The only thing I am afraid of is dying somewhere with no lamp." Twenty-four of them are standing across the exact stretch the souls must pass. They do not know what they are blocking — but whoever sent them does.',
+  'Đếm Xem Còn Lại Gì': 'Count What Is Left',
+  '"Mỗi cái hộp khoá kín là một người đã không quay lại lấy nó." Mở năm cái. Ta không cần đồ trong đó — ta muốn biết năm người ấy mang theo gì khi họ nghĩ mình sẽ về.':
+    '"Every sealed box is one person who never came back for it." Open five. I do not want what is inside — I want to know what those five were carrying when they still thought they would return.',
+  'Kẻ Đếm Ở Đáy Vực': 'The Counter At The Bottom',
+  '"Dưới đáy vực sâu nhất có một kẻ vẫn ngồi đếm, dù trên này không còn ai nghe hắn đếm nữa." Xuống đó. Hỏi hắn một câu duy nhất: *cái tên thứ bảy trên bảng gỗ, ông có đọc được không.*':
+    '"At the bottom of the deepest gorge someone still sits and counts, even though nobody up here is listening any more." Go down. Ask him one question and one only: *the seventh name on the wooden board — can you read it.*',
+  'Lối Không Ai Giữ': 'A Trail Nobody Holds',
+  '"Lối mòn đó không phải một NƠI — không ai dựng phiến đá trên một lối đi. Nên thứ gì đi qua đó cũng không phải xin phép ai." Dọn khoảnh đầu lối cho người sau còn đi được.':
+    '"That trail is not a PLACE — nobody raises a slab on a path. So whatever walks it never has to ask anyone\'s leave." Clear the head of the trail so the next one through can still get through.',
+  'Thuốc Mọc Ven Lối': 'Herbs Along The Trail',
+  '"Chỗ nào không có luật giữ thì cỏ mọc theo ý nó. Mấy thứ mọc ven lối đó không có ở vùng nào khác — hái tám bụi về đây cho ta." Đi bộ, cúi xuống, hái. Không cần đánh ai.':
+    '"Where no law holds, the grass grows as it pleases. What comes up along that trail grows nowhere else — bring me eight bushes of it." Walk, bend down, pick. No fighting needed.',
+  'Thứ Lối Mòn Không Cho': 'What A Trail Will Not Give You',
+  '"Lối mòn cho ngươi đường đi, không cho ngươi cái gì bền. Cái bền thì phải vào lò mà lấy." Bỏ gì đó vào Lò Hỗn Độn một lần — thắng hay hỏng không quan trọng, ta chỉ cần ngươi biết cái lò ở đâu.':
+    '"A trail gives you a way through; it does not give you anything that lasts. For that you go to the forge." Put something into the Chaos Forge once — win or break, it does not matter, I only need you to know where the forge is.',
+  'Đất Không Chịu Nổi Một Nét Khắc': 'Ground That Will Not Hold A Carving',
+  '"Trũng đó nằm ngay dưới chỗ Sylas cắt trời. Cắm đá xuống đấy là đá NỨT — nên không phiến nào giữ được gì ở đó, kể cả cái luật ai được giết ai." Miệng trũng đang đông. Vào cẩn thận: dưới đó người cũng giết được người.':
+    '"That hollow lies directly under the place Sylas cut the sky. Drive stone into it and the stone SPLITS — so no Rune holds anything down there, not even the law about who may kill whom." The mouth of the hollow is getting crowded. Go in carefully: down there people can kill people too.',
+  'Cỏ Mọc Trên Vết Nứt': 'Grass On The Fracture',
+  '"Có thứ chỉ mọc được ở chỗ đá đã nứt. Ta cần chín bụi — không phải để chữa ai, để xem cái nứt đó sâu tới đâu." Chín bụi rải khắp lòng trũng, và không ai giữ giúp ngươi chỗ nào.':
+    '"Some things only grow where the stone has already split. I need nine bushes — not to heal anyone, but to see how deep that split runs." Nine bushes scattered across the hollow, and nobody down there is holding a spot for you.',
+  'Nhắn Qua Chỗ Không Có Luật': 'A Message Across Lawless Ground',
+  '"Vandai bên kia trũng. Ta không qua được — ta còn phải đếm trứng. Ngươi qua thì mang câu này: *đá dưới chân tôi đã mỏng tới mức nghe được tiếng bên dưới.*" Một câu, hai bờ, và không phiến nào bảo đảm ngươi tới được.':
+    '"Vandai is on the far side of the hollow. I cannot cross — I still have eggs to count. If you cross, carry this: *the stone under my feet has worn thin enough that I can hear what is below it.*" One sentence, two banks, and no Rune guarantees you reach the other side.',
+  'Nhịp Đá Không Có Nền': 'A Span With No Bed',
+  '"Đường lên đỉnh đi qua một nhịp đá vắt trên hồ ngầm không đáy. Chỗ đó không có NỀN để cắm phiến nào, nên thứ dưới đó trồi lên lúc nào cũng được." Một lối, không đường vòng. Dọn thềm đá ướt.':
+    '"The way up to the heights crosses a stone span strung over a bottomless underground lake. There is no BED there to set a Rune into, so whatever is below can come up whenever it likes." One path, no way around. Clear the wet stone.',
+  'Hồ Không Thuộc Vùng Nào': 'A Lake That Belongs To No Region',
+  '"Cái hồ đó không thuộc vùng nào, nên nó không có Dòng Cốt nào, nên chẳng ai xuống đó cày. Vì thế thứ mọc ở đó còn nguyên." Mười bụi trên đầu cầu rêu — trượt chân thì hồ dưới đó không có đáy.':
+    '"That lake belongs to no region, so it has no Bone Line, so nobody goes down there to farm. Which is why what grows there is still untouched." Ten bushes at the mossy end of the crossing — slip, and the lake below has no bottom.',
+  'Người Đếm Trứng Muốn Biết': 'The Egg-Counter Wants To Know',
+  '"Sylas hỏi ta cái hồ dưới nhịp đá sâu bao nhiêu. Ta không biết, và đó chính là câu trả lời — nói với ông ấy đúng như thế." Đi ngược lại qua nhịp đá mà mang câu ấy về.':
+    '"Sylas asked me how deep the lake under the span is. I do not know, and that is precisely the answer — tell him exactly that." Cross back over the span and carry it to him.',
+});
+
+/* ══ CHỖ TẦNG KỂ CHUYỆN THẬT SỰ HIỆN RA ═══════════════════════════════════════════════
+   Khối `EXACT` ngay trên chứng minh `lang.js` DỊCH ĐƯỢC 190 chuỗi kể chuyện. Nó KHÔNG chứng
+   minh chúng tới được mắt người chơi — `test_dichen §④` bơm từng chuỗi vào một <div> RỜI, tức
+   nó đo một text-node do chính nó dựng ra, không đo cái text-node mà game dựng.
+
+   Quét lại bằng cách MỞ ĐÚNG mấy cái bảng ấy ra (Nhật Ký · thẻ nhiệm vụ trên HUD · bảng Kỹ
+   Năng · lời nhắc góc màn) thì lòi ra một tập hoàn toàn khác: tên nhiệm vụ đi kèm hậu tố
+   (`◈ <tên> —`), tên NPC ghép vào câu (`— xong, về gặp <ai>`), mục tiêu ngày ghép số, và mấy
+   dòng chưa ai khai bao giờ. Không dòng nào trong số đó nằm trong 190 chuỗi kia.
+
+   *Một phép đo dựng lấy cảnh của chính nó thì nó chỉ gác được cái cảnh ấy.* Cùng vết sẹo đã
+   ghi cho §③ (quét 15 bảng, bỏ qua HUD) và cho bộ quét đọc tệp của đài phun nước. */
+Object.assign(EXACT, {
+  '★ Chính tuyến hoàn tất!': '★ Main story complete!',
+  'Bạn là Kẻ Gỡ Rune Cuối — tự do rèn luyện.': 'You are the Last Rune-Taker — train as you please.',
+  'Kẻ Gỡ Rune Cuối': 'The Last Rune-Taker',
+  '✦ Chưa có nhiệm vụ': '✦ No quests yet',
+  'Chuỗi nhiệm vụ đang được dựng lại. Cứ đi săn, rèn đồ và cày Cốt — mọi hệ thống khác vẫn chạy.':
+    'The quest chain is being rebuilt. Keep hunting, forging and working Bone — every other system still runs.',
+  '??? Vùng Chưa Mở': '??? Region Not Opened',
+  '🧭 Tới': '🧭 Go',
+  'đã tới mốc cuối': 'final milestone reached',
+  // lời nhắc góc màn (`hint-toast`) vỡ quanh thẻ <b> đúng như sáu bước hướng dẫn
+  '💠 Còn': '💠 You have',
+  'điểm Tiềm Năng chưa phân — cộng ngay cho khỏi phí!':
+    'unspent Potential points — put them in before they go to waste!',
+  'Phân Ngay': 'Spend Now',
+  '✦ Đang có': '✦ You are holding',
+  'chưa dùng — quay thử một lượt ×10!': 'unused — try a ×10 pull!',
+});
+RULES.unshift(
+  // Thẻ nhiệm vụ trên HUD: tên phụ tuyến đi kèm hậu tố ' — ' rồi mới tới <span> tiến độ, nên
+  // NGUYÊN cái tên không bao giờ đứng một mình trong một text-node. Gọi lại `tr()` cho phần
+  // tên để nó dùng đúng bản dịch đã khai ở khối trên — đừng khai lại tên lần thứ hai.
+  [/^◈ (.+) —$/,               (m, a) => `◈ ${tr(a)} —`],
+  [/^— xong, về gặp (.+)$/,    (m, a) => `— done, report to ${tr(a)}`],
+  [/^✔ về gặp (.+)$/,          (m, a) => `✔ report to ${tr(a)}`],
+  // Mục Tiêu Hôm Nay — `DAILY_META[].ten(n)` ghép SỐ vào câu, mà số đổi theo bảy dải cấp.
+  // Ba mục từ chép cứng (`… 1 lần`, `… 2 lần`, `Khai 1 Vỉa Cốt`) vẫn còn ở trên và vẫn thắng
+  // vì `EXACT` được hỏi trước — mấy luật này chỉ đỡ phần còn lại của thang.
+  [/^Rèn \/ nâng tầng \/ khảm ngọc (\d+) lần$/, (m, a) => `Forge / tier up / socket a jewel ${a} times`],
+  [/^Hạ (\d+) Trùm Vùng$/,     (m, a) => `Defeat ${a} Region Bosses`],
+  [/^Khai (\d+) Vỉa Cốt$/,     (m, a) => `Open ${a} Bone Veins`],
+  // bảng Kỹ Năng
+  [/^bậc (\d+)\/(\d+)$/,       (m, a, c) => `rank ${a}/${c}`],
+  [/^📜 Sách Kỹ Năng nâng thẳng 1 cấp, khỏi tốn Lumen lẫn Bản Năng \(còn (\d+)\)$/,
+    (m, a) => `📜 A Tome raises one level outright — no Lumen, no Instinct (${a} left)`]
+);
+
+/* ══ BẢNG NPC (`panel-quest`) — 377 dòng, và nó là MẶT BÀY HÀNG CỦA CẢ GAME ══════════════
+   Khối ngay trên đã đi theo bảng Nhật Ký, thẻ nhiệm vụ trên HUD và lời nhắc góc màn. Quét
+   rộng hơn (5 lớp × 7 cấp × mọi NPC, lái bằng `tryTalk()` thật) thì lòi ra một mặt lớn hơn
+   hẳn tất cả những mặt ấy cộng lại: **377 dòng nằm trong `panel-quest`** — thoại NPC, quầy
+   thuốc, quầy rương, Trại Ngựa, Vực Thẳm, Truy Nã. Đó là bảng mà người chơi mở ra nhiều
+   nhất trong mười phút đầu, và nó đang tiếng Việt gần như trọn vẹn.
+
+   Vì sao không bài nào bắt được: `test_dichen §④` bơm từng chuỗi vào một <div> RỜI nên nó
+   chỉ chứng minh `lang.js` DỊCH ĐƯỢC chuỗi, không chứng minh chuỗi tới được mắt người chơi;
+   còn §③ quét 15 bảng nhưng KHÔNG mở bảng NPC, vì bảng NPC chỉ dựng ra khi đứng cạnh một
+   người và bấm E. *Một phép quét không mở được cái bảng thì nó không gác được cái bảng ấy.*
+
+   Chia việc theo đúng lối cũ: 77 dòng KHÔNG có số → `EXACT` (nguyên chuỗi, vì thoại NPC là
+   văn xuôi liền mạch); 33 khuôn CÓ số → `RULES`, vì số đổi theo cấp, theo túi và theo đồng
+   hồ. Đừng khai bản có số vào `EXACT`: nó chỉ đúng ở đúng một trạng thái người chơi. */
+Object.assign(EXACT, {
+  // ─ bảy mục tiêu Truy Nã (`TRUYNA_BANDS`) — chưa cái nào từng được khai
+  'Đầu Lĩnh Gloam': 'Gloam Headman',
+  'Đại Đầu Mục Gloam': 'Gloam Grand Headman',
+  'Chỉ Huy Phản Loạn Werebear Woods': 'Werebear Woods Rebel Commander',
+  'Chúa Tể Hang Sâu': 'Lord of the Deep Cave',
+  'Độc Hoa Chúa Tể': 'Lord of the Venom Bloom',
+  'Tàn Tướng Tro Tàn': 'Ashen Remnant General',
+  'Sát Thần Bão Tố': 'Storm Deathbringer',
+  '⚖ Truy Nã Lệnh hôm nay': "⚖ Today's Bounty Writ",
+  'Nhận Truy Nã': 'Take the Bounty',
+  'Mục tiêu:': 'Target:',
+  'Nơi ẩn náu:': 'Hideout:',
+  'Cần đạt': 'Requires',
+
+  // ─ quầy thuốc · quán trọ
+  'Lọ Mana': 'Mana Flask',
+  'Trị Thương Toàn Phần': 'Full Heal',
+  'Nghỉ Trọ': 'Rest at Inn',
+  'Nghỉ ngơi dưỡng thần': 'Rest and recover',
+  'Men say bừng bừng sát khí': 'Liquor that stokes the killing edge',
+  'Mang theo khi vào vùng bão': 'Carry this into storm country',
+  'Nhà Giả Kim tự tay bào chế — dùng ngay tại chỗ':
+    'Brewed by the Alchemist by hand — drink it on the spot',
+  '(không chết) +': '(without dying) +',
+
+  // ─ quầy rương · quầy hàng
+  'HÀNG THƯỜNG': 'STANDARD STOCK',
+  'Rương Binh Khí': 'Weapon Chest',
+  'Rương Phòng Cụ': 'Armor Chest',
+  'RƯƠNG — rẻ hơn hàng bày, nhưng không biết trước ra gì':
+    'CHESTS — cheaper than the shelf, but you cannot see what is inside',
+  'Vũ khí ngẫu nhiên theo cấp của bạn — có thể ra hàng hiếm':
+    'A random weapon scaled to your level — a rare piece is possible',
+  'Giáp trụ ngẫu nhiên theo cấp — có thể ra trang bị Hoàn Hảo':
+    'Random armour scaled to your level — a Flawless piece is possible',
+  'Rê chuột lên món để xem đủ chỉ số và so với đồ đang mặc.':
+    'Hover a piece to see its full stats and compare it against what you are wearing.',
+  'Dọn túi nhanh — nhận Lumen ngay': 'Clear the bag fast — Lumen on the spot',
+  'Túi tiền:': 'Purse:',
+  '◈ Lumen đang có:': '◈ Lumen on hand:',
+  '· mỗi lượt quay': '· per pull',
+
+  // ─ Trại Ngựa — Mục Đồng
+  'Trại Ngựa — Mục Đồng': 'Stable — the Herder',
+  'Mã Thầu': 'Bridle Cord',
+  'Mã Thầu đang có': 'Bridle Cords on hand',
+  'Tuấn Mã đã bắt hôm nay': 'Steeds caught today',
+  'THÂN ĐANG DÙNG:': 'BODY IN USE:',
+  'lớp nhân vật': 'your character class',
+  '"Tuấn mã hoang chạy ngoài đồng kia — lại gần nó sẽ vùng chạy, rượt đến khi':
+    '"Wild steeds run the fields out there — get close and they bolt. Chase one until it is',
+  'kiệt sức': 'spent',
+  'rồi bấm': 'then press',
+  'mà bắt. Mỗi con cho một cuộn': 'to catch it. Each one yields a coil of',
+  ': khi thăng giai thú cưỡi, dùng': ': when you raise a mount a tier, spend it for',
+
+  // ─ Vực Thẳm
+  '☁ VỰC THẲM — liều mình thử vận': '☁ THE ABYSS — stake yourself on luck',
+  '☁ Vách cao mây phủ — phàm nhân nhảy xuống chỉ có nát thây.':
+    '☁ A cloud-wrapped cliff — an ordinary man who jumps is simply broken on the rocks.',
+  'Cái giá mỗi lần nhảy:': 'Price of each jump:',
+  'nhảy vào Vực Thẳm': 'to leap into the Abyss',
+  'khi ấy mới đủ sức': 'only then are you hard enough',
+  '— Trang bị theo cấp (phẩm Lam trở lên)': '— Gear scaled to your level (Blue quality or better)',
+  '— Tứ Châu ngẫu nhiên (Chúc Phúc / Linh Hồn / Sinh Mệnh / Hỗn Độn)':
+    '— A random one of the Four Jewels (Bless / Soul / Life / Chaos)',
+  '— Vật liệu rèn (Hỗn Nguyên) hoặc Sách Kỹ Năng':
+    '— Forging stock (Chaos) or a Tome',
+  '— Gặp hiền giả ẩn danh: được chỉ điểm': '— You meet a nameless sage: you are pointed the way',
+  '— Hang động giấu cổ thư:': '— A cave that hides old writings:',
+  '— Cổ thư hiếm: Mảnh Cổ Thư · Huyết Ma Thôn Phệ (đã thành tựu → ● Hỗn Độn Châu)':
+    '— Rare writings: a Tome Fragment · Blood Demon Devour (already mastered → ● Jewel of Chaos)',
+
+  // ─ chỗ khác trong bảng
+  'Lực chiến': 'Combat Power',
+  '★ Chính tuyến đã hoàn tất — bạn là Kẻ Gỡ Rune Cuối.':
+    '★ The main story is complete — you are the Last Rune-Taker.',
+
+  // ─ 22 câu thoại NPC phố Ardhaven. Chúng là VĂN XUÔI LIỀN, không tag nào chen vào, nên
+  //   khai nguyên chuỗi là đúng — cùng lý do 190 chuỗi kể chuyện ở khối trên khai nguyên.
+  '"Binh khí nhà ta ba đời rèn giũa — cứ ngắm cho kỹ rồi hẵng trả tiền."':
+    '"Three generations of my house have forged these — look them over well before you pay."',
+  '"Bọn cháu chơi đuổi bắt. Ai chạm vào bậc thềm nhà bác thợ rèn là thua, vì bác ấy sẽ ra mắng — luật do bác ấy đặt, không phải bọn cháu."':
+    '"We’re playing tag. Whoever touches the smith’s doorstep loses, because he comes out and scolds you — his rule, not ours."',
+  '"Chép tay cả, không có bản thứ hai. Cầm nhẹ tay cho."':
+    '"All copied by hand, and there is no second copy. Handle it gently."',
+  '"Con này ta nhặt lúc nó còn nhỏ bằng bàn tay. Nó không hiền đâu — nó chỉ quen ta thôi. Quen với hiền là hai chuyện khác nhau, nhớ cho kỹ."':
+    '"I picked this one up when it fit in my palm. It is not gentle — it is only used to me. Used-to and gentle are two different things; remember that."',
+  '"Cái ghế này quay mặt ra phố lớn. Ta ngồi từ lúc mặt trời chưa qua nóc nhà đối diện, tới lúc nó khuất sau đó. Ngày nào cũng vậy, và ta chưa chán ngày nào."':
+    '"This chair faces the main street. I sit from before the sun clears the roof opposite until it drops behind it. Every day the same, and not one day have I tired of it."',
+  '"Cả phố đặt ta đóng cửa mới. Cửa cũ vẫn tốt cả — chỉ là ai cũng muốn cái then dày hơn ngón tay cái. Ta đóng, ta không hỏi vì sao."':
+    '"The whole street orders new doors from me. The old ones are all sound — everyone simply wants a bolt thicker than a thumb. I build them; I do not ask why."',
+  '"Cổng Nam mở ra Beast Herd Camp. Đất bằng, cỏ cao ngang thắt lưng, và bầy thú ngoài đó không sợ người nữa — đó mới là chỗ đáng ngại."':
+    '"The South Gate opens onto Beast Herd Camp. Flat ground, grass to the waist, and the herds out there no longer fear people — that is the worrying part."',
+  '"Cổng Đông dẫn vào Werebear Woods. Rừng già, cây to hai người ôm, và giữa ban ngày trong đó tối như lúc chập tối."':
+    '"The East Gate leads into Werebear Woods. Old forest, trunks two men cannot reach around, and at midday it is as dark in there as dusk."',
+  '"Giếng ở đầu phố, nhà ta ở cuối phố. Mười hai chuyến một ngày, và ta thuộc từng viên đá lát trên đoạn đường đó — kể cả viên bị nứt từ hôm khu phố này rơi sang."':
+    '"The well is at the top of the street and my house at the bottom. Twelve trips a day, and I know every paving stone on that stretch — including the one cracked since the day this quarter fell through."',
+  '"Hoa của ta trồng ở luống sau nhà, không phải hàng gánh từ ngoài đồng vào. Cành ngắn hơn thật, nhưng cắm trong nhà được bảy ngày."':
+    '"My flowers come from the beds behind the house, not hauled in from the fields. The stems are shorter, true, but they last seven days indoors."',
+  '"Ngồi xuống đã. Ngươi vừa đi qua một thứ mà phần lớn người đi qua đều không dậy nổi."':
+    '"Sit down first. You have just come through a thing most who come through it never get up from."',
+  '"Qua cổng này là đường lên Bird Tribe Heights. Dốc, gió ngược, và trên đó chim làm tổ trên đá chứ không làm trên cây — cứ nhìn tổ là biết mình lên tới đâu."':
+    '"Through this gate is the climb to Bird Tribe Heights. Steep, wind in your face, and up there the birds nest on stone rather than in trees — read the nests and you know how high you have come."',
+  '"Ra Cổng Tây rồi đi thẳng là tới Rẻo Rừng Corran. Rừng thấp, nhiều lối, mà lối nào cũng giống lối nào. Nhớ đường về hơn là nhớ đường đi."':
+    '"Out the West Gate and straight on is the Corran Thicket. Low forest, many paths, and every path looks like every other. Remember the way back rather than the way there."',
+  '"Rell bảo ngươi tới. Ông ấy tin người nhanh hơn ta nhiều."':
+    '"Rell sent you. He trusts people a great deal faster than I do."',
+  '"Sáng quét lá, chiều quét bụi, tối quét thứ khách say làm rơi. Phố sạch thì không ai khen. Phố bẩn thì ai cũng biết là ta."':
+    '"Leaves in the morning, dust in the afternoon, and whatever the drunks drop at night. A clean street earns no praise. A dirty one, and everyone knows whose it is."',
+  '"Ta chạy tin giữa bốn cổng, trong tường thôi. Thư gửi ra ngoài thành thì ta không nhận — ngoài đó không có ai đứng đợi ở đầu đường cả."':
+    '"I run messages between the four gates, inside the walls only. Letters bound outside I will not take — out there nobody is waiting at the end of the road."',
+  '"Ta gánh hai thúng, một thúng bánh một thúng chè. Thúng nào bán hết trước thì sáng mai ta gánh thúng đó nặng hơn. Đơn giản thế thôi."':
+    '"I carry two baskets, one of cakes and one of sweet soup. Whichever empties first, I load heavier tomorrow morning. It is that simple."',
+  '"Ta hát bài nào cũng được, trừ bài về cái đêm trời nứt. Hát bài đó thì có người bỏ về, có người ngồi lại khóc — mà cả hai hạng đều không bỏ tiền."':
+    '"I will sing anything but the song about the night the sky split. Sing that one and some walk out, some stay and weep — and neither sort pays."',
+  '"Ta vượt vết nứt cùng ba mươi người. Về tới đây còn một. Đừng hỏi tên đội — không còn ai gọi tên đội đó nữa."':
+    '"Thirty of us crossed the tear. One reached this place. Do not ask the company’s name — nobody says it any more."',
+  '"Ta đi từ Cổng Tây sang Cổng Đông rồi quay lại, mỗi vòng đúng một khắc. Việc chán lắm. Nhưng chán là dấu hiệu tốt, ngươi cứ tin ta."':
+    '"West Gate to East Gate and back, one quarter-hour a circuit. Dull work. But dull is a good sign — take my word for it."',
+  '"Tay ta xanh tới khuỷu, rửa cách gì cũng không ra. Khách nhìn tay ta rồi mới tin mấy tấm vải treo kia là màu thật chứ không phải màu quét."':
+    '"My hands are blue to the elbow and nothing washes it out. Customers look at my hands, and only then believe the cloth hanging there is dyed through and not painted on."',
+  '"Tỉ lệ ta dán trên vách, chữ to bằng bàn tay, ai đứng ngoài cửa cũng đọc được. Đọc xong mà vẫn quay thì đó là việc của ngươi, không phải lỗi của ta."':
+    '"The odds are pasted on my wall in letters the size of a hand; anyone in the doorway can read them. Read them and pull anyway, and that is your business, not my fault."',
+  '"Vào đây uống chén trà nóng đã — chuyện Lunacia để sau hẵng hay."':
+    '"Come in and take a cup of hot tea first — Lunacia can wait."',
+  '"Vách này mỗi sáng ta dán một tờ, mỗi chiều gỡ một tờ. Trước đây gỡ vì hết hạn. Dạo này thì gỡ vì có người mang việc về xong — ta thích cách gỡ đó hơn."':
+    '"Each morning I paste one sheet on this wall and each evening I take one down. It used to be because they expired. Lately it is because someone has brought the work back finished — I prefer taking them down that way."',
+
+  // ─ Lò Hỗn Độn (`forge-content`) — bảng rèn, và nó cũng chưa từng bị quét
+  '⚙ Lò Hỗn Độn': '⚙ Chaos Machine',
+  'KHAY HỖN ĐỘN': 'CHAOS TRAY',
+  'CÔNG THỨC': 'RECIPES',
+  'TRANG BỊ': 'GEAR',
+  'Rèn Trang Bị': 'Forge Gear',
+  'Khảm Ngọc': 'Socket Jewel',
+  'Chế Tạo': 'Craft',
+  'Lấy hết ra': 'Take all out',
+  'Khay hiện tại không khớp công thức': 'No',
+  'nào.': 'recipe matches the current tray.',
+  'Gợi ý:': 'Try:',
+  'bấm món trong túi để bỏ vào · bấm ô khay để lấy ra':
+    'click a bag item to put it in · click a tray slot to take it out',
+  'bấm để bỏ vào khay': 'click to put it in the tray',
+  '— 1 trang bị +9/+10/+11 · ngọc': '— 1 piece at +9/+10/+11 · jewel',
+  'Bỏ trang bị và ngọc vào khay bên dưới.': 'Put gear and jewels into the tray below.',
+  'Lượt tung': 'Roll',
+
+  // ─ bảng Nhân Vật · lời nhắc góc màn còn sót
+  '(dòng chính) +': '(main line) +',
+  '(dòng phụ) — dồn điểm vào đó là hiệu quả nhất.':
+    '(secondary line) — pouring points there is the most efficient.',
+  ', dồn vào chỉ số lớp mình gợi ý': ', pour them into the stat your class calls for',
+  'Mở Bảng': 'Open Panel',
+  'điểm Tiềm Năng — bấm': 'Potential points — press',
+  'điểm Đại Thành chưa phân — mở bảng để chọn nhánh!':
+    'unspent Mastery points — open the panel and pick a branch!',
+  '💠 Có': '💠 You have',
+  '✦ Còn': '✦ Left',
+});
+RULES.unshift(
+  // ⚠ KHUÔN CÓ SỐ PHẢI VÀO `RULES`, ĐỪNG VÀO `EXACT`. Mấy dòng này ghép máu hiện tại, số lọ
+  //   đang mang, đồng hồ nhập hàng và cấp người chơi — khai nguyên chuỗi là chỉ dịch đúng ở
+  //   MỘT trạng thái, còn mọi trạng thái khác thì trơ tiếng Việt và không ai thấy.
+  [/^Hồi đầy máu — đang ([\d.,]+)\/([\d.,]+)$/,
+    (m, a, b) => `Full heal — currently ${a}/${b}`],
+  [/^Hồi đầy máu và Mana — đang ([\d.,]+)\/([\d.,]+) máu · ([\d.,]+)\/([\d.,]+) Mana$/,
+    (m, a, b, c, d) => `Full heal and Mana — currently ${a}/${b} HP · ${c}/${d} Mana`],
+  [/^Hồi (\d+)% máu \(~([\d.,]+)\) · đang có (\d+)\/(\d+)$/,
+    (m, p, v, c, d) => `Restores ${p}% HP (~${v}) · carrying ${c}/${d}`],
+  [/^Hồi (\d+)% Mana — bấm T, mang tối đa (\d+) lọ$/,
+    (m, p, n) => `Restores ${p}% Mana — press T, carry up to ${n} flasks`],
+  [/^Mang theo (\d+)\/(\d+) lọ — Mana ([\d.,]+)\/([\d.,]+)$/,
+    (m, a, b, c, d) => `Carrying ${a}/${b} flasks — Mana ${c}/${d}`],
+  [/^Uống bằng phím R — túi đựng tối đa (\d+) lọ$/,
+    (m, n) => `Drink with R — the bag holds at most ${n} flasks`],
+  [/^Trọng Thương (\d+) phút$/, (m, n) => `Grievous Wound for ${n} minutes`],
+  [/^-(\d+)% Sinh Lực$/, (m, n) => `-${n}% Max HP`],
+  [/^−(\d+)% sát thương thiên lôi trong (\d+) phút$/,
+    (m, a, b) => `−${a}% lightning damage for ${b} minutes`],
+  [/^HÀNG BÀY — còn (\d+)\/(\d+) món · nhập hàng sau (\d+):(\d+)$/,
+    (m, a, b, c, d) => `ON THE SHELF — ${a}/${b} left · restock in ${c}:${d}`],
+  [/^VẬT PHẨM QUÝ — đổi sau (\d+):(\d+)$/,
+    (m, a, b) => `PRIZE GOODS — rotates in ${a}:${b}`],
+  [/^Bán hết đồ trắng\/lục \((\d+) món\)$/,
+    (m, n) => `Sell every white/green piece (${n} items)`],
+  [/^Mở ra trang bị cấp (\d+)-(\d+)(\+?) — có thể ra dòng Hoàn Hảo$/,
+    (m, a, b, p) => `Opens gear for levels ${a}-${b}${p} — a Flawless line is possible`],
+  [/^Tầng theo cấp của bạn · đang giữ (\d+) hạp · mở ở Túi Đồ → Box Kundun$/,
+    (m, n) => `Tier follows your level · holding ${n} boxes · open them in Bag → Box Kundun`],
+  [/^◑ Quay Vận May — ([\d.,]+)◈$/, (m, n) => `◑ Spin for Luck — ${n}◈`],
+  [/^· Túi đồ (\d+)\/(\d+)$/, (m, a, b) => `· Bag ${a}/${b}`],
+  [/^\(sức mạnh theo cấp (\d+)\)$/, (m, n) => `(power scaled to level ${n})`],
+  [/^\(hết → \+(\d+) 📜\)$/, (m, n) => `(none left → +${n} 📜)`],
+  [/^(\d+) kỹ năng chưa ngộ$/, (m, n) => `${n} skills not yet learned`],
+  [/^học miễn phí (\d+) kỹ năng tự do$/, (m, n) => `learn ${n} free skills at no cost`],
+  [/^Nâng thẳng (\d+) cấp cho một chiêu của lớp mình — bảng K, khỏi tốn Lumen lẫn Bản Năng$/,
+    (m, n) => `Raises one of your class skills by ${n} level outright — panel K, no Lumen and no Instinct`],
+  [/^\+(\d+) Hỗn Nguyên Thạch · đang có (\d+)$/,
+    (m, a, b) => `+${a} Chaos Stone · holding ${b}`],
+  [/^−(\d+)✦ phí$/, (m, n) => `−${n}✦ on the fee`],
+  [/^Reward: Lumen — mỗi ngày (\d+) lần$/, (m, n) => `Reward: Lumen — ${n}× per day`],
+  [/^Thợ Rèn Truyền Thuyết \+(\d+)%$/, (m, n) => `Legendary Smith +${n}%`],
+  [/^\(cảnh (\d+), tự động ở cấp (\d+)\) để Thăng Linh,$/,
+    (m, a, b) => `(realm ${a}, automatic at level ${b}) to Ascend,`],
+  [/^Giờ Vàng \((\d+)h & (\d+)h mỗi ngày\): tỉ lệ cổ thư\/hiền giả ×([\d.,]+)\.$/,
+    (m, a, b, c) => `Golden Hour (${a}h & ${b}h daily): odds of writings and sages ×${c}.`],
+  [/^— Hang động cổ xưa: (\d+)-(\d+) 📜 Sách Kỹ Năng$/,
+    (m, a, b) => `— An ancient cave: ${a}-${b} 📜 Tomes`],
+  [/^— Lọt vào hang động: (\d+)-(\d+) 📜 Sách Kỹ Năng$/,
+    (m, a, b) => `— You drop into a cave: ${a}-${b} 📜 Tomes`],
+  [/^— Rơi vào lùm cây \/ dòng suối: (\d+)-(\d+) 📜 Sách Kỹ Năng \+ ([\d.,]+)-([\d.,]+)◈ Lumen$/,
+    (m, a, b, c, d) => `— You land in brush or a stream: ${a}-${b} 📜 Tomes + ${c}-${d}◈ Lumen`],
+  [/^Tuấn Mã Hoang ở ba đồng cỏ Outskirts \(và Reptile Sunstone Flats — phụ tuyến «Tuấn Mã Reptile Sunstone Flats» cấp (\d+)\)\.$/,
+    (m, n) => `Wild Steeds graze the three Outskirts meadows (and Reptile Sunstone Flats — side quest «Steeds of Reptile Sunstone Flats», level ${n}).`],
+  [/^mỗi cuộn \(tối đa (\d+) cuộn\/lần\)\. Ngày chỉ bắt (\d+) con thôi — ngựa cũng cần nghỉ!"$/,
+    (m, a, b) => `per coil (at most ${a} coils a time). Only ${b} a day — horses need rest too!"`],
+  [/^"Vết nứt xé qua chỗ này thì kéo đi một mảng đất, và chỗ đất mất đi để lại cái vực đằng sau lưng ta\. Ta ngồi đây đếm người nhảy xuống\. Ai đủ cứng — từ cấp (\d+) trở lên — thì còn leo lên lại được\."$/,
+    (m, n) => `"The tear ripped through here and took a slab of ground with it, and where the ground went there is the chasm behind my back. I sit here counting the ones who jump. Whoever is hard enough — level ${n} and up — can still climb back out."`]
+);
+
+/* ══ BĂNG-RÔN GIỮA MÀN (`zoneBanner`) — 108 chuỗi, và KHÔNG BÀI NÀO GÁC ĐƯỢC NÓ ═════════
+   `test_dichen §②` bọc `fillText` rồi đọc lại, nên nó chỉ thấy chuỗi nào TÌNH CỜ vẽ ra
+   trong ~30 giây bài chạy. Mà băng-rôn thì phần lớn nổ ở một **mốc GIỜ THẬT** (Hung Thần
+   0/4/8/12/16/20h · Đàn Vàng 2/6/10/14/18/22h · Vực Nứt 0/6/12/18h) hoặc ở một sự kiện một
+   lần trong đời (Tái Sinh, thông quan Tầng Sâu, hoàn lại di trú). Lượt chạy hôm nay rơi
+   trúng mốc "10 phút nữa Đàn Vàng" ⇒ §② đỏ **2 chuỗi**, và đó là cách cả mặt này lộ ra.
+
+   Quét thẳng `zoneBanner = {…}` trong `game.js` rồi hỏi từng chuỗi qua bộ dịch thật:
+   **59 / 65 chuỗi THUẦN chưa dịch**. Đây là chữ to nhất trên màn hình, giữa khung nhìn.
+
+   ⚠ **PROBE BẢN ĐẦU BÁO 102/108 VÀ ĐÓ LÀ BÁO ĐỘNG GIẢ.** Nó thay mọi `${…}` bằng một mốc
+   `§` rồi hỏi — mà thay thế ấy **phá mọi luật `RULES` có `(\d+)`**, nên chuỗi có khuôn đều
+   ra "chưa dịch" dù luật khớp hoàn hảo với bản THẬT. Chỉ chuỗi KHÔNG có `${}` mới kết luận
+   được bằng cách đó; phần có khuôn phải viết `RULES` rồi đo lại trên bản đã ghép số.
+
+   ⚠ **NỬA DỊCH CÒN TỆ HƠN KHÔNG DỊCH.** `⏱ HẾT GIỜ — PHÓ BẢN THẤT BẠI` từng ra
+   `⏱ HẾT GIỜ — DUNGEON THẤT BẠI` và `5 phút giảm 40% sát thương thiên lôi…` ra
+   `5 min: giảm 40% lightning damage…` — đó là `TERMS` thay lẻ từng từ khi không `EXACT` nào
+   khớp. `EXACT` được hỏi TRƯỚC nên khai đủ câu là nó thắng. */
+Object.assign(EXACT, {
+  // ── Hung Thần (Ma Tôn) ──
+  '⚠ HUNG THẦN SẮP GIÁNG THẾ': '⚠ THE DREAD ONE IS COMING',
+  '☠ HUNG THẦN GIÁNG THẾ': '☠ THE DREAD ONE DESCENDS',
+  '☠ HUNG THẦN XUẤT HIỆN': '☠ THE DREAD ONE APPEARS',
+  '☠ HUNG THẦN ĐÃ BỊ TIÊU DIỆT': '☠ THE DREAD ONE IS DESTROYED',
+  'Hung Thần đã rời đi': 'The Dread One has gone',
+  'Ngay trước mắt — toàn lực ứng chiến!': 'Right in front of you — give it everything!',
+  'Tà khí tản dần — hẹn khung giờ sau.': 'The blight thins out — until the next hour.',
+  // ── Xâm Lăng Vàng ──
+  '✦ ĐÀN VÀNG SẮP XÂM LĂNG': '✦ THE GILDED HERD IS COMING',
+  '✦ ĐÀN VÀNG TRÀN VÀO': '✦ THE GILDED HERD POURS IN',
+  '✦ XÂM LĂNG VÀNG': '✦ GILDED INVASION',
+  '✦ CHÚA ĐÀN VÀNG GỤC NGÃ': '✦ THE GILDED HERD-LORD FALLS',
+  '✦ ĐÀN VÀNG BỊ QUÉT SẠCH': '✦ THE GILDED HERD IS WIPED OUT',
+  'Đàn Vàng đã rút lui': 'The Gilded Herd has withdrawn',
+  'Toàn bộ Box Kundun đã vào túi — mở trong Túi Đồ (phím I)!':
+    'Every Box Kundun is in your bag — open them in the Bag (key I)!',
+  // ── Vực Nứt ──
+  '✹ VỰC NỨT TOÁC NGAY GIỮA BÃI': '✹ A RIFT TEARS OPEN MID-GROUND',
+  '✹ CHÚA TỂ VỰC NỨT GỤC NGÃ': '✹ THE RIFT LORD FALLS',
+  // ── Truy Nã ──
+  '⚖ ĐÃ NHẬN TRUY NÃ LỆNH': '⚖ BOUNTY WRIT ACCEPTED',
+  '⚖ TRUY NÃ HOÀN THÀNH': '⚖ BOUNTY COMPLETE',
+  '◈ TRUY NÃ HOÀN TẤT': '◈ BOUNTY SETTLED',
+  'Mục tiêu đã phục pháp — về Sapidae Chiefdom gặp Bổ Đầu nhận Công Huân Lệnh!':
+    'The target has answered for it — return to Sapidae Chiefdom and see the Constable for your Writ of Merit!',
+  'Mang Lumen đến Sảnh Cầu May — Thương Nhân Vận May sẽ mở một lượt quay (5% ra cổ thư hiếm)!':
+    'Bring the Lumen to the Hall of Fortune — the Fortune Trader will open a pull for you (5% for rare writings)!',
+  // ── Vạn Duyên Các · Vận May ──
+  '☁ VẬN MAY NGÀN VÀNG': '☁ FORTUNE WORTH A THOUSAND',
+  '◑ VẬN MAY NGÀN VÀNG': '◑ FORTUNE WORTH A THOUSAND',
+  '☁ HIỀN GIẢ CHỈ ĐIỂM': '☁ A SAGE POINTS THE WAY',
+  // ── Rune · Tướng Quân · Cổng Vực ──
+  '⛨ PHONG ẤN RUNE': '⛨ RUNE SEAL',
+  'Phong ấn nguyên tố vùng này tạm được giữ vững — phần thưởng Chinh Phạt đã trao.':
+    "This region's elemental seal holds for now — the Conquest reward has been paid.",
+  '☠ NGƯỜI THỨ BẢY ĐÃ NGÃ': '☠ THE SEVENTH HAS FALLEN',
+  'KẺ GỠ RUNE CUỐI': 'THE LAST RUNE-TAKER',
+  'Chính tuyến hoàn tất — danh hiệu tối thượng đã mở (bấm C chọn danh hiệu)':
+    'Main story complete — the highest title is unlocked (press C to choose a title)',
+  // ── Vỉa Cốt · Rương Canh ──
+  '◆ VỈA CỐT ĐÃ KHAI': '◆ BONE VEIN OPENED',
+  '▣ RƯƠNG CANH ĐÃ MỞ': '▣ GUARDED CHEST OPENED',
+  // ── Lò Hỗn Loạn · Tái Sinh ──
+  '◑ LÒ HỖN LOẠN — THÀNH CÔNG!': '◑ CHAOS MACHINE — SUCCESS!',
+  '◑ LÒ HỖN LOẠN — THẤT BẠI': '◑ CHAOS MACHINE — FAILED',
+  '3 món đã tan thành tro bụi — Hỗn Loạn vô thường.':
+    'Three pieces turned to ash — Chaos keeps no promises.',
+  '🔄 TÁI SINH': '🔄 RESET',
+  // ── Tầng Sâu · Lò Khắc ──
+  '⛨ CỬA ĐÁ MỞ': '⛨ THE STONE DOOR OPENS',
+  'Phòng kế tiếp đã thông — tiến lên phía Bắc!': 'The next room is clear — press north!',
+  '⏱ HẾT GIỜ — PHÓ BẢN THẤT BẠI': '⏱ TIME UP — DUNGEON FAILED',
+  'PHÓ BẢN THÔNG QUAN!': 'DUNGEON CLEARED!',
+  'Mất sạch chiến lợi phẩm cả lượt — lần sau nhớ rút đúng lúc.':
+    'The whole run’s spoils are gone — next time, pull out in good time.',
+  '✦ CHẠM ĐÁY VỰC SÂU': '✦ THE DEEP FLOOR REACHED',
+  // ── rơi đồ · mục tiêu ngày · Đọa Ma ──
+  '✦ HOÀN HẢO!': '✦ FLAWLESS!',
+  'Trang bị Hoàn Hảo vừa rơi xuống — nhặt ngay!': 'A Flawless piece just dropped — grab it!',
+  '☀ HOÀN THÀNH MỤC TIÊU HÔM NAY!': "☀ TODAY'S GOALS COMPLETE!",
+  '⚠ TỰ ĐÁNH ĐÃ TỰ TẮT': '⚠ AUTO-ATTACK SWITCHED ITSELF OFF',
+  'Hết Bình Thuốc Đỏ & máu xuống thấp — tắt TỰ ĐÁNH để tránh chết oan. Mua thêm thuốc rồi bật lại!':
+    'Out of Red Potions and low on health — AUTO is off so you do not die for nothing. Buy more, then switch it back on!',
+  '5 phút giảm 40% sát thương thiên lôi — cứ yên tâm xông vào bão!':
+    'Five minutes at −40% lightning damage — walk into the storm and mean it!',
+  '⚫ ĐỌA MA': '⚫ FALLEN',
+  'Sát niệm xâm tâm — công lực +15% nhưng lôi kiếp sẽ khắc nghiệt hơn!':
+    'Bloodlust takes hold — +15% power, but the lightning will judge you harder!',
+  'HỒI ĐẦU THỊ NGẠN': 'TURNED BACK',
+  'Tội nghiệt đã gột sạch — trở lại danh sạch.': 'The stain is washed out — your name is clean again.',
+  // ── băng-rôn DI TRÚ: chạy đúng MỘT lần cho save đời cũ, nên gần như không lượt chạy nào
+  //    bắt được chúng — mà chúng lại là câu đầu tiên người chơi cũ đọc sau khi cập nhật.
+  'ĐÃ HOÀN LẠI': 'REFUNDED',
+  '✦ HOÀN LẠI SÁU HỆ ĐÃ GỠ': '✦ SIX REMOVED SYSTEMS REFUNDED',
+  '◆ TU LA TINH THẠCH ĐÃ NGỪNG DÙNG': '◆ ASURA CRYSTALS ARE NO LONGER USED',
+  '⚒ KẾ THỪA ĐÃ GỠ': '⚒ INHERITANCE REMOVED',
+  '⚠ TÚI ĐỔI SANG LƯỚI': '⚠ THE BAG IS NOW A GRID',
+  '🎒 TÚI ĐỒ THÀNH LƯỚI': '🎒 BAG CONVERTED TO A GRID',
+});
+RULES.unshift(
+  // ⚠ `unshift` — luật cũ `/^(\d+) phút (.*)$/` khớp trước và trả về "10 min: nữa — …",
+  //    tức nuốt mất mọi luật viết sau. Lần THỨ BA cùng cái bẫy trong tệp này.
+  [/^10 phút nữa — (.+)\. Chuẩn bị ứng chiến!$/,
+    (m, a) => `Ten minutes out — ${tr(a)}. Get ready to fight!`],
+  [/^10 phút nữa — (.+)\. Săn Box Kundun!$/,
+    (m, a) => `Ten minutes out — ${tr(a)}. Hunt the Box Kundun!`],
+  [/^Tà khí phủ (.+) — hạ Hung Thần nhận Box Kundun!$/,
+    (m, a) => `Blight covers ${tr(a)} — fell the Dread One for a Box Kundun!`],
+  [/^(\d+) quái dát vàng — mỗi con rơi 1 Box Kundun!$/,
+    (m, n) => `${n} gilded monsters — each one drops a Box Kundun!`],
+  [/^Đàn quái dát vàng tràn vào (.+) — 12 phút, mỗi con rơi 1 (.+)!$/,
+    (m, a, b) => `A gilded herd pours into ${tr(a)} — 12 minutes, each drops one ${tr(b)}!`],
+  [/^\+1 (.+) — mở trong Túi Đồ \(phím I\)!$/, (m, a) => `+1 ${tr(a)} — open it in the Bag (key I)!`],
+  [/^Nhận (.+) — mở trong Túi Đồ \(phím I\)!$/, (m, a) => `You receive ${tr(a)} — open it in the Bag (key I)!`],
+  [/^(.+) cấp (\d+) — rơi (.+) \+ Hỗn Độn Châu!$/,
+    (m, a, b, c) => `${tr(a)} at level ${b} — drops ${tr(c)} + a Jewel of Chaos!`],
+  [/^Còn (\d+) con ở bãi săn khác — cửa vực đóng lúc (.+)!$/,
+    (m, n, t) => `${n} more on other hunting grounds — the rift shuts at ${t}!`],
+  [/^Mục tiêu ẩn náu tại (.+) — tiêu diệt để lĩnh thưởng!$/,
+    (m, a) => `The target is hiding in ${tr(a)} — kill it to claim the reward!`],
+  // Rune · Tướng Quân · Đai
+  [/^⚔ VỆ BINH RUNE (\d+)\/3 ĐÃ NGÃ$/, (m, n) => `⚔ RUNE WARDEN ${n}/3 HAS FALLEN`],
+  [/^Còn (\d+)\/3 Vệ Binh Rune chưa hạ — phá đủ ba thì Cổng Vực mở\.$/,
+    (m, n) => `${n}/3 Rune Wardens still stand — break all three and the Abyss Gate opens.`],
+  [/^⚑ TƯỚNG QUÂN (.+) ĐÃ NGÃ XUỐNG$/, (m, a) => `⚑ WARDEN ${tr(a)} HAS FALLEN`],
+  // Vỉa · Rương
+  [/^Vỉa (.+) tại (.+) — hôm nay hết phần ở vùng này\.$/,
+    (m, a, b) => `The ${tr(a)} vein at ${tr(b)} — nothing more here today.`],
+  [/^(.+) — còn (\d+)\/(\d+) rương chưa ai chạm tới\.$/,
+    (m, a, b, c) => `${tr(a)} — ${b}/${c} chests still untouched.`],
+  // Tái Sinh · Lò Hỗn Loạn
+  [/^Lần thứ (\d+) — Công Kích & Sinh Lực \+(\d+)% vĩnh viễn!$/,
+    (m, a, b) => `Reset ${a} — +${b}% Attack and Max HP, permanently!`],
+  [/^3 món hoá thành (.+)!$/, (m, a) => `Three pieces became ${tr(a)}!`],
+  // Tầng Sâu · Lò Khắc
+  [/^TẦNG (\d+) — (.+)$/, (m, n, a) => `FLOOR ${n} — ${tr(a)}`],
+  [/^TẦNG (\d+)\/(\d+)$/, (m, a, b) => `FLOOR ${a}/${b}`],
+  [/^☠ GỤC Ở TẦNG (\d+)$/, (m, n) => `☠ DOWNED ON FLOOR ${n}`],
+  [/^ĐỢT (\d+) — (.+)$/, (m, n, a) => `WAVE ${n} — ${tr(a)}`],
+  [/^ĐỢT (\d+)\/(\d+)$/, (m, a, b) => `WAVE ${a}/${b}`],
+  [/^☠ GỤC Ở ĐỢT (\d+)$/, (m, n) => `☠ DOWNED ON WAVE ${n}`],
+  [/^(\d+) quái · máu ×([\d.,]+) — dọn sạch để mở lối xuống$/,
+    (m, a, b) => `${a} monsters · HP ×${b} — clear them to open the way down`],
+  [/^(\d+) quái · máu ×([\d.,]+) — dọn sạch để khắc một nếp mới$/,
+    (m, a, b) => `${a} monsters · HP ×${b} — clear them to cut a new carving`],
+  [/^Trọn (\d+) tầng — thưởng ×([\d.,]+) và một (.+)!$/,
+    (m, a, b, c) => `All ${a} floors — rewards ×${b} and one ${tr(c)}!`],
+  [/^📦 RƯƠNG CẤP (.+) MỞ RA!$/, (m, a) => `📦 A TIER ${a} CHEST OPENS!`],
+  // băng-rôn DI TRÚ
+  [/^Hệ Cốt và vòng nuôi Ragoon đã gỡ — (.+) trả về ví$/,
+    (m, a) => `The Bone system and the Ragoon loop are gone — ${tr(a)} returned to your purse`],
+  [/^(.+) viên → (.+)◈ Lumen · rèn \+1→\+9 nay chỉ bằng ngọc$/,
+    (m, a, b) => `${a} crystals → ${b}◈ Lumen · forging +1→+9 now takes jewels only`],
+  [/^(.+) Mảnh \+ (.+) Đá Ấn Rune → (.+)◈ Lumen · giai của món nay do thứ RƠI RA quyết định$/,
+    (m, a, b, c) => `${a} Fragments + ${b} Rune Seal Stones → ${c}◈ Lumen · a piece’s tier is now decided by what DROPS`],
+  [/^(\d+) món không còn chỗ — đã quy ra (.+)◈ Lumen$/,
+    (m, a, b) => `${a} pieces had no room left — converted to ${b}◈ Lumen`],
+  [/^Mỗi món nay chiếm khối ô theo hình dáng — tặng (\d+) hàng để không mất món nào$/,
+    (m, n) => `Every piece now takes a block of cells by its shape — ${n} extra rows granted so nothing is lost`]
+);
+
+/* ══ ĐUÔI CÒN LẠI CỦA BẢNG NPC — quét 1.044 lượt bắt chuyện, còn 18 dòng ════════════════
+   Quét sâu hơn `§⑥` (2 map × 6 cấp × 6 mốc `questIdx` × mọi NPC) lôi ra đúng cái mà một
+   lượt đo ở MỘT trạng thái nhiệm vụ không bao giờ thấy: thoại `active` của người giao
+   nhiệm vụ, khung Cổ Thư Thất Truyền, và ba dòng khoá cấp của tab Phụ Tuyến.
+
+   ⚠ VÀ ĐỒNG HỒ QUẦY CÓ **HAI** ĐỊNH DẠNG: `13:58` khi còn dưới một giờ, `1h59m` khi còn
+   trên. Luật viết cho một dạng thì xanh ở mọi lượt chạy rơi vào dạng ấy — mà lượt nào rơi
+   vào dạng nào là do GIỜ THẬT quyết định. Đây là cùng một vết sẹo với băng-rôn sự kiện. */
+Object.assign(EXACT, {
+  '"Trong Rẻo Rừng Corran còn thứ ngươi phải làm cho xong."':
+    '"There is still something in the Corran Thicket you have to finish."',
+  '"Ta vớt ngươi lên khi bầu trời còn đang nứt. Ngươi không nhớ gì — nhưng bầy nhỏ của ta thì nhớ mùi lửa đêm đó."':
+    '"I pulled you out while the sky was still splitting. You remember nothing — but my little herd remembers the smell of fire that night."',
+  '"Ta pha thuốc cho cả đảo này từ trước khi trời nứt. Giờ nửa số bệnh ta chữa không có trong sách nào cả."':
+    '"I have mixed medicine for this whole island since before the sky tore. Half of what I treat now is in no book at all."',
+  'Cổ Thư Thất Truyền — Huyết Ma Thôn Phệ': 'Lost Writings — Blood Demon Devour',
+  'Mảnh cổ thư:': 'Writing fragments:',
+  'Đánh bại Thủ Lĩnh Gloam để thu thập mảnh cổ thư (Thượng 40% · Trung 40% · Hạ 20%).':
+    'Defeat Gloam Chieftains to collect the fragments (Upper 40% · Middle 40% · Lower 20%).',
+  'PHỤ TUYẾN': 'SIDE QUESTS',
+  'Cần đi thêm một đoạn chính tuyến nữa': 'You need to get further along the main story',
+});
+RULES.unshift(
+  [/^VẬT PHẨM QUÝ — đổi sau (\d+)h(\d+)m$/, (m, a, b) => `PRIZE GOODS — rotates in ${a}h${b}m`],
+  [/^HÀNG BÀY — còn (\d+)\/(\d+) món · nhập hàng sau (\d+)h(\d+)m$/,
+    (m, a, b, c, d) => `ON THE SHELF — ${a}/${b} left · restock in ${c}h${d}m`],
+  [/^★ Chính tuyến (c\d+q\d+): (.+)$/, (m, id, ten) => `★ Main story ${id}: ${tr(ten)}`],
+  [/^Cần cấp (\d+) \(đang (\d+)\)$/, (m, a, b) => `Requires level ${a} (you are ${b})`]
+);
 
 function tr(s) {
   if (lang !== 'en' || !s || typeof s !== 'string') return s;

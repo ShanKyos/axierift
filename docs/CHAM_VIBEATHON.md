@@ -48,8 +48,14 @@ lại một nấc thang "mua con tốt hơn thì đánh mạnh hơn" — thứ �
 
 **Vì sao không phải 10:**
 - Con Axie vẫn **0 chỉ số, 0 kỹ năng, 0 trang bị** theo đúng thiết kế, nên với người chơi
-  lướt qua, nó vẫn *trông như* một cái skin. Cơ chế có thật nhưng **phải được dạy** — và cửa
-  dạy mới chỉ có 8 kênh, trong đó đúng **một** nhiệm vụ (`c1q4`, cấp 19).
+  lướt qua, nó vẫn *trông như* một cái skin. Cơ chế có thật nhưng **phải được dạy**.
+  Đợt 2026-09-21 trả hai chỗ hở lớn nhất của vế dạy đó:
+  - chuỗi hướng dẫn tân thủ nay có **bước ⑦ `than`** — cửa duy nhất nói ra trục phòng thủ
+    trong phút đầu. Trước đó `grep` sáu bước cũ cho **0** lần nhắc `Axie` lẫn `hệ`, còn
+    nhiệm vụ dạy nó (`c1q4`) mở tận **cấp 19**;
+  - màn tạo nhân vật từng ghi *"Chỉ là hình dáng"* — tức đúng câu thể lệ trừ điểm
+    (*"appear only as a cosmetic skin"*), ở đúng màn đầu tiên người ta đọc. Nay nó nói đủ
+    cả hai vế: 0 chỉ số **và** lớp Axie quyết định hệ phòng thủ.
 - Con số **32,4%** từng suýt bị đem đi báo cáo là một con số **không đại diện** (đo trên một
   con quái tự chọn); trên đàn quái thật chênh chỉ **7,9%** ở chặng 1. Con số 39,0% ở trên là
   số sau khi có đủ ba chặng và đo trên đàn thật — nhưng bài học thì giữ: *đo một mẫu tự chọn
@@ -143,3 +149,32 @@ không ai đọc log của một bài xanh.*
 3. **Đổi mô tả và topic của repo GitHub** — hiện `description` đúng một chữ `axierift`, và
    `homepage` trỏ tới `?test=1` chứ không kèm `&lang=en`. Giám khảo mở link đầu tiên là thấy
    tiếng Việt.
+
+---
+
+## Bổ sung 2026-09-21 — bản tiếng Anh nay **sạch trên mọi mặt đo được**
+
+Hai đợt việc chủ dự án chốt (*"làm phần dạy trục Axie và dịch thuật"*) đã xong. Số đo:
+
+| mặt | trước | sau |
+|---|--:|--:|
+| tầng kể chuyện (`test_dichen §④`, 7 mặt) | 190 chuỗi | **0** |
+| quét rộng 5 lớp × 7 cấp × 4 bảng × mọi NPC | 418 dòng | **0** |
+| quét sâu bảng NPC — 1.044 lượt bắt chuyện, 2 map × 6 cấp × 6 mốc nhiệm vụ | 18 dòng | **0** |
+| băng-rôn giữa màn (`zoneBanner`), chuỗi THUẦN | 59/65 chưa dịch | **0** |
+
+**Bài học lớn nhất của đợt, và nó đáng cho mục ⑤ hơn là mục này:** ba mặt sau **không mặt nào**
+bị bài kiểm cũ chạm tới, dù cả bảy trần của `§④` đều đã về 0 và bài xanh. `§④` bơm chuỗi vào một
+`<div>` RỜI ⇒ nó chứng minh *dịch được*, không chứng minh *tới được mắt người chơi*; `§③` quét 15
+bảng nhưng bảng NPC chỉ dựng ra khi bấm E; `§②` bọc `fillText` nên chỉ thấy băng-rôn nào tình cờ
+nổ trong 30 giây. Mặt băng-rôn lộ ra **hoàn toàn do may** — lượt chạy rơi trúng mốc giờ thật.
+
+⇒ `test_dichen` nay có **`§⑥`** mở bảng NPC thật (2 map × 2 cấp × mọi NPC, chốt tự kiểm ≥20 lượt).
+Mặt băng-rôn thì **vẫn chưa có bài gác** — nói thẳng chứ không giấu; xem
+`docs/CHUA_HOAN_THIEN.md §5`.
+
+Và một phép hồi quy mới cho chính bản dịch: so `tr()` của **1.216 chuỗi** giữa bản cũ và bản mới
+⇒ **đúng 1 chuỗi đổi, và là chuỗi cố ý đổi**. Nó gác đúng kiểu hỏng mà mọi phép dò "còn tiếng
+Việt không" đều mù: `RULES` khớp theo thứ tự, nên một luật RỘNG `unshift` lên trên có thể nuốt
+một luật HẸP đã có — cho ra chữ **tiếng Anh KHÁC**, không phải tiếng Việt. Đã dẫm đúng thế một
+lần trong chính đợt này (`/^ĐAI (.+)$/` nuốt `/^ĐAI (NGOẠI VI|TRUNG TÂM|HẠT NHÂN)$/`).
