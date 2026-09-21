@@ -15836,10 +15836,19 @@ window.drawHeroLit = drawHeroLit;
 const NHOA_DUOC = { i:1, w:1, r:1 };
 const NHOA_MS   = 140;   // trong hoạt hình chuyên nghiệp, transition lặp thường 150-300ms
 const HS_FRAMES = { i: 16, w: 32, a: 16, c: 16, r: 16,          // BẢNG MỘT
-                    h: 8, p: 12, s: 16, d: 10, j: 10, q: 6, n: 6, t: 6, e: 10 };  // BẢNG HAI
+                    h: 8, p: 12, s: 16, d: 10, j: 10, q: 6, n: 6, t: 6, e: 10,
+                    f: 8 };  // BẢNG HAI ('f' = BAY, xem NV_BO_CO_BAY)
 // Khối nào nằm ở bảng hai. Thứ tự trong NV_MOC2 phải trùng KHUNG2 của tools/spine/nuong_nv.py.
-const NV_BANG2 = { h:1, p:1, s:1, d:1, j:1, q:1, n:1, t:1, e:1 };
-const NV_MOC2  = { h:0, p:8, s:20, d:36, j:46, q:56, n:62, t:68, e:74 };
+const NV_BANG2 = { h:1, p:1, s:1, d:1, j:1, q:1, n:1, t:1, e:1, f:1 };
+const NV_MOC2  = { h:0, p:8, s:20, d:36, j:46, q:56, n:62, t:68, e:74, f:84 };
+// ⚠ KHỐI 'f' (BAY) KHÔNG CÓ TRONG `KHUNG2` của `nuong_nv.py` — gói Spine không có hoạt cảnh
+// bay, nên mọi bộ nướng từ Spine chỉ có 84 khung ở bảng hai và ô 84-91 của chúng RỖNG. Đọc ô
+// rỗng thì không ném lỗi, nó chỉ vẽ ra khoảng không — tức nhân vật BIẾN MẤT lúc bay, im lặng.
+// ⇒ Hỏi bảng này, đừng hỏi "ô có rỗng không".
+const NV_BO_CO_BAY = { dwsl1: true };
+window.NV_BO_CO_BAY = NV_BO_CO_BAY;
+// Nhịp vỗ cánh: 8 khung × 95ms ≈ 10,5 khung/giây, đúng dải 10-12 mà gói art đề nghị.
+const BAY_NHIP = 95;
 // Khối ĐÁNH đã nướng RIÊNG cho từng lớp (xem --danh của bộ nướng), nên không còn phải đổi
 // khối lúc vẽ nữa: Sylvan Ranger bắn nỏ, Dark Wizard và Dark Lord niệm chú, ngay trong khối 'a'.
 // Lớp nào có nhát thứ hai thì đòn thường luân phiên 'a' ↔ 's'.
@@ -18926,6 +18935,10 @@ function drawPlayer(p){
   if (Math.abs(_bayDich - bayCao) < 0.05) bayCao = _bayDich;
   _bayCao.set(_bayK0, bayCao);
   const bayK = bayCao / Math.max(1, BAY_CAO[2]);        // 0 = chạm đất, 1 = bay cao nhất
+  // ĐÃ LÊN TỚI ĐỘ CAO CỦA CHÍNH ĐÔI CÁNH NÀY — cửa DUY NHẤT hỏi "đang bay hẳn chưa".
+  // Hai chỗ đọc nó (`_bayBo` để tắt cánh vẽ rời, `_bay` để chọn khối vẽ) phải cùng một
+  // câu trả lời, nếu không là cánh tắt mà khối bay chưa bật ⇒ nhân vật KHÔNG có cánh nào.
+  const _bayDat = _bayDich > 0 && bayCao >= _bayDich - 0.4;
   // ⚠ ĐÔI CÁNH ĐEO TRÊN LỚP NHÂN VẬT, KHÔNG TRÊN CON AXIE — nên chỉ lớp nhân vật rời mặt đất.
   // `veCanh()` đã vẽ cánh ở chỗ lớp nhân vật đứng (xem chú thích tại chỗ vẽ), tức đôi cánh
   // thuộc về kẻ hộ tống. Bản trước nhấc CẢ CẶP bằng một `ctx.translate(0, yOff)` bọc ngoài,
@@ -19124,6 +19137,10 @@ function drawPlayer(p){
   // vế `(!_coAva || _lopHien)` đã phải gỡ một lần rồi ("khoác lên vai thì phải thấy lúc ĐỨNG").
   const _tier = heroTier(p), _gv = gearVisual(p);
   const _boCoVk = !!NV_BO_CO_VK[nvBoGoc(p.sect, _tier, _gv) || ''];
+  // ⚠ KHỐI BAY CỦA BỘ NÀY ĐÃ NƯỚNG SẴN ĐÔI CÁNH. Bật `veCanh()` cùng lúc là HAI đôi cánh trên
+  // màn — cùng một kiểu hỏng với hai cây vũ khí ở `_boCoVk`. Khai sớm ở đây vì chỗ vẽ cánh nằm
+  // TRÊN chỗ chọn khối vẽ.
+  const _bayBo = _bayDat && !!NV_BO_CO_BAY[nvBoGoc(p.sect, _tier, _gv) || ''];
   // ⚠⚠ ĐÃ NHẬP VÀO AXIE THÌ VŨ KHÍ VẪN PHẢI HIỆN — chủ dự án chốt (2026-09-17), nguyên văn:
   // *"khi Axie ra chiêu thì sẽ hiện cây vũ khí… nhân vật có thể không hiện nhưng vũ khí sẽ
   // LUÔN xuất hiện để đồng bộ được skill"*.
@@ -19178,7 +19195,9 @@ function drawPlayer(p){
     // trên màn. Bỏ chốt này là một đôi cánh bay lơ lửng cạnh con Axie, không ai đeo.
     // (Cái giá, nói thẳng: ngoài thành người chơi KHÔNG thấy đôi cánh mình mua nữa. Đó là hệ
     //  quả thẳng của việc nhập vào, không phải một lỗi — chỗ khoe cánh nay là trong thành.)
-    if (wingIt && !_nhap) veCanh(ctx, wingIt, p.x, p.y + CANH_CHAN_MAN, p.sway || 0, p.swayDir || 0,
+    const _canhRoi = !!wingIt && !_nhap && !_bayBo;
+    if (window.TEST_MODE) window.__veCanhRoi = _canhRoi;   // bài kiểm hỏi QUYẾT ĐỊNH, không đếm điểm ảnh
+    if (_canhRoi) veCanh(ctx, wingIt, p.x, p.y + CANH_CHAN_MAN, p.sway || 0, p.swayDir || 0,
                        CANH_CO_MAN, bayK, p.sect);
     if (window.TEST_MODE) _doNeo('canh', ctx, p.x, p.y + CANH_CHAN_MAN + CANH_CO_MAN * CANH_GOC_Y);
     if (_tk && !_tk.truoc && _tkHien && !_tkNhap) veThanKhi(ctx, _tk, p);   // nằm sau lưng: vẽ TRƯỚC thân
@@ -19276,8 +19295,14 @@ function drawPlayer(p){
     // đó thay vì chạy hết chu kỳ sải chân.
     // (Bản trước nướng thêm hẳn một khối '00_Squat' cho việc này — 16 khung × 8 bộ, 0,7 MB.
     //  Đo xong thì thừa: dáng cần đã nằm sẵn trong khối đi.)
-    const _bay = bayK >= 0.5;
-    const _catCanh = bayK > 0.06 && bayK < 0.5;    // đang bốc lên hoặc hạ xuống
+    // ⚠ NGƯỠNG BAY PHẢI SO VỚI ĐỘ CAO CỦA CHÍNH ĐÔI CÁNH ẤY, không so với bậc cao nhất.
+    // Bản cũ hỏi `bayK >= 0.5`, mà `bayK = bayCao / BAY_CAO[2]` — tức chia cho bậc 3. Cánh
+    // bậc 1 trần ở 11/24 = 0,458 ⇒ **không bao giờ** vào trạng thái bay, nó kẹt vĩnh viễn ở
+    // `_catCanh` và đứng chết ở khung cuối của khối NHẢY. Đo được: bậc 1 ra khối 'j' ở mọi
+    // lượt, bậc 2 (0,708) và bậc 3 (1,0) ra 'f'. Lỗi CÓ SẴN, nhưng khối bay riêng làm nó lộ
+    // hẳn ra — hai bậc trên vỗ cánh, bậc dưới đứng hình.
+    const _bay = _bayDat;
+    const _catCanh = bayCao > 1.4 && !_bay;        // đang bốc lên hoặc hạ xuống
     // Đang di chuyển ở tốc độ thường ⇒ khối CHẠY. Khối ĐI để dành cho lúc bị làm chậm.
     // Bay thì vẫn đọc khối ĐI (BAY_KHUNG ghim vào một khung trong đó).
     const _diBo = p.moving && !_bay && !_catCanh;
@@ -19322,7 +19347,10 @@ function drawPlayer(p){
     // Spellblade sau này mang hai kiếm thì 's' chính là nhát của tay phụ.
     // Niệm chú: đổi khối theo KIỂU RA ĐÒN của chiêu (xem KHOI_THEO_ACT). `_kind` vẫn là 'c'
     // nên ràng buộc `_lopHien === (_kind==='a'||'c')` ở khối trên không đổi — chỉ khối VẼ đổi.
-    const _blk = _kind === 'c' ? (KHOI_THEO_ACT[p.castAct] || 'c')
+    // Bộ có khối BAY riêng thì bay đọc khối ấy, không còn ghim một khung của khối ĐI nữa.
+    // `_kind` giữ nguyên 'w'/'r' ⇒ ràng buộc `_lopHien === (_kind==='a'||'c')` không đổi.
+    const _blk = _bayBo ? 'f'
+               : _kind === 'c' ? (KHOI_THEO_ACT[p.castAct] || 'c')
                : _kind !== 'a' ? _kind
                : !(p.equip && p.equip.vukhi) ? 'p'
                : (DANH_HAI_NHAT[p.sect] && p.nhat2) ? 's' : 'a';
@@ -19332,7 +19360,8 @@ function drawPlayer(p){
     // 16. Đọc thẳng HS_FRAMES là bộ 32 khung chỉ chạy được nửa vòng rồi lặp.
     const _n = nvSoKhungBo(p.sect, _tier, _gv, _blk, p._hw) || HS_FRAMES[_kind];
     const _TAU = Math.PI * 2;
-    const _idx = _kind === 'c' ? clamp((Math.min(1, castK) * _n) | 0, 0, _n - 1)
+    const _idx = _blk === 'f' ? ((now / BAY_NHIP) | 0) % _n
+               : _kind === 'c' ? clamp((Math.min(1, castK) * _n) | 0, 0, _n - 1)
                : _kind === 'a' ? clamp((atkK * _n) | 0, 0, _n - 1)
                : _kind === 'h' ? clamp((((NV_GIAT_GIAY - (p.hurtT || 0)) / NV_GIAT_GIAY) * _n) | 0, 0, _n - 1)
                : _kind === 'd' ? clamp((((p.deadT || 0) / 1.2) * _n) | 0, 0, _n - 1)
@@ -19347,6 +19376,9 @@ function drawPlayer(p){
     // castK = 0 lúc đánh thường — nên khung đứng im ở 0.
     _spr = heroSprite(p.sect, _tier, _gv, _kind, clamp(_idx, 0, _n - 1), _act, _ps.back, _sw, _blk, p._hw);
     window.__khoiVe = _blk;   // bài kiểm đọc cờ này
+    // Chỉ số KHUNG đang vẽ — bài kiểm đếm nó để biết khối có CHẠY hay đứng hình. Đo điểm
+    // ảnh thay cho việc này là đo cả nền trôi lẫn hào quang đập; xem vết sẹo `test_dongbodo`.
+    if (window.TEST_MODE) window.__khungVe = _blk + ':' + clamp(_idx, 0, _n - 1);
     // ── NỘI SUY GIỮA HAI KHUNG LIỀN NHAU — chỉ cho khối CHẠY ─────────────────────────
     // ĐO: sải chân một vòng / số khung = quãng bàn chân dịch mỗi khung.
     //     đi   126,6px / 32 khung =  3,96px

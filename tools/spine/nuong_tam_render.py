@@ -29,6 +29,14 @@ CAO_THAN = 160          # chiều cao thân chuẩn
 TAM_X    = 129          # tâm ngang
 MOC      = {'i': 0, 'w': 16, 'a': 48, 'c': 64, 'r': 80}
 SO       = {'i': 16, 'w': 32, 'a': 16, 'c': 16, 'r': 16}
+# BẢNG HAI — phải trùng `NV_MOC2`/`HS_FRAMES` trong game.js.
+# ⚠ Khối `f` (BAY) là PHẦN MỞ RỘNG của đường tấm liền, KHÔNG có trong `KHUNG2` của
+#   `nuong_nv.py`: gói Spine không có hoạt cảnh bay. Bộ nào có nó thì khai trong
+#   `NV_BO_CO_BAY` bên game.js — hỏi bảng ấy, đừng hỏi chỉ số ô có rỗng không.
+MOC2     = {'h': 0, 'p': 8, 's': 20, 'd': 36, 'j': 46, 'q': 56, 'n': 62, 't': 68,
+            'e': 74, 'f': 84}
+SO2      = {'h': 8, 'p': 12, 's': 16, 'd': 10, 'j': 10, 'q': 6, 'n': 6, 't': 6,
+            'e': 10, 'f': 8}
 # nhún hai bước một vòng, biên độ 3,1% — đúng bằng khối đi thật của game
 NHUN_BIEN = 0.031
 
@@ -138,6 +146,14 @@ def main():
     cfg = json.load(open(sys.argv[1], encoding='utf-8'))
     ra = cfg['ra']
     sheet = Image.new('RGBA', (COT * O_W, 6 * O_H), (0, 0, 0, 0))
+    # ⚠ BẢNG HAI VẼ ĐÈ LÊN TỆP ĐANG CÓ, không dựng lại từ trắng. Nó giữ 9 khối cũ (trúng đòn,
+    #   chết, ngồi, nói, nhảy múa…) mà đợt này không đụng tới; dựng lại từ trắng là xoá sạch
+    #   chúng trong im lặng — đúng kiểu hỏng mà `ISO_NEO` đã ghi.
+    ra2 = cfg.get('ra2')
+    sheet2 = None
+    if ra2:
+        sheet2 = (Image.open(ra2).convert('RGBA') if os.path.exists(ra2)
+                  else Image.new('RGBA', (COT * O_W, 6 * O_H), (0, 0, 0, 0)))
 
     # ── nguồn ──────────────────────────────────────────────────────────────────
     ngd, ngo = {}, {}
@@ -155,41 +171,53 @@ def main():
         return ngo[ref['nguon']][ref.get('hang', 0)][ref['khung']]
 
     for khoi, sp in cfg['khoi'].items():
-        n = SO[khoi]; moc = MOC[khoi]
+        b2 = sp.get('bang') == 2
+        tam = sheet2 if b2 else sheet
+        if tam is None:
+            raise SystemExit('khối %r khai bang:2 mà cfg thiếu "ra2"' % khoi)
+        n = (SO2 if b2 else SO)[khoi]; moc = (MOC2 if b2 else MOC)[khoi]
         khung = sp['khung']                       # danh sách ref, sẽ kéo giãn cho đủ n
         lat = sp.get('lat', False)
         for i in range(n):
             src = khung[int(i * len(khung) / n)]
             if sp.get('neo') == 'o':
-                dat_o(sheet, moc + i, lay_o(src), sp['cao_goc'], sp['nen'], lat)
+                dat_o(tam, moc + i, lay_o(src), sp['cao_goc'], sp['nen'], lat)
                 continue
             nh = 0.0
             if sp.get('nhun'):
                 nh = -NHUN_BIEN * abs(np.sin(np.pi * 2 * i / n))
-            dat(sheet, moc + i, lay(src), nh, lat)
+            dat(tam, moc + i, lay(src), nh, lat)
 
     os.makedirs(os.path.dirname(ra), exist_ok=True)
     sheet.save(ra, quality=94, alpha_quality=100, method=6)
     print('NƯỚNG XONG: %s  %s' % (ra, sheet.size))
+    if sheet2 is not None:
+        sheet2.save(ra2, quality=94, alpha_quality=100, method=6)
+        print('NƯỚNG XONG: %s  %s' % (ra2, sheet2.size))
 
     # ── TỰ KIỂM ngay tại chỗ: đúng hợp đồng chưa ───────────────────────────────
     a = np.array(Image.open(ra).convert('RGBA'))[..., 3] > 16
+    a2 = np.array(Image.open(ra2).convert('RGBA'))[..., 3] > 16 if ra2 else None
     xau = 0
     # ⚠ Khối neo theo Ô giữ nguyên chuyển động của bản vẽ gốc — kể cả cú lao người nhấc chân
     #   khỏi đất. Ở đó "bàn chân lệch" là THỨ PHẢI CÓ, không phải lỗi; vẫn IN ra để đọc được,
     #   nhưng không tính vào số lỗi. Khối thu theo hộp bao thì lệch chân vẫn là lỗi như cũ.
     neoO = {k for k, v in cfg['khoi'].items() if v.get('neo') == 'o'}
-    for khoi in SO:
+    cham = list(cfg['khoi'].keys())
+    for khoi in [k for k in SO if k in cham] + [k for k in SO2 if k in cham]:
+        b2 = cfg['khoi'][khoi].get('bang') == 2
+        A = a2 if b2 else a
+        SOx, MOCx = (SO2, MOC2) if b2 else (SO, MOC)
         ds, cs, ts = [], [], []
-        for i in range(SO[khoi]):
-            k = MOC[khoi] + i
-            s = a[(k // COT) * O_H:(k // COT) * O_H + O_H, (k % COT) * O_W:(k % COT) * O_W + O_W]
+        for i in range(SOx[khoi]):
+            k = MOCx[khoi] + i
+            s = A[(k // COT) * O_H:(k // COT) * O_H + O_H, (k % COT) * O_W:(k % COT) * O_W + O_W]
             if not s.any():
                 print('  ⚠ ô %d (%s) RỖNG' % (k, khoi)); xau += 1; continue
             ys, xs = np.where(s)
             ds.append(ys.max()); cs.append(ys.max() - ys.min() + 1); ts.append((xs.min() + xs.max()) / 2)
-        print('  %-2s: chân %d..%d · cao %d..%d · tâm %.0f..%.0f'
-              % (khoi, min(ds), max(ds), min(cs), max(cs), min(ts), max(ts)))
+        print('  %-2s%s: chân %d..%d · cao %d..%d · tâm %.0f..%.0f'
+              % (khoi, '(b2)' if b2 else '', min(ds), max(ds), min(cs), max(cs), min(ts), max(ts)))
         if max(ds) - min(ds) > 3:
             if khoi in neoO:
                 print('     · bàn chân lệch %d px — neo theo ô, đây là cú lao người của bản vẽ gốc'
