@@ -445,7 +445,7 @@ window.QUESTS = [
   // cứng với nó; thêm phiến thứ tám là lớp vết nứt tụt về 0 ở nấc cuối mà không lỗi nào báo.
   // Cũng đừng cho DRUE làm Trấn Ải: mỗi map đúng MỘT con, `TRAN_AI_TONG` suy từ BOSS_DEFS.
   { id:'c8q1', chapter:'VIII · Người Thứ Bảy', lv:116, npc:'laotuong', map:'nhanmon',
-    type:'talk', targetNpc:'thumo',
+    type:'talk', targetNpc:'thumo', need:1,
     name:'Bảng Gỗ Bảy Cái Tên',
     desc:'"Ta giữ cái bảng từ hôm hạ Tướng Quân Reptile Sunstone Flats. Bảy cái tên, bốn cái đã bị gạch. Cái thứ năm là RELL. Cái thứ sáu là ngươi." Brann đưa bảng gỗ, rồi ngồi xuống. "Cái thứ bảy chưa bị gạch, vì chưa ai chứng minh được là nó nên bị gạch. Mang xuống cho Sylas — ông ấy khắc, ông ấy đọc được nét ai."',
     rew:{ xp:795454, silver:66000 } },

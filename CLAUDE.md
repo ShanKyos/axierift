@@ -3930,15 +3930,40 @@ phép thử ngược phải DUY NHẤT**, và phải đếm số lần xuất hi
 ## ⚔ LỰC CHIẾN · 🎁 NHẬN QUÀ · ✹ DẢI TRẠNG THÁI
 
 Ba thứ ship cùng một đợt theo ảnh mẫu chủ dự án đưa. Gác chung: **`tests/test_lucchien.js`**
-(9 mệnh đề, ba phép thử ngược đều đỏ).
+(10 mệnh đề, sáu phép thử ngược đều đỏ).
 
 | | ở đâu |
 |---|---|
 | Công thức | `LC_HE` + **`lucChien(p)`** — cửa DUY NHẤT |
 | Phân rã | `LC_NGUON` + **`lcPhanRa()`** · chi tiết `lcChiTiet(id, tongDong)` |
-| Bảng | `renderLucChien()` → `#panel-lucchien` · nút HUD `#btn-lc` trong `#cd-nut` |
+| Bảng | `renderLucChien()` → `#panel-lucchien` · nút HUD `#btn-lc` trong **`#lc-khung`** |
 | Quà | `QUA_DK` · `QUA_SK` · `renderQua()` → `#panel-qua` · `quaNhanMoc()` · `quaNhanHet()` |
 | Trạng thái | **`TT_DINH`** + `capNhatTrangThai()` → `#trang-thai` (cột PHẢI, trên bản đồ nhỏ) |
+
+### ⌗ KHUNG LỰC CHIẾN LÀ MỘT UI RIÊNG, KHÔNG PHẢI MỘT CHIP NHÉT VÀO KHUNG CHÂN DUNG
+
+Bản đầu đặt hai nút trong `#cd-nut`, nằm bên trong `#cd-phai` — tức cùng một cột với hai thanh
+máu/mana. Chủ dự án nhìn ảnh chụp và chốt: *"cho nó ra ngoài hẳn 1 UI kế bên thanh máu đi"*.
+Nay `#lc-khung` là một khung riêng — vành đồng và nền lấy **đúng công thức của `#chan-dung`** —
+và cả hai nằm trong một hàng `#hud-dau`.
+
+⚠ **`width:min(238px,40vw)` DỜI TỪ `#hud-left` XUỐNG `#chan-dung`.** Cột trái nay chứa cả một
+hàng rộng hơn khung chân dung; khoá bề rộng ở cột là khung Lực Chiến bị bóp hoặc tràn. Con số
+giữ nguyên, chỉ đổi chỗ nó bám vào ⇒ hai thanh máu/mana không đổi lấy một điểm ảnh nào.
+
+⚠ **`margin-bottom` CỦA MỘT KHỐI TÍNH VÀO CHIỀU CAO HÀNG.** `#chan-dung` giữ `margin-bottom:5px`
+thì `align-items:stretch` kéo khung bên cạnh cao thêm đúng 5px — đo được **83 vs 88**, hai mép
+dưới lệch nhau. Lề ngoài phải nằm trên `#hud-dau`. *Lề của một khối không được là thứ quyết định
+chiều cao khối bên cạnh nó.*
+
+⚠ **ĐO BỀ RỘNG BẰNG NHÃN DÀI NHẤT, ĐỪNG ĐO BẰNG NHÃN ĐẦU TIÊN.** Ở 106px thì "LỰC CHIẾN" vừa,
+còn "NHẬN QUÀ" — sau khi chừa 13px cho chấm đỏ — đọc thành **"NHẬN …"**. Nay 120px.
+`test_lucchien §6b` hỏi `scrollWidth > clientWidth` chứ không nhìn ảnh chụp.
+
+⚠ **`§6` giữ BA VẾ, bỏ vế nào cũng lọt một kiểu hỏng:** không lồng trong `#chan-dung` (hỏi cây
+DOM, không suy từ toạ độ) · không đè lên khung chân dung · cao bằng nó. Ba phép thử ngược đều đỏ.
+
+Màn hẹp (≤820px) thì bỏ nhãn chữ, khung tụt về 58px — để không đẩy chân dung ra khỏi mép trái.
 
 ### ⚠ NĂM DÒNG PHÂN RÃ SUY TỪ HỆ ĐANG CHẠY, KHÔNG CHÉP TỪ ẢNH MẪU
 
@@ -5794,6 +5819,86 @@ và lỗi báo ra không nhắc gì tới ESM.
 ⚠ Khi nhảy thẳng `player.level` trong test, phải tự gọi `vhAutoLearn()` — game thật gọi nó qua
 `gainXp()` → `unlockNotices()` mỗi lần lên cấp.
 
+### ☠☠ BÀI KIỂM IN "FAIL" MÀ THOÁT 0 — `reg.sh` ĐẾM NÓ LÀ XANH
+
+`tools/reg.sh` chấm đỏ/xanh **bằng MÃ THOÁT** (`rc=$?`). Một bài kết thúc bằng
+`console.log(ok ? 'PASS' : 'FAIL')` rồi hết hàm thì Node thoát **0** — tức nó in ra chữ FAIL
+ở giữa log và bảng tổng kết vẫn đếm nó là XANH. **Hai bài đã sống như thế rất lâu**
+(`test_story` · `test_mobbalance`), và lượt hồi quy gần nhất báo `206/206 xanh` trong khi cả hai
+đang tự nhận là hỏng.
+
+⇒ **Bài nào in ra một PHÁN QUYẾT thì bắt buộc phải `process.exit(ok ? 0 : 1)`.** Đã rà cả bộ
+và vá sáu bài cùng họ: hai bài trên, cộng `test_flinch` · `test_golden` · `test_hero` ·
+`test_moblevels` (bốn bài này đang XANH thật, nhưng chúng sẽ câm đúng kiểu ấy vào ngày chúng đỏ).
+Quét lại bất cứ lúc nào:
+
+```bash
+cd tests && for f in test_*.js; do grep -qE 'process\.exit' "$f" || \
+  grep -lE "'FAIL'|\"FAIL\"|'PASS'" "$f"; done
+```
+
+**Và cái giá thật không nằm ở mã thoát — nó nằm ở chỗ KHÔNG AI ĐỌC LOG CỦA MỘT BÀI XANH.**
+Cả hai bài đều đỏ vì **cảnh dựng đã mục**, không phải vì sản phẩm hỏng, và mỗi thứ mục đi
+một kiểu — đây mới là phần đáng nhớ:
+
+| bài | khẳng định đỏ | nó là gì |
+|---|---|---|
+| `test_story` | `questCount === 35` | chuỗi nay **51** mục — con số chép cứng đã mục |
+| `test_story` | `idsContiguous` (`v === i+1`) | id nay là **chuỗi `c<chương>q<số>`**, không còn là số 1..N |
+| `test_story` | `allHaveText` (`need > 0`) | **LỖI THẬT** — `c8q1` là mục `talk` duy nhất trong 11 mục thiếu `need:1` |
+| `test_mobbalance` | 12 chỗ "gần cổng không hạ được" | **cả 12 đều là lỗi của PHÉP ĐO** — xem ba ý dưới |
+
+**⇒ `questCount === 35` đổi thành SÀN (`>= 40`), không đổi thành 51.** Thay 35 bằng 51 chỉ là
+lên dây lại đúng quả mìn đó: thêm một nhiệm vụ là bài đỏ vì một lý do chẳng liên quan gì tới thứ
+nó định gác. Thứ nó định gác là *chuỗi bị cụt hay rỗng đi trong im lặng* — sàn bắt đúng chuyện
+đó, còn phần "không thủng ở giữa" thì `idsHopLe` gác chặt hơn hẳn một con số tổng: id phải đúng
+khuôn `c<chương>q<số>`, không trùng, số thứ tự trong mỗi chương phải 1..N, chương phải gom
+thành khối và đi 0,1,2,… **và tiền tố `cN` phải khớp con số in trên nhãn chương** (một mục mang
+id `c5q1` mà nhãn ghi "IV · …" là đúng kiểu lỗi chép-dán khi chèn thêm mục, và `reqMain` là CHỈ SỐ
+nên nó trượt theo trong im lặng).
+
+**⇒ `test_mobbalance` đã đo SAI ba thứ cùng lúc**, và mỗi cái là một bài học riêng:
+
+1. **Bảng `CASES` chép cứng cấp map.** Nó ghi `['daohoa', 1]` — đúng hồi Đào Hoa là map khởi đầu.
+   Nay `daohoa` là Plant Tribe Glade `min: 36`, map khởi đầu là `corran`. Tức bài thả một nhân vật
+   **cấp 1 vào giữa bầy quái lv38** rồi kết luận là cân bằng hỏng. Bảng còn bỏ sót 4 map có bãi quái.
+   ⇒ Suy từ `md.min` và từ chính `MAPS`; thêm map mới là tự có mặt.
+2. **Đo NHÂN VẬT TRẦN.** CLAUDE.md đã ghi nguyên văn cho `XP60PLUS_ANCHORS` rằng đo "không trang bị"
+   thì từ cấp 10 trở lên nhân vật chết trước khi giết được con nào — **bài này đang làm đúng cái đó.**
+   Đo lại cả hai lối trên cùng một lượt chạy: trần **6/33** chỗ hỏng, mặc đồ đúng cấp **0/33**.
+3. **`m.hp = def.hp` ĐÈ LÊN MÁU THẬT — nặng nhất.** `def.hp` trong `MOBS` chỉ là **trọng số tương đối**
+   ("con này dày hơn bạn cùng cấp"); máu thật do `mobHp(def)` tính qua cả đường cong cân bằng.
+   Đo ở `bandao`: `def.hp` **1790** vs `mobHp` **744** ⇒ mọi trận dài gấp **2,4 lần** thực tế, và
+   `m.maxHp` thì vẫn 744 nên máu còn lớn hơn máu trần. *Một bài tên là "mobbalance" mà đo những con
+   số hệ cân bằng không dùng tới.* ⇒ Để `spawnMob` quyết máu; nó là cửa duy nhất.
+
+**⚠ VÀ KHI ĐO LẠI CHO ĐÚNG THÌ NHIỄU LỘ RA.** Với một lượt bốc đồ, biên máu còn lại mỏng nhất ra
+48% · 50% · 43% qua ba lượt chạy — chỉ dư 3 điểm trên sàn 40%, tức sẽ đỏ vì xúc xắc. Nhiễu dồn
+vào đúng MỘT cảnh (`Axie Sa Ngã` lv38 ở cửa `daohoa`/`loimon`): cùng cảnh ấy, bảy lượt bốc đồ ra
+dải **17–52%** và thời gian hạ swing 4,2s → 25s, trong khi một cảnh lành chỉ dải 2 điểm.
+Chữa bằng cách **HẠ NHIỄU, không hạ sàn** — lấy trung vị của `LOT` lượt bốc đồ. Đo để chọn `LOT`
+chứ đừng đoán (biên dư trên sàn, ba lượt mỗi mức):
+
+| | dư trên sàn 40% | thời gian |
+|---|---|---|
+| `LOT=1` | 8 · 10 · **3** | 12s |
+| `LOT=3` | **2** · 8 · 5 | 26s |
+| `LOT=5` | 13 · 16 · **6** | 38s |
+| **`LOT=7`** | **13 · 10 · 12** | 50s |
+
+⇒ `LOT = 7`, và bài **in ra biên còn lại** mỗi lượt để thấy nó mỏng đi *trước* khi nó đỏ — một bài
+chỉ nói PASS/FAIL thì không ai biết mình đang đứng cách vực bao xa. 50 giây còn rất xa trần 260s.
+
+**⚠ CẢ HAI BÀI NAY TỰ KIỂM CẢNH DỰNG TRƯỚC KHI CHẤM.** `test_mobbalance` đòi mỗi cảnh phải có bãi
+quái **và đã mặc ≥ 4 ô đồ** — vì cách hỏng dễ nhất là rơi ngược về đúng phép đo "nhân vật trần"
+vừa gỡ. Thử ngược: cho `autoEquipBest` thành no-op ⇒ chốt tự kiểm bắt (`ô đồ đã mặc: 0`), không
+phải một mệnh đề nào đỏ nhầm.
+
+**⚠ `questPanel`/`storyTab` của `test_story` TRƯỚC ĐÂY ĐƯỢC ĐO RỒI VỨT ĐI** — hai biến ấy được
+tính ở trong `evaluate` nhưng không có mặt trong phép tính `ok`, nên bảng Nhật Ký có thể vẽ ra
+**rỗng** mà bài vẫn xanh. Nay tính vào (thử ngược: `renderQlog` vẽ rỗng ⇒ đỏ, `errors: []`).
+*Một con số đo rồi không chấm thì nó không phải một khẳng định, nó là một dòng log.*
+
 ### ⏱ `rc=124` TRONG HỒI QUY LÀ ĐỒNG HỒ CỦA BỘ CHẠY, KHÔNG PHẢI MỘT KHẲNG ĐỊNH ĐỎ
 
 Log của bài dính kiểu này **cụt giữa chừng** với `Target page … has been closed` chứ không có
@@ -5863,6 +5968,7 @@ suýt kết luận "giả thuyết sai". Bỏ hai dòng đặt lại ấy thì r
 | ~~`test_uigothic ⑥`~~ | *"ở 30% máu, đầu TRÁI thanh cũng tối theo"* | ✅ **ĐÃ SỬA TẬN GỐC, không còn trong bảng này.** Dòng cũ ghi *"thanh máu có thành phần đập theo thời gian"* — **sai**: thanh không đập. Mẫu "đầy" đổi giữa các lượt vì `applyTestBoost()` bốc đồ NGẪU NHIÊN ⇒ `maxHp` khác ⇒ **chữ số khác**, mà que dò đọc đúng một điểm ở `(0,08 · giữa)` — tức đọc thẳng vào con số máu do `.cd-thanh span` vẽ đè. Nay đọc **đỉnh độ đỏ của cả CỘT** (chữ trắng và bóng đen chỉ kéo độ đỏ xuống) ⇒ năm lượt ra đúng cùng một bộ số. Xem mục thanh máu/mana ở khối UI Gothic. *Một bài đỏ theo xúc xắc vẫn phải TRUY tới nguyên nhân — lần này "xúc xắc" là một que dò hỏng, và chính nó che một mệnh đề rỗng suốt nhiều phiên.* |
 | `test_gearlook` | *"cache chân dung không đổi khi thay đồ"* (`cache_doiTheoDo: false`) | **xanh 13/13 lượt chạy lẻ** — 3 trên cây này · 3 trên cây trước · 3 trên chính BẢN ĐÓNG BĂNG của lượt hồi quy đã đỏ · 4 lượt nữa dưới tải CPU giả (6 vòng bận trên 4 lõi) — mà chỉ đỏ **bên trong** một lượt hồi quy đầy đủ. Xanh ở `reg-mg`(236 bài) và `reg-now`. Nó là một cuộc đua TẢI ART: hai thẻ so nhau là *đủ giáp giai 7* với *trần trụi giai 1*, và nếu lớp giáp giai 7 chưa về kịp thì cả hai cùng vẽ ra thân trần ⇒ hai data-URL trùng khít. **Chưa dựng lại được cảnh đỏ**, nên đừng chép câu này như một kết luận đã đóng; thứ đã chứng minh được là nó không đến từ một diff chỉ chạm `MOBS`/`vung` |
 | `test_qablock` | *"dựng cảnh sai: người chơi không ăn đòn nào"* rồi kéo theo 2 FAIL nữa | **xanh 8/8 lượt liên tiếp** khi chạy riêng · chính chú thích trong bài đã ghi nó nhạy với mạch ngẫu nhiên (*"từng xanh chỉ vì may"*) — con quái phải kịp đánh trúng trong 40 khung, máy bận là trượt. Phân biệt bằng `git diff -U0 … | grep '^@@'`: nếu diff không chạm `update`/`hurtPlayer`/`swingFeel`/`shakeDir` thì nó không thể là của mình |
+| `test_canbanglop` | *"chênh ST cao/thấp 3.63× > trần 3.6× (Dark Knight vs Dark Wizard)"* | **đỏ 2/10 trên CẢ HAI cây** trong một phép A/B ghép đôi: cùng một `game.js` byte-cho-byte, chỉ khác layout HUD ⇒ không phải của ai cả. Giá trị đo trải **2,26 – 4,27×** quanh một cái trần đặt ở **3,6** — tức ngưỡng nằm GIỮA dải nhiễu, nên nó đỏ theo xúc xắc vĩnh viễn. Đỉnh tệ nhất (4,27) rơi vào cây ĐỐI CHỨNG. Muốn dứt điểm thì cộng dồn nhiều lượt rồi lấy trung vị (lối `test_hethu §2`), đừng nới trần — nới trần là bỏ luôn thứ nó gác |
 
 ⚠ **VÀ QUE DÒ CỦA CHÍNH PHÉP PHÂN BIỆT ẤY CŨNG HỎNG ĐƯỢC — tôi vừa dẫm.** Nhiều bài đọc `../public/game/game.js` bằng đường dẫn TƯƠNG ĐỐI, nên chạy chúng từ một thư mục không có `public/` bên cạnh là chết `ENOENT` **trước khi một khẳng định nào chạy** — mà `rc=1`, nên nó đọc ra đúng như *"đỏ 3/3, tất định"*. Tôi đã suýt kết luận ngược hẳn. Dựng cảnh cho đúng: một thư mục có `tests/` **và** `public/` cạnh nhau — nhưng ⚠ **`tests/` phải là BẢN CHÉP THẬT, symlink thì không được**: Node phân giải đường thật rồi gặp `package.json` khai `"type":"module"` ⇒ chết ở `require is not defined` **trước khi một khẳng định nào chạy**, và `rc=1` lại đọc ra y hệt *"đỏ 3/3 trên cả hai cây"*. Đã dẫm đúng thế và suýt tuyên bố hai bài là đỏ-có-sẵn mà không có một bằng chứng nào. (`public/` thì symlink được — nó chỉ bị đọc bằng `fs` và qua HTTP, không dính phép tra `package.json`.) ⇒ **Chốt tự kiểm bắt buộc cho mọi phép chạy lẻ: đếm số dòng khẳng định trong log; bằng 0 thì đó là QUE DÒ hỏng, không phải bài đỏ.** Cùng luật với ba bài chép cứng cổng ở trên: *trước khi tin một lượt chạy lẻ, hỏi log xem nó có tới được trang không.*
 

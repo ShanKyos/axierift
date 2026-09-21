@@ -13947,8 +13947,12 @@ function drawSpring(){
   ctx.strokeStyle = 'rgba(35,35,40,.6)'; ctx.lineWidth = 1.5; ctx.stroke();
   ctx.fillStyle = '#5a5a60'; ctx.fillRect(bx-15, by+2, 30, 5); // đế bia
   ctx.save(); ctx.translate(bx, by-8); ctx.rotate(-0.03);
-  ctx.fillStyle = '#2e3438'; ctx.font = '11px "Ma Shan Zheng", serif'; ctx.textAlign = 'center';
-  ctx.fillText('Tịnh', 0, -4); ctx.fillText('Tâm', 0, 9);
+  // ⚠ TÀN DƯ WUXIA ĐÃ DỌN (Quy tắc số 1). Bia này từng khắc 'Tịnh Tâm' bằng phông thư pháp
+  // Trung Hoa "Ma Shan Zheng" — hai chữ tu tiên, và là chỗ DUY NHẤT trong game gọi phông đó
+  // (nó còn chưa từng được nạp, nên máy nào cũng lui về serif). Nay khắc đúng giáo lý Rune của
+  // canon — Nếp Khắc Vừa — bằng phông chữ của chính game.
+  ctx.fillStyle = '#2e3438'; ctx.font = '11px serif'; ctx.textAlign = 'center';
+  ctx.fillText('Khắc', 0, -4); ctx.fillText('Vừa', 0, 9);
   ctx.restore();
   drawCalligraphy('Suối Ký Ức', x, y - r - 14, '#2e6e60', 15);
 }
@@ -25768,10 +25772,15 @@ function lcChiTiet(id, tongDong){
   if (id === 'nv'){
     const s0 = SECTS[player.sect];
     d.push(['Cấp', player.level]);
-    d.push(['Sức Mạnh', player.str + s0.bonus.str + 3]);
-    d.push(['Nhanh Nhẹn', player.agi + s0.bonus.agi + 2]);
-    d.push(['Thể Lực', player.vit + s0.bonus.vit + 3]);
-    d.push(['Linh Lực', player.ene + (s0.bonus.ene || 0)]);
+    // ⚠ TÊN BỐN CHỈ SỐ ĐỌC TỪ `ATTR_INFO`, ĐỪNG CHÉP TAY. Bản đầu chép tay và chép nhầm
+    // luôn một cái tên ĐÃ BỊ GỠ: nó in 'Linh Lực' — một trong năm tên kiếm hiệp mà đợt đổi
+    // sang bốn chỉ số kiểu MU đã thay (`ene` nay là **Năng Lượng**). Bảng Nhân Vật in đúng
+    // tên mới còn bảng này in tên cũ, tức hai bảng cạnh nhau gọi một chỉ số bằng hai tên.
+    // Đọc từ bảng gốc thì đổi tên một lần là mọi chỗ theo, và Quy tắc số 1 không lọt được.
+    d.push([ATTR_INFO.str.name, player.str + s0.bonus.str + 3]);
+    d.push([ATTR_INFO.agi.name, player.agi + s0.bonus.agi + 2]);
+    d.push([ATTR_INFO.vit.name, player.vit + s0.bonus.vit + 3]);
+    d.push([ATTR_INFO.ene.name, player.ene + (s0.bonus.ene || 0)]);
     d.push(['Phòng Thủ', Math.round((player.def + s0.bonus.def + 2) * (s0.defMult || 1))]);
     if ((player.free || 0) > 0) d.push(['⚠ Điểm chưa cộng', player.free]);
   } else if (id === 'do'){

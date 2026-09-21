@@ -25,6 +25,11 @@ const { chromium } = require('playwright');
     return { changedPixels: diff(calm, hit) };
   });
   console.log(JSON.stringify(r), 'errors:', JSON.stringify(errs));
-  console.log(r.changedPixels > 150 && !errs.length ? 'PASS' : 'FAIL');
+  const ok = r.changedPixels > 150 && !errs.length;
+  console.log(ok ? 'PASS' : 'FAIL');
   await b.close();
+  // ⚠ MÃ THOÁT LÀ THỨ `tools/reg.sh` CHẤM — in "FAIL" mà thoát 0 thì bài được đếm là XANH.
+  // Đã xảy ra thật với test_story và test_mobbalance: chúng đỏ suốt một thời gian dài mà bảng tổng
+  // kết vẫn báo đủ xanh. Bài này cùng họ — nó in phán quyết nên nó phải trả mã thoát.
+  process.exit(ok ? 0 : 1);
 })();
