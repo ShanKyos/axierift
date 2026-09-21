@@ -4569,8 +4569,22 @@ bắt ca **nghẽn mạng** — mạng chậm thì không ném lỗi nào, nó c
 **TRẠNG THÁI** `v.ended` mỗi khung chứ không nghe sự kiện `'ended'`: nghe sự kiện thì phải gỡ
 tay, mà một lần gắn sót là cú quay sau chạy hoạt ảnh hai lần.
 
-**⚠ `window.TEST_MODE` PHẢI TẮT PHIM.** 177 bài lái thẳng `kheUocQuay`; thiếu cửa đó là mỗi cú
-quay trong bộ kiểm chờ 10,7 giây.
+**⚠ CỬA TẮT PHIM HỎI `TEST_MODE && !TEST_URL`, KHÔNG HỎI `TEST_MODE` TRƠN.** Bản đầu hỏi trơn, và
+nó **giấu mất tính năng ở đúng chỗ chủ dự án hay xem**: `?test=1` là link chơi thử quen dùng, nên
+vào đó là không bao giờ thấy phim — mà triệu chứng đọc ra y hệt *"phim chưa lên production"*.
+
+⇒ `window.TEST_URL` là cờ RIÊNG suy thẳng từ URL (cùng lối `TEST_DO` đã có), nên phân biệt được
+**"một con người mở link chơi thử"** với **"một bài kiểm tự đặt cờ"**. Đo trước khi đổi chứ không
+đoán: cả ba bài chạm gacha (`test_kheuoc` · `test_kubanner` · `test_kuphim`) đều `goto('/index.html')`
+**trơn** rồi mới `window.TEST_MODE = true` trong `page.evaluate`, còn 14 bài có `?test=1` trong URL
+thì **không bài nào** quay Khế Ước ⇒ bộ kiểm không chậm thêm một giây nào.
+
+⚠ **Đừng gộp vào `TEST_DO`** — cờ đó mang nghĩa *"phát sẵn bộ giai 1"*. Hai nghĩa trên một cờ là
+chỗ sẽ lệch nhau ở đợt sửa kế tiếp.
+
+⚠ **Và `test_kuphim ②` vẫn phải giữ nguyên**: nó đặt cờ bằng `page.evaluate` nên `TEST_URL` rỗng ⇒
+phim vẫn phải tắt. Hai mệnh đề kẹp hai đầu — ② giữ tốc độ bộ kiểm, ⑦ giữ link chơi thử. Thử ngược
+(trả cửa về `TEST_MODE` trơn) làm ⑦ đỏ và ② **vẫn xanh**, đúng như nó phải thế.
 
 **⚠ BỎ QUA LÚC ĐANG CHIẾU thì CHỈ bỏ PHIM.** Nhịp báo phẩm và cái thẻ mới là thứ người chơi trả
 vé để xem; nuốt luôn cả hai vì một cú bấm sốt ruột ở giây đầu là lấy mất đúng thứ họ mua. Bấm

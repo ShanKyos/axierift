@@ -1,6 +1,6 @@
 // PHIM MỞ ĐẦU KHẾ ƯỚC — nhịp 0 của hoạt ảnh quay, một clip Veo 10,7 giây có tiếng.
 //
-// Sáu mệnh đề, và năm trong sáu gác những thứ KHÔNG ném lỗi và KHÔNG hiện ra:
+// Bảy mệnh đề, và năm trong số đó gác những thứ KHÔNG ném lỗi và KHÔNG hiện ra:
 //
 //  ① Tệp phải TẢI ĐƯỢC qua HTTP. `public/game/assets/video/` nằm trong `.gitignore` từ trước,
 //     và production là `git reset --hard` trên VPS — nên một tệp bị chặn ở đó sẽ 404 trên máy
@@ -14,6 +14,9 @@
 //  ⑤ Phim hết thì TỰ sang 'comet' — không có nó thì lớp phủ treo đen vĩnh viễn, mất cả cú quay.
 //  ⑥ Tiếng đi qua SETTINGS.sfx, và nhạc nền được hạ xuống rồi TRẢ LẠI. Quên vế trả lại là nhạc
 //     nền câm hẳn từ cú quay đầu tiên tới hết phiên.
+//  ⑦ ?test=1 thì VẪN chiếu. Cửa tắt phim phải hỏi "bài kiểm đặt cờ" chứ không phải "cờ đang
+//     bật": chủ dự án dùng ?test=1 làm link chơi thử, và một link chơi thử giấu mất tính năng
+//     mới thì nó đang thử một trò chơi khác.
 const { chromium } = require('playwright');
 const PORT = process.argv[2] || '8853';
 const SRC = ['assets/video/summon_mo_dau.webm', 'assets/video/summon_mo_dau.mp4'];
@@ -153,6 +156,34 @@ const SRC = ['assets/video/summon_mo_dau.webm', 'assets/video/summon_mo_dau.mp4'
   else pass('phim chạy hết thì tự sang nhịp sau');
 
   await p.evaluate(() => { try { kuBoQua(); kuBoQua(); } catch(e){} });
+
+  // ── ⑦ ?test=1 VẪN chiếu — link chơi thử của chủ dự án ────────────────────
+  // Cửa tắt phim hỏi `TEST_MODE && !TEST_URL`, nên nó chỉ tắt khi BÀI KIỂM tự đặt cờ. Vào bằng
+  // ?test=1 là một con người mở link chơi thử và họ phải thấy đúng thứ người chơi thấy.
+  // ⚠ Mục này TỰ KIỂM CẢNH DỰNG trước khi chấm: đòi TEST_MODE phải THẬT SỰ bật ở trang này,
+  // nếu không thì "có chiếu phim" là xanh vì một lý do chẳng liên quan gì tới cái cờ.
+  const p7 = await b.newPage({ viewport:{ width:1100, height:800 } });
+  await p7.goto('http://localhost:' + PORT + '/index.html?test=1');
+  await p7.waitForFunction(() => window.__gameReady).catch(()=>{});
+  await p7.waitForTimeout(400);
+  const r7 = await p7.evaluate(() => {
+    startGame('thieulam', null);
+    player.level = 20; player.lvPeak = 20; calcDerived();
+    chiState().ve.gk = 50; window.kheUocQuay('gk', 1);
+    const v = document.getElementById('ku-phim');
+    return { tm: !!window.TEST_MODE, turl: !!window.TEST_URL,
+             hien: !!v && !v.classList.contains('hidden'),
+             pha: window._kuPha || null,
+             phu: !document.getElementById('gacha-wrap').classList.contains('hidden') };
+  });
+  await p7.evaluate(() => { try { kuBoQua(); kuBoQua(); } catch(e){} });
+  console.log('⑦', JSON.stringify(r7));
+  if (!r7.tm || !r7.turl) fail(`dựng cảnh ⑦ hỏng: ?test=1 mà TEST_MODE=${r7.tm} TEST_URL=${r7.turl} — mục này không gác gì`);
+  else if (!r7.phu) fail('dựng cảnh ⑦ hỏng: kheUocQuay không mở được lớp phủ');
+  else if (!r7.hien) fail('?test=1 mà KHÔNG chiếu phim — link chơi thử phải thấy đúng thứ người chơi thấy');
+  else pass('?test=1: TEST_MODE bật mà phim vẫn chiếu');
+  await p7.close();
+
   if (errs.length) { console.log('LỖI TRANG:', errs.slice(0,5).join(' | ')); bad++; }
   console.log(bad ? `\n✖ ${bad} lỗi` : '\n✔ tất cả xanh');
   await b.close(); process.exit(bad ? 1 : 0);

@@ -21828,7 +21828,9 @@ function kuPhimNap(sao){
 // Trả false khi KHÔNG chạy được — chỗ gọi phải tự lui về nhịp 'comet'. Một cú quay đứng im chờ
 // một tệp không tới là mất luôn cả cú quay, mà vé quay thì không hoàn lại được.
 function kuPhimChay(){
-  if (window.TEST_MODE) return false;   // 177 bài hồi quy lái thẳng kheUocQuay, đừng bắt chúng chờ 10,7 giây
+  // Chỉ tắt khi TEST_MODE do BÀI KIỂM đặt. Vào bằng ?test=1 là một con người mở link chơi thử,
+  // và họ phải thấy đúng thứ người chơi thấy — xem chú thích ở window.TEST_URL.
+  if (window.TEST_MODE && !window.TEST_URL) return false;
   const v = kuPhimNap(kuPhamCao());
   if (!v) return false;
   v.classList.remove('hidden');
@@ -23024,6 +23026,14 @@ window.TEST_MODE = /([?&])(test|max)=1/.test(location.search);
 // Riêng ?test=1 (không tính ?max=1) còn phát sẵn nguyên bộ giai 1 — xem tangDoThuNghiem().
 // Cờ RIÊNG, suy thẳng từ URL: bài kiểm ghi đè TEST_MODE nên không dùng chung được.
 window.TEST_DO = /([?&])test=1/.test(location.search);
+// Cờ RIÊNG thứ hai, cùng lý do: "TEST_MODE bật TỪ URL" khác hẳn "một bài kiểm tự đặt TEST_MODE".
+// Chủ dự án dùng ?test=1 làm link chơi thử, nên ở đó phải thấy ĐÚNG thứ người chơi thấy — kể cả
+// phim mở đầu Khế Ước. Còn 240 bài hồi quy thì `goto('/index.html')` trơn rồi mới `window.TEST_MODE
+// = true` trong page.evaluate (đo được: cả ba bài chạm gacha — test_kheuoc · test_kubanner ·
+// test_kuphim — đều đi đường đó, và 14 bài có ?test=1 trong URL thì không bài nào quay Khế Ước).
+// ⚠ Đừng gộp vào TEST_DO: cái đó mang nghĩa "phát sẵn bộ giai 1", hai nghĩa trên một cờ là chỗ
+// sẽ lệch nhau ở đợt sửa kế tiếp.
+window.TEST_URL = window.TEST_MODE;
 // TEST_MODE: hiện checkbox "Chế độ thử nghiệm" trên các màn hình bắt đầu (mặc định ẩn trong index.html)
 if (window.TEST_MODE) setTimeout(() => {
   for (const id of ['max-mode', 'max-mode-intro']) { const l = el(id); if (l) l.style.display = 'block'; }
