@@ -4553,6 +4553,54 @@ hồi quy, và `rc` khác 0 thì script đọc thành "đỏ". Chạy lại lúc
 đỏ KÈM dòng `FAIL` thật. ⇒ **Một dòng "ĐỎ" không kèm thông báo của chính bài kiểm thì chưa phải
 một phép thử ngược**, và script thử ngược phải tách `rc=124` ra khỏi `rc=1`.
 
+## 🎪 BẢN CHƠI THỬ: NGƯỜI THẬT VÀO LÀ **MAX CẤP + FULL TÀI NGUYÊN**
+
+Chủ dự án chốt: *"ở bản http://14.225.204.107/ — khi vào game, hãy cho người chơi max cấp đi, và
+cho họ tài nguyên full để có thể cảm được game."*
+
+Máy làm việc đó **vốn đã có** — `applyTestBoost()`: cấp `MAX_LV` · full Chí Tôn giai 10 +11 Hoàn
+Hảo · Linh Dực bậc 3 · 16 thân Axie · 999 Shard · 999.999 Lumen/Bản Năng · 99 mỗi loại châu ·
+70 Box Kundun · mọi chiêu Lv120 · `moHetCong()` mở mọi cổng tiến trình. Nó chỉ nấp sau `?max=1`,
+tức sau một thứ không ai biết mà gõ. **Đừng dựng một đường boost thứ hai** — sửa cái CỬA, không
+sửa cái máy.
+
+| | |
+|---|---|
+| cửa | `_mayLai` + `_choiThuong` trong `startGame`, ngay trên khối `maxMode` |
+| đường lui | **`?thuong=1`** — vẫn vào được đoạn mở đầu thật |
+| gác | **`tests/test_choithu.js`** (3 mệnh đề, **hai phép thử ngược đều đỏ**) |
+
+### ⚠⚠ CỬA PHÂN BIỆT LÀ `navigator.webdriver`, KHÔNG PHẢI `TEST_MODE` — hai lối hiển nhiên đều sai
+
+Đây là chỗ phải **đo ba lần** mới ra, và cả hai lối đầu đều làm hỏng bộ kiểm **trong im lặng**:
+
+| gác bằng | vì sao sai — đo được |
+|---|---|
+| `!window.TEST_MODE` | **38 bài** `goto('/index.html')` trơn rồi gọi thẳng `startGame` mà không đặt cờ nào (`test_points` · `test_walkrun` · `test_inv` · `test_lopdo` · `test_migration`…) sẽ đột nhiên đo một nhân vật **cấp 120 full BiS** |
+| `TEST_URL` (cờ của phim mở đầu) | **14 bài** có `?test=1` trong URL cũng dính — trong đó `test_ruiro` đo phạt EXP khi chết và `test_tanthu` đo hướng dẫn tân thủ |
+| **`navigator.webdriver`** | **true ở MỌI phiên Playwright/CDP, false ở trình duyệt người thật** — đo trên chính `/opt/pw-browsers/chromium`: `about:blank` ra `true`, kiểu `boolean`. Tách đúng *"một con người mở trang"* khỏi *"một bài kiểm đang lái"*, **không đụng một bài nào trong 254 bài** |
+
+⚠ **`?thuong=1` là đường LUI, đừng gỡ.** Không có nó thì trên production không còn cách nào xem
+lại đoạn mở đầu thật — phát bộ khởi đầu · hướng dẫn tân thủ · chuỗi nhiệm vụ từ ô số 1 — tức một
+nhánh mã còn sống bị che khuất vĩnh viễn khỏi mắt người.
+
+⚠ **Bài kiểm chạy DƯỚI Playwright nên `navigator.webdriver` vốn là true.** Dựng cảnh "người thật"
+phải đè bằng `addInitScript` **trước khi trang nạp** (`Object.defineProperty(Navigator.prototype,
+'webdriver', …)`). Và mục ② **tự kiểm** rằng ở trang KHÔNG đè thì nó thật sự là `true` — nếu
+Playwright đời sau thôi đặt cờ ấy thì cả cửa này mất tác dụng, và ② phải đỏ ngay chứ không được
+xanh vì một lý do chẳng liên quan.
+
+⚠ **Chỉ áp cho NHÂN VẬT MỚI** (`startGame`), không đụng `loadGame`. Ai đã có save thì giữ nguyên
+tiến trình của họ — boost một bản lưu đang chơi là xoá mất thứ người ta đã cày.
+
+⚠ **Ba con số trên băng-rôn nay SUY TỪ DỮ LIỆU.** Bản cũ chép tay *"Cấp 100"* (`MAX_LV` là **120**)
+và *"Linh Dực c2"* (`applyTestBoost` cho **bậc 3**) — hai lời nói dối nằm im rất lâu vì hồi đó chỉ
+ai gõ `?max=1` mới đọc tới. Nay **mọi người vào đều đọc**, nên chúng phải đúng.
+
+**Cái giá, nói thẳng:** production không còn là nơi cảm được **nhịp tiến trình** (3 giờ tới cấp 60,
+cửa cơ chế mở dần theo chương). Đó là đánh đổi chủ dự án đã chốt — đổi chiều sâu lấy việc người lạ
+chạm được vào mọi hệ thống trong ba mươi giây. Muốn xem nhịp thật thì `?thuong=1`.
+
 ## 🎬 PHIM MỞ ĐẦU KHẾ ƯỚC — nhịp 0, và **HAI ĐUÔI LÀ BẮT BUỘC**
 
 Hoạt ảnh quay vốn có sáu nhịp vẽ bằng canvas (`comet · no · hien · the · luoi`). Nay có thêm

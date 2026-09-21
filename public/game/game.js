@@ -22632,12 +22632,41 @@ function startGame(sectKey, quze){
   calcDerived(); player.hp = player.maxHp; player.qi = player.maxQi;
   spaceMacDinh();                 // nhân vật mới cũng phải có sẵn tuyệt chiêu trên phím Space
   applySkillIcons();
-  const maxMode = !RELEASE_BUILD && ((el('chk-max') && el('chk-max').checked) || (el('chk-max-intro') && el('chk-max-intro').checked) || /max=1/.test(location.search));
+  // ═══ BẢN CHƠI THỬ: NGƯỜI THẬT VÀO LÀ MAX CẤP + FULL TÀI NGUYÊN ═══
+  // Chủ dự án chốt: vào http://14.225.204.107/ là cảm được game ngay, không phải cày 3 giờ tới
+  // cấp 60 mới thấy hệ thống nào mở ra. `applyTestBoost()` vốn đã làm đúng việc đó (cấp 120 ·
+  // full Chí Tôn +11 · 16 thân Axie · 999 Shard · mọi cổng tiến trình mở) — chỉ là nó nấp sau
+  // ?max=1, tức sau một thứ không ai biết mà gõ.
+  //
+  // ⚠⚠ CỬA PHÂN BIỆT LÀ `navigator.webdriver`, KHÔNG PHẢI `TEST_MODE`. Đây là chỗ đã đo ba lần
+  // mới ra, và hai lối "hiển nhiên" đều sai:
+  //   · gác bằng `!window.TEST_MODE` ⇒ **38 bài** goto('/index.html') trơn rồi gọi thẳng
+  //     startGame mà không đặt cờ nào (test_points · test_walkrun · test_inv · test_lopdo ·
+  //     test_migration…) sẽ đột nhiên đo một nhân vật cấp 120 full BiS. Cả bộ cân bằng đổi mốc
+  //     trong im lặng — đúng cái bẫy mà chú thích `phatDoKhoiDau` ngay dưới đã cảnh báo.
+  //   · gác bằng `TEST_URL` (cờ của phim mở đầu) ⇒ 14 bài có ?test=1 trong URL cũng dính, trong
+  //     đó test_ruiro đo phạt EXP khi chết và test_tanthu đo hướng dẫn tân thủ.
+  // `navigator.webdriver` là **true ở MỌI phiên Playwright/CDP** và false ở trình duyệt người
+  // thật — đo được (`about:blank` trong chính /opt/pw-browsers/chromium ra `true`, kiểu boolean),
+  // nên nó tách đúng "một con người mở trang" khỏi "một bài kiểm đang lái" mà không đụng một
+  // bài nào trong 254 bài.
+  //
+  // ⚠ `?thuong=1` là đường LUI, đừng gỡ: không có nó thì trên production không còn cách nào xem
+  // lại đoạn mở đầu thật (phát bộ khởi đầu · hướng dẫn tân thủ · chuỗi nhiệm vụ từ ô số 1), tức
+  // một nhánh mã sống bị che khuất vĩnh viễn khỏi mắt người.
+  const _mayLai = (() => { try { return navigator.webdriver === true; } catch { return false; } })();
+  const _choiThuong = /([?&])thuong=1/.test(location.search);
+  const maxMode = !RELEASE_BUILD && !_choiThuong && (!_mayLai
+    || (el('chk-max') && el('chk-max').checked) || (el('chk-max-intro') && el('chk-max-intro').checked)
+    || /max=1/.test(location.search));
   if (maxMode){
     applyTestBoost();
     checkTitles();
-    addFloat(player.x, player.y-50, 'CHẾ ĐỘ THỬ NGHIỆM — Cấp 100, MỌI TÍNH NĂNG TỐI ĐA!', '#7ecbff', 16);
-    addFloat(player.x, player.y-72, 'Full Chí Tôn +11 · Linh Dực c2 · 99 châu · 70 Box Kundun', '#a0ffe9', 13);
+    // ⚠ Ba con số này SUY TỪ DỮ LIỆU, đừng chép tay. Bản cũ ghi "Cấp 100" (MAX_LV là 120) và
+    // "Linh Dực c2" (applyTestBoost cho bậc 3) — hai lời nói dối nằm im rất lâu vì hồi đó chỉ
+    // ai gõ ?max=1 mới đọc tới. Nay mọi người vào đều đọc, nên chúng phải đúng.
+    addFloat(player.x, player.y-50, `BẢN CHƠI THỬ — Cấp ${MAX_LV}, MỌI TÍNH NĂNG TỐI ĐA!`, '#7ecbff', 16);
+    addFloat(player.x, player.y-72, `Full Chí Tôn +11 · Linh Dực bậc 3 · 99 châu · ${(BAOHAP_TIERS.length-1)*10} Box Kundun · 16 thân Axie`, '#a0ffe9', 13);
     addFloat(player.x, player.y-94, 'C nhân vật · V trang bị · B túi đồ · O cài đặt · M bản đồ · K kỹ năng', '#ffd76a', 12);
   } else {
     // ?test=1 (không kèm ?max=1): không lên cấp, không phát tiền — chỉ mặc sẵn bộ giai 1 để
