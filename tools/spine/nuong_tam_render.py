@@ -68,6 +68,16 @@ def tach_luoi(path, hang, cot):
     return out
 
 
+def tach_o(path, hang, cot):
+    """Cắt theo lưới đều nhưng GIỮ NGUYÊN Ô — không lấy hộp bao. Dùng cho `neo:'o'`."""
+    im = Image.open(path).convert('RGBA')
+    W, H = im.size
+    ow, oh = W / cot, H / hang
+    return [[im.crop((int(round(c * ow)), int(round(r * oh)),
+                      int(round((c + 1) * ow)), int(round((r + 1) * oh))))
+             for c in range(cot)] for r in range(hang)]
+
+
 def tach_blob(path):
     """Cắt theo BLOB (dùng khi tấm không xếp trên lưới đều)."""
     im = Image.open(path).convert('RGBA')
@@ -77,7 +87,11 @@ def tach_blob(path):
 
 
 def dat(sheet, k, anh, nhun=0.0, lat=False):
-    """Đặt MỘT khung vào ô k, chuẩn hoá cỡ + neo bàn chân + tâm ngang."""
+    """Đặt MỘT khung vào ô k, chuẩn hoá cỡ + neo bàn chân + tâm ngang.
+
+    Đường CŨ: thu theo HỘP BAO của chính khung. Đúng khi trong khung chỉ có cái thân
+    (khối đi, khối đứng) — hộp bao chính là nhân vật.
+    """
     if anh is None:
         return
     if lat:
@@ -89,6 +103,35 @@ def dat(sheet, k, anh, nhun=0.0, lat=False):
     sheet.alpha_composite(anh, (cx + TAM_X - w // 2, cy + CHAN_Y - h))
 
 
+def dat_o(sheet, k, o, cao_goc, nen, lat=False):
+    """Đặt một khung theo Ô NGUỒN, KHÔNG theo hộp bao của nó.
+
+    ⚠ VÌ SAO PHẢI CÓ ĐƯỜNG THỨ HAI: khung nào có VŨ KHÍ thì hộp bao là (thân + cây gậy),
+    mà cây gậy quét từ trên đầu xuống ngang hông nên hộp bao phình co theo nó. Đo trên gói
+    tấn công 8 hướng, hàng 7: hộp bao cao 244..296 px (lệch 21%) trong khi nhân vật gần như
+    không đổi cỡ. Thu theo hộp bao ở đây là nhân vật PHÌNH TO THU NHỎ theo cây gậy —
+    nhân vật to lên đúng lúc hạ gậy xuống.
+
+    Đường này lấy đúng hai con số ĐO MỘT LẦN trên khung đứng của chính hàng ấy:
+      `cao_goc` — nhân vật cao bao nhiêu px trong ô nguồn
+      `nen`     — bàn chân nằm ở dòng nào trong ô nguồn
+    rồi áp CÙNG MỘT phép biến hình cho cả khối. Máy sinh art đặt nhân vật vào giữa ô theo
+    một mốc cố định, nên giữ nguyên mốc ấy là giữ nguyên mọi chuyển động nó đã vẽ — kể cả
+    cú nhún và cú lao người, thứ mà phép thu theo hộp bao sẽ san phẳng mất.
+    """
+    if o is None:
+        return
+    if lat:
+        o = o.transpose(Image.FLIP_LEFT_RIGHT)
+    tl = CAO_THAN / float(cao_goc)
+    w = max(1, int(round(o.width * tl)))
+    h = max(1, int(round(o.height * tl)))
+    o = o.resize((w, h), Image.LANCZOS)
+    cx, cy = (k % COT) * O_W, (k // COT) * O_H
+    sheet.alpha_composite(o, (cx + TAM_X - int(round(w / 2)),
+                              cy + CHAN_Y - int(round(nen * tl))))
+
+
 def main():
     if len(sys.argv) < 2:
         print(__doc__); sys.exit(2)
@@ -97,15 +140,19 @@ def main():
     sheet = Image.new('RGBA', (COT * O_W, 6 * O_H), (0, 0, 0, 0))
 
     # ── nguồn ──────────────────────────────────────────────────────────────────
-    ngd = {}
+    ngd, ngo = {}, {}
     for ten, n in cfg['nguon'].items():
         if n.get('kieu') == 'blob':
             ngd[ten] = [tach_blob(n['tep'])]
         else:
             ngd[ten] = tach_luoi(n['tep'], n['hang'], n['cot'])
+            ngo[ten] = tach_o(n['tep'], n['hang'], n['cot'])
 
     def lay(ref):
         return ngd[ref['nguon']][ref.get('hang', 0)][ref['khung']]
+
+    def lay_o(ref):
+        return ngo[ref['nguon']][ref.get('hang', 0)][ref['khung']]
 
     for khoi, sp in cfg['khoi'].items():
         n = SO[khoi]; moc = MOC[khoi]
@@ -113,6 +160,9 @@ def main():
         lat = sp.get('lat', False)
         for i in range(n):
             src = khung[int(i * len(khung) / n)]
+            if sp.get('neo') == 'o':
+                dat_o(sheet, moc + i, lay_o(src), sp['cao_goc'], sp['nen'], lat)
+                continue
             nh = 0.0
             if sp.get('nhun'):
                 nh = -NHUN_BIEN * abs(np.sin(np.pi * 2 * i / n))
@@ -125,6 +175,10 @@ def main():
     # ── TỰ KIỂM ngay tại chỗ: đúng hợp đồng chưa ───────────────────────────────
     a = np.array(Image.open(ra).convert('RGBA'))[..., 3] > 16
     xau = 0
+    # ⚠ Khối neo theo Ô giữ nguyên chuyển động của bản vẽ gốc — kể cả cú lao người nhấc chân
+    #   khỏi đất. Ở đó "bàn chân lệch" là THỨ PHẢI CÓ, không phải lỗi; vẫn IN ra để đọc được,
+    #   nhưng không tính vào số lỗi. Khối thu theo hộp bao thì lệch chân vẫn là lỗi như cũ.
+    neoO = {k for k, v in cfg['khoi'].items() if v.get('neo') == 'o'}
     for khoi in SO:
         ds, cs, ts = [], [], []
         for i in range(SO[khoi]):
@@ -137,7 +191,11 @@ def main():
         print('  %-2s: chân %d..%d · cao %d..%d · tâm %.0f..%.0f'
               % (khoi, min(ds), max(ds), min(cs), max(cs), min(ts), max(ts)))
         if max(ds) - min(ds) > 3:
-            print('     ⚠ bàn chân lệch %d px' % (max(ds) - min(ds))); xau += 1
+            if khoi in neoO:
+                print('     · bàn chân lệch %d px — neo theo ô, đây là cú lao người của bản vẽ gốc'
+                      % (max(ds) - min(ds)))
+            else:
+                print('     ⚠ bàn chân lệch %d px' % (max(ds) - min(ds))); xau += 1
     print('  => %s' % ('CÓ LỖI' if xau else 'ĐẠT hợp đồng'))
 
 

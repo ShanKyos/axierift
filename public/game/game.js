@@ -16192,6 +16192,12 @@ const NV_VK_LOP = {
 //
 // Khoá theo lớp của MÓN (`d.sect`), không theo lớp người chơi: món của lớp khác thì không mặc
 // được (itemUsable gác), nhưng đọc theo món mới là cùng một nguồn sự thật với hai dòng trên.
+// Bộ THÂN (đường tấm liền) đã có vũ khí nướng sẵn trong khối RA ĐÒN. Chỉ cần tên bộ — hộp và
+// khung thì đã nằm trong chính bảng khung ấy. Xem `_boCoVk` trong `drawPlayer`.
+const NV_BO_CO_VK = { dwsl1: true };
+// ⚠ `const` ở tầng cao nhất KHÔNG gắn vào `window` — bày ra để bài kiểm tự kiểm được cảnh
+//   dựng (nó phải biết bộ đang vẽ có nằm trong bảng này không), cùng lối `window.CHI_DANH`.
+window.NV_BO_CO_VK = NV_BO_CO_VK;
 const NV_VK_LOP_LOP = { thieulam: 'dkph1', minhgiao: 'sbsm1', toanchan: 'elnb1' };
 function nvVkLop(p){
   const it = p && p.equip && p.equip.vukhi;
@@ -19108,6 +19114,16 @@ function drawPlayer(p){
   // Bộ nào có LỚP VŨ KHÍ nướng sẵn thì cây kiếm đã nằm trong tay rồi — tắt thần khí, không
   // thì trên màn có HAI cây: một cây trong tay và một cây bay lượn cạnh người.
   const _coVkLop = !!nvVkLop(p);
+  // ⚠ BỘ NÀO NƯỚNG SẴN VŨ KHÍ VÀO **KHỐI RA ĐÒN** thì lúc ra đòn cây đã nằm trong tay rồi —
+  // bật thần khí ở đấy là HAI cây trên màn (đã chụp lại: một cây gậy trong tay + một cây bay
+  // trên đầu). Khác `NV_VK_LOP` ở chỗ: bảng kia là một LỚP `vk` cắt riêng, có mặt ở mọi khối;
+  // đây là bộ đi đường TẤM LIỀN, vũ khí nằm sẵn trong nét vẽ nên không tách ra được.
+  //
+  // ⚠ VÀ NÓ CHỈ TẮT Ở KHỐI RA ĐÒN (`_lopHien`), KHÔNG TẮT CẢ ĐỜI. Khối đi/đứng của `dwsl1`
+  // KHÔNG có cây nào trong tay, nên tắt thẳng là đứng trong thành TAY KHÔNG — đúng cái lỗi mà
+  // vế `(!_coAva || _lopHien)` đã phải gỡ một lần rồi ("khoác lên vai thì phải thấy lúc ĐỨNG").
+  const _tier = heroTier(p), _gv = gearVisual(p);
+  const _boCoVk = !!NV_BO_CO_VK[nvBoGoc(p.sect, _tier, _gv) || ''];
   // ⚠⚠ ĐÃ NHẬP VÀO AXIE THÌ VŨ KHÍ VẪN PHẢI HIỆN — chủ dự án chốt (2026-09-17), nguyên văn:
   // *"khi Axie ra chiêu thì sẽ hiện cây vũ khí… nhân vật có thể không hiện nhưng vũ khí sẽ
   // LUÔN xuất hiện để đồng bộ được skill"*.
@@ -19129,7 +19145,7 @@ function drawPlayer(p){
   // kia có lớp `vk` nướng sẵn nên không ai để ý. Chủ dự án chốt: *"trong thành cho vũ khí khoác
   // lên vai (kiểu khu an toàn)"* — khoác lên vai thì phải thấy lúc ĐỨNG, không phải lúc vung.
   // `test_axiedanh §5` gác cả hai chiều (trong thành phải BẬT · ngoài thành đứng yên phải TẮT).
-  const _tkHien = _tkNhap || (!_nhap && !_coVkLop);
+  const _tkHien = _tkNhap || (!_nhap && !_coVkLop && !(_boCoVk && _lopHien));
   // Đã nhập thì vũ khí thuộc về CON AXIE, nên nó neo vào chỗ Axie đứng (độ lệch 0), không neo
   // vào chỗ lớp nhân vật LẼ RA đứng — chỗ đó nay không có ai, cây vũ khí sẽ trôi lơ lửng cách
   // con Axie gần một thân người. Cùng lỗi mà `_nhap` sinh ra để chặn, chỉ đổi vai.
@@ -19223,7 +19239,8 @@ function drawPlayer(p){
     _ps.armR -= 0.22 * _hurt;
     _ps.bob  -= 2.2 * _hurt;
   }
-  const _tier = heroTier(p), _gv = gearVisual(p);
+  // (`_tier`/`_gv` nay khai SỚM — xem `_boCoVk` ở trên. `const` có vùng chết, dùng trước
+  //  chỗ khai là ném ReferenceError mỗi khung mà `node --check` vẫn xanh.)
   // Khai ở đây chứ không trong khối vẽ sprite: chỗ hoà hình (_veThanHoa) nằm NGOÀI khối đó
   // mà vẫn phải dựng lại khung cũ bằng đúng bộ tham số này.
   const _sw = (p.sway || 0) > 0.35 ? 2 : (p.sway || 0) < -0.35 ? 1 : 0;
