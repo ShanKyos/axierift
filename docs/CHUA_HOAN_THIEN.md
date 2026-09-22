@@ -1,147 +1,98 @@
-# Những thứ CHƯA hoàn thiện — 2026-09-20
+# Những thứ CHƯA hoàn thiện — 2026-09-22
 
 > Viết ra để không thứ nào trong đây bị ngầm hiểu là đã xong. Mỗi mục có **số đo** hoặc nói
 > thẳng là chưa đo được. Đọc kèm `docs/CHAM_VIBEATHON.md`.
 >
 > Thứ tự: nặng trước. "Nặng" ở đây nghĩa là *người chơi hoặc giám khảo sẽ gặp*, không phải
 > *tốn công nhất*.
+>
+> ⚠ **Bản 2026-09-20 của chính tệp này đã nói sai bốn mục P1** — nó liệt sáu bài kiểm thoát-0,
+> hai nhánh chưa trộn và bốn con số README như thể còn nguyên, trong khi cả bốn đã đóng trước
+> khi ai đọc lại nó. Một tài liệu "còn thiếu gì" mà không kiểm lại thì nó không chỉ vô dụng: nó
+> **tự tin nói sai**, và người đọc sẽ đi sửa một thứ đã sửa rồi. Bản này khảo sát lại từng mục
+> trên cây `ac31984` chứ không chép mục cũ; những mục đã đóng thì giữ đúng tiêu đề gạch ngang
+> để thấy chúng từng ở đây, theo đúng nếp của `CLAUDE.md`.
 
 ---
 
 ## 🔴 P1 — sẽ gặp, và gặp là thấy ngay
 
-### 1. Sáu bài kiểm in `FAIL` mà thoát 0 ⇒ hồi quy đếm chúng là XANH
+### 1. Metadata repo GitHub chưa chỉnh cho khâu nộp
 
-`tools/reg.sh` chấm bằng **mã thoát**. Bài nào kết bằng `console.log(ok ? 'PASS' : 'FAIL')`
-rồi hết hàm thì Node thoát 0. Dựng lại được trên `main` hôm nay:
-
-| bài | mã thoát | in ra |
-|---|--:|---|
-| `test_story` | 0 | **FAIL** |
-| `test_mobbalance` | 0 | **FAIL** |
-| `test_flinch` · `test_golden` · `test_hero` · `test_moblevels` | 0 | PASS (xanh thật, nhưng sẽ câm cùng kiểu vào ngày chúng đỏ) |
-
-⇒ **Mọi lượt hồi quy từ trước tới nay đều đã bỏ sót hai bài đang tự nhận là hỏng.**
-
-Bản vá có sẵn ở `claude/lucid-ritchie-9rgwpb` (trộn sạch vào `main`, đã thử). Nó vá
-`process.exit(ok ? 0 : 1)` cho cả sáu, và sửa cảnh dựng đã mục của hai bài đỏ.
-
-**Chưa trộn** vì lượt này bị chặn ở cửa quyền; cần chủ dự án duyệt.
-
-### 2. Nhánh phim mở đầu chưa trộn
-
-`claude/eager-dirac-oiyma6` — 10 commit, 24 tệp, **trộn sạch vào `main`, đã thử**:
-
-- `assets/video/summon_mo_dau.mp4` (2,9 MB) + `.webm` (1,45 MB) — clip Veo 10,7 giây có tiếng,
-  chiếu ở nhịp 0 của lượt quay Khế Ước. Có trần cứng 16 giây, hạ nhạc nền còn 0,22, có đường
-  lui khi tải hỏng.
-- Banner nhân vật kiểu key-art cho Khế Ước, dựng bằng art THẬT.
-- Vũ khí cầm tay: trong thành mang bên vai, ngoài thành hiện lúc ra đòn.
-- `tools/sau_tron.sh` — cửa chặn sau-khi-trộn.
-- Hai bài kiểm mới: `test_kuphim.js`, `test_kubanner.js`.
-
-Quét dịch trên nhánh này: **2 chuỗi** chưa dịch (`Bấm phím bất kỳ để bỏ qua [phim]`) — sẽ phải
-thêm vào `lang.js` ngay sau khi trộm.
-
-### 3. `README.md` đang nói sai bốn con số
-
-| README ghi | thật |
-|---|--:|
-| 208 / 218 regressions (nói hai con số khác nhau ở 6 chỗ) | **239** |
-| 13 maps | **15** |
-| 48 mob types | **49** |
-| 50-quest main chain | **51** |
-| "Two regression tests are dice-rolls" | **tám** bài, đã ghi đủ trong `CLAUDE.md` |
-
-Câu *"`&lang=en` puts it in English before the first frame"* nay **gần đúng hẳn**: bot QA chơi
-150 giây ra **0 chuỗi tiếng Việt trên 76.505 lượt vẽ** và **0 dòng trên cả 15 bảng**. Nhưng
-tầng kể chuyện thì chưa (xem mục 5), nên câu ấy vẫn cần một vế phụ nói rõ.
-
-### 4. Repo GitHub chưa chỉnh cho khâu nộp
+Gọi API hôm nay, không suy từ tài liệu:
 
 | | hiện tại | nên là |
 |---|---|---|
 | `description` | `axierift` | một câu thật, có chữ Vibeathon và Axie |
-| `homepage` | `http://14.225.204.107/?test=1` | thêm `&lang=en` — giám khảo mở link đầu là thấy tiếng Việt |
-| `topics` | `axie`, `mmorpg` | thêm `vibeathon`, `axie-infinity`, `browser-game`, `javascript` |
+| `homepage` | `http://14.225.204.107/?test=1` | `https://14-225-204-107.nip.io/?lang=en` |
+| `topics` | `axie`, `mmorpg` | thêm `vibeathon`, `axie-infinity`, `browser-game` |
 
-Còn lại đã ổn: repo **public**, `LICENSE` có và giải thích lý do source-available, CI xanh trên
-`main`, `main` là nhánh mặc định, 0 issue mở.
+`homepage` sai **ba** chỗ cùng lúc: `http` (nay đã có TLS), IP thô (chứng chỉ cấp cho tên
+`nip.io`, mở bằng IP là cảnh báo bảo mật), và `?test=1` — cờ đó nay **thừa**, vì bản demo tự
+nhận ra người thật qua `navigator.webdriver` và cho cấp 120 mà không cần cờ nào.
+
+Đây là thứ **duy nhất** trong cả tệp này mà giám khảo gặp **trước khi** mở game.
+
+Còn lại đã ổn: repo **public** · `LICENSE` có và giải thích lý do source-available · CI xanh
+trên `main` · `main` là nhánh mặc định · 0 issue mở.
 
 ---
 
 ## 🟠 P2 — nợ thật, không chặn khâu nộp
 
-### 5. ~~Tầng kể chuyện còn 190 chuỗi chưa dịch~~ — **ĐÃ TRẢ**, và nó lộ ra một mặt lớn hơn
+### 2. Bảy cây trượng vẫn mang tên tu tiên — Quy tắc số 1
 
-> ⚠ Giữ đúng cái tiêu đề gạch ngang này thay vì xoá trắng: bảng số cũ dưới đây là **cách một
-> phép đo có thể xanh mà không gác gì**, và đó mới là phần đáng nhớ.
+Đây **không** phải chú thích trong mã. Sinh 400 món vũ khí trong game đang chạy rồi lọc, nên
+đó là tên người chơi thật sự đọc:
 
-190 chuỗi kể chuyện (43 mô tả chiêu · 81 chính tuyến · 64 phụ tuyến · 2 tên NPC) đã dịch xong;
-bảy trần trong `test_dichen §④` nay **đều là 0** và là một **bánh cóc**, không còn là hạn mức —
-thêm một nhiệm vụ mà quên khai bản dịch là bài đỏ ngay, chứ không lặng lẽ ăn vào phần trần dư.
+`Huyền Cổ Thần Trượng` · `Cửu Thế Phục Sinh Trượng` · `Mỹ Xà Quyền Trượng` ·
+`Thiên Lôi Trượng` · `Mãng Xà Trượng` · `Thiên Linh Quyền Trượng` · `Cốt Linh Trượng`
 
-**Nhưng phép đo ấy đo sai thứ, và đây là bài học:** `§④` bơm từng chuỗi vào một `<div>` RỜI do
-chính nó dựng, nên nó chứng minh `lang.js` **DỊCH ĐƯỢC** chuỗi — không chứng minh chuỗi **tới
-được mắt người chơi**. Quét lại bằng cách mở đúng mấy cái bảng ra (5 lớp × 7 cấp × mọi NPC, lái
-bằng `tryTalk()` thật) thì lòi ra một tập hoàn toàn khác, **418 dòng**, mà cả năm mục cũ đều mù:
+Bản tiếng Anh đã dịch sang tên MU trung tính từ lâu, nhưng **bản tiếng Việt là bản gốc**, nên
+luật vẫn đang bị phạm ở đúng chỗ nó tính. Cùng đợt đó soát luôn `Rượu Hổ Cốt` (một món tiêu
+hao mang tên rượu thuốc kiếm hiệp, còn 8 chỗ trong `game.js`).
 
-| ở đâu | dòng | vì sao không mục nào thấy |
-|---|--:|---|
-| `#panel-quest` — thoại NPC, quầy thuốc, quầy rương, Trại Ngựa, Vực Thẳm, Truy Nã | **377** | bảng chỉ dựng ra khi đứng cạnh một người và bấm E |
-| `#forge-content` — Lò Hỗn Độn | 16 | mở được, nhưng `§③` đọc `innerText` của panel cha |
-| lời nhắc góc màn · thẻ nhiệm vụ · bảng Kỹ Năng · Nhật Ký | 25 | chúng là HUD, không phải `#panel-*` |
+⚠ Đổi tên trượng thì phải sửa **cả chú thích trong `VK_ANH`** (dòng 1847-1853) — bảy dòng đó
+đang chép đúng tên cũ để tra cứu, nên sửa một nửa là hai nửa nói hai đằng.
 
-⇒ Đã dịch hết, và **`test_dichen §⑥` nay mở bảng NPC THẬT** (hai map × hai cấp × mọi NPC) rồi
-quét trong đó, có chốt tự kiểm đòi ≥20 lượt bắt chuyện trước khi chấm. *Một phép quét không mở
-được cái bảng thì nó không gác được cái bảng ấy — và nó trả về những con số trông hoàn toàn
-bình thường.*
-
-Và một mặt thứ hai lộ ra ngay sau đó, lớn không kém: **băng-rôn giữa màn (`zoneBanner`) —
-59/65 chuỗi THUẦN chưa dịch**. `§②` bọc `fillText` nên chỉ thấy chuỗi nào tình cờ vẽ ra trong
-~30 giây bài chạy, mà băng-rôn thì phần lớn nổ ở một **mốc giờ thật** hoặc ở một sự kiện **một
-lần trong đời**. Nó lộ ra hoàn toàn do may: lượt chạy hôm nay rơi trúng mốc "10 phút nữa Đàn
-Vàng". Đã dịch hết (59 `EXACT` + 32 `RULES`).
-
-**Còn nợ, nói thẳng:** chưa có bài kiểm nào gác mặt băng-rôn — `§②` vẫn là một phép đo phụ
-thuộc giờ chạy. Cửa đúng là một mục mới quét thẳng `zoneBanner` trong `game.js` rồi hỏi bộ dịch,
-đúng lối `tools/` đang làm; chưa làm vì nó cần một bộ dựng thể hiện cho 43 khuôn có `${}`.
-
-### 6. Tàn dư kiếm hiệp trong tên vật phẩm — Quy tắc số 1
-
-Bảy cây vũ khí vẫn mang tên tu tiên: `Cửu Thế Phục Sinh Trượng` · `Huyền Cổ Thần Trượng` ·
-`Mãng Xà Trượng` · `Mỹ Xà Quyền Trượng` · `Thiên Linh Quyền Trượng` · `Thiên Lôi Trượng` ·
-`Cốt Linh Trượng`. Bản tiếng Anh đã dịch sang tên MU trung tính, nhưng **bản tiếng Việt vẫn
-phạm luật** — và bản tiếng Việt mới là bản gốc. Cần một đợt đổi tên riêng.
-
-Cùng đợt đó nên soát luôn `Rượu Hổ Cốt` (một món tiêu hao mang tên rượu thuốc kiếm hiệp).
-
-### 7. Ba nhánh còn nội dung chưa trộn
+### 3. Ba nhánh còn nội dung chưa trộn
 
 | nhánh | commit | nội dung | trộn được? |
 |---|--:|---|---|
-| `claude/practical-volta-1kg6na` | 3 | Suối Ký Ức → **Suối Nước Nóng** bằng art thật; gỡ 69 dòng vector + hoa đào kiếm hiệp (sửa **cả** Quy tắc 1 lẫn Quy tắc 3) | ❌ **đụng `game.js`**, phải gỡ tay |
+| `claude/practical-volta-1kg6na` | 3 | Suối Ký Ức → **Suối Nước Nóng** bằng art thật; gỡ 69 dòng vector + hoa đào kiếm hiệp (sửa **cả** Quy tắc 1 lẫn Quy tắc 3) | ❌ đụng `game.js`, phải gỡ tay |
 | `claude/gracious-darwin-3zowyj` | 11 | 41 avatar từ gói Axie (20 → 61 lựa chọn), thợ rèn người lùn, Kỵ Sĩ Ronin, thiết kế thị trấn | chưa thử |
-| `luu/covat-cu` | 16 | Khế Ước quay ra **Cổ Vật** thay vì Chimera; ra soát lại hệ tiền tệ; luật xịt theo mốc khi rèn | chưa thử |
+| `luu/covat-cu` | 16 | Khế Ước quay ra **Cổ Vật** thay vì Chimera; rà soát hệ tiền tệ; luật xịt theo mốc khi rèn | chưa thử |
 
-Sáu nhánh còn lại (`capnhat-tailieu` · `pc-only` · `tach-killmob` · `thiet-ke-online` ·
-`demo-axie-showcase` · `backup-before-stage-combat`) là **ảnh chụp đông lạnh của đời game
-trước**, không có tổ tiên chung với `main` — `git merge` từ chối thẳng. Đừng cố trộn chúng.
+Hai nhánh đông lạnh còn sót trên remote (`demo-axie-showcase` · `backup-before-stage-combat`)
+là **ảnh chụp của đời game trước**, không có tổ tiên chung với `main` — `git merge` từ chối
+thẳng. Đừng cố trộn. Bốn nhánh đông lạnh cũ khác đã không còn trên remote.
 
-### 8. `test_mobbalance` báo 11 ca "không hạ được" — là lỗi của PHÉP ĐO, không phải cân bằng
+### 4. `cheatExec` vẫn ship
 
-Chính nhánh `lucid-ritchie` đã truy ra: bảng cảnh chép cứng `['daohoa', 1]` trong khi
-`daohoa.min` nay là 36 ⇒ thả nhân vật **cấp 1** vào bầy quái **cấp 38**; đo nhân vật **trần**
-(CLAUDE.md đã ghi phép đo đó vô hiệu từ cấp 10); và `m.hp = def.hp` đè lên máu thật (đo ở
-`bandao`: 1790 vs 744 ⇒ mọi trận dài gấp **2,4 lần** thực tế). Đo lại cho đúng: **0/33 hỏng**.
+`window.cheatExec` còn nguyên trong `game.js`. Vô hại ở bản chơi một mình — nhưng tầng online
+đã chạy thật (bóng người · chat · PvP), nên **phải gỡ trước khi có bất cứ thứ gì CHUNG**: kho
+đồ trên máy chủ, bảng xếp hạng, hay bất kỳ con số nào máy chủ tin từ client. Hôm nay ai mở
+console cũng tự phát đồ được.
 
-Nợ ở đây là: **bản vá chưa trộn**, nên con số "cân bằng quái" hiện chưa ai gác thật.
+### 5. Mặt băng-rôn giữa màn chưa có bài kiểm dịch nào gác
+
+`test_dichen §②` bọc `fillText`, nên nó chỉ thấy chuỗi nào **tình cờ vẽ ra** trong ~30 giây
+bài chạy. Mà `zoneBanner` phần lớn nổ ở một **mốc giờ thật** (Hung Thần 0/4/8/12/16/20h · Đàn
+Vàng 2/6/10/14/18/22h · Vực Nứt 0/6/12/18h) hoặc ở một sự kiện **một lần trong đời**.
+
+Hệ quả đo được: `test_dichen §②` **đỏ theo ĐỒNG HỒ**, không theo mã — đỏ lúc 01:50-02:12 UTC
+(trong cửa sổ Đàn Vàng), xanh lúc 02:21. Cửa đúng là một mục mới quét thẳng `zoneBanner` trong
+`game.js` rồi hỏi bộ dịch; `grep zoneBanner tests/test_dichen.js` hôm nay ra **0**.
+
+⚠ Bộ dò cho mục ấy phải cẩn thận: bản đầu thay mọi `${…}` bằng một mốc `§` rồi hỏi, mà phép
+thay ấy **phá mọi luật `RULES` có `(\d+)`** ⇒ báo 102/108 chưa dịch trong khi luật khớp hoàn
+hảo với bản THẬT. Chỉ chuỗi KHÔNG có `${}` mới kết luận được theo lối ấy.
 
 ---
 
 ## 🟡 P3 — đã biết từ lâu, có ghi chú tại chỗ
 
-### 9. `tools/do_nhipcap.cjs` không đo được từ cấp 60 trở lên
+### 6. `tools/do_nhipcap.cjs` không đo được từ cấp 60 trở lên
 
 Các mốc 60 · 65 · 70 · 80 · 100 · 119 trả về **0 XP/giờ** ⇒ "giờ để lên cấp 60" in ra
 `Infinity`. **Không phải do đợt tam giác lớp Axie** — đã dựng worktree ở commit ngay trước đó
@@ -150,38 +101,57 @@ và ra đúng cùng bảng số 0. Cũng không phải máy bận. **Chưa truy 
 ⇒ Mọi con số nhịp cấp từ 60 trở lên trong tài liệu (33,4 giờ tới cấp 120) hiện **không đo lại
 được**. Chúng vẫn có thể đúng, nhưng đừng trích như một phép đo còn hiệu lực.
 
-### 10. Tám bài kiểm đỏ theo xúc xắc
+### 7. Bảy bài kiểm đỏ theo xúc xắc — và một trong số đó KHÔNG phải xúc xắc
 
-`test_canbanglop §2` · `test_gearlook` · `test_uigothic ⑥` · `test_qablock` · `test_sandat`
-(nhanmon) · `test_bophan §4` · `test_ngamchuot §4` · `test_tamphap §3` · `test_phutdau §4`.
+`test_canbanglop §2` · `test_gearlook` · `test_qablock` · `test_bophan §4` ·
+`test_ngamchuot §4` · `test_tamphap §3` · `test_phutdau §4` · `test_dichen §②` (xem mục 5).
+
 Tất cả đã có phân tích và số đo trong `CLAUDE.md`, kèm cách phân biệt "đỏ do mình" với "đỏ do
-xúc xắc" (chạy riêng 3 lượt trên cây của mình, rồi 3 lượt trên cây trước).
+xúc xắc": chạy riêng 3 lượt trên cây của mình, rồi 3 lượt trên cây trước commit của mình.
 
-⚠ **`test_sandat` (nhanmon) KHÔNG phải nhiễu** — nó là một **lỗi thật bắn thưa**: một nhánh
-dời chỗ quái quên gọi `collideObstacles`. Cần một đợt riêng quét năm nhánh dời quái trong
-`update()`. Đừng nới ngưỡng.
+⚠ **`test_sandat` (nhanmon) KHÔNG nằm trong danh sách trên** — nó là một **lỗi thật bắn thưa**:
+một nhánh dời chỗ quái quên gọi `collideObstacles`, nên thỉnh thoảng một con nằm ngoài sàn sau
+3600 khung đuổi. Nó xanh khi chạy riêng, nên rất dễ đọc nhầm là nhiễu rồi bỏ qua. Cần một đợt
+riêng quét **năm** nhánh dời quái trong `update()`. **Đừng nới ngưỡng.**
 
-### 11. Tầng map chưa dựng lại
+`test_uigothic ⑥` và `test_tamphap §2` đã **sửa tận gốc** và rời khỏi danh sách này — cả hai
+hoá ra là **que dò hỏng**, không phải mã hỏng, và `⑥` còn che một mệnh đề rỗng suốt nhiều phiên.
 
-Bảy phó bản `pb_*` đã **gỡ hẳn** (máy chạy phó bản thì giữ nguyên, nó chạy theo dữ liệu). Ba
-thứ từng treo trên đó phải nhớ trả về khi dựng lại: địa hình Tầng Sâu · nguồn Cốt · `COT_DONG[*].map`.
-`cotBossVung` hiện là **cầu tạm, không phải thiết kế**.
+### 8. Tầng map phó bản chưa dựng lại
 
-### 12. Nợ art và nợ mã lẻ
+Bảy phó bản `pb_*` đã **gỡ hẳn**; máy chạy phó bản thì giữ nguyên và nó chạy theo dữ liệu —
+thêm một khoá vào `MAPS` + một khoá cùng tên vào `window.DUNGEONS` là phòng chạy lại ngay.
 
-- **Thân nền chưa cắt lớp** — lớp giáp đắp lên tấm thân liền `dw1`, nên đeo mỗi ô `chan` thì
-  ống chân đè mất vạt áo dài.
+Ba thứ từng treo trên đó phải nhớ trả về khi dựng lại: địa hình Tầng Sâu · nguồn Cốt ·
+`COT_DONG[*].map`. `cotBossVung` hiện là **cầu tạm, không phải thiết kế**.
+
+### 9. Nợ ART — mã không chữa được
+
+- **`NV_GIAP` chỉ còn 2/35 tổ hợp** `lớp|giai` (`baidasan|7` · `thieulam|1`). Thiếu khoá thì
+  rơi về đường vẽ cũ, nên phần lớn bộ giáp mặc vào **trông y hệt thân trần**. (Trước có 3;
+  `baidasan|1` đã phải gỡ vì art của nó thuộc về thân CŨ — mặc vào là hoá thành người khác.)
 - **51% quãng đường đi/chạy là trượt chân nằm sẵn trong bản vẽ** (`tảiĐất` chỉ ~49% `sảiBọc`).
-  Không giá trị `SAI_CHAN` nào chữa nổi; phải vẽ lại vòng đi/chạy.
-- **Spellblade thiếu hẳn một hàng bảng khung** (`sbhd1` 96 ô so với 112 của bốn bộ kia).
-- **`NV_GIAP` mới có 3/35 tổ hợp** `lớp|giai` — thiếu khoá thì rơi về đường vẽ cũ.
-- **Thân người từ xa chưa đồng bộ `hurtT`**, nên Axie của NGƯỜI KHÁC gồng được nhưng chưa giật
-  được khi họ ăn đòn.
-- **`cheatExec` vẫn ship** — vô hại ở bản chơi một mình, nhưng phải gỡ trước khi có bất cứ thứ
-  gì chung (kho đồ trên máy chủ, xếp hạng).
-- **Tầng Sâu chưa có nhiệm vụ phụ nào** — nợ duy nhất còn lại của bảng 32 mục.
+  Không giá trị `SAI_CHAN` nào chữa nổi; phải vẽ lại vòng đi/chạy. Đặc tả đặt hàng + ngưỡng
+  nghiệm thu: `docs/DAT_HANG_TUONG_DI.md`.
+- **Thân nền chưa cắt lớp** — lớp giáp đắp lên tấm thân liền, nên đeo mỗi ô `chan` thì ống
+  chân đè mất vạt áo dài. Cần một gói Spine THÂN TRẦN cho mỗi lớp.
+- **Spellblade thiếu hẳn một hàng bảng khung** (`sbhd1` 96 ô so với 112 của bốn bộ kia), nên
+  khối chạy của nó chỉ đọc được nửa đầu vòng.
+- **Cầm rìa thì cây bay ra vẫn là hình KIẾM** — nấc lùi `TK_LOP` theo lớp. Sửa được bằng một
+  dòng art trong `VK_ANH`, không sửa được bằng mã.
 
-### 13. Chưa chốt / chưa thiết kế
+### 10. Nợ mã lẻ
+
+- **Thân người từ xa chưa đồng bộ `hurtT`** — Axie của NGƯỜI KHÁC gồng được (đã đồng bộ cú ra
+  đòn) nhưng chưa giật được khi họ ăn đòn.
+- **Tầng Sâu chưa có nhiệm vụ phụ nào** — `grep "map:'deep'"` ra **0**; nợ duy nhất còn lại
+  của bảng 32 mục.
+- **PvP chỉ có đòn thường.** Chiêu thức đi qua `hurtMob` ở hàng chục chỗ với hình học riêng;
+  nối vào PvP là một đợt riêng. Nói ra thay vì nối nửa vời.
+- **Chat không lưu lịch sử** — máy chủ không có cơ sở dữ liệu, mà cron deploy khởi động lại nó
+  mỗi khi `server/` đổi. Lịch sử là việc của giai đoạn có tài khoản thật.
+
+### 11. Chưa chốt / chưa thiết kế
 
 | | |
 |---|---|
@@ -190,3 +160,39 @@ thứ từng treo trên đó phải nhớ trả về khi dựng lại: địa h�
 | Chibi 5 lớp Axie ở màn tạo nhân vật | chưa thiết kế; `CHIBI_CFG` vẫn phân biệt bằng bóng dáng NGƯỜI |
 | Mốc thay "Giày +6 mở dáng chạy" | avatar bay/chạy làm mốc cũ mất nghĩa |
 | `via` ở dải 4 (cấp 40-59) | ~3% số ngày cả ba vỉa nằm ngoài tầm với của người chơi dải đó |
+
+---
+
+## ✅ Đã đóng kể từ bản 2026-09-20 — giữ lại để không ai đi sửa lần nữa
+
+### ~~Sáu bài kiểm in `FAIL` mà thoát 0~~
+
+`process.exit(ok ? 0 : 1)` nay có ở cả sáu (`test_story` · `test_mobbalance` · `test_flinch` ·
+`test_golden` · `test_hero` · `test_moblevels`). Hai bài từng tự nhận là hỏng đã được truy ra
+và **cả hai đỏ vì cảnh dựng đã mục, không vì sản phẩm**: `test_story` chốt cứng `questCount
+=== 35` (nay 51) và id dạng số (nay `c<chương>q<số>`); `test_mobbalance` đo nhân vật TRẦN ở
+cấp 38 và đè `m.hp = def.hp` — đo lại cho đúng ra **0/33 hỏng**.
+
+### ~~Nhánh phim mở đầu chưa trộn~~
+
+`claude/eager-dirac-oiyma6` và `claude/lucid-ritchie-9rgwpb` đều đã là **tổ tiên của `main`**.
+
+### ~~README nói sai bốn con số~~
+
+Đã sửa, và tầng kể chuyện cũng đã dịch xong: **190 chuỗi → 0**, trên **bốn** đợt quét độc lập,
+mỗi đợt lôi ra thứ đợt trước mù (418 dòng bảng NPC · 1.044 lượt mở bảng thật · 59/65 chuỗi
+băng-rôn). Bảy trần trong `test_dichen §④` nay là **bánh cóc**, không còn là hạn mức.
+
+### ~~Không có HTTPS~~
+
+`deploy/bat_https.sh` (nip.io + Let's Encrypt, một dòng chạy trên VPS) đã trộn vào `main` và
+đã chạy: `https://14-225-204-107.nip.io/`. Nó giữ luôn tầng online — `net.js` tự đổi sang
+`wss://` khi trang chạy trên https, nên TLS **không** đánh đổi mất tính năng nào.
+
+### ~~Bộ tự chỉnh chất lượng quá chậm, và dừng ở 75%~~
+
+Ba lỗi câm cùng một gốc: `ms` của `requestAnimationFrame` **bị lượng tử hoá** (đo 2.241 mẫu ra
+**đúng hai giá trị**, 33,3 và 16,7), nên trung vị mili-giây là một phép đo mù. Nay cả hai chiều
+hỏi **tỉ lệ khung trượt nhịp**. Đo lại cùng cảnh: lắng ở nét 50% sau **27 giây**, **57,9 fps ·
+4% khung trượt** (trước: dừng ở 85%, ~47 fps, ~50% trượt, và **không bao giờ** trả lại chất
+lượng khi tải giảm).
