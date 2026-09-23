@@ -16753,10 +16753,12 @@ const MR_STATE = { i:'idle', q:'idle', n:'idle', t:'idle', e:'idle', j:'idle',
 // Khối nào phải ĐỨNG YÊN ở khung 0 thay vì chạy vòng. Thiếu bảng này thì nhân vật vừa trúng
 // đòn vừa nhấp nhô theo nhịp thở, và cái xác thì thở suốt 1,2 giây nằm xuống.
 const MR_GHIM = { h:1, d:1 };
-// Nhịp riêng của gói, đọc từ manifest.states[].fps. Engine tính chỉ số khung theo `wph`
-// (quãng đường đã đi) cho w/r và theo đồng hồ cho i — nên FPS ở đây CHỈ dùng cho hai khối
-// đứng yên; đi/chạy vẫn phải bám bàn chân, đúng luật `SAI_CHAN` đã ghi.
-const MR_FPS_LUI = { idle: 5, walk: 7, run: 11, attack: 10 };
+// ⚠ CỐ Ý KHÔNG ĐỌC `manifest.states[].fps`. Gói đề nghị idle 5 · walk 7 · run 11 · attack 10,
+// nhưng engine này KHÔNG chạy khung theo đồng hồ ở hai khối quan trọng nhất: `w`/`r` tính chỉ
+// số theo `wph` (QUÃNG ĐƯỜNG đã đi) để bàn chân không trượt đất, còn `a`/`c` tính theo `atkK`
+// để khung chạm lưỡi rơi đúng lúc sát thương nổ. Ép FPS của gói vào đó là dựng lại đúng lỗi
+// "bàn chân trượt đất" mà `SAI_CHAN` đã phải trả giá một lần. Chỉ khối `f` (bay) chạy theo
+// đồng hồ, và nó đọc `frameDurationMs` của manifest bay qua `mrNhipBay()`.
 
 // Cánh của gói: mỗi lớp một biến thể. Wing 1 MG là bản dựng riêng cho project (README ghi rõ
 // không phải art gốc Webzen), Wing 1 DW để dành cho ngày Dark Wizard có gói tương tự. Khai theo
@@ -16793,7 +16795,9 @@ function mrNapDL(){
     // Màn chờ vẽ ĐÚNG MỘT KHUNG ở chế độ giảm chuyển động, nên art về sau mà không ai gọi vẽ
     // lại thì nó nằm đó mãi với ô trống. `ccChoAnh` chỉ hẹn được trên `Image`, mà thứ về muộn
     // nhất ở đây là hai tệp JSON — không phải ảnh. Nên gọi thẳng.
-    if (typeof titleVeLai === 'function') try { titleVeLai(); } catch (e) {}
+    // Màn chờ có thể chưa dựng (bài kiểm gọi thẳng `startGame`) — nuốt lỗi ở đây là đúng:
+    // vẽ lại màn chờ là việc PHỤ, nó không được phép làm hỏng lượt nạp gói.
+    if (typeof titleVeLai === 'function'){ try { titleVeLai(); } catch { /* màn chờ chưa dựng */ } }
   }).catch(() => {});
 }
 // Lớp này có đọc gói không. Cửa DUY NHẤT — `heroSprite`, `drawPlayer` và bài kiểm đều hỏi nó,
