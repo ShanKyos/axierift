@@ -1,0 +1,102 @@
+{
+  "version": 1,
+  "grid": {
+    "columns": 8,
+    "rows": 8,
+    "normalized_sheet": [
+      2048,
+      2048
+    ],
+    "frame": [
+      256,
+      256
+    ]
+  },
+  "directions": [
+    "south",
+    "south-west",
+    "west",
+    "north-west",
+    "north",
+    "north-east",
+    "east",
+    "south-east"
+  ],
+  "pivot": [
+    0.5,
+    0.94
+  ],
+  "render_order": [
+    "wing_back",
+    "body_armor_weapon",
+    "skill_vfx"
+  ],
+  "grounded_attack_with_wing": true,
+  "attacks": {
+    "dual-slash": {
+      "name": "Dual Slash / Chem chu X",
+      "fps": 12,
+      "frames_per_direction": 8
+    },
+    "horizontal-slash": {
+      "name": "Horizontal Slash / Chem ngang",
+      "fps": 12,
+      "frames_per_direction": 8
+    },
+    "spin-slash": {
+      "name": "Spin Slash / Xoay kiem",
+      "fps": 14,
+      "frames_per_direction": 8
+    },
+    "straight-thrust": {
+      "name": "Straight Thrust / Dam thang",
+      "fps": 13,
+      "frames_per_direction": 8
+    },
+    "rising-slash": {
+      "name": "Rising Slash / Hat tu duoi len",
+      "fps": 12,
+      "frames_per_direction": 8
+    },
+    "fire-dash-slash": {
+      "name": "Fire Dash Slash / Chem lua va luot",
+      "fps": 15,
+      "frames_per_direction": 8
+    },
+    "light-storm": {
+      "name": "Light Storm / Bao anh sang",
+      "fps": 11,
+      "frames_per_direction": 8
+    }
+  },
+  "armors": [
+    {
+      "id": "t01-legendary",
+      "name": "Ma Thuat / Legendary"
+    },
+    {
+      "id": "t02-plate",
+      "name": "Thiet Ban / Plate"
+    },
+    {
+      "id": "t03-dragon",
+      "name": "Long Than / Dragon"
+    },
+    {
+      "id": "t04-storm-crow",
+      "name": "Phong Vu / Storm Crow"
+    },
+    {
+      "id": "t05-valiant",
+      "name": "Dung Si / Valiant"
+    },
+    {
+      "id": "t06-thunder-hawk",
+      "name": "Loi Phong / Thunder Hawk"
+    },
+    {
+      "id": "t07-hurricane",
+      "name": "Cuong Phong / Hurricane"
+    }
+  ]
+}
