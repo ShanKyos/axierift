@@ -48,6 +48,11 @@ const { chromium } = require('playwright');
     }
     if (goc) break;
   }
+  // ⚠ `reg.sh` XUẤT SẴN `AXIE_REPO` cho đúng chuyện này — hỏi nó trước khi đoán. Hai đường
+  // `/home/user/...` dưới là chỗ đoán cho máy của người viết; trên máy CI kho nằm ở
+  // `/home/runner/work/<kho>/<kho>` nên cả hai trượt, `goc` ra null và mục quét tệp RỖNG RUỘT.
+  if (!goc && process.env.AXIE_REPO && fs.existsSync(path.join(process.env.AXIE_REPO, MOC)))
+    goc = process.env.AXIE_REPO;
   if (!goc) for (const g of ['/home/user/axiewuxia', '/home/user/axie-wuxia'])
     if (fs.existsSync(path.join(g, MOC))) { goc = g; break; }
   const py = goc ? fs.readFileSync(path.join(goc, MOC), 'utf8') : '';

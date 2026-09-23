@@ -50,6 +50,21 @@ jobs:
           SHARD: ${{ matrix.shard }}/6
         run: bash tools/reg.sh "$RUNNER_TEMP/reg-${{ matrix.shard }}"
 
+      # ⚠ IN THẲNG LOG BÀI ĐỎ RA ĐÂY, đừng chỉ dựa vào artifact. Artifact tải về qua
+      # blob storage — một cổng mà nhiều môi trường (kể cả sandbox đang phát triển bộ này)
+      # KHÔNG với tới được. Lúc ấy người đọc chỉ thấy đúng TÊN bài đỏ, không thấy nó đỏ vì
+      # gì, và phải đoán. Một dòng `tail` ở đây rẻ hơn hẳn một vòng đoán.
+      - name: In log bài đỏ
+        if: failure()
+        run: |
+          D="$RUNNER_TEMP/reg-${{ matrix.shard }}"
+          [ -f "$D/all.log" ] || { echo "không có all.log — reg.sh chết trước khi chạy bài nào"; exit 0; }
+          for f in $(awk '$1!=0 && $1 ~ /^[0-9]+$/ {print $2}' "$D/all.log"); do
+            echo "::group::$f"
+            tail -60 "$D/$f.log" 2>/dev/null || echo "(không có log)"
+            echo "::endgroup::"
+          done
+
       # Chỉ giữ log khi ĐỎ. Giữ cả lúc xanh là mỗi lượt chạy đẻ ra 245 tệp log không ai đọc.
       - name: Log của mảnh đỏ
         if: failure()

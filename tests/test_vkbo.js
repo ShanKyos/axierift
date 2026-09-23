@@ -11,7 +11,7 @@
 // ⚠ Bài vẫn phải kẹp HAI ĐẦU, chỉ là đổi đầu thứ hai: bộ CÓ trong bảng thì tắt sạch, bộ KHÔNG
 // có trong bảng thì vẫn phải bật. Bỏ vế sau là gỡ hẳn thần khí khỏi game cũng xanh — mà bốn
 // lớp kia vẫn đang sống nhờ nó.
-const { chromium } = require(process.env.PW || '/opt/node22/lib/node_modules/playwright');
+const { chromium } = require(process.env.PW || 'playwright');
 const PORT = process.argv[2] || 8853;
 
 (async () => {
