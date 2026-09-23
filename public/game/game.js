@@ -16050,7 +16050,7 @@ const NV_ANH = {};
 // dựng bằng đường cho tới khi có đủ art giáp. Cách dựng tệp: .claude/skills/spine-nuong/SKILL.md
 // Tên tệp = viết tắt lớp + viết tắt TÊN BỘ, để nhìn tên là biết đang xem thân nào:
 //   dkcw1 = Dark Knight · Crimson Warrior   · dwsc1 = Dark Wizard · Spellcaster
-//   sbhd1 = Spellblade  · Hybrid Duellist  · elfar1 = Sylvan Ranger · Archer
+//   elfar1 = Sylvan Ranger · Archer        · (Spellblade ĐÃ RỜI sang gói `magic-runtime`)
 //   dlcm1 = Dark Lord   · Commander
 // Ba bộ này thay hẳn dk1/dw1/sb1 đời cũ. Đời cũ sai hai chuyện, và cả hai đều KHÔNG sửa được
 // bằng mã:
@@ -16063,9 +16063,13 @@ const NV_ANH = {};
 // Cả năm lớp nay cùng một hợp đồng: không mảnh nào rủ xuống dưới hông, tóc khớp tranh anh
 // hùng, 0/96 khung có mảnh rời khi nướng.
 const NV_BO = {                                    // lớp|giai -> tệp bảng khung THÂN
-  'thieulam|1': 'dkcw1', 'baidasan|1': 'dwsl1', 'minhgiao|1': 'sbhd1',
+  'thieulam|1': 'dkcw1', 'baidasan|1': 'dwsl1',
   'toanchan|1': 'elfar1', 'bug|1': 'dlcm1',
 };
+// ⚠ `minhgiao` CỐ Ý KHÔNG CÓ MẶT — Spellblade đã rời hẳn sang gói `magic-runtime` (xem khối
+// `MR_*`). Bộ Spine cũ `sbhd1`/`sbsm1` đã gỡ khỏi đĩa theo yêu cầu chủ dự án, nên cắm lại một
+// dòng ở đây là trỏ vào tệp không tồn tại và nhân vật TÀNG HÌNH — không phải lui về bộ cũ.
+// `mrDung(sect)` là cửa duy nhất hỏi "lớp này đọc gói nào"; đừng dựng cửa thứ hai ở đây.
 // ⚠ `dwsl1` (Dark Wizard · Soul Lord) đi đường TẤM LIỀN, không phải năm lớp rời — nên nó
 // KHÔNG khai trong `NV_LOP_HOP`, và đó là chủ ý chứ không phải sót. Art tới đây là ảnh render
 // ĐÃ DẸP, tách lớp từ một tấm dẹp thì không có cách nào (cùng lý do 7 bộ đời cũ vẫn đi đường
@@ -16096,7 +16100,10 @@ const NV_GIAP = {
   'thieulam|7': 'dkph1',
   'bug|7': 'dlbc1',        // Dark Lord — trượng bay, không có lớp vũ khí cầm tay
   'toanchan|7': 'elnb1',   // Sylvan Ranger — bộ Ngọc Bích, cung CẦM TAY
-  'minhgiao|7': 'sbsm1',   // Spellblade — bộ Sinh Mệnh, kiếm CẦM TAY, KHÔNG mũ
+  // ⚠ `minhgiao` KHÔNG CÒN Ở ĐÂY. Bảy bộ giáp của Spellblade nay nằm trong `manifest.json`
+  // của gói `magic-runtime` và tra bằng `mrGiap(giai)` — bảng này chỉ còn phục vụ hệ NV_* cũ.
+  // Hệ quả PHẢI biết: `giaiCoArt('minhgiao')` nay trả 1 (không tìm thấy giai nào), nên `?test=1`
+  // và bài kiểm nào hỏi "lớp này có art ở giai nào" phải đi qua `mrGiap`, không qua hàm đó.
 };
 // Lớp này có art giáp ở giai nào? Lấy giai CAO NHẤT có art. Có hàm này thì ?test=1 và bài kiểm
 // không ai phải thuộc lòng "Dark Wizard thì giai 7, Dark Knight thì giai 1", và thêm bộ mới
@@ -16172,9 +16179,6 @@ const NV_LOP_HOP = {
   'dwsc1':  { h:[82,91,74,83,3,83,174,185], t1:[67,132,121,75,42,107,168,121],
               c:[61,156,131,103,70,141,127,121], a:[95,121,53,71,31,111,136,146],
               t2:[65,124,132,76,35,114,157,139], n:[83,87,75,57,0,79,178,173] },
-  'sbhd1':  { t1:[70,130,114,93,40,111,166,117], c:[63,154,142,105,68,141,130,120],
-              a:[89,123,92,94,31,113,140,137], t2:[67,123,124,76,31,115,158,137],
-              n:[81,86,109,75,0,79,180,172] },
   'elfar1': { h:[75,84,80,92,0,77,175,194], t1:[67,128,123,80,41,108,167,119],
               c:[62,151,128,108,67,143,128,120], a:[93,119,57,80,26,110,143,143],
               t2:[65,124,132,79,39,115,150,141], n:[79,87,83,61,0,79,181,177] },
@@ -16191,12 +16195,6 @@ const NV_LOP_HOP = {
   // (thần khí), nên nướng bằng cờ --khongvk. Xem NV_VK_LOP — cố ý không khai.
   // Sylvan Ranger — bộ Ngọc Bích. Bộ ĐẦU TIÊN có lớp `h` (tóc sau): elf tóc dài nên khe
   // 背后头发 có nét vẽ thật, khác bốn bộ trước đều rỗng lớp này.
-  // Spellblade — bộ Sinh Mệnh. Lớp `n` (đầu) là TÓC TRẦN, không mũ: chủ dự án chốt lớp này
-  // không đội mũ, và art của gói vốn đã vẽ vậy nên không phải xử gì thêm ở mã.
-  'sbsm1':  { h:[80,94,109,89,6,86,174,182], t1:[70,128,113,91,38,111,167,118],
-              c:[63,149,141,108,66,141,130,123], a:[89,119,95,96,26,111,148,143],
-              vk:[0,0,240,300,0,45,240,255], t2:[62,116,130,84,31,107,155,152],
-              n:[81,86,110,73,0,79,181,176] },
   'elnb1':  { h:[85,96,70,79,5,88,170,177], t1:[71,132,116,75,39,115,165,118],
               c:[70,159,121,101,71,142,127,119], a:[92,125,59,75,33,115,137,139],
               vk:[0,58,240,214,30,79,210,216], t2:[63,126,132,80,36,119,156,136],
@@ -16217,7 +16215,9 @@ const NV_LOP_HOP = {
 // Có mặt ở đây thì thần khí tự tắt (xem `_tkHien`), nếu không là hiện HAI cây.
 const NV_VK_LOP = {
   'kiem|7': 'dkph1',        // Phượng Kiếm — nướng từ chính gói Spine của bộ Phoenix
-  'makiem|7': 'sbsm1',      // Kiếm Sinh Mệnh — Spellblade cầm kiếm, combo hai nhát a↔s
+  // ⚠ Spellblade ĐÃ RỜI khỏi bảng này: gói `magic-runtime` cầm vũ khí bằng tệp RỜI đặt theo
+  // socket hai tay của từng khung, nên nó không cần — và không có — một bảng khung nướng sẵn
+  // cho mỗi cặp dòng×giai. Đó chính là thứ cho phép 7 giáp × 7 vũ khí dùng chung một bộ art.
   'truongcung|7': 'elnb1',  // Cung Thiên Mệnh — cung thì PHẢI cầm tay, bắn bằng cung bay
                             // lơ lửng thì không đọc ra động tác giương cung nào cả.
 };
@@ -16241,7 +16241,7 @@ const NV_BO_CO_VK = { dwsl1: true };
 // ⚠ `const` ở tầng cao nhất KHÔNG gắn vào `window` — bày ra để bài kiểm tự kiểm được cảnh
 //   dựng (nó phải biết bộ đang vẽ có nằm trong bảng này không), cùng lối `window.CHI_DANH`.
 window.NV_BO_CO_VK = NV_BO_CO_VK;
-const NV_VK_LOP_LOP = { thieulam: 'dkph1', minhgiao: 'sbsm1', toanchan: 'elnb1' };
+const NV_VK_LOP_LOP = { thieulam: 'dkph1', toanchan: 'elnb1' };
 function nvVkLop(p){
   const it = p && p.equip && p.equip.vukhi;
   const d = it && itemDef(it);
@@ -16452,7 +16452,7 @@ function nvMoc(kind){ return NV_BANG2[kind] ? NV_MOC2[kind] : NV_MOC[kind]; }
 // HS_FRAMES.r mặc định. Kiểm bằng phép chia: bềRộngBảng/bềRộngÔ = 16 và bềCao/caoÔ = 7.
 // Quên khai là lớp đó chỉ đọc NỬA ĐẦU vòng chạy — chân lệch nhịp so với lớp khai đủ.
 const NV_KHUNG_R = { dkcw1: 32, dwsc1: 32, elfar1: 32, dlcm1: 32,
-                     dkph1: 32, dlbc1: 32, elnb1: 32, sbsm1: 32,
+                     dkph1: 32, dlbc1: 32, elnb1: 32,
                      // ⚠ `dwsl1` khai 8 chứ không phải 16, và đó là nói THẬT chứ không phải hạ
                      // chuẩn: nguồn chỉ có 8 pha. Khai 16 thì ô 88-95 là bản chép của 80-87,
                      // tức nửa sau vòng chạy trùng khít nửa trước — đúng cái `test_khungchay`
@@ -16461,9 +16461,10 @@ const NV_KHUNG_R = { dkcw1: 32, dwsc1: 32, elfar1: 32, dlcm1: 32,
 // Số khung của một khối, tính trên MỌI bộ đang góp lớp — không chỉ thân nền.
 //
 // ⚠ `nvBoTen()` trả THÂN NỀN cho bộ đã cắt lớp (vì `nvBoGiap()` cố ý trả null), nên hỏi nó số
-// khung là hỏi nhầm người: Spellblade mặc `sbsm1` (32 khung chạy) mà thân nền `sbhd1` chỉ có
-// 16 ⇒ vòng chạy đọc nửa đầu rồi lặp lại, nửa sau trùng khít nửa trước. Nhìn ra chỉ thấy
-// "chạy hơi lạ"; `tests/test_khungchay.js` bắt được bằng cách so từng khung.
+// khung là hỏi nhầm người. Ca đã trả giá (nay không còn, giữ lại để đừng dựng lại): Spellblade
+// mặc `sbsm1` 32 khung chạy mà thân nền `sbhd1` chỉ có 16 ⇒ vòng chạy đọc nửa đầu rồi lặp lại,
+// nửa sau trùng khít nửa trước. Nhìn ra chỉ thấy "chạy hơi lạ"; `tests/test_khungchay.js` bắt
+// được bằng cách so từng khung. (Hai bộ ấy đã gỡ cùng đợt Spellblade sang `magic-runtime`.)
 //
 // Lấy MAX chứ không lấy của thân: `nvKhungGop()` đã quy mỗi lớp về PHA 0..1 rồi mới nhân với
 // số khung của CHÍNH nó, nên lớp ít khung vẫn chạy đúng nhịp, chỉ thô hơn. Lấy min thì bộ
@@ -16704,10 +16705,275 @@ function nvHaoQuangTruoc(g, sectKey, tier, gv, now, im, kind, idx){
 // khoá cache), `blk` là "lấy tấm khung TỪ ĐÂU" (xem KHOI_DANH).
 // `hw` thêm SAU CÙNG nên mọi lời gọi chín tham số cũ vẫn chạy — giữ đúng quy ước đã dùng khi
 // thêm `sway` vào heroPose().
-function heroSprite(sectKey, tier, gv, kind, idx, act, back, sw, blk, hw){
+// ═════════════ GÓI MAGIC RUNTIME — Spellblade dựng từ LỚP RỜI, TÁM HƯỚNG THẬT ═════════════
+//
+// ⚠ VÌ SAO NÓ CÓ ĐƯỜNG VẼ RIÊNG, KHÔNG NHÉT VÀO `NV_BO`/`NV_MOC`. Hai hợp đồng bảng khung
+// khác hẳn nhau, và ép cái này vào cái kia là hỏng cả hai:
+//
+//              | hệ NV_* đang chạy                  | gói magic-runtime
+//   khối       | nối tiếp theo NV_MOC (i·w·a·c·r…)  | BỐN atlas rời (idle/walk/run/attack)
+//   hướng      | một bản nghiêng + LẬT ngang        | 8 HÀNG trong chính atlas, không lật
+//   ô          | suy từ NV_LOP_HOP mỗi bộ một khác  | 256×256 cố định, pivot (128,244)
+//   vũ khí     | nướng SẴN vào lớp `vk` của thân    | tệp RỜI + socket hai tay theo từng khung
+//
+// Cái cuối mới là điểm của cả gói: vũ khí không bake vào thân ⇒ 7 giáp × 7 vũ khí = **49 tổ
+// hợp, 0 byte art thêm**. Đó đúng là thứ hệ `NV_VK_LOP` không làm được (nó phải nướng một
+// bảng khung cho MỖI cặp dòng×giai, và vì thế 60/63 món của ba lớp rơi về cây lùi).
+//
+// ⚠ MANIFEST LÀ NGUỒN DUY NHẤT. README của gói ghi thẳng *"Do not hard-code an armor/weapon
+// pair in game logic"*, và đó cũng là luật của dự án này (xem `mapBanSac()` suy từ `packs`).
+// Chép bảng 7 giáp / 7 vũ khí sang `game.js` là dựng bản sao thứ hai của một bảng đang sống.
+const MR_LOP = { minhgiao: true };       // lớp nào đọc gói này
+const MR_GOC = 'assets/magic-runtime/';
+const MR_O   = 256;                      // cạnh ô trong atlas (manifest.cell)
+const MR_COT = 8;                        // số frame mỗi hướng
+// Thân trong ô cao 226px — ĐO trên `armor/ma_thuat/idle` south f0 (bbox 84,18 → 173,244), không
+// phải một con số chép từ README. Quy về `CAO_THAN_NUONG` để Spellblade đứng CAO BẰNG bốn lớp
+// kia; chép cứng một tỉ lệ đẹp ở đây là một lớp cao hơn hẳn phần còn lại mà không ai đo ra.
+const MR_CAO_O = 226;
+const MR_TY    = CAO_THAN_NUONG / MR_CAO_O;
+// ⚠ BẮC CẦU HƯỚNG BẰNG **TÊN**, ĐỪNG CHÉP MỘT MẢNG CHỈ SỐ. `NV_HUONG` đánh số theo GÓC
+// (0 = Đông) còn `manifest.layout.rowOrder` kể TÊN hàng. Hôm nay hai bảng lệch nhau đúng 6
+// nấc, nhưng viết `(i+6)%8` là khoá cứng một sự trùng hợp: đổi `rowOrder` trong manifest thì
+// nhân vật quay lung tung mà không một lỗi nào in ra.
+const MR_TEN_HUONG = ['east','southeast','south','southwest','west','northwest','north','northeast'];
+// KHỐI VẼ của engine → STATE của gói. Gói chỉ có BỐN state; mọi khối khác phải trỏ về một
+// trong bốn, và trỏ về đâu là một quyết định chứ không phải một phép lui mặc định:
+//   `c` (niệm chú) → attack : Spellblade niệm chú BẰNG nhát chém (Fire Slash), nên đây là
+//                             thay thế gần nhất trong bốn cái — không phải một chỗ trống.
+//   `h`/`d`        → idle   : chưa có tư thế giật/ngã. `MR_GHIM` dưới đây ghim khung 0 để
+//                             nó ĐỨNG YÊN thay vì đi bộ tại chỗ trong lúc trúng đòn/chết.
+//   `q`/`n`/`t`/`e`→ idle   : bốn dáng trong thành (ngồi · nói · dính buff · nhảy múa).
+//   `f`/`g`        → idle/attack : bay dùng bộ sheet RIÊNG (xem `MR_BAY`), đây chỉ là nấc lui
+//                             khi sheet bay chưa về.
+const MR_STATE = { i:'idle', q:'idle', n:'idle', t:'idle', e:'idle', j:'idle',
+                   h:'idle', d:'idle', f:'idle',
+                   w:'walk', r:'run',
+                   a:'attack', s:'attack', p:'attack', c:'attack', g:'attack' };
+// Khối nào phải ĐỨNG YÊN ở khung 0 thay vì chạy vòng. Thiếu bảng này thì nhân vật vừa trúng
+// đòn vừa nhấp nhô theo nhịp thở, và cái xác thì thở suốt 1,2 giây nằm xuống.
+const MR_GHIM = { h:1, d:1 };
+// Nhịp riêng của gói, đọc từ manifest.states[].fps. Engine tính chỉ số khung theo `wph`
+// (quãng đường đã đi) cho w/r và theo đồng hồ cho i — nên FPS ở đây CHỈ dùng cho hai khối
+// đứng yên; đi/chạy vẫn phải bám bàn chân, đúng luật `SAI_CHAN` đã ghi.
+const MR_FPS_LUI = { idle: 5, walk: 7, run: 11, attack: 10 };
+
+// Cánh của gói: mỗi lớp một biến thể. Wing 1 MG là bản dựng riêng cho project (README ghi rõ
+// không phải art gốc Webzen), Wing 1 DW để dành cho ngày Dark Wizard có gói tương tự. Khai theo
+// LỚP chứ không theo bậc cánh: gói chỉ có tier 1, và giả vờ có ba bậc là hứa suông.
+const MR_CANH_LOP = { minhgiao: 'wing_mg_tier1', baidasan: 'wing_dw_tier1' };
+let MR_DL = null;              // manifest.json
+let MR_SOCKET = null;          // sockets.json
+let MR_BAY = null;             // flight/flight-manifest.json
+let MR_BAYDANH = null;         // flight_attack/flight-attack-manifest.json
+let _mrXinDL = false;
+const MR_ANH = Object.create(null);
+
+// Xin manifest + sockets đúng MỘT lần. Hai tệp cộng lại 182 KB — nhẹ hơn một atlas 30 lần,
+// nên chúng được nạp SỚM và nạp cả hai; atlas thì để lười theo bộ đang mặc.
+function mrNapDL(){
+  if (_mrXinDL) return;
+  _mrXinDL = true;
+  fetch(MR_GOC + 'manifest.json').then(r => r.json()).then(d => {
+    MR_DL = d;
+    // Hai gói bay là SLICE DUYỆT, không phải atlas tám hướng: `flight` chỉ có hướng South,
+    // `flight_attack` chỉ có Southeast. README của gói nói thẳng thế, nên chúng nạp riêng và
+    // hỏng riêng — thiếu chúng thì đường bay lui về hành vi cũ chứ không kéo cả nhân vật theo.
+    if (d.flight && d.flight.manifest)
+      fetch(MR_GOC + d.flight.manifest).then(r => r.json())
+        .then(f => { MR_BAY = f; MR_BAY._goc = d.flight.manifest.replace(/[^/]+$/, ''); })
+        .catch(() => {});
+    if (d.flightAttack && d.flightAttack.manifest)
+      fetch(MR_GOC + d.flightAttack.manifest).then(r => r.json())
+        .then(f => { MR_BAYDANH = f; MR_BAYDANH._goc = d.flightAttack.manifest.replace(/[^/]+$/, ''); })
+        .catch(() => {});
+    return fetch(MR_GOC + (d.sockets || 'sockets.json')).then(r => r.json());
+  }).then(s => {
+    MR_SOCKET = s;
+    // Màn chờ vẽ ĐÚNG MỘT KHUNG ở chế độ giảm chuyển động, nên art về sau mà không ai gọi vẽ
+    // lại thì nó nằm đó mãi với ô trống. `ccChoAnh` chỉ hẹn được trên `Image`, mà thứ về muộn
+    // nhất ở đây là hai tệp JSON — không phải ảnh. Nên gọi thẳng.
+    if (typeof titleVeLai === 'function') try { titleVeLai(); } catch (e) {}
+  }).catch(() => {});
+}
+// Lớp này có đọc gói không. Cửa DUY NHẤT — `heroSprite`, `drawPlayer` và bài kiểm đều hỏi nó,
+// nên không có cách nào một chỗ tưởng có gói còn chỗ kia tưởng không.
+function mrDung(sectKey){
+  if (!MR_LOP[sectKey]) return false;
+  mrNapDL();
+  return !!(MR_DL && MR_SOCKET);
+}
+// Ảnh nạp LƯỜI, và nướng bitmap ngay lúc tải xong — cùng lý do đã đo ở `nvTai`: giải mã webp/png
+// trong vòng vẽ tốn 210 ms, còn `createImageBitmap` ngoài luồng chính tốn 24 ms.
+function mrTai(duong){
+  if (!duong) return null;
+  let im = MR_ANH[duong];
+  if (!im){
+    im = new Image(); MR_ANH[duong] = im;
+    im.onload = () => {
+      if (typeof createImageBitmap !== 'function') return;
+      createImageBitmap(im).then(bm => {
+        bm.naturalWidth = bm.width; bm.naturalHeight = bm.height; bm.complete = true;
+        im._bm = bm;
+      }, () => {});
+    };
+    im.src = MR_GOC + duong;
+  }
+  return im._bm || ((im.complete && im.naturalWidth) ? im : null);
+}
+// Bộ giáp theo GIAI. Dùng thẳng `tier` mà `heroSprite` nhận — tức `heroTier(p)`, tức bậc trung
+// bình NHÂN ĐỘ PHỦ của bốn ô giáp. Đây là quy ước đang chạy cho cả `NV_GIAP`, không phải một
+// luật mới: mặc ba món giai 7 thì không được nhìn ngang với mặc đủ bốn.
+function mrGiap(tier){
+  if (!MR_DL) return null;
+  const t = clamp(Math.round(tier || 1), 1, MR_DL.armors.length);
+  return MR_DL.armors.find(a => a.tier === t) || MR_DL.armors[MR_DL.armors.length - 1];
+}
+// ⚠ XIN CẢ BỐN STATE NGAY LÚC BỘ GIÁP HIỆN RA LẦN ĐẦU — ĐỪNG ĐỂ LƯỜI THUẦN. Nạp lười thuần thì
+// **bước đi ĐẦU TIÊN của mỗi phiên rơi vào khoảng trống**: `mrTai()` trả null ở lượt vẽ đầu nên
+// khung walk không dựng được, và vì `_choArt` chặn nhớ lại nên nó chỉ hỏng đúng một lần rồi tự
+// khỏi — tức cực dễ nghiệm thu nhầm là đã xong. Đúng vết sẹo đã ghi cho bảng CHẠY của avatar.
+// Đo được ở lượt kiểm đầu: idle ra 7.444-7.780 điểm ảnh ở cả 8 hướng, còn walk/run/attack ra 0.
+//
+// Giá phải trả, nói thẳng: một bộ giáp = 11,5 MB trên đĩa và ~64 MB sau giải nén. Vì thế chỉ xin
+// bộ ĐANG MẶC, không xin cả bảy — đổi giáp thì bộ mới tự được xin ở khung vẽ kế tiếp.
+function mrXinBo(giap){
+  if (!giap || giap._daXin) return;
+  giap._daXin = true;
+  for (const k in giap.states) mrTai(giap.states[k]);
+}
+function mrVuKhi(wTier){
+  if (!MR_DL || !wTier) return null;
+  const t = clamp(Math.round(wTier), 1, MR_DL.weapons.length);
+  return MR_DL.weapons.find(w => w.tier === t) || MR_DL.weapons[MR_DL.weapons.length - 1];
+}
+// Hàng nào trong atlas cho hướng thứ `h` của NV_HUONG. Trả 0 (south) khi tra hụt — south là
+// hướng quay MẶT VỀ PHÍA NGƯỜI XEM, nên nó cũng đúng cho thẻ nhân vật và màn chờ.
+function mrHang(h){
+  if (!MR_DL) return 0;
+  const i = MR_DL.layout.rowOrder.indexOf(MR_TEN_HUONG[((h | 0) % 8 + 8) % 8]);
+  return i < 0 ? 0 : i;
+}
+// Ô cell (u,v) → hệ toạ độ hộp nhân vật 160×220. Pivot bàn chân của gói (128,244) đặt đúng
+// vào (HERO_W/2, HERO_GOT) — chỗ mà cả bốn lớp kia đang neo gót.
+function mrX(u){ return HERO_W / 2 + (u - MR_DL.pivot[0]) * MR_TY; }
+function mrY(v){ return HERO_GOT  + (v - MR_DL.pivot[1]) * MR_TY; }
+// Một cây vũ khí đặt vào một bàn tay. Đúng phép dựng của gói: pivot cán nằm ở `gripRatio` tính
+// từ mép trên tấm, tay TRÁI lật ngang.
+function mrVeTay(g, wim, vk, tay, ben){
+  const x = mrX(tay.xy[0]), y = mrY(tay.xy[1]);
+  const s = (vk.displayPx || 96) * MR_TY;
+  g.save();
+  g.translate(x, y);
+  g.rotate((tay.rotationDeg || 0) * Math.PI / 180);
+  if (ben === 0) g.scale(-1, 1);
+  g.drawImage(wim, -s / 2, -s * (vk.gripRatio || 0.12), s, s);
+  g.restore();
+}
+// ⚠ VÁ LẠI LÒNG BÀN TAY SAU KHI DÁN VŨ KHÍ. Cán cây nằm ĐÈ lên tay, nên không có bước này thì
+// trông như nhân vật cầm cây bằng cách để nó xuyên qua nắm đấm. Chép đúng một mẩu tròn của
+// chính tấm giáp đang mặc, nên nó luôn đúng màu găng của bộ ấy — không phải một màu da vẽ tay.
+function mrVeLongTay(g, im, cot, hang, tay, blk){
+  const r = (blk === 'a' || blk === 's' || blk === 'p' || blk === 'c' || blk === 'g') ? 7 : 6;
+  const sx = cot * MR_O + tay.xy[0] - r, sy = hang * MR_O + tay.xy[1] - r;
+  const dx = mrX(tay.xy[0] - r), dy = mrY(tay.xy[1] - r), d = r * 2 * MR_TY;
+  g.save();
+  g.beginPath(); g.arc(dx + d / 2, dy + d / 2, d / 2, 0, Math.PI * 2); g.clip();
+  g.drawImage(im, sx, sy, r * 2, r * 2, dx, dy, d, d);
+  g.restore();
+}
+// ── BAY: gói có SLICE DUYỆT, không có atlas tám hướng ────────────────────────────────────
+// `flight` = hướng South · `flight_attack` = hướng Southeast. Đây là sự thật của gói (README
+// ghi rõ *"a `south` review slice, not a claimed eight-direction flight atlas"*), nên đường bay
+// CỐ Ý bỏ qua `huong`: bay sang Tây vẫn hiện tư thế South. Đó là một khoản nợ ART, không phải
+// một lỗi mã — và nói ra ở đây còn hơn để người sau tưởng hướng bị tính sai.
+//
+// ⚠ ĐÔI CÁNH NẰM SẴN TRONG SLICE NÀY, nên `_bayBo` phải bật để `veCanh()` TẮT. Vẽ cả hai là
+// hai đôi cánh trên màn — cùng kiểu hỏng với hai cây vũ khí ở `_boCoVk`.
+// ⚠ VÀ CỐ Ý KHÔNG VẼ `skill_vfx` của gói: Fire Slash của game đã có tranh riêng trong
+// `CHIEU_TRANH`, vẽ thêm là hai vụ nổ chồng nhau lệch tâm.
+function mrCoBay(sectKey){
+  return !!(mrDung(sectKey) && MR_BAY && MR_CANH_LOP[sectKey]);
+}
+function mrNhipBay(){ return (MR_BAY && MR_BAY.frameDurationMs) || BAY_NHIP; }
+function mrVeBay(sectKey, blk, idx){
+  const F = (blk === 'g' && MR_BAYDANH) ? MR_BAYDANH : MR_BAY;
+  if (!F || !F._goc) return null;
+  const canh = MR_CANH_LOP[sectKey];
+  const n = F.frames || MR_COT;
+  const cot = clamp(idx | 0, 0, n - 1);
+  // Thứ tự của chính manifest: wing_back → body_armor → weapon → hand_grip_front.
+  const lop = [F.sheets[canh], F.sheets.body, F.sheets.weapon, F.sheets.handGrip]
+                .filter(Boolean).map(x => mrTai(F._goc + x));
+  if (!lop.length || lop.some(x => !x)) return null;
+  const t = document.createElement('canvas'); t.width = NV_OW; t.height = NV_OH;
+  const g = t.getContext('2d');
+  g.translate(HS_PAD, HS_PAD);
+  for (const im of lop)
+    g.drawImage(im, cot * MR_O, 0, MR_O, MR_O, mrX(0), mrY(0), MR_O * MR_TY, MR_O * MR_TY);
+  return t;
+}
+// Dựng MỘT khung của gói thành một tấm `NV_OW×NV_OH` — ĐÚNG khuôn mà `_nvKhungRa()` nhận
+// thẳng (`if (im.width === NV_OW) return im;`). Nhờ vậy viền sáng +N, dải quét +10 và tàn lửa
+// chạy nguyên xi trên Spellblade mà không phải sửa một dòng nào của khối hào quang — chúng bám
+// theo ALPHA của khung, và khung ở đây cũng là một tấm alpha như mọi khung khác.
+//
+// Trả `null` khi art chưa về. Chỗ gọi phải KHÔNG NHỚ khung đó lại, đúng vết sẹo `_choArt`: một
+// khung dựng lúc art chưa tới mà nằm lại trong bộ nhớ đệm là một nhân vật sai nằm đó cả phiên.
+function mrVe(sectKey, tier, gv, blk, idx, huong){
+  if (!mrDung(sectKey)) return null;
+  if (blk === 'f' || blk === 'g'){
+    const bay = mrVeBay(sectKey, blk, idx);
+    if (bay) return bay;                       // chưa về thì rơi xuống khối mặt đất bên dưới
+  }
+  const st = MR_STATE[blk] || 'idle';
+  const giap = mrGiap(tier);
+  mrXinBo(giap);
+  const duong = giap ? giap.states[st] : (MR_DL.bodyBase && MR_DL.bodyBase[st]);
+  const im = mrTai(duong);
+  if (!im) return null;
+  const hang = mrHang(huong);
+  const cot  = MR_GHIM[blk] ? 0 : clamp(idx | 0, 0, MR_COT - 1);
+  const pose = ((MR_SOCKET.states[st] || {})[MR_DL.layout.rowOrder[hang]] || [])[cot] || null;
+  const vk   = mrVuKhi(gv && gv.wTier);
+  const wim  = vk ? mrTai(vk.master) : null;
+  const t = document.createElement('canvas'); t.width = NV_OW; t.height = NV_OH;
+  const g = t.getContext('2d');
+  g.translate(HS_PAD, HS_PAD);                 // về hệ toạ độ hộp nhân vật 160×220
+  // Thứ tự vẽ là của MANIFEST, không phải của tôi: vũ khí z:back → thân/giáp → vũ khí z:front
+  // → vá lòng bàn tay. Bỏ lượt `back` đi là cây tay xa nhảy ra TRƯỚC ngực ở nửa số hướng.
+  const veVk = (z) => {
+    if (!pose || !wim) return;
+    ['hand_left', 'hand_right'].forEach((k, ben) => {
+      const tay = pose[k];
+      if (tay && tay.z === z) mrVeTay(g, wim, vk, tay, ben);
+    });
+  };
+  veVk('back');
+  g.drawImage(im, cot * MR_O, hang * MR_O, MR_O, MR_O,
+                  mrX(0), mrY(0), MR_O * MR_TY, MR_O * MR_TY);
+  veVk('front');
+  if (pose && wim) ['hand_left', 'hand_right'].forEach((k) => {
+    const tay = pose[k];
+    if (tay && tay.z === 'front') mrVeLongTay(g, im, cot, hang, tay, blk);
+  });
+  return t;
+}
+// Phơi ra cho bài kiểm và bảng gỡ rối. `MR_LOP` là `const` ở tầng cao nhất nên nó KHÔNG tự gắn
+// vào `window` — cùng bẫy đã ghi cho `player`/`curMap` ở mục online, và `net.js` đã trả giá
+// một lần bằng một tính năng im lặng không chạy.
+window.mrDung = mrDung; window.mrVe = mrVe; window.mrCoBay = mrCoBay; window.MR_LOP = MR_LOP;
+window.mrGiap = mrGiap; window.mrVuKhi = mrVuKhi; window.mrNhipBay = mrNhipBay;
+
+function heroSprite(sectKey, tier, gv, kind, idx, act, back, sw, blk, hw, huong){
   sw = sw || 0;
   blk = blk || kind;
   hw = hw || '';
+  // ⚠ `huong` THÊM SAU CÙNG, đúng quy ước đã ghi cho `heroPose`: mọi lời gọi 10 tham số cũ
+  // (thẻ nhân vật · màn chờ · banner Khế Ước · thân người từ xa) vẫn chạy và rơi về `south`,
+  // tức hướng quay MẶT VỀ NGƯỜI XEM — đúng thứ một tấm chân dung cần.
+  huong = huong | 0;
+  const _mr = mrDung(sectKey);
   // Bộ CÓ art thì `back` không đổi lấy một điểm ảnh (art quyết hướng, xem NV_HUONG) — để nó
   // trong khoá là nhân đôi số ô đệm để đổi lấy hai tấm ảnh giống hệt nhau. Bộ KHÔNG có art
   // mới rơi về hình dựng bằng đường, và đường ấy thì `ps.back` có đổi thật (gáy, mũ trùm).
@@ -16715,7 +16981,7 @@ function heroSprite(sectKey, tier, gv, kind, idx, act, back, sw, blk, hw){
   // `act` phải nằm trong khoá cho CẢ đánh lẫn tung chiêu: heroFramePose() đọc act ở cả hai nhánh
   // (mỗi lớp một bộ khung tay/vũ khí riêng), nên bỏ nó ra khỏi khoá ở nhánh 'c' là hai tuyệt kỹ
   // khác nhau dùng chung một ảnh.
-  const key = `${sectKey}|${tier}|${heroGearSig(gv)}|${kind}|${idx}|${(kind === 'a' || kind === 'c') ? act : ''}|${blk}|${_coArt ? hw : (back ? 'B' : '')}|${sw}|${nvBoTen(sectKey, tier, gv, hw) || ''}${nvBo(sectKey, tier, gv, hw) ? '' : '?'}${NV_BANG2[blk] && !nvBang(sectKey, tier, gv, blk, hw) ? '!' : ''}|${window.TEST_TO_PHANG ? 'D' : ''}`;
+  const key = `${sectKey}|${tier}|${heroGearSig(gv)}|${kind}|${idx}|${(kind === 'a' || kind === 'c') ? act : ''}|${blk}|${_coArt ? hw : (back ? 'B' : '')}|${sw}|${_mr ? 'MR' + huong : ''}${nvBoTen(sectKey, tier, gv, hw) || ''}${nvBo(sectKey, tier, gv, hw) ? '' : '?'}${NV_BANG2[blk] && !nvBang(sectKey, tier, gv, blk, hw) ? '!' : ''}|${window.TEST_TO_PHANG ? 'D' : ''}`;
   let cv = _hsCache.get(key);
   if (cv){                       // chạm — đẩy lên cuối để LRU giữ lại
     _hsHit++;
@@ -16731,7 +16997,9 @@ function heroSprite(sectKey, tier, gv, kind, idx, act, back, sw, blk, hw){
   g.scale(HS_SCALE, HS_SCALE);
   g.translate(HS_PAD, HS_PAD);
   // Số khung của KHỐI ĐANG ĐỌC, theo chính bộ art này (khối chạy khai riêng — xem NV_KHUNG_R).
-  const _nk = nvSoKhungBo(sectKey, tier, gv, blk, hw);
+  // Gói magic-runtime có ĐÚNG 8 frame mỗi hướng cho cả bốn state — hỏi `nvSoKhungBo` ở đó là
+  // hỏi một bảng không còn ai khai, và nó trả undefined ⇒ `heroFrameNow` chia cho 0.
+  const _nk = _mr ? MR_COT : nvSoKhungBo(sectKey, tier, gv, blk, hw);
   const ps = heroFramePose(kind, idx, act, sw, _nk);
   ps.back = !!back;
   // Cánh KHÔNG nướng vào sprite: drawPlayer đã vẽ nó riêng bằng veCanh(). Nướng vào đây là vẽ
@@ -16745,12 +17013,20 @@ function heroSprite(sectKey, tier, gv, kind, idx, act, back, sw, blk, hw){
   // Hai đường dựng khung, thử ĐƯỜNG LỚP trước: bộ nào có lớp rời thì chồng lớp, không thì
   // lấy nguyên tấm. `_gop` đứng đầu chuỗi `||` nên khi có nó, nvBang() không bị gọi — thân
   // đã cắt lớp thì KHÔNG CÒN tệp `<thân>.webp`, hỏi tới là 404.
-  let _gop = nvKhungGop(sectKey, tier, gv, blk, idx, hw);
+  // ⚠ GÓI MAGIC RUNTIME ĐI CHUNG ĐƯỜNG `_gop`, và đó là cả điểm của việc cho `mrVe()` trả về
+  // một tấm `NV_OW×NV_OH`: `_gop` nghĩa là "khung đã dựng sẵn, blit thẳng", còn `_nvKhungRa()`
+  // thì nhận nguyên một tấm rộng đúng `NV_OW`. Nhờ vậy viền sáng +N · dải quét +10 · tàn lửa
+  // chạy y nguyên trên Spellblade mà KHÔNG phải sửa một dòng nào của khối hào quang.
+  let _gop = _mr ? mrVe(sectKey, tier, gv, blk, idx, huong)
+                 : nvKhungGop(sectKey, tier, gv, blk, idx, hw);
   // Khối ở bảng hai mà bảng hai chưa về: lui về dáng đứng ở bảng một, y như đường tấm liền.
-  const _blkVe = (NV_BANG2[blk] && !_gop && !nvBang(sectKey, tier, gv, blk, hw)) ? 'i' : blk;
-  if (!_gop && _blkVe !== blk) _gop = nvKhungGop(sectKey, tier, gv, _blkVe, idx, hw);
-  const _nvIm = _gop || nvBang(sectKey, tier, gv, blk, hw)
-              || (NV_BANG2[blk] ? nvBo(sectKey, tier, gv, hw) : null);
+  // Gói MR không có bảng hai — bốn dáng trong thành đã trỏ về `idle` ngay trong `MR_STATE`,
+  // nên hỏi `nvBang` ở đó là hỏi một tệp không tồn tại rồi lặng lẽ đổi khối vẽ.
+  const _blkVe = (!_mr && NV_BANG2[blk] && !_gop && !nvBang(sectKey, tier, gv, blk, hw)) ? 'i' : blk;
+  if (!_mr && !_gop && _blkVe !== blk) _gop = nvKhungGop(sectKey, tier, gv, _blkVe, idx, hw);
+  const _nvIm = _gop || (_mr ? null
+              : (nvBang(sectKey, tier, gv, blk, hw)
+                 || (NV_BANG2[blk] ? nvBo(sectKey, tier, gv, hw) : null)));
   // ── KHUNG DỰNG LÚC ART CHƯA VỀ THÌ KHÔNG ĐƯỢC NHỚ LẠI ──────────────────────────────────
   // Bộ đã cắt lớp (cả năm thân trần) đi đường nvKhungGop(), mà hàm đó trả null khi MỘT lớp
   // chưa tải xong. Khoá bộ nhớ đệm chỉ ghi được chuyện "thiếu TẤM LIỀN" (dấu `?`) — mà bộ
@@ -16766,7 +17042,10 @@ function heroSprite(sectKey, tier, gv, kind, idx, act, back, sw, blk, hw){
   // Chữa ở chỗ NHỚ, không ở chỗ vẽ: bộ có tên art mà chưa dựng được bằng art thì vẫn vẽ tạm
   // như cũ, chỉ là đừng nhớ lại. Lượt vẽ sau art đã về là tự đúng. Vài khung đầu phải dựng
   // lại mỗi lượt — rẻ hơn nhiều so với một khung sai nằm đó cả phiên chơi.
-  const _choArt = !_nvIm && _coArt;
+  // Lớp dùng gói MR thì `_coArt` luôn false (nó không còn bộ `NV_BO` nào), nên phải cộng `_mr`
+  // vào đây — nếu không, khung dựng lúc atlas chưa về sẽ được NHỚ LẠI và Spellblade tàng hình
+  // vĩnh viễn ở đúng mấy khung đó. Cùng vết sẹo `_choArt` đã ghi ngay dưới.
+  const _choArt = !_nvIm && (_coArt || _mr);
   if (_nvIm){
     const _now = heroFrameNow(kind, idx, _nk);
     nvHaoQuangSau(g, sectKey, tier, gv, _now);      // hào quang cường hoá nằm SAU lưng
@@ -16784,7 +17063,9 @@ function heroSprite(sectKey, tier, gv, kind, idx, act, back, sw, blk, hw){
   // hình vẽ thay thế. Đổi lại là không bao giờ chớp ra một nhân vật khác. Cùng đánh đổi mà
   // `ccArtSan()` của màn chờ đã chốt — "thà thân trần còn hơn một nhân vật khác hẳn".
   // Bộ KHÔNG khai art (chưa nướng bao giờ) vẫn đi đường cũ, không đổi một điểm ảnh.
-  else if (!_coArt) drawHeroFigureLit(g, sectKey, tier, heroFrameNow(kind, idx, _nk), ps, canhBoRa(gv));
+  // ⚠ `!_mr` là BẮT BUỘC: lớp dùng gói MR không có `NV_BO` nên `_coArt` false, và thiếu vế này
+  // thì mỗi khung atlas chưa về lại chớp ra một hiệp sĩ xám mũ sừng — đúng thứ Quy tắc số 3 cấm.
+  else if (!_coArt && !_mr) drawHeroFigureLit(g, sectKey, tier, heroFrameNow(kind, idx, _nk), ps, canhBoRa(gv));
   // ── CHẾ ĐỘ TÔ PHẲNG, CHỈ DÀNH CHO PHÉP ĐO ──────────────────────────────────────────────
   // Bài kiểm nào cần biết "nhân vật có nằm ở chỗ này của khung hình không" đều phải nhận ra
   // nhân vật bằng MÀU — không có cách nào khác rẻ hơn (trừ khung, so byte, dựng lại thế giới:
@@ -19095,7 +19376,13 @@ function drawPlayer(p){
   // nên hôm nay không đổi một điểm ảnh; nướng thêm một hướng là hướng ấy hiện ra ngay.
   const _hInfo = nvChonHuong(nvBoGoc(p.sect, heroTier(p), gearVisual(p)), p.face);
   p._hw = _hInfo.ban;
-  const flip = _hInfo.lat;
+  // ⚠ GÓI MAGIC RUNTIME KHÔNG BAO GIỜ LẬT. Nó có đủ tám hướng nằm trong tám HÀNG của atlas, nên
+  // lật thêm một lần nữa là hướng Tây soi gương thành Đông — và vì bóng dáng gần đối xứng, nhìn
+  // ra chỉ thấy "hình như quay sai", không ra một lỗi. `nvChonHuong` trả `lat:true` ở đó vì lớp
+  // này không còn bộ `NV_BO` nào để khai bản vẽ, tức nó đang trả lời một câu hỏi khác.
+  const _mrLop = mrDung(p.sect);
+  p._mrH = nvHuongSo(p.face);
+  const flip = _mrLop ? false : _hInfo.lat;
   // ── AVATAR: lớp nhân vật đứng KẾ BÊN, không đứng đè lên Axie ────────────────────────
   // Chủ dự án chốt sau khi chơi thử: "nhân vật xuất hiện kế bên Axie… đi theo để bảo kê".
   // Nên Axie KHÔNG biến mất lúc đánh nữa; lớp nhân vật hiện ra ở một chỗ khác, chắn phía
@@ -19201,11 +19488,17 @@ function drawPlayer(p){
   // ⚠ VÀ NÓ CHỈ TẮT Ở KHỐI RA ĐÒN (`_lopHien`), KHÔNG TẮT CẢ ĐỜI. Khối đi/đứng của `dwsl1`
   // KHÔNG có cây nào trong tay, nên tắt thẳng là đứng trong thành TAY KHÔNG — đúng cái lỗi mà
   // vế `(!_coAva || _lopHien)` đã phải gỡ một lần rồi ("khoác lên vai thì phải thấy lúc ĐỨNG").
-  const _boCoVk = !!NV_BO_CO_VK[nvBoGoc(p.sect, _tier, _gv) || ''];
+  // ⚠ GÓI MAGIC RUNTIME LUÔN CÓ VŨ KHÍ TRONG TAY, ở MỌI khối — nó dán cây theo socket hai tay
+  // của từng khung chứ không nướng vào thân. Nên nó thuộc cùng một họ với `NV_BO_CO_VK`, và
+  // thiếu vế `_mrLop` này thì trên màn có HAI cây: hai cây trong tay + một cây thần khí bay
+  // lơ lửng bên trái (đã chụp lại ở lượt nghiệm thu đầu). `nvBoGoc` không cứu được vì lớp
+  // dùng gói MR không còn bộ `NV_BO` nào để mà tra.
+  const _boCoVk = _mrLop || !!NV_BO_CO_VK[nvBoGoc(p.sect, _tier, _gv) || ''];
   // ⚠ KHỐI BAY CỦA BỘ NÀY ĐÃ NƯỚNG SẴN ĐÔI CÁNH. Bật `veCanh()` cùng lúc là HAI đôi cánh trên
   // màn — cùng một kiểu hỏng với hai cây vũ khí ở `_boCoVk`. Khai sớm ở đây vì chỗ vẽ cánh nằm
   // TRÊN chỗ chọn khối vẽ.
-  const _bayBo = _bayDat && !!NV_BO_CO_BAY[nvBoGoc(p.sect, _tier, _gv) || ''];
+  const _bayBo = _bayDat && (_mrLop ? mrCoBay(p.sect)
+                                   : !!NV_BO_CO_BAY[nvBoGoc(p.sect, _tier, _gv) || '']);
   // ⚠⚠ ĐÃ NHẬP VÀO AXIE THÌ VŨ KHÍ VẪN PHẢI HIỆN — chủ dự án chốt (2026-09-17), nguyên văn:
   // *"khi Axie ra chiêu thì sẽ hiện cây vũ khí… nhân vật có thể không hiện nhưng vũ khí sẽ
   // LUÔN xuất hiện để đồng bộ được skill"*.
@@ -19419,7 +19712,8 @@ function drawPlayer(p){
     // `_kind` giữ nguyên 'w'/'r' ⇒ ràng buộc `_lopHien === (_kind==='a'||'c')` không đổi.
     // Đang bay mà đang ra đòn ⇒ khối BAY+ĐÁNH. Không có khối ấy thì lui về 'f' (lơ lửng) —
     // thà mất động tác đánh còn hơn mất đôi cánh giữa lúc bay.
-    const _blk = (_bayBo && _lopHien && NV_BO_CO_BAYDANH[nvBoGoc(p.sect, _tier, _gv) || '']) ? 'g'
+    const _blk = (_bayBo && _lopHien && (_mrLop ? !!MR_BAYDANH
+                                                : NV_BO_CO_BAYDANH[nvBoGoc(p.sect, _tier, _gv) || ''])) ? 'g'
                : _bayBo ? 'f'
                : _kind === 'c' ? (KHOI_THEO_ACT[p.castAct] || 'c')
                : _kind !== 'a' ? _kind
@@ -19429,9 +19723,12 @@ function drawPlayer(p){
     // tính chỉ số bằng 16 rồi chia dư cho 12 là thứ tự khung đảo lộn giữa cú đấm.
     // Số khung phải hỏi CHÍNH bộ art đang mặc: khối chạy của bộ nướng lại có 32 khung, bộ cũ
     // 16. Đọc thẳng HS_FRAMES là bộ 32 khung chỉ chạy được nửa vòng rồi lặp.
-    const _n = nvSoKhungBo(p.sect, _tier, _gv, _blk, p._hw) || HS_FRAMES[_kind];
+    // Gói MR: 8 frame mỗi hướng cho cả bốn state, không tra bảng nào.
+    const _n = _mrLop ? MR_COT : (nvSoKhungBo(p.sect, _tier, _gv, _blk, p._hw) || HS_FRAMES[_kind]);
     const _TAU = Math.PI * 2;
-    const _idx = _blk === 'f' ? ((now / BAY_NHIP) | 0) % _n
+    // ⚠ NHỊP VỖ CÁNH LẤY TỪ MANIFEST CỦA GÓI (175 ms), đừng dùng `BAY_NHIP` 95 ms cho nó:
+    // gói ghi rõ *"a deliberately slow wing beat"*, chạy ở 95 là vỗ nhanh gấp đôi ý art.
+    const _idx = _blk === 'f' ? ((now / (_mrLop ? mrNhipBay() : BAY_NHIP)) | 0) % _n
                // ⚠⚠ `castK`/`atkK` ĐẾM NGƯỢC (1 ở khung ĐẦU, 0 ở khung cuối — xem chỗ khai).
                // Dùng thẳng là khối chạy NGƯỢC: đo được `c:15 c:14 … c:0`, tức nhân vật thu
                // chiêu về rồi mới giơ trượng lên. Nhánh 'h' ngay dưới VỐN ĐÃ tính xuôi
@@ -19450,7 +19747,7 @@ function drawPlayer(p){
     // khối 'c'. Đổi khối vẽ mà GIỮ NGUYÊN `_kind` semantics: chỉ số khung vẫn tính theo atkK,
     // chỉ có tấm khung đọc từ chỗ khác. Gán thẳng _kind='c' thì chỉ số rơi về nhánh castK — mà
     // castK = 0 lúc đánh thường — nên khung đứng im ở 0.
-    _spr = heroSprite(p.sect, _tier, _gv, _kind, clamp(_idx, 0, _n - 1), _act, _ps.back, _sw, _blk, p._hw);
+    _spr = heroSprite(p.sect, _tier, _gv, _kind, clamp(_idx, 0, _n - 1), _act, _ps.back, _sw, _blk, p._hw, p._mrH);
     window.__khoiVe = _blk;   // bài kiểm đọc cờ này
     // Chỉ số KHUNG đang vẽ — bài kiểm đếm nó để biết khối có CHẠY hay đứng hình. Đo điểm
     // ảnh thay cho việc này là đo cả nền trôi lẫn hào quang đập; xem vết sẹo `test_dongbodo`.
@@ -19473,7 +19770,7 @@ function drawPlayer(p){
       const _fx = (((wph % _TAU) + _TAU) % _TAU) / _TAU * _n;
       p._phaLe  = _fx - Math.floor(_fx);
       p._phaSau = heroSprite(p.sect, _tier, _gv, _kind, (Math.floor(_fx) + 1) % _n,
-                             _act, _ps.back, _sw, _blk, p._hw);
+                             _act, _ps.back, _sw, _blk, p._hw, p._mrH);
     } else { p._phaLe = 0; p._phaSau = null; }
     // ── HOÀ HÌNH KHI ĐỔI TRẠNG THÁI ───────────────────────────────────────────────────
     // Đứng ↔ đi ↔ chạy trước đây CẮT PHỰT sang khung mới: đang đứng yên hai chân khép, bấm
@@ -22525,7 +22822,7 @@ function kbVeMot(cv, t){
       // ⚠ Seam cũng GHIM KHUNG THỞ. Không có vế đó thì hai lần đo rơi vào hai khung khác nhau
       // và ảnh đổi vì NHỊP THỞ chứ không vì đổi lớp — mệnh đề "đổi lớp thì key art đổi" xanh
       // kể cả khi thân bị ghim cứng vào một lớp. Đã thử ngược đúng thế, hai lượt.
-      const spr = heroSprite(tin.lop, tier, gv, 'i', _chiThan ? 0 : ccKhung(t), '', false, 0, 'i', '');
+      const spr = heroSprite(tin.lop, tier, gv, 'i', _chiThan ? 0 : ccKhung(t, tin.lop), '', false, 0, 'i', '', 2);
       if (spr){
         const k = KB_THAN / CAO_THAN_NUONG;
         g.save();
@@ -22778,6 +23075,13 @@ window.doTayTuy = function(confirmed){
 // ---------- Sect select / boot ----------
 function startGame(sectKey, quze){
   taiTroDong();   // màn tải (nếu còn) — cửa duy nhất vào thế giới là chỗ đúng để đóng nó
+  // ⚠ XIN MANIFEST CỦA GÓI `magic-runtime` NGAY Ở ĐÂY, đừng để `mrDung()` tự xin ở khung vẽ đầu.
+  // Hai tệp JSON nặng 182 KB và mọi thứ của gói đều phải đợi chúng, nên xin ở lượt vẽ đầu là
+  // nhân vật TÀNG HÌNH vài trăm mili giây. Tệ hơn: `mrDung()` trả `false` suốt lúc đó, và bất cứ
+  // ai hỏi MỘT LẦN ở đoạn ấy (bài kiểm, bảng chọn lớp) sẽ nhận một câu trả lời sai rồi tin nó —
+  // đúng cái vừa làm `test_khungchay` đỏ ở một chỗ chẳng hỏng gì.
+  // Chỉ xin cho lớp THẬT SỰ dùng gói: 182 KB cho mọi người chơi là 11% ngân sách màn tải.
+  if (MR_LOP[sectKey]) mrNapDL();
   // Chat nối ở đây vì đây là cửa duy nhất vào thế giới — cùng lý do với taiTroDong() ở trên.
   // ⚠ Cờ chặn gọi hai lần: `startGame` chạy lại được (đổi nhân vật, bài kiểm), mà gắn listener
   // hai lần là một câu chat gửi đi hai lần.
@@ -28673,8 +28977,13 @@ function ccChoAnh(im){
 // bộ nướng đo rồi ghi ra.
 // Khung đứng thứ mấy, tại thời điểm t. MỘT công thức cho cả hình nướng lẫn hình dựng sống —
 // hai đường phải luôn ở cùng một khung, nếu không thì lúc art về xong, nhân vật nhảy một cái.
-function ccKhung(t){
-  const nK = window.LOP_CHO ? window.LOP_CHO.nKhung : 16;
+// ⚠ SỐ KHUNG THEO TỪNG LỚP, KHÔNG PHẢI MỘT CON SỐ CHUNG. Bản cũ chốt `LOP_CHO.nKhung` một số
+// cho cả năm lớp — đúng hồi cả năm cùng nướng ra 16 khung đứng. Từ lúc Spellblade sang gói
+// `magic-runtime` (8 khung mỗi hướng) thì một số chung là **hai đường vẽ chạy lệch khung nhau**:
+// dải nướng có 8 ô mà chỉ số chạy tới 15 ⇒ đọc ra ngoài dải ⇒ nửa vòng thở TRỐNG TRƠN.
+function ccKhung(t, sect){
+  const A = sect ? ccLopHinh(sect) : null;
+  const nK = (A && A.nKhung) || (window.LOP_CHO ? window.LOP_CHO.nKhung : 16) || 16;
   return Math.floor(((t || 0) / CC_NHIP) * nK) % nK;
 }
 // Dải khung nướng sẵn — THÂN TRẦN của lớp. Đặt vào ĐÚNG hệ Ô VẼ (HERO_W x HERO_H) bằng
@@ -28685,7 +28994,7 @@ function ccVeNguoi(g, sect, cx, fy, than, mo, t){
   if (!A || !im) return false;
   const k = than / A.than, x0 = cx - HERO_W / 2 * k;
   g.save(); g.globalAlpha = mo == null ? 1 : mo;
-  g.drawImage(im, ccKhung(t) * A.cw, 0, A.cw, A.ch,
+  g.drawImage(im, ccKhung(t, sect) * A.cw, 0, A.cw, A.ch,
               x0 + A.x * k, fy - A.got * k, A.cw * k, A.ch * k);
   g.restore();
   return true;
@@ -28709,6 +29018,14 @@ function ccArtSan(sect, tier, gv){
   if (_ccArtOk[kh]) return true;
   // Cùng biểu thức mà `heroSprite()` dùng để quyết định vẽ bằng ART hay bằng ĐƯỜNG (`_nvIm`),
   // thu về khối đứng. `nvKhungGop` dựng hẳn một canvas mỗi lần hỏi, nên nhớ lại NGAY khi đạt.
+  // ⚠ GÓI `magic-runtime` PHẢI ĐƯỢC HỎI Ở ĐÂY. Lớp dùng gói không có `NV_BO`/`NV_GIAP` nào, nên
+  // hai cửa dưới luôn trả null và van này ĐÓNG VĨNH VIỄN — màn chọn lớp rơi về dải nướng
+  // `assets/title/lop/<lớp>.webp`, tức **nhân vật CŨ**, trong khi vào game ra một người khác hẳn.
+  // Đúng cái "nhân vật fake" mà cả đợt dựng lại màn chờ sinh ra để gỡ, chỉ đổi chiều.
+  if (mrDung(sect) && mrVe(sect, tier, gv, 'i', 0, 2)){
+    _ccArtOk[kh] = 1;
+    return true;
+  }
   if (nvKhungGop(sect, tier, gv, 'i', 0, '') || nvBang(sect, tier, gv, 'i', '')){
     _ccArtOk[kh] = 1;
     return true;
@@ -28717,6 +29034,9 @@ function ccArtSan(sect, tier, gv){
   // Không cần biết lớp nào còn thiếu: mọi tấm art nhân vật đều nằm trong `NV_ANH`, mà
   // `ccChoAnh()` tự chống hẹn trùng, nên rải lời hẹn lên cả bảng là đủ và không tốn gì.
   for (const k2 in NV_ANH) ccChoAnh(NV_ANH[k2]);
+  // Atlas của gói `magic-runtime` nằm ở bảng riêng — thiếu vòng này là màn chờ không bao giờ
+  // vẽ lại sau khi atlas về, và lớp ấy hiện ra bằng dải nướng cũ suốt phiên.
+  for (const k3 in MR_ANH) ccChoAnh(MR_ANH[k3]);
   return false;
 }
 // Dựng lại MỘT khung 240x300 từ dải nướng, ĐÚNG hệ toạ độ mà `nvKhungGop()` trả ra: điểm ảnh
@@ -28759,9 +29079,12 @@ function ccVeNguoiBo(g, n, t){
   const pl = n.pl;
   if (!pl || !SECTS[pl.sect]) return ccVeNguoi(g, n.k, n.cx, n.fy, n.than, n.mo, t);
   const gv = gearVisual(pl), tier = heroTier(pl);
-  const k = n.than / CAO_THAN_NUONG, i = ccKhung(t), now = performance.now();
+  const k = n.than / CAO_THAN_NUONG, i = ccKhung(t, pl.sect), now = performance.now();
+  // `huong` = 2 là SOUTH trong NV_HUONG — hướng quay mặt về người xem. Bỏ trống thì gói
+  // `magic-runtime` rơi về hàng 0 của `rowOrder`, mà hàng 0 chỉ TÌNH CỜ cũng là south; dựa vào
+  // một sự trùng hợp trong dữ liệu là thứ sẽ hỏng lặng lẽ ngày ai đó xếp lại `rowOrder`.
   const song = ccArtSan(pl.sect, tier, gv)
-    && heroSprite(pl.sect, tier, gv, 'i', i, '', false, 0, 'i', '');
+    && heroSprite(pl.sect, tier, gv, 'i', i, '', false, 0, 'i', '', 2);
   g.save();
   // Vào hệ Ô VẼ: gốc ở góc trên-trái ô, gót chân ở HERO_GOT, thân cao CAO_THAN_NUONG.
   g.translate(n.cx, n.fy); g.scale(k, k); g.translate(-HERO_W / 2, -HERO_GOT);

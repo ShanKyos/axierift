@@ -22,11 +22,14 @@ const pass = m => console.log('PASS ' + m);
     co:     typeof nvSoKhung === 'function',
     dwsc1r: nvSoKhung('dwsc1', 'r'), dkcw1r: nvSoKhung('dkcw1', 'r'),
     elfar1r:nvSoKhung('elfar1','r'), dlcm1r: nvSoKhung('dlcm1', 'r'),
-    sbhd1r: nvSoKhung('sbhd1', 'r'), dwvt1r: nvSoKhung('dwvt1', 'r'),
+    // ⚠ `sbhd1` ĐÃ GỠ cùng đợt Spellblade sang gói `magic-runtime`. Thay bằng một tên KHÔNG
+    // BAO GIỜ tồn tại: ca mà mệnh đề này thật sự muốn gác là "bộ không khai riêng thì lui về
+    // 16", và một tên bịa gác đúng ca ấy mà không cột bài vào một bộ art có thể bị gỡ.
+    boLa: nvSoKhung('bo_khong_co_that', 'r'), dwvt1r: nvSoKhung('dwvt1', 'r'),
     khongTen: nvSoKhung(null, 'r'),
     // khối KHÁC khối chạy thì mọi bộ phải giống nhau — nếu không là đụng vào chỗ không cần đụng
-    dwsc1w: nvSoKhung('dwsc1', 'w'), sbhd1w: nvSoKhung('sbhd1', 'w'),
-    dwsc1i: nvSoKhung('dwsc1', 'i'), sbhd1i: nvSoKhung('sbhd1', 'i'),
+    dwsc1w: nvSoKhung('dwsc1', 'w'), boLaW: nvSoKhung('bo_khong_co_that', 'w'),
+    dwsc1i: nvSoKhung('dwsc1', 'i'), boLaI: nvSoKhung('bo_khong_co_that', 'i'),
     moc: NV_MOC.r
   }));
   console.log('① bảng khung:', JSON.stringify(r1));
@@ -35,10 +38,10 @@ const pass = m => console.log('PASS ' + m);
   const moi = [r1.dwsc1r, r1.dkcw1r, r1.elfar1r, r1.dlcm1r];
   if (moi.some(v => v !== 32)) fail(`bốn bộ đã nướng lại phải 32 khung chạy, đang ${JSON.stringify(moi)}`);
   else pass('dkcw1 · dwsc1 · elfar1 · dlcm1 → 32 khung chạy');
-  if (r1.sbhd1r !== 16 || r1.dwvt1r !== 16 || r1.khongTen !== 16)
-    fail(`bộ chưa nướng lại phải giữ 16 khung, đang sbhd1=${r1.sbhd1r} dwvt1=${r1.dwvt1r} không-tên=${r1.khongTen}`);
-  else pass('sbhd1 · dwvt1 · không rõ tên → giữ 16 khung');
-  if (r1.dwsc1w !== r1.sbhd1w || r1.dwsc1i !== r1.sbhd1i)
+  if (r1.boLa !== 16 || r1.dwvt1r !== 16 || r1.khongTen !== 16)
+    fail(`bộ chưa nướng lại phải giữ 16 khung, đang bộ-lạ=${r1.boLa} dwvt1=${r1.dwvt1r} không-tên=${r1.khongTen}`);
+  else pass('bộ lạ · dwvt1 · không rõ tên → giữ 16 khung');
+  if (r1.dwsc1w !== r1.boLaW || r1.dwsc1i !== r1.boLaI)
     fail('khối ĐI/ĐỨNG khác nhau giữa hai bộ — chỉ khối chạy được phép khai riêng');
   else pass('khối đi và đứng vẫn dùng chung số khung');
   if (r1.moc !== 80) fail(`mốc khối chạy đổi thành ${r1.moc} — phải giữ 80 cho cả hai đời`);
@@ -81,9 +84,22 @@ const pass = m => console.log('PASS ' + m);
     return ra;
   }, [sect, blk, n]);
 
+  // ⚠ CHỜ GÓI `magic-runtime` VỀ TRƯỚC KHI HỎI. `mrDung()` trả false tới khi manifest+sockets
+  // tải xong; hỏi sớm thì lớp dùng gói bị xếp nhầm sang nhánh `NV_BO` và bài đỏ ở một chỗ
+  // không hỏng gì. `startGame` đã xin sớm giúp, nhưng mạng vẫn cần vài trăm mili giây.
+  await p.evaluate(() => { window.TEST_MODE = true; for (const s of Object.keys(SECTS)) if (window.MR_LOP && MR_LOP[s]) startGame(s, null); });
+  await p.waitForFunction(() => !window.MR_LOP || Object.keys(MR_LOP).every(s => mrDung(s)),
+                          null, { timeout: 15000 }).catch(() => {});
+
   const boCua = await p.evaluate(() => {
     const gv = { t: 1, plus: 0 }, ra = {};
-    for (const s of Object.keys(SECTS)){ const bo = nvBoGoc(s, 1, gv); ra[s] = { bo, n: nvSoKhung(bo, 'r') }; }
+    for (const s of Object.keys(SECTS)){
+      // ⚠ LỚP DÙNG GÓI `magic-runtime` KHÔNG CÓ BỘ `NV_BO` NÀO. Hỏi `nvBoGoc` ở đó trả
+      // undefined và `nvSoKhung` lui về 16, nên bài đòi 16 tư thế từ một gói chỉ có 8 và ĐỎ ở
+      // một chỗ không hỏng gì. Hỏi đúng cửa của gói: `mrDung()` + `MR_COT`.
+      if (window.mrDung && mrDung(s)){ ra[s] = { bo: 'magic-runtime', n: MR_COT, mr: true }; continue; }
+      const bo = nvBoGoc(s, 1, gv); ra[s] = { bo, n: nvSoKhung(bo, 'r') };
+    }
     return ra;
   });
   console.log('② bộ thân của từng lớp:', JSON.stringify(boCua));
@@ -114,12 +130,38 @@ const pass = m => console.log('PASS ' + m);
     else pass(`${lop}/${d.bo}: nửa sau vòng chạy là ${nua} tư thế MỚI, không phải lặp lại nửa trước`);
   }
 
-  // ── ③ Bộ CHƯA nướng lại vẫn chạy bình thường ───────────────────────────────────────────
-  const h16 = await bam('minhgiao', 'r', 16);
-  const rong16 = h16.filter(v => v === 'rong' || v === 'null').length;
-  console.log('③ Spellblade (sbhd1, 16 khung): rỗng=' + rong16 + ' · khác nhau=' + new Set(h16).size);
-  if (rong16) fail(`${rong16}/16 khung chạy của bộ cũ vẽ ra RỖNG — đời cũ bị hỏng theo`);
-  else pass('bộ chưa nướng lại vẫn vẽ đủ 16 khung');
+  // ── ③ Gói `magic-runtime`: TÁM HƯỚNG phải ra TÁM tư thế khác nhau ─────────────────────
+  // Mệnh đề cũ ở đây đo "bộ CHƯA nướng lại (sbhd1, 16 khung) vẫn chạy" — bộ ấy đã gỡ cùng đợt
+  // Spellblade sang gói mới, nên nó hết chỗ đo. Thứ thay nó là tính chất MỚI mà gói mang tới và
+  // chưa bài nào gác: hướng nằm theo HÀNG trong atlas, nên tra nhầm hàng là nhân vật quay sai
+  // mà KHÔNG một lỗi nào in ra. Đo ở khối ĐỨNG (tư thế ổn định nhất) và đòi cả 8 hàng khác nhau.
+  const lopMR = Object.entries(boCua).filter(([, d]) => d.mr).map(([k]) => k);
+  if (!lopMR.length) console.log('③ (bỏ qua — chưa lớp nào dùng gói magic-runtime)');
+  for (const lop of lopMR){
+    const h8 = await p.evaluate(async (lop) => {
+      window.TEST_MODE = true; startGame(lop, null);
+      await new Promise(r => setTimeout(r, 2500));
+      const gv = Object.assign({}, gearVisual(player), { t: 1, plus: 0 });
+      const ra = [];
+      for (let h = 0; h < 8; h++){
+        const s = heroSprite(lop, 1, gv, 'i', 0, 'a', false, 0, 'i', '', h);
+        if (!s) { ra.push('null'); continue; }
+        const c = document.createElement('canvas'); c.width = s.width; c.height = s.height;
+        const q = c.getContext('2d'); q.drawImage(s, 0, 0);
+        const d = q.getImageData(0, 0, c.width, c.height).data;
+        let x = 0, dac = 0;
+        for (let k = 3; k < d.length; k += 40){ if (d[k] > 8) dac++; x = (x * 31 + d[k] + d[k-3]) | 0; }
+        ra.push(dac < 40 ? 'rong' : String(x));
+      }
+      return ra;
+    }, lop);
+    const rong8 = h8.filter(v => v === 'rong' || v === 'null').length;
+    console.log(`③ ${lop} (magic-runtime): rỗng=${rong8}/8 · hướng khác nhau=${new Set(h8).size}/8`);
+    if (rong8) fail(`③ ${lop}: ${rong8}/8 hướng vẽ ra RỖNG — atlas chưa về hoặc tra sai hàng`);
+    else if (new Set(h8).size < 7)
+      fail(`③ ${lop}: chỉ ${new Set(h8).size}/8 hướng khác nhau — đang đọc trùng hàng trong atlas`);
+    else pass(`③ ${lop}: 8 hướng ra 8 tư thế khác nhau`);
+  }
 
   // ── ④ CHỖ NGUY HIỂM: thân 32 khung đội giáp 16 khung, trong cùng một khung hình ────────
   // nvKhungGop phải quy về PHA rồi mới nhân với số khung của từng lớp. Nếu nó lấy chung một

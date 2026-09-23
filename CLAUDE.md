@@ -2633,7 +2633,9 @@ trang bị nên ai chưa có giày cũng bị khối ĐI gánh tốc độ 209 p
 trượt chân nằm sẵn trong bản vẽ**. Bàn chân chống đất gần như đứng yên tại chỗ trong 16/32
 khung. Không giá trị `SAI_CHAN` nào chữa nổi; phải vẽ lại vòng đi/chạy.
 Bản đặt hàng + ngưỡng nghiệm thu: `docs/DAT_HANG_TUONG_DI.md`.
-**Spellblade còn thiếu hẳn một hàng bảng khung** — `sbhd1` có 96 ô (6 hàng) trong khi bốn bộ
+~~**Spellblade còn thiếu hẳn một hàng bảng khung**~~ — hết hiệu lực: Spellblade đã rời sang gói
+`magic-runtime` và `sbhd1` đã gỡ khỏi đĩa. Giữ lại đoạn dưới vì nó mô tả một kiểu hỏng có thật
+của đường nướng Spine: `sbhd1` có 96 ô (6 hàng) trong khi bốn bộ
 kia 112 ô, nên khối chạy của nó chỉ đọc được **nửa đầu** vòng.
 
 Test: `tests/test_walkrun.js`. Mục 3 đo `walkPh` chuẩn hoá **theo px đã đi**, không theo thời
@@ -5090,6 +5092,10 @@ gọn lại thì phải cắt hộp THEO TỪNG KHỐI, không phải một hộ
 
 ### 🏹 ~~cung phải VẶN LẠI~~ → **TƯ THẾ MANG TRONG THÀNH** (`VK_XOAY` · `VK_MANG`)
 
+> ⚠ Mọi số đo nhắc `sbsm1` trong khối này là **LỊCH SỬ**: bộ ấy đã gỡ cùng đợt Spellblade sang gói
+> `magic-runtime` (2026-09-23). Hai bộ còn lại (`dkph1` · `elnb1`) vẫn chạy nguyên, nên luật thì
+> còn hiệu lực — chỉ mấy con số của cột Spellblade là không đối chiếu lại được nữa.
+
 > ⚠ Giữ tiêu đề gạch ngang để cảnh báo: `VK_XOAY` **đã đổi hẳn ngữ nghĩa lẫn giá trị**. Bản cũ
 > là cặp `(số độ, những hoạt cảnh BỎ QUA)` và chỉ khai `elnb1: −40` cho riêng cây cung. Đọc
 > lịch sử git rồi tưởng luật cũ còn là sai cả hai nửa.
@@ -5169,7 +5175,11 @@ khai theo `dòng|giai`, nên đeo **bất cứ cây nào khác** — cây rìu, 
 ở giai 1-6 — là `nvVkLop` trả `null`, `_tkHien` bật **thần khí**, và một thanh đại kiếm cao gần
 bằng người **trôi lơ lửng** cạnh nhân vật. Đo được: **60/63** món của ba lớp rơi vào đường đó.
 
-⇒ `NV_VK_LOP_LOP = { thieulam:'dkph1', minhgiao:'sbsm1', toanchan:'elnb1' }` là nấc lùi cuối,
+⇒ `NV_VK_LOP_LOP = { thieulam:'dkph1', toanchan:'elnb1' }` là nấc lùi cuối,
+⚠ **`minhgiao` ĐÃ RỜI khỏi bảng này** (2026-09-23): gói `magic-runtime` cầm vũ khí bằng tệp RỜI
+đặt theo socket hai tay của từng khung, nên nó không cần — và không có — một bảng khung nướng
+sẵn cho mỗi cặp dòng×giai. Đó chính là thứ cho phép 7 giáp × 7 vũ khí dùng chung một bộ art.
+Nấc lùi ấy
 tra theo lớp của **MÓN** (`d.sect`). Thần khí **cố ý** chỉ còn dành cho Dark Wizard và Dark Lord
 — chủ dự án chốt từ đợt nhập gói: *"với DK thì nhân vật tay sẽ cầm kiếm"*, và riêng Dark Lord
 *"cho vũ khí bay theo nhé"*.
@@ -5259,6 +5269,169 @@ phần dao động còn lại là chân đưa qua đưa lại. Quy về ô nư�
 ⚠ **ĐỪNG ghim theo BÓNG THÂN của khung đầu** — phần dư lòi ra thành một vương miện THỨ HAI trên
 đầu cùng mấy mảnh chi ma. Và **đừng tách cánh theo MÀU**: cửa nhận diện theo màu bắt luôn kẽ
 giáp (tối) và nẹp vàng (vàng) — cùng vết sẹo đã ghi cho phép gỡ bóng của đài phun nước.
+
+## ✦ GÓI `magic-runtime` — SPELLBLADE ĐÃ RỜI HẲN KHỎI SPINE, và nó có TÁM HƯỚNG THẬT
+
+Chủ dự án chốt (2026-09-23): *"thay thế nó bằng nhân vật spellcaster… tốt nhất là xoá hẳn spine
+agent và thay thế mới đi. Và khi thay vào, ở chỗ equipment người chơi đã có thể đổi tự do các
+món đồ / vũ khí với nhau."*
+
+| | |
+|---|---|
+| Gói | `public/game/assets/magic-runtime/` — **90,1 MB** (armor 78 · body_base 7,6 · flight 4,3 · weapons **0,1**) |
+| Nguồn sự thật | `manifest.json` (7 giáp · 7 vũ khí · FPS · thứ tự vẽ) + `sockets.json` (**4 state × 8 hướng × 8 frame = 256 pose**) |
+| Máy | khối `MR_*` trong `game.js`, ngay trên `heroSprite` |
+| Cửa DUY NHẤT | **`mrDung(sect)`** — lớp này đọc gói không · **`mrVe(...)`** — dựng một khung |
+| Lớp dùng nó | `MR_LOP = { minhgiao: true }` |
+
+### ⚠ VÌ SAO NÓ CÓ ĐƯỜNG VẼ RIÊNG, KHÔNG NHÉT VÀO `NV_BO`/`NV_MOC`
+
+Hai hợp đồng bảng khung khác hẳn nhau, ép cái này vào cái kia là hỏng cả hai:
+
+| | hệ `NV_*` | gói `magic-runtime` |
+|---|---|---|
+| khối | nối tiếp theo `NV_MOC` (i·w·a·c·r…) | **BỐN atlas rời** (idle/walk/run/attack) |
+| hướng | một bản nghiêng + **LẬT** ngang | **8 HÀNG** trong chính atlas, không lật |
+| ô | suy từ `NV_LOP_HOP`, mỗi bộ một khác | `256×256` cố định, pivot `(128,244)` |
+| vũ khí | nướng SẴN vào lớp `vk` của thân | **tệp RỜI** + socket hai tay theo từng khung |
+
+Cái cuối là cả điểm của gói: **7 giáp × 7 vũ khí = 49 tổ hợp, 0 byte art thêm**. Hệ `NV_VK_LOP`
+không làm được — nó phải nướng một bảng khung cho MỖI cặp dòng×giai, và vì thế 60/63 món của ba
+lớp từng rơi về cây lùi.
+
+### Nó đi CHUNG đường `_gop`, và đó là lý do hào quang +N chạy nguyên xi
+
+`mrVe()` trả về một tấm **`NV_OW×NV_OH`** — đúng khuôn mà `_nvKhungRa()` nhận thẳng
+(`if (im.width === NV_OW) return im;`). Nhờ vậy viền sáng +N · dải quét +10 · tàn lửa bám theo
+ALPHA của khung mới **mà không phải sửa một dòng nào** của khối hào quang. `_gop` nghĩa là
+"khung đã dựng sẵn, blit thẳng" — gói chỉ việc nói cùng thứ tiếng ấy.
+
+### ⚠ BẢY CHỖ PHẢI GÁC, và sáu trong bảy hỏng trong IM LẶNG
+
+| | nếu quên |
+|---|---|
+| `flip` phải **false** (`_mrLop ? false : _hInfo.lat`) | atlas đã có đủ 8 hướng, lật thêm lần nữa là hướng Tây soi gương thành Đông — bóng dáng gần đối xứng nên nhìn ra "hình như quay sai", không ra một lỗi |
+| `_n` phải là `MR_COT` (8) | `nvSoKhungBo` trả undefined ⇒ `heroFrameNow` chia cho 0 |
+| `_boCoVk` phải bật | **đã chụp lại**: hai cây trong tay + một cây thần khí bay lơ lửng bên trái |
+| `_choArt` phải cộng `_mr` | `_coArt` luôn false ở lớp này, nên khung dựng lúc atlas chưa về sẽ được NHỚ LẠI ⇒ tàng hình vĩnh viễn ở đúng mấy khung đó |
+| `else if (!_coArt && !_mr)` ở nhánh vẽ-bằng-đường | mỗi khung chưa về lại chớp ra một hiệp sĩ xám mũ sừng — đúng thứ Quy tắc số 3 cấm |
+| `ccArtSan()` phải hỏi `mrVe` | van ĐÓNG VĨNH VIỄN ⇒ màn chọn lớp rơi về dải nướng = **nhân vật CŨ**, vào game ra một người khác hẳn |
+| `ccKhung(t, sect)` phải theo TỪNG LỚP | dải nướng 8 ô bị đọc tới chỉ số 15 ⇒ **nửa vòng thở TRỐNG TRƠN** |
+
+### ⚠ `mrDung()` TRẢ `false` Ở LƯỢT HỎI ĐẦU — lượt ấy chỉ KHỞI ĐỘNG phép tải
+
+Manifest + sockets là 182 KB và **mọi thứ của gói phải đợi chúng**. Ai hỏi MỘT LẦN rồi tin câu
+trả lời sẽ xếp lớp ấy nhầm sang nhánh `NV_BO` — đã làm `test_khungchay` đỏ ở một chỗ chẳng hỏng
+gì, và làm bộ nướng màn chờ nướng nhầm nhân vật cũ. `drawPlayer` miễn nhiễm vì nó hỏi lại mỗi
+khung; mọi chỗ hỏi MỘT lần thì phải **chờ**.
+
+⇒ `startGame()` gọi `mrNapDL()` ngay dòng đầu **cho lớp thật sự dùng gói** — 182 KB cho mọi
+người chơi là 11% ngân sách màn tải (`data/taitro.js`: 21 tệp / 1,63 MB), không đáng.
+
+### ⚠ NẠP TRƯỚC CẢ BỐN STATE CỦA BỘ ĐANG MẶC — đừng để lười thuần
+
+Đo ở lượt nghiệm thu đầu: idle ra **7.444-7.780** điểm ảnh ở cả 8 hướng, còn walk/run/attack ra
+**0**. Nạp lười thuần thì **bước đi ĐẦU TIÊN của mỗi phiên rơi vào khoảng trống**, và vì
+`_choArt` chặn nhớ lại nên nó chỉ hỏng đúng một lần rồi tự khỏi — cực dễ nghiệm thu nhầm là xong.
+Cùng vết sẹo đã ghi cho bảng CHẠY của avatar.
+
+`mrXinBo()` xin cả bốn state ngay lúc bộ giáp hiện ra lần đầu. **Chỉ bộ ĐANG MẶC**, không xin cả
+bảy: một bộ là 11,5 MB trên đĩa và **~64 MB sau giải nén** (4 × 2048² × 4 byte).
+
+### ⚠ BẮC CẦU HƯỚNG BẰNG **TÊN**, ĐỪNG CHÉP MỘT MẢNG CHỈ SỐ
+
+`NV_HUONG` đánh số theo GÓC (0 = Đông), `manifest.layout.rowOrder` kể TÊN hàng. Hôm nay hai bảng
+lệch đúng 6 nấc, nhưng viết `(i+6)%8` là khoá cứng một sự trùng hợp: đổi `rowOrder` trong manifest
+thì nhân vật quay lung tung mà **không một lỗi nào in ra**. `MR_TEN_HUONG` bắc cầu bằng tên.
+
+### Tỉ lệ suy từ `CAO_THAN_NUONG`, không chép một con số đẹp
+
+Thân trong ô cao **226 px** — ĐO trên `armor/ma_thuat/idle` south f0 (bbox `84,18 → 173,244`),
+không phải chép từ README. `MR_TY = CAO_THAN_NUONG / 226` ⇒ Spellblade đứng cao **bằng** bốn lớp
+kia. Chép cứng một tỉ lệ ở đây là một lớp cao hơn hẳn phần còn lại mà không ai đo ra.
+
+### ⚠ BỐN STATE, và bốn khối kia trỏ về đâu là một QUYẾT ĐỊNH
+
+`MR_STATE` — gói chỉ có `idle/walk/run/attack`:
+
+- **`c` (niệm chú) → attack.** Spellblade niệm chú BẰNG nhát chém (Fire Slash), nên đây là thay
+  thế gần nhất trong bốn cái, không phải một chỗ trống.
+- **`h`/`d` → idle, GHIM khung 0** (`MR_GHIM`). Thiếu bảng ghim thì nhân vật vừa trúng đòn vừa
+  nhấp nhô theo nhịp thở, và cái xác thì thở suốt 1,2 giây nằm xuống.
+- **`q`/`n`/`t`/`e` (ngồi · nói · dính buff · nhảy múa) → idle.** Gói không có bảng hai, nên
+  `_blkVe` cũng phải bỏ qua nhánh `nvBang` cho lớp này.
+
+**Nợ ART, không phải nợ mã — nói ra chứ đừng giấu:** chưa có tư thế GIẬT và tư thế NGÃ. Cái chết
+hiện ra là khung idle đứng yên rồi mờ dần.
+
+### 🪶 BAY: gói có SLICE DUYỆT, không có atlas tám hướng
+
+`flight` = hướng **South** · `flight_attack` = hướng **Southeast**. README của gói nói thẳng
+(*"a `south` review slice, not a claimed eight-direction flight atlas"*), nên `mrVeBay()` **cố ý
+bỏ qua `huong`**: bay sang Tây vẫn hiện tư thế South. Đó là nợ ART, và nói ra ở đây còn hơn để
+người sau tưởng hướng bị tính sai.
+
+- **Đôi cánh nằm SẴN trong slice** ⇒ `_bayBo` phải bật để `veCanh()` TẮT. Vẽ cả hai là hai đôi
+  cánh trên màn — cùng kiểu hỏng với hai cây vũ khí ở `_boCoVk`.
+- **Cánh khai theo LỚP** (`MR_CANH_LOP`), không theo bậc: gói chỉ có tier 1, giả vờ có ba bậc là
+  hứa suông. Wing 1 MG cho Spellblade, Wing 1 DW để dành cho ngày Dark Wizard có gói tương tự.
+- **Nhịp vỗ cánh lấy từ manifest (175 ms), KHÔNG dùng `BAY_NHIP` 95 ms** — gói ghi rõ *"a
+  deliberately slow wing beat"*, chạy ở 95 là vỗ nhanh gấp đôi ý art.
+- **CỐ Ý không vẽ `skill_vfx` của gói**: Fire Slash của game đã có tranh riêng trong
+  `CHIEU_TRANH`, vẽ thêm là hai vụ nổ chồng nhau lệch tâm.
+- ⚠ **Thân trong slice bay là bộ `Ma Thuật` (giai 4) cố định.** Mặc Cuồng Phong giai 7 mà bay thì
+  vẫn ra thân Ma Thuật. Giới hạn của ART, không sửa được bằng mã.
+
+### ⚠ ĐỔI TỰ DO ĐƯỢC MỘT NỬA — nói rõ nửa nào
+
+README ghi `armorMode: "appearance-replacement"` và nói thẳng nó *"does not claim per-piece
+chest/gloves/pants/boots mixing yet; that requires separately authored occlusion masks for every
+state"*.
+
+| | |
+|---|---|
+| đổi **vũ khí** tự do, mọi giáp | ✅ hoàn toàn — 49 tổ hợp |
+| đổi **bộ giáp** | ✅ 7 bộ, tra bằng `mrGiap(tier)` |
+| 4 ô giáp vẫn cộng **chỉ số** riêng | ✅ `calcDerived` không đụng một dòng |
+| **nhìn thấy** nón bộ A + áo bộ B | ❌ cần occlusion mask cho 4 state × 8 hướng × 8 frame |
+
+Bóng dáng đọc theo `tier` mà `heroSprite` nhận — tức `heroTier(p)`, tức bậc trung bình **NHÂN ĐỘ
+PHỦ** của bốn ô. Đây là quy ước đang chạy cho cả `NV_GIAP`, không phải một luật mới.
+
+### Đã gỡ theo — `sbsm1` · `sbhd1` KHÔNG CÒN TRÊN ĐĨA
+
+`NV_BO['minhgiao|1']` · `NV_GIAP['minhgiao|7']` · `NV_LOP_HOP['sbhd1'|'sbsm1']` ·
+`NV_KHUNG_R.sbsm1` · `NV_VK_LOP['makiem|7']` · `NV_VK_LOP_LOP.minhgiao` · 25 tệp webp.
+
+⚠ **`giaiCoArt('minhgiao')` nay trả 1** (không tìm thấy giai nào trong `NV_GIAP`). Chỗ nào hỏi
+"lớp này có art ở giai nào" cho Spellblade phải đi qua `mrGiap`, không qua hàm đó.
+
+### ⚠⚠ BỘ NƯỚNG MÀN CHỜ CÓ **HAI** LỖI CÓ SẴN, và đợt này mới lôi ra
+
+`tools/title/nuong_lop_cho.cjs`:
+
+1. **Cửa sẵn sàng chỉ hỏi `nvKhungGop`** — cửa của bộ CẮT LỚP. Bộ đi đường TẤM LIỀN (`dwsl1` của
+   Dark Wizard) luôn trả null ⇒ bộ nướng bỏ cuộc với *"art chưa về"*. Nay hỏi đúng biểu thức mà
+   `ccArtSan()` hỏi (`nvKhungGop || nvBang`).
+2. **Lớp nào hỏng thì nó VẪN GHI `data/lop_cho.js`** ⇒ lớp ấy **biến mất khỏi `LOP_CHO.o`**,
+   `ccLopHinh()` trả null, màn chọn lớp mất hẳn bóng người — và tệp đã bị ghi đè nên không còn gì
+   để so. **Đã xảy ra thật trong phiên này** với `baidasan` và suýt ship. Nay hỏng một lớp là
+   KHÔNG ghi tệp nào.
+
+*Một bộ sinh dữ liệu ghi đè khi thiếu một mục là một bộ xoá sổ mục ấy trong im lặng — cùng họ với
+vết sẹo `ISO_NEO`.*
+
+Bên lề: nhờ ① mà dải nướng của Dark Wizard được cập nhật lần đầu kể từ khi lớp ấy đổi sang `dwsl1`
+— nó đang là ảnh chụp của một bộ art đã gỡ.
+
+### Gác
+
+`tests/test_khungchay.js` — ② suy bộ/số khung từ `mrDung()` + `MR_COT`; **③ nay gác chính tính
+chất mới**: 8 hướng phải ra 8 tư thế KHÁC NHAU (hướng nằm theo HÀNG, tra nhầm hàng là nhân vật
+quay sai mà không một lỗi nào in ra). `tests/test_vklop.js` — số món cần quét **suy từ bảng**
+(`WEAPON_LINES` × `GIAI_MAX`), không chép cứng 63: Spellblade rời đi thì còn 42, và bản cũ ĐỎ ở
+một chỗ chẳng hỏng gì.
+
 
 ## Art nướng sẵn từ Spine — có SKILL riêng, đọc trước khi đụng vào
 

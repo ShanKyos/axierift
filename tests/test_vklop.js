@@ -144,6 +144,11 @@ const { chromium } = require('playwright');
   // ── ③ không lớp nào rơi lại về thần khí ────────────────────────────────────────────────
   const r3 = await p.evaluate(() => {
     const ra = { thieu: [], daQuet: 0, lop: Object.keys(NV_VK_LOP_LOP) };
+    // ⚠ SỐ MÓN CẦN QUÉT SUY TỪ DỮ LIỆU, đừng chép cứng 63. Bản cũ chốt `< 50` đúng hồi có ba
+    // lớp cầm tay; Spellblade rời sang gói `magic-runtime` (vũ khí đặt theo socket, không cần
+    // bảng khung nướng sẵn) thì còn hai lớp = 42 món, và bài ĐỎ ở một chỗ chẳng hỏng gì cả.
+    ra.canQuet = (window.WEAPON_LINES || [])
+      .filter(L => L.slot === 'vukhi' && NV_VK_LOP_LOP[L.sect]).length * GIAI_MAX;
     const sectCu = player.sect;
     for (const L of (window.WEAPON_LINES || [])){
       if (L.slot !== 'vukhi' || !NV_VK_LOP_LOP[L.sect]) continue;
@@ -172,9 +177,12 @@ const { chromium } = require('playwright');
     player.sect = sectCu;
     return ra;
   });
-  // Tự kiểm cảnh dựng: 3 lớp × 3 dòng × 7 giai = 63 món. Ít hơn hẳn là genItem đang lọc theo
-  // lớp và mệnh đề chỉ quét được một phần — xanh mà không gác gì.
-  if (r3.daQuet < 50) fail(`③ chỉ dựng được ${r3.daQuet} món (cần ~63) — cảnh hỏng, mệnh đề vô nghĩa`);
+  // Tự kiểm cảnh dựng: phải quét được gần hết số món SUY RA TỪ BẢNG (mỗi dòng vũ khí của một
+  // lớp có bảng cầm tay × GIAI_MAX). Ít hơn hẳn là genItem đang lọc theo lớp và mệnh đề chỉ
+  // quét được một phần — xanh mà không gác gì.
+  if (!r3.canQuet) fail('③ không lớp nào còn bảng vũ khí cầm tay — mệnh đề hết chỗ đo');
+  else if (r3.daQuet < r3.canQuet * 0.8)
+    fail(`③ chỉ dựng được ${r3.daQuet} món (cần ~${r3.canQuet}) — cảnh hỏng, mệnh đề vô nghĩa`);
   else if (r3.thieu.length)
     fail(`③ ${r3.thieu.length}/${r3.daQuet} món rơi về THẦN KHÍ (vũ khí trôi lơ lửng): ` +
          r3.thieu.slice(0, 8).join(', '));
