@@ -108,19 +108,40 @@ const pass = m => console.log('PASS ' + m);
     // tới cái cờ — gán thẳng thì gỡ hẳn dòng đếm trong `hurtPlayer` bài này vẫn xanh.
     R.datCoHe = !!((mapBanSac(curMap) || {}).he);
     R.heTruoc = player._tutHe || 0;
+    // ⚠⚠ DỌN HAI CỬA XÚC XẮC ĐỨNG TRƯỚC `_tutHe`, nếu không mục này là một cú tung đồng xu.
+    // `hurtPlayer` có `if (m.blindT > 0 && Math.random() < 0.5)` rồi `else if (Math.random() <
+    // player.eva)` — cả hai BỎ QUA nguyên khối sát thương, tức bỏ qua luôn dòng đếm `_tutHe`.
+    // Cộng thêm chuyện người chơi ĐÁNH TRẢ trong `update()` nên con quái vừa ghim có thể chết,
+    // và `mobs.find` lượt sau bốc một con khác đang ở xa. Ba nguồn ngẫu nhiên xếp trước một
+    // khẳng định TẤT ĐỊNH ⇒ đo được đỏ ~1/6 lượt khi máy bận, và **đỏ y hệt trên cây TRƯỚC đợt
+    // này** (đã dựng worktree ở commit cũ để đối chiếu) — tức lỗi CÓ SẴN, không phải hồi quy.
+    //
+    // ⚠ Dọn như thế KHÔNG làm mệnh đề yếu đi. Thứ mục này gác là SỢI DÂY `hurtPlayer` →
+    // `heThuKet` → `_tutHe`; đòn vẫn phải đi trọn đường ấy. Cái bị gỡ là né tránh và cái chết
+    // của con quái — hai thứ chẳng liên quan gì tới sợi dây đó.
+    const _evaCu = player.eva;
+    player.eva = 0;
     for (let i = 0; i < 600 && (player._tutHe || 0) < 3; i++){
       const q = mobs.find(x => x.hp > 0);
-      if (q){ q.x = player.x + 8; q.y = player.y; q.atkCd = 0; }
+      if (q){ q.x = player.x + 8; q.y = player.y; q.atkCd = 0; q.blindT = 0; q.hp = q.maxHp; }
       player.hp = player.maxHp;            // đòn quái phải ĐẾM, nhưng không được giết người đo
       update(1 / 60);
     }
+    player.eva = _evaCu;
     R.heSau = player._tutHe || 0;
     for (let i = 0; i < 4; i++) tutTick(1 / 60);
     R.buoc.push(ten());
     return R;
   });
   const mong = ['move', 'npc', 'map', 'kill', 'loot', 'panel', 'than', 'TAT'];
-  if (di.buoc.join('>') !== mong.join('>')) fail(`③ đường thuận lệch: ${di.buoc.join(' → ')} · mong ${mong.join(' → ')}`);
+  // ⚠ TỰ KIỂM CẢNH DỰNG TRƯỚC KHI CHẤM, và IN RA CON SỐ. Không có dòng này thì lượt đỏ chỉ nói
+  // "đường thuận lệch … → than → than" và người đọc phải ĐOÁN xem bước cuối hỏng vì cơ chế hay
+  // vì con quái không kịp đánh đủ ba đòn — tôi đã phải đoán đúng một lần, và mất một vòng dựng
+  // worktree mới loại được. Một con số trong thông báo rẻ hơn hẳn một vòng chẩn đoán.
+  if (!di.datCoHe) fail('③ cảnh dựng: map đo không có hệ trội — bước `than` bất khả ở đây');
+  else if (di.heSau < 3)
+    fail(`③ cảnh dựng: quái không đánh đủ 3 đòn có hệ trong 600 nhịp (_tutHe ${di.heTruoc} → ${di.heSau})`);
+  if (di.buoc.join('>') !== mong.join('>')) fail(`③ đường thuận lệch: ${di.buoc.join(' → ')} · mong ${mong.join(' → ')} · _tutHe ${di.heSau}`);
   else pass(`③ sáu bước đi hết bằng hành động thật: ${di.buoc.join(' → ')}`);
   if (!di.coQuai || !di.kills) fail(`③ cảnh dựng: không hạ được con nào (quái ${di.coQuai} · kills ${di.kills})`);
 
