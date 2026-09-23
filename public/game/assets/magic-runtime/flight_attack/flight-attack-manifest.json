@@ -1,0 +1,148 @@
+{
+  "id": "magic_airborne_fire_slash_v2",
+  "direction": "southeast",
+  "frames": 8,
+  "frameDurationMs": 105,
+  "loop": false,
+  "cell": [
+    256,
+    256
+  ],
+  "renderOrder": [
+    "wing_back",
+    "body_armor",
+    "weapon_left",
+    "weapon_right",
+    "hand_grip_front",
+    "skill_vfx"
+  ],
+  "status": "review-ready modular southeast slice",
+  "weaponHands": [
+    [
+      [
+        60,
+        124
+      ],
+      [
+        204,
+        140
+      ]
+    ],
+    [
+      [
+        83,
+        94
+      ],
+      [
+        217,
+        142
+      ]
+    ],
+    [
+      [
+        88,
+        65
+      ],
+      [
+        217,
+        142
+      ]
+    ],
+    [
+      [
+        99,
+        76
+      ],
+      [
+        213,
+        140
+      ]
+    ],
+    [
+      [
+        119,
+        59
+      ],
+      [
+        244,
+        148
+      ]
+    ],
+    [
+      [
+        54,
+        77
+      ],
+      [
+        218,
+        111
+      ]
+    ],
+    [
+      [
+        89,
+        81
+      ],
+      [
+        216,
+        130
+      ]
+    ],
+    [
+      [
+        72,
+        119
+      ],
+      [
+        200,
+        129
+      ]
+    ]
+  ],
+  "weaponAngles": [
+    [
+      -15,
+      15
+    ],
+    [
+      -70,
+      25
+    ],
+    [
+      -100,
+      35
+    ],
+    [
+      -110,
+      55
+    ],
+    [
+      -120,
+      -70
+    ],
+    [
+      -65,
+      110
+    ],
+    [
+      -40,
+      35
+    ],
+    [
+      -15,
+      15
+    ]
+  ],
+  "weaponGripPivot": [
+    128,
+    45
+  ],
+  "sheets": {
+    "body": "body-ma-thuat-fire-slash-se-8frame.png",
+    "wing_dw_tier1": "wing-dw-tier1-fire-slash-se-8frame.png",
+    "wing_mg_tier1": "wing-mg-tier1-fire-slash-se-8frame.png",
+    "weapon": "weapon-dual-ao-anh-fire-slash-se-8frame.png",
+    "handGrip": "hand-grip-fire-slash-se-8frame.png",
+    "skill_vfx": "vfx-fire-slash-se-8frame.png"
+  }
+}

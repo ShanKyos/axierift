@@ -1,0 +1,113 @@
+{
+  "id": "magic_true_flight_wing1_v1",
+  "direction": "south",
+  "frames": 8,
+  "frameDurationMs": 175,
+  "loop": true,
+  "cell": [
+    256,
+    256
+  ],
+  "renderOrder": [
+    "wing_back",
+    "body_armor",
+    "weapon_left_right",
+    "hand_grip_front",
+    "skill_vfx"
+  ],
+  "wingRoot": [
+    128,
+    70
+  ],
+  "wingScaleRule": "span slightly larger than body; no feather/membrane below hips",
+  "bodyMotion": "stable torso; small hover; bent legs; cloak reacts gently",
+  "weaponHands": [
+    [
+      [
+        80,
+        132
+      ],
+      [
+        174,
+        132
+      ]
+    ],
+    [
+      [
+        81,
+        136
+      ],
+      [
+        183,
+        137
+      ]
+    ],
+    [
+      [
+        73,
+        135
+      ],
+      [
+        178,
+        135
+      ]
+    ],
+    [
+      [
+        79,
+        133
+      ],
+      [
+        174,
+        133
+      ]
+    ],
+    [
+      [
+        76,
+        136
+      ],
+      [
+        178,
+        136
+      ]
+    ],
+    [
+      [
+        77,
+        134
+      ],
+      [
+        175,
+        132
+      ]
+    ],
+    [
+      [
+        72,
+        138
+      ],
+      [
+        184,
+        134
+      ]
+    ],
+    [
+      [
+        77,
+        136
+      ],
+      [
+        178,
+        133
+      ]
+    ]
+  ],
+  "sheets": {
+    "body": "body-ma-thuat-true-fly-south-8frame.png",
+    "wing_dw_tier1": "wing-dw-tier1-fly-south-8frame.png",
+    "wing_mg_tier1": "wing-mg-tier1-fly-south-8frame.png",
+    "weapon": "weapon-dual-ao-anh-fly-south-8frame.png",
+    "handGrip": "hand-grip-fly-south-8frame.png"
+  }
+}

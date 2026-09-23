@@ -20,6 +20,7 @@ public/game/assets/video/*
 !public/game/assets/video/summon_mo_dau.mp4
 tools/__pycache__/
 tools/**/__pycache__/
+**/__pycache__/
 
 # Ảnh chụp QA — ĐẦU RA của bài kiểm, không phải tài sản dự án.
 # 4 bài (test_uifix, test_uidot5, test_skillpanel, test_khungbang) ghi vào đây; KHÔNG dòng code
