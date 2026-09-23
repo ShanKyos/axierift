@@ -75,8 +75,27 @@ for h in "$ROOT"/tests/*.js; do
   case "$(basename "$h")" in test_*) ;; *) cp "$h" "$OUT/src/" ;; esac
 done
 do=0
+# ── CHIA MẢNH cho CI ────────────────────────────────────────────────────────────────────────
+# `SHARD=i/n` chạy mảnh thứ i trong n mảnh (i đếm từ 1). Không đặt thì chạy hết, y như cũ.
+#
+# ⚠ CHIA THEO SỐ DƯ, ĐỪNG CHIA THEO KHỐI LIỀN. Bài kiểm xếp theo tên nên các bài cùng chủ đề
+# nằm liền nhau (test_ava*, test_bo*…), mà bài cùng chủ đề thì nặng gần bằng nhau — chia khối
+# liền là một mảnh gánh toàn bài nặng còn mảnh khác xong trong hai phút. Số dư thì trộn đều.
+#
+# ⚠ MỖI MẢNH DỰNG MÁY CHỦ RIÊNG, và đó là chủ ý: cổng xin từ hệ điều hành nên hai mảnh chạy
+# song song trên hai máy CI không đụng nhau. Đừng "tối ưu" thành một máy chủ dùng chung.
+SHARD="${SHARD:-}"
+if [ -n "$SHARD" ]; then
+  S_I="${SHARD%%/*}"; S_N="${SHARD##*/}"
+  echo "mảnh $S_I/$S_N" >> "$OUT/all.log"
+fi
+_idx=0
 for f in "$ROOT"/tests/test_*.js; do
   n=$(basename "$f")
+  if [ -n "$SHARD" ]; then
+    if [ "$(( _idx % S_N ))" -ne "$(( S_I - 1 ))" ]; then _idx=$((_idx+1)); continue; fi
+  fi
+  _idx=$((_idx+1))
   # Cổng trong bài được viết cứng; đổi hết sang cổng thật của lượt này.
   sed -E "s#localhost:8[0-9]{3}#localhost:$PORT#g" "$f" > "$OUT/src/$n"
   # Vài bài lấy cổng từ argv[2] — sed không đụng tới, nên phải truyền vào.
