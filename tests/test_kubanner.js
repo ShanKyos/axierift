@@ -152,7 +152,12 @@ const LOP = ['thieulam', 'toanchan', 'baidasan', 'minhgiao', 'bug'];
         san = ccArtSan(l, tier, gv);
         if (!san) await new Promise(r => setTimeout(r, 100));
       }
-      ra[l] = { san, tier, bo: nvBoTen(l, tier, gv, ''), nuong: !!NV_GIAP[l + '|' + tier],
+      // ⚠ HAI NGUỒN ART, HỎI CẢ HAI. `NV_GIAP` là bảng của hệ Spine; lớp dùng gói
+      // `magic-runtime` không có mặt ở đó nhưng vẫn có art thật (7 bộ trong `manifest.json`),
+      // nên hỏi thiếu một nguồn là bài báo "chưa có art giáp nướng" trên một lớp có đủ art.
+      const mr = typeof mrDung === 'function' && mrDung(l);
+      ra[l] = { san, tier, bo: nvBoTen(l, tier, gv, '') || (mr ? 'magic-runtime' : null),
+                nuong: !!NV_GIAP[l + '|' + tier] || mr, mr,
                 tp: t.tp, atlas: t.atlas };
     }
     return ra;

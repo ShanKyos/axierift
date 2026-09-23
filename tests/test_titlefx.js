@@ -172,9 +172,13 @@ let bad = 0; const fail = m => { bad++; console.log('FAIL ' + m); };
     return {
       thieu: CC_ORDER.filter(k => !ccLopAnh(k)),
       // Mỗi dải phải đủ `nKhung` ô: nướng hụt một ô là vòng thở giật một nhịp mỗi vòng.
+      // ⚠ SỐ KHUNG THEO TỪNG LỚP. `LOP_CHO.nKhung` là con số CHUNG, đúng hồi cả năm lớp cùng
+      // nướng ra 16 ô; gói `magic-runtime` chỉ có 8 khung mỗi hướng nên dùng số chung là bài
+      // đỏ ở một chỗ chẳng hỏng gì. Bảng hình học nay ghi `nKhung` riêng cho từng lớp.
       leKhung: CC_ORDER.filter(k => {
         const A = ccLopHinh(k), im = ccLopAnh(k);
-        return !A || !im || im.naturalWidth !== A.cw * window.LOP_CHO.nKhung;
+        const nK = (A && A.nKhung) || window.LOP_CHO.nKhung;
+        return !A || !im || im.naturalWidth !== A.cw * nK;
       }),
       nguon: CC_ORDER.map(k => (ccLopAnh(k) || {}).src || '').map(u => u.split('/').slice(-2).join('/')),
       phong: bc.nguoi.map(n => +(n.than / ccLopHinh(n.k).than).toFixed(3)),
@@ -219,9 +223,15 @@ let bad = 0; const fail = m => { bad++; console.log('FAIL ' + m); };
       let n = 0; for (let i = 3; i < d.length; i += 4) if (d[i] > 24) n++;
       // `coArt` suy từ DỮ LIỆU, không chép cứng tên lớp: bộ giáp mới nhập vào NV_GIAP là kỳ
       // vọng tự đổi theo. Bộ đã cắt lớp thì nvBoGiap() cố ý trả null, nên phải hỏi cả NV_GIAP.
+      // ⚠ HỎI CẢ HAI NGUỒN ART. `NV_GIAP` là bảng của hệ Spine; lớp dùng gói `magic-runtime`
+      // KHÔNG có mặt ở đó nhưng vẫn có art thật (7 bộ trong `manifest.json`). Hỏi thiếu một
+      // nguồn thì mệnh đề dưới đọc ra "chưa có art mà van vẫn mở" — đúng ngược với sự thật.
       const _bo = NV_GIAP[sect + '|' + tier];
+      const _mr = typeof mrDung === 'function' && mrDung(sect);
       return { px:n, artSan: ccArtSan(sect, tier, gv), giap: nvBoGiap(sect, gv) || null,
-               coArt: !!_bo, boTen: _bo || null, lopRoi: !!(_bo && NV_LOP_HOP[_bo]),
+               coArt: !!_bo || _mr, mr: _mr, boTen: _bo || (_mr ? 'magic-runtime' : null),
+               giapMr: _mr ? ((mrGiap(tier) || {}).id || null) : null,
+               lopRoi: !!(_bo && NV_LOP_HOP[_bo]),
                canh: !!(gv && gv.canh), plus: gv ? Math.round(gv.plus) : 0 };
     };
     return { dwTran: await dem('baidasan', false), dwDo: await dem('baidasan', true),
@@ -236,8 +246,14 @@ let bad = 0; const fail = m => { bad++; console.log('FAIL ' + m); };
       fail(`${ten} CÓ art giáp (${r.boTen}) mà ccArtSan() đóng — sân khấu bỏ phí art thật`);
     if (!r.coArt && r.artSan)
       fail(`${ten} CHƯA có art giáp mà ccArtSan() vẫn mở — sân khấu sẽ rơi về hình vẽ đường`);
-    // Bộ đổi CẢ TẤM thì nvBoGiap() phải trả tên; bộ cắt lớp thì cố ý trả null (xem nvBoGiap).
-    if (r.coArt && !r.lopRoi && r.giap !== r.boTen)
+    // ⚠ BA ĐƯỜNG DỰNG THÂN, mỗi đường một cửa — đừng hỏi cửa của đường này cho đường kia:
+    //   cắt lớp   → `nvKhungGop`, và `nvBoGiap()` CỐ Ý trả null (xem nvBoGiap)
+    //   tấm liền  → `nvBoGiap()` phải trả đúng tên bộ
+    //   gói MR    → `mrGiap(tier)`, không có mặt trong `NV_GIAP` nên `nvBoGiap` luôn null
+    if (r.mr){
+      if (!r.giapMr) fail(`${ten}: gói magic-runtime phải chọn được một bộ giáp ở giai ${r.tier}`);
+    }
+    else if (r.coArt && !r.lopRoi && r.giap !== r.boTen)
       fail(`${ten}: bộ đổi cả tấm phải dựng sống bằng ${r.boTen}, nhận ${JSON.stringify(r)}`);
   }
   // Cả hai lớp, có đồ phải KHÁC HẲN trần: cánh + hào quang +N là art/hiệu ứng thật cho mọi lớp.
