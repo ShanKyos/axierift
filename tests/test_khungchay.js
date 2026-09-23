@@ -43,19 +43,30 @@ const pass = m => console.log('PASS ' + m);
   else pass('khối đi và đứng vẫn dùng chung số khung');
   if (r1.moc !== 80) fail(`mốc khối chạy đổi thành ${r1.moc} — phải giữ 80 cho cả hai đời`);
   else pass('mốc khối chạy vẫn ở ô 80, hai đời không lệch mốc');
-
-  // ── ② 32 khung chạy phải VẼ RA THẬT, không rỗng và không lặp lại nửa vòng ──────────────
+  // ── ② Bộ khai N khung chạy thì phải VẼ RA N tư thế THẬT ───────────────────────────────
   // Nếu luật cũ (16 khung) còn sót ở đâu đó thì khung 16..31 hoặc rỗng (đọc quá đáy ảnh)
   // hoặc trùng khít khung 0..15 (do `idx % 16`). Bắt cả hai bằng cách băm điểm ảnh.
+  //
+  // ⚠⚠ CHỌN LỚP TỪ DỮ LIỆU, ĐỪNG CHÉP CỨNG 'baidasan'. Bản cũ đo Dark Wizard và đòi 32 tư
+  // thế, đúng hồi lớp ấy dùng `dwsc1`. Nay Dark Wizard dùng `dwsl1` — thân dựng từ ảnh render,
+  // `NV_KHUNG_R` khai thẳng là **8** khung — nên đòi 32 thì chỉ số cuộn vòng, ra đúng 8 tư thế
+  // và nửa sau trùng khít nửa trước. Bài báo "luật 16 khung còn sót" trong khi mã hoàn toàn
+  // đúng và dữ liệu cũng đúng. *Một bài kiểm chép cứng tên lớp là một bài kiểm sẽ mục vào
+  // đúng ngày lớp ấy đổi bộ art — mà đổi bộ art là việc xảy ra thường xuyên ở đây.*
   const bam = async (sect, blk, n) => await p.evaluate(async ([sect, blk, n]) => {
+    // ⚠⚠ ĐẶT `TEST_MODE` TRƯỚC `startGame`, nếu không `phatDoKhoiDau()` phát bộ giai 7 cho
+    // nhân vật mới — và `gearVisual().oLop` sẽ trỏ vào bộ giai 7 trong khi bài ép `tier = 1`.
+    // Hai thứ lệch nhau thì `nvKhungGop()` không ghép được lớp nào và thân vẽ ra TRỐNG TRƠN:
+    // đo được thieulam ra 32/32 khung rỗng, tức bài báo "đọc quá đáy bảng khung" trong khi
+    // mã hoàn toàn đúng. Đặt cờ rồi thì cùng khung ấy ra 581 điểm ảnh đặc.
+    // Bốn lớp kia không lộ ra vì bộ của chúng không đi đường lớp rời ở giai 7.
+    window.TEST_MODE = true;
     startGame(sect, null);
     await new Promise(r => setTimeout(r, 500));
     const ra = [];
     for (let i = 0; i < n; i++){
-      // ⚠ ÉP `t:1`, đừng tin đồ mặc định. Bài này đo THÂN 32 khung; nếu người chơi mới đang
-      // mặc sẵn bộ giai 7 (xem DEMO_DO_GIAI) thì với Dark Wizard đó là `dwsm1` — bộ GỘP nướng
-      // từ đời cũ, chỉ 96 ô = 16 khung chạy — và nvKhungGop() cố ý trả null cho bộ gộp. Bài
-      // sẽ đo nhầm 16 khung rồi báo "luật 16 khung còn sót" trong khi mã hoàn toàn đúng.
+      // ⚠ ÉP `t:1`, đừng tin đồ mặc định. Nhân vật mới nay được phát sẵn bộ giai 7
+      // (xem DEMO_DO_GIAI), mà bộ GỘP đời cũ thì `nvKhungGop()` cố ý trả null.
       const _gv = Object.assign({}, gearVisual(player), { t: 1, plus: 0 });
       const s = heroSprite(player.sect, 1, _gv, blk, i, 'a', false, 0, blk);
       if (!s) { ra.push('null'); continue; }
@@ -70,18 +81,38 @@ const pass = m => console.log('PASS ' + m);
     return ra;
   }, [sect, blk, n]);
 
-  const h32 = await bam('baidasan', 'r', 32);
-  const rong = h32.filter(v => v === 'rong' || v === 'null').length;
-  const rieng = new Set(h32).size;
-  const nuaSau = h32.slice(16), nuaTruoc = h32.slice(0, 16);
-  const trungNua = nuaSau.filter((v, i) => v === nuaTruoc[i]).length;
-  console.log('② Dark Wizard 32 khung chạy: rỗng=' + rong + ' · khác nhau=' + rieng + ' · nửa sau trùng nửa trước=' + trungNua);
-  if (rong) fail(`${rong}/32 khung chạy vẽ ra RỖNG — đang đọc quá đáy bảng khung`);
-  else pass('cả 32 khung chạy đều có hình');
-  if (trungNua > 2) fail(`${trungNua}/16 khung nửa sau trùng khít nửa trước — luật 16 khung còn sót, idx đang bị chia dư`);
-  else pass('nửa sau vòng chạy là 16 tư thế MỚI, không phải lặp lại nửa trước');
-  if (rieng < 24) fail(`chỉ ${rieng}/32 khung khác nhau — bảng khung không đủ tư thế`);
-  else pass(`${rieng}/32 khung khác nhau`);
+  const boCua = await p.evaluate(() => {
+    const gv = { t: 1, plus: 0 }, ra = {};
+    for (const s of Object.keys(SECTS)){ const bo = nvBoGoc(s, 1, gv); ra[s] = { bo, n: nvSoKhung(bo, 'r') }; }
+    return ra;
+  });
+  console.log('② bộ thân của từng lớp:', JSON.stringify(boCua));
+
+  // ⓐ MỌI lớp: khai bao nhiêu khung thì phải vẽ ra bấy nhiêu tư thế, không rỗng.
+  for (const [lop, d] of Object.entries(boCua)){
+    const h = await bam(lop, 'r', d.n);
+    const rong = h.filter(v => v === 'rong' || v === 'null').length;
+    const rieng = new Set(h).size;
+    const san = Math.ceil(d.n * 0.75);
+    console.log(`②ⓐ ${lop} (${d.bo}, khai ${d.n}): rỗng=${rong} · khác nhau=${rieng}`);
+    if (rong) fail(`${lop}/${d.bo}: ${rong}/${d.n} khung chạy vẽ ra RỖNG — đang đọc quá đáy bảng khung`);
+    else if (rieng < san) fail(`${lop}/${d.bo}: chỉ ${rieng}/${d.n} khung khác nhau (cần ≥${san}) — bảng khung không đủ tư thế`);
+    else pass(`${lop}/${d.bo}: ${rieng}/${d.n} khung chạy đều có hình và khác nhau`);
+  }
+
+  // ⓑ Lớp nào khai ≥32 thì nửa sau vòng chạy phải là tư thế MỚI — đây mới là mệnh đề bắt
+  //    được "luật 16 khung còn sót". Chọn bộ khai NHIỀU khung nhất, cũng suy từ dữ liệu.
+  const lop32 = Object.entries(boCua).filter(([, d]) => d.n >= 32).sort((a, b) => b[1].n - a[1].n)[0];
+  if (!lop32) fail('không lớp nào còn khai ≥32 khung chạy — mệnh đề "nửa sau phải mới" hết chỗ đo');
+  else {
+    const [lop, d] = lop32;
+    const h = await bam(lop, 'r', d.n);
+    const nua = d.n >> 1;
+    const trungNua = h.slice(nua).filter((v, i) => v === h[i]).length;
+    console.log(`②ⓑ ${lop} (${d.bo}, ${d.n} khung): nửa sau trùng nửa trước=${trungNua}/${nua}`);
+    if (trungNua > 2) fail(`${lop}/${d.bo}: ${trungNua}/${nua} khung nửa sau trùng khít nửa trước — luật 16 khung còn sót, idx đang bị chia dư`);
+    else pass(`${lop}/${d.bo}: nửa sau vòng chạy là ${nua} tư thế MỚI, không phải lặp lại nửa trước`);
+  }
 
   // ── ③ Bộ CHƯA nướng lại vẫn chạy bình thường ───────────────────────────────────────────
   const h16 = await bam('minhgiao', 'r', 16);
