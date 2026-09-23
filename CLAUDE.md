@@ -1774,6 +1774,29 @@ cuối trùng). Đúng bệnh nhân bản mà mục chẩn đoán ở đầu tà
 `TUT_STEPS` (**7 bước**) · `tutTick` · `tutGhi` · `tutAdvance` · `tutLamDuoc`, trong `game.js`.
 Gác: **`tests/test_tanthu.js`** (**8 mục**, **mọi cơ chế đã thử ngược và đều đỏ**).
 
+#### ⚠ MỤC ③ TỪNG LÀ MỘT CÚ TUNG ĐỒNG XU — ba nguồn ngẫu nhiên trước một khẳng định TẤT ĐỊNH
+
+Đỏ ~1/6 lượt khi máy bận, và nó im lặng theo kiểu tệ nhất: cùng một commit xanh trên `main` mà
+đỏ trên `release`. Thông điệp chỉ nói `… → than → than · mong … → than → TAT`, tức người đọc
+phải **đoán** bước cuối hỏng vì cơ chế hay vì con quái không kịp đánh đủ ba đòn.
+
+Nguyên nhân: `hurtPlayer` có **HAI cửa `Math.random()` đứng TRƯỚC** dòng đếm `_tutHe` —
+`m.blindT && rnd < 0.5` rồi `rnd < player.eva` — và cả hai **bỏ qua nguyên khối sát thương**,
+tức bỏ qua luôn phép đếm. Cộng thêm chuyện người chơi **đánh trả** trong `update()` nên con quái
+vừa ghim có thể chết, và `mobs.find` lượt sau bốc một con đang ở xa.
+
+⇒ Cảnh đo ghim `player.eva = 0` · `q.blindT = 0` · `q.hp = q.maxHp`, rồi **trả lại `eva`**.
+⚠ Việc ấy **KHÔNG làm mệnh đề yếu đi**: thứ mục ③ gác là SỢI DÂY `hurtPlayer` → `heThuKet` →
+`_tutHe`, và đòn vẫn phải đi trọn đường ấy. Cái bị gỡ là né tránh và cái chết của con quái —
+hai thứ chẳng liên quan tới sợi dây đó. Đây là nới **MẪU**, không phải nới **NGƯỠNG**.
+
+Thử ngược (`player.eva = 0.97`) dựng lại **đúng từng chữ** thông điệp gốc ⇒ chẩn đoán đúng chứ
+không phải đoán.
+
+**Và bài học lớn hơn cái lỗi: chốt tự kiểm phải IN RA CON SỐ.** Nay nó nói `_tutHe 0 → 1`. Bản
+cũ không in gì, nên lượt đỏ đầu tiên tốn nguyên một vòng dựng worktree ở commit cũ mới loại được
+giả thuyết "hồi quy của đợt đang làm". *Một con số trong thông báo rẻ hơn hẳn một vòng chẩn đoán.*
+
 #### ⑦ BƯỚC `than` — CHUỖI HƯỚNG DẪN TỪNG KHÔNG NHẮC TRỤC AXIE LẤY MỘT CHỮ
 
 Thể lệ chấm **Axie Core 35%**, và trục phòng thủ (`heThuKet`) là thứ gánh nó. Đếm lại các cửa
