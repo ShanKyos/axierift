@@ -240,8 +240,31 @@ const errs = [];
   await p3.waitForTimeout(500);
 
   const doThanh = async (tyLe) => {
-    await p3.evaluate((t) => { player.hp = player.maxHp * t; updateHud(); }, tyLe);
-    await p3.waitForTimeout(280);          // `.fill` có transition .18s
+    // ⚠⚠ THANH MÁU LÀ MỘT MỤC TIÊU DI ĐỘNG — hai thứ cùng đẩy nó, và cách chữa của thứ này
+    // làm nặng thứ kia:
+    //   · `.fill` có `transition .18s`, nên chụp quá SỚM là bắt được nó đang giữa đường;
+    //   · `player.hp` TỰ HỒI mỗi khung, và vòng game gọi `updateHud()` mỗi khung, nên chờ quá
+    //     LÂU là nó bò lên trên mức mình vừa đặt.
+    // Đo được cả hai đầu: chờ 280ms cố định ⇒ trên máy CI (6 mảnh song song) mép còn nằm bên
+    // TRÁI cột đo, ra `đỏ 38 vs nền rỗng 40`; đổi sang "chờ tới khi bề rộng lắng" ⇒ hồi máu
+    // kéo thanh vượt cả cột `phai` (0,82), ra `139 vs 147`. Cả hai lần bài đều báo "ảnh đang
+    // CO theo .fill" trong khi CSS hoàn toàn đúng.
+    //
+    // ⇒ TẮT HẲN transition rồi chụp sau đúng hai nhịp vẽ: không còn gì để mà chờ, và hồi máu
+    // trong ~33ms thì nhỏ hơn một điểm ảnh. Ép lại `hp` ngay trước khi chụp cho chắc.
+    // *Một ngưỡng đo trên một đại lượng đang chạy, trong một khoảng thời gian có hạn, là một
+    // ngưỡng về TỐC ĐỘ MÁY — dù nó không trông giống thế.*
+    await p3.evaluate((t) => {
+      if (!document.getElementById('_uiTatChuyen')){
+        const st = document.createElement('style'); st.id = '_uiTatChuyen';
+        st.textContent = '#bar-hp,#bar-qi{transition:none !important}';
+        document.head.appendChild(st);
+      }
+      player.hp = player.maxHp * t; updateHud();
+    }, tyLe);
+    await p3.evaluate((t) => new Promise(r => requestAnimationFrame(() => requestAnimationFrame(() => {
+      player.hp = player.maxHp * t; updateHud(); r();   // ép lại: vòng game đã hồi thêm vài điểm
+    }))), tyLe);
     const bb = await p3.locator('#orb-hp').boundingBox();
     const anh = await p3.screenshot({ clip: { x: Math.round(bb.x), y: Math.round(bb.y),
                                               width: Math.round(bb.width), height: Math.round(bb.height) } });

@@ -59,6 +59,36 @@ export NODE_PATH="${NODE_PATH:-/opt/node22/lib/node_modules}"
 # bản mới; ở một tệp 170 dòng thì đó là đánh đổi chấp nhận được, nhưng đừng quên nó.
 export AXIE_REPO="$ROOT"
 
+# ── TRÌNH DUYỆT ─────────────────────────────────────────────────────────────────────────────
+# 240/245 bài chép cứng `executablePath: '/opt/pw-browsers/chromium'` — đường dẫn của SANDBOX
+# nơi chúng được viết. Trên máy CI đường đó không tồn tại, nên `chromium.launch()` ném ngay và
+# CẢ 41 bài của một mảnh chết trong 18 giây. Nhìn ra "bộ kiểm đỏ toàn tập"; thật ra chưa một
+# khẳng định nào chạy — cùng vết sẹo với bốn bài chép cứng cổng 8853 đã ghi trong CLAUDE.md.
+#
+# Hỏi THẲNG playwright xem nó cầm bản chromium nào. Trong sandbox nó trả về đúng cái tệp mà
+# symlink `/opt/pw-browsers/chromium` trỏ tới ⇒ hành vi không đổi một chút nào; trên CI nó trả
+# về bản `npx playwright install chromium` vừa tải. Một cửa, tự đúng ở mọi máy.
+#
+# ⚠ MỘT luật sed, đuôi dài là TUỲ CHỌN. Viết thành hai luật (dài trước, ngắn sau) thì luật
+# ngắn ăn tiếp vào KẾT QUẢ của luật dài và nối đường dẫn thành đôi:
+#   /opt/pw-browsers/chromium-1194/chrome-linux/chrome-1194/chrome-linux/chrome
+# Đã dẫm đúng thế, và nó chỉ đỏ ở 3 bài dùng dạng dài nên rất dễ đọc nhầm là ba bài ấy hỏng.
+#
+# ⚠ ĐỪNG "dọn gọn" bằng cách xoá hẳn `executablePath` khỏi 240 bài. Bỏ trống thì playwright
+# chọn CHROMIUM HEADLESS SHELL chứ không chọn bản chrome đầy đủ — một bản dựng khác, và mấy
+# chục bài ở đây chấm bằng cách đếm điểm ảnh trên canvas.
+pw_hoi(){ (cd "$1" && node -p "require('playwright').chromium.executablePath()" 2>/dev/null); }
+# Hỏi từ $ROOT trước: ở đó `./node_modules` nằm ngay dưới chân nên không cần NODE_PATH. Rồi mới
+# tới $OUT/src (nơi bài thật sự chạy, dựa vào NODE_PATH), rồi mới tới symlink của sandbox.
+PW_EXE=$(pw_hoi "$ROOT")
+[ -x "${PW_EXE:-/}" ] || PW_EXE=$(pw_hoi "$OUT/src")
+[ -x "${PW_EXE:-/}" ] || PW_EXE=/opt/pw-browsers/chromium
+if [ ! -x "$PW_EXE" ]; then
+  echo "LỖI: không tìm được chromium cho playwright (thử: npx playwright install chromium)" \
+    | tee -a "$OUT/all.log"; exit 1
+fi
+echo "chromium $PW_EXE" >> "$OUT/all.log"
+
 # `timeout` giết node nhưng KHÔNG giết trình duyệt con — nó thành mồ côi (ppid=1) và vẫn giữ
 # RAM suốt phần còn lại của lượt chạy.
 # ⚠ ĐỪNG dùng `pkill -f chrom`: mẫu đó khớp luôn dòng lệnh của chính shell đang chạy và giết
@@ -75,10 +105,30 @@ for h in "$ROOT"/tests/*.js; do
   case "$(basename "$h")" in test_*) ;; *) cp "$h" "$OUT/src/" ;; esac
 done
 do=0
+# ── CHIA MẢNH cho CI ────────────────────────────────────────────────────────────────────────
+# `SHARD=i/n` chạy mảnh thứ i trong n mảnh (i đếm từ 1). Không đặt thì chạy hết, y như cũ.
+#
+# ⚠ CHIA THEO SỐ DƯ, ĐỪNG CHIA THEO KHỐI LIỀN. Bài kiểm xếp theo tên nên các bài cùng chủ đề
+# nằm liền nhau (test_ava*, test_bo*…), mà bài cùng chủ đề thì nặng gần bằng nhau — chia khối
+# liền là một mảnh gánh toàn bài nặng còn mảnh khác xong trong hai phút. Số dư thì trộn đều.
+#
+# ⚠ MỖI MẢNH DỰNG MÁY CHỦ RIÊNG, và đó là chủ ý: cổng xin từ hệ điều hành nên hai mảnh chạy
+# song song trên hai máy CI không đụng nhau. Đừng "tối ưu" thành một máy chủ dùng chung.
+SHARD="${SHARD:-}"
+if [ -n "$SHARD" ]; then
+  S_I="${SHARD%%/*}"; S_N="${SHARD##*/}"
+  echo "mảnh $S_I/$S_N" >> "$OUT/all.log"
+fi
+_idx=0
 for f in "$ROOT"/tests/test_*.js; do
   n=$(basename "$f")
+  if [ -n "$SHARD" ]; then
+    if [ "$(( _idx % S_N ))" -ne "$(( S_I - 1 ))" ]; then _idx=$((_idx+1)); continue; fi
+  fi
+  _idx=$((_idx+1))
   # Cổng trong bài được viết cứng; đổi hết sang cổng thật của lượt này.
-  sed -E "s#localhost:8[0-9]{3}#localhost:$PORT#g" "$f" > "$OUT/src/$n"
+  sed -E "s#localhost:8[0-9]{3}#localhost:$PORT#g
+          s#/opt/pw-browsers/chromium(-[0-9]+/chrome-linux/chrome)?#$PW_EXE#g" "$f" > "$OUT/src/$n"
   # Vài bài lấy cổng từ argv[2] — sed không đụng tới, nên phải truyền vào.
   timeout 260 node "$OUT/src/$n" "$PORT" > "$OUT/$n.log" 2>&1
   rc=$?

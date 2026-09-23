@@ -6156,6 +6156,38 @@ kết nối của ai. `is-active` giữ nguyên: chưa bật dịch vụ thì đ
 
 ## Test
 
+### 🚦 245 BÀI NAY LÀ CỔNG CI — và lượt chạy đầu tiên ra **0/245 xanh**
+
+`.github/workflows/game.yml` chạy cả bộ trên GitHub Actions, **6 mảnh song song** (`SHARD=i/n`
+trong `reg.sh`, chia theo SỐ DƯ chứ không theo khối liền). Cả bộ xong trong **~6 phút**.
+
+**⚠⚠ LỚP LỖI LỚN NHẤT KHI ĐEM BỘ KIỂM RA KHỎI SANDBOX: ĐƯỜNG DẪN TUYỆT ĐỐI CHÉP CỨNG.**
+Lượt CI đầu tiên đỏ **cả 6 mảnh trong 18 giây** — 0,37 giây một bài, tức chưa một khẳng định
+nào chạy. Ba chỗ, cùng một họ với vết sẹo "bốn bài chép cứng cổng 8853":
+
+| chép cứng | bao nhiêu bài | hỏng thế nào trên máy khác |
+|---|--:|---|
+| `executablePath: '/opt/pw-browsers/chromium'` | **240/245** | `chromium.launch()` ném ngay |
+| `require('/opt/node22/lib/node_modules/playwright')` | 2 | `require` ném ở dòng đầu |
+| `'/home/user/axiewuxia'` làm gốc kho | 2 | `GOC = null` ⇒ mục quét tệp **rỗng ruột** |
+
+⇒ Trình duyệt vá ở **`reg.sh`** (nó vốn đã viết lại cổng lúc chép bài sang `$OUT/src`), và nó
+**hỏi thẳng playwright** `chromium.executablePath()` chứ không đoán. Gốc kho thì hỏi
+**`AXIE_REPO`** — biến `reg.sh` đã xuất sẵn từ lâu cho đúng việc này.
+⚠ MỘT luật sed, đuôi dài là TUỲ CHỌN: viết hai luật (dài trước, ngắn sau) thì luật ngắn ăn tiếp
+vào KẾT QUẢ của luật dài và nối đường dẫn thành đôi.
+
+**⚠ ARTIFACT TẢI QUA BLOB STORAGE — nhiều môi trường không với tới.** Nên workflow có bước
+**in thẳng `tail -60` của từng bài đỏ** vào log CI. Không có nó thì đọc log chỉ thấy TÊN bài đỏ
+rồi phải đoán, mà đoán một lượt là mất một vòng đẩy-chờ-đọc 6 phút.
+
+**⚠ MÁY CI CHẬM HƠN VÀ CHẠY 6 MẢNH SONG SONG ⇒ nó lôi ra đúng lớp mệnh đề "chờ N mili-giây".**
+Bốn bài đỏ ở CI mà xanh ở máy này, và **không bài nào là ngẫu nhiên thật** — cả bốn là QUE DÒ
+hỏng (xem bảng xúc xắc bên dưới). *Vì thế `reg.sh` CỐ Ý không chạy lại bài `rc=1`: một cái cổng
+"đỏ thì chạy lại" sẽ giấu sạch cả bốn.* Chỉ `rc=124` (đồng hồ của chính bộ chạy) mới được chạy
+lại, và nó in ra tên bài đã phải chạy lại.
+
+
 Playwright + server tĩnh:
 ```bash
 cd public/game && python3 -m http.server 8853
@@ -6297,7 +6329,7 @@ khởi động**. Triệu chứng: thoát **144**, `$OUT` không tồn tại, kh
 nhầm thành "bộ kiểm hỏng". Tắt server thì tìm pid **theo CỔNG** (`ss -lptn "sport = :8853"`), đừng
 tìm theo chuỗi lệnh.
 
-⚠ **BA BÀI ĐANG CÒN ĐỎ THEO XÚC XẮC — đã đo, chưa sửa tận gốc.** Ghi ra để người sau đừng mất
+⚠ **MẤY BÀI ĐỎ THEO XÚC XẮC — đã đo, phần chưa sửa tận gốc nằm ở mấy dòng KHÔNG gạch ngang.** Ghi ra để người sau đừng mất
 một buổi truy lại từ đầu, và đừng vội đổ cho commit của mình:
 
 | bài | dấu hiệu | đã đo được |
@@ -6324,6 +6356,9 @@ trước mỗi lượt đo — tức dời người chơi ra xa đúng con quái
 suýt kết luận "giả thuyết sai". Bỏ hai dòng đặt lại ấy thì ra `quaiGan: 2, gần nhất 8px`.
 | `test_canbanglop §2` | *"chênh ST cao/thấp 4,42× > trần 3,6×"* | **xanh 3/3 trên cây đang làm VÀ 3/3 trên cây trước** — tức xúc xắc, không phải commit nào. Đo TB 3 lượt ra **2,63×** (cây nay) và **2,32×** (cây trước), đều sâu trong trần. Gốc: đồ rơi NGẪU NHIÊN + số lần chết là hàm bậc thang (mỗi lần chết `buildWorld()` hồi đầy cả bãi), nên ST tuy "trơn" hơn số mạng vẫn thừa hưởng phi tuyến ấy. Lượt đỏ bốc trúng DK 88.385 (dải thường 53-58k) và DW 19.999 ⇒ 4,42×. Chính đầu tệp bài ấy đã ghi ±22% tản — con số đó đo khi chưa ai chết 11 lần |
 | `test_sandat` (nhanmon) | *"sau 3600 khung đuổi, 1 con nằm ngoài sàn: Cao Thủ Lang Thang — nhánh di chuyển nào đó thiếu collideObstacles"* | ⚠ **ĐÂY KHÔNG PHẢI NHIỄU, đây là một LỖI THẬT bắn thưa.** Xanh 3/3 chạy riêng · xanh ở lượt hồi quy liền trước ⇒ rất dễ đọc nhầm là xúc xắc rồi bỏ qua. Nhưng chính mệnh đề ấy sinh ra để bắt *một nhánh dời chỗ quái quên gọi `collideObstacles`*, và nó chỉ nổ khi hình học truy đuổi rơi đúng chỗ. Cần một đợt riêng: quét NĂM nhánh dời quái trong `update()` (xem cảnh báo `mobDoBuoc()`) rồi đối chiếu nhánh nào thiếu. Đừng nới ngưỡng, và đừng ghi nó vào đây rồi quên |
+| ~~`test_dongbodo`/`test_bongnguoi §3c(b)`~~ | *"bật atkAnim mà hình chỉ đổi 148 điểm ảnh — lớp nhân vật không hiện ra"* | ✅ **ĐÃ SỬA, và nó che một MỆNH ĐỀ RỖNG.** ① Cảnh dựng tự phá mình: mục (a) dời B tới SÁT một con quái để lái cú đánh thật, rồi (b) đo ngay tại đó — B bị đánh liên tục, mà `_lopHien` đòi `!(hurtT>0)` nên lớp nhân vật không bao giờ vật chất hoá; thứ còn đổi chỉ là khối GIẬT của Axie (148 điểm ảnh: trên sàn nhiễu 19, dưới sàn mệnh đề 300). Đỏ hay xanh tuỳ con quái có kịp ra đòn trong 120ms ⇒ xúc xắc. ② Vá xong ① thì ra 5.638 và xanh — nhưng **thử ngược (`_lopHien = false`) VẪN XANH, 5.492**: từ đợt *"Axie NAY RA ĐÒN"*, bật `atkAnim` làm con Axie vung theo, nên phép đếm điểm ảnh bắt cú vung của Axie rồi dán cho nó cái nhãn "lớp nhân vật". ⇒ Hỏi thẳng `window.__veChet[khoá].lopHien`, **hai vế** (bật phải true, tắt phải false), kèm chốt tự kiểm "không có mục nào ⇒ QUE DÒ HỎNG". *Một mệnh đề đếm điểm ảnh đo MỌI thứ đổi trong ô đó — thêm một cơ chế mới cùng chỗ là nó lặng lẽ thành một cái nhãn dán sai.* |
+| ~~`test_uigothic ⑥b`~~ | *"ở 60% máu, màu KHÔNG chạy tới sát mép (đỏ 38 vs nền rỗng 40)"* — chỉ đỏ trên CI | ✅ **ĐÃ SỬA. Thanh máu là một MỤC TIÊU DI ĐỘNG, và hai thứ đẩy nó ngược chiều nhau:** `.fill` có `transition .18s` (chụp sớm ⇒ bắt nó giữa đường) và `player.hp` **TỰ HỒI** mỗi khung với `updateHud()` chạy mỗi khung (chờ lâu ⇒ nó bò lên trên mức vừa đặt). Đo cả hai đầu: chờ 280ms cố định ⇒ `38 vs 40` trên CI; đổi sang "chờ tới khi bề rộng lắng" ⇒ hồi máu kéo thanh **vượt cả cột đối chứng 0,82**, ra `139 vs 147`. Cả hai lần bài đều báo "ảnh đang CO theo `.fill`" trong khi CSS hoàn toàn đúng. ⇒ **Tắt hẳn transition rồi chụp sau đúng hai nhịp vẽ, ép lại `hp` ngay trước khi chụp** — hai lượt ra 139/138. ⚠ Và phép thử ngược đầu tiên **im lặng vì đổi nhầm dòng CSS**: `style.css:196` là `.cd-thanh` (rãnh RỖNG), phần TÔ là `.cd-thanh .fill` ở dòng 203. Hồ sơ màu theo cột ở 60% cho thấy 0,58 là chỗ đo đúng — `auto 100%`: …0,58:**138** 0,62:140 ǀ 0,64:39… · `100% 100%`: …0,56:134 0,58:**34** 0,60:43… |
+| ~~`test_khungchay`~~ · ~~`test_lopdo` mục 4~~ | đỏ SẴN trên `main`, không phải của PR nào | ✅ **ĐÃ SỬA — cả hai là CẢNH DỰNG MỤC, không phải lỗi game.** `test_khungchay` đo `baidasan` rồi đòi 32 tư thế, đúng hồi lớp ấy dùng `dwsc1`; nay nó dùng **`dwsl1`** (thân dựng từ ảnh render, `NV_KHUNG_R` khai **8**) nên chỉ số cuộn vòng. `test_lopdo` mục 4 mục ba chỗ: chép cứng `baidasan` (nay không có lớp rời) · chép cứng **giai 1** (cả 5 bộ lớp-rời đều ở **giai 7**; `NV_GIAP['thieulam\|1']` trỏ `dkgs1` chưa nướng lớp) · nạp trước **sai tên lớp** (`NV_LOP` là một **MẢNG**, `Object.keys` ra `"0".."6"`; khoá lớp nằm ở `NV_LOP_HOP[bộ]`) nên nó đo một thân ghép chưa tải xong, `_ow = 2`. Cả hai nay **suy từ dữ liệu** và gác chặt hơn bản cũ. ⚠ Bản viết lại còn lôi ra: `test_khungchay` **không đặt `TEST_MODE`**, nên `phatDoKhoiDau()` phát bộ giai 7 và `gv.oLop` trỏ bộ giai 7 trong khi bài ép `tier = 1` ⇒ thân vẽ ra **TRỐNG TRƠN** (32/32 khung rỗng). |
 | ~~`test_uigothic ⑥`~~ | *"ở 30% máu, đầu TRÁI thanh cũng tối theo"* | ✅ **ĐÃ SỬA TẬN GỐC, không còn trong bảng này.** Dòng cũ ghi *"thanh máu có thành phần đập theo thời gian"* — **sai**: thanh không đập. Mẫu "đầy" đổi giữa các lượt vì `applyTestBoost()` bốc đồ NGẪU NHIÊN ⇒ `maxHp` khác ⇒ **chữ số khác**, mà que dò đọc đúng một điểm ở `(0,08 · giữa)` — tức đọc thẳng vào con số máu do `.cd-thanh span` vẽ đè. Nay đọc **đỉnh độ đỏ của cả CỘT** (chữ trắng và bóng đen chỉ kéo độ đỏ xuống) ⇒ năm lượt ra đúng cùng một bộ số. Xem mục thanh máu/mana ở khối UI Gothic. *Một bài đỏ theo xúc xắc vẫn phải TRUY tới nguyên nhân — lần này "xúc xắc" là một que dò hỏng, và chính nó che một mệnh đề rỗng suốt nhiều phiên.* |
 | `test_gearlook` | *"cache chân dung không đổi khi thay đồ"* (`cache_doiTheoDo: false`) | **xanh 13/13 lượt chạy lẻ** — 3 trên cây này · 3 trên cây trước · 3 trên chính BẢN ĐÓNG BĂNG của lượt hồi quy đã đỏ · 4 lượt nữa dưới tải CPU giả (6 vòng bận trên 4 lõi) — mà chỉ đỏ **bên trong** một lượt hồi quy đầy đủ. Xanh ở `reg-mg`(236 bài) và `reg-now`. Nó là một cuộc đua TẢI ART: hai thẻ so nhau là *đủ giáp giai 7* với *trần trụi giai 1*, và nếu lớp giáp giai 7 chưa về kịp thì cả hai cùng vẽ ra thân trần ⇒ hai data-URL trùng khít. **Chưa dựng lại được cảnh đỏ**, nên đừng chép câu này như một kết luận đã đóng; thứ đã chứng minh được là nó không đến từ một diff chỉ chạm `MOBS`/`vung` |
 | `test_dichen §②` | *"CANVAS còn 2/76 chuỗi tiếng Việt: `✦ ĐÀN VÀNG SẮP XÂM LĂNG` · `10 min: nữa — …`"* | ⚠ **KHÔNG phải nhiễu, và cũng KHÔNG phải xúc xắc — nó phụ thuộc ĐỒNG HỒ.** Băng-rôn Xâm Lăng Vàng chỉ hiện trong cửa sổ ~22 phút quanh mốc **2h·6h·10h·14h·18h·22h UTC** (10 phút báo trước + 12 phút sự kiện). Ngoài cửa sổ đó bài ra `0/74` và xanh — đo được: đỏ lúc 01:50-02:12 UTC, chạy lại lúc 02:21 thì xanh ngay. Tức đây là một lỗ i18n **CÓ THẬT** còn sót, chỉ là nó tàng hình 90% thời gian. `sau_tron.sh` chạy cùng bài ấy 40 phút trước đó cũng xanh. ⇒ Sửa là dịch hai chuỗi băng-rôn sự kiện, đừng nới bài kiểm; và **đừng kết luận "đỏ do phép trộn" khi một bài i18n đỏ — hỏi giờ UTC trước** |

@@ -254,27 +254,57 @@ const cho = ms => new Promise(r => setTimeout(r, ms));
       const giuX = np.x, giuY = np.y;
       np.x = player.x + 110; np.y = player.y;
       const cxw = np.x + 420, cyw = np.y - 300;      // ô đối chứng: chỗ không có ai đứng
-      const giuA = np.atkAnim, giuC = np.castT;
+      // ⚠⚠ TẮT `hurtT` VÀ `chet` TRONG LÚC ĐO. `_lopHien` đòi `!_chet && !(hurtT > 0)`, mà
+      // mục (a) vừa dời B tới SÁT một con quái để lái một cú đánh thật — nên lúc tới đây B
+      // đang bị đánh liên tục và lớp nhân vật KHÔNG BAO GIỜ vật chất hoá. Thứ còn đổi chỉ là
+      // khối GIẬT của con Axie, đo được 148 điểm ảnh: trên sàn nhiễu (19) nhưng dưới sàn
+      // mệnh đề (300), nên bài đỏ với đúng cái câu "lớp nhân vật không hiện ra" trong khi
+      // sợi dây hoàn toàn nguyên vẹn. Đỏ hay xanh tuỳ con quái có kịp ra đòn trong 120ms hay
+      // không ⇒ xúc xắc. CLAUDE.md đã ghi vế `!hurtT` này một lần rồi, chỉ là vá chưa tới.
+      const giuA = np.atkAnim, giuC = np.castT, giuH = np.hurtT, giuCh = np.chet;
+      np.hurtT = 0; np.chet = false;
+      // ⚠⚠ HỎI THẲNG QUYẾT ĐỊNH, ĐỪNG SUY TỪ ĐIỂM ẢNH. Từ đợt "Axie NAY RA ĐÒN" thì bật
+      // `atkAnim` làm CON AXIE vung theo, nên điểm ảnh đổi vài nghìn kể cả khi lớp nhân vật
+      // không hiện ra một lần nào. Thử ngược đã chứng minh: ép `_lopHien = false` trong
+      // `drawPlayer` mà ô có bóng vẫn đổi 5.492 điểm ảnh ⇒ mệnh đề đếm điểm ảnh MỘT MÌNH là
+      // một mệnh đề rỗng, chỉ dán nhãn "lớp nhân vật không hiện ra" cho một thứ khác.
+      // `drawPlayer` phơi sẵn quyết định ra `window.__veChet`, khoá theo từng thân người.
+      window.TEST_MODE = true;
+      const khoa = veKhoa(np);
       np.atkAnim = 0.22; np.castT = 0; render();
+      const qdCo = (window.__veChet || {})[khoa];
       const coB = lay(np.x, np.y), coC = lay(cxw, cyw);
       np.atkAnim = 0;    np.castT = 0; render();
+      const qdKhong = (window.__veChet || {})[khoa];
       const khongB = lay(np.x, np.y), khongC = lay(cxw, cyw);
-      np.atkAnim = giuA; np.castT = giuC; np.x = giuX; np.y = giuY;
+      np.atkAnim = giuA; np.castT = giuC; np.hurtT = giuH; np.chet = giuCh;
+      np.x = giuX; np.y = giuY;
       const dem = (u, v) => { let n = 0;
         for (let i = 0; i < u.length; i += 4) if (u[i] !== v[i] || u[i+1] !== v[i+1] || u[i+2] !== v[i+2]) n++;
         return n; };
-      return { oBong: dem(coB, khongB), oDoiChung: dem(coC, khongC), tong: coB.length / 4 };
+      return { oBong: dem(coB, khongB), oDoiChung: dem(coC, khongC), tong: coB.length / 4,
+               lopHienCo: !!(qdCo && qdCo.lopHien), lopHienKhong: !!(qdKhong && qdKhong.lopHien),
+               coQd: !!qdCo };
     });
     console.log('3c(b) · điểm ảnh đổi khi bật atkAnim — ô có bóng:', doDanh && doDanh.oBong,
-                '· ô đối chứng:', doDanh && doDanh.oDoiChung);
+                '· ô đối chứng:', doDanh && doDanh.oDoiChung,
+                '· _lopHien bật/tắt:', doDanh && doDanh.lopHienCo, '/', doDanh && doDanh.lopHienKhong);
     if (!doDanh) fail('3c(b): A không còn thân người nào để đo');
     else {
       if (doDanh.oDoiChung > doDanh.tong * 0.15) {
         fail(`3c(b): ô đối chứng đổi ${doDanh.oDoiChung}/${doDanh.tong} — nhiễu nền quá lớn, `
            + 'đừng đọc kết quả dưới là "xanh"');
       }
+      if (!doDanh.coQd) {
+        fail('3c(b): `window.__veChet` không có mục nào cho thân người từ xa — que dò hỏng, '
+           + 'đừng đọc mấy dòng dưới là "xanh"');
+      } else if (!doDanh.lopHienCo) {
+        fail('3c(b): bật atkAnim mà `_lopHien` vẫn false — lớp nhân vật không vật chất hoá');
+      } else if (doDanh.lopHienKhong) {
+        fail('3c(b): tắt atkAnim mà `_lopHien` vẫn true — nó không đọc trạng thái ra đòn');
+      }
       if (doDanh.oBong < 300) {
-        fail(`3c(b): bật atkAnim mà hình chỉ đổi ${doDanh.oBong} điểm ảnh — lớp nhân vật không hiện ra`);
+        fail(`3c(b): bật atkAnim mà hình chỉ đổi ${doDanh.oBong} điểm ảnh — thân người từ xa không phản ứng gì`);
       }
       if (doDanh.oBong < doDanh.oDoiChung * 4) {
         fail(`3c(b): ô có bóng (${doDanh.oBong}) không nổi hơn hẳn ô đối chứng (${doDanh.oDoiChung})`);

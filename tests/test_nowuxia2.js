@@ -22,7 +22,12 @@ function timGoc(){
     if (fs.existsSync(path.join(d, 'public/game/game.js'))) return d;
     d = path.dirname(d);
   }
-  // Bài chạy từ bản chép ngoài kho (tools/reg.sh) — thử vài chỗ quen thuộc.
+  // Bài chạy từ bản chép ngoài kho (tools/reg.sh) — hỏi biến nó xuất sẵn TRƯỚC KHI đoán.
+  // ⚠ Hai đường `/home/user/...` dưới chỉ đúng trên máy của người viết. Trên CI kho nằm ở
+  // `/home/runner/work/<kho>/<kho>` ⇒ cả hai trượt và bài đỏ vì một lý do không liên quan
+  // gì tới thứ nó gác — đúng cái bẫy mà khối chú thích trên đầu hàm này đã cảnh báo.
+  const mt = process.env.AXIE_REPO;
+  if (mt && fs.existsSync(path.join(mt, 'public/game/game.js'))) return mt;
   for (const g of ['/home/user/axiewuxia', '/home/user/axie-wuxia'])
     if (fs.existsSync(path.join(g, 'public/game/game.js'))) return g;
   return null;

@@ -48,6 +48,11 @@ const { chromium } = require('playwright');
     }
     if (goc) break;
   }
+  // ⚠ `reg.sh` XUẤT SẴN `AXIE_REPO` cho đúng chuyện này — hỏi nó trước khi đoán. Hai đường
+  // `/home/user/...` dưới là chỗ đoán cho máy của người viết; trên máy CI kho nằm ở
+  // `/home/runner/work/<kho>/<kho>` nên cả hai trượt, `goc` ra null và mục quét tệp RỖNG RUỘT.
+  if (!goc && process.env.AXIE_REPO && fs.existsSync(path.join(process.env.AXIE_REPO, MOC)))
+    goc = process.env.AXIE_REPO;
   if (!goc) for (const g of ['/home/user/axiewuxia', '/home/user/axie-wuxia'])
     if (fs.existsSync(path.join(g, MOC))) { goc = g; break; }
   const py = goc ? fs.readFileSync(path.join(goc, MOC), 'utf8') : '';
@@ -114,15 +119,50 @@ const { chromium } = require('playwright');
   else pass('bộ chưa nướng lớp vẫn đổi cả tấm như cũ — hai đường sống chung');
 
   // ── 4. MỖI Ô một mình phải đổi được hình ──────────────────────────────────────────────
-  const r4 = await p.evaluate(async () => {
-    startGame('baidasan', null);
+  // ⚠⚠ CHỌN LỚP TỪ DỮ LIỆU, ĐỪNG CHÉP CỨNG 'baidasan'. Bản cũ đo Dark Wizard vì hồi đó lớp
+  // ấy dùng `dwsc1` — một bộ CÓ lớp rời. Nay Dark Wizard dùng `dwsl1`, thân dựng từ ảnh
+  // render đã dẹp nên KHÔNG tách lớp được và không có mặt trong `NV_LOP_HOP` ⇒ `oLop` luôn
+  // null, cả bốn ô báo "không nhận ra bộ có lớp rời", và hai mệnh đề cuối báo "luật cũ
+  // đủ-bộ-mới-hiện chưa gỡ". Cả sáu dòng đỏ ấy nói về một cơ chế vẫn đang chạy hoàn hảo ở
+  // bốn lớp còn lại — chúng chỉ đang hỏi sai người.
+  //
+  // Hỏi thẳng: lớp nào có bộ nằm trong `NV_LOP_HOP` thì đo lớp đó. Thêm/bớt bộ art sau này
+  // là bài tự đi theo, không phải sửa một cái tên chép tay.
+  //
+  // ⚠ VÀ GIAI CŨNG PHẢI SUY RA. `nvLopCuaEquip()` chỉ điền `oLop[ô]` khi
+  // `NV_GIAP[lớp|giai]` trỏ vào một bộ CÓ trong `NV_LOP_HOP`. Đo được: cả 5 bộ lớp-rời đang
+  // khai đều ở **giai 7** (`dkph1` · `dlbc1` · `elnb1` · `sbsm1`), còn `thieulam|1` trỏ
+  // `dkgs1` — bộ CHƯA nướng lớp. Nên chép cứng `genSpecific(ô, 1)` như bản cũ là đo ở đúng
+  // cái giai không có lớp rời nào, và bốn ô đều báo "không nhận ra bộ có lớp rời".
+  const lopRoi = await p.evaluate(() => {
+    for (const k in NV_GIAP){
+      const bo = NV_GIAP[k];
+      if (!NV_LOP_HOP[bo]) continue;
+      const [sect, tier] = k.split('|');
+      return { sect, tier: +tier, bo, nen: NV_BO_NEN[sect] };
+    }
+    return null;
+  });
+  if (!lopRoi) fail('không lớp nào còn dùng bộ có lớp rời — mục 4 hết chỗ đo');
+  console.log('4) đo trên lớp:', JSON.stringify(lopRoi));
+  const r4 = lopRoi && await p.evaluate(async (L) => {
+    // ⚠ TEST_MODE trước startGame: không có nó thì `phatDoKhoiDau()` phát bộ giai 7, và mục
+    // này đo "đeo ĐÚNG MỘT ô" nên một bộ đầy người là dựng sai hẳn cảnh.
+    window.TEST_MODE = true;
+    startGame(L.sect, null);
     player.level = 3; calcDerived();
-    for (const ml of ['n','t1','t2','c','a']){ nvTai('dwvt1_' + ml, 'webp'); nvTai('dwvt1_' + ml + '2', 'webp'); }
-    nvTai('dw1', 'webp');
+    // ⚠ KHOÁ LỚP LẤY TỪ `NV_LOP_HOP[bộ]`, KHÔNG lấy từ `NV_LOP`. `NV_LOP` là một MẢNG
+    // (`Object.keys` ra "0".."6"), và mỗi bộ chỉ nướng những lớp nó có — `dkph1` có
+    // `t1·c·a·vk·t2·n`, không có `h`. Xin sai tên là nạp trước 0 tấm, rồi mục này đo một
+    // thân ghép CHƯA TẢI XONG và ra `_ow = 2` (gần như rỗng) — trông y như cơ chế hỏng.
+    for (const ml of Object.keys(NV_LOP_HOP[L.bo] || {})){
+      nvTai(L.bo + '_' + ml, 'webp'); nvTai(L.bo + '_' + ml + '2', 'webp');
+    }
+    if (L.nen) nvTai(L.nen, 'webp');
     await new Promise(r => setTimeout(r, 2500));
     const ve = () => {
       const gv = gearVisual(player), t = heroTier(player);
-      const spr = heroSprite('baidasan', t, gv, 'i', 0, null, false, 0, 'i');
+      const spr = heroSprite(L.sect, t, gv, 'i', 0, null, false, 0, 'i');
       const c = document.createElement('canvas'); c.width = 240; c.height = 300;
       const g = c.getContext('2d');
       g.drawImage(spr, 40 + spr._ox, 40 + spr._oy, spr._ow, spr._oh);
@@ -135,29 +175,29 @@ const { chromium } = require('playwright');
     const ra = { o: {}, oLop: {} };
     for (const s of ['non','ao','tay','chan']){
       player.equip = {};
-      const it = genSpecific(s, 1); if (it){ it.tier = 1; it.plus = 0; player.equip[s] = it; }
+      const it = genSpecific(s, L.tier); if (it){ it.tier = L.tier; it.plus = 0; player.equip[s] = it; }
       ra.oLop[s] = (gearVisual(player).oLop || {})[s] || null;
       ra.o[s] = khac(ve(), tran);
     }
     // bỏ MỘT ô khỏi bộ đủ — phải khác cả "đủ bộ" lẫn "thân trần"
     const mac = bo => { player.equip = {};
-      for (const s of bo){ const it = genSpecific(s, 1); if (it){ it.tier = 1; it.plus = 0; player.equip[s] = it; } }
+      for (const s of bo){ const it = genSpecific(s, L.tier); if (it){ it.tier = L.tier; it.plus = 0; player.equip[s] = it; } }
       return ve(); };
     const du = mac(['non','ao','tay','chan']);
     const thieu = mac(['non','ao','tay']);
     ra.duVsThieu = khac(du, thieu);
     ra.thieuVsTran = khac(thieu, tran);
     return ra;
-  });
+  }, lopRoi);
   console.log('4) từng ô:', JSON.stringify(r4));
-  for (const s of ['non','ao','tay','chan']){
+  for (const s of (r4 ? ['non','ao','tay','chan'] : [])){
     if (!r4.oLop[s]) fail(`ô ${s} không nhận ra bộ có lớp rời`);
     else if (r4.o[s] < 300) fail(`đeo mỗi ô ${s} mà hình gần như không đổi (${r4.o[s]} điểm ảnh) — ô chưa tách rời`);
     else pass(`đeo mỗi ô ${s} → đổi ${r4.o[s]} điểm ảnh`);
   }
-  if (r4.duVsThieu < 300) fail('bỏ một ô khỏi bộ đủ mà hình không đổi');
+  if (r4 && r4.duVsThieu < 300) fail('bỏ một ô khỏi bộ đủ mà hình không đổi');
   else pass(`bỏ một ô khỏi bộ đủ → đổi ${r4.duVsThieu} điểm ảnh`);
-  if (r4.thieuVsTran < 300) fail('mặc 3 ô mà vẫn y hệt thân trần — luật cũ "đủ bộ mới hiện" chưa gỡ');
+  if (r4 && r4.thieuVsTran < 300) fail('mặc 3 ô mà vẫn y hệt thân trần — luật cũ "đủ bộ mới hiện" chưa gỡ');
   else pass(`mặc 3 ô vẫn hiện giáp (khác thân trần ${r4.thieuVsTran} điểm ảnh)`);
 
   console.log('errors:', JSON.stringify(errs.slice(0, 5)));

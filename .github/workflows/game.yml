@@ -1,0 +1,75 @@
+# Hồi quy trình duyệt — 245 bài Playwright trong `tests/`.
+#
+# ⚠ VÌ SAO WORKFLOW NÀY PHẢI TỒN TẠI: trước nó, `ci.yml` chỉ chạy tsc/eslint/vitest/`node --check`
+# — bốn cổng đó KHÔNG đọc một dòng nào của `public/game/game.js` ngoài cú pháp. Toàn bộ 245 bài
+# thật sự gác lối chơi chỉ chạy TAY trong sandbox, nên một commit làm đỏ chúng vẫn lên tới người
+# chơi trong 2 phút mà không có gì chặn. Đây là cái gate còn thiếu.
+#
+# ⚠ CHIA 6 MẢNH vì chạy tuần tự cả bộ mất ~40 phút. Sáu máy song song ⇒ ~8 phút. Kho là PUBLIC
+# nên phút GitHub Actions không mất tiền — cái phải tiết kiệm là THỜI GIAN CHỜ, không phải phút.
+name: Game regression
+
+on:
+  pull_request:
+    branches: [main, release]
+  push:
+    branches: [main, release]
+  workflow_dispatch:
+
+# Đẩy commit mới lên cùng một nhánh thì huỷ lượt cũ — nếu không, nhịp commit của dự án này
+# (đo được: có ngày 93 commit) xếp hàng chồng chất rồi kết quả về sau khi đã lỗi thời.
+concurrency:
+  group: game-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  regression:
+    runs-on: ubuntu-latest
+    timeout-minutes: 40
+    strategy:
+      fail-fast: false          # một mảnh đỏ thì năm mảnh kia vẫn phải chạy hết, nếu không
+      matrix:                   # mỗi lượt sửa chỉ lộ ra một phần danh sách đỏ
+        shard: [1, 2, 3, 4, 5, 6]
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - run: npm ci
+
+      # Chỉ Chromium — cả 245 bài đều gọi `chromium.launch()`, không bài nào dùng firefox/webkit.
+      - run: npx playwright install --with-deps chromium
+
+      - name: Hồi quy mảnh ${{ matrix.shard }}/6
+        env:
+          # reg.sh mặc định trỏ NODE_PATH vào /opt/node22 của sandbox — máy CI không có chỗ đó.
+          NODE_PATH: ${{ github.workspace }}/node_modules
+          SHARD: ${{ matrix.shard }}/6
+        run: bash tools/reg.sh "$RUNNER_TEMP/reg-${{ matrix.shard }}"
+
+      # ⚠ IN THẲNG LOG BÀI ĐỎ RA ĐÂY, đừng chỉ dựa vào artifact. Artifact tải về qua
+      # blob storage — một cổng mà nhiều môi trường (kể cả sandbox đang phát triển bộ này)
+      # KHÔNG với tới được. Lúc ấy người đọc chỉ thấy đúng TÊN bài đỏ, không thấy nó đỏ vì
+      # gì, và phải đoán. Một dòng `tail` ở đây rẻ hơn hẳn một vòng đoán.
+      - name: In log bài đỏ
+        if: failure()
+        run: |
+          D="$RUNNER_TEMP/reg-${{ matrix.shard }}"
+          [ -f "$D/all.log" ] || { echo "không có all.log — reg.sh chết trước khi chạy bài nào"; exit 0; }
+          for f in $(awk '$1!=0 && $1 ~ /^[0-9]+$/ {print $2}' "$D/all.log"); do
+            echo "::group::$f"
+            tail -60 "$D/$f.log" 2>/dev/null || echo "(không có log)"
+            echo "::endgroup::"
+          done
+
+      # Chỉ giữ log khi ĐỎ. Giữ cả lúc xanh là mỗi lượt chạy đẻ ra 245 tệp log không ai đọc.
+      - name: Log của mảnh đỏ
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: reg-log-${{ matrix.shard }}
+          path: ${{ runner.temp }}/reg-${{ matrix.shard }}/*.log
+          retention-days: 7

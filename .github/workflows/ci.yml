@@ -5,9 +5,9 @@ name: CI
 # could sit unnoticed indefinitely. This gates every push/PR against main on all three.
 on:
   push:
-    branches: [main]
+    branches: [main, release]
   pull_request:
-    branches: [main]
+    branches: [main, release]
 
 jobs:
   verify:
@@ -33,3 +33,25 @@ jobs:
 
       - name: Syntax-check the game engine
         run: node --check public/game/game.js
+
+      # ⚠ CỔNG CÂN NẶNG. Đo được ở thời điểm thêm cổng này: gói git đã **408 MB**, và mười blob
+      # nặng nhất đều là ẢNH NGUỒN lẽ ra không bao giờ nên vào lịch sử
+      # (`tools/iso/nguon/gem_icon_ui.png` 8,3 MB · `docs/*.docx` 6,0 MB · nhạc 4,6 MB…).
+      # Không thể gỡ chúng ra nữa mà không viết lại lịch sử — mà viết lại lịch sử thì bản sao
+      # trên VPS (`git reset --hard` mỗi 2 phút) vỡ ngay. Nên việc còn làm được là CHẶN CHIỀU ĐI
+      # TỚI: tệp nguồn nặng thì đưa lên Release asset (trần 2 GB, không nằm trong lịch sử).
+      - name: Chặn tệp nặng mới
+        if: github.event_name == 'pull_request'
+        run: |
+          TRAN=$((5 * 1024 * 1024))
+          git fetch --no-tags --depth=1 origin "${{ github.base_ref }}"
+          xau=0
+          while IFS= read -r f; do
+            [ -f "$f" ] || continue
+            sz=$(stat -c%s "$f")
+            if [ "$sz" -gt "$TRAN" ]; then
+              echo "::error file=$f::$(( sz / 1048576 )) MB — vượt trần 5 MB. Đưa lên Release asset thay vì commit."
+              xau=1
+            fi
+          done < <(git diff --name-only --diff-filter=AM "origin/${{ github.base_ref }}...HEAD")
+          exit $xau

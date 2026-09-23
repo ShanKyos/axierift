@@ -8,7 +8,7 @@
 //
 // ⚠ ② và ③ cùng đọc `_bayDat`. Nếu tách thành hai ngưỡng thì có cửa sổ mà cánh vẽ rời đã tắt
 //   còn khối bay chưa bật ⇒ nhân vật bay mà KHÔNG có cánh nào. Bài này kẹp cả hai.
-const { chromium } = require(process.env.PW || '/opt/node22/lib/node_modules/playwright');
+const { chromium } = require(process.env.PW || 'playwright');
 const PORT = process.argv[2] || 8853;
 
 (async () => {
