@@ -66,6 +66,15 @@ const pass = m => console.log('PASS ' + m);
     window.TEST_MODE = true;
     startGame(sect, null);
     await new Promise(r => setTimeout(r, 500));
+    // ⚠ Gói `magic-runtime` nạp LƯỜI THEO KHỐI: lớp đó luôn bay ngoài màn (xem `_bayLuon`), nên
+    // atlas chạy chỉ được xin khi chính bài này hỏi. Trước đợt "luôn bay", `mrXinBo` xin sẵn cả
+    // bốn khối lúc nhân vật hiện ra nên 500 ms trên là đủ — bài xanh vì một tác dụng phụ. Gọi
+    // một lượt cho nó bắt đầu tải, đợi ảnh về, rồi mới đo (cùng lối với mục ④ dưới đây).
+    if (window.mrDung && mrDung(sect)){
+      const _g0 = Object.assign({}, gearVisual(player), { t: 1, plus: 0 });
+      for (let cho = 0; cho < 120 && !window.mrVe(sect, 1, _g0, blk, 0, 2); cho++)
+        await new Promise(r => setTimeout(r, 100));
+    }
     const ra = [];
     for (let i = 0; i < n; i++){
       // ⚠ ÉP `t:1`, đừng tin đồ mặc định. Nhân vật mới nay được phát sẵn bộ giai 7
