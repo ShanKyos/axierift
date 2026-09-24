@@ -6776,6 +6776,14 @@ Hỏng thì **sửa trước khi push**, đừng push rồi sửa sau — ngư�
 - ⚠ **KHÔNG ghi thông tin đăng nhập vào bất kỳ file nào trong repo.** Mật khẩu root từng bị
   dán nguyên văn vào lịch sử chat — đã báo người dùng đổi và chuyển sang SSH key.
 
+### ⚠ Push rồi mà trang không đổi ⇒ cron deploy hỏng, dựng lại bằng MỘT dòng
+
+```
+cd /var/www/axiewuxia && git fetch origin main && git reset --hard origin/main && bash deploy/sua_deploy.sh
+```
+
+`deploy/sua_deploy.sh` GHI LẠI TỪ ĐẦU `/root/deploy-axiewuxia.sh` (kéo `main`, khoá `flock` chống chạy chồng, bước restart Bóng Người) và crontab (xoá mọi dòng trùng, để đúng một), rồi chạy thử và so HEAD với `origin/main`. Phần kéo tay ở đầu là bắt buộc: cron hỏng thì chính script sửa cũng chưa tới được VPS. Đã chạy thật 2026-09-24. Log: `/var/log/axiewuxia-deploy.log`.
+
 ### Kiểm tra sau khi deploy
 
 `http://14.225.204.107/` (thêm `?test=1` để mở chế độ thử: đi map tự do + tick cấp 60).
