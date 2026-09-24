@@ -3661,7 +3661,7 @@ function updateGate(){
   // ấy. Với dữ liệu hiện nay không cặp map nào rơi vào ca đó nên khoá KHÔNG BAO GIỜ BẬT —
   // và đó là đúng. `test_loira §4b` dựng thẳng cái ca ấy ra để chứng minh nó còn chạy.
   if (_loiRaKhoa){
-    if (_loiRaKhoa.map !== curMap || dist(player.x, player.y, _loiRaKhoa.x, _loiRaKhoa.y) > LOIRA_TAM * 1.6)
+    if (_loiRaKhoa.map !== curMap || dist(player.x, player.y, _loiRaKhoa.x, _loiRaKhoa.y) > (_loiRaKhoa.nha || LOIRA_TAM * 1.6))
       _loiRaKhoa = null;
   }
   for (const g of GATES){
@@ -6202,13 +6202,29 @@ const AVA_TK_NHAP_CO = 1.00;
 // Trong thành vì thế đứng gần như NGANG HÀNG (lùi ít) và lệch hẳn sang bên.
 const AVA_THANH_SAU = 18;
 const AVA_THANH_BEN = 88;
-const AVA_TY  = 0.95;   // thân Axie cao mấy phần thân người…
+// ══ ĐỔI CẤU TRÚC (2026-09-24): NHÂN VẬT LÀ THÂN CHÍNH, AXIE LÀ PET ĐI THEO ════════════════
+// Chủ dự án chốt: *"Mình muốn thấy nhân vật to ra để có thể thấy được cặp vũ khí, axie giờ sẽ
+// nhỏ lại như là pet đi theo"*. Tức là LẬT thứ bậc cũ ("Axie là thân, người là kẻ hộ tống"):
+//   · nhân vật đứng ở CHÍNH toạ độ người chơi, cỡ `NV_CHINH_CO`, luôn hiện — kể cả ngoài thành
+//     (luật "nhập vào Axie" tắt, xem `avaNhap`)
+//   · con Axie lùi ra SAU LƯNG, nhỏ lại (`AVA_TY`/`AVA_TRAN`), trôi theo có độ trễ, không ra đòn
+// Luật hệ phòng thủ theo lớp Axie (`heThu`) KHÔNG đổi — đây chỉ là đổi LỚP VẼ.
+// ⚠ Tắt `THU_CUNG` là về nguyên hình dạng cũ (Axie thân chính, người nhập vào ngoài thành).
+// `let`, không `const`: các bài kiểm của hình dạng CŨ tắt nó đi để tiếp tục gác luật cũ.
+let THU_CUNG = true;
+const NV_CHINH_CO = 1.30;   // nhân vật to lên bao nhiêu so với cỡ gốc
+const PET_SAU = 62;          // pet lùi sau lưng bao nhiêu (pixel thế giới)
+const PET_BEN = 40;          // …và lệch sang bên
+const PET_TRE = 5.5;         // độ bám: lớn = bám sát, nhỏ = trôi lề mề
+const AVA_TY  = 0.95;   // thân Axie cao mấy phần thân người… (hình dạng cũ)
 const AVA_TRAN = 1.18;  // …và hộp vẽ ra, chiều nào cũng vậy, không quá ngần này lần
+const PET_TY   = 0.50;  // cỡ pet — cùng hai luật, khi `THU_CUNG` bật
+const PET_TRAN = 0.62;
 function avaCo(id){
   const A = CHI_ANH.o[id];
-  let than = NV_THAN_PX * AVA_TY;
+  let than = NV_THAN_PX * (THU_CUNG ? PET_TY : AVA_TY);
   if (!A) return than;
-  const tran = NV_THAN_PX * AVA_TRAN;
+  const tran = NV_THAN_PX * (THU_CUNG ? PET_TRAN : AVA_TRAN);
   const cao = than / A.thanCao, rong = cao * (A.nhoRong / A.nhoCao);
   const qua = Math.max(cao, rong) / tran;
   return qua > 1 ? than / qua : than;     // vượt trần thì tự thu đúng phần vượt
@@ -6295,7 +6311,7 @@ function avaTrongThanh(mid){
   const pk = packsMd(md);
   return !(pk && pk.length);
 }
-function avaNhap(mid){ return !avaTrongThanh(mid); }
+function avaNhap(mid){ return !THU_CUNG && !avaTrongThanh(mid); }
 
 const CHI_DANH = {
   thieulam: { duoi: '_ts', n: 12, cot: 6 },  // tail-smash   — bổ nặng từ trên
@@ -6470,7 +6486,30 @@ function veAvatar(g, p, dangDiChuyen, now){
 // `bayCao` > 0 nghĩa là khối gọi đang nằm trong một `translate(0, -bayCao)`; cộng lại là về đất.
 // Gom vào MỘT hàm vì có HAI chỗ gọi (xếp lớp theo chiều sâu) — sửa một chỗ quên chỗ kia là con
 // Axie bay ở nửa số hướng nhìn, mà kiểu lệch đó nhìn ra "hình như lag" chứ không ra một lỗi.
-function veAvatarDat(g, p, now, bayCao){
+// Chỗ pet đứng: trôi theo một điểm sau lưng nhân vật, có độ trễ — pet đứng cứng một chỗ cạnh
+// người thì quay mặt là nó nhảy vòng tức thì, đọc ra một hình dán chứ không ra con vật đi theo.
+// Giữ NGOÀI `player` (cùng lý do `_bayCao`): trạng thái vẽ, không được chui vào save.
+const _petViTri = new Map();
+function petLech(p, now){
+  const tx = -Math.cos(p.face) * PET_SAU - Math.sin(p.face) * PET_BEN;
+  const ty = (-Math.sin(p.face) * PET_SAU + Math.cos(p.face) * PET_BEN) * 0.55;
+  const k0 = veKhoa(p);
+  let v = _petViTri.get(k0);
+  const wx = p.x + tx, wy = p.y + ty;
+  if (!v || Math.hypot(v.x - wx, v.y - wy) > 320){ v = { x: wx, y: wy, t: now }; _petViTri.set(k0, v); }
+  const dt = clamp((now - v.t) / 1000, 0, 0.1); v.t = now;
+  const k = 1 - Math.exp(-dt * PET_TRE);
+  v.x += (wx - v.x) * k; v.y += (wy - v.y) * k;
+  return { dx: v.x - p.x, dy: v.y - p.y };
+}
+function veAvatarDat(g, p, now, bayCao, dx, dy){
+  if (dx || dy){
+    // Pet có chân đế riêng — bóng nhỏ dưới nó, không thì nó trôi trên nền.
+    g.save(); g.translate(dx, dy);
+    g.fillStyle = 'rgba(0,0,0,.18)'; g.beginPath();
+    g.ellipse(p.x, p.y + 8, avaRong(avatarId(p)) * 0.30, 5, 0, 0, 7); g.fill();
+    veAvatarDat(g, p, now, bayCao); g.restore(); return;
+  }
   if (!bayCao){
     if (window.TEST_MODE) _doNeo('axie', g, p.x, p.y);
     veAvatar(g, p, !!p.moving, now); return;
@@ -19345,7 +19384,7 @@ function drawPlayer(p){
   // ⇒ Khi có avatar: lớp nhân vật bay, con Axie ĐỨNG ĐẤT, và bóng đổ / vòng chân giữ nguyên
   // cỡ (chúng là chân đế của con Axie, mà con Axie thì vẫn đang chạm đất). Tắt avatar bằng
   // `/avatar off` thì thân người LÀ thân nhìn thấy ⇒ hành vi cũ y nguyên.
-  const bayKNen = _coAva ? 0 : bayK;
+  const bayKNen = (_coAva && !THU_CUNG) ? 0 : bayK;
   let yOff = -bayCao;
   // Nhịp bước chân chỉ có nghĩa khi chân còn chạm đất. Đang bay mà vẫn nhún như đang chạy bộ
   // là thứ phá cảm giác bay nhanh nhất.
@@ -19488,10 +19527,14 @@ function drawPlayer(p){
   const _lopB  = _oThanh ?  AVA_THANH_BEN : _lopHien ? AVA_CHAN_BEN   :  AVA_THEO_BEN;
   // Trong thành thì cỡ riêng (khoe giáp); ngoài thành lớp nhân vật đã nhập nên `_lopCo` chỉ
   // còn ý nghĩa với nhánh không-avatar.
-  const _lopCo = _coAva ? (_oThanh ? AVA_THANH_CO
+  const _lopCo = THU_CUNG ? NV_CHINH_CO : _coAva ? (_oThanh ? AVA_THANH_CO
                          : _lopHien ? AVA_DANH_CO : AVA_THEO_CO) : 1;
-  let _avaDx = _coAva ? Math.cos(p.face)*_lopT - Math.sin(p.face)*_lopB : 0;
-  let _avaDy = _coAva ? (Math.sin(p.face)*_lopT + Math.cos(p.face)*_lopB)*0.55 : 0;
+  // Cấu trúc pet: nhân vật ĐỨNG Ở GỐC (dời 0), con Axie mới là thứ bị dời — xem `petLech`.
+  let _avaDx = (_coAva && !THU_CUNG) ? Math.cos(p.face)*_lopT - Math.sin(p.face)*_lopB : 0;
+  let _avaDy = (_coAva && !THU_CUNG) ? (Math.sin(p.face)*_lopT + Math.cos(p.face)*_lopB)*0.55 : 0;
+  const _pet = (_coAva && THU_CUNG) ? petLech(p, now) : { dx: 0, dy: 0 };
+  // Axie vẽ TRƯỚC lớp nhân vật khi nó đứng CAO hơn trên màn (xếp theo chiều sâu).
+  const _axTruoc = THU_CUNG ? _pet.dy <= 0 : _avaDy > 0;
   // ⚠⚠ PHÉP NÉN TRỤC ĐỨNG ×0,55 ĂN MẤT KHOẢNG CÁCH, và ba hằng chỗ đứng ở trên KHÔNG bù được
   //   — chúng đo trong hệ toạ độ THẾ GIỚI, còn thứ mắt đọc là khoảng cách trên MÀN. Đo qua tám
   //   hướng với `tidewarden` (hộp vẽ 97,9 px ngang ⇒ ngưỡng đứng-rời 68 px):
@@ -19528,7 +19571,7 @@ function drawPlayer(p){
   // không thì trên màn còn một đôi cánh và một vòng sáng bay lơ lửng không có ai đeo.
   let _hienLop = 1;
   if (_nhap) _hienLop = 0;
-  else if (_coAva && _lopHien)
+  else if (_coAva && _lopHien && !THU_CUNG)   // cấu trúc pet: nhân vật LUÔN có mặt, không vật chất hoá
     _hienLop = clamp((castK > 0 ? Math.min(1, castK) : 1 - Math.min(1, atkK)) / 0.28, 0, 1);
   // ── THỨ TỰ VẼ THEO CHIỀU SÂU ───────────────────────────────────────────────────────
   // Ai đứng THẤP hơn trên màn thì vẽ SAU. `_avaDy > 0` nghĩa là lớp nhân vật đứng thấp hơn
@@ -19536,9 +19579,9 @@ function drawPlayer(p){
   // con Axie che mất nửa người — nhìn ra một lỗi hiển thị chứ không ra "đứng kế bên".
   // ⚠ TRẢ CON AXIE VỀ MẶT ĐẤT. Khối này nằm trong `ctx.translate(0, yOff)` — phép nhấc do đôi
   // cánh sinh ra — mà cánh thì đeo trên LỚP NHÂN VẬT, không trên Axie. Xem `bayKNen`.
-  if (_coAva && _avaDy > 0) veAvatarDat(ctx, p, now, bayCao);
+  if (_coAva && _axTruoc) veAvatarDat(ctx, p, now, bayCao, _pet.dx, _pet.dy);
   // Vòng triệu hồi nổ dưới chân LỚP NHÂN VẬT (thứ đang được gọi tới), và phải nằm DƯỚI nó.
-  if (_coAva && _lopHien && _hienLop < 1 && !_nhap)
+  if (_coAva && _lopHien && _hienLop < 1 && !_nhap && !THU_CUNG)
     veVongTrieu(ctx, { x: p.x + _avaDx, y: p.y + _avaDy }, _hienLop);
   // ── CÁNH và THẦN KHÍ đi theo LỚP NHÂN VẬT, không theo neo người chơi ────────────────
   // Cả hai là trang bị CỦA NGƯỜI. Trước bản này chúng vẽ thẳng ở (p.x, p.y) không hỏi avatar,
@@ -19904,7 +19947,7 @@ function drawPlayer(p){
   // Axie là THÂN của người chơi nên vẽ ở MỌI trạng thái — kể cả lúc lớp nhân vật đang hiện.
   // Bản trước cho nó biến mất lúc đánh (đổi chỗ cho nhau), chủ dự án chốt lại là đứng cạnh.
   // Nửa còn lại của phép xếp chiều sâu ở trên: lớp nhân vật đứng CAO hơn ⇒ Axie vẽ SAU.
-  if (_coAva && _avaDy <= 0) veAvatarDat(ctx, p, now, bayCao);
+  if (_coAva && !_axTruoc) veAvatarDat(ctx, p, now, bayCao, _pet.dx, _pet.dy);
   if (_tk && _tk.truoc && _tkHien){                   // quét ra trước mặt: vẽ SAU thân
     ctx.save();
     ctx.translate(p.x + _tkDx, _lopNeoY + _tkDy + _tkChan);
@@ -30538,6 +30581,19 @@ window.travelTo = function(mapId, from){
   for (const g of GATES){
     if (g.map !== curMap || g.portal) continue;
     if (dist(player.x, player.y, g.x, g.y) < LOIRA_TAM){ _loiRaKhoa = { map: curMap, x: g.x, y: g.y, g }; break; }
+  }
+  // ...và khoá luôn CỔNG DẪN NGƯỢC VỀ map vừa rời nếu điểm hạ cánh nằm gần nó. Điểm hạ cánh
+  // nằm NGOÀI cổng (vấu cổng) thì đường đi vào map buộc phải bước qua vòng lối ra ⇒ bị hất
+  // ngược ra ngay — đó là lỗi "không về được thành" (xem spawnFrom của ardhaven). Khoá nhả khi
+  // người chơi rời xa cổng quá LOIRA_TAM*1.6, tức đã đi xuyên qua nó.
+  if (!_loiRaKhoa && from){
+    for (const g of GATES){
+      if (g.map !== curMap || g.portal || g.to !== from) continue;
+      const d0 = dist(player.x, player.y, g.x, g.y);
+      // `nha`: nhả khi đã ra xa hơn chỗ vừa hạ cánh một đoạn — tức đã đi XUYÊN qua cổng sang
+      // phía trong. Dùng mốc cố định LOIRA_TAM*1.6 thì hạ cánh ở 170px là nhả ngay khung đầu.
+      if (d0 < 400){ _loiRaKhoa = { map: curMap, x: g.x, y: g.y, g, nha: Math.max(LOIRA_TAM * 1.6, d0 + 60) }; break; }
+    }
   }
   player.hintOff = {}; // B3: qua map mới → các Nhắc Việc đã tắt hiện lại
   snapCamera(); // đổi map: camera đặt thẳng vào vị trí mới, không pan từ map cũ

@@ -27,7 +27,7 @@ const LOP = ['thieulam', 'baidasan', 'toanchan', 'minhgiao', 'bug'];
   p.on('pageerror', e => errs.push(String(e)));
   await p.goto(GOC);
   await p.waitForFunction(() => window.__gameReady).catch(() => {});
-  await p.evaluate(ls => { window.TEST_MODE = true; window.LOPT = ls; startGame('thieulam', null); }, LOP);
+  await p.evaluate(ls => { window.TEST_MODE = true; window.LOPT = ls; THU_CUNG = false; /* bài này gác hình dạng CŨ (nhập vào Axie) — xem CLAUDE.md § ĐỔI CẤU TRÚC */ startGame('thieulam', null); }, LOP);
 
   // ── 0. BẢNG PHẢI ĐỦ, VÀ Ô PHẢI TRÙNG KHÍT BẢNG NHỎ ──────────────────────────────────────
   // Ô lệch một pixel là con vật NHẢY một cái mỗi lần đổi khối — nhìn ra ngay mà không lỗi nào
@@ -148,7 +148,7 @@ const LOP = ['thieulam', 'baidasan', 'toanchan', 'minhgiao', 'bug'];
     const r = {};
     for (const l of LS){
       localStorage.clear();
-      startGame(l, null);
+      THU_CUNG = false; startGame(l, null);
       phatDoKhoiDau();                 // TEST_MODE cố ý không phát bộ chơi thử — phải xin tay
       const doc = () => (window.__veChet && window.__veChet.ta) || {};
       const mot = (mid, danh) => {

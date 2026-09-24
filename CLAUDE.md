@@ -97,6 +97,48 @@ tầng mạng: đồng bộ một người chơi là đồng bộ **cả cặp**
 khung" phải đếm theo cặp.
 | **Khoá lớp** | chọn một lần lúc tạo nhân vật. **Avatar thì tự do** — mọi NFT đều cắm được. |
 
+### 🐾 ĐỔI CẤU TRÚC (2026-09-24): NHÂN VẬT LÀ THÂN CHÍNH, AXIE LÀ PET ĐI THEO
+
+Chủ dự án chốt (nguyên văn): *"Mình muốn thấy nhân vật to ra để có thể thấy được cặp vũ khí,
+axie giờ sẽ nhỏ lại như là pet đi theo nhé"*. Tức là **LẬT** thứ bậc cũ ("Axie là thân nhìn thấy,
+lớp nhân vật là kẻ hộ tống / nhập vào Axie ngoài thành"). Công tắc duy nhất: **`THU_CUNG`**.
+
+| | cũ | nay (`THU_CUNG = true`) |
+|---|---|---|
+| ai đứng ở `player.x/y` | con Axie | **nhân vật** (dời 0) |
+| cỡ nhân vật | 0,72 · 0,90 · 1,00 tuỳ trạng thái | **`NV_CHINH_CO` 1,30**, cố định |
+| ngoài thành | nhân vật NHẬP vào Axie | **nhân vật luôn hiện** — `avaNhap()` trả `false` |
+| con Axie | `AVA_TY` 0,95 / `AVA_TRAN` 1,18 | **`PET_TY` 0,50 / `PET_TRAN` 0,62**, lùi sau lưng (`PET_SAU` 62 · `PET_BEN` 40) |
+| Axie ra đòn | ngoài thành ra đòn của lớp | **không** — khối GỒNG như trong thành |
+| bay | chỉ lớp nhân vật bay, bóng giữ cỡ | nhân vật bay, **bóng co theo** (`bayKNen = bayK`); pet đứng đất |
+
+- **`petLech(p, now)`** — pet trôi theo một điểm sau lưng, có độ trễ (`PET_TRE`), khoá theo
+  `veKhoa(p)`, **ngoài `player`** (không chui vào save). Xa quá 320px (dịch chuyển) thì bám tức thì.
+- **`veAvatarDat(g,p,now,bayCao,dx,dy)`** — hai tham số dời mới; có dời thì vẽ thêm bóng nhỏ cho pet.
+- Xếp chiều sâu theo **`_axTruoc`** (pet đứng cao hơn trên màn thì vẽ trước).
+- Vật chất hoá / vòng triệu hồi mỗi cú đánh **tắt** — nhân vật luôn có mặt, mờ đi rồi hiện lại
+  mỗi đòn là nhấp nháy.
+- ⚠ **Hệ phòng thủ theo lớp Axie (`heThu`) KHÔNG ĐỔI** — đây chỉ là đổi LỚP VẼ. Pet nhỏ không
+  có nghĩa là Axie hết tác dụng; Axie Core vẫn gánh bằng luật phòng thủ.
+- ⚠ Các mục bên dưới (nhập vào Axie · Axie ra đòn · tỉ lệ `AVA_TY`) mô tả hình dạng CŨ. Tắt
+  `THU_CUNG` là về nguyên hình dạng đó; đọc chúng như lịch sử khi công tắc đang bật.
+- ⚠ **`THU_CUNG` là `let`, và bốn bài gác hình dạng cũ TỰ TẮT nó** (`test_avaphanung` ·
+  `test_axiedanh` · `test_hopve` · `test_vukhihien`) — chúng đỏ vì luật bị lật, nên được giữ
+  để gác đường lui chứ không bị xoá mệnh đề. Hình dạng pet gác ở **`tests/test_thucung.js`**.
+
+### 🚪 VÀO THÀNH BẰNG ĐƯỜNG ĐI BỘ TỪNG BẤT KHẢ — điểm hạ cánh nằm NGOÀI cổng
+
+`MAPS.ardhaven.spawnFrom` đặt bốn điểm hạ cánh **ngoài** cột mốc (trong vấu cổng — thời còn bấm G).
+Từ khi lối ra tự đi (`LOIRA_TAM`), muốn vào thành là phải bước qua đúng vòng lối ra ⇒ bị hất
+ngược ra map vừa rời. Đi bộ về "map an toàn" là không thể; chỉ dịch chuyển bằng bảng M còn chạy.
+
+Sửa hai lớp: (1) dữ liệu — bốn điểm dời vào **trong** cổng ~180px, lệch khỏi trục để không đè
+Lính Gác; (2) chốt chung trong `travelTo` — hạ cánh gần (<400px) cổng dẫn NGƯỢC về map vừa rời thì
+khoá cổng ấy, nhả khi đã đi xa hơn chỗ hạ cánh 60px (`_loiRaKhoa.nha`). Mốc cố định
+`LOIRA_TAM*1.6` thì hạ cánh ở 170px là nhả ngay khung đầu — tức khoá chết.
+`test_noimap` miễn luật "điểm tới sát rìa" cho `Lối Về Thành` (đúng ý chú thích của nó —
+`MAPS.ardhaven` không khai `city` nên chốt cũ chưa bao giờ miễn được).
+
 ### ⚔ LỚP AXIE QUYẾT ĐỊNH HỆ PHÒNG THỦ — quan hệ, KHÔNG phải nấc thang
 
 Thể lệ Vibeathon chấm **Axie Core 35%** với đúng một câu: *"a meaningful interpretation of the

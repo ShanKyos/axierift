@@ -24,7 +24,7 @@ const pass = m => console.log('PASS ' + m);
 
   const r = await page.evaluate(() => {
     window.TEST_MODE = true;
-    startGame('baidasan', null); player.level = 60; calcDerived();
+    THU_CUNG = false; /* bài này gác cỡ Axie của hình dạng CŨ (Axie thân chính) — cỡ pet gác ở test_thucung */ startGame('baidasan', null); player.level = 60; calcDerived();
     const o = { than: NV_THAN_PX, tran: AVA_TRAN, ty: AVA_TY, con: [], macDinh: {} };
     for (const id in CHI_ANH.o){
       const A = CHI_ANH.o[id], t = avaCo(id);

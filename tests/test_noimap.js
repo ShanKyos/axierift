@@ -54,7 +54,7 @@ const { chromium } = require('playwright');
       // Lối RÌA HOANG DÃ: hai vùng ngoài trời giáp nhau. "Lối Về Thành" cũng có tiền tố "Lối"
       // nhưng nó đi vào TRONG tường thành, tới đúng cổng tường — không phải rìa map, nên luật
       // "điểm tới phải sát rìa" không áp cho nó. (Bẫy này bắt được ngay lần chạy đầu.)
-      const laRia = /^Lối /.test(g.name || '') && !MAPS[g.to].city;
+      const laRia = /^Lối /.test(g.name || '') && !/^Lối Về Thành/.test(g.name || '') && !MAPS[g.to].city;
       if (laRia && !sf) veTha.push(`${g.map}→${g.to}`);
       // ⚠ Đo theo khổ của map ĐÍCH (md), không phải MAP toàn cục — MAP là map ĐANG đứng. Hồi
       // map đầu game còn 2600×1900 thì hai con số trùng nhau nên lỗi này nằm im; tới lúc điểm

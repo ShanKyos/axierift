@@ -34,7 +34,7 @@ const { chromium } = require('playwright');
 
   await p.goto('http://localhost:8853/index.html?test=1', { waitUntil: 'networkidle' });
   await p.waitForFunction(() => window.__gameReady).catch(() => {});
-  await p.evaluate(() => { window.TEST_MODE = true; startGame('baidasan', null); });
+  await p.evaluate(() => { window.TEST_MODE = true; THU_CUNG = false; /* bài này gác hình dạng CŨ (nhập vào Axie) — xem CLAUDE.md § ĐỔI CẤU TRÚC */ startGame('baidasan', null); });
   await p.waitForTimeout(4000);
 
   // Một khung hình THẬT rồi đọc cờ — không gọi drawPlayer tay, vì thứ cần gác là cái mà vòng

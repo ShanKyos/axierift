@@ -35,7 +35,7 @@ const LOP = ['thieulam', 'minhgiao', 'toanchan', 'baidasan', 'bug'];
     // MỘT evaluate cho cả hai cảnh: vòng RAF vẫn chạy giữa hai lệnh evaluate và `atkAnim` đếm
     // ngược, nên đặt ở lệnh này rồi `render()` ở lệnh sau là đo trên một trạng thái đã trôi.
     r1[lop] = await p.evaluate((lop) => {
-      window.TEST_MODE = true; startGame(lop, null);
+      window.TEST_MODE = true; THU_CUNG = false; /* bài này gác hình dạng CŨ (nhập vào Axie) — xem CLAUDE.md § ĐỔI CẤU TRÚC */ startGame(lop, null);
       player.level = 60; vhAutoLearn(); calcDerived();
       cheatExec('/gen 5 +9');
       const doc = () => {

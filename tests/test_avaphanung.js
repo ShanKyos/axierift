@@ -29,7 +29,7 @@ const GOC = 'http://localhost:' + CONG + '/index.html';
   await p.waitForFunction(() => window.__gameReady).catch(() => {});
 
   await p.evaluate(() => {
-    window.TEST_MODE = true; startGame('thieulam', null);
+    window.TEST_MODE = true; THU_CUNG = false; /* bài này gác hình dạng CŨ (nhập vào Axie) — xem CLAUDE.md § ĐỔI CẤU TRÚC */ startGame('thieulam', null);
     travelTo('daohoa'); player.x = 1300; player.y = 1500;
     calcDerived(); player.hp = player.maxHp;
   });

@@ -1083,8 +1083,13 @@ window.MAPS = {
       [[400,370],[6000,370]],   [[400,2830],[6000,2830]],
     ],
     spawn:{ x:3200, y:1900 },
-    spawnFrom:{ ngoai:{ x:3200, y:3080 }, corran:{ x:250, y:1600 },
-                chungnam:{ x:6150, y:1600 }, tuyettinh:{ x:3200, y:120 } },
+    // ⚠ ĐIỂM VÀO THÀNH PHẢI NẰM **TRONG** CỔNG, KHÔNG NẰM NGOÀI. Bản cũ đặt chúng ngoài cột mốc
+    // (trong vấu cổng, thời còn phải bấm G để qua cổng). Từ khi LỐI RA TỰ ĐI (`LOIRA_TAM`), muốn
+    // đi vào thành là phải bước qua đúng vòng lối ra ⇒ bị hất ngược ra map vừa rời. Tức là KHÔNG
+    // AI VÀO ĐƯỢC THÀNH BẰNG ĐƯỜNG ĐI BỘ. Nay: ~180px vào trong cổng, lệch 70-80px khỏi trục để
+    // không đứng đè Lính Gác (đứng ở cổng+250). Quét bằng `trongDaGiac` + `inObstacle`.
+    spawnFrom:{ ngoai:{ x:3280, y:2720 }, corran:{ x:670, y:1680 },
+                chungnam:{ x:5730, y:1680 }, tuyettinh:{ x:3280, y:480 } },
     trees:0, rocks:0, herbs:true,
     desc:'Khu phố Ardhaven đi qua Nhát Gọi còn nguyên khối — nguyên mái, nguyên giếng, nguyên cả cái lò. Lunacia khắc Rune lên trời để xin đúng cái lò này, nên thành không phải đống đổ nát: nó là câu trả lời. Dân bản địa dựng tường quanh và gọi chỗ này là Sapidae Chiefdom. Trong tường: Quảng Trường Atia, Phố Chợ, Phố Lò, Sân Chuồng, Sảnh Lệnh, Vách Gió và Xóm Trọ. Không Chimera nào vào được. Bốn cổng ra bốn hướng.',
     // ⚠ BỐN CÁI MIỆNG ĐÃ BO GÓC — sinh bằng máy (`bo cung Bézier bậc hai, r=90, 2 đỉnh chèn`),
