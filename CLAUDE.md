@@ -5664,6 +5664,22 @@ quay sai mà không một lỗi nào in ra). `tests/test_vklop.js` — số món
 một chỗ chẳng hỏng gì.
 
 
+## 🗑 ART SPINE CỦA BỐN LỚP ĐÃ XOÁ (2026-09-24) — chờ làm lại
+
+Chủ dự án chốt: xoá hết art Spine của **Dark Knight · Dark Wizard · Sylvan Ranger · Dark Lord**
+để làm lại cho đẹp hơn (Spellblade/`magic-runtime` giữ nguyên, đang do nơi khác làm lại).
+
+- Đã gỡ khỏi đĩa: 11 bộ `assets/nv/{dkcw1,dkgs1,dkph1,dwsl1,dwsc1,dwsm1,dwvt1,elfar1,elnb1,dlcm1,dlbc1}*`
+  · `pick_<lớp>.webp` · `assets/title/lop/<lớp>.webp` (4 lớp) · mục tương ứng trong `data/lop_cho.js`;
+  `data/taitro.js` sinh lại bằng `tools/title/liet_ke_taitro.cjs`.
+- Bảng khai để TRỐNG có chủ ý: `NV_BO` · `NV_GIAP` · `NV_LOP_HOP` · `NV_VK_LOP` · `NV_VK_LOP_LOP` ·
+  `NV_KHUNG_R` · `NV_KHUNG_W` · `NV_BO_CO_VK` · `NV_BO_CO_BAY(DANH)`; `NV_PICK` chỉ còn `minhgiao`.
+- **GIỮ** ảnh vũ khí rời `vk_*` · `tk_dwstaff` · `dw_truong1-7` (icon túi đồ + vũ khí bay).
+- Trong lúc chờ, bốn lớp hiện bằng **hình dựng sẵn** (`drawHeroFigure`) — tạm, không phải đích.
+- ⚠ Mọi mục bên dưới nhắc `dkph1`/`dwsl1`/`elnb1`… là LỊCH SỬ cho tới khi art mới về. Các bài
+  kiểm gác mấy bộ ấy (`test_vklop` · `test_lopdo` · `test_khoihinh`…) sẽ đỏ vì art không còn —
+  cắm art mới vào rồi nướng lại mới sửa theo, đừng xoá mệnh đề.
+
 ## Art nướng sẵn từ Spine — có SKILL riêng, đọc trước khi đụng vào
 
 Art nhân vật do Meowa sinh ra là rig Spine. Game này không có runtime Spine và sẽ không có

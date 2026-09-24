@@ -15929,10 +15929,10 @@ const NV_MOC2  = { h:0, p:8, s:20, d:36, j:46, q:56, n:62, t:68, e:74, f:84, g:9
 // bay, nên mọi bộ nướng từ Spine chỉ có 84 khung ở bảng hai và ô 84-91 của chúng RỖNG. Đọc ô
 // rỗng thì không ném lỗi, nó chỉ vẽ ra khoảng không — tức nhân vật BIẾN MẤT lúc bay, im lặng.
 // ⇒ Hỏi bảng này, đừng hỏi "ô có rỗng không".
-const NV_BO_CO_BAY = { dwsl1: true };
+const NV_BO_CO_BAY = {};
 // Bộ có khối BAY + ĐÁNH riêng ('g'). Tách khỏi NV_BO_CO_BAY vì một bộ có thể có khối bay mà
 // chưa có khối đánh-lúc-bay — lúc đó nó lui về 'f' (lơ lửng) thay vì đọc ô RỖNG.
-const NV_BO_CO_BAYDANH = { dwsl1: true };
+const NV_BO_CO_BAYDANH = {};
 window.NV_BO_CO_BAYDANH = NV_BO_CO_BAYDANH;
 window.NV_BO_CO_BAY = NV_BO_CO_BAY;
 // Nhịp vỗ cánh: 8 khung × 95ms ≈ 10,5 khung/giây, đúng dải 10-12 mà gói art đề nghị.
@@ -16126,10 +16126,10 @@ const NV_ANH = {};
 //      chốt lấy TRANH ANH HÙNG làm chuẩn.
 // Cả năm lớp nay cùng một hợp đồng: không mảnh nào rủ xuống dưới hông, tóc khớp tranh anh
 // hùng, 0/96 khung có mảnh rời khi nướng.
-const NV_BO = {                                    // lớp|giai -> tệp bảng khung THÂN
-  'thieulam|1': 'dkcw1', 'baidasan|1': 'dwsl1',
-  'toanchan|1': 'elfar1', 'bug|1': 'dlcm1',
-};
+// ⚠ ĐÃ XOÁ (2026-09-24, chủ dự án chốt): art Spine của bốn lớp Dark Knight · Dark Wizard ·
+// Sylvan Ranger · Dark Lord gỡ khỏi đĩa để làm lại. Bảng để TRỐNG có chủ ý — cắm lại một
+// dòng là trỏ vào tệp không còn tồn tại. Art mới về thì khai lại ở đây.
+const NV_BO = {};                                  // lớp|giai -> tệp bảng khung THÂN
 // ⚠ `minhgiao` CỐ Ý KHÔNG CÓ MẶT — Spellblade đã rời hẳn sang gói `magic-runtime` (xem khối
 // `MR_*`). Bộ Spine cũ `sbhd1`/`sbsm1` đã gỡ khỏi đĩa theo yêu cầu chủ dự án, nên cắm lại một
 // dòng ở đây là trỏ vào tệp không tồn tại và nhân vật TÀNG HÌNH — không phải lui về bộ cũ.
@@ -16145,30 +16145,10 @@ const NV_BO = {                                    // lớp|giai -> tệp bảng
 // mặc gì. Còn đây là từng bộ giáp, tra theo `lớp|giai` của CHÍNH MÓN ĐỒ chứ không phải của
 // người chơi: trong túi có thể nằm một cái nón giai 3 của lớp khác, và nó phải hiện đúng nón
 // giai 3 của lớp đó. Lớp|giai nào chưa có art thì không có khoá — icon tự về đường cũ.
-const NV_GIAP = {
-  // Grand Soul là bộ ĐỈNH của Dark Wizard trong MU, nên nó thuộc giai 7 chứ không phải giai 1.
-  // Dark Knight vẫn ở giai 1 — mỗi lớp một giai khác nhau là chuyện bình thường, và chính vì
-  // thế mà KHÔNG chỗ nào được ghi cứng số giai: dùng giaiCoArt() để hỏi bảng này.
-  'baidasan|7': 'dwsm1',
-  'thieulam|1': 'dkgs1',
-  // ⚠ 'baidasan|1': 'dwvt1' ĐÃ GỠ — art của nó thuộc về THÂN CŨ (`dwsc1`), không thuộc về
-  // thân mới `dwsl1`. Chụp ra thì thấy ngay: mặc bộ ấy vào là nhân vật hoá thành một NGƯỜI
-  // KHÁC — áo choàng xám nhạt, mặt khác, không còn giáp tím vai bè nào. Tệp `dwvt1_*.webp`
-  // vẫn nằm trên đĩa; cắm lại một dòng là nó sống lại, ngày nào có thân nền hợp với nó.
-  //
-  // Cái giá, nói thẳng: Dark Wizard giai 1 nay mặc giáp vào trông y hệt thân trần, và bốn
-  // icon trong túi (`dwvt1_icon`) cũng mất theo — `nvIconUrl` đọc chính bảng này. Đổi lại là
-  // không có cú tráo nhân vật nào. Đây là bộ lớp-rời DUY NHẤT, nên đường `nvKhungGop` tạm thời
-  // không còn ai đi; giữ nguyên nó, đừng gỡ.
-  // Phoenix — bộ ĐỈNH của Dark Knight, nên giai 7 chứ không phải giai 1 (cùng lý do dwsm1).
-  'thieulam|7': 'dkph1',
-  'bug|7': 'dlbc1',        // Dark Lord — trượng bay, không có lớp vũ khí cầm tay
-  'toanchan|7': 'elnb1',   // Sylvan Ranger — bộ Ngọc Bích, cung CẦM TAY
-  // ⚠ `minhgiao` KHÔNG CÒN Ở ĐÂY. Bảy bộ giáp của Spellblade nay nằm trong `manifest.json`
-  // của gói `magic-runtime` và tra bằng `mrGiap(giai)` — bảng này chỉ còn phục vụ hệ NV_* cũ.
-  // Hệ quả PHẢI biết: `giaiCoArt('minhgiao')` nay trả 1 (không tìm thấy giai nào), nên `?test=1`
-  // và bài kiểm nào hỏi "lớp này có art ở giai nào" phải đi qua `mrGiap`, không qua hàm đó.
-};
+// ⚠ ĐÃ XOÁ (2026-09-24, chủ dự án chốt): art Spine của bốn lớp Dark Knight · Dark Wizard ·
+// Sylvan Ranger · Dark Lord gỡ khỏi đĩa để làm lại. Bảng để TRỐNG có chủ ý — cắm lại một
+// dòng là trỏ vào tệp không còn tồn tại. Art mới về thì khai lại ở đây.
+const NV_GIAP = {};
 // Lớp này có art giáp ở giai nào? Lấy giai CAO NHẤT có art. Có hàm này thì ?test=1 và bài kiểm
 // không ai phải thuộc lòng "Dark Wizard thì giai 7, Dark Knight thì giai 1", và thêm bộ mới
 // vào NV_GIAP là mọi chỗ tự theo.
@@ -16182,7 +16162,7 @@ function capDauGiai(t){ return (clamp(t, 1, GIAI_MAX) - 1) * GIAI_SPAN + 1; }
 // Phải khai Ở ĐÂY chứ không cạnh heroPickUrl(): vòng nạp sớm ngay dưới đọc bảng này, mà nó
 // chạy ở dòng 13k còn heroPickUrl nằm ở 13,6k — `const` chưa khởi tạo thì cả tệp ném lỗi và
 // trang trắng bóc. Đã mắc đúng một lần.
-const NV_PICK = { thieulam:1, baidasan:1, toanchan:1, minhgiao:1, bug:1 };
+const NV_PICK = { minhgiao:1 };   // bốn lớp kia: tranh đã xoá, chờ art mới
 function nvBoGiap(sectKey, gv){
   // Chỉ đổi sang art giáp khi người chơi THẬT SỰ đang mặc đồ. heroTier() kẹp sàn ở 1, nên
   // người cởi trần và người mặc đủ bộ giai 1 cùng báo về "giai 1" — phân biệt bằng gv.n.
@@ -16235,41 +16215,10 @@ const NV_LOP = [['h', 'non'], ['t1', 'tay'], ['c', 'chan'], ['a', 'ao'],
 // Cả THÂN của lớp lẫn BỘ GIÁP đều nằm chung một bảng: lúc vẽ, mỗi lớp tra đúng một tên, không
 // cần biết tên đó là thân hay giáp. Tách hai bảng thì mọi chỗ dùng phải rẽ nhánh — mà chúng
 // hoàn toàn cùng một thứ.
-const NV_LOP_HOP = {
-  // ── THÂN của năm lớp nhân vật ────────────────────────────────────────────────────────
-  'dkcw1':  { t1:[65,131,124,95,42,105,168,120], c:[61,159,141,99,73,142,122,118],
-              a:[94,122,83,90,32,113,135,141], t2:[64,117,133,88,36,114,154,139],
-              n:[81,86,109,77,0,79,179,172] },
-  'dwsc1':  { h:[82,91,74,83,3,83,174,185], t1:[67,132,121,75,42,107,168,121],
-              c:[61,156,131,103,70,141,127,121], a:[95,121,53,71,31,111,136,146],
-              t2:[65,124,132,76,35,114,157,139], n:[83,87,75,57,0,79,178,173] },
-  'elfar1': { h:[75,84,80,92,0,77,175,194], t1:[67,128,123,80,41,108,167,119],
-              c:[62,151,128,108,67,143,128,120], a:[93,119,57,80,26,110,143,143],
-              t2:[65,124,132,79,39,115,150,141], n:[79,87,83,61,0,79,181,177] },
-  'dlcm1':  { t1:[55,134,146,87,43,97,178,135], c:[63,158,128,100,71,142,125,121],
-              a:[93,123,57,72,32,113,137,140], t2:[63,123,139,86,35,114,160,141],
-              n:[84,87,76,56,0,79,180,173] },
-  // ── BỘ GIÁP ──────────────────────────────────────────────────────────────────────────
-  // Phoenix — bộ giai 7 của Dark Knight. Lớp `h` (tóc sau) RỖNG ở bộ này nên không khai,
-  // y như dkcw1/sbhd1/dlcm1: mũ giáp trùm kín gáy thì không còn tóc nào thò ra sau.
-  'dkph1':  { t1:[61,133,135,105,43,102,175,131], c:[62,161,152,105,70,139,136,124],
-              a:[63,124,126,138,26,114,167,147], vk:[0,21,240,279,16,68,224,229],
-              t2:[57,110,145,103,35,111,163,139], n:[84,87,105,75,0,79,179,169] },
-  // Dark Lord — bộ vàng-đỏ nạm hồng ngọc. KHÔNG có lớp `vk`: lớp này cầm trượng BAY
-  // (thần khí), nên nướng bằng cờ --khongvk. Xem NV_VK_LOP — cố ý không khai.
-  // Sylvan Ranger — bộ Ngọc Bích. Bộ ĐẦU TIÊN có lớp `h` (tóc sau): elf tóc dài nên khe
-  // 背后头发 có nét vẽ thật, khác bốn bộ trước đều rỗng lớp này.
-  'elnb1':  { h:[85,96,70,79,5,88,170,177], t1:[71,132,116,75,39,115,165,118],
-              c:[70,159,121,101,71,142,127,119], a:[92,125,59,75,33,115,137,139],
-              vk:[0,58,240,214,30,79,210,216], t2:[63,126,132,80,36,119,156,136],
-              n:[82,86,76,62,0,79,178,173] },
-  'dlbc1':  { t1:[68,132,126,91,44,112,175,131], c:[65,157,130,108,69,141,134,120],
-              a:[74,121,98,89,28,111,154,161], t2:[65,127,137,85,36,114,161,139],
-              n:[86,88,80,55,0,80,186,168] },
-  'dwvt1':  { t1:[61,137,136,82,44,105,174,128], c:[64,154,135,114,67,136,141,125],
-              a:[65,121,129,122,28,111,163,142], t2:[68,125,130,81,31,116,163,139],
-              n:[87,88,80,55,0,79,187,172] },
-};
+// ⚠ ĐÃ XOÁ (2026-09-24, chủ dự án chốt): art Spine của bốn lớp Dark Knight · Dark Wizard ·
+// Sylvan Ranger · Dark Lord gỡ khỏi đĩa để làm lại. Bảng để TRỐNG có chủ ý — cắm lại một
+// dòng là trỏ vào tệp không còn tồn tại. Art mới về thì khai lại ở đây.
+const NV_LOP_HOP = {};
 // Ô nào đang đeo món của bộ CÓ LỚP RỜI? Tra theo `lớp|giai` của CHÍNH MÓN ĐỒ, không phải của
 // người chơi: trong túi có thể nằm cái nón giai 3 của lớp khác, và nó phải hiện đúng nón đó.
 // Trả null khi không ô nào có — người gọi khỏi phải tạo rác mỗi khung hình.
@@ -16277,14 +16226,7 @@ const NV_LOP_HOP = {
 // là cùng một câu hỏi — "cây này trông ra sao" — chỉ khác đầu ra: VK_ANH cho THẦN KHÍ một tấm
 // phẳng bay theo người, còn bảng này cho một BẢNG KHUNG đã nướng trong tay theo từng hoạt cảnh.
 // Có mặt ở đây thì thần khí tự tắt (xem `_tkHien`), nếu không là hiện HAI cây.
-const NV_VK_LOP = {
-  'kiem|7': 'dkph1',        // Phượng Kiếm — nướng từ chính gói Spine của bộ Phoenix
-  // ⚠ Spellblade ĐÃ RỜI khỏi bảng này: gói `magic-runtime` cầm vũ khí bằng tệp RỜI đặt theo
-  // socket hai tay của từng khung, nên nó không cần — và không có — một bảng khung nướng sẵn
-  // cho mỗi cặp dòng×giai. Đó chính là thứ cho phép 7 giáp × 7 vũ khí dùng chung một bộ art.
-  'truongcung|7': 'elnb1',  // Cung Thiên Mệnh — cung thì PHẢI cầm tay, bắn bằng cung bay
-                            // lơ lửng thì không đọc ra động tác giương cung nào cả.
-};
+const NV_VK_LOP = {};
 // ⚠ LỚP NÀO ĐÃ CÓ MỘT CÂY CẦM TAY THÌ CẦM CÂY ẤY CHO MỌI MÓN — đừng để rơi về thần khí.
 // Chủ dự án nhìn ảnh chụp và hỏi thẳng: *"DK có đại long đao theo sau mà?"*. Đúng: đeo bất cứ
 // cây nào KHÔNG khai trong NV_VK_LOP (rìu, chuỳ, hay chính cây kiếm ở giai 1-6) là `nvVkLop`
@@ -16301,11 +16243,11 @@ const NV_VK_LOP = {
 // được (itemUsable gác), nhưng đọc theo món mới là cùng một nguồn sự thật với hai dòng trên.
 // Bộ THÂN (đường tấm liền) đã có vũ khí nướng sẵn trong khối RA ĐÒN. Chỉ cần tên bộ — hộp và
 // khung thì đã nằm trong chính bảng khung ấy. Xem `_boCoVk` trong `drawPlayer`.
-const NV_BO_CO_VK = { dwsl1: true };
+const NV_BO_CO_VK = {};
 // ⚠ `const` ở tầng cao nhất KHÔNG gắn vào `window` — bày ra để bài kiểm tự kiểm được cảnh
 //   dựng (nó phải biết bộ đang vẽ có nằm trong bảng này không), cùng lối `window.CHI_DANH`.
 window.NV_BO_CO_VK = NV_BO_CO_VK;
-const NV_VK_LOP_LOP = { thieulam: 'dkph1', toanchan: 'elnb1' };
+const NV_VK_LOP_LOP = {};
 function nvVkLop(p){
   const it = p && p.equip && p.equip.vukhi;
   const d = it && itemDef(it);
@@ -16515,13 +16457,7 @@ function nvMoc(kind){ return NV_BANG2[kind] ? NV_MOC2[kind] : NV_MOC[kind]; }
 // ⚠ Bộ nào nướng ra 112 ô (16 cột × 7 hàng) thì khối CHẠY là 32 khung, không phải 16 như
 // HS_FRAMES.r mặc định. Kiểm bằng phép chia: bềRộngBảng/bềRộngÔ = 16 và bềCao/caoÔ = 7.
 // Quên khai là lớp đó chỉ đọc NỬA ĐẦU vòng chạy — chân lệch nhịp so với lớp khai đủ.
-const NV_KHUNG_R = { dkcw1: 32, dwsc1: 32, elfar1: 32, dlcm1: 32,
-                     dkph1: 32, dlbc1: 32, elnb1: 32,
-                     // ⚠ `dwsl1` khai 8 chứ không phải 16, và đó là nói THẬT chứ không phải hạ
-                     // chuẩn: nguồn chỉ có 8 pha. Khai 16 thì ô 88-95 là bản chép của 80-87,
-                     // tức nửa sau vòng chạy trùng khít nửa trước — đúng cái `test_khungchay`
-                     // sinh ra để bắt. Thà 8 khung thật còn hơn 16 khung có 8 cái giả.
-                     dwsl1: 8 };
+const NV_KHUNG_R = {};
 // Số khung của một khối, tính trên MỌI bộ đang góp lớp — không chỉ thân nền.
 //
 // ⚠ `nvBoTen()` trả THÂN NỀN cho bộ đã cắt lớp (vì `nvBoGiap()` cố ý trả null), nên hỏi nó số
@@ -16545,7 +16481,7 @@ function nvSoKhungBo(sectKey, tier, gv, kind, hw){
 // Khối ĐI cũng khai được theo bộ, cùng khuôn `NV_KHUNG_R` — bộ nào nguồn chỉ có N pha thì
 // khai N, đừng để bảng chép khung cho đủ 32. Lý do y hệt khối chạy: 32 ô mà 24 ô là bản chép
 // thì bàn chân đứng im ba khung rồi nhảy một cái, và không bài kiểm nào đọc ra là "thiếu art".
-const NV_KHUNG_W = { dwsl1: 8 };
+const NV_KHUNG_W = {};
 function nvSoKhung(ten, kind){
   if (kind === 'r' && ten && NV_KHUNG_R[ten]) return NV_KHUNG_R[ten];
   if (kind === 'w' && ten && NV_KHUNG_W[ten]) return NV_KHUNG_W[ten];

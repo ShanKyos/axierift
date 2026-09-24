@@ -2,7 +2,7 @@
    Bản kê tài nguyên màn tải: [đường dẫn, số byte]. Thanh tiến độ cân theo BYTE, không theo
    số tệp — xem lý do trong đầu tệp công cụ. Nướng lại art màn chờ thì chạy lại công cụ. */
 window.TAI_TRO = {
- "tong": 1675344,
+ "tong": 1328890,
  "nhom": [
   { "id":"canh", "ten":"Cảnh Lunacia", "tep":[
    ["assets/title/lunacia/bg.webp",5840],
@@ -18,11 +18,7 @@ window.TAI_TRO = {
    ["assets/title/lunacia/san.webp",27362]
   ]},
   { "id":"lop", "ten":"Năm lớp nhân vật", "tep":[
-   ["assets/title/lop/baidasan.webp",88298],
-   ["assets/title/lop/bug.webp",74360],
-   ["assets/title/lop/minhgiao.webp",66216],
-   ["assets/title/lop/thieulam.webp",85790],
-   ["assets/title/lop/toanchan.webp",98006]
+   ["assets/title/lop/minhgiao.webp",66216]
   ]},
   { "id":"axie", "ten":"Axie đại diện", "tep":[
    ["assets/chimera/emberjaw.webp",116472],
