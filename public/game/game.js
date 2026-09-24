@@ -1954,9 +1954,11 @@ function thanKhiNguon(p){
   // Dòng của gói `magic-runtime`: bay theo bằng chính tấm master của cây đang cầm. Tấm dựng
   // ĐỨNG (mũi chúc xuống +Y, cán ở `gripRatio` tính từ mép trên), còn thần khí đòi mũi dọc +X —
   // xoay −90° quanh chỗ nắm là về đúng quy ước, không phải chuẩn hoá lại tệp nào.
-  if (d.mr){
-    const vk = mrVkTheoDong(d.mr), wim = vk && mrTai(vk.master);
-    if (!wim) return null;
+  // Tấm master chưa về (manifest chưa tải, hoặc người lớp khác cầm) thì RƠI XUỐNG cây lùi bên
+  // dưới, đừng trả null: luật "vũ khí LUÔN hiện lúc ra đòn" không có ngoại lệ lúc đang tải.
+  const _mrVk = d.mr ? mrVkTheoDong(d.mr) : null, _mrIm = _mrVk && mrTai(_mrVk.master);
+  if (_mrIm){
+    const vk = _mrVk, wim = _mrIm;
     const O = wim.naturalWidth || MR_O, cam = O * (vk.gripRatio || 0.12);
     const s = (NV_CAO / HERO_H) * TK_PHONG * (vk.displayPx || MR_VK_CHUAN) / MR_VK_CHUAN;
     return { art: d.art, dai: O * (1 - (vk.gripRatio || 0.12)) * s,

@@ -1924,6 +1924,28 @@ RULES.unshift([_reMon, (m, hh, o, duoi) => {
   const ten = duoi ? `${BO_DO[duoi]} ${O_DO[o]}` : O_DO[o];
   return hh ? `Excellent ${ten}` : ten;
 }]);
+// ── Spellblade: 7 dòng giáp + 7 dòng vũ khí của gói `magic-runtime` ──────────────────────────
+// Tên có khuôn `[Hoàn Hảo ]<ô> <bộ> <giai La Mã>` và `[Hoàn Hảo ]<vũ khí> <giai La Mã>` — số giai
+// nằm trong tên để bảy giai không trùng tên (xem canbang.js). Luật đứng TRƯỚC `_reMon` ở trên: tên
+// giáp này cũng mở đầu bằng 'Giáp', và `_reMon` gặp đuôi lạ thì trả nguyên chuỗi tiếng Việt.
+// Tên gói là tên TẠM (chủ dự án sẽ đổi), nên dịch cũng tạm theo — đổi tên thì đổi ở đây một dòng.
+const MR_BO_EN = {
+  'Vải Thô':'Homespun', 'Trâu Xanh':'Blue Bull', 'Đồ Đồng':'Bronzeware', 'Ma Thuật':'Arcane',
+  'Phong Vũ':'Stormwind', 'Lôi Phong':'Thunderwind', 'Cuồng Phong':'Tempest',
+};
+const MR_VK_EN = {
+  'Song Đao Cơ Bản':'Plain Twin Blades', 'Song Chùy':'Twin Maces', 'Song Hỏa Đao':'Twin Fire Blades',
+  'Song Kiếm Điện':'Twin Storm Swords', 'Lôi Phong Đao':'Thunderwind Blade',
+  'Ảo Ảnh Đao':'Phantom Blade', 'Hỏa Tinh Kiếm':'Firestar Sword',
+};
+const _mrEsc = (k) => k.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+const _mrLa = '(I|II|III|IV|V|VI|VII)';
+RULES.unshift(
+  [new RegExp('^(Hoàn Hảo )?(Mũ Trụ|Giáp|Găng|Ủng) (' + Object.keys(MR_BO_EN).map(_mrEsc).join('|') + ') ' + _mrLa + '$'),
+    (m, hh, o, bo, la) => `${hh ? 'Excellent ' : ''}${MR_BO_EN[bo]} ${O_DO[o]} ${la}`],
+  [new RegExp('^(Hoàn Hảo )?(' + Object.keys(MR_VK_EN).map(_mrEsc).join('|') + ') ' + _mrLa + '$'),
+    (m, hh, vk, la) => `${hh ? 'Excellent ' : ''}${MR_VK_EN[vk]} ${la}`]
+);
 // 28 cây vũ khí có tên RIÊNG, không theo khuôn ô+bộ.
 // ⚠ Bảy cái trong số này còn là TÀN DƯ KIẾM HIỆP (Cửu Thế Phục Sinh · Huyền Cổ Thần · Mãng Xà
 // · Mỹ Xà Quyền · Thiên Linh Quyền · Thiên Lôi · Cốt Linh). Dịch sang tên MU trung tính là
