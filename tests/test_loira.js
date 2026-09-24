@@ -157,7 +157,7 @@ const ok = m => console.log('PASS ' + m);
     await p.evaluate((to) => {
       const g = GATES.find(x => x.map === 'ardhaven' && x.to === to);
       const [hx, hy] = loiRaHuong(g);
-      // 260, không 120: từ đợt cấu trúc pet (NV_CHINH_CO 1,65) nhân vật TO hơn và con pet đứng
+      // 260, không 120: từ đợt cấu trúc pet (NV_CHINH_CO 1,45–1,65) nhân vật TO hơn và con pet đứng
       // sau lưng — ở 120px thì chính hai hình ấy đè lên ô đo, và mệnh đề đo cái người chứ không
       // đo cái miệng lối ra.
       player.x = g.x - hx * 260; player.y = g.y - hy * 260; moveTarget = null;

@@ -6212,7 +6212,7 @@ const AVA_THANH_BEN = 88;
 // ⚠ Tắt `THU_CUNG` là về nguyên hình dạng cũ (Axie thân chính, người nhập vào ngoài thành).
 // `let`, không `const`: các bài kiểm của hình dạng CŨ tắt nó đi để tiếp tục gác luật cũ.
 let THU_CUNG = true;
-const NV_CHINH_CO = 1.65;   // nhân vật to lên bao nhiêu so với cỡ gốc (1,30 chủ dự án thấy "chưa to ra")
+const NV_CHINH_CO = 1.45;   // nhân vật to lên bao nhiêu so với cỡ gốc (1,30 "chưa to ra" · 1,65 thì "nhỏ lại một chút")
 const PET_SAU = 78;          // pet lùi sau lưng bao nhiêu (pixel thế giới)
 const PET_BEN = 48;          // …và lệch sang bên
 const PET_TRE = 5.5;         // độ bám: lớn = bám sát, nhỏ = trôi lề mề
