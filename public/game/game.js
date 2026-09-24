@@ -17215,9 +17215,17 @@ function mrVeThanh(sectKey, gv, blk, idx, huong){
   const lop = (k) => {
     if (k === 'wing_far')   return M.wing && M.wing.states[st] && M.wing.states[st].far;
     if (k === 'wing_clasp') return M.wing && M.wing.states[st] && M.wing.states[st].clasp;
-    if (k === 'body_base')  return M.bodyBase && M.bodyBase[st];
+    // ⚠ KHÔNG vẽ body_base ở gói Thành. Manifest trỏ `../body_base/*` (thân trần của gói gốc),
+    // mà giáp piece_layers của town_v1 KHÔNG dựng trên thân đó: đo độ chồng giày ↔ bàn chân thân
+    // trần ra <0,20 ở bốn trong tám hướng ⇒ trên màn là HAI người lệch nhau ("trộn tùm lum").
+    // Năm lớp giáp tự dựng đủ thân (`validation.armorReconstruction` = true cả 7 bộ), nên ô
+    // TRỐNG lui về mảnh của bộ đầu dòng (Vải Thô) thay vì để lộ một thân trần lệch hướng.
+    if (k === 'body_base')  return null;
     const p = mrPhanGiap(M, k, st, gv);
-    return p === undefined ? null : p;
+    if (p === undefined) return null;
+    if (p) return p;
+    const m = /^armor_(\w+)$/.exec(k), a0 = M.armors && M.armors[0];
+    return (m && a0 && a0.states[st] && a0.states[st][m[1]]) || null;
   };
   const vkLop = (g, k) => {
     if (k !== 'weapon_back' || !vk) return;

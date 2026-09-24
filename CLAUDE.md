@@ -5603,6 +5603,13 @@ trên một người (nón Trâu Xanh · áo Cuồng Phong · găng Đồ Đồn
   sẵn (cùng giai **và** cùng mức rèn 0 hoặc 11).
 - Gác: `test_goimr §⑦` (thử ngược: gỡ lời gọi ở bộ chơi thử ⇒ đỏ).
 
+**⚠ VÀ GÓI THÀNH KHÔNG ĐƯỢC VẼ `body_base`** — đó là nửa còn lại của cái "trộn tùm lum". Manifest
+`town_v1` trỏ `../body_base/*` (thân trần của gói GỐC), mà giáp piece_layers của gói Thành không
+dựng trên thân đó: đo độ chồng giày ↔ bàn chân ra **<0,20 ở 4/8 hướng** ⇒ trên màn là hai người
+lệch nhau. Năm lớp giáp tự dựng đủ thân (`validation.armorReconstruction`), nên `mrVeThanh` bỏ
+`body_base`, và ô TRỐNG lui về mảnh của bộ đầu dòng (`armors[0]`, Vải Thô). Gói Ngoài có thân
+riêng (`field_v2/body_base/`) nên không dính. Gác: `test_goimr §⑧` (trả body_base về ⇒ đỏ).
+
 ### 👖 Ô QUẦN QUAY LẠI — NĂM Ô GIÁP CHO CẢ NĂM LỚP (chủ dự án chốt 2026-09-24)
 
 Nón · Áo · Tay · **Quần** · Chân — đúng kiểu MU, và khớp năm phần của gói piece_layers. Áp cho cả

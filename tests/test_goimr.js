@@ -176,6 +176,24 @@ const pass = (m) => console.log('PASS', m);
   else if (new Set(r7.max).size !== 1 || !r7.max[0]) fail(`⑦ bộ max ra năm dòng khác nhau: ${r7.max.join(' · ')}`);
   else pass(`⑦ đồ phát sẵn là một bộ trọn (max: ${r7.max[0]})`);
 
+  // ⑧ gói Thành KHÔNG chồng thân trần body_base lên giáp — thân đó lệch hướng với giáp town_v1,
+  //    vẽ chung là HAI người chồng nhau ở 4/8 hướng. Và tháo một ô thì ô đó vẫn phải có hình.
+  const r8 = await p.evaluate(async () => {
+    const gv = gearVisual(player), xin = [];
+    const goc = window.mrTai; window.mrTai = (u) => { xin.push(u); return goc(u); };
+    for (let h = 0; h < 8; h++) mrVeThanh('minhgiao', gv, 'i', 0, h);
+    const gv2 = { ...gv, mrO: { ...gv.mrO } }; delete gv2.mrO.quan;
+    window.mrTai = goc;
+    let tron = null;   // mảnh lùi nạp lười — chờ nó về, có hạn
+    for (let i = 0; i < 40 && !tron; i++){ tron = mrVeThanh('minhgiao', gv2, 'i', 0, 2); if (!tron) await new Promise(z => setTimeout(z, 150)); }
+    return { body: xin.filter(u => /body_base/.test(u)).length, xin: xin.length, tron: !!tron };
+  });
+  console.log('⑧ gói Thành:', JSON.stringify(r8));
+  if (!r8.xin) fail('⑧ QUE DÒ: mrVeThanh không xin tệp nào — không bọc được mrTai');
+  else if (r8.body) fail(`⑧ gói Thành vẫn vẽ body_base (${r8.body} lượt) — hai thân lệch hướng chồng nhau`);
+  else if (!r8.tron) fail('⑧ tháo quần thì gói Thành trả null — ô trống không có mảnh lùi');
+  else pass('⑧ gói Thành chỉ vẽ lớp giáp, không chồng thân trần lệch hướng');
+
   if (errs.length) fail('lỗi trang: ' + errs.slice(0, 3).join(' | '));
   console.log(loi ? `\n${loi} FAIL` : '\nTẤT CẢ XANH');
   await b.close();
