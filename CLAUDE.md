@@ -5590,6 +5590,19 @@ hiện character đang ở ngoài thành, mang kiếm ra skill và đi giết qu
   cách gọi thẳng `mrVe` với khối drawPlayer vừa chọn — sprite nằm trong bộ đệm nên render lần hai
   không gọi lại `mrVe`, và cờ đọc ra `null` (đã dẫm).
 
+### 🧥 ĐỒ PHÁT SẴN LÀ MỘT BỘ TRỌN — `mrDongBo(eq, dong)`
+
+Chủ dự án nhìn ảnh chụp production: *"sao nó trộn tùm lum hết vậy"*. `assignDef` bốc DÒNG ngẫu
+nhiên cho từng ô, và từ lúc năm ô vẽ rời (piece_layers) thì bộ max ra đúng năm bộ khác nhau
+trên một người (nón Trâu Xanh · áo Cuồng Phong · găng Đồ Đồng · quần Ma Thuật · giày Lôi Phong).
+
+- `mrDongBo` chỉ đổi DÒNG (hình), giữ nguyên giai/chỉ số. Gọi ở `applyTestBoost` (ép
+  **Cuồng Phong**) và `phatDoKhoiDau` (theo dòng của ô Áo). **Người chơi tự phối thì không đi qua đây** —
+  phối được là tính năng, chỉ đồ MÁY phát mới phải đồng bộ.
+- Save cũ: vá **một lần** trong `loadGame` (cờ `_mrDongBo`), và chỉ khi năm ô trông đúng là đồ phát
+  sẵn (cùng giai **và** cùng mức rèn 0 hoặc 11).
+- Gác: `test_goimr §⑦` (thử ngược: gỡ lời gọi ở bộ chơi thử ⇒ đỏ).
+
 ### 👖 Ô QUẦN QUAY LẠI — NĂM Ô GIÁP CHO CẢ NĂM LỚP (chủ dự án chốt 2026-09-24)
 
 Nón · Áo · Tay · **Quần** · Chân — đúng kiểu MU, và khớp năm phần của gói piece_layers. Áp cho cả

@@ -163,6 +163,19 @@ const pass = (m) => console.log('PASS', m);
   if (r6.trung) fail(`⑥ ${r6.trung} cặp hướng bay ra CÙNG một tư thế — gói có 8 hàng, đang đọc nhầm hàng`);
   else pass('⑥ tám hướng bay là tám tư thế khác nhau');
 
+  // ⑦ đồ PHÁT SẴN là MỘT bộ trọn — bộ chơi thử lẫn bộ max (chủ dự án: "trộn tùm lum")
+  const r7 = await p.evaluate(() => {
+    const dong = () => ['non', 'ao', 'tay', 'quan', 'chan'].map(k => { const d = itemDef(player.equip[k]); return d && d.mr; });
+    const ra = {};
+    for (let i = 0; i < 6; i++){ phatDoKhoiDau(); const L = dong(); if (new Set(L).size !== 1 || !L[0]) { ra.demo = L; break; } }
+    applyTestBoost(); ra.max = dong();
+    return ra;
+  });
+  console.log('⑦ đồ phát sẵn:', JSON.stringify(r7));
+  if (r7.demo) fail(`⑦ bộ chơi thử ra năm dòng khác nhau: ${r7.demo.join(' · ')}`);
+  else if (new Set(r7.max).size !== 1 || !r7.max[0]) fail(`⑦ bộ max ra năm dòng khác nhau: ${r7.max.join(' · ')}`);
+  else pass(`⑦ đồ phát sẵn là một bộ trọn (max: ${r7.max[0]})`);
+
   if (errs.length) fail('lỗi trang: ' + errs.slice(0, 3).join(' | '));
   console.log(loi ? `\n${loi} FAIL` : '\nTẤT CẢ XANH');
   await b.close();

@@ -9536,6 +9536,16 @@ function loadGame(idx){
     // chính phép di trú nghiền xuống giai 5 (7 → 10 → ceil(10/2)) — đo được, và không lỗi nào
     // báo. Ở đây thì lưới túi cũng đã dựng xong nên `bagConCho`/`bagThem` trả lời đúng.
     demoDoDiTru();
+    // Save tạo TRƯỚC khi có mrDongBo mang bộ phát sẵn chắp vá năm dòng. Vá MỘT lần, và chỉ khi
+    // năm ô trông đúng là đồ phát sẵn (cùng giai, cùng mức rèn 0 hoặc 11) — bộ người chơi tự
+    // phối thì hiếm khi khớp cả hai, và phối tay là quyền của họ.
+    if (!player._mrDongBo){
+      const _ds = Object.keys(MR_O_PHAN).map(k => [itemDef(player.equip[k]), player.equip[k]]);
+      if (_ds.every(([d]) => d && d.mr) && new Set(_ds.map(([d]) => d.band)).size === 1
+          && new Set(_ds.map(([, it]) => it.plus)).size === 1 && [0, 11].includes(_ds[0][1].plus))
+        mrDongBo(player.equip, _ds[0][1].plus === 11 ? 'cuong_phong' : null);
+      player._mrDongBo = 1;
+    }
     canhMacDinh();   // lớp luôn bay nhận cánh cấp 1 một lần — xem chỗ khai
     let maxUid = 0;
     for (const s in player.equip) if (player.equip[s]) maxUid = Math.max(maxUid, player.equip[s].uid);
@@ -15308,6 +15318,24 @@ function mrGiapDong(eq){
   if (!eq) return null;
   for (const k of MR_O_CHUAN){ const d = itemDef(eq[k]); if (d && d.mr) return d.mr; }
   return null;
+}
+// Đồ PHÁT SẴN (bộ chơi thử · max) phải là MỘT bộ trọn. assignDef bốc dòng NGẪU NHIÊN cho từng ô,
+// nên không ép thì năm ô ra năm bộ khác nhau và nhân vật đọc ra một thân chắp vá — chủ dự án
+// nhìn ảnh chụp: "sao nó trộn tùm lum hết vậy". Chỉ đổi DÒNG (hình), giữ giai/chỉ số nguyên.
+// `dong` rỗng ⇒ theo dòng của ô Áo (ô quyết thân). Người chơi tự phối thì KHÔNG đi qua đây.
+function mrDongBo(eq, dong){
+  if (!eq || !player || !MR_GIAP_LINES[player.sect]) return;
+  const _a = itemDef(eq.ao);
+  dong = dong || (_a && _a.mr);
+  if (!dong) return;
+  for (const k in MR_O_PHAN){
+    const it = eq[k], d = itemDef(it);
+    if (!d || !d.mr || d.mr === dong) continue;
+    const moi = ITEM_DB[`${d.sect}_${dong}_${d.band}_${d.slot}`];
+    if (!moi) continue;
+    it.def = moi.id; it.line = moi.line;
+    it.name = (it.perfect ? 'Hoàn Hảo ' : '') + moi.name;
+  }
 }
 // Bậc bảng màu giáp — nay chỉ đọc TRANG BỊ THẬT. Trước đây nó lấy CAO HƠN giữa bậc Thần Binh
 // và trang bị, và đó là đường duy nhất khiến người chưa mặc gì vẫn lên màu giáp. Thần Binh
@@ -22299,6 +22327,7 @@ function phatDoKhoiDau(){
     const it = demoTaoMon(_id);
     if (it) player.equip[_id] = it;
   }
+  mrDongBo(player.equip);   // bộ chơi thử: năm ô cùng một dòng
   player._demoDo = DEMO_DO_GIAI;   // đã nhận bộ chơi thử — xem demoDoDiTru()
   canhMacDinh();
   calcDerived();
@@ -22393,6 +22422,7 @@ function applyTestBoost(){
     it.plus = 11; it.perfect = true;
     player.equip[sl.id] = it;
   }
+  mrDongBo(player.equip, 'cuong_phong');   // max: một bộ trọn, không năm bộ chắp vá
   // Đồ đặc biệt tối thượng: Linh Dực bậc 3 của chính lớp đang chơi
   player.equip.canh = genWing(player.sect, 3);   // max mode: cánh bậc 3 của chính lớp đang chơi
   // Châu + Bảo Hạp: để thử nguyên vòng rèn/mở hạp mà không phải cày
