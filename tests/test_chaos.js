@@ -171,7 +171,8 @@ const { chromium } = require('playwright');
   if (r.tenDinhKiemHiep.length) fail(`còn tên kiếm hiệp: ${r.tenDinhKiemHiep.join(', ')}`);
   // 8 chứ không 40: hệ phẩm đã gỡ nên ITEM_NAMES còn ĐÚNG MỘT tên lui mỗi ô, không phải năm
   // tên chọn theo phẩm. (Trước đó là 40 = 8 ô × 5 phẩm; trước nữa là 45 khi còn ô Quần.)
-  if (r.soTen !== 8) fail(`bảng tên có ${r.soTen} tên, cần 8 (mỗi ô một tên lui)`);
+  // 9 từ 2026-09-24: ô Quần quay lại.
+  if (r.soTen !== 9) fail(`bảng tên có ${r.soTen} tên, cần 9 (mỗi ô một tên lui)`);
   // Công thức 'Luyện Áo Choàng' đã gỡ cùng cả hệ Áo Choàng — nó trùng vai với Cánh (theo định
   // nghĩa chủ dự án chốt: Cánh CHÍNH LÀ áo choàng của Dark Lord). Gác ngược lại: nó phải BIẾN MẤT.
   if (r.khayTrong.includes('cloak'))

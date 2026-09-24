@@ -1879,7 +1879,7 @@ Object.assign(EXACT, { 'Mana đã đầy!': 'Mana is full!' });
    bảng nhỏ cộng một luật, không phải 266 khoá chép tay: thêm một bộ giáp mới vào `HERO_SETS`
    là chỉ phải thêm MỘT dòng vào `BO_DO`, không phải bốn dòng cho bốn ô. */
 const O_DO = {
-  'Mũ Trụ':'Helm', 'Giáp':'Armor', 'Găng':'Gauntlets', 'Ủng':'Boots',
+  'Mũ Trụ':'Helm', 'Giáp':'Armor', 'Găng':'Gauntlets', 'Quần':'Pants', 'Ủng':'Boots',
   'Dây Chuyền':'Amulet', 'Nhẫn':'Ring', 'Đại Kiếm':'Greatsword', 'Ma Kiếm':'Runeblade',
   'Song Đao':'Twin Blades', 'Lệnh Trượng':'Command Rod', 'Trường Cung':'Longbow',
   'Kiếm':'Sword', 'Gậy':'Staff', 'Cung':'Bow', 'Nỏ':'Crossbow', 'Rìu':'Axe',
@@ -1941,7 +1941,7 @@ const MR_VK_EN = {
 const _mrEsc = (k) => k.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
 const _mrLa = '(I|II|III|IV|V|VI|VII)';
 RULES.unshift(
-  [new RegExp('^(Hoàn Hảo )?(Mũ Trụ|Giáp|Găng|Ủng) (' + Object.keys(MR_BO_EN).map(_mrEsc).join('|') + ') ' + _mrLa + '$'),
+  [new RegExp('^(Hoàn Hảo )?(Mũ Trụ|Giáp|Găng|Quần|Ủng) (' + Object.keys(MR_BO_EN).map(_mrEsc).join('|') + ') ' + _mrLa + '$'),
     (m, hh, o, bo, la) => `${hh ? 'Excellent ' : ''}${MR_BO_EN[bo]} ${O_DO[o]} ${la}`],
   [new RegExp('^(Hoàn Hảo )?(' + Object.keys(MR_VK_EN).map(_mrEsc).join('|') + ') ' + _mrLa + '$'),
     (m, hh, vk, la) => `${hh ? 'Excellent ' : ''}${MR_VK_EN[vk]} ${la}`]

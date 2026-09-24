@@ -17260,7 +17260,7 @@ function heroSprite(sectKey, tier, gv, kind, idx, act, back, sw, blk, hw, huong)
   // `act` phải nằm trong khoá cho CẢ đánh lẫn tung chiêu: heroFramePose() đọc act ở cả hai nhánh
   // (mỗi lớp một bộ khung tay/vũ khí riêng), nên bỏ nó ra khỏi khoá ở nhánh 'c' là hai tuyệt kỹ
   // khác nhau dùng chung một ảnh.
-  const key = `${sectKey}|${tier}|${heroGearSig(gv)}|${kind}|${idx}|${(kind === 'a' || kind === 'c') ? act : ''}|${blk}|${_coArt ? hw : (back ? 'B' : '')}|${sw}|${_mr ? 'MR' + huong : ''}${nvBoTen(sectKey, tier, gv, hw) || ''}${nvBo(sectKey, tier, gv, hw) ? '' : '?'}${NV_BANG2[blk] && !nvBang(sectKey, tier, gv, blk, hw) ? '!' : ''}|${window.TEST_TO_PHANG ? 'D' : ''}`;
+  const key = `${sectKey}|${tier}|${heroGearSig(gv)}|${kind}|${idx}|${(kind === 'a' || kind === 'c') ? act : ''}|${blk}|${_coArt ? hw : (back ? 'B' : '')}|${sw}|${_mr ? 'MR' + huong + (MR_THANH ? 'T' : '') + (MR_NGOAI ? 'N' : '') : ''}${nvBoTen(sectKey, tier, gv, hw) || ''}${nvBo(sectKey, tier, gv, hw) ? '' : '?'}${NV_BANG2[blk] && !nvBang(sectKey, tier, gv, blk, hw) ? '!' : ''}|${window.TEST_TO_PHANG ? 'D' : ''}`;
   let cv = _hsCache.get(key);
   if (cv){                       // chạm — đẩy lên cuối để LRU giữ lại
     _hsHit++;
@@ -19998,7 +19998,10 @@ function drawPlayer(p){
     const _blk = _mrNgoai ? (_chet ? 'fd'
                              : _lopHien ? (_kind === 'c' ? (p.castAct === 'thrust' ? 'gd' : 'g') : 'gl')
                              : (p.hurtT > 0) ? 'fh'
-                             : (_kind === 'w' || _kind === 'r') ? 'fm' : 'f')
+                             // ⚠ `p.moving`, KHÔNG `_kind` cũng KHÔNG `_diBo`: đang bay thì `_kind`
+                             // luôn là 'w' (`_bay ? 'w'`) và `_diBo` luôn false (`!_bay`) — hỏi
+                             // hai cái đó là đứng yên cũng ra bay-đi, hoặc đi cũng ra đứng.
+                             : p.moving ? 'fm' : 'f')
                : (_bayBo && _lopHien && (_mrLop ? !!MR_BAYDANH
                                                 : NV_BO_CO_BAYDANH[nvBoGoc(p.sect, _tier, _gv) || ''])) ? 'g'
                : _bayBo ? 'f'

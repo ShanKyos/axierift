@@ -31,7 +31,7 @@ const { chromium } = require('playwright');
   // ── 1. Hai bảng khung ─────────────────────────────────────────────────────
   const r1 = await p.evaluate(async () => {
     applyTestBoost(); cheatExec('lv 20');
-    for (const sl of ['non','ao','tay','chan']) { const it = genSpecific(sl, 1); if (it) player.equip[sl] = it; }
+    for (const sl of HERO_ARMOR_SLOTS) { const it = genSpecific(sl, 1); if (it) player.equip[sl] = it; }
     player.equip.canh = null; calcDerived();
     await new Promise(r => setTimeout(r, 1600));
     const gv = gearVisual(player), t = heroTier(player);

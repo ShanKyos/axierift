@@ -125,23 +125,31 @@ const PORT = process.argv[2] || '8853';
   else if (!/^Hoàn Hảo /.test(r5.wn) || r5.plus.join() !== '9,5') fail(`di trú làm mất Hoàn Hảo/mức rèn: ${r5.wn} ${r5.plus}`);
   else pass(`id cũ tự đổi: ${r5.an} · ${r5.wn}`);
 
-  // ⑥ LUÔN BAY — kể cả KHÔNG đeo cánh; đứng · đi · đánh. Đối chứng: Dark Knight không cánh thì không bay.
+  // ⑥ LUÔN BAY **NGOÀI THÀNH** — kể cả KHÔNG đeo cánh; đứng · đi · đánh. Đối chứng: Dark Knight
+  // không cánh thì không bay. (Trong thành Spellblade ĐI BỘ bằng gói town_v1 — chủ dự án chốt
+  // 2026-09-24; `test_goimr ①` gác nửa đó. Bản cũ đo ở ardhaven, đúng hồi luật còn là "luôn bay".)
   const r6 = await p.evaluate(async () => {
-    travelTo('ardhaven'); player.avatar = null; player.equip.canh = null; calcDerived();
+    travelTo('daohoa'); player.avatar = null; player.equip.canh = null; calcDerived();
+    for (const m of mobs){ m.x = -9999; m.y = -9999; }
     const khoi = async (dat) => {
       dat(); const out = new Set();
-      for (let i = 0; i < 90; i++){ update(1 / 60); render(); out.add(window.__khoiVe); await new Promise(r => setTimeout(r, 5)); }
+      // Ngoài thành có quái: dời chúng ra xa MỖI nhịp, không thì nhân vật cấp 1 chết giữa bài và
+      // khối đo được là 'fd' (chết) — đo một cảnh khác hẳn cảnh định đo.
+      for (let i = 0; i < 90; i++){ for (const m of mobs){ m.x = -9999; m.y = -9999; } update(1 / 60); render(); out.add(window.__khoiVe); await new Promise(r => setTimeout(r, 5)); }
       return [...out];
     };
     const dung = await khoi(() => { moveTarget = null; });
     const di   = await khoi(() => { moveTarget = { x: player.x + 500, y: player.y }; });
     const danh = await khoi(() => { moveTarget = null; player.atkAnim = window.NV_HD_GIAY.a; });
     const danh2 = []; for (let i = 0; i < 20; i++){ player.atkAnim = window.NV_HD_GIAY.a; render(); danh2.push(window.__khoiVe); }
-    return { dung, di, danh: danh2 };
+    return { dung, di, danh: danh2, chet: dead };
   });
-  const chiF = (a) => a.every(k => k === 'f' || k === 'g');
-  if (!chiF(r6.dung) || !chiF(r6.di)) fail(`Spellblade không cánh vẫn rơi về khối mặt đất: đứng ${r6.dung} · đi ${r6.di}`);
-  else if (!r6.danh.includes('g')) fail(`đang bay ra đòn mà không vào khối bay-đánh: ${r6.danh}`);
+  // Gói field_v2 tách thêm bay-đi 'fm' · trúng đòn 'fh' · chết 'fd' · ba đòn 'g'/'gl'/'gd'.
+  const BAY = ['f', 'fm', 'fh', 'fd', 'g', 'gl', 'gd'];
+  const chiF = (a) => a.every(k => BAY.includes(k));
+  if (r6.chet) fail('⑥ QUE DÒ: nhân vật chết giữa lúc đo — cảnh dựng hỏng, không phải cơ chế');
+  else if (!chiF(r6.dung) || !chiF(r6.di)) fail(`Spellblade không cánh vẫn rơi về khối mặt đất: đứng ${r6.dung} · đi ${r6.di}`);
+  else if (!r6.danh.some(k => /^g/.test(k))) fail(`đang bay ra đòn mà không vào khối bay-đánh: ${r6.danh}`);
   else pass(`luôn bay: đứng [${r6.dung}] · đi [${r6.di}] · đánh có 'g'`);
   const r6b = await p.evaluate(async () => {
     startGame('thieulam', null); travelTo('ardhaven'); player.avatar = null; player.equip.canh = null; calcDerived();

@@ -91,24 +91,32 @@ const pass = (m) => console.log('PASS', m);
 
   // ② NGOÀI THÀNH
   const r2 = await p.evaluate(async () => {
-    travelTo('daohoa'); player.avatar = null;
-    for (const m of mobs){ m.x = -9999; m.y = -9999; }
-    for (let i = 0; i < 40; i++){ update(1/60); render(); await new Promise(z => setTimeout(z, 16)); }
+    travelTo('daohoa'); player.avatar = null; moveTarget = null;
+    const xa = () => { for (const m of mobs){ m.x = -9999; m.y = -9999; } };
+    // Đi trước: khối bay-đi 'fm' phải bật khi đang di chuyển…
+    moveTarget = { x: player.x + 400, y: player.y };
+    const khiDi = new Set();
+    for (let i = 0; i < 30; i++){ xa(); update(1/60); render(); if (player.moving) khiDi.add(window.__mrKhoi.blk); await new Promise(z => setTimeout(z, 16)); }
+    window.__khiDi = [...khiDi];
+    // …rồi đứng yên cho tới khi hết trôi.
+    moveTarget = null;
+    for (let i = 0; i < 40; i++){ xa(); update(1/60); render(); await new Promise(z => setTimeout(z, 16)); }
     const k0 = window.__mrKhoi; window.__mrGoiVe = null;
     mrVe('minhgiao', 4, gearVisual(player), k0.blk, 0, 2);
     const dung = { k: k0, goi: window.__mrGoiVe, tt: avaTrongThanh() };
     player.atkAnim = 0.2; player.atkAct = 'slash'; render();
-    return { ...dung, danh: window.__mrKhoi && window.__mrKhoi.blk };
+    return { ...dung, danh: window.__mrKhoi && window.__mrKhoi.blk, khiDi: window.__khiDi };
   });
   console.log('② ngoài thành:', JSON.stringify(r2));
   if (r2.tt) fail('② QUE DÒ: daohoa bị coi là trong thành');
   else {
     const l0 = loi;
     if (!r2.k || r2.k.thanh) fail('② ngoài thành mà drawPlayer tưởng đang trong thành');
-    if (r2.k && !['f', 'fm'].includes(r2.k.blk)) fail(`② ngoài thành đứng yên ra khối '${r2.k.blk}', phải là bay`);
+    if (r2.k && r2.k.blk !== 'f') fail(`② ngoài thành ĐỨNG YÊN ra khối '${r2.k.blk}', phải là bay đứng 'f' (không phải bay-đi 'fm')`);
+    if (!(r2.khiDi || []).length || !r2.khiDi.every(k => k === 'fm')) fail(`② ngoài thành ĐANG ĐI ra khối ${JSON.stringify(r2.khiDi)}, phải là bay-đi 'fm'`);
     if (r2.goi !== 'ngoai') fail(`② ngoài thành không vẽ bằng gói field_v2 (vẽ: ${r2.goi})`);
     if (r2.danh !== 'gl') fail(`② đòn thường ngoài thành ra khối '${r2.danh}', phải là Light Slash 'gl'`);
-    if (loi === l0) pass('② ngoài thành: gói field_v2 · bay · đòn thường = Light Slash');
+    if (loi === l0) pass('② ngoài thành: gói field_v2 · bay đứng f / bay đi fm · đòn thường = Light Slash');
   }
 
   // ③ ④ MẶC LẪN BỘ — đo ở cả hai gói
