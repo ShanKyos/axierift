@@ -24,8 +24,9 @@ const { chromium } = require('playwright');
 
     // ĐO TRÊN ĐƯỜNG ART NƯỚNG, không phải hình vector.
     // Bản trước gọi thẳng drawHeroFigure — đó là hình VẼ ĐƯỜNG, nay chỉ còn là lối lui khi lớp
-    // chưa có bảng khung. Người chơi nhìn thấy art Spine: hào quang rèn vẽ bằng nvHaoQuangSau
-    // (quầng sau lưng) và nvVienSang (viền dựng từ chính bóng dáng khung hình). Đo sai đường
+    // chưa có bảng khung. Người chơi nhìn thấy art Spine: hào quang rèn vẽ bằng nvHaoQuangTruoc
+    // (viền dựng từ chính bóng dáng khung · tàn lửa · dải quét). Quầng sau lưng (nvHaoQuangSau)
+    // ĐÃ GỠ theo lệnh chủ dự án — mục ⑦ dưới đây gác để nó không mọc lại. Đo sai đường
     // thì bài kiểm báo "rèn lên không đổi gì" trong khi ngoài màn nó đổi rất rõ.
     // Đo ở GIAI 1: đó là giai duy nhất của Dark Knight đang có bảng khung (dkgs1). Mức rèn mới
     // là thứ bài này đo, mà hào quang rèn không phụ thuộc giai — nên giai 1 đo được đủ.
@@ -36,7 +37,6 @@ const { chromium } = require('playwright');
       const c = document.createElement('canvas'); c.width = NV_OW; c.height = NV_OH;
       const q = c.getContext('2d');
       const t = now === undefined ? 900 : now;
-      nvHaoQuangSau(q, 'thieulam', 1, gv(pl), t);
       nvVeKhung(q, IM, 'i', 0);
       nvHaoQuangTruoc(q, 'thieulam', 1, gv(pl), t, IM, 'i', 0);
       return q.getImageData(0, 0, NV_OW, NV_OH).data;
@@ -68,11 +68,34 @@ const { chromium } = require('playwright');
     // +0 phải giống hệt "không có gv" — không được tự dưng sáng khi chưa rèn
     const bare = (() => { const c=document.createElement('canvas'); c.width=NV_OW; c.height=NV_OH;
       const q=c.getContext('2d');
-      nvHaoQuangSau(q, 'thieulam', 1, gv(0), 900);
       nvVeKhung(q, IM, 'i', 0);
       nvHaoQuangTruoc(q, 'thieulam', 1, gv(0), 900, IM, 'i', 0);
       return q.getImageData(0,0,NV_OW,NV_OH).data; })();
     o.plus0_khongSang = diff(bare, shot(0)) === 0;
+
+    // ⑦ QUẦNG SAU LƯNG ĐÃ GỠ — và không được mọc lại. Chủ dự án: "tắt cái vầng sáng xung quanh
+    // nhân vật đi, remove nó luôn. Sẽ làm lại hiệu ứng +9 sau". Đo điểm ảnh +11 thêm vào mà nằm
+    // XA bóng dáng +0 (nở 8px): viền sáng và dải quét bám ngay trên mép nên không tính; tàn lửa
+    // chỉ vài đốm nhỏ. Quầng cũ là một đĩa bán kính ~100px ⇒ hàng chục nghìn điểm.
+    o.hamGo = ['hPlusAura', 'nvHaoQuangSau', 'heroRimCanvas'].filter(f => typeof window[f] === 'function');
+    {
+      const a0 = shot(0), a11 = shot(11);
+      const trong = new Uint8Array(NV_OW * NV_OH);
+      for (let y = 0; y < NV_OH; y++) for (let x = 0; x < NV_OW; x++)
+        if (a0[(y * NV_OW + x) * 4 + 3] > 20) trong[y * NV_OW + x] = 1;
+      const R = 8, no = new Uint8Array(NV_OW * NV_OH);
+      for (let y = 0; y < NV_OH; y++) for (let x = 0; x < NV_OW; x++){
+        if (!trong[y * NV_OW + x]) continue;
+        for (let dy = -R; dy <= R; dy++) for (let dx = -R; dx <= R; dx++){
+          const xx = x + dx, yy = y + dy;
+          if (xx >= 0 && yy >= 0 && xx < NV_OW && yy < NV_OH) no[yy * NV_OW + xx] = 1;
+        }
+      }
+      let xa = 0;
+      for (let i = 0; i < NV_OW * NV_OH; i++) if (!no[i] && a11[i * 4 + 3] > 8) xa++;
+      o.quangXa11 = xa;
+      o.thanDac0 = trong.reduce((t, v) => t + v, 0);
+    }
 
     // cache chân dung phải đổi theo mức rèn
     player.thanbinh = { tier: 1 }; player.equip = {};
@@ -133,14 +156,23 @@ const { chromium } = require('playwright');
   // (So với bước ở mốc 3 là sai: ở đó dải sáng quét thân chi phối, hai chế độ khác hẳn nhau
   //  nên số pixel không đem ra so trực tiếp được.)
   if (r.nhayTai.p4 <= 0) fail('vượt +4 không đổi gì');
-  if (r.nhayTai.p7 < r.trongMoc.p5 * 3)
-    fail(`ngưỡng +7 (${r.nhayTai.p7}) không nổi bật so với bước thường mốc 1 (${r.trongMoc.p5})`);
+  // ⚠ TẠM HẠ ×3 → ×1: cú nhảy ×3 ở +7 chính LÀ quầng sau lưng, mà chủ dự án đã gỡ quầng đó
+  // ("sẽ làm lại hiệu ứng +9 sau"). Còn lại ở +7 chỉ là tàn lửa bắt đầu bay — vẫn phải đổi NHIỀU
+  // HƠN một bước thường, nhưng chưa thành một cú nhảy. Làm lại hiệu ứng +7..+9 xong thì kéo lại.
+  if (r.nhayTai.p7 <= r.trongMoc.p5)
+    fail(`ngưỡng +7 (${r.nhayTai.p7}) không đổi hơn bước thường mốc 1 (${r.trongMoc.p5})`);
   if (r.nhayTai.p10 <= 0) fail('vượt +10 không đổi gì');
   // Hào quang theo BẬC (M.glow) vốn đã đập nhẹ từ trước — nên +0 động là chuyện bình thường,
   // điều cần chứng minh là lớp cường hoá làm nó động THÊM đáng kể.
-  if (r.dong_plus11 < 500) fail('hào quang +11 không động theo thời gian — thành đèn dán');
+  // Quầng sau lưng (thứ đập mạnh nhất) đã gỡ; phần còn động là tàn lửa bay + dải quét +10.
+  // Sàn hạ theo đúng thứ còn lại, và vế "động hơn +0" vẫn giữ nguyên.
+  if (r.dong_plus11 < 150) fail(`hiệu ứng +11 không động theo thời gian (${r.dong_plus11}) — thành đèn dán`);
   if (r.dong_plus11 < r.dong_plus0 * 1.3)
     fail(`+11 (${r.dong_plus11}) không động hơn +0 (${r.dong_plus0}) — lớp cường hoá không thêm chuyển động`);
+  console.log('quầng xa bóng dáng ở +11:', r.quangXa11, 'điểm ảnh (thân đặc +0:', r.thanDac0 + ')');
+  if (!(r.thanDac0 > 2000)) fail(`cảnh dựng hỏng: khung +0 chỉ có ${r.thanDac0} điểm ảnh — art chưa tải, phép đo quầng vô nghĩa`);
+  if (r.hamGo.length) fail('hàm quầng sau lưng đã gỡ mà còn sống: ' + r.hamGo.join(', '));
+  if (r.quangXa11 > 1500) fail(`+11 có ${r.quangXa11} điểm ảnh sáng nằm XA bóng dáng — quầng sau lưng đã mọc lại`);
   if (!r.plus0_khongSang) fail('+0 đã phát sáng — ngưỡng bị rò');
   if (!r.cache_doiTheoRen) fail('cache chân dung không đổi theo mức rèn');
   if (r.renLech_plus > 3) fail(`rèn lệch tính sai: chỉ mũ +11 mà ra ${r.renLech_plus}`);

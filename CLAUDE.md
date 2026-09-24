@@ -2509,7 +2509,7 @@ Chỉ 2 trường hợp còn blit ảnh: Hóa Thân Tướng Quân (mượn spri
   | A. Bóng dáng | `hPauldrons` · `hHelmCrest` · `hGreave` · `hBelt` — mọc dần theo bậc |
   | B. Chất liệu | `hArmorSheen` — sắt nhám → thép đánh bóng (dải phản quang hẹp dần) |
   | C. Hoa văn | `hEngrave` — số đường khảm theo bậc, **màu theo `it.rarity`** |
-  | D. Hào quang | giữ, nhuốm màu bộ Cổ Thần đang mặc |
+  | D. Hào quang | ~~giữ, nhuốm màu bộ Cổ Thần đang mặc~~ — **ĐÃ GỠ** (2026-09-24), xem mục Cường hoá |
 - ⚠ Vai giáp phải đủ to để vượt **ra ngoài** đường viền cánh tay (tay vẽ tới x≈122). Nằm gọn
   bên trong thì nó chỉ còn là mảng màu, mất hẳn tác dụng đổi dáng — đó là lý do bản đầu chỉ
   đổi được 6 px đường viền.
@@ -2590,6 +2590,19 @@ lớp `hPauldrons`**: đo trên nguyên hình sẽ bắt được **thanh kiếm
 chứ không bắt được vai giáp — đối chứng Dark Knight lẽ ra 0 mà ra 215 px vì lý do đó.
 
 ### Cường hoá +0..+11 (`plusStage`)
+
+> ⚠ **QUẦNG SAU LƯNG ĐÃ GỠ (2026-09-24)** — chủ dự án chốt: *"Tắt cái vầng sáng xung quanh nhân
+> vật đi, remove nó luôn. Sẽ làm lại hiệu ứng +9 sau."* Gỡ **bốn** nguồn sáng tròn quanh thân:
+> `hPlusAura` (quầng +7..+11) · `nvHaoQuangSau` (cửa gọi nó ở đường art nướng) · hào quang theo
+> BẬC `glowCol` trong `drawHeroFigure` · hào quang + viền kim quang **Thần Hiệp** (`heroRimCanvas`).
+> Cái cuối đáng nói: bản chơi thử phát cấp max + Axie 5★ cho **mọi** người ⇒ `isMaxed` đúng với tất
+> cả ⇒ một vầng vàng trùm lên mọi nhân vật trên production, suốt phiên.
+> **CÒN GIỮ:** viền sáng (+4) · tàn lửa (+7) · dải quét (+10) · ấn Thần Hiệp dưới chân.
+> `test_plusglow ⑦` gác chiều ngược lại (ba hàm phải không còn; +11 không được có điểm sáng nằm xa
+> bóng dáng), và ngưỡng "+7 nhảy ×3" đã **tạm hạ** vì cú nhảy ấy chính là cái quầng — làm lại
+> +7..+9 xong thì kéo lại. Phần mô tả bên dưới là thiết kế GỐC, đọc nó như lịch sử.
+> ⚠ `test_herosprite §2` đổi theo: nó từng đòi "mép sprite trong suốt", đúng chỉ vì quầng mờ là thứ
+> ngoài cùng của một sprite **cắt sát hộp bao**. Nay đo đúng thứ nó gác — hộp bao lọt trong lề `HS_PAD`.
 
 Đúng mốc MU Online: **+7 là ngưỡng phát sáng**. Bốn mốc, mỗi mốc thêm một hiện tượng KHÁC
 (không phải chỉ chói hơn): `0` (+0..3) trơ · `1` (+4..6) viền sáng quanh vai/mũ · `2` (+7..9)
@@ -5497,6 +5510,8 @@ Hai cái bẫy đã mắc:
 giáp và ủng bạc màu.
 
 ## Sáng theo +N: quầng NẰM NGOÀI, món đồ giữ nguyên màu
+
+> ⚠ Lớp **quầng** ở mục này đã gỡ (2026-09-24) — xem mục "Cường hoá +0..+11". Viền sát bóng còn giữ.
 
 **Luật gốc: trang bị là thứ GẮN LÊN người, nên nó phải giữ được bản sắc riêng ở mọi
 mức rèn.** Bộ giáp tím-đen viền đồng ở +11 vẫn phải đọc ra đúng bộ giáp đó. Tín hiệu

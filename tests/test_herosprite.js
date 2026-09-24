@@ -78,11 +78,18 @@ const pass = m => console.log('PASS ' + m);
     const at = (x,y) => d[(y*spr.width + x)*4 + 3];
     for (let x = 0; x < spr.width; x++){ if (at(x,0) > 24) mep++; if (at(x,spr.height-1) > 24) mep++; }
     for (let y = 0; y < spr.height; y++){ if (at(0,y) > 24) mep++; if (at(spr.width-1,y) > 24) mep++; }
-    return { mepDuc: mep, w: spr.width, h: spr.height, ox: Math.round(spr._ox), oy: Math.round(spr._oy) };
+    // Lề còn lại tới mép canvas DỰNG (hệ 160×220, lề HS_PAD mỗi phía). Chạm mép đó mới là bị cắt.
+    const le = Math.min(spr._ox + HS_PAD, spr._oy + HS_PAD,
+                        HERO_W + HS_PAD - (spr._ox + spr._ow), HERO_H + HS_PAD - (spr._oy + spr._oh));
+    return { mepDuc: mep, le: +le.toFixed(1), w: spr.width, h: spr.height, ox: Math.round(spr._ox), oy: Math.round(spr._oy) };
   });
   console.log('2.', JSON.stringify(r2));
-  if (r2.mepDuc > 8) fail(`hào quang bị cắt: ${r2.mepDuc} điểm ảnh đục nằm sát mép sprite`);
-  else pass('hào quang không bị cắt (mép sprite trong suốt)');
+  // ⚠ Bản cũ đòi "mép sprite TRONG SUỐT". Nhưng heroSprite() CẮT SÁT theo hộp bao alpha, nên
+  // mép sprite trong suốt chỉ vì QUẦNG SAU LƯNG mờ dần là thứ nằm ngoài cùng. Gỡ quầng (chủ dự
+  // án chốt) thì thân và vũ khí nằm ngay mép hộp — đúng như phải thế — và mệnh đề cũ đỏ oan.
+  // Thứ nó thật sự gác là "canvas DỰNG không xén mất gì": hộp bao phải nằm lọt trong lề HS_PAD.
+  if (!(r2.le >= 1)) fail(`sprite bị cắt cụt: hộp bao chạm mép canvas dựng (lề còn ${r2.le}px)`);
+  else pass(`sprite không bị cắt (hộp bao cách mép canvas dựng ${r2.le}px)`);
 
   // 3. đổi lớp / bậc / bộ đồ phải ra sprite KHÁC
   const r3 = await p.evaluate(() => {

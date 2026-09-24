@@ -15365,24 +15365,11 @@ function hFigureLight(g){
 // `plus` là mức rèn TRUNG BÌNH của 5 ô giáp (xem gearVisual) — rèn mỗi cái mũ +11 rồi bỏ trống
 // 4 ô còn lại thì không được sáng ngang full +11.
 function plusStage(pl){ return !(pl > 0) ? 0 : pl < 4 ? 0 : pl < 7 ? 1 : pl < 10 ? 2 : 3; }
-// Hào quang nóng — vẽ SAU LƯNG, trước cả áo choàng
-function hPlusAura(g, M, gv, now){
-  const st = plusStage(gv ? gv.plus : 0);
-  if (st < 2) return;
-  const col = M.glow || '#ffe9a8';
-  const pulse = 0.5 + 0.5 * Math.sin(now / 260);
-  // k: thành phần LIÊN TỤC 0→1 từ +7 lên +11. Chỉ chia mốc thôi thì +7 với +9 trông y hệt
-  // nhau (đo được: 0 pixel khác biệt) — mà rèn từ +7 lên +9 là cả một chặng dài, phải thấy.
-  const k = clamp(((gv.plus || 0) - 6) / 5, 0, 1);
-  const r = 64 + st * 11 + k * 12 + pulse * (4 + st * 3);
-  g.save();
-  g.globalAlpha = (0.10 + st * 0.055 + k * 0.07) * (0.75 + pulse * 0.25);
-  const gr = g.createRadialGradient(80, 128, r * 0.3, 80, 128, r);
-  gr.addColorStop(0, col); gr.addColorStop(0.5, col); gr.addColorStop(1, 'rgba(0,0,0,0)');
-  g.fillStyle = gr;
-  g.beginPath(); g.arc(80, 128, r, 0, 7); g.fill();
-  g.restore();
-}
+// ⚠ HÀO QUANG SAU LƯNG (`hPlusAura`) ĐÃ GỠ — chủ dự án chốt: "tắt cái vầng sáng xung quanh
+// nhân vật đi, remove nó luôn. Sẽ làm lại hiệu ứng +9 sau". Nó là một đĩa gradient phủ kín sau
+// lưng từ +7, to dần tới +11 — nuốt mất bóng dáng bộ giáp đúng ở mức rèn người chơi tự hào nhất.
+// Viền sáng (+4) · tàn lửa (+7) · dải quét (+10) GIỮ NGUYÊN. Làm lại +9 thì làm ở đây, và đừng
+// dựng lại một vầng tròn phủ sau lưng: `test_plusglow` gác chiều đó.
 // Tàn lửa bay lên — vẽ TRƯỚC thân: cho cảm giác món đồ đang toả nhiệt, không phải dán đèn
 function hPlusSpark(g, M, gv, now){
   const st = plusStage(gv ? gv.plus : 0);
@@ -16035,7 +16022,7 @@ function heroFramePose(kind, idx, act, sw, n){
            : heroPose(0, false, 0, 0, (idx + 0.5) / nk * TAU * 620, act, sway, sway); // nhịp thở
   return ps;
 }
-// `now` giả của khung: giữ cho hào quang +10 (hPlusAura/Sweep/Spark) vẫn nhúc nhích theo chu kỳ
+// `now` giả của khung: giữ cho hào quang +10 (Sweep/Spark) vẫn nhúc nhích theo chu kỳ
 // thay vì đứng chết một kiểu.
 function heroFrameNow(kind, idx, n){
   return (idx + 0.5) / (n || HS_FRAMES[kind] || 8) * Math.PI * 2 * 620;
@@ -16622,16 +16609,10 @@ function nvKhungGop(sectKey, tier, gv, kind, idx, hw){
 // Màu tô đè khi TEST_TO_PHANG bật. Hồng cánh sen thuần: không sắc nào trong game tới gần —
 // cảnh vật là xanh lam/xanh lá/xám đá, hiệu ứng là cam/vàng/xanh ngọc.
 const HS_MAU_DO = '#ff00ff';
-// Ba lớp hào quang cường hoá (+4 / +7 / +10) mà drawHeroFigure() tự gọi bên trong nó. Đường
-// art NƯỚNG đi vòng qua drawHeroFigure() — nó chỉ blit hai bảng khung — nên nếu không gọi lại
-// ở đây thì nhân vật mặc art nướng rèn tới +11 vẫn trông y hệt +0: đập đồ mất hàng chục lượt
-// mà không thấy gì đổi. Toạ độ dùng chung được vì cả hai đường đều vẽ trong hệ của bộ xương
-// (gót ở y=212), không phải hệ của ô ảnh.
-function nvHaoQuangSau(g, sectKey, tier, gv, now){
-  if (!gv) return;
-  const S = heroSet(sectKey, gv.t);
-  hPlusAura(g, hSetMetal(hMetal(tier), S), gv, now);
-}
+// Hai lớp hào quang cường hoá còn lại (+4 viền / +7 tàn lửa / +10 dải quét) mà drawHeroFigure()
+// tự gọi bên trong nó. Đường art NƯỚNG đi vòng qua drawHeroFigure() — nó chỉ blit bảng khung —
+// nên nếu không gọi lại ở `nvHaoQuangTruoc` thì nhân vật mặc art nướng rèn tới +11 vẫn trông y
+// hệt +0. Lớp THỨ BA (quầng sau lưng, `nvHaoQuangSau`) đã gỡ cùng `hPlusAura` — xem chỗ đó.
 // Cắt MỘT khung khỏi bảng khung ra canvas riêng — nền cho hai hiệu ứng bám bóng dáng bên dưới.
 function _nvKhungRa(im, kind, idx, ten){
   // Khung GỘP (nvKhungGop) rộng đúng một ô, còn bảng khung rộng 16 ô — phân biệt bằng bề
@@ -17052,7 +17033,6 @@ function heroSprite(sectKey, tier, gv, kind, idx, act, back, sw, blk, hw, huong)
   const _choArt = !_nvIm && (_coArt || _mr);
   if (_nvIm){
     const _now = heroFrameNow(kind, idx, _nk);
-    nvHaoQuangSau(g, sectKey, tier, gv, _now);      // hào quang cường hoá nằm SAU lưng
     if (_gop) g.drawImage(_gop, -HS_PAD, -HS_PAD);  // khung đã gộp sẵn, dán thẳng
     else nvVeKhung(g, _nvIm, _blkVe, idx, nvBoTen(sectKey, tier, gv, hw));  // bộ giáp đổi cả tấm
     nvHaoQuangTruoc(g, sectKey, tier, gv, _now, _nvIm, kind, idx);   // viền + quét + tàn lửa
@@ -17141,20 +17121,6 @@ function _veThanHoa(g, p, spr, now, tier, gv, act, ps, sw){
 }
 window.heroSpriteStats = () => ({ cache: _hsCache.size, hit: _hsHit, miss: _hsMiss });
 
-// Canvas phụ dùng lại giữa các khung — dựng mới mỗi khung thì lại tốn hơn cái vừa tiết kiệm được.
-let _rimCv = null, _rimCtx = null;
-function heroRimCanvas(sectKey, tier, now, ps, gv){
-  if (!_rimCv){
-    _rimCv = document.createElement('canvas');
-    _rimCv.width = HERO_W; _rimCv.height = HERO_H;
-    _rimCtx = _rimCv.getContext('2d');
-  }
-  _rimCtx.clearRect(0, 0, HERO_W, HERO_H);
-  // Bỏ cánh ra, cùng lý do với heroSprite(): drawPlayer đã vẽ cánh riêng rồi. Khung này còn
-  // đúng 160×220 nên đôi cánh vẽ vào đây cũng bị cắt cụt hai bên.
-  drawHeroFigure(_rimCtx, sectKey, tier, now, ps, canhBoRa(gv));
-  return _rimCv;
-}
 function drawHeroFigure(g, sectKey, tier, now, ps, gv){
   const M = hMetal(tier), G = HERO_GEAR[sectKey] || HERO_GEAR.thieulam, P = G.pal;
   ps = ps || HERO_POSE0;
@@ -17166,15 +17132,8 @@ function drawHeroFigure(g, sectKey, tier, now, ps, gv){
   ps._wpen = null;   // ps thường là HERO_POSE0 dùng chung — đừng để sót hàm vẽ của lượt trước
   g.save();
   hEll(g, 80, 212, 30 - ps.bob * 0.9, 8, 'rgba(0,0,0,.22)'); // bóng co lại khi nhấc chân
-  // thì hào quang nhuốm màu bộ đó, nên bộ nào cũng có dáng riêng nhìn từ xa.
-  const glowCol = (gv && gv.setColor) || SM.glow;
-  if (glowCol){
-    const ag = g.createRadialGradient(80, 120, 10, 80, 120, 86);
-    ag.addColorStop(0, glowCol); ag.addColorStop(1, 'rgba(0,0,0,0)');
-    g.globalAlpha = 0.2 + 0.1 * Math.sin(now / 380); g.fillStyle = ag;
-    g.beginPath(); g.arc(80, 120, 86, 0, 7); g.fill(); g.globalAlpha = 1;
-  }
-  hPlusAura(g, SM, gv, now);                                 // E. hào quang cường hoá (sau lưng)
+  // Hào quang theo BẬC (`glowCol`) và hào quang cường hoá (`hPlusAura`) sau lưng ĐÃ GỠ — xem
+  // chú thích ở chỗ `hPlusAura` từng nằm.
   // Cánh nằm SAU lưng và TRƯỚC áo choàng — cùng thứ tự lớp như ngoài màn. veCanh() vẽ THẲNG
   // trong hệ của bộ xương này (gốc giữa hai bàn chân, hero 80/212), nên ở đây tỉ lệ đúng bằng
   // 1 và không có hệ số phỏng đoán nào cả. Trước đây chỗ này nhân đại 1,9 rồi truyền chân
@@ -17239,7 +17198,6 @@ function heroCardUrl(sectKey, tier, gv){
   if (_nvIm){
     // Thẻ nhân vật và thẻ chọn lớp dùng CHUNG bảng khung với hình trong màn, nên không có cách
     // nào lệch nhau. Cánh vẫn vẽ rời như cũ — nó không nằm trong bảng khung.
-    nvHaoQuangSau(hg, sectKey, tier || 1, gv, 0);
     if (_gopC) hg.drawImage(_gopC, -HS_PAD, -HS_PAD);
     else nvVeKhung(hg, _nvIm, 'i', 0, nvBoTen(sectKey, tier || 1, gv));
     if (gv && gv.canh) veCanh(hg, gv.canh, 80, 212, 0, 0, 1, 0);
@@ -19585,15 +19543,10 @@ function drawPlayer(p){
   ctx.scale(_lopCo, _lopCo);
   if (flip) ctx.scale(-1, 1);
   ctx.scale(pulse, pulse);
-  // Thần Hiệp: hào quang vàng rực sau lưng + viền kim quang quanh thân
-  if (maxed && (!_coAva || _lopHien) && !_nhap){
-    const hg = ctx.createRadialGradient(0, -8, 6, 0, -8, 64);
-    hg.addColorStop(0, 'rgba(255,228,150,.55)'); hg.addColorStop(0.55, 'rgba(255,177,92,.16)'); hg.addColorStop(1, 'rgba(0,0,0,0)');
-    ctx.globalAlpha = 0.85 + 0.15*Math.sin(now/300); ctx.fillStyle = hg;
-    ctx.beginPath(); ctx.arc(0, -8, 64, 0, 7); ctx.fill();
-    ctx.globalAlpha = 1;
-    // Viền kim quang quanh thân KHÔNG đặt shadowBlur ở đây nữa — xem chỗ vẽ dáng người bên dưới.
-  }
+  // ⚠ Thần Hiệp: hào quang vàng sau lưng + viền kim quang quanh thân ĐÃ GỠ, cùng đợt với
+  // `hPlusAura` ("tắt cái vầng sáng xung quanh nhân vật đi, remove nó luôn"). Bản chơi thử phát
+  // cấp max + Axie 5★ cho MỌI người, nên `isMaxed` đúng với tất cả — tức cái vầng vàng ấy trùm
+  // lên mọi nhân vật trên production, suốt phiên. Ấn dưới chân (`drawThanHiepSeal`) thì GIỮ.
   // tuyệt chiêu: hào quang phái lóe sau lưng
   if (castK > 0){
     const cg = ctx.createRadialGradient(0, 0, 4, 0, 0, 52);
@@ -19794,17 +19747,6 @@ function drawPlayer(p){
       p._veBlk = _blk; p._veKind = _kind;
     }
     p._veIdx = clamp(_idx, 0, _n - 1);
-  }
-  // Thần Hiệp: viền kim quang quanh thân. Trước đây làm bằng cách đặt shadowBlur rồi để nguyên
-  // suốt cả dáng người — đo được 166 trong 204 nhát fill của drawPlayer() bị làm mờ, mỗi nhát là
-  // một mặt vẽ phụ + một lượt ghép riêng. Chi phí KHÔNG phụ thuộc bán kính mờ (thử hạ còn 1/4 chỉ
-  // được 22,8 → 25,6 FPS) mà phụ thuộc SỐ NHÁT vẽ có bóng. Một nhát mờ trên sprite là đủ.
-  if (maxed && !_veAva){
-    ctx.save();
-    ctx.shadowColor = '#ffd76a'; ctx.shadowBlur = 15;
-    if (_spr) heroBlit(ctx, _spr);
-    else ctx.drawImage(heroRimCanvas(p.sect, _tier, now, _ps, _gv), 0, 0, HERO_W, HERO_H);
-    ctx.restore();
   }
   // Bài kiểm đọc cờ này để gác đúng lỗi vừa sửa: trúng đòn KHÔNG được rơi về hình vẽ đường.
   // Một phép gán chuỗi mỗi khung — rẻ hơn nhiều so với để lỗi đó quay lại mà không ai thấy.
@@ -29092,7 +29034,6 @@ function ccVeNguoiBo(g, n, t){
   g.save();
   // Vào hệ Ô VẼ: gốc ở góc trên-trái ô, gót chân ở HERO_GOT, thân cao CAO_THAN_NUONG.
   g.translate(n.cx, n.fy); g.scale(k, k); g.translate(-HERO_W / 2, -HERO_GOT);
-  if (!song) nvHaoQuangSau(g, pl.sect, tier, gv, now);
   if (gv && gv.canh) veCanh(g, gv.canh, HERO_W / 2, HERO_GOT, 0, 0, 1, 0);
   if (song) heroBlit(g, song);
   else {

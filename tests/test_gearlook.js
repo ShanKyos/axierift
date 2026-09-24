@@ -40,7 +40,7 @@ const fs = require('fs');
       n, rarity, t, plus, rcol: giaiMau(t),
       wTier: t, wPlus: plus, setColor: setColor || null, canh: null });
 
-    // Vẽ nhân vật ĐÚNG như trong màn: hào quang sau · bảng khung · hào quang trước.
+    // Vẽ nhân vật ĐÚNG như trong màn: bảng khung · hào quang trước (quầng SAU lưng đã gỡ).
     const shot = (gv, tier) => {
       const c = document.createElement('canvas'); c.width = NV_OW; c.height = NV_OH;
       const q = c.getContext('2d');
@@ -48,7 +48,6 @@ const fs = require('fs');
       const gop = nvKhungGop('thieulam', tier, gv, 'i', 0);
       const im = gop || nvBo('thieulam', tier, gv);
       if (!im) return null;
-      if (gv) nvHaoQuangSau(q, 'thieulam', tier, gv, 900);
       if (gop) q.drawImage(gop, 0, 0); else nvVeKhung(q, im, 'i', 0);
       if (gv) nvHaoQuangTruoc(q, 'thieulam', tier, gv, 900, im, 'i', 0);
       return { data: q.getImageData(0, 0, NV_OW, NV_OH).data, url: c.toDataURL('image/png') };
@@ -88,7 +87,7 @@ const fs = require('fs');
     // hào quang phải ĐỘNG, không phải đèn dán
     const _t0 = (() => { const c=document.createElement('canvas'); c.width=NV_OW; c.height=NV_OH;
       const q=c.getContext('2d'); const gv=gvOf(1,4,11,4,null); const im=nvBo('thieulam',1,gv);
-      nvHaoQuangSau(q,'thieulam',1,gv,0); nvVeKhung(q,im,'i',0); nvHaoQuangTruoc(q,'thieulam',1,gv,0,im,'i',0);
+      nvVeKhung(q,im,'i',0); nvHaoQuangTruoc(q,'thieulam',1,gv,0,im,'i',0);
       return q.getImageData(0,0,NV_OW,NV_OH).data; })();
     out.haoQuangDong = diff(_t0, prev);
 
