@@ -16820,6 +16820,7 @@ function mrTai(duong){
       createImageBitmap(im).then(bm => {
         bm.naturalWidth = bm.width; bm.naturalHeight = bm.height; bm.complete = true;
         im._bm = bm;
+        _mrHenVeLai();
       }, () => {});
     };
     im.src = MR_GOC + duong;
@@ -16834,18 +16835,31 @@ function mrGiap(tier){
   const t = clamp(Math.round(tier || 1), 1, MR_DL.armors.length);
   return MR_DL.armors.find(a => a.tier === t) || MR_DL.armors[MR_DL.armors.length - 1];
 }
-// ⚠ XIN CẢ BỐN STATE NGAY LÚC BỘ GIÁP HIỆN RA LẦN ĐẦU — ĐỪNG ĐỂ LƯỜI THUẦN. Nạp lười thuần thì
-// **bước đi ĐẦU TIÊN của mỗi phiên rơi vào khoảng trống**: `mrTai()` trả null ở lượt vẽ đầu nên
-// khung walk không dựng được, và vì `_choArt` chặn nhớ lại nên nó chỉ hỏng đúng một lần rồi tự
-// khỏi — tức cực dễ nghiệm thu nhầm là đã xong. Đúng vết sẹo đã ghi cho bảng CHẠY của avatar.
-// Đo được ở lượt kiểm đầu: idle ra 7.444-7.780 điểm ảnh ở cả 8 hướng, còn walk/run/attack ra 0.
-//
-// Giá phải trả, nói thẳng: một bộ giáp = 11,5 MB trên đĩa và ~64 MB sau giải nén. Vì thế chỉ xin
-// bộ ĐANG MẶC, không xin cả bảy — đổi giáp thì bộ mới tự được xin ở khung vẽ kế tiếp.
-function mrXinBo(giap){
-  if (!giap || giap._daXin) return;
-  giap._daXin = true;
-  for (const k in giap.states) mrTai(giap.states[k]);
+// ⚠ ~~XIN CẢ BỐN STATE NGAY LÚC BỘ GIÁP HIỆN RA~~ — luật đó sinh ra để bước đi ĐẦU TIÊN của phiên
+// khỏi rơi vào khung trống (đo được: idle 7.444 điểm ảnh, walk/run/attack 0). Từ đợt "luôn bay"
+// lớp MR không còn đi/chạy ngoài màn, nên nay chỉ xin đúng khối được hỏi (`chi`). Slice bay thì
+// `mrXinBay` nạp trước ngay khi manifest về — đó mới là thứ khung đầu tiên trên màn cần.
+// Giá một bộ: ~2,9 MB mỗi khối trên đĩa, ~16 MB sau giải nén.
+function mrXinBo(giap, chi){
+  if (!giap) return;
+  const da = giap._daXin || (giap._daXin = {});
+  for (const k in giap.states){
+    if (da[k] || (chi && !chi.includes(k))) continue;
+    da[k] = true; mrTai(giap.states[k]);
+  }
+}
+// ⚠ ẢNH CỦA GÓI VỀ MUỘN THÌ BẢNG PHẢI VẼ LẠI. Lớp luôn bay vẽ slice bay ngoài màn, nên atlas ĐỨNG
+// của bộ đang mặc — thứ duy nhất thẻ nhân vật cần — chỉ được xin khi thẻ đã đang mở. Không vẽ
+// lại thì thẻ đứng trống cho tới khi ai đó bấm gì đó. Gom trong 80 ms: một bộ có bốn tệp về sát nhau.
+let _mrVeLai = 0;
+function _mrHenVeLai(){
+  if (_mrVeLai) return;
+  _mrVeLai = setTimeout(() => {
+    _mrVeLai = 0;
+    const pc = el('panel-char');
+    if (pc && !pc.classList.contains('hidden') && typeof renderCharPanel === 'function') renderCharPanel();
+    if (typeof refreshEqPanels === 'function') refreshEqPanels();
+  }, 80);
 }
 // Tra theo DÒNG (id trong manifest). Dòng lạ — manifest đổi mà dữ liệu chưa theo — thì trả null
 // để chỗ gọi lui về chọn theo giai, chứ không vẽ ra thân trần.
@@ -16979,11 +16993,17 @@ function mrVe(sectKey, tier, gv, blk, idx, huong){
     // ⚠ Chưa về thì trả null, KHÔNG rơi xuống khối mặt đất: `heroSprite` nhớ khung theo khoá của
     // khối 'f'/'g', nên một khung đứng-đất dựng lúc slice chưa tải nằm lại đó VĨNH VIỄN dưới đúng
     // cái khoá của khối bay. `_choArt` (cộng `_mr`) lo chuyện không nhớ khung null.
+    // Xin sẵn atlas ĐỨNG của bộ đang mặc: ngoài màn không ai vẽ nó nữa, mà thẻ nhân vật cần nó.
+    // CHỈ khối idle — walk/run không còn dùng, xin cả bốn là 11 MB thừa cho mỗi bộ.
+    mrXinBo(mrGiapTheoDong(gv && gv.mrGiap) || mrGiap(tier), ['idle']);
     return mrVeBay(sectKey, blk, idx, gv);
   }
   const st = MR_STATE[blk] || 'idle';
   const giap = mrGiapTheoDong(gv && gv.mrGiap) || mrGiap(tier);
-  mrXinBo(giap);
+  // Chỉ xin đúng khối đang vẽ. Trước đợt "luôn bay" phải xin cả bốn cho bước đi đầu tiên khỏi
+  // trống; nay lớp MR không bao giờ đi/chạy ngoài màn (xem `_bayLuon`), nên khối mặt đất chỉ còn
+  // thẻ nhân vật và màn chờ đọc — xin cả bốn là ~11 MB mỗi bộ cho ba khối không ai vẽ.
+  mrXinBo(giap, [st]);
   const duong = giap ? giap.states[st] : (MR_DL.bodyBase && MR_DL.bodyBase[st]);
   const im = mrTai(duong);
   if (!im) return null;
