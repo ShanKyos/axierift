@@ -217,5 +217,46 @@
     ],
     "weaponLayer": "weapon-dual-ao-anh-fire-slash-se-8frame.png",
     "vfxLayer": "vfx-fire-slash-se-8frame.png"
+  },
+  "winged8Direction": {
+    "manifest": "flight_8dir/manifest.json",
+    "wingAlwaysEquipped": true,
+    "states": [
+      "safeWalk",
+      "fly",
+      "flyMove",
+      "flyAttack"
+    ],
+    "safeZoneWeaponPolicy": "crossed_back"
+  },
+  "townPackage": {
+    "manifest": "town_v1/manifest.json",
+    "states": [
+      "idle",
+      "walk",
+      "run"
+    ],
+    "armorMode": "piece_layers",
+    "weaponUpgradeLevels": [
+      "+0",
+      "+9",
+      "+10",
+      "+11"
+    ]
+  },
+  "fieldPackage": {
+    "manifest": "field_v2/manifest.json",
+    "states": [
+      "flyIdle",
+      "flyMove",
+      "flyHit",
+      "flyDeath",
+      "flyAttackFireSlash",
+      "flyAttackLightSlash",
+      "flyAttackDash"
+    ],
+    "armorMode": "piece_layers",
+    "weaponMode": "dual_socketed",
+    "wingAlwaysEquipped": true
   }
 }

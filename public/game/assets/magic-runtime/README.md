@@ -24,7 +24,10 @@ Render in this order:
 
 Armor never contains weapon pixels. Each weapon exists once in `weapons/*-master.png` and both hands reuse it through `sockets.json`. Therefore any of the seven armor appearances can use any of the seven weapons without a new combined sheet.
 
-`armorMode` is currently `appearance-replacement`: armor sets can be swapped as complete looks. It does not claim per-piece chest/gloves/pants/boots mixing yet; that requires separately authored occlusion masks for every state.
+The production packages use `armorMode: piece_layers`. Each armor state is
+split into `head`, `chest`, `gloves`, `pants`, and `boots` atlases. Magic has no
+helmet, so `head` is intentionally transparent; `chest` owns the face mask and
+shoulders. Equipment can be selected independently at runtime.
 
 ## Included equipment
 
@@ -59,6 +62,37 @@ This is a `south` review slice, not a claimed eight-direction flight atlas. Grou
 - the weapon is rebuilt from one canonical item texture with an authored grip pivot `(128,45)`; each frame places that pivot on the palm socket before applying wrist rotation. This replaces the earlier generated weapon sheet whose hilts only approximated the hands.
 
 The review slice is 8 frames, southeast-facing, `105 ms/frame`, and is intended as the approved pose/timing reference before authoring the remaining directions.
+
+## Winged eight-direction pack v3
+
+`flight_8dir/manifest.json` is the production-ready extension of the approved flight slice. It contains 8 directions × 8 frames for:
+
+- `safeWalk`: the wing remains equipped in town and the dual blades are crossed on two back-harness sockets;
+- `fly`: upright airborne idle with a slow wing beat and one blade fixed to each palm;
+- `flyMove`: directional travel with a controlled 10–15 degree forward lean, trailing legs and coat tails;
+- `flyAttack`: an eight-frame airborne dual-blade arc for every direction.
+
+The body, wing, held weapon, back weapon and front hand-grip cover remain independent sheets. Wings are redrawn—not horizontally compressed—for front, profile, rear-three-quarter and full-rear views. `wing_far` and `wing_near` change the occlusion order as the character turns, exposing the rear membrane, central spine and shoulder attachment in the north-facing rows.
+
+### Canonical Magic identity
+
+`armor/ma_thuat/*` is the single approved character identity: slim build, silver hair, covered lower face, fixed shoulder width and the green-black/gold Ma Thuật silhouette. Combat sheets must use this production skeleton directly. Image-generated bodies may be used only as pose studies and must not replace the canonical face, hair, proportions or armor silhouette.
+
+Held equipment follows the same depth rule through `weapon_far` and `weapon_near`: both blades are camera-near in front views, both pass behind the torso in the full-rear view, and profile/three-quarter views place one blade on each side of the body. A weapon is transformed around its authored hilt pivot, placed on the per-frame palm socket, then covered by the palm patch only when camera-near. This makes the hand visibly enclose the handle while preserving equipment swapping. All atlases have a transparent gutter and must report no occupied edge pixels before release.
+
+## Production packages
+
+- `town_v1/manifest.json`: safe-zone Idle, Walk and Run with wings equipped,
+  crossed-back weapons and five swappable armor slots.
+- `field_v2/manifest.json`: Fly Idle, Fly Move, Hit, Death, Fire Slash, Light
+  Slash and Dash. Every state has eight directions and eight frames.
+
+For Package 2, use `field_v2/weapon-sockets.json` rather than baking a weapon
+into the body. Select one of the seven masters and one of the +0/+9/+10/+11
+material variants declared by the manifest. Render `weapon_far` before the
+character and `weapon_near` after the wing clasp; render `hand_grip` afterward
+so the palm visibly closes around the handle. Damage, VFX and dash movement
+frames are declared under `timing` and should not be inferred from FPS.
 
 ## Demo
 

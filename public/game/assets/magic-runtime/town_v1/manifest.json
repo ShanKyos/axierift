@@ -1,0 +1,518 @@
+{
+  "id": "spellblade_town_package_v1",
+  "identity": "magic_canonical_ma_thuat_skeleton",
+  "cell": [
+    256,
+    256
+  ],
+  "layout": {
+    "columns": 8,
+    "rows": 8,
+    "framesPerDirection": 8,
+    "rowOrder": [
+      "south",
+      "southwest",
+      "west",
+      "northwest",
+      "north",
+      "northeast",
+      "east",
+      "southeast"
+    ]
+  },
+  "pivot": [
+    128,
+    244
+  ],
+  "states": {
+    "idle": {
+      "fps": 5,
+      "movementPxPerSecond": 0
+    },
+    "walk": {
+      "fps": 7,
+      "movementPxPerSecond": 72
+    },
+    "run": {
+      "fps": 11,
+      "movementPxPerSecond": 136
+    }
+  },
+  "armorMode": "piece_layers",
+  "armorSlots": [
+    "head",
+    "chest",
+    "gloves",
+    "pants",
+    "boots"
+  ],
+  "magicHeadPolicy": "empty; chest owns face mask and shoulders",
+  "renderOrder": [
+    "wing_far",
+    "weapon_back",
+    "body_base",
+    "armor_chest",
+    "armor_pants",
+    "armor_gloves",
+    "armor_boots",
+    "wing_clasp"
+  ],
+  "bodyBase": {
+    "idle": "../body_base/idle-8dir-8frame.png",
+    "walk": "../body_base/walk-8dir-8frame.png",
+    "run": "../body_base/run-8dir-8frame.png"
+  },
+  "armors": [
+    {
+      "tier": 1,
+      "id": "vai_tho",
+      "name": "Vải thô",
+      "states": {
+        "idle": {
+          "head": "armor/vai_tho/idle/head.png",
+          "chest": "armor/vai_tho/idle/chest.png",
+          "gloves": "armor/vai_tho/idle/gloves.png",
+          "pants": "armor/vai_tho/idle/pants.png",
+          "boots": "armor/vai_tho/idle/boots.png"
+        },
+        "walk": {
+          "head": "armor/vai_tho/walk/head.png",
+          "chest": "armor/vai_tho/walk/chest.png",
+          "gloves": "armor/vai_tho/walk/gloves.png",
+          "pants": "armor/vai_tho/walk/pants.png",
+          "boots": "armor/vai_tho/walk/boots.png"
+        },
+        "run": {
+          "head": "armor/vai_tho/run/head.png",
+          "chest": "armor/vai_tho/run/chest.png",
+          "gloves": "armor/vai_tho/run/gloves.png",
+          "pants": "armor/vai_tho/run/pants.png",
+          "boots": "armor/vai_tho/run/boots.png"
+        }
+      }
+    },
+    {
+      "tier": 2,
+      "id": "trau_xanh",
+      "name": "Trâu xanh",
+      "states": {
+        "idle": {
+          "head": "armor/trau_xanh/idle/head.png",
+          "chest": "armor/trau_xanh/idle/chest.png",
+          "gloves": "armor/trau_xanh/idle/gloves.png",
+          "pants": "armor/trau_xanh/idle/pants.png",
+          "boots": "armor/trau_xanh/idle/boots.png"
+        },
+        "walk": {
+          "head": "armor/trau_xanh/walk/head.png",
+          "chest": "armor/trau_xanh/walk/chest.png",
+          "gloves": "armor/trau_xanh/walk/gloves.png",
+          "pants": "armor/trau_xanh/walk/pants.png",
+          "boots": "armor/trau_xanh/walk/boots.png"
+        },
+        "run": {
+          "head": "armor/trau_xanh/run/head.png",
+          "chest": "armor/trau_xanh/run/chest.png",
+          "gloves": "armor/trau_xanh/run/gloves.png",
+          "pants": "armor/trau_xanh/run/pants.png",
+          "boots": "armor/trau_xanh/run/boots.png"
+        }
+      }
+    },
+    {
+      "tier": 3,
+      "id": "do_dong",
+      "name": "Đồ đồng",
+      "states": {
+        "idle": {
+          "head": "armor/do_dong/idle/head.png",
+          "chest": "armor/do_dong/idle/chest.png",
+          "gloves": "armor/do_dong/idle/gloves.png",
+          "pants": "armor/do_dong/idle/pants.png",
+          "boots": "armor/do_dong/idle/boots.png"
+        },
+        "walk": {
+          "head": "armor/do_dong/walk/head.png",
+          "chest": "armor/do_dong/walk/chest.png",
+          "gloves": "armor/do_dong/walk/gloves.png",
+          "pants": "armor/do_dong/walk/pants.png",
+          "boots": "armor/do_dong/walk/boots.png"
+        },
+        "run": {
+          "head": "armor/do_dong/run/head.png",
+          "chest": "armor/do_dong/run/chest.png",
+          "gloves": "armor/do_dong/run/gloves.png",
+          "pants": "armor/do_dong/run/pants.png",
+          "boots": "armor/do_dong/run/boots.png"
+        }
+      }
+    },
+    {
+      "tier": 4,
+      "id": "ma_thuat",
+      "name": "Ma Thuật",
+      "states": {
+        "idle": {
+          "head": "armor/ma_thuat/idle/head.png",
+          "chest": "armor/ma_thuat/idle/chest.png",
+          "gloves": "armor/ma_thuat/idle/gloves.png",
+          "pants": "armor/ma_thuat/idle/pants.png",
+          "boots": "armor/ma_thuat/idle/boots.png"
+        },
+        "walk": {
+          "head": "armor/ma_thuat/walk/head.png",
+          "chest": "armor/ma_thuat/walk/chest.png",
+          "gloves": "armor/ma_thuat/walk/gloves.png",
+          "pants": "armor/ma_thuat/walk/pants.png",
+          "boots": "armor/ma_thuat/walk/boots.png"
+        },
+        "run": {
+          "head": "armor/ma_thuat/run/head.png",
+          "chest": "armor/ma_thuat/run/chest.png",
+          "gloves": "armor/ma_thuat/run/gloves.png",
+          "pants": "armor/ma_thuat/run/pants.png",
+          "boots": "armor/ma_thuat/run/boots.png"
+        }
+      }
+    },
+    {
+      "tier": 5,
+      "id": "phong_vu",
+      "name": "Phong Vũ",
+      "states": {
+        "idle": {
+          "head": "armor/phong_vu/idle/head.png",
+          "chest": "armor/phong_vu/idle/chest.png",
+          "gloves": "armor/phong_vu/idle/gloves.png",
+          "pants": "armor/phong_vu/idle/pants.png",
+          "boots": "armor/phong_vu/idle/boots.png"
+        },
+        "walk": {
+          "head": "armor/phong_vu/walk/head.png",
+          "chest": "armor/phong_vu/walk/chest.png",
+          "gloves": "armor/phong_vu/walk/gloves.png",
+          "pants": "armor/phong_vu/walk/pants.png",
+          "boots": "armor/phong_vu/walk/boots.png"
+        },
+        "run": {
+          "head": "armor/phong_vu/run/head.png",
+          "chest": "armor/phong_vu/run/chest.png",
+          "gloves": "armor/phong_vu/run/gloves.png",
+          "pants": "armor/phong_vu/run/pants.png",
+          "boots": "armor/phong_vu/run/boots.png"
+        }
+      }
+    },
+    {
+      "tier": 6,
+      "id": "loi_phong",
+      "name": "Lôi Phong",
+      "states": {
+        "idle": {
+          "head": "armor/loi_phong/idle/head.png",
+          "chest": "armor/loi_phong/idle/chest.png",
+          "gloves": "armor/loi_phong/idle/gloves.png",
+          "pants": "armor/loi_phong/idle/pants.png",
+          "boots": "armor/loi_phong/idle/boots.png"
+        },
+        "walk": {
+          "head": "armor/loi_phong/walk/head.png",
+          "chest": "armor/loi_phong/walk/chest.png",
+          "gloves": "armor/loi_phong/walk/gloves.png",
+          "pants": "armor/loi_phong/walk/pants.png",
+          "boots": "armor/loi_phong/walk/boots.png"
+        },
+        "run": {
+          "head": "armor/loi_phong/run/head.png",
+          "chest": "armor/loi_phong/run/chest.png",
+          "gloves": "armor/loi_phong/run/gloves.png",
+          "pants": "armor/loi_phong/run/pants.png",
+          "boots": "armor/loi_phong/run/boots.png"
+        }
+      }
+    },
+    {
+      "tier": 7,
+      "id": "cuong_phong",
+      "name": "Cuồng Phong",
+      "states": {
+        "idle": {
+          "head": "armor/cuong_phong/idle/head.png",
+          "chest": "armor/cuong_phong/idle/chest.png",
+          "gloves": "armor/cuong_phong/idle/gloves.png",
+          "pants": "armor/cuong_phong/idle/pants.png",
+          "boots": "armor/cuong_phong/idle/boots.png"
+        },
+        "walk": {
+          "head": "armor/cuong_phong/walk/head.png",
+          "chest": "armor/cuong_phong/walk/chest.png",
+          "gloves": "armor/cuong_phong/walk/gloves.png",
+          "pants": "armor/cuong_phong/walk/pants.png",
+          "boots": "armor/cuong_phong/walk/boots.png"
+        },
+        "run": {
+          "head": "armor/cuong_phong/run/head.png",
+          "chest": "armor/cuong_phong/run/chest.png",
+          "gloves": "armor/cuong_phong/run/gloves.png",
+          "pants": "armor/cuong_phong/run/pants.png",
+          "boots": "armor/cuong_phong/run/boots.png"
+        }
+      }
+    }
+  ],
+  "weapons": [
+    {
+      "tier": 1,
+      "id": "song_dao_co_ban",
+      "name": "Song đao cơ bản",
+      "heldDisplayPx": 83,
+      "backDisplayPx": 90,
+      "gripPivot": [
+        128,
+        45
+      ],
+      "variants": {
+        "+0": "weapons/song_dao_co_ban/plus0.png",
+        "+9": "weapons/song_dao_co_ban/plus9.png",
+        "+10": "weapons/song_dao_co_ban/plus10.png",
+        "+11": "weapons/song_dao_co_ban/plus11.png"
+      }
+    },
+    {
+      "tier": 2,
+      "id": "song_chuy",
+      "name": "Song chùy",
+      "heldDisplayPx": 90,
+      "backDisplayPx": 98,
+      "gripPivot": [
+        128,
+        45
+      ],
+      "variants": {
+        "+0": "weapons/song_chuy/plus0.png",
+        "+9": "weapons/song_chuy/plus9.png",
+        "+10": "weapons/song_chuy/plus10.png",
+        "+11": "weapons/song_chuy/plus11.png"
+      }
+    },
+    {
+      "tier": 3,
+      "id": "song_hoa_dao",
+      "name": "Song hỏa đao",
+      "heldDisplayPx": 99,
+      "backDisplayPx": 108,
+      "gripPivot": [
+        128,
+        45
+      ],
+      "variants": {
+        "+0": "weapons/song_hoa_dao/plus0.png",
+        "+9": "weapons/song_hoa_dao/plus9.png",
+        "+10": "weapons/song_hoa_dao/plus10.png",
+        "+11": "weapons/song_hoa_dao/plus11.png"
+      }
+    },
+    {
+      "tier": 4,
+      "id": "song_kiem_dien",
+      "name": "Song kiếm điện",
+      "heldDisplayPx": 108,
+      "backDisplayPx": 118,
+      "gripPivot": [
+        128,
+        45
+      ],
+      "variants": {
+        "+0": "weapons/song_kiem_dien/plus0.png",
+        "+9": "weapons/song_kiem_dien/plus9.png",
+        "+10": "weapons/song_kiem_dien/plus10.png",
+        "+11": "weapons/song_kiem_dien/plus11.png"
+      }
+    },
+    {
+      "tier": 5,
+      "id": "loi_phong_dao",
+      "name": "Lôi phong đao",
+      "heldDisplayPx": 120,
+      "backDisplayPx": 130,
+      "gripPivot": [
+        128,
+        45
+      ],
+      "variants": {
+        "+0": "weapons/loi_phong_dao/plus0.png",
+        "+9": "weapons/loi_phong_dao/plus9.png",
+        "+10": "weapons/loi_phong_dao/plus10.png",
+        "+11": "weapons/loi_phong_dao/plus11.png"
+      }
+    },
+    {
+      "tier": 6,
+      "id": "ao_anh_dao",
+      "name": "Ảo ảnh đao",
+      "heldDisplayPx": 133,
+      "backDisplayPx": 145,
+      "gripPivot": [
+        128,
+        45
+      ],
+      "variants": {
+        "+0": "weapons/ao_anh_dao/plus0.png",
+        "+9": "weapons/ao_anh_dao/plus9.png",
+        "+10": "weapons/ao_anh_dao/plus10.png",
+        "+11": "weapons/ao_anh_dao/plus11.png"
+      }
+    },
+    {
+      "tier": 7,
+      "id": "hoa_tinh_kiem",
+      "name": "Hỏa tinh kiếm",
+      "heldDisplayPx": 147,
+      "backDisplayPx": 160,
+      "gripPivot": [
+        128,
+        45
+      ],
+      "variants": {
+        "+0": "weapons/hoa_tinh_kiem/plus0.png",
+        "+9": "weapons/hoa_tinh_kiem/plus9.png",
+        "+10": "weapons/hoa_tinh_kiem/plus10.png",
+        "+11": "weapons/hoa_tinh_kiem/plus11.png"
+      }
+    }
+  ],
+  "weaponBackPreviewPlus11": {
+    "song_dao_co_ban": {
+      "idle": "weapon_back/song_dao_co_ban/idle.png",
+      "walk": "weapon_back/song_dao_co_ban/walk.png",
+      "run": "weapon_back/song_dao_co_ban/run.png"
+    },
+    "song_chuy": {
+      "idle": "weapon_back/song_chuy/idle.png",
+      "walk": "weapon_back/song_chuy/walk.png",
+      "run": "weapon_back/song_chuy/run.png"
+    },
+    "song_hoa_dao": {
+      "idle": "weapon_back/song_hoa_dao/idle.png",
+      "walk": "weapon_back/song_hoa_dao/walk.png",
+      "run": "weapon_back/song_hoa_dao/run.png"
+    },
+    "song_kiem_dien": {
+      "idle": "weapon_back/song_kiem_dien/idle.png",
+      "walk": "weapon_back/song_kiem_dien/walk.png",
+      "run": "weapon_back/song_kiem_dien/run.png"
+    },
+    "loi_phong_dao": {
+      "idle": "weapon_back/loi_phong_dao/idle.png",
+      "walk": "weapon_back/loi_phong_dao/walk.png",
+      "run": "weapon_back/loi_phong_dao/run.png"
+    },
+    "ao_anh_dao": {
+      "idle": "weapon_back/ao_anh_dao/idle.png",
+      "walk": "weapon_back/ao_anh_dao/walk.png",
+      "run": "weapon_back/ao_anh_dao/run.png"
+    },
+    "hoa_tinh_kiem": {
+      "idle": "weapon_back/hoa_tinh_kiem/idle.png",
+      "walk": "weapon_back/hoa_tinh_kiem/walk.png",
+      "run": "weapon_back/hoa_tinh_kiem/run.png"
+    }
+  },
+  "wing": {
+    "id": "wing_mg_default",
+    "states": {
+      "idle": {
+        "far": "wing/idle-far.png",
+        "clasp": "wing/idle-clasp.png"
+      },
+      "walk": {
+        "far": "wing/walk-far.png",
+        "clasp": "wing/walk-clasp.png"
+      },
+      "run": {
+        "far": "wing/run-far.png",
+        "clasp": "wing/run-clasp.png"
+      }
+    }
+  },
+  "heldSockets": "../sockets.json",
+  "backSockets": "back-sockets.json",
+  "upgradeLevels": {
+    "+0": {
+      "brightness": 1.0,
+      "color": [
+        255,
+        255,
+        255
+      ],
+      "bloom": 0
+    },
+    "+9": {
+      "brightness": 1.22,
+      "color": [
+        100,
+        190,
+        255
+      ],
+      "bloom": 3
+    },
+    "+10": {
+      "brightness": 1.38,
+      "color": [
+        255,
+        204,
+        90
+      ],
+      "bloom": 5
+    },
+    "+11": {
+      "brightness": 1.58,
+      "color": [
+        255,
+        105,
+        235
+      ],
+      "bloom": 7
+    }
+  },
+  "validation": {
+    "armorReconstruction": {
+      "vai_tho": {
+        "idle": true,
+        "walk": true,
+        "run": true
+      },
+      "trau_xanh": {
+        "idle": true,
+        "walk": true,
+        "run": true
+      },
+      "do_dong": {
+        "idle": true,
+        "walk": true,
+        "run": true
+      },
+      "ma_thuat": {
+        "idle": true,
+        "walk": true,
+        "run": true
+      },
+      "phong_vu": {
+        "idle": true,
+        "walk": true,
+        "run": true
+      },
+      "loi_phong": {
+        "idle": true,
+        "walk": true,
+        "run": true
+      },
+      "cuong_phong": {
+        "idle": true,
+        "walk": true,
+        "run": true
+      }
+    },
+    "expectedMixes": 49
+  }
+}
