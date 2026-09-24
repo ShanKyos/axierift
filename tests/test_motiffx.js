@@ -50,7 +50,7 @@ const { chromium } = require('playwright');
     wear(null);                       o.tayKhong = swing();
     wear('thieulam_kiem_1');          o.kiemTron = swing();     // Kiếm Thép (giai 2) — motif 'khong'
     wear('thieulam_kiem_5');          o.kiemLua  = swing();     // Kiếm Lôi Đình (giai 6) — motif 'lua'
-    wear('minhgiao_makiem_3');        o.maKiem   = swing();     // Ma Kiếm Lửa Dữ (giai 4) — motif 'mach'
+    wear('minhgiao_ao_anh_dao_3');    o.maKiem   = swing();     // Ảo Ảnh Đao IV (giai 4) — motif 'runes' (cùng màu 'mach')
     wear('thieulam_kiem_3');          o.kiemGai  = swing();     // Kiếm Vảy Rồng (giai 4) — motif 'gai'
     // Bạo kích và Hoàn Hảo phải ĐÈ LÊN màu hoa văn — đây là hành vi cố ý, chốt lại luôn
     {
@@ -62,7 +62,7 @@ const { chromium } = require('playwright');
       o.baoKichDeLenHoaVan = (m2.hitCol || '').toLowerCase();
     }
     o.motifs = { kiem1: ITEM_DB['thieulam_kiem_1'].motif, kiem4: ITEM_DB['thieulam_kiem_5'].motif,
-                 ma4: ITEM_DB['minhgiao_makiem_3'].motif, kiem3: ITEM_DB['thieulam_kiem_3'].motif };
+                 ma4: ITEM_DB['minhgiao_ao_anh_dao_3'].motif, kiem3: ITEM_DB['thieulam_kiem_3'].motif };
     // Sát thương KHÔNG được đổi theo hoa văn. Phải đo trên CÙNG MỘT MÓN, chỉ đổi mỗi `def` —
     // sinh hai món rồi so là sai, chênh lệch khi đó là do dòng phụ ngẫu nhiên.
     {
@@ -81,7 +81,7 @@ const { chromium } = require('playwright');
   let bad = 0; const fail = m => { console.log('FAIL', m); bad++; };
   const co = (x, c) => x.mauVet.includes(c);
   if (r.motifs.kiem4 !== 'lua') fail(`Kiếm Hỏa Long phải mang hoa văn lửa, đang là "${r.motifs.kiem4}"`);
-  if (r.motifs.ma4 !== 'mach') fail(`Ma Kiếm phải mang hoa văn mạch, đang là "${r.motifs.ma4}"`);
+  if (r.motifs.ma4 !== 'runes') fail(`Ảo Ảnh Đao phải mang hoa văn rune, đang là "${r.motifs.ma4}"`);
   if (!r.kiemLua.daTrung) fail('dựng cảnh sai: đòn đánh không trúng quái');
   if (!co(r.kiemLua, '#ff8a2a')) fail(`kiếm lửa không sinh hiệu ứng cam: ${JSON.stringify(r.kiemLua.mauVet)}`);
   if (!co(r.maKiem, '#c8a8ff')) fail(`ma kiếm không sinh hiệu ứng tím: ${JSON.stringify(r.maKiem.mauVet)}`);

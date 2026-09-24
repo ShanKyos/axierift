@@ -2597,7 +2597,8 @@ chứ không bắt được vai giáp — đối chứng Dark Knight lẽ ra 0 m
 > BẬC `glowCol` trong `drawHeroFigure` · hào quang + viền kim quang **Thần Hiệp** (`heroRimCanvas`).
 > Cái cuối đáng nói: bản chơi thử phát cấp max + Axie 5★ cho **mọi** người ⇒ `isMaxed` đúng với tất
 > cả ⇒ một vầng vàng trùm lên mọi nhân vật trên production, suốt phiên.
-> **CÒN GIỮ:** viền sáng (+4) · tàn lửa (+7) · dải quét (+10) · ấn Thần Hiệp dưới chân.
+> **CÒN GIỮ:** tàn lửa (+7) · dải quét (+10) · ấn Thần Hiệp dưới chân. ~~viền sáng (+4)~~ — gỡ ngay
+> sau đó (`nvVienSang`, *"gỡ luôn viền cam đi"*): +1..+6 nay TRƠ, `test_plusglow` gác chiều đó.
 > `test_plusglow ⑦` gác chiều ngược lại (ba hàm phải không còn; +11 không được có điểm sáng nằm xa
 > bóng dáng), và ngưỡng "+7 nhảy ×3" đã **tạm hạ** vì cú nhảy ấy chính là cái quầng — làm lại
 > +7..+9 xong thì kéo lại. Phần mô tả bên dưới là thiết kế GỐC, đọc nó như lịch sử.
@@ -5433,6 +5434,55 @@ state"*.
 
 Bóng dáng đọc theo `tier` mà `heroSprite` nhận — tức `heroTier(p)`, tức bậc trung bình **NHÂN ĐỘ
 PHỦ** của bốn ô. Đây là quy ước đang chạy cho cả `NV_GIAP`, không phải một luật mới.
+
+### ⚔ BẢY DÒNG VŨ KHÍ + BẢY DÒNG GIÁP — hình theo DÒNG, chỉ số theo GIAI (2026-09-24)
+
+Chủ dự án chốt: *"7 dòng vũ khí và 7 lớp trang bị riêng, tức nó tách ra và theo process của game,
+nhân vật có thể trang bị tuỳ ý"*.
+
+| | |
+|---|---|
+| vũ khí | `WEAPON_LINES` minhgiao = **7 dòng**, `line` = id cây trong manifest, `base.mr` = id đó |
+| giáp | **`MR_GIAP_LINES`** (`data/canbang.js`) — 7 × 7 giai × 4 ô = **196 món**, id `minhgiao_<dòng>_<band>_<ô>` |
+| tên | tên gói + số giai La Mã (`Song Chùy IV` · `Giáp Phong Vũ IV`) — cùng tên ở 7 giai là 7 món trùng tên |
+| bộ nào hiện lên người | **ô ÁO** (`mrGiapDong`, lui `non→tay→chan`) — gói `appearance-replacement` nên chỉ MỘT bộ hiện được |
+| cửa đọc | `gearVisual().mrGiap` / `.mrVk` → `mrGiapTheoDong` / `mrVkCua` → `mrVe`; `heroGearSig` mang `mrGiap` |
+| icon túi | vũ khí = tấm master (cắt sát + xoay mũi +X cho `veVkTranh`); giáp = `assets/magic-runtime/icon/*` nướng bằng **`tools/magic/nuong_icon_mr.py`** |
+| save cũ | **`ITEM_ALIAS`**: `minhgiao_<band>_<ô>` và `minhgiao_{songdao,daikiem,makiem}_<band>` → dòng thứ `band+1` — đúng cái hình người chơi đang thấy trước đợt này. Tự vá lúc `itemDef()` đọc, nên vá cả món nằm ngoài túi |
+
+- ⚠ **`mrIconTai` chỉ trả BẢN ĐÃ CẮT.** `complete` bật trước khi `onload` chạy; trả tấm gốc trong
+  khe đó là một lượt vẽ tấm dựng đứng bị `veVkTranh` xoay thêm −90° ⇒ cây NẰM NGANG — và lượt đó
+  mang khoá `'V'` nên bị nhớ lại vĩnh viễn. Đã dẫm đúng thế ở lượt chụp đầu.
+- ⚠ **Canvas cắt sát phải mang `src`.** `vkBong()` khoá theo `im.src`; canvas không có ⇒ bảy cây
+  dùng chung một bóng hào quang rèn.
+- ⚠ **`iconTyLe` phải hỏi `def.mr`**, không chỉ `vkAnh` — thiếu là khung cao 2×3 thành vuông.
+- ⚠ **`heroCardUrl` đi đường `mrVe` khối ĐỨNG hướng South** — đó là chỗ DUY NHẤT còn thấy 7 bộ
+  giáp (ngoài màn nhân vật luôn bay, xem dưới). Trước đợt này thẻ rơi về `drawHeroFigure`: một
+  hiệp sĩ dựng bằng đường, lỗi có từ đợt chuyển gói.
+
+### 🪽 SPELLBLADE LUÔN BAY — không còn đi/chạy
+
+Chủ dự án chốt: *"Bỏ phần nhân vật đi bộ đi … by default hãy cho nhân vật đang bay và mang cánh
+cấp 1 (áp dụng cho Magic trước)"*, và chọn **đúng slice bay của gói** dù biết cái giá.
+
+- `_bayLuon = !!MR_LOP[p.sect]` trong `drawPlayer`: bay **không cần ô cánh**, và **không cất cánh**
+  (độ cao ghim ngay — nội suy từ 0 là mỗi lần sang map đứng đất nửa giây).
+- **Cái giá, nói thẳng:** thân trong slice bay là **Ma Thuật cố định, hướng South cố định**. Bảy
+  bộ giáp và tám hướng **không hiện ngoài màn** — chỉ thẻ nhân vật / màn chờ còn thấy. Nợ ART.
+- **Vũ khí thì đổi được cả bảy cây**: lớp `weapon` vẽ sẵn (Ảo Ảnh) bị bỏ, tấm master đặt vào tay
+  theo `weaponHands` (+ `weaponAngles`/`weaponGripPivot` ở bay-đánh). Bay thường không có góc ⇒
+  `MR_BAY_VK` đo bằng khớp IoU vào lớp vẽ sẵn (0,65/0,76 · bay-đánh 0,76–0,84). ⚠ `weaponAngles`
+  ngược chiều canvas, nhân −1.
+- `mrVe` khối `f`/`g` trả **null** khi slice chưa về — rơi xuống khung đứng đất là nhớ khung sai
+  vĩnh viễn dưới khoá của khối bay. `mrXinBay` nạp trước mọi lớp slice + 7 tấm master.
+- **Cánh cấp 1 mặc định**: `canhMacDinh()` (một lần, cờ `_canhMacDinh`, không chạy trong TEST_MODE).
+  ⚠ Chế độ `?max=1` / bản chơi thử vẫn phát bậc 3 (`applyTestBoost`); hình trên người như nhau
+  (Wing 1 MG của slice), chỉ khác độ cao và chỉ số.
+- Ngoài thành luật `avaNhap()` không đổi: thân nhân vật nhập vào Axie, nên cảnh bay này thấy ở
+  **trong thành** (và khi `/avatar off`).
+
+Gác: **`tests/test_mrdong.js`** (8 mệnh đề; ba phép thử ngược — bỏ chọn theo dòng · bỏ `_bayLuon`
+· dán lại lớp vũ khí vẽ sẵn — đều đỏ đúng mệnh đề).
 
 ### Đã gỡ theo — `sbsm1` · `sbhd1` KHÔNG CÒN TRÊN ĐĨA
 

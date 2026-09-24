@@ -95,9 +95,14 @@ const { chromium } = require('playwright');
         // (nó và dòng Gậy vẽ ra cùng một tấm, giai 7 có hai món trùng hình). Suy từ WEAPON_LINES
         // thay vì ghi cứng 3 — thêm hay bớt dòng nào thì bài kiểm tự theo.
         soDong: WEAPON_LINES.filter(L => L.sect === sk).length,
+        // Giáp: lớp khai bộ theo DÒNG (Spellblade — 7 bộ của gói `magic-runtime`) có mỗi dòng đủ
+        // 7 giai × 4 ô; lớp còn lại một bộ mỗi giai. Suy từ MR_GIAP_LINES, đừng ghi cứng.
+        soDongGiap: ((window.MR_GIAP_LINES || {})[sk] || [null]).length,
       };
     }
     o.giaiMax = GIAI_MAX;
+    o.canGiap = Object.values(o.theoLop).reduce((t, x) => t + x.soDongGiap * GIAI_MAX * 4, 0);
+    o.canVk = Object.values(o.theoLop).reduce((t, x) => t + x.soDong * GIAI_MAX, 0);
     o.phuKien = ids.filter(i => ITEM_DB[i].kind === 'acc').length;
     o.phuKienKhoaLop = ids.filter(i => ITEM_DB[i].kind === 'acc' && ITEM_DB[i].sect).length;
 
@@ -139,10 +144,13 @@ const { chromium } = require('playwright');
   if (!r.vk.khacOCho) fail('icon vũ khí CÓ TRANH vẫn ra y hệt ô chờ art — drawItemIcon chưa dùng tranh');
   if (r.vk.soMau < 200) fail(`icon vũ khí chỉ có ${r.vk.soMau} màu — nhiều khả năng đang tô thành BÓNG ĐẶC thay vì vẽ tranh`);
   if (r.conVector.length) fail(`còn hình vector cho trang bị: ${r.conVector.join(', ')} — phải xoá hết, mọi món về ô chờ art`);
-  // 266 chứ không 273: đã dẹp dòng Tinh Trượng của Dark Wizard (7 món).
-  if (r.tong !== 266) fail(`danh mục có ${r.tong} món, cần 266`);
-  if (r.theoLoai.armor !== 140) fail(`giáp ${r.theoLoai.armor}, cần 140 (35 bộ × 4 ô)`);
-  if (r.theoLoai.weapon !== 98) fail(`vũ khí ${r.theoLoai.weapon}, cần 98 (14 dòng × 7 giai)`);
+  // Tổng SUY TỪ DỮ LIỆU: Spellblade tách thành 7 dòng giáp + 7 dòng vũ khí (gói `magic-runtime`),
+  // nên con số cứng 266/140/98 cũ không còn đúng. Ghi cứng lại số mới chỉ là lên dây quả mìn đó.
+  // Sàn chặn chiều ngược lại: danh mục rỗng đi trong im lặng thì cả hai vế cùng về 0.
+  if (r.theoLoai.armor !== r.canGiap) fail(`giáp ${r.theoLoai.armor}, cần ${r.canGiap}`);
+  if (r.theoLoai.weapon !== r.canVk) fail(`vũ khí ${r.theoLoai.weapon}, cần ${r.canVk}`);
+  if (r.tong !== r.canGiap + r.canVk + 28) fail(`danh mục có ${r.tong} món, cần ${r.canGiap + r.canVk + 28}`);
+  if (r.canGiap < 140 || r.canVk < 98) fail(`danh mục nhỏ đi bất thường: giáp ${r.canGiap} · vũ khí ${r.canVk}`);
   if (r.theoLoai.acc !== 28) fail(`phụ kiện ${r.theoLoai.acc}, cần 28`);
   if (r.veLoi) fail(`${r.veLoi} món KHÔNG vẽ được`);
   if (r.anhTrung) fail(`${r.anhTrung} cặp món CÓ ART ra CÙNG một ảnh: ${JSON.stringify(r.viDuTrung)}`);
@@ -151,7 +159,8 @@ const { chromium } = require('playwright');
     const _can = r.theoLop[sk].soDong * r.giaiMax;
     if (r.theoLop[sk].vukhi !== _can)
       fail(`${sk}: ${r.theoLop[sk].vukhi} vũ khí, cần ${_can} (${r.theoLop[sk].soDong} dòng × ${r.giaiMax} giai)`);
-    if (r.theoLop[sk].giap !== 28) fail(`${sk}: ${r.theoLop[sk].giap} giáp, cần 28 (7 giai × 4 ô)`);
+    const _cg = r.theoLop[sk].soDongGiap * r.giaiMax * 4;
+    if (r.theoLop[sk].giap !== _cg) fail(`${sk}: ${r.theoLop[sk].giap} giáp, cần ${_cg} (${r.theoLop[sk].soDongGiap} dòng × ${r.giaiMax} giai × 4 ô)`);
   }
   if (r.phuKienKhoaLop !== 0) fail('phụ kiện bị khoá lớp — dây chuyền và nhẫn phải dùng chung');
   if (!r.dk_mackiem) fail('Dark Knight không mặc được kiếm của chính mình');

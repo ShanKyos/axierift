@@ -1870,7 +1870,8 @@ const VK_ANH = {
   // Cung Thiên Mệnh. Cây này CÓ lớp cầm tay (NV_VK_LOP) nên trong màn không dùng tấm này —
   // nhưng ICON TRONG TÚI thì vẫn vẽ từ đây, nên thiếu dòng này là túi hiện cây cung cũ.
   'truongcung|7': { tep:'vk_elfcung', x:65, y:38 },    // Cung Thiên Mệnh
-  'makiem|7':     { tep:'vk_sbkiem',  x:65, y:28 },    // Kiếm Sinh Mệnh
+  // ('makiem|7' Kiếm Sinh Mệnh đã gỡ cùng dòng `makiem` — Spellblade nay có 7 dòng của gói
+  //  `magic-runtime`, icon và thần khí lấy thẳng tấm master của gói, xem `mrVkMaster()`.)
 };
 // Tra art của một món vũ khí: tranh riêng của giai trước, tranh chung của dòng sau.
 function vkAnh(d){
@@ -1950,6 +1951,17 @@ function thanKhiNguon(p){
   // cũng đổi theo — cây rìu sẽ hiện ra hình thanh kiếm ngay trong ô túi. Ở cỡ vũ khí bay quanh
   // thì thứ cần là một BÓNG DÁNG; trong ô túi thì phải đúng món ấy. Cùng đánh đổi đã ghi cho
   // `NV_VK_LOP_LOP`, và cùng chỗ đặt.
+  // Dòng của gói `magic-runtime`: bay theo bằng chính tấm master của cây đang cầm. Tấm dựng
+  // ĐỨNG (mũi chúc xuống +Y, cán ở `gripRatio` tính từ mép trên), còn thần khí đòi mũi dọc +X —
+  // xoay −90° quanh chỗ nắm là về đúng quy ước, không phải chuẩn hoá lại tệp nào.
+  if (d.mr){
+    const vk = mrVkTheoDong(d.mr), wim = vk && mrTai(vk.master);
+    if (!wim) return null;
+    const O = wim.naturalWidth || MR_O, cam = O * (vk.gripRatio || 0.12);
+    const s = (NV_CAO / HERO_H) * TK_PHONG * (vk.displayPx || MR_VK_CHUAN) / MR_VK_CHUAN;
+    return { art: d.art, dai: O * (1 - (vk.gripRatio || 0.12)) * s,
+             ve: (g) => { g.scale(s, s); g.rotate(-Math.PI / 2); g.translate(-O / 2, -cam); g.drawImage(wim, 0, 0); } };
+  }
   const A = vkAnh(d) || VK_ANH[TK_LOP[d.sect || (p && p.sect) || player.sect]] || null;
   if (!A) return null;                         // lớp chưa khai cây lùi thì đành chịu
   const im = nvTai(A.tep, 'png');
@@ -9508,6 +9520,7 @@ function loadGame(idx){
     // chính phép di trú nghiền xuống giai 5 (7 → 10 → ceil(10/2)) — đo được, và không lỗi nào
     // báo. Ở đây thì lưới túi cũng đã dựng xong nên `bagConCho`/`bagThem` trả lời đúng.
     demoDoDiTru();
+    canhMacDinh();   // lớp luôn bay nhận cánh cấp 1 một lần — xem chỗ khai
     let maxUid = 0;
     for (const s in player.equip) if (player.equip[s]) maxUid = Math.max(maxUid, player.equip[s].uid);
     for (const it of player.inv) maxUid = Math.max(maxUid, it.uid);
@@ -15260,8 +15273,21 @@ function gearVisual(p){
     // Ô nào đang đeo bộ CÓ LỚP RỜI. Đây là chỗ bốn ô tách nhau ra: `t` ở trên là bậc gộp cả
     // người, còn bảng này giữ nguyên TỪNG Ô, nên đeo mỗi đôi giày là đúng đôi giày đổi.
     oLop: nvLopCuaEquip(p),
+    // Gói `magic-runtime`: bộ giáp và cây vũ khí hiện ra do DÒNG của món quyết định, không do
+    // giai. `null` khi không mặc món nào của gói ⇒ `mrVe` lui về chọn theo giai như cũ.
+    mrGiap: mrGiapDong(p.equip),
+    mrVk: (itemDef(w) || {}).mr || null,
     setColor,
   };
+}
+// Bộ nào hiện lên người. Gói ở chế độ `appearance-replacement` — một bộ thay CẢ thân, không ghép
+// được nón bộ này với áo bộ kia — nên phải chọn MỘT ô làm chuẩn: ô ÁO, vì nó chiếm nhiều thân
+// nhất. Không mặc áo thì lấy ô giáp đầu tiên có dòng, để cởi áo ra không nhảy về thân trần.
+const MR_O_CHUAN = ['ao', 'non', 'tay', 'chan'];
+function mrGiapDong(eq){
+  if (!eq) return null;
+  for (const k of MR_O_CHUAN){ const d = itemDef(eq[k]); if (d && d.mr) return d.mr; }
+  return null;
 }
 // Bậc bảng màu giáp — nay chỉ đọc TRANG BỊ THẬT. Trước đây nó lấy CAO HƠN giữa bậc Thần Binh
 // và trang bị, và đó là đường duy nhất khiến người chưa mặc gì vẫn lên màu giáp. Thần Binh
@@ -16006,7 +16032,8 @@ function heroGearSig(gv){
   // LỚP RỜI cũng phải nằm trong chữ ký, vì hai bộ đồ khác nhau có thể cho cùng `t`/`n`/`plus`
   // (bốn ô, cùng giai, khác bộ) — thiếu dòng này là đổi mũ mà đầu vẫn cái mũ cũ.
   const l = gv.oLop ? Object.keys(gv.oLop).sort().map(k => k + gv.oLop[k]).join('') : '';
-  return `${Math.round(gv.t*10)}_${gv.n}_${gv.rarity}_${Math.round(gv.plus)}_${gv.setColor||''}_${w}_${l}`;
+  // DÒNG giáp của gói cũng vậy: bảy dòng cùng giai cho cùng `t`, chỉ khác bộ hiện lên người.
+  return `${Math.round(gv.t*10)}_${gv.n}_${gv.rarity}_${Math.round(gv.plus)}_${gv.setColor||''}_${w}_${l}_${gv.mrGiap||''}`;
 }
 // Tư thế của MỘT khung hình — dựng lại đúng từ chỉ số khung, để ảnh trong bộ nhớ đệm luôn khớp khoá.
 function heroFramePose(kind, idx, act, sw, n){
@@ -16626,28 +16653,9 @@ function _nvKhungRa(im, kind, idx, ten){
                                NV_OW, NV_OH, 0, 0, NV_OW, NV_OH);
   return t;
 }
-// Viền sáng (+4 trở lên). Bản vector có hArmorSheen/hEngrave vẽ viền theo TOẠ ĐỘ của từng
-// mảnh giáp nó tự dựng — art nướng không có mảnh nào để mà bám vào, nên nếu chỉ gọi lại mấy
-// hàm đó thì từ +0 tới +6 KHÔNG CÓ GÌ ĐỔI (đo được: đúng 0 điểm ảnh khác nhau). Ở đây dựng
-// viền từ chính BÓNG DÁNG của khung: vẽ khung lệch ra tám hướng rồi khoét chính nó ở giữa.
-function nvVienSang(g, im, kind, idx, mau, dam, ten){
-  const kh = _nvKhungRa(im, kind, idx, ten);
-  const t = document.createElement('canvas'); t.width = NV_OW; t.height = NV_OH;
-  const q = t.getContext('2d');
-  for (let a = 0; a < 8; a++){
-    const r = a * Math.PI / 4;
-    q.drawImage(kh, Math.round(Math.cos(r) * 2), Math.round(Math.sin(r) * 2));
-  }
-  q.globalCompositeOperation = 'destination-out';
-  q.drawImage(kh, 0, 0);                                   // khoét ruột ⇒ còn đúng cái viền
-  q.globalCompositeOperation = 'source-in';
-  q.fillStyle = mau; q.fillRect(0, 0, NV_OW, NV_OH);
-  g.save();
-  g.globalCompositeOperation = 'lighter';
-  g.globalAlpha = dam;
-  g.drawImage(t, -HS_PAD, -HS_PAD);
-  g.restore();
-}
+// ⚠ VIỀN SÁNG +4 (`nvVienSang`) ĐÃ GỠ — chủ dự án: "gỡ luôn viền cam đi", ngay sau đợt gỡ quầng
+// sau lưng. Nó là dải 2px tô theo màu bộ quanh bóng dáng, cộng sáng; ở +9/+11 đọc ra một đường
+// viền cam dán quanh người. Còn lại của +N trên thân: tàn lửa (+7) · dải quét (+10).
 // Dải sáng quét thân (+10). hPlusSweep() cắt theo một hình chữ nhật đo trên thân người VECTOR;
 // đặt lên art nướng thì nó tràn ra ngoài người và đọc ra một hộp xám bẹt. Ở đây cắt theo đúng
 // alpha của khung, nên dải sáng chỉ chạy TRÊN người.
@@ -16673,11 +16681,9 @@ function nvHaoQuangTruoc(g, sectKey, tier, gv, now, im, kind, idx){
   const st = plusStage(gv.plus);
   if (st < 1) return;
   const SM = hSetMetal(hMetal(tier), heroSet(sectKey, gv.t));
-  const k = clamp(((gv.plus || 0) - 3) / 8, 0, 1);          // 0 ở +4, 1 ở +11
-  // Tên bộ để biết khối chạy của CHÍNH nó có bao nhiêu khung — hai hiệu ứng dưới đây cắt
-  // theo alpha của đúng ô khung, cắt nhầm ô là viền sáng bám vào một tư thế khác.
+  // Tên bộ để biết khối chạy của CHÍNH nó có bao nhiêu khung — dải quét cắt theo alpha của
+  // đúng ô khung, cắt nhầm ô là nó bám vào một tư thế khác.
   const _ten = nvBoTen(sectKey, tier, gv);
-  nvVienSang(g, im, kind, idx, (gv.setColor || SM.glow || '#ffe9a8'), 0.16 + st * 0.09 + k * 0.14, _ten);
   if (st >= 3) nvDaiQuet(g, im, kind, idx, now, _ten);
   hPlusSpark(g, SM, gv, now);                              // tàn lửa, từ +7
 }
@@ -16764,12 +16770,14 @@ function mrNapDL(){
     // hỏng riêng — thiếu chúng thì đường bay lui về hành vi cũ chứ không kéo cả nhân vật theo.
     if (d.flight && d.flight.manifest)
       fetch(MR_GOC + d.flight.manifest).then(r => r.json())
-        .then(f => { MR_BAY = f; MR_BAY._goc = d.flight.manifest.replace(/[^/]+$/, ''); })
+        .then(f => { MR_BAY = f; MR_BAY._goc = d.flight.manifest.replace(/[^/]+$/, ''); mrXinBay(f); })
         .catch(() => {});
     if (d.flightAttack && d.flightAttack.manifest)
       fetch(MR_GOC + d.flightAttack.manifest).then(r => r.json())
-        .then(f => { MR_BAYDANH = f; MR_BAYDANH._goc = d.flightAttack.manifest.replace(/[^/]+$/, ''); })
+        .then(f => { MR_BAYDANH = f; MR_BAYDANH._goc = d.flightAttack.manifest.replace(/[^/]+$/, ''); mrXinBay(f); })
         .catch(() => {});
+    // Bảy tấm master (~0,1 MB cả bảy): cây nào cũng có thể đang nằm trên tay ai đó trong màn.
+    for (const w of d.weapons || []) mrTai(w.master);
     return fetch(MR_GOC + (d.sockets || 'sockets.json')).then(r => r.json());
   }).then(s => {
     MR_SOCKET = s;
@@ -16783,6 +16791,18 @@ function mrNapDL(){
 }
 // Lớp này có đọc gói không. Cửa DUY NHẤT — `heroSprite`, `drawPlayer` và bài kiểm đều hỏi nó,
 // nên không có cách nào một chỗ tưởng có gói còn chỗ kia tưởng không.
+// Nạp trước mọi lớp của một slice bay. Lớp nào LUÔN bay (MR_LOP) thì khung đầu tiên trên màn
+// đã là khung bay; nạp lười là mấy trăm mili giây đầu nhân vật tàng hình.
+// ⚠ Chỉ lớp `wing_*` CỦA LỚP NÀO ĐÓ và lớp `weapon` vẽ sẵn thì bỏ: lớp weapon không bao giờ được
+// dán (xem `mrVeBay`), và `skill_vfx` cố ý không vẽ.
+function mrXinBay(F){
+  const dung = new Set(Object.values(MR_CANH_LOP));
+  for (const k in F.sheets){
+    if (k === 'weapon' || k === 'skill_vfx') continue;
+    if (/^wing_/.test(k) && !dung.has(k)) continue;
+    mrTai(F._goc + F.sheets[k]);
+  }
+}
 function mrDung(sectKey){
   if (!MR_LOP[sectKey]) return false;
   mrNapDL();
@@ -16826,6 +16846,21 @@ function mrXinBo(giap){
   if (!giap || giap._daXin) return;
   giap._daXin = true;
   for (const k in giap.states) mrTai(giap.states[k]);
+}
+// Tra theo DÒNG (id trong manifest). Dòng lạ — manifest đổi mà dữ liệu chưa theo — thì trả null
+// để chỗ gọi lui về chọn theo giai, chứ không vẽ ra thân trần.
+function mrGiapTheoDong(id){
+  if (!MR_DL || !id) return null;
+  return MR_DL.armors.find(a => a.id === id) || null;
+}
+function mrVkTheoDong(id){
+  if (!MR_DL || !id) return null;
+  return MR_DL.weapons.find(w => w.id === id) || null;
+}
+// Cây vũ khí của một bộ trang phục: dòng trước, giai sau (món không thuộc gói ⇒ theo giai).
+function mrVkCua(gv){
+  if (!gv) return null;
+  return mrVkTheoDong(gv.mrVk) || mrVuKhi(gv.wTier);
 }
 function mrVuKhi(wTier){
   if (!MR_DL || !wTier) return null;
@@ -16881,21 +16916,54 @@ function mrCoBay(sectKey){
   return !!(mrDung(sectKey) && MR_BAY && MR_CANH_LOP[sectKey]);
 }
 function mrNhipBay(){ return (MR_BAY && MR_BAY.frameDurationMs) || BAY_NHIP; }
-function mrVeBay(sectKey, blk, idx){
+// ── VŨ KHÍ TRONG SLICE BAY: đổi được cả bảy cây ─────────────────────────────────────────────
+// Hai slice vẽ sẵn ĐÚNG MỘT cây (Ảo Ảnh Đao) vào lớp `weapon`. Dán lớp đó là mọi Spellblade bay
+// cầm cùng một cây, bất kể món đang mặc — mà luôn bay nghĩa là cả game chỉ thấy cây ấy. Nên lớp
+// đó bị bỏ qua và tấm master của cây đang cầm được đặt vào bàn tay theo đúng dữ liệu của gói:
+//   • bay-đánh: `weaponHands` + `weaponAngles` + `weaponGripPivot` — gói khai đủ, dùng thẳng.
+//   • bay thường: gói có `weaponHands` mà KHÔNG có góc. Góc và độ lệch dưới đây ĐO bằng cách
+//     khớp tấm master Ảo Ảnh vào chính lớp vẽ sẵn (tools/magic/do_vk_bay.py, IoU 0,65/0,76 ở
+//     bay · 0,76–0,84 ở bay-đánh). Đo lại khi gói đổi slice, đừng chỉnh bằng mắt.
+// ⚠ Góc tính THEO CANVAS (dương = xoay thuận chiều kim đồng hồ). `weaponAngles` của gói ngược
+// chiều đó, nên nhân −1 — khớp ra đúng như thế, không phải đoán.
+const MR_BAY_VK = { goc: [-12, 20], dy: 6, co: 0.95 };
+const MR_VK_CHUAN = 116;                   // displayPx của Ảo Ảnh Đao — cây hai slice vẽ sẵn
+function mrVeVkBay(g, F, cot, vk, wim){
+  const hs = F.weaponHands && F.weaponHands[cot];
+  if (!hs) return;
+  const piv = F.weaponGripPivot || [MR_O / 2, MR_O * (vk.gripRatio || 0.12)];
+  const s = (vk.displayPx || MR_VK_CHUAN) * MR_BAY_VK.co * MR_TY;
+  for (let h = 0; h < 2; h++){
+    const tay = hs[h]; if (!tay) continue;
+    const goc = F.weaponAngles ? -(F.weaponAngles[cot] || [0, 0])[h] : MR_BAY_VK.goc[h];
+    const dy  = F.weaponAngles ? 0 : MR_BAY_VK.dy;
+    g.save();
+    g.translate(mrX(tay[0]), mrY(tay[1] + dy));
+    g.rotate(goc * Math.PI / 180);
+    g.drawImage(wim, -s * piv[0] / MR_O, -s * piv[1] / MR_O, s, s);
+    g.restore();
+  }
+}
+function mrVeBay(sectKey, blk, idx, gv){
   const F = (blk === 'g' && MR_BAYDANH) ? MR_BAYDANH : MR_BAY;
   if (!F || !F._goc) return null;
   const canh = MR_CANH_LOP[sectKey];
   const n = F.frames || MR_COT;
   const cot = clamp(idx | 0, 0, n - 1);
-  // Thứ tự của chính manifest: wing_back → body_armor → weapon → hand_grip_front.
-  const lop = [F.sheets[canh], F.sheets.body, F.sheets.weapon, F.sheets.handGrip]
-                .filter(Boolean).map(x => mrTai(F._goc + x));
-  if (!lop.length || lop.some(x => !x)) return null;
+  const lay = (x) => x ? mrTai(F._goc + x) : null;
+  const cImg = lay(F.sheets[canh]), bImg = lay(F.sheets.body), tImg = lay(F.sheets.handGrip);
+  if ((F.sheets[canh] && !cImg) || !bImg || (F.sheets.handGrip && !tImg)) return null;
+  const vk = mrVkCua(gv), wim = vk ? mrTai(vk.master) : null;
+  if (vk && !wim) return null;                     // cây đang cầm chưa về — đừng vẽ tay không
   const t = document.createElement('canvas'); t.width = NV_OW; t.height = NV_OH;
   const g = t.getContext('2d');
   g.translate(HS_PAD, HS_PAD);
-  for (const im of lop)
-    g.drawImage(im, cot * MR_O, 0, MR_O, MR_O, mrX(0), mrY(0), MR_O * MR_TY, MR_O * MR_TY);
+  const dan = (im) => g.drawImage(im, cot * MR_O, 0, MR_O, MR_O, mrX(0), mrY(0), MR_O * MR_TY, MR_O * MR_TY);
+  // Thứ tự của chính manifest: wing_back → body_armor → weapon → hand_grip_front.
+  if (cImg) dan(cImg);
+  dan(bImg);
+  if (vk) mrVeVkBay(g, F, cot, vk, wim);
+  if (tImg) dan(tImg);
   return t;
 }
 // Dựng MỘT khung của gói thành một tấm `NV_OW×NV_OH` — ĐÚNG khuôn mà `_nvKhungRa()` nhận
@@ -16908,11 +16976,13 @@ function mrVeBay(sectKey, blk, idx){
 function mrVe(sectKey, tier, gv, blk, idx, huong){
   if (!mrDung(sectKey)) return null;
   if (blk === 'f' || blk === 'g'){
-    const bay = mrVeBay(sectKey, blk, idx);
-    if (bay) return bay;                       // chưa về thì rơi xuống khối mặt đất bên dưới
+    // ⚠ Chưa về thì trả null, KHÔNG rơi xuống khối mặt đất: `heroSprite` nhớ khung theo khoá của
+    // khối 'f'/'g', nên một khung đứng-đất dựng lúc slice chưa tải nằm lại đó VĨNH VIỄN dưới đúng
+    // cái khoá của khối bay. `_choArt` (cộng `_mr`) lo chuyện không nhớ khung null.
+    return mrVeBay(sectKey, blk, idx, gv);
   }
   const st = MR_STATE[blk] || 'idle';
-  const giap = mrGiap(tier);
+  const giap = mrGiapTheoDong(gv && gv.mrGiap) || mrGiap(tier);
   mrXinBo(giap);
   const duong = giap ? giap.states[st] : (MR_DL.bodyBase && MR_DL.bodyBase[st]);
   const im = mrTai(duong);
@@ -16920,7 +16990,7 @@ function mrVe(sectKey, tier, gv, blk, idx, huong){
   const hang = mrHang(huong);
   const cot  = MR_GHIM[blk] ? 0 : clamp(idx | 0, 0, MR_COT - 1);
   const pose = ((MR_SOCKET.states[st] || {})[MR_DL.layout.rowOrder[hang]] || [])[cot] || null;
-  const vk   = mrVuKhi(gv && gv.wTier);
+  const vk   = mrVkCua(gv);
   const wim  = vk ? mrTai(vk.master) : null;
   const t = document.createElement('canvas'); t.width = NV_OW; t.height = NV_OH;
   const g = t.getContext('2d');
@@ -17177,14 +17247,20 @@ function heroCardUrl(sectKey, tier, gv){
   // bằng hình dựng đường rồi nằm lì trong bộ nhớ đệm — cùng cái bẫy đã gặp hai lần ở cánh.
   // Cùng hai đường như heroSprite(): thân đã cắt lớp thì gộp lớp, không thì lấy tấm liền.
   // Thẻ nhân vật LUÔN vẽ khối đứng khung 0, nên chỉ cần gộp đúng một khung.
-  const _gopC = nvKhungGop(sectKey, tier || 1, gv, 'i', 0);
-  const _nvIm = _gopC || nvBo(sectKey, tier || 1, gv);
+  // Lớp đọc gói `magic-runtime` đi qua `mrVe` — khối ĐỨNG, hướng South (quay mặt về người xem).
+  // ⚠ CỐ Ý không dùng khối bay: slice bay chỉ có thân Ma Thuật, còn thẻ này là chỗ DUY NHẤT người
+  // chơi thấy được bảy bộ giáp (ngoài màn nhân vật luôn bay). Thiếu nhánh này thì `_nvIm` null và
+  // thẻ rơi về `drawHeroFigure` — một hiệp sĩ dựng bằng đường, đúng thứ Quy tắc số 3 cấm.
+  const _mrC = mrDung(sectKey);
+  const _gopC = _mrC ? mrVe(sectKey, tier || 1, gv, 'i', 0, 2) : nvKhungGop(sectKey, tier || 1, gv, 'i', 0);
+  const _nvIm = _gopC || (_mrC ? null : nvBo(sectKey, tier || 1, gv));
   // Khoá phải mang CẢ tên bộ LẪN "art đã tải xong chưa". Bản trước chỉ có tên bộ: bảng khung
   // nặng ~480 KB nên lượt dựng đầu tiên thường chạy lúc ảnh chưa về, rơi về hình vẽ vector —
   // rồi cất vào đệm DƯỚI ĐÚNG CÁI TÊN CỦA ART. Ảnh về sau đó cũng không đổi được khoá, nên
   // thẻ nhân vật giữ mãi bản vector. Dấu '?' tách hai trạng thái ra làm hai khoá khác nhau.
   const key = sectKey + ':' + (tier || 1) + ':' + sig + ':'
-            + (nvBoTen(sectKey, tier || 1, gv) || '') + (_nvIm ? '' : '?');
+            + (nvBoTen(sectKey, tier || 1, gv) || '') + (_nvIm ? '' : '?')
+            + (_mrC ? ':MR' + heroGearSig(gv) : '');     // dòng giáp + cây vũ khí của gói
   { const u = lruLay(_heroCardCache, key); if (u) return u; }
   // Khung rộng thêm hai bên để CHỨA ĐƯỢC SẢI CÁNH. Mút cánh bậc 3 nằm ở x = 80 + 14 + 102·1,12
   // ≈ 208, cộng quầng loe nữa là tràn khỏi khung 160 px chừng 90 px — vẽ trong khung cũ thì
@@ -17200,9 +17276,11 @@ function heroCardUrl(sectKey, tier, gv){
     // nào lệch nhau. Cánh vẫn vẽ rời như cũ — nó không nằm trong bảng khung.
     if (_gopC) hg.drawImage(_gopC, -HS_PAD, -HS_PAD);
     else nvVeKhung(hg, _nvIm, 'i', 0, nvBoTen(sectKey, tier || 1, gv));
-    if (gv && gv.canh) veCanh(hg, gv.canh, 80, 212, 0, 0, 1, 0);
+    // Lớp MR: đôi cánh trên người là Wing 1 MG nằm SẴN trong slice bay, không phải tranh của món
+    // trong ô cánh — vẽ `veCanh` ở đây là thẻ đeo một đôi mà ngoài màn đeo đôi khác.
+    if (gv && gv.canh && !_mrC) veCanh(hg, gv.canh, 80, 212, 0, 0, 1, 0);
     nvHaoQuangTruoc(hg, sectKey, tier || 1, gv, 0, _nvIm, 'i', 0);
-  } else {
+  } else if (!_mrC && !MR_LOP[sectKey]){
     drawHeroFigure(hg, sectKey, tier || 1, 0, HERO_POSE0, gv);
   }
   hg.setTransform(1, 0, 0, 1, 0, 0);
@@ -19213,13 +19291,22 @@ function drawPlayer(p){
   // thì nó chui vào save, rồi lần nạp sau nhân vật xuất hiện ở một độ cao cũ chẳng liên quan
   // gì tới đôi cánh đang mặc. Nhưng cũng không để ở MỘT biến module — xem `_bayCao`.
   const _canhIt = p.equip && p.equip.canh;
-  const _bayDich = _canhIt ? BAY_CAO[clamp(wingBac(_canhIt), 1, 3) - 1] : 0;
+  // ⚠ LỚP ĐỌC GÓI `magic-runtime` THÌ LUÔN BAY — chủ dự án chốt: *"Bỏ phần nhân vật đi bộ đi …
+  // by default hãy cho nhân vật đang bay và mang cánh cấp 1 (áp dụng cho Magic trước)"*. Không
+  // hỏi ô cánh: tháo cánh ra mà rơi về đi bộ là dựng lại đúng cái khối vừa bị bỏ. Cánh vẽ ra là
+  // cánh của slice bay (Wing 1 MG, xem MR_CANH_LOP); món trong ô cánh chỉ quyết định độ cao.
+  // Hỏi `MR_LOP` chứ không hỏi `mrDung()`: lúc manifest chưa về thì nhân vật vẫn phải đang ở
+  // trên không, không được đáp xuống một nhịp rồi cất cánh lại.
+  const _bayLuon = !!MR_LOP[p.sect];
+  const _bayDich = (_canhIt || _bayLuon) ? BAY_CAO[clamp(wingBac(_canhIt), 1, 3) - 1] : 0;
   // Xấp xỉ hàm mũ theo KHUNG HÌNH: giá trị chỉ dùng để vẽ, lệch vài phần trăm giữa 60 và
   // 144 Hz không ai thấy được, mà đổi lại không phải luồn dt xuống tận đây.
   const _bayK0 = veKhoa(p);
   let bayCao = _bayCao.get(_bayK0) || 0;
   bayCao += (_bayDich - bayCao) * 0.08;
-  if (Math.abs(_bayDich - bayCao) < 0.05) bayCao = _bayDich;
+  // Lớp luôn bay thì KHÔNG cất cánh: không có mặt đất nào để mà rời. Để nó nội suy từ 0 là mỗi
+  // lần vào game / sang map lại đứng đất nửa giây trên khung ĐỨNG của gói (khối 'j' ⇒ idle).
+  if (_bayLuon || Math.abs(_bayDich - bayCao) < 0.05) bayCao = _bayDich;
   _bayCao.set(_bayK0, bayCao);
   const bayK = bayCao / Math.max(1, BAY_CAO[2]);        // 0 = chạm đất, 1 = bay cao nhất
   // ĐÃ LÊN TỚI ĐỘ CAO CỦA CHÍNH ĐÔI CÁNH NÀY — cửa DUY NHẤT hỏi "đang bay hẳn chưa".
@@ -21924,7 +22011,9 @@ const DEMO_DO_GIAI = 7;
 // Dòng vũ khí có ART của từng lớp. Phát bừa một dòng khác thì bộ giáp giai 7 hiện đúng mà
 // trên tay lại là cây vũ khí chưa có tranh — mà vũ khí là thứ to nhất trên bóng dáng.
 // Ba lớp có lớp vũ khí CẦM TAY (xem NV_VK_LOP) nên chọn sai dòng là mất luôn cây trong tay.
-const DEMO_VK_DONG = { thieulam:'kiem', minhgiao:'makiem', toanchan:'truongcung',
+// Spellblade: bảy dòng đều có art (gói `magic-runtime`); lấy Hoả Tinh Kiếm vì đó đúng là cây
+// người chơi thử đang thấy ở giai 7 trước khi tách dòng — đổi cây là họ thấy vũ khí tự đổi.
+const DEMO_VK_DONG = { thieulam:'kiem', minhgiao:'hoa_tinh_kiem', toanchan:'truongcung',
                        baidasan:'gay',  bug:'lenhtruong' };
 const DEMO_O = ['vukhi', 'non', 'ao', 'tay', 'chan'];
 // Sinh ĐÚNG MỘT món của bộ chơi thử cho một ô. Tách khỏi `phatDoKhoiDau` vì có HAI đường gọi
@@ -21961,8 +22050,23 @@ function phatDoKhoiDau(){
     if (it) player.equip[_id] = it;
   }
   player._demoDo = DEMO_DO_GIAI;   // đã nhận bộ chơi thử — xem demoDoDiTru()
+  canhMacDinh();
   calcDerived();
   player.hp = player.maxHp; player.qi = player.maxQi;
+}
+// ═══ CÁNH CẤP 1 MẶC ĐỊNH cho lớp LUÔN BAY (gói `magic-runtime`) ═══════════════════════════
+// Chủ dự án: *"by default hãy cho nhân vật đang bay và mang cánh cấp 1 (áp dụng cho Magic
+// trước)"*. Việc BAY không cần món này (drawPlayer tự bay cho MR_LOP); món này là để ô cánh
+// không trống trong khi trên màn rõ ràng có đôi cánh — trang bị nhìn thấy thì phải có thật.
+// ⚠ PHÁT MỘT LẦN (`_canhMacDinh`): người chơi tháo cánh ra là quyết định của họ, nạp save lần
+// sau mà phát lại là in thêm cánh vào túi mỗi lần vào game.
+// ⚠ Không phát trong TEST_MODE/TEST_DO: bài kiểm cân bằng đo nhân vật TRẦN, mà cánh cộng chỉ số.
+function canhMacDinh(){
+  if (window.TEST_MODE || window.TEST_DO) return;
+  if (!player || !MR_LOP[player.sect] || player._canhMacDinh) return;
+  player._canhMacDinh = true;
+  if (!player.equip) player.equip = {};
+  if (!player.equip.canh) player.equip.canh = genWing(player.sect, 1);
 }
 // ═══ SAVE ĐỜI TRƯỚC CŨNG PHẢI NHẬN BỘ CHƠI THỬ ═══════════════════════════════════════════
 // `phatDoKhoiDau()` chỉ chạy trong `newGame()`, nên mọi nhân vật tạo TRƯỚC bản demo không bao
@@ -25173,7 +25277,7 @@ const VK_ICON_KHUNG = 92;           // chừa 4px mỗi bên trong hệ 100x100 
 // tỉ lệ khối ô nó chiếm trong túi, để tranh nở ra hết khối. Chỉ lưới túi mới gọi tới — ô trang
 // bị và quầy hàng vẫn là ô vuông nên vẫn xin bản vuông.
 function iconTyLe(def){
-  if (!def || def.kind !== 'weapon' || !vkAnh(def)) return 1;
+  if (!def || def.kind !== 'weapon' || !(vkAnh(def) || def.mr)) return 1;
   const o = BAG_SIZES_LINE[def.line] || BAG_SIZES.vukhi;
   return o[1] / o[0];
 }
@@ -25272,7 +25376,7 @@ const MON_ANH = {
   // cuối của `bua` là người chơi rèn lên đỉnh rồi thấy vũ khí đổi hẳn thành loại khác.
   bua:        ['gb_da', 'gb_dong', 'gb_dong', 'gb_dongthau', 'gb_dongthau', 'gb_sat', 'gb_sat'],
   riu:        ['gb_thep', 'gb_thep', 'gb_thep', 'gb_thep', 'gb_thep', 'gb_thep', 'gb_thep'],
-  songdao:    ['gs_dong', 'gs_dong', 'gs_dongthau', 'gs_dongthau', 'gs_sat', 'gs_thep', 'gs_thep'],
+  // (`songdao` đã gỡ cùng ba dòng cũ của Spellblade — bảy dòng mới dùng tấm master của gói.)
   cungngan:   ['gc_ngan', 'gc_ngan', 'gc_ngan', 'gc_ngan', 'gc_ngan', 'gc_ngan', 'gc_ngan'],
   truongcung: ['gc_dai', 'gc_dai', 'gc_dai', 'gc_kep', 'gc_kep', 'gc_kep', 'gc_kep'],
 };
@@ -25326,6 +25430,7 @@ function monAnhKhoa(d){
 // XONG, hàm này chỉ hỏi bảng khai. Khoá đệm icon cần phân biệt đúng hai thứ đó — xem itemArtUrl.
 function monCoKhaiTranh(d){
   if (!d) return false;
+  if (d.mr) return true;                           // mọi món của gói đều có tranh (icon/ · master)
   if (d.kind === 'weapon' && vkAnh(d)) return true;
   const k = monAnhKhoa(d);
   return !!(k && MON_ANH[k]);
@@ -25339,7 +25444,77 @@ function monTranh(def){
 }
 // Tranh của một món + CÁCH vẽ nó. Art gói Spine đã chuẩn hoá mũi dọc trục +X nên phải xoay cho
 // ra dáng đặt trong ô; art Axie Land thì đã dựng sẵn THEO DÁNG ICON, xoay thêm là nằm ngang.
+// ── ICON CỦA GÓI `magic-runtime` ──────────────────────────────────────────────────────────
+// Vũ khí: chính tấm master 256×256 của gói (mũi chúc xuống, dựng sẵn theo dáng icon ⇒ KHÔNG xoay).
+// Giáp: 4 ô cắt từ khung South — gói không có tấm rời cho từng món, xem tools/magic/nuong_icon_mr.py.
+// Nạp qua MON_ANH_IM + `_monHenVeLai` như mọi tranh icon khác: tranh về muộn thì bảng tự vẽ lại.
+function mrIconDuong(def){
+  if (!def || !def.mr) return null;
+  if (def.kind === 'armor') return 'icon/' + def.mr + '_' + def.slot + '.webp';
+  if (def.kind === 'weapon'){
+    mrNapDL();                                     // người lớp khác nhặt được đồ Spellblade
+    const w = mrVkTheoDong(def.mr);
+    return w ? w.master : null;
+  }
+  return null;
+}
+function mrIconTai(def){
+  const duong = mrIconDuong(def);
+  if (!duong) return null;
+  const k = 'mr:' + duong;
+  let im = MON_ANH_IM[k];
+  if (!im){
+    im = new Image();
+    // Tấm master 256×256 có lề trống lớn (thân cây chỉ chiếm ~62×177), mà `veMonTranh` thu theo
+    // CẠNH LỚN CỦA TẤM — không cắt thì cây vũ khí chỉ bằng 2/3 ô túi. Cắt sát alpha một lần.
+    // Vũ khí thì xoay thêm cho MŨI DỌC +X — quy ước mà `veVkTranh` đòi (tấm master dựng ĐỨNG,
+    // mũi chúc xuống). Chỉ đường đó mới dựng cây đứng theo khung cao 2×3/2×4 của ô túi;
+    // `veMonTranh` thu vào khung VUÔNG nên cây vũ khí chỉ còn 1/3 chiều cao ô.
+    im.onload = () => {
+      const c = mrCatSat(im);
+      im._cat = (c && def.kind === 'weapon') ? mrMuiX(c) : c;
+      // ⚠ `vkBong()` khoá bộ đệm theo `im.src`. Canvas không có `src` ⇒ mọi cây dùng CHUNG một
+      // khoá 'undefined|màu' ⇒ hào quang rèn của cây này vẽ theo bóng dáng cây kia.
+      if (im._cat) im._cat.src = im.src + '#cat';
+      _monHenVeLai();
+    };
+    im.src = MR_GOC + duong;
+    MON_ANH_IM[k] = im;
+  }
+  // ⚠ Chỉ trả BẢN ĐÃ CẮT. `complete` bật TRƯỚC khi `onload` kịp chạy, nên trả tấm gốc trong khe đó
+  // là một lượt vẽ dùng tấm dựng đứng rồi `veVkTranh` xoay thêm −90° ⇒ cây nằm ngang — và lượt
+  // đó mang khoá 'V' (có tranh) nên bị NHỚ LẠI vĩnh viễn. Đo được đúng thế ở lượt chụp đầu.
+  return im._cat || null;
+}
+// Xoay −90°: (x, y) → (y, w − x) ⇒ mũi đang chúc xuống +Y quay sang +X, chỗ nắm về bên trái.
+function mrMuiX(c){
+  const t = document.createElement('canvas');
+  t.width = c.height; t.height = c.width;
+  const q = t.getContext('2d');
+  q.translate(0, c.width); q.rotate(-Math.PI / 2); q.drawImage(c, 0, 0);
+  t.naturalWidth = t.width; t.naturalHeight = t.height;
+  return t;
+}
+function mrCatSat(im){
+  const w = im.naturalWidth, h = im.naturalHeight;
+  const c = document.createElement('canvas'); c.width = w; c.height = h;
+  const q = c.getContext('2d'); q.drawImage(im, 0, 0);
+  const d = q.getImageData(0, 0, w, h).data;
+  let x0 = w, y0 = h, x1 = -1, y1 = -1;
+  for (let y = 0; y < h; y++) for (let x = 0; x < w; x++)
+    if (d[(y * w + x) * 4 + 3] > 8){ if (x < x0) x0 = x; if (x > x1) x1 = x; if (y < y0) y0 = y; if (y > y1) y1 = y; }
+  if (x1 < 0) return null;
+  const t = document.createElement('canvas');
+  t.width = x1 - x0 + 1; t.height = y1 - y0 + 1;
+  t.getContext('2d').drawImage(c, x0, y0, t.width, t.height, 0, 0, t.width, t.height);
+  t.naturalWidth = t.width; t.naturalHeight = t.height;   // veMonTranh đọc hai trường này
+  return t;
+}
 function tranhCuaMon(def){
+  if (def && def.mr){
+    const m = mrIconTai(def);
+    return m ? { im: m, xoay: def.kind === 'weapon' } : null;
+  }
   const v = vkTranhCuaMon(def);
   if (v) return { im: v, xoay: true };
   const m = monTranh(def);
@@ -25532,7 +25707,11 @@ const ARMOR_PIECES = [
   { slot:'tay',  art:'gloves', pre:'Găng' },
   { slot:'chan', art:'boots',  pre:'Ủng' },
 ];
+// Lớp nào khai bộ giáp theo DÒNG (MR_GIAP_LINES) thì KHÔNG sinh bộ theo giai nữa — hai cách
+// cùng lúc là mỗi ô có hai họ món rơi ra, một họ không có hình.
+const MR_GIAP_LINES = window.MR_GIAP_LINES || {};
 for (const sect in HERO_SETS){
+  if (MR_GIAP_LINES[sect]) continue;
   HERO_SETS[sect].forEach((sd, band) => {
     for (const pc of ARMOR_PIECES){
       regItem({
@@ -25542,6 +25721,29 @@ for (const sect in HERO_SETS){
         lv: BAND_LV[band], tier: BAND_TIER[band],
         name: `${pc.pre} ${sd.name}`, setName: sd.name,
       });
+    }
+  });
+}
+// ── GIÁP THEO DÒNG (Spellblade): 7 dòng × 7 giai × 4 ô = 196 món ─────────────────────────
+// Dòng = bộ giáp của gói `magic-runtime` (HÌNH), giai = chỉ số (tiến trình). `style`/`tint` vẫn
+// lấy theo giai từ HERO_SETS: chúng chỉ còn phục vụ đường vẽ lùi và bảng màu viền icon.
+// Số giai La Mã cho tên — cùng lý do với bảy dòng vũ khí (xem canbang.js). Chép riêng ở đây vì
+// `GIAI_LA_MA` khai MÃI dưới kia: đọc nó lúc dựng ITEM_DB là rơi vùng chết của const.
+const MR_GIAI_LA = ['I','II','III','IV','V','VI','VII'];
+for (const sect in MR_GIAP_LINES){
+  const bo = HERO_SETS[sect] || [];
+  MR_GIAP_LINES[sect].forEach((L) => {
+    for (let band = 0; band < GIAI_MAX; band++){
+      const sd = bo[band] || bo[bo.length - 1] || {};
+      for (const pc of ARMOR_PIECES){
+        regItem({
+          id: `${sect}_${L.id}_${band}_${pc.slot}`, kind:'armor', sect, band, line: L.id, mr: L.id,
+          slot: pc.slot, art: pc.art, style: sd.style, tint: sd.tint || null, sh: sd.sh || null,
+          tintKey: `${sect}${L.id}${band}`, st: band + 1,
+          lv: BAND_LV[band], tier: BAND_TIER[band],
+          name: `${pc.pre} ${L.ten} ${MR_GIAI_LA[band] || band + 1}`, setName: L.ten,
+        });
+      }
     }
   });
 }
@@ -25633,7 +25835,37 @@ function itemLockMsg(it){
 // nên giai 1 và giai 2 rơi ra cùng một bộ đồ mang cùng một cái tên — đó là gốc của chuyện
 // "lên giai mà nhìn y hệt". Đừng gộp lại.
 function bandOfTier(t){ return clamp((t || 1) - 1, 0, GIAI_MAX - 1); }
-function itemDef(it){ return it && it.def ? ITEM_DB[it.def] : null; }
+// ── ID CŨ → ID MỚI. Spellblade đổi từ "một bộ mỗi giai + ba dòng vũ khí" sang bảy dòng giáp +
+// bảy dòng vũ khí. Món cũ trỏ vào một khoá không còn ⇒ `itemDef` trả undefined ⇒ mọi chỗ đọc
+// .name/.line/.art ngã. Nên ĐỔI chứ không XOÁ, và đổi sang dòng CÙNG HÌNH với trước: trước đây
+// hình bộ giáp/vũ khí của Spellblade đi theo GIAI (giai N → bộ thứ N của gói), nên dòng thứ N là
+// đúng cái người chơi đang nhìn thấy. Giữ nguyên giai, mức rèn, dòng phụ — mất đúng cái tên cũ.
+// Tự vá lúc đọc (không chỉ ở loadGame) vì món cũ còn nằm ở nhiều chỗ ngoài túi và ô mặc.
+const ITEM_ALIAS = {};
+for (const sect in MR_GIAP_LINES){
+  const Ls = MR_GIAP_LINES[sect];
+  for (let band = 0; band < GIAI_MAX; band++){
+    const L = Ls[clamp(band, 0, Ls.length - 1)];
+    for (const pc of ARMOR_PIECES) ITEM_ALIAS[`${sect}_${band}_${pc.slot}`] = `${sect}_${L.id}_${band}_${pc.slot}`;
+  }
+}
+{
+  const _vkMr = WEAPON_LINES.filter(L => L.sect === 'minhgiao' && L.base && L.base.mr);
+  if (_vkMr.length) for (const cu of ['songdao', 'daikiem', 'makiem'])
+    for (let band = 0; band < GIAI_MAX; band++)
+      ITEM_ALIAS[`minhgiao_${cu}_${band}`] = `minhgiao_${_vkMr[clamp(band, 0, _vkMr.length - 1)].line}_${band}`;
+}
+function itemDef(it){
+  if (!it || !it.def) return null;
+  const d = ITEM_DB[it.def];
+  if (d) return d;
+  const moi = ITEM_ALIAS[it.def];
+  if (!moi || !ITEM_DB[moi]) return undefined;
+  it.def = moi;
+  if (ITEM_DB[moi].line) it.line = ITEM_DB[moi].line;
+  it.name = (it.perfect ? 'Hoàn Hảo ' : '') + ITEM_DB[moi].name;
+  return ITEM_DB[moi];
+}
 // Gắn định nghĩa + TÊN theo danh mục. Lớp quyết định món nào rơi ra được: vũ khí và giáp đều
 // khoá lớp, nên nhặt được đồ lớp khác là chuyện cố ý (bán, hoặc ném vào Lò Hỗn Loạn).
 function assignDef(it, sect){
@@ -25882,7 +26114,11 @@ const BAG_SIZES = {
 // (Ở 2×3 hồi trước tranh còn bé là vì icon vẽ vũ khí XOAY CHÉO trong một khung vuông; nay
 // khung cao thì tranh dựng đứng và nở hết khối, nên 6 ô đã ra dáng món dài — xem veVkTranh.)
 const BAG_SIZES_LINE = {
-  kiem:[2,3], makiem:[2,3], songdao:[2,3], daikiem:[2,4], riu:[2,3], bua:[2,3], chuy:[2,3],
+  kiem:[2,3], riu:[2,3], bua:[2,3], chuy:[2,3],
+  // Spellblade — bảy dòng của gói `magic-runtime`. Tấm master dựng ĐỨNG (mũi chúc xuống), nên
+  // khung cao 2×3 là vừa; cây dài nhất (Hoả Tinh Kiếm, displayPx 128) mới lên 2×4.
+  song_dao_co_ban:[2,3], song_chuy:[2,3], song_hoa_dao:[2,3], song_kiem_dien:[2,3],
+  loi_phong_dao:[2,3], ao_anh_dao:[2,4], hoa_tinh_kiem:[2,4],
   kich:[2,4], quyentruong:[2,4], lenhtruong:[2,3], gay:[2,4],
   cungngan:[2,3], truongcung:[2,4], no:[2,3],
 };

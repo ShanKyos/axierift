@@ -147,15 +147,16 @@ const { chromium } = require('playwright');
   const fail = m => { console.log('FAIL', m); bad++; };
   if (JSON.stringify(r.moc) !== JSON.stringify([0,0,0,0,1,1,1,2,2,2,3,3]))
     fail('mốc sai — phải là 0 tới +3, 1 tại +4..6, 2 tại +7..9 (ngưỡng MU), 3 từ +10: ' + JSON.stringify(r.moc));
-  // +1..+3 CỐ Ý không đổi gì (dưới ngưỡng, đồ còn trơ) — đòi mỗi cấp đều đổi là đặt sai đề
+  // ⚠ +1..+6 NAY ĐỀU TRƠ. Viền cam +4 (`nvVienSang`) đã gỡ theo lệnh chủ dự án ("gỡ luôn viền
+  // cam đi"), ngay sau quầng sau lưng — nên thứ còn lại trên THÂN chỉ bắt đầu từ +7 (tàn lửa) và
+  // +10 (dải quét). Mệnh đề này gác cả hai chiều: dưới +7 mà đổi là viền cam mọc lại.
   for (const s of r.moiCap){
-    if (s.pl <= 3 && s.doi !== 0) fail(`+${s.pl} đã phát sáng — ngưỡng bị rò xuống dưới +4`);
-    if (s.pl >= 4 && s.doi <= 0) fail(`rèn lên +${s.pl} không đổi gì trên hình`);
+    if (s.pl <= 6 && s.doi !== 0) fail(`+${s.pl} đã đổi hình (${s.doi} điểm ảnh) — viền +4 đã gỡ mà còn sót/mọc lại`);
+    if (s.pl >= 7 && s.doi <= 0) fail(`rèn lên +${s.pl} không đổi gì trên hình`);
   }
   // Ngưỡng +7 (mốc MU) phải là một cú nhảy RÕ RỆT, so với bước thường CỦA MỐC LIỀN TRƯỚC.
   // (So với bước ở mốc 3 là sai: ở đó dải sáng quét thân chi phối, hai chế độ khác hẳn nhau
   //  nên số pixel không đem ra so trực tiếp được.)
-  if (r.nhayTai.p4 <= 0) fail('vượt +4 không đổi gì');
   // ⚠ TẠM HẠ ×3 → ×1: cú nhảy ×3 ở +7 chính LÀ quầng sau lưng, mà chủ dự án đã gỡ quầng đó
   // ("sẽ làm lại hiệu ứng +9 sau"). Còn lại ở +7 chỉ là tàn lửa bắt đầu bay — vẫn phải đổi NHIỀU
   // HƠN một bước thường, nhưng chưa thành một cú nhảy. Làm lại hiệu ứng +7..+9 xong thì kéo lại.

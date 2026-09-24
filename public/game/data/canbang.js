@@ -707,34 +707,29 @@ window.WEAPON_LINES = [
         ['Nỏ Sương Mai', {}],
         ['Nỏ Nguyệt Quế', {}],
         ['Nỏ Bạch Phượng', {}] ] },
-  // ══ Spellblade ══
-  { sect:'minhgiao', line:'songdao', slot:'vukhi', desc:'nhanh',
-    base:{ art:'weapon' },
-    t:[ ['Song Đao Thô', {}],
-        ['Song Đao Da Nung', {}],
-        ['Song Đao Tro Tàn', { motif:'lua' }],
-        ['Song Đao Lửa Dữ', { motif:'lua' }],
-        ['Song Đao Dung Nham', { motif:'lua' }],
-        ['Song Đao Long Diễm', { motif:'lua' }],
-        ['Song Đao Viêm Đế', { motif:'mach' }] ] },
-  { sect:'minhgiao', line:'daikiem', slot:'vukhi', desc:'nặng',
-    base:{ art:'weapon' },
-    t:[ ['Đại Kiếm Thô', {}],
-        ['Đại Kiếm Da Nung', {}],
-        ['Đại Kiếm Tro Tàn', { motif:'lua' }],
-        ['Đại Kiếm Lửa Dữ', { motif:'lua' }],
-        ['Đại Kiếm Dung Nham', { motif:'lua' }],
-        ['Đại Kiếm Long Diễm', { motif:'lua' }],
-        ['Đại Kiếm Viêm Đế', { motif:'mach' }] ] },
-  { sect:'minhgiao', line:'makiem', slot:'vukhi', desc:'lai phép',
-    base:{ art:'weapon' },
-    t:[ ['Ma Kiếm Thô', { motif:'runes' }],
-        ['Ma Kiếm Da Nung', { motif:'runes' }],
-        ['Ma Kiếm Tro Tàn', { motif:'mach' }],
-        ['Ma Kiếm Lửa Dữ', { motif:'mach' }],
-        ['Ma Kiếm Dung Nham', { motif:'mach' }],
-        ['Ma Kiếm Long Diễm', { motif:'lua' }],
-        ['Ma Kiếm Viêm Đế', { motif:'mach' }] ] },
+  // ══ Spellblade ══ — BẢY DÒNG, một dòng cho mỗi cây vũ khí của gói `magic-runtime`.
+  // Chủ dự án chốt: "7 dòng vũ khí và 7 lớp trang bị riêng … theo process của game, nhân vật
+  // có thể trang bị tuỳ ý". Dòng quyết định HÌNH (cây nào trên tay), giai quyết định CHỈ SỐ —
+  // nên mọi dòng rơi ra ở mọi giai, và Hoả Tinh Kiếm giai 1 là một lựa chọn hẳn hoi.
+  // Tên lấy nguyên từ gói (sẽ đổi sau); `mr` là id của cây trong manifest — `test_mrdong` đối
+  // chiếu bảng này với manifest thật, nên đừng thêm/bớt một dòng ở một bên thôi.
+  // Ba dòng cũ (songdao · daikiem · makiem) đã gỡ; save cũ đổi sang dòng CÙNG HÌNH qua
+  // `ITEM_ALIAS` trong game.js, nên không ai mất món nào.
+  ...[
+    ['song_dao_co_ban', 'Song Đao Cơ Bản', 'nhanh',            null   ],
+    ['song_chuy',       'Song Chùy',       'phá giáp',         'gai'  ],
+    ['song_hoa_dao',    'Song Hỏa Đao',    'lửa',              'lua'  ],
+    ['song_kiem_dien',  'Song Kiếm Điện',  'điện',             'set'  ],
+    ['loi_phong_dao',   'Lôi Phong Đao',   'lôi phong',        'set'  ],
+    ['ao_anh_dao',      'Ảo Ảnh Đao',      'lai phép',         'runes'],
+    ['hoa_tinh_kiem',   'Hỏa Tinh Kiếm',   'hoả tinh',         'lua'  ],
+  ].map(([id, ten, desc, motif]) => ({
+    sect:'minhgiao', line:id, slot:'vukhi', desc,
+    base:{ art:'weapon', mr:id },
+    // Tên mỗi nấc = tên gói + số giai La Mã: cùng một tên ở cả bảy giai là bảy món trùng tên
+    // trong túi (test_itemdb gác `tenTrung`), mà huy hiệu giai ở góc ô thì không có trong câu log.
+    t: ['I','II','III','IV','V','VI','VII'].map(la => [`${ten} ${la}`, motif ? { motif } : {}]),
+  })),
   // ══ Dark Lord ══
   { sect:'bug', line:'lenhtruong', slot:'vukhi', desc:'chỉ huy',
     base:{ art:'staff' },
@@ -764,6 +759,23 @@ window.WEAPON_LINES = [
         ['Kích Hắc Đế', {}],
         ['Kích Đế Vương', {}] ] },
 ];
+
+// ── GIÁP SPELLBLADE: BẢY DÒNG, một dòng cho mỗi bộ giáp của gói `magic-runtime` ─────────────
+// Cùng luật với bảy dòng vũ khí ngay trên: dòng quyết định HÌNH, giai quyết định CHỈ SỐ. Gói ở
+// chế độ `appearance-replacement` (một bộ thay CẢ thân), nên trên người hiện bộ của ô ÁO — xem
+// `mrGiapDong()` trong game.js. `id` phải trùng `armors[].id` trong manifest (test_mrdong gác).
+window.MR_GIAP_LINES = {
+  minhgiao: [
+    { id:'vai_tho',     ten:'Vải Thô' },
+    { id:'trau_xanh',   ten:'Trâu Xanh' },
+    { id:'do_dong',     ten:'Đồ Đồng' },
+    { id:'ma_thuat',    ten:'Ma Thuật' },
+    { id:'phong_vu',    ten:'Phong Vũ' },
+    { id:'loi_phong',   ten:'Lôi Phong' },
+    { id:'cuong_phong', ten:'Cuồng Phong' },
+  ],
+};
+
 
 // Cấu hình từng phó bản: 3 đợt quái (quái của map cha) → Boss → thưởng nguyên liệu nâng tầng kỹ năng
 // timeLimit (giây): học Devil Square/Blood Castle của MU Online — phó bản có đồng hồ đếm ngược,

@@ -154,19 +154,17 @@ const fs = require('fs');
   const fail = m => { console.log('FAIL', m); bad++; };
   if (res.giapDoi < 4000) fail(`mặc đủ bộ mà chỉ đổi ${res.giapDoi} px so với thân trần (cần >4000)`);
   if (res.giapDoiVien < 300) fail(`ĐƯỜNG VIỀN gần như không đổi: ${res.giapDoiVien} — bộ giáp phải đổi được BÓNG DÁNG, đó mới là thứ thấy từ xa`);
-  for (const r of res.ren)
-    if (r.doiSoVoiNacTruoc < 400) fail(`rèn lên +${r.plus} không đổi gì trên hình (${r.doiSoVoiNacTruoc} px)`);
-  // Viền sáng dựng từ chính BÓNG DÁNG khung hình, nên trên +4 nó gần như không đổi bề dày —
-  // khác hẳn bản vector cũ, nơi mỗi mốc rèn mọc thêm gai và viền phình ra thật. Đo được:
-  // +4 · 1186 → +7 · 1187 → +10 · 1117 (tụt 6% vì dải quét và tàn lửa che bớt vài điểm mép).
-  // Nên gác "viền phải ĐỦ DÀY ở mọi mốc", không gác "phải phình dần" — gác monotonic ở đây là
-  // gác một tính chất mà đường art nướng không hứa.
-  const vien = res.ren.map(r => r.vienSoVoiTran);
-  res.ren.forEach((r, i) => {
-    if (vien[i] < 600) fail(`viền sáng ở +${r.plus} quá mỏng (${vien[i]} px) — rèn cao mà nhìn từ xa không thấy`);
-  });
-  if (res.haoQuangDong < 500) fail(`hào quang +11 không nhúc nhích theo nhịp (${res.haoQuangDong} px) — thành đèn dán`);
-  if (res.mauBo < 200) fail('màu bộ giáp không nhuốm được hào quang');
+  // ⚠ Viền cam +4 và quầng sau lưng ĐÃ GỠ (chủ dự án: "gỡ luôn viền cam đi" — sẽ làm lại +9 sau).
+  // Còn lại trên thân: tàn lửa từ +7 và dải quét từ +10 — nhỏ hơn hẳn thứ đã gỡ, nên sàn 400px
+  // cũ (đặt cho viền + quầng) không còn áp được. Gác hai chiều thay vì một:
+  //   · +4 phải ĐÚNG 0 — đổi gì ở đó là viền cam mọc lại;
+  //   · +7 / +10 / +11 phải CÓ đổi — không thì cả hệ +N trên thân đã tắt câm.
+  // Hai mệnh đề "viền ≥600px" và "màu bộ nhuốm hào quang" gác đúng cái viền đã gỡ ⇒ bỏ theo.
+  for (const r of res.ren){
+    if (r.plus === 4 && r.doiSoVoiNacTruoc !== 0) fail(`+4 đổi ${r.doiSoVoiNacTruoc} px — viền cam đã gỡ mà còn/mọc lại`);
+    if (r.plus >= 7 && r.doiSoVoiNacTruoc < 50) fail(`rèn lên +${r.plus} không đổi gì trên hình (${r.doiSoVoiNacTruoc} px)`);
+  }
+  if (res.haoQuangDong < 150) fail(`hiệu ứng +11 không nhúc nhích theo nhịp (${res.haoQuangDong} px) — thành đèn dán`);
   if (!res.gvNull_khiChuaCoPlayer) fail('crash khi chưa có player (màn chọn lớp): ' + res.crashMsg);
   if (res.heroTier_tranTrui !== 1) fail(`cởi hết đồ mà heroTier vẫn ${res.heroTier_tranTrui}, phải về 1`);
   if (res.heroTier_theoDo !== res.giaiMax) fail(`mặc full giai đỉnh mà heroTier chỉ ${res.heroTier_theoDo}/${res.giaiMax}`);
