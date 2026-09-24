@@ -106,9 +106,9 @@ lớp nhân vật là kẻ hộ tống / nhập vào Axie ngoài thành"). Công
 | | cũ | nay (`THU_CUNG = true`) |
 |---|---|---|
 | ai đứng ở `player.x/y` | con Axie | **nhân vật** (dời 0) |
-| cỡ nhân vật | 0,72 · 0,90 · 1,00 tuỳ trạng thái | **`NV_CHINH_CO` 1,30**, cố định |
+| cỡ nhân vật | 0,72 · 0,90 · 1,00 tuỳ trạng thái | **`NV_CHINH_CO` 1,65**, cố định (1,30 thì chủ dự án thấy *"chưa to ra"* — trong thành bản cũ đã ở 1,00) |
 | ngoài thành | nhân vật NHẬP vào Axie | **nhân vật luôn hiện** — `avaNhap()` trả `false` |
-| con Axie | `AVA_TY` 0,95 / `AVA_TRAN` 1,18 | **`PET_TY` 0,50 / `PET_TRAN` 0,62**, lùi sau lưng (`PET_SAU` 62 · `PET_BEN` 40) |
+| con Axie | `AVA_TY` 0,95 / `AVA_TRAN` 1,18 | **`PET_TY` 0,46 / `PET_TRAN` 0,62**, lùi sau lưng (`PET_SAU` 78 · `PET_BEN` 48) |
 | Axie ra đòn | ngoài thành ra đòn của lớp | **không** — khối GỒNG như trong thành |
 | bay | chỉ lớp nhân vật bay, bóng giữ cỡ | nhân vật bay, **bóng co theo** (`bayKNen = bayK`); pet đứng đất |
 

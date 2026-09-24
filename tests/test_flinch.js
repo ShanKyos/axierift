@@ -7,8 +7,16 @@ const { chromium } = require('playwright');
   await p.goto('http://localhost:8853/index.html');
   await p.waitForFunction(() => window.__gameReady).catch(()=>{});
   await p.waitForTimeout(700);
-  const r = await p.evaluate(() => {
+  await p.evaluate(() => {
     window.TEST_MODE = true; startGame('thieulam', null);
+    player.x = MAP.w/2; player.y = MAP.h/2; player.face = 0;
+    mobs.length = 0; effects.length = 0;
+  });
+  // ⚠ CHỜ ART VỀ RỒI MỚI CHỤP. Từ đợt cấu trúc pet (THU_CUNG) thứ đứng ở gốc là NHÂN VẬT, mà
+  // bảng khung của nhân vật nạp lười — chụp ngay sau startGame là chụp một ô chưa có gì, và bài
+  // đọc ra "trúng đòn không đổi hình". Trước đây con Axie đứng ở gốc, và nó đã nạp sẵn ở màn tải.
+  await p.waitForTimeout(2500);
+  const r = await p.evaluate(() => {
     player.x = MAP.w/2; player.y = MAP.h/2; player.face = 0;
     mobs.length = 0; effects.length = 0;
     const grab = () => {

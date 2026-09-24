@@ -6212,13 +6212,13 @@ const AVA_THANH_BEN = 88;
 // ⚠ Tắt `THU_CUNG` là về nguyên hình dạng cũ (Axie thân chính, người nhập vào ngoài thành).
 // `let`, không `const`: các bài kiểm của hình dạng CŨ tắt nó đi để tiếp tục gác luật cũ.
 let THU_CUNG = true;
-const NV_CHINH_CO = 1.30;   // nhân vật to lên bao nhiêu so với cỡ gốc
-const PET_SAU = 62;          // pet lùi sau lưng bao nhiêu (pixel thế giới)
-const PET_BEN = 40;          // …và lệch sang bên
+const NV_CHINH_CO = 1.65;   // nhân vật to lên bao nhiêu so với cỡ gốc (1,30 chủ dự án thấy "chưa to ra")
+const PET_SAU = 78;          // pet lùi sau lưng bao nhiêu (pixel thế giới)
+const PET_BEN = 48;          // …và lệch sang bên
 const PET_TRE = 5.5;         // độ bám: lớn = bám sát, nhỏ = trôi lề mề
 const AVA_TY  = 0.95;   // thân Axie cao mấy phần thân người… (hình dạng cũ)
 const AVA_TRAN = 1.18;  // …và hộp vẽ ra, chiều nào cũng vậy, không quá ngần này lần
-const PET_TY   = 0.50;  // cỡ pet — cùng hai luật, khi `THU_CUNG` bật
+const PET_TY   = 0.46;  // cỡ pet — cùng hai luật, khi `THU_CUNG` bật
 const PET_TRAN = 0.62;
 function avaCo(id){
   const A = CHI_ANH.o[id];
