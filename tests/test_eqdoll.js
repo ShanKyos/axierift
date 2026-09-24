@@ -41,8 +41,9 @@ const pass = m => console.log('PASS ' + m);
   // là lưới ô thuần, mỗi món một ô đủ lớn để NHÌN RA nó. Bỏ tấm chibi không mất gì: bảng Nhân
   // Vật (phím C) vẫn hiện đúng hình đó, và hai bảng nay mở được cùng lúc.
   // Chủ dự án chốt chỗ: ÁO ở chính giữa với vũ khí kế bên, HAI NHẪN nằm giữa tay và chân.
+  // Ô QUẦN (quay lại 2026-09-24) nằm ngay dưới áo.
   const MONG = [['pet','non','canh'], [null,'daychuyen',null],
-                ['vukhi','ao','vukhi2'], ['tay',['nhan1','nhan2'],'chan']];
+                ['vukhi','ao','vukhi2'], [null,'quan',null], ['tay',['nhan1','nhan2'],'chan']];
   if (JSON.stringify(r1.bang) !== JSON.stringify(MONG))
     fail('EQUIP_DOLL sai bố cục: ' + JSON.stringify(r1.bang));
   else pass('EQUIP_DOLL đúng bố cục lưới MU');
@@ -119,7 +120,7 @@ const pass = m => console.log('PASS ' + m);
   console.log('5.', JSON.stringify(r5));
   // CHÍN ô, không phải mười: ô 'aochoang' đã gỡ (trùng vai với Cánh). Con số này đi theo
   // EQUIP_DOLL — sửa bảng đó thì sửa luôn ở đây, đừng nới lỏng phép so thành `>=`.
-  if (r5.soO !== 11 || r5.oTrong !== 11) fail(`chưa mặc gì: ${r5.soO} ô / ${r5.oTrong} ô trống (mong 11/11)`);
+  if (r5.soO !== 12 || r5.oTrong !== 12) fail(`chưa mặc gì: ${r5.soO} ô / ${r5.oTrong} ô trống (mong 12/12)`);
   else pass('chưa mặc gì: đủ 11 ô trống, mỗi ô có nhãn tên vị trí');
   // Đối chiếu với DANH SÁCH nhãn, không đoán theo dấu tiếng Việt: "Tay" và "Pet" không có dấu
   // nào cả nên phép đoán đó luôn báo lẫn ngôn ngữ dù bảng hoàn toàn nhất quán.

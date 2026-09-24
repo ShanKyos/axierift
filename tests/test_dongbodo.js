@@ -113,7 +113,7 @@ const cho = ms => new Promise(r => setTimeout(r, ms));
   console.log('1 · A thấy bộ đồ của B:', JSON.stringify(thay));
   if (!thay) fail('A không thấy B — kiểm lại Giai đoạn 1 trước khi đọc tiếp');
   else {
-    if (thay.n !== 4) fail(`A thấy B mặc ${thay.n}/4 ô giáp`);
+    if (thay.n !== 5) fail(`A thấy B mặc ${thay.n}/5 ô giáp`);
     if (!(thay.t > 1)) fail(`bậc giáp hiệu dụng của B đọc ra ${thay.t} — bộ đồ không qua được dây`);
     if (!(thay.plus > 5)) fail(`mức rèn của B đọc ra +${thay.plus}, B đang full +11`);
     if (thay.rarity !== 4) fail(`mức quý đọc ra ${thay.rarity}, B đang full Hoàn Hảo (cần 4)`);
@@ -297,7 +297,7 @@ const cho = ms => new Promise(r => setTimeout(r, ms));
   // Bản đầu của `locTrangBi` trả `null` khi mô tả rỗng rồi máy chủ bỏ qua, nên cởi hết đồ ra là
   // mọi người vẫn thấy ta mặc nguyên bộ cũ — và chính người cởi là người duy nhất không thấy.
   await B.p.evaluate(() => {
-    for (const k of ['non', 'ao', 'tay', 'chan', 'vukhi', 'canh']) delete player.equip[k];
+    for (const k of [...HERO_ARMOR_SLOTS, 'vukhi', 'canh']) delete player.equip[k];
     calcDerived();
   });
   await cho(1200);

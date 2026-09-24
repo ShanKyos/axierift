@@ -231,7 +231,7 @@ function phatSan(goi){
  * khác: một `def` dài 2 MB hay một mảng 10.000 phần tử là một client làm treo cả phòng. Đây vẫn
  * là chống RÁC, không phải chống gian lận — ai sửa `tier` trong devtools thì bóng của họ lấp
  * lánh hơn, và ở giai đoạn này đó là chuyện chấp nhận được (xem chú thích đầu tệp).             */
-const O_DO = ['non', 'ao', 'tay', 'chan', 'vukhi'];
+const O_DO = ['non', 'ao', 'tay', 'quan', 'chan', 'vukhi'];
 // ⚠ MÔ TẢ RỖNG LÀ MỘT CÂU TRẢ LỜI, KHÔNG PHẢI MỘT CÂU HỎI HỎNG. Bản đầu trả `null` khi không
 // nhận ra ô nào rồi bên trên bỏ qua — nên THÁO HẾT ĐỒ RA là máy chủ giữ nguyên bộ cũ và mọi
 // người vẫn thấy ta mặc đủ giáp. Không lỗi nào báo, và chính người tháo đồ là người duy nhất

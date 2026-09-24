@@ -54,7 +54,7 @@ const PORT = process.argv[2] || '8853';
     return { giap: giap.length, vk: vk.length, roiAo: roi.ao.size, roiVk: roi.vukhi.size,
              khongDong: giap.filter(i => !ITEM_DB[i].mr).length + vk.filter(i => !ITEM_DB[i].mr).length };
   });
-  if (r2.giap !== 7 * 7 * 4) fail(`Spellblade có ${r2.giap} món giáp, cần 196 (7 dòng × 7 giai × 4 ô)`);
+  if (r2.giap !== 7 * 7 * 5) fail(`Spellblade có ${r2.giap} món giáp, cần 245 (7 dòng × 7 giai × 5 ô)`);
   if (r2.vk !== 7 * 7) fail(`Spellblade có ${r2.vk} vũ khí, cần 49 (7 dòng × 7 giai)`);
   if (r2.khongDong) fail(`${r2.khongDong} món Spellblade không mang \`mr\` — chúng sẽ không có hình`);
   if (r2.roiAo !== 7 || r2.roiVk !== 7) fail(`giai 4 chỉ rơi ra ${r2.roiAo} dòng áo / ${r2.roiVk} dòng vũ khí, cần 7/7`);

@@ -15,6 +15,7 @@ const { chromium } = require('playwright');
   const r = await p.evaluate(() => {
     const o = {}, ids = Object.keys(ITEM_DB);
     o.tong = ids.length;
+    o.soOGiap = HERO_ARMOR_SLOTS.length;   // năm ô từ khi Quần quay lại — đọc từ game, đừng chép
     o.theoLoai = {};
     for (const id of ids){ const d = ITEM_DB[id]; o.theoLoai[d.kind] = (o.theoLoai[d.kind]||0)+1; }
     // Mỗi món phải VẼ RA ĐƯỢC. Còn "phải khác nhau" thì nay chỉ đòi ở món CÓ ART THẬT:
@@ -101,7 +102,7 @@ const { chromium } = require('playwright');
       };
     }
     o.giaiMax = GIAI_MAX;
-    o.canGiap = Object.values(o.theoLop).reduce((t, x) => t + x.soDongGiap * GIAI_MAX * 4, 0);
+    o.canGiap = Object.values(o.theoLop).reduce((t, x) => t + x.soDongGiap * GIAI_MAX * HERO_ARMOR_SLOTS.length, 0);
     o.canVk = Object.values(o.theoLop).reduce((t, x) => t + x.soDong * GIAI_MAX, 0);
     o.phuKien = ids.filter(i => ITEM_DB[i].kind === 'acc').length;
     o.phuKienKhoaLop = ids.filter(i => ITEM_DB[i].kind === 'acc' && ITEM_DB[i].sect).length;
@@ -159,8 +160,8 @@ const { chromium } = require('playwright');
     const _can = r.theoLop[sk].soDong * r.giaiMax;
     if (r.theoLop[sk].vukhi !== _can)
       fail(`${sk}: ${r.theoLop[sk].vukhi} vũ khí, cần ${_can} (${r.theoLop[sk].soDong} dòng × ${r.giaiMax} giai)`);
-    const _cg = r.theoLop[sk].soDongGiap * r.giaiMax * 4;
-    if (r.theoLop[sk].giap !== _cg) fail(`${sk}: ${r.theoLop[sk].giap} giáp, cần ${_cg} (${r.theoLop[sk].soDongGiap} dòng × ${r.giaiMax} giai × 4 ô)`);
+    const _cg = r.theoLop[sk].soDongGiap * r.giaiMax * r.soOGiap;
+    if (r.theoLop[sk].giap !== _cg) fail(`${sk}: ${r.theoLop[sk].giap} giáp, cần ${_cg} (${r.theoLop[sk].soDongGiap} dòng × ${r.giaiMax} giai × ${r.soOGiap} ô)`);
   }
   if (r.phuKienKhoaLop !== 0) fail('phụ kiện bị khoá lớp — dây chuyền và nhẫn phải dùng chung');
   if (!r.dk_mackiem) fail('Dark Knight không mặc được kiếm của chính mình');

@@ -5552,6 +5552,58 @@ vết sẹo `ISO_NEO`.*
 Bên lề: nhờ ① mà dải nướng của Dark Wizard được cập nhật lần đầu kể từ khi lớp ấy đổi sang `dwsl1`
 — nó đang là ảnh chụp của một bộ art đã gỡ.
 
+### 🎯 HAI GÓI SPELLBLADE — MỖI GÓI MỘT CHỖ ĐỨNG (chủ dự án chốt 2026-09-24, nguyên văn)
+
+*"Option 1 chính là hình nhân vật đang ở trong thành, mang wing và cánh đi lại. Option 2 sẽ thể
+hiện character đang ở ngoài thành, mang kiếm ra skill và đi giết quái vật."*
+
+| gói | chỗ | nhân vật làm gì | vũ khí |
+|---|---|---|---|
+| **`town_v1`** (gói 1) | **TRONG THÀNH** / khu an toàn | **ĐI BỘ** (đứng · đi · chạy), **đeo cánh** | **bắt chéo sau lưng** (`backSockets`) |
+| **`field_v2`** (gói 2) | **NGOÀI THÀNH** / bãi quái | **BAY**, ra chiêu (Fire Slash · Light Slash · Dash), trúng đòn, chết | **cầm hai tay** (`weaponSockets`) |
+
+- ⚠ **Luật "Spellblade LUÔN BAY" (`_bayLuon`) chỉ còn đúng NGOÀI thành.** Trong thành nhân vật
+  đi trên đất bằng gói 1, cánh vẫn đeo trên lưng nhưng không cất cánh.
+- ⚠ **Cửa "trong/ngoài thành" dùng CHUNG luật đang có** — map CÓ BÃI QUÁI là ngoài thành (xem
+  `avaNhap`: `safe` một mình không đủ, Outskirts khai `safe` mà là bãi săn 8 bãi).
+- Đồ RƠI luôn **+0**; mức rèn chỉ tới từ ngọc (Chúc Phúc +6 · Linh Hồn +9). Bản vẽ +9/+10/+11 của
+  vũ khí trong gói là **chất liệu theo mức rèn đang có**, không phải thứ rơi ra.
+
+**Đã thi công** (`mrNapGoi` · `mrVeThanh` · `mrVeNgoai` · `mrDungLop` · `mrVeSocket` trong `game.js`):
+
+| | |
+|---|---|
+| mỗi ô vẽ lớp của **bộ đeo ở ô đó** | `gv.mrO` = `mrODong(equip)` · `MR_O_PHAN` (non→head · ao→chest · tay→gloves · quan→pants · chan→boots) |
+| thứ tự lớp | đọc thẳng `renderOrder` của từng manifest |
+| khối vẽ ngoài thành | `f` bay đứng · `fm` bay đi · `fh` trúng đòn · `fd` chết · `gl` đòn thường = Light Slash · `g` niệm chiêu = Fire Slash · `gd` chiêu `thrust` = Dash |
+| vật liệu vũ khí | `mrVkBan(vk, plus)` → `+0 · +9 · +10 · +11` |
+| `skill_vfx` của gói | chỉ `gl`/`gd` — chiêu (`g`) đã có tranh riêng trong `CHIEU_TRANH` |
+| thiếu gói | `mrVe` lui về đường cũ (một bộ thay cả thân), không vẽ trống |
+
+- ⚠ **CỠ VŨ KHÍ CẦM TAY Ở GÓI NGOÀI LÀ SỐ ĐO** (`MR_NGOAI_VK_CO` = 122/133 bay · 126/133 đánh).
+  `weapon_at` sống trong `scripts/build_magic_flight_8dir_v3.py` — **tệp không có trong nhánh** —
+  nên khớp tấm preview +11 của gói bằng cách quét cỡ: IoU **đúng 1,000** ở cả bảy state. Dùng
+  thẳng `heldDisplayPx` thì chỉ ~0,84. Gói Thành thì `transform_weapon` có sẵn, khớp IoU 1,000.
+- ⚠ **Nợ ART, không phải mã:** ở ba khung cuối của `flyDeath` đôi cánh bị cắt ngang ở mép ô (nằm
+  sẵn trong atlas của gói).
+- Gác: **`tests/test_goimr.js`** (6 mệnh đề, bốn phép thử ngược đều đỏ). ⚠ Lấy "gói nào vẽ" bằng
+  cách gọi thẳng `mrVe` với khối drawPlayer vừa chọn — sprite nằm trong bộ đệm nên render lần hai
+  không gọi lại `mrVe`, và cờ đọc ra `null` (đã dẫm).
+
+### 👖 Ô QUẦN QUAY LẠI — NĂM Ô GIÁP CHO CẢ NĂM LỚP (chủ dự án chốt 2026-09-24)
+
+Nón · Áo · Tay · **Quần** · Chân — đúng kiểu MU, và khớp năm phần của gói piece_layers. Áp cho cả
+năm lớp (bốn lớp kia chưa có art quần ⇒ ô Quần hiện ô chờ art, vẫn cộng chỉ số).
+
+- **Sinh Lực CHIA LẠI, không cộng thêm:** 0,30/0,40/0,30 → nón 0,22 · áo 0,32 · tay 0,22 · quần
+  0,24 — tổng vẫn 1,00, đủ bộ giai nào thì máu y như cũ.
+- **Trần Giảm Sát Thương GIỮ 24%** dù số ô 6 → 7 (`DMGRED_TRAN` không còn nhân theo số ô).
+- `EQUIP_DOLL`: Quần ngay dưới Áo; luật cũ *hai nhẫn nằm giữa tay và chân* giữ nguyên.
+- `migrateBoQuan()` (đổi đồ quần cũ thành đồ chân) **ĐÃ GỠ** — giữ nó là đồ Quần mới bị đổi mất.
+- Danh sách ô sống ở NHIỀU chỗ (`SLOTS` · `ARMOR_SLOTS` · `HERO_ARMOR_SLOTS` · `DROP_O_TRANGBI` ·
+  `NET_O_DO` + `O_DO` máy chủ · `DEMO_O` · `BAG_SIZES` · `ARMOR_PIECES`). Thêm/bớt ô là sửa đủ.
+- Đồ **RƠI luôn +0** — cú "rớt thẳng +9" (`DROP_PLUS9`) đã gỡ hẳn; `test_droprate` gác mọi nguồn.
+
 ### 🗄 ART CỦA GÓI LÀ **WEBP THƯỜNG TRONG GIT** — không PNG, không Git LFS (chủ dự án chốt 2026-09-24)
 
 Nhánh `codex/spellblade-field-package-v2` (gói Thành `town_v1` + gói Ngoài map `field_v2`) đẩy

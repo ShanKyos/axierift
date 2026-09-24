@@ -71,18 +71,14 @@ const { chromium } = require('playwright');
     o.tiLePhuKien = DROP_PHUKIEN;
     o.phuKienMoiGio = +(DROP_PHUKIEN * NHIP_CAY).toFixed(1);
 
-    // ── CÚ RỚT THẲNG +9 ──
-    // 0,1% trên món đã rơi, CHỈ đường quái. Rương phó bản, Box Kundun và tiệm phải bằng 0.
-    const đếmP9 = (srcK, n, opts) => { let c = 0;
-      for (let i = 0; i < n; i++) if (genItem(50, 0, srcK, opts).plus >= DROP_PLUS9_MUC) c++;
-      return +(c / n * 100).toFixed(3); };
-    o.p9_quai   = đếmP9('mob', 400000);
-    o.p9_boss   = đếmP9('thuve', 400000);
-    o.p9_ruong  = đếmP9('box5', 100000);
-    o.p9_khongNguon = đếmP9(null, 100000);           // tiệm, Lò Hỗn Loạn, đồ tặng
-    o.p9_mucRen = DROP_PLUS9_MUC;
-    // ép tỉ lệ: mức rèn phải đúng DROP_PLUS9_MUC, không phải một con số khác
-    o.p9_mucThucTe = (() => { const it = genItem(50, 0, 'mob', { plus9: 1 }); return it.plus; })();
+    // ── ĐỒ RƠI LUÔN +0 ── (chủ dự án chốt 2026-09-24: mức rèn chỉ tới từ NGỌC)
+    // Đếm MỌI mức rèn khác 0, không chỉ +9: một nhánh lạ rơi ra +3 cũng là phá luật.
+    const đếmRen = (srcK, n) => { let c = 0;
+      for (let i = 0; i < n; i++) if ((genItem(50, 0, srcK).plus || 0) !== 0) c++;
+      return c; };
+    o.ren = { quai: đếmRen('mob', 100000), boss: đếmRen('thuve', 50000),
+              ruong: đếmRen('box5', 20000), khongNguon: đếmRen(null, 20000) };
+    o.conHang = typeof DROP_PLUS9 !== 'undefined';
 
     // ── CHỐNG ĐỠ: dòng CỨNG trên MỌI món, mọi đường sinh đồ ──
     // Ba điều: (a) có trên 100% món, kể cả phụ kiện; (b) CỨNG — cùng giai thì cùng con số,
@@ -218,12 +214,10 @@ const { chromium } = require('playwright');
     if (Math.abs(co - can) > can * 0.25)
       fail(`${k}: ${co} viên/giờ ở dải giữa, đích ${can} (lệch quá 25%)`);
   }
-  // ── CÚ RỚT THẲNG +9 ──
-  for (const [ten, v] of [['quái thường', r.p9_quai], ['boss', r.p9_boss]])
-    if (Math.abs(v - 0.1) > 0.045) fail(`rớt thẳng +9 từ ${ten}: ${v}%, đích 0,1%`);
-  if (r.p9_ruong !== 0) fail(`Rương Boss Săn ra ${r.p9_ruong}% món rèn sẵn — chỉ đường QUÁI mới có`);
-  if (r.p9_khongNguon !== 0) fail(`đồ không từ quái (tiệm/Lò/tặng) ra ${r.p9_khongNguon}% món rèn sẵn`);
-  if (r.p9_mucThucTe !== r.p9_mucRen) fail(`ép tỉ lệ ra món +${r.p9_mucThucTe}, phải +${r.p9_mucRen}`);
+  // ── ĐỒ RƠI LUÔN +0 ──
+  for (const [k, v] of Object.entries(r.ren))
+    if (v !== 0) fail(`nguồn ${k} ra ${v} món có mức rèn khác +0 — đồ rơi phải luôn +0, rèn bằng ngọc`);
+  if (r.conHang) fail('hằng DROP_PLUS9 còn sống — cú "rớt thẳng +9" phải gỡ hẳn');
 
   // ── CHỐNG ĐỠ ──
   for (const [ten, c] of [['trang bị', r.cd_trangBi], ['phụ kiện', r.cd_phuKien]]){
@@ -246,7 +240,7 @@ const { chromium } = require('playwright');
     fail(`dòng Sát Thương Tối Đa ra các giá trị ${r.van_giaTri.join(',')}, phải trải đủ 1–5`);
 
   // ── PHỤ KIỆN ──
-  if (r.oTrangBi.join(',') !== 'ao,chan,non,tay,vukhi')
+  if (r.oTrangBi.join(',') !== 'ao,chan,non,quan,tay,vukhi')
     fail(`bể ô TRANG BỊ sai: ${r.oTrangBi.join(',')} — dây chuyền/nhẫn lọt vào là 1% thành vô nghĩa`);
   if (r.oPhuKien.join(',') !== 'daychuyen,nhan1,nhan2')
     fail(`bể ô PHỤ KIỆN sai: ${r.oPhuKien.join(',')}`);
@@ -281,9 +275,9 @@ const { chromium } = require('playwright');
   if (tr.moiMon !== 4) fail(`Giảm Sát Thương mỗi món ${tr.moiMon}%, chủ dự án chốt 4%`);
   if (tr.soO !== tr.oGiap.length)
     fail(`DMGRED_SO_O = ${tr.soO} nhưng ARMOR_SLOTS có ${tr.oGiap.length} ô (${tr.oGiap.join(',')}) — số viết tay đã lệch`);
-  if (tr.oGiap.join(',') !== 'ao,chan,nhan1,nhan2,non,tay')
-    fail(`bể ô mang Giảm Sát Thương sai: ${tr.oGiap.join(',')} — phải là nón/áo/tay/chân/2 nhẫn`);
-  if (tr.tran !== 24) fail(`trần tổng ${tr.tran}%, phải là 4 × 6 = 24%`);
+  if (tr.oGiap.join(',') !== 'ao,chan,nhan1,nhan2,non,quan,tay')
+    fail(`bể ô mang Giảm Sát Thương sai: ${tr.oGiap.join(',')} — phải là nón/áo/tay/quần/chân/2 nhẫn`);
+  if (tr.tran !== 24) fail(`trần tổng ${tr.tran}%, phải giữ 24% (chủ dự án chốt) dù đã thêm ô Quần`);
   if (tr.doDuoc > tr.tran + 1e-9)
     fail(`nhồi 6 món +9 ra ${tr.doDuoc}% giảm sát thương — vượt trần ${tr.tran}%, calcDerived không chặn`);
   if (tr.doDuoc < tr.tran - 1e-9)
