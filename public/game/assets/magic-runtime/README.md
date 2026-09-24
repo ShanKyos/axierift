@@ -1,5 +1,14 @@
 # Magic modular runtime v1
 
+> **Storage: plain WebP in git — never PNG, never Git LFS.** Production is a VPS that runs
+> `git reset --hard` every 2 minutes without `git-lfs`, so an LFS file ships as a 130-byte text
+> pointer and the art silently disappears. The build scripts in `scripts/` export PNG; after every
+> bake run `python3 tools/magic/sang_webp.py` (per file it keeps the smaller of lossless and
+> q90 + lossless alpha, re-decodes to verify alpha is bit-identical, and rewrites every `.png`
+> path in the manifests). `tests/test_khonglfs.js` fails on any LFS pointer, any PNG left in this
+> folder, or any manifest path that points at a missing file. Bake experiments outside the repo:
+> every re-committed atlas is a full new copy in git history forever.
+
 This folder is the canonical runtime pack for the Magic character prototype.
 
 ## Runtime contract
@@ -22,7 +31,7 @@ Render in this order:
 4. a small palm patch from the selected appearance (the handle looks enclosed by the hand)
 5. optional skill VFX
 
-Armor never contains weapon pixels. Each weapon exists once in `weapons/*-master.png` and both hands reuse it through `sockets.json`. Therefore any of the seven armor appearances can use any of the seven weapons without a new combined sheet.
+Armor never contains weapon pixels. Each weapon exists once in `weapons/*-master.webp` and both hands reuse it through `sockets.json`. Therefore any of the seven armor appearances can use any of the seven weapons without a new combined sheet.
 
 The production packages use `armorMode: piece_layers`. Each armor state is
 split into `head`, `chest`, `gloves`, `pants`, and `boots` atlases. Magic has no
@@ -44,7 +53,7 @@ All paths, display sizes, labels, FPS values and the row order are authoritative
 - 8 frames at `175 ms/frame` for a deliberately slow wing beat.
 - Two interchangeable back layers: Wing 1 DW and the project-specific Wing 1 MG variant.
 - Wing hinge at the upper shoulder line; the wing span stays larger than the body and does not trail below the hips.
-- The Ma Thuật body, dual Ảo Ảnh Đao, palm-cover layer and both wing types remain separate PNG sheets.
+- The Ma Thuật body, dual Ảo Ảnh Đao, palm-cover layer and both wing types remain separate WebP sheets.
 - Render order: `wing_back -> body_armor -> weapon_left_right -> hand_grip_front -> skill_vfx`.
 
 This is a `south` review slice, not a claimed eight-direction flight atlas. Ground movement with wings continues to use the regular Idle/Walk/Run atlases; true flight uses this separate pose family.

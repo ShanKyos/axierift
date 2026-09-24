@@ -71,7 +71,8 @@ sources. New armor, wing, weapon and VFX layers must align to this skeleton.
 
 Package 1 and Package 2 each ship with:
 
-- separate PNG atlases for every runtime layer;
+- separate WebP atlases for every runtime layer (export PNG, then run
+  `tools/magic/sang_webp.py`; never commit PNG or Git LFS pointers here);
 - one authoritative JSON manifest;
 - socket timelines and per-direction depth values;
 - contact sheets and animated review GIFs;

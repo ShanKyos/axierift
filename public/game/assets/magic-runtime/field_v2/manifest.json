@@ -112,67 +112,67 @@
   ],
   "files": {
     "bodyBase": {
-      "flyIdle": "body_base/flyIdle.png",
-      "flyMove": "body_base/flyMove.png",
-      "flyHit": "body_base/flyHit.png",
-      "flyDeath": "body_base/flyDeath.png",
-      "flyAttackFireSlash": "body_base/flyAttackFireSlash.png",
-      "flyAttackLightSlash": "body_base/flyAttackLightSlash.png",
-      "flyAttackDash": "body_base/flyAttackDash.png"
+      "flyIdle": "body_base/flyIdle.webp",
+      "flyMove": "body_base/flyMove.webp",
+      "flyHit": "body_base/flyHit.webp",
+      "flyDeath": "body_base/flyDeath.webp",
+      "flyAttackFireSlash": "body_base/flyAttackFireSlash.webp",
+      "flyAttackLightSlash": "body_base/flyAttackLightSlash.webp",
+      "flyAttackDash": "body_base/flyAttackDash.webp"
     },
     "wingFar": {
-      "flyIdle": "wing/flyIdle-far.png",
-      "flyMove": "wing/flyMove-far.png",
-      "flyHit": "wing/flyHit-far.png",
-      "flyDeath": "wing/flyDeath-far.png",
-      "flyAttackFireSlash": "wing/flyAttackFireSlash-far.png",
-      "flyAttackLightSlash": "wing/flyAttackLightSlash-far.png",
-      "flyAttackDash": "wing/flyAttackDash-far.png"
+      "flyIdle": "wing/flyIdle-far.webp",
+      "flyMove": "wing/flyMove-far.webp",
+      "flyHit": "wing/flyHit-far.webp",
+      "flyDeath": "wing/flyDeath-far.webp",
+      "flyAttackFireSlash": "wing/flyAttackFireSlash-far.webp",
+      "flyAttackLightSlash": "wing/flyAttackLightSlash-far.webp",
+      "flyAttackDash": "wing/flyAttackDash-far.webp"
     },
     "wingClasp": {
-      "flyIdle": "wing/flyIdle-clasp.png",
-      "flyMove": "wing/flyMove-clasp.png",
-      "flyHit": "wing/flyHit-clasp.png",
-      "flyDeath": "wing/flyDeath-clasp.png",
-      "flyAttackFireSlash": "wing/flyAttackFireSlash-clasp.png",
-      "flyAttackLightSlash": "wing/flyAttackLightSlash-clasp.png",
-      "flyAttackDash": "wing/flyAttackDash-clasp.png"
+      "flyIdle": "wing/flyIdle-clasp.webp",
+      "flyMove": "wing/flyMove-clasp.webp",
+      "flyHit": "wing/flyHit-clasp.webp",
+      "flyDeath": "wing/flyDeath-clasp.webp",
+      "flyAttackFireSlash": "wing/flyAttackFireSlash-clasp.webp",
+      "flyAttackLightSlash": "wing/flyAttackLightSlash-clasp.webp",
+      "flyAttackDash": "wing/flyAttackDash-clasp.webp"
     },
     "weaponFarPreviewPlus11": {
-      "flyIdle": "weapon_preview/flyIdle-far.png",
-      "flyMove": "weapon_preview/flyMove-far.png",
-      "flyHit": "weapon_preview/flyHit-far.png",
-      "flyDeath": "weapon_preview/flyDeath-far.png",
-      "flyAttackFireSlash": "weapon_preview/flyAttackFireSlash-far.png",
-      "flyAttackLightSlash": "weapon_preview/flyAttackLightSlash-far.png",
-      "flyAttackDash": "weapon_preview/flyAttackDash-far.png"
+      "flyIdle": "weapon_preview/flyIdle-far.webp",
+      "flyMove": "weapon_preview/flyMove-far.webp",
+      "flyHit": "weapon_preview/flyHit-far.webp",
+      "flyDeath": "weapon_preview/flyDeath-far.webp",
+      "flyAttackFireSlash": "weapon_preview/flyAttackFireSlash-far.webp",
+      "flyAttackLightSlash": "weapon_preview/flyAttackLightSlash-far.webp",
+      "flyAttackDash": "weapon_preview/flyAttackDash-far.webp"
     },
     "weaponNearPreviewPlus11": {
-      "flyIdle": "weapon_preview/flyIdle-near.png",
-      "flyMove": "weapon_preview/flyMove-near.png",
-      "flyHit": "weapon_preview/flyHit-near.png",
-      "flyDeath": "weapon_preview/flyDeath-near.png",
-      "flyAttackFireSlash": "weapon_preview/flyAttackFireSlash-near.png",
-      "flyAttackLightSlash": "weapon_preview/flyAttackLightSlash-near.png",
-      "flyAttackDash": "weapon_preview/flyAttackDash-near.png"
+      "flyIdle": "weapon_preview/flyIdle-near.webp",
+      "flyMove": "weapon_preview/flyMove-near.webp",
+      "flyHit": "weapon_preview/flyHit-near.webp",
+      "flyDeath": "weapon_preview/flyDeath-near.webp",
+      "flyAttackFireSlash": "weapon_preview/flyAttackFireSlash-near.webp",
+      "flyAttackLightSlash": "weapon_preview/flyAttackLightSlash-near.webp",
+      "flyAttackDash": "weapon_preview/flyAttackDash-near.webp"
     },
     "handGrip": {
-      "flyIdle": "hand_grip/flyIdle.png",
-      "flyMove": "hand_grip/flyMove.png",
-      "flyHit": "hand_grip/flyHit.png",
-      "flyDeath": "hand_grip/flyDeath.png",
-      "flyAttackFireSlash": "hand_grip/flyAttackFireSlash.png",
-      "flyAttackLightSlash": "hand_grip/flyAttackLightSlash.png",
-      "flyAttackDash": "hand_grip/flyAttackDash.png"
+      "flyIdle": "hand_grip/flyIdle.webp",
+      "flyMove": "hand_grip/flyMove.webp",
+      "flyHit": "hand_grip/flyHit.webp",
+      "flyDeath": "hand_grip/flyDeath.webp",
+      "flyAttackFireSlash": "hand_grip/flyAttackFireSlash.webp",
+      "flyAttackLightSlash": "hand_grip/flyAttackLightSlash.webp",
+      "flyAttackDash": "hand_grip/flyAttackDash.webp"
     },
     "skillVfx": {
-      "flyIdle": "vfx/flyIdle.png",
-      "flyMove": "vfx/flyMove.png",
-      "flyHit": "vfx/flyHit.png",
-      "flyDeath": "vfx/flyDeath.png",
-      "flyAttackFireSlash": "vfx/flyAttackFireSlash.png",
-      "flyAttackLightSlash": "vfx/flyAttackLightSlash.png",
-      "flyAttackDash": "vfx/flyAttackDash.png"
+      "flyIdle": "vfx/flyIdle.webp",
+      "flyMove": "vfx/flyMove.webp",
+      "flyHit": "vfx/flyHit.webp",
+      "flyDeath": "vfx/flyDeath.webp",
+      "flyAttackFireSlash": "vfx/flyAttackFireSlash.webp",
+      "flyAttackLightSlash": "vfx/flyAttackLightSlash.webp",
+      "flyAttackDash": "vfx/flyAttackDash.webp"
     }
   },
   "armors": [
@@ -182,53 +182,53 @@
       "name": "Vải thô",
       "states": {
         "flyIdle": {
-          "head": "armor/vai_tho/flyIdle/head.png",
-          "chest": "armor/vai_tho/flyIdle/chest.png",
-          "gloves": "armor/vai_tho/flyIdle/gloves.png",
-          "pants": "armor/vai_tho/flyIdle/pants.png",
-          "boots": "armor/vai_tho/flyIdle/boots.png"
+          "head": "armor/vai_tho/flyIdle/head.webp",
+          "chest": "armor/vai_tho/flyIdle/chest.webp",
+          "gloves": "armor/vai_tho/flyIdle/gloves.webp",
+          "pants": "armor/vai_tho/flyIdle/pants.webp",
+          "boots": "armor/vai_tho/flyIdle/boots.webp"
         },
         "flyMove": {
-          "head": "armor/vai_tho/flyMove/head.png",
-          "chest": "armor/vai_tho/flyMove/chest.png",
-          "gloves": "armor/vai_tho/flyMove/gloves.png",
-          "pants": "armor/vai_tho/flyMove/pants.png",
-          "boots": "armor/vai_tho/flyMove/boots.png"
+          "head": "armor/vai_tho/flyMove/head.webp",
+          "chest": "armor/vai_tho/flyMove/chest.webp",
+          "gloves": "armor/vai_tho/flyMove/gloves.webp",
+          "pants": "armor/vai_tho/flyMove/pants.webp",
+          "boots": "armor/vai_tho/flyMove/boots.webp"
         },
         "flyHit": {
-          "head": "armor/vai_tho/flyHit/head.png",
-          "chest": "armor/vai_tho/flyHit/chest.png",
-          "gloves": "armor/vai_tho/flyHit/gloves.png",
-          "pants": "armor/vai_tho/flyHit/pants.png",
-          "boots": "armor/vai_tho/flyHit/boots.png"
+          "head": "armor/vai_tho/flyHit/head.webp",
+          "chest": "armor/vai_tho/flyHit/chest.webp",
+          "gloves": "armor/vai_tho/flyHit/gloves.webp",
+          "pants": "armor/vai_tho/flyHit/pants.webp",
+          "boots": "armor/vai_tho/flyHit/boots.webp"
         },
         "flyDeath": {
-          "head": "armor/vai_tho/flyDeath/head.png",
-          "chest": "armor/vai_tho/flyDeath/chest.png",
-          "gloves": "armor/vai_tho/flyDeath/gloves.png",
-          "pants": "armor/vai_tho/flyDeath/pants.png",
-          "boots": "armor/vai_tho/flyDeath/boots.png"
+          "head": "armor/vai_tho/flyDeath/head.webp",
+          "chest": "armor/vai_tho/flyDeath/chest.webp",
+          "gloves": "armor/vai_tho/flyDeath/gloves.webp",
+          "pants": "armor/vai_tho/flyDeath/pants.webp",
+          "boots": "armor/vai_tho/flyDeath/boots.webp"
         },
         "flyAttackFireSlash": {
-          "head": "armor/vai_tho/flyAttackFireSlash/head.png",
-          "chest": "armor/vai_tho/flyAttackFireSlash/chest.png",
-          "gloves": "armor/vai_tho/flyAttackFireSlash/gloves.png",
-          "pants": "armor/vai_tho/flyAttackFireSlash/pants.png",
-          "boots": "armor/vai_tho/flyAttackFireSlash/boots.png"
+          "head": "armor/vai_tho/flyAttackFireSlash/head.webp",
+          "chest": "armor/vai_tho/flyAttackFireSlash/chest.webp",
+          "gloves": "armor/vai_tho/flyAttackFireSlash/gloves.webp",
+          "pants": "armor/vai_tho/flyAttackFireSlash/pants.webp",
+          "boots": "armor/vai_tho/flyAttackFireSlash/boots.webp"
         },
         "flyAttackLightSlash": {
-          "head": "armor/vai_tho/flyAttackLightSlash/head.png",
-          "chest": "armor/vai_tho/flyAttackLightSlash/chest.png",
-          "gloves": "armor/vai_tho/flyAttackLightSlash/gloves.png",
-          "pants": "armor/vai_tho/flyAttackLightSlash/pants.png",
-          "boots": "armor/vai_tho/flyAttackLightSlash/boots.png"
+          "head": "armor/vai_tho/flyAttackLightSlash/head.webp",
+          "chest": "armor/vai_tho/flyAttackLightSlash/chest.webp",
+          "gloves": "armor/vai_tho/flyAttackLightSlash/gloves.webp",
+          "pants": "armor/vai_tho/flyAttackLightSlash/pants.webp",
+          "boots": "armor/vai_tho/flyAttackLightSlash/boots.webp"
         },
         "flyAttackDash": {
-          "head": "armor/vai_tho/flyAttackDash/head.png",
-          "chest": "armor/vai_tho/flyAttackDash/chest.png",
-          "gloves": "armor/vai_tho/flyAttackDash/gloves.png",
-          "pants": "armor/vai_tho/flyAttackDash/pants.png",
-          "boots": "armor/vai_tho/flyAttackDash/boots.png"
+          "head": "armor/vai_tho/flyAttackDash/head.webp",
+          "chest": "armor/vai_tho/flyAttackDash/chest.webp",
+          "gloves": "armor/vai_tho/flyAttackDash/gloves.webp",
+          "pants": "armor/vai_tho/flyAttackDash/pants.webp",
+          "boots": "armor/vai_tho/flyAttackDash/boots.webp"
         }
       }
     },
@@ -238,53 +238,53 @@
       "name": "Trâu xanh",
       "states": {
         "flyIdle": {
-          "head": "armor/trau_xanh/flyIdle/head.png",
-          "chest": "armor/trau_xanh/flyIdle/chest.png",
-          "gloves": "armor/trau_xanh/flyIdle/gloves.png",
-          "pants": "armor/trau_xanh/flyIdle/pants.png",
-          "boots": "armor/trau_xanh/flyIdle/boots.png"
+          "head": "armor/trau_xanh/flyIdle/head.webp",
+          "chest": "armor/trau_xanh/flyIdle/chest.webp",
+          "gloves": "armor/trau_xanh/flyIdle/gloves.webp",
+          "pants": "armor/trau_xanh/flyIdle/pants.webp",
+          "boots": "armor/trau_xanh/flyIdle/boots.webp"
         },
         "flyMove": {
-          "head": "armor/trau_xanh/flyMove/head.png",
-          "chest": "armor/trau_xanh/flyMove/chest.png",
-          "gloves": "armor/trau_xanh/flyMove/gloves.png",
-          "pants": "armor/trau_xanh/flyMove/pants.png",
-          "boots": "armor/trau_xanh/flyMove/boots.png"
+          "head": "armor/trau_xanh/flyMove/head.webp",
+          "chest": "armor/trau_xanh/flyMove/chest.webp",
+          "gloves": "armor/trau_xanh/flyMove/gloves.webp",
+          "pants": "armor/trau_xanh/flyMove/pants.webp",
+          "boots": "armor/trau_xanh/flyMove/boots.webp"
         },
         "flyHit": {
-          "head": "armor/trau_xanh/flyHit/head.png",
-          "chest": "armor/trau_xanh/flyHit/chest.png",
-          "gloves": "armor/trau_xanh/flyHit/gloves.png",
-          "pants": "armor/trau_xanh/flyHit/pants.png",
-          "boots": "armor/trau_xanh/flyHit/boots.png"
+          "head": "armor/trau_xanh/flyHit/head.webp",
+          "chest": "armor/trau_xanh/flyHit/chest.webp",
+          "gloves": "armor/trau_xanh/flyHit/gloves.webp",
+          "pants": "armor/trau_xanh/flyHit/pants.webp",
+          "boots": "armor/trau_xanh/flyHit/boots.webp"
         },
         "flyDeath": {
-          "head": "armor/trau_xanh/flyDeath/head.png",
-          "chest": "armor/trau_xanh/flyDeath/chest.png",
-          "gloves": "armor/trau_xanh/flyDeath/gloves.png",
-          "pants": "armor/trau_xanh/flyDeath/pants.png",
-          "boots": "armor/trau_xanh/flyDeath/boots.png"
+          "head": "armor/trau_xanh/flyDeath/head.webp",
+          "chest": "armor/trau_xanh/flyDeath/chest.webp",
+          "gloves": "armor/trau_xanh/flyDeath/gloves.webp",
+          "pants": "armor/trau_xanh/flyDeath/pants.webp",
+          "boots": "armor/trau_xanh/flyDeath/boots.webp"
         },
         "flyAttackFireSlash": {
-          "head": "armor/trau_xanh/flyAttackFireSlash/head.png",
-          "chest": "armor/trau_xanh/flyAttackFireSlash/chest.png",
-          "gloves": "armor/trau_xanh/flyAttackFireSlash/gloves.png",
-          "pants": "armor/trau_xanh/flyAttackFireSlash/pants.png",
-          "boots": "armor/trau_xanh/flyAttackFireSlash/boots.png"
+          "head": "armor/trau_xanh/flyAttackFireSlash/head.webp",
+          "chest": "armor/trau_xanh/flyAttackFireSlash/chest.webp",
+          "gloves": "armor/trau_xanh/flyAttackFireSlash/gloves.webp",
+          "pants": "armor/trau_xanh/flyAttackFireSlash/pants.webp",
+          "boots": "armor/trau_xanh/flyAttackFireSlash/boots.webp"
         },
         "flyAttackLightSlash": {
-          "head": "armor/trau_xanh/flyAttackLightSlash/head.png",
-          "chest": "armor/trau_xanh/flyAttackLightSlash/chest.png",
-          "gloves": "armor/trau_xanh/flyAttackLightSlash/gloves.png",
-          "pants": "armor/trau_xanh/flyAttackLightSlash/pants.png",
-          "boots": "armor/trau_xanh/flyAttackLightSlash/boots.png"
+          "head": "armor/trau_xanh/flyAttackLightSlash/head.webp",
+          "chest": "armor/trau_xanh/flyAttackLightSlash/chest.webp",
+          "gloves": "armor/trau_xanh/flyAttackLightSlash/gloves.webp",
+          "pants": "armor/trau_xanh/flyAttackLightSlash/pants.webp",
+          "boots": "armor/trau_xanh/flyAttackLightSlash/boots.webp"
         },
         "flyAttackDash": {
-          "head": "armor/trau_xanh/flyAttackDash/head.png",
-          "chest": "armor/trau_xanh/flyAttackDash/chest.png",
-          "gloves": "armor/trau_xanh/flyAttackDash/gloves.png",
-          "pants": "armor/trau_xanh/flyAttackDash/pants.png",
-          "boots": "armor/trau_xanh/flyAttackDash/boots.png"
+          "head": "armor/trau_xanh/flyAttackDash/head.webp",
+          "chest": "armor/trau_xanh/flyAttackDash/chest.webp",
+          "gloves": "armor/trau_xanh/flyAttackDash/gloves.webp",
+          "pants": "armor/trau_xanh/flyAttackDash/pants.webp",
+          "boots": "armor/trau_xanh/flyAttackDash/boots.webp"
         }
       }
     },
@@ -294,53 +294,53 @@
       "name": "Đồ đồng",
       "states": {
         "flyIdle": {
-          "head": "armor/do_dong/flyIdle/head.png",
-          "chest": "armor/do_dong/flyIdle/chest.png",
-          "gloves": "armor/do_dong/flyIdle/gloves.png",
-          "pants": "armor/do_dong/flyIdle/pants.png",
-          "boots": "armor/do_dong/flyIdle/boots.png"
+          "head": "armor/do_dong/flyIdle/head.webp",
+          "chest": "armor/do_dong/flyIdle/chest.webp",
+          "gloves": "armor/do_dong/flyIdle/gloves.webp",
+          "pants": "armor/do_dong/flyIdle/pants.webp",
+          "boots": "armor/do_dong/flyIdle/boots.webp"
         },
         "flyMove": {
-          "head": "armor/do_dong/flyMove/head.png",
-          "chest": "armor/do_dong/flyMove/chest.png",
-          "gloves": "armor/do_dong/flyMove/gloves.png",
-          "pants": "armor/do_dong/flyMove/pants.png",
-          "boots": "armor/do_dong/flyMove/boots.png"
+          "head": "armor/do_dong/flyMove/head.webp",
+          "chest": "armor/do_dong/flyMove/chest.webp",
+          "gloves": "armor/do_dong/flyMove/gloves.webp",
+          "pants": "armor/do_dong/flyMove/pants.webp",
+          "boots": "armor/do_dong/flyMove/boots.webp"
         },
         "flyHit": {
-          "head": "armor/do_dong/flyHit/head.png",
-          "chest": "armor/do_dong/flyHit/chest.png",
-          "gloves": "armor/do_dong/flyHit/gloves.png",
-          "pants": "armor/do_dong/flyHit/pants.png",
-          "boots": "armor/do_dong/flyHit/boots.png"
+          "head": "armor/do_dong/flyHit/head.webp",
+          "chest": "armor/do_dong/flyHit/chest.webp",
+          "gloves": "armor/do_dong/flyHit/gloves.webp",
+          "pants": "armor/do_dong/flyHit/pants.webp",
+          "boots": "armor/do_dong/flyHit/boots.webp"
         },
         "flyDeath": {
-          "head": "armor/do_dong/flyDeath/head.png",
-          "chest": "armor/do_dong/flyDeath/chest.png",
-          "gloves": "armor/do_dong/flyDeath/gloves.png",
-          "pants": "armor/do_dong/flyDeath/pants.png",
-          "boots": "armor/do_dong/flyDeath/boots.png"
+          "head": "armor/do_dong/flyDeath/head.webp",
+          "chest": "armor/do_dong/flyDeath/chest.webp",
+          "gloves": "armor/do_dong/flyDeath/gloves.webp",
+          "pants": "armor/do_dong/flyDeath/pants.webp",
+          "boots": "armor/do_dong/flyDeath/boots.webp"
         },
         "flyAttackFireSlash": {
-          "head": "armor/do_dong/flyAttackFireSlash/head.png",
-          "chest": "armor/do_dong/flyAttackFireSlash/chest.png",
-          "gloves": "armor/do_dong/flyAttackFireSlash/gloves.png",
-          "pants": "armor/do_dong/flyAttackFireSlash/pants.png",
-          "boots": "armor/do_dong/flyAttackFireSlash/boots.png"
+          "head": "armor/do_dong/flyAttackFireSlash/head.webp",
+          "chest": "armor/do_dong/flyAttackFireSlash/chest.webp",
+          "gloves": "armor/do_dong/flyAttackFireSlash/gloves.webp",
+          "pants": "armor/do_dong/flyAttackFireSlash/pants.webp",
+          "boots": "armor/do_dong/flyAttackFireSlash/boots.webp"
         },
         "flyAttackLightSlash": {
-          "head": "armor/do_dong/flyAttackLightSlash/head.png",
-          "chest": "armor/do_dong/flyAttackLightSlash/chest.png",
-          "gloves": "armor/do_dong/flyAttackLightSlash/gloves.png",
-          "pants": "armor/do_dong/flyAttackLightSlash/pants.png",
-          "boots": "armor/do_dong/flyAttackLightSlash/boots.png"
+          "head": "armor/do_dong/flyAttackLightSlash/head.webp",
+          "chest": "armor/do_dong/flyAttackLightSlash/chest.webp",
+          "gloves": "armor/do_dong/flyAttackLightSlash/gloves.webp",
+          "pants": "armor/do_dong/flyAttackLightSlash/pants.webp",
+          "boots": "armor/do_dong/flyAttackLightSlash/boots.webp"
         },
         "flyAttackDash": {
-          "head": "armor/do_dong/flyAttackDash/head.png",
-          "chest": "armor/do_dong/flyAttackDash/chest.png",
-          "gloves": "armor/do_dong/flyAttackDash/gloves.png",
-          "pants": "armor/do_dong/flyAttackDash/pants.png",
-          "boots": "armor/do_dong/flyAttackDash/boots.png"
+          "head": "armor/do_dong/flyAttackDash/head.webp",
+          "chest": "armor/do_dong/flyAttackDash/chest.webp",
+          "gloves": "armor/do_dong/flyAttackDash/gloves.webp",
+          "pants": "armor/do_dong/flyAttackDash/pants.webp",
+          "boots": "armor/do_dong/flyAttackDash/boots.webp"
         }
       }
     },
@@ -350,53 +350,53 @@
       "name": "Ma Thuật",
       "states": {
         "flyIdle": {
-          "head": "armor/ma_thuat/flyIdle/head.png",
-          "chest": "armor/ma_thuat/flyIdle/chest.png",
-          "gloves": "armor/ma_thuat/flyIdle/gloves.png",
-          "pants": "armor/ma_thuat/flyIdle/pants.png",
-          "boots": "armor/ma_thuat/flyIdle/boots.png"
+          "head": "armor/ma_thuat/flyIdle/head.webp",
+          "chest": "armor/ma_thuat/flyIdle/chest.webp",
+          "gloves": "armor/ma_thuat/flyIdle/gloves.webp",
+          "pants": "armor/ma_thuat/flyIdle/pants.webp",
+          "boots": "armor/ma_thuat/flyIdle/boots.webp"
         },
         "flyMove": {
-          "head": "armor/ma_thuat/flyMove/head.png",
-          "chest": "armor/ma_thuat/flyMove/chest.png",
-          "gloves": "armor/ma_thuat/flyMove/gloves.png",
-          "pants": "armor/ma_thuat/flyMove/pants.png",
-          "boots": "armor/ma_thuat/flyMove/boots.png"
+          "head": "armor/ma_thuat/flyMove/head.webp",
+          "chest": "armor/ma_thuat/flyMove/chest.webp",
+          "gloves": "armor/ma_thuat/flyMove/gloves.webp",
+          "pants": "armor/ma_thuat/flyMove/pants.webp",
+          "boots": "armor/ma_thuat/flyMove/boots.webp"
         },
         "flyHit": {
-          "head": "armor/ma_thuat/flyHit/head.png",
-          "chest": "armor/ma_thuat/flyHit/chest.png",
-          "gloves": "armor/ma_thuat/flyHit/gloves.png",
-          "pants": "armor/ma_thuat/flyHit/pants.png",
-          "boots": "armor/ma_thuat/flyHit/boots.png"
+          "head": "armor/ma_thuat/flyHit/head.webp",
+          "chest": "armor/ma_thuat/flyHit/chest.webp",
+          "gloves": "armor/ma_thuat/flyHit/gloves.webp",
+          "pants": "armor/ma_thuat/flyHit/pants.webp",
+          "boots": "armor/ma_thuat/flyHit/boots.webp"
         },
         "flyDeath": {
-          "head": "armor/ma_thuat/flyDeath/head.png",
-          "chest": "armor/ma_thuat/flyDeath/chest.png",
-          "gloves": "armor/ma_thuat/flyDeath/gloves.png",
-          "pants": "armor/ma_thuat/flyDeath/pants.png",
-          "boots": "armor/ma_thuat/flyDeath/boots.png"
+          "head": "armor/ma_thuat/flyDeath/head.webp",
+          "chest": "armor/ma_thuat/flyDeath/chest.webp",
+          "gloves": "armor/ma_thuat/flyDeath/gloves.webp",
+          "pants": "armor/ma_thuat/flyDeath/pants.webp",
+          "boots": "armor/ma_thuat/flyDeath/boots.webp"
         },
         "flyAttackFireSlash": {
-          "head": "armor/ma_thuat/flyAttackFireSlash/head.png",
-          "chest": "armor/ma_thuat/flyAttackFireSlash/chest.png",
-          "gloves": "armor/ma_thuat/flyAttackFireSlash/gloves.png",
-          "pants": "armor/ma_thuat/flyAttackFireSlash/pants.png",
-          "boots": "armor/ma_thuat/flyAttackFireSlash/boots.png"
+          "head": "armor/ma_thuat/flyAttackFireSlash/head.webp",
+          "chest": "armor/ma_thuat/flyAttackFireSlash/chest.webp",
+          "gloves": "armor/ma_thuat/flyAttackFireSlash/gloves.webp",
+          "pants": "armor/ma_thuat/flyAttackFireSlash/pants.webp",
+          "boots": "armor/ma_thuat/flyAttackFireSlash/boots.webp"
         },
         "flyAttackLightSlash": {
-          "head": "armor/ma_thuat/flyAttackLightSlash/head.png",
-          "chest": "armor/ma_thuat/flyAttackLightSlash/chest.png",
-          "gloves": "armor/ma_thuat/flyAttackLightSlash/gloves.png",
-          "pants": "armor/ma_thuat/flyAttackLightSlash/pants.png",
-          "boots": "armor/ma_thuat/flyAttackLightSlash/boots.png"
+          "head": "armor/ma_thuat/flyAttackLightSlash/head.webp",
+          "chest": "armor/ma_thuat/flyAttackLightSlash/chest.webp",
+          "gloves": "armor/ma_thuat/flyAttackLightSlash/gloves.webp",
+          "pants": "armor/ma_thuat/flyAttackLightSlash/pants.webp",
+          "boots": "armor/ma_thuat/flyAttackLightSlash/boots.webp"
         },
         "flyAttackDash": {
-          "head": "armor/ma_thuat/flyAttackDash/head.png",
-          "chest": "armor/ma_thuat/flyAttackDash/chest.png",
-          "gloves": "armor/ma_thuat/flyAttackDash/gloves.png",
-          "pants": "armor/ma_thuat/flyAttackDash/pants.png",
-          "boots": "armor/ma_thuat/flyAttackDash/boots.png"
+          "head": "armor/ma_thuat/flyAttackDash/head.webp",
+          "chest": "armor/ma_thuat/flyAttackDash/chest.webp",
+          "gloves": "armor/ma_thuat/flyAttackDash/gloves.webp",
+          "pants": "armor/ma_thuat/flyAttackDash/pants.webp",
+          "boots": "armor/ma_thuat/flyAttackDash/boots.webp"
         }
       }
     },
@@ -406,53 +406,53 @@
       "name": "Phong Vũ",
       "states": {
         "flyIdle": {
-          "head": "armor/phong_vu/flyIdle/head.png",
-          "chest": "armor/phong_vu/flyIdle/chest.png",
-          "gloves": "armor/phong_vu/flyIdle/gloves.png",
-          "pants": "armor/phong_vu/flyIdle/pants.png",
-          "boots": "armor/phong_vu/flyIdle/boots.png"
+          "head": "armor/phong_vu/flyIdle/head.webp",
+          "chest": "armor/phong_vu/flyIdle/chest.webp",
+          "gloves": "armor/phong_vu/flyIdle/gloves.webp",
+          "pants": "armor/phong_vu/flyIdle/pants.webp",
+          "boots": "armor/phong_vu/flyIdle/boots.webp"
         },
         "flyMove": {
-          "head": "armor/phong_vu/flyMove/head.png",
-          "chest": "armor/phong_vu/flyMove/chest.png",
-          "gloves": "armor/phong_vu/flyMove/gloves.png",
-          "pants": "armor/phong_vu/flyMove/pants.png",
-          "boots": "armor/phong_vu/flyMove/boots.png"
+          "head": "armor/phong_vu/flyMove/head.webp",
+          "chest": "armor/phong_vu/flyMove/chest.webp",
+          "gloves": "armor/phong_vu/flyMove/gloves.webp",
+          "pants": "armor/phong_vu/flyMove/pants.webp",
+          "boots": "armor/phong_vu/flyMove/boots.webp"
         },
         "flyHit": {
-          "head": "armor/phong_vu/flyHit/head.png",
-          "chest": "armor/phong_vu/flyHit/chest.png",
-          "gloves": "armor/phong_vu/flyHit/gloves.png",
-          "pants": "armor/phong_vu/flyHit/pants.png",
-          "boots": "armor/phong_vu/flyHit/boots.png"
+          "head": "armor/phong_vu/flyHit/head.webp",
+          "chest": "armor/phong_vu/flyHit/chest.webp",
+          "gloves": "armor/phong_vu/flyHit/gloves.webp",
+          "pants": "armor/phong_vu/flyHit/pants.webp",
+          "boots": "armor/phong_vu/flyHit/boots.webp"
         },
         "flyDeath": {
-          "head": "armor/phong_vu/flyDeath/head.png",
-          "chest": "armor/phong_vu/flyDeath/chest.png",
-          "gloves": "armor/phong_vu/flyDeath/gloves.png",
-          "pants": "armor/phong_vu/flyDeath/pants.png",
-          "boots": "armor/phong_vu/flyDeath/boots.png"
+          "head": "armor/phong_vu/flyDeath/head.webp",
+          "chest": "armor/phong_vu/flyDeath/chest.webp",
+          "gloves": "armor/phong_vu/flyDeath/gloves.webp",
+          "pants": "armor/phong_vu/flyDeath/pants.webp",
+          "boots": "armor/phong_vu/flyDeath/boots.webp"
         },
         "flyAttackFireSlash": {
-          "head": "armor/phong_vu/flyAttackFireSlash/head.png",
-          "chest": "armor/phong_vu/flyAttackFireSlash/chest.png",
-          "gloves": "armor/phong_vu/flyAttackFireSlash/gloves.png",
-          "pants": "armor/phong_vu/flyAttackFireSlash/pants.png",
-          "boots": "armor/phong_vu/flyAttackFireSlash/boots.png"
+          "head": "armor/phong_vu/flyAttackFireSlash/head.webp",
+          "chest": "armor/phong_vu/flyAttackFireSlash/chest.webp",
+          "gloves": "armor/phong_vu/flyAttackFireSlash/gloves.webp",
+          "pants": "armor/phong_vu/flyAttackFireSlash/pants.webp",
+          "boots": "armor/phong_vu/flyAttackFireSlash/boots.webp"
         },
         "flyAttackLightSlash": {
-          "head": "armor/phong_vu/flyAttackLightSlash/head.png",
-          "chest": "armor/phong_vu/flyAttackLightSlash/chest.png",
-          "gloves": "armor/phong_vu/flyAttackLightSlash/gloves.png",
-          "pants": "armor/phong_vu/flyAttackLightSlash/pants.png",
-          "boots": "armor/phong_vu/flyAttackLightSlash/boots.png"
+          "head": "armor/phong_vu/flyAttackLightSlash/head.webp",
+          "chest": "armor/phong_vu/flyAttackLightSlash/chest.webp",
+          "gloves": "armor/phong_vu/flyAttackLightSlash/gloves.webp",
+          "pants": "armor/phong_vu/flyAttackLightSlash/pants.webp",
+          "boots": "armor/phong_vu/flyAttackLightSlash/boots.webp"
         },
         "flyAttackDash": {
-          "head": "armor/phong_vu/flyAttackDash/head.png",
-          "chest": "armor/phong_vu/flyAttackDash/chest.png",
-          "gloves": "armor/phong_vu/flyAttackDash/gloves.png",
-          "pants": "armor/phong_vu/flyAttackDash/pants.png",
-          "boots": "armor/phong_vu/flyAttackDash/boots.png"
+          "head": "armor/phong_vu/flyAttackDash/head.webp",
+          "chest": "armor/phong_vu/flyAttackDash/chest.webp",
+          "gloves": "armor/phong_vu/flyAttackDash/gloves.webp",
+          "pants": "armor/phong_vu/flyAttackDash/pants.webp",
+          "boots": "armor/phong_vu/flyAttackDash/boots.webp"
         }
       }
     },
@@ -462,53 +462,53 @@
       "name": "Lôi Phong",
       "states": {
         "flyIdle": {
-          "head": "armor/loi_phong/flyIdle/head.png",
-          "chest": "armor/loi_phong/flyIdle/chest.png",
-          "gloves": "armor/loi_phong/flyIdle/gloves.png",
-          "pants": "armor/loi_phong/flyIdle/pants.png",
-          "boots": "armor/loi_phong/flyIdle/boots.png"
+          "head": "armor/loi_phong/flyIdle/head.webp",
+          "chest": "armor/loi_phong/flyIdle/chest.webp",
+          "gloves": "armor/loi_phong/flyIdle/gloves.webp",
+          "pants": "armor/loi_phong/flyIdle/pants.webp",
+          "boots": "armor/loi_phong/flyIdle/boots.webp"
         },
         "flyMove": {
-          "head": "armor/loi_phong/flyMove/head.png",
-          "chest": "armor/loi_phong/flyMove/chest.png",
-          "gloves": "armor/loi_phong/flyMove/gloves.png",
-          "pants": "armor/loi_phong/flyMove/pants.png",
-          "boots": "armor/loi_phong/flyMove/boots.png"
+          "head": "armor/loi_phong/flyMove/head.webp",
+          "chest": "armor/loi_phong/flyMove/chest.webp",
+          "gloves": "armor/loi_phong/flyMove/gloves.webp",
+          "pants": "armor/loi_phong/flyMove/pants.webp",
+          "boots": "armor/loi_phong/flyMove/boots.webp"
         },
         "flyHit": {
-          "head": "armor/loi_phong/flyHit/head.png",
-          "chest": "armor/loi_phong/flyHit/chest.png",
-          "gloves": "armor/loi_phong/flyHit/gloves.png",
-          "pants": "armor/loi_phong/flyHit/pants.png",
-          "boots": "armor/loi_phong/flyHit/boots.png"
+          "head": "armor/loi_phong/flyHit/head.webp",
+          "chest": "armor/loi_phong/flyHit/chest.webp",
+          "gloves": "armor/loi_phong/flyHit/gloves.webp",
+          "pants": "armor/loi_phong/flyHit/pants.webp",
+          "boots": "armor/loi_phong/flyHit/boots.webp"
         },
         "flyDeath": {
-          "head": "armor/loi_phong/flyDeath/head.png",
-          "chest": "armor/loi_phong/flyDeath/chest.png",
-          "gloves": "armor/loi_phong/flyDeath/gloves.png",
-          "pants": "armor/loi_phong/flyDeath/pants.png",
-          "boots": "armor/loi_phong/flyDeath/boots.png"
+          "head": "armor/loi_phong/flyDeath/head.webp",
+          "chest": "armor/loi_phong/flyDeath/chest.webp",
+          "gloves": "armor/loi_phong/flyDeath/gloves.webp",
+          "pants": "armor/loi_phong/flyDeath/pants.webp",
+          "boots": "armor/loi_phong/flyDeath/boots.webp"
         },
         "flyAttackFireSlash": {
-          "head": "armor/loi_phong/flyAttackFireSlash/head.png",
-          "chest": "armor/loi_phong/flyAttackFireSlash/chest.png",
-          "gloves": "armor/loi_phong/flyAttackFireSlash/gloves.png",
-          "pants": "armor/loi_phong/flyAttackFireSlash/pants.png",
-          "boots": "armor/loi_phong/flyAttackFireSlash/boots.png"
+          "head": "armor/loi_phong/flyAttackFireSlash/head.webp",
+          "chest": "armor/loi_phong/flyAttackFireSlash/chest.webp",
+          "gloves": "armor/loi_phong/flyAttackFireSlash/gloves.webp",
+          "pants": "armor/loi_phong/flyAttackFireSlash/pants.webp",
+          "boots": "armor/loi_phong/flyAttackFireSlash/boots.webp"
         },
         "flyAttackLightSlash": {
-          "head": "armor/loi_phong/flyAttackLightSlash/head.png",
-          "chest": "armor/loi_phong/flyAttackLightSlash/chest.png",
-          "gloves": "armor/loi_phong/flyAttackLightSlash/gloves.png",
-          "pants": "armor/loi_phong/flyAttackLightSlash/pants.png",
-          "boots": "armor/loi_phong/flyAttackLightSlash/boots.png"
+          "head": "armor/loi_phong/flyAttackLightSlash/head.webp",
+          "chest": "armor/loi_phong/flyAttackLightSlash/chest.webp",
+          "gloves": "armor/loi_phong/flyAttackLightSlash/gloves.webp",
+          "pants": "armor/loi_phong/flyAttackLightSlash/pants.webp",
+          "boots": "armor/loi_phong/flyAttackLightSlash/boots.webp"
         },
         "flyAttackDash": {
-          "head": "armor/loi_phong/flyAttackDash/head.png",
-          "chest": "armor/loi_phong/flyAttackDash/chest.png",
-          "gloves": "armor/loi_phong/flyAttackDash/gloves.png",
-          "pants": "armor/loi_phong/flyAttackDash/pants.png",
-          "boots": "armor/loi_phong/flyAttackDash/boots.png"
+          "head": "armor/loi_phong/flyAttackDash/head.webp",
+          "chest": "armor/loi_phong/flyAttackDash/chest.webp",
+          "gloves": "armor/loi_phong/flyAttackDash/gloves.webp",
+          "pants": "armor/loi_phong/flyAttackDash/pants.webp",
+          "boots": "armor/loi_phong/flyAttackDash/boots.webp"
         }
       }
     },
@@ -518,53 +518,53 @@
       "name": "Cuồng Phong",
       "states": {
         "flyIdle": {
-          "head": "armor/cuong_phong/flyIdle/head.png",
-          "chest": "armor/cuong_phong/flyIdle/chest.png",
-          "gloves": "armor/cuong_phong/flyIdle/gloves.png",
-          "pants": "armor/cuong_phong/flyIdle/pants.png",
-          "boots": "armor/cuong_phong/flyIdle/boots.png"
+          "head": "armor/cuong_phong/flyIdle/head.webp",
+          "chest": "armor/cuong_phong/flyIdle/chest.webp",
+          "gloves": "armor/cuong_phong/flyIdle/gloves.webp",
+          "pants": "armor/cuong_phong/flyIdle/pants.webp",
+          "boots": "armor/cuong_phong/flyIdle/boots.webp"
         },
         "flyMove": {
-          "head": "armor/cuong_phong/flyMove/head.png",
-          "chest": "armor/cuong_phong/flyMove/chest.png",
-          "gloves": "armor/cuong_phong/flyMove/gloves.png",
-          "pants": "armor/cuong_phong/flyMove/pants.png",
-          "boots": "armor/cuong_phong/flyMove/boots.png"
+          "head": "armor/cuong_phong/flyMove/head.webp",
+          "chest": "armor/cuong_phong/flyMove/chest.webp",
+          "gloves": "armor/cuong_phong/flyMove/gloves.webp",
+          "pants": "armor/cuong_phong/flyMove/pants.webp",
+          "boots": "armor/cuong_phong/flyMove/boots.webp"
         },
         "flyHit": {
-          "head": "armor/cuong_phong/flyHit/head.png",
-          "chest": "armor/cuong_phong/flyHit/chest.png",
-          "gloves": "armor/cuong_phong/flyHit/gloves.png",
-          "pants": "armor/cuong_phong/flyHit/pants.png",
-          "boots": "armor/cuong_phong/flyHit/boots.png"
+          "head": "armor/cuong_phong/flyHit/head.webp",
+          "chest": "armor/cuong_phong/flyHit/chest.webp",
+          "gloves": "armor/cuong_phong/flyHit/gloves.webp",
+          "pants": "armor/cuong_phong/flyHit/pants.webp",
+          "boots": "armor/cuong_phong/flyHit/boots.webp"
         },
         "flyDeath": {
-          "head": "armor/cuong_phong/flyDeath/head.png",
-          "chest": "armor/cuong_phong/flyDeath/chest.png",
-          "gloves": "armor/cuong_phong/flyDeath/gloves.png",
-          "pants": "armor/cuong_phong/flyDeath/pants.png",
-          "boots": "armor/cuong_phong/flyDeath/boots.png"
+          "head": "armor/cuong_phong/flyDeath/head.webp",
+          "chest": "armor/cuong_phong/flyDeath/chest.webp",
+          "gloves": "armor/cuong_phong/flyDeath/gloves.webp",
+          "pants": "armor/cuong_phong/flyDeath/pants.webp",
+          "boots": "armor/cuong_phong/flyDeath/boots.webp"
         },
         "flyAttackFireSlash": {
-          "head": "armor/cuong_phong/flyAttackFireSlash/head.png",
-          "chest": "armor/cuong_phong/flyAttackFireSlash/chest.png",
-          "gloves": "armor/cuong_phong/flyAttackFireSlash/gloves.png",
-          "pants": "armor/cuong_phong/flyAttackFireSlash/pants.png",
-          "boots": "armor/cuong_phong/flyAttackFireSlash/boots.png"
+          "head": "armor/cuong_phong/flyAttackFireSlash/head.webp",
+          "chest": "armor/cuong_phong/flyAttackFireSlash/chest.webp",
+          "gloves": "armor/cuong_phong/flyAttackFireSlash/gloves.webp",
+          "pants": "armor/cuong_phong/flyAttackFireSlash/pants.webp",
+          "boots": "armor/cuong_phong/flyAttackFireSlash/boots.webp"
         },
         "flyAttackLightSlash": {
-          "head": "armor/cuong_phong/flyAttackLightSlash/head.png",
-          "chest": "armor/cuong_phong/flyAttackLightSlash/chest.png",
-          "gloves": "armor/cuong_phong/flyAttackLightSlash/gloves.png",
-          "pants": "armor/cuong_phong/flyAttackLightSlash/pants.png",
-          "boots": "armor/cuong_phong/flyAttackLightSlash/boots.png"
+          "head": "armor/cuong_phong/flyAttackLightSlash/head.webp",
+          "chest": "armor/cuong_phong/flyAttackLightSlash/chest.webp",
+          "gloves": "armor/cuong_phong/flyAttackLightSlash/gloves.webp",
+          "pants": "armor/cuong_phong/flyAttackLightSlash/pants.webp",
+          "boots": "armor/cuong_phong/flyAttackLightSlash/boots.webp"
         },
         "flyAttackDash": {
-          "head": "armor/cuong_phong/flyAttackDash/head.png",
-          "chest": "armor/cuong_phong/flyAttackDash/chest.png",
-          "gloves": "armor/cuong_phong/flyAttackDash/gloves.png",
-          "pants": "armor/cuong_phong/flyAttackDash/pants.png",
-          "boots": "armor/cuong_phong/flyAttackDash/boots.png"
+          "head": "armor/cuong_phong/flyAttackDash/head.webp",
+          "chest": "armor/cuong_phong/flyAttackDash/chest.webp",
+          "gloves": "armor/cuong_phong/flyAttackDash/gloves.webp",
+          "pants": "armor/cuong_phong/flyAttackDash/pants.webp",
+          "boots": "armor/cuong_phong/flyAttackDash/boots.webp"
         }
       }
     }
@@ -581,10 +581,10 @@
         45
       ],
       "variants": {
-        "+0": "../town_v1/weapons/song_dao_co_ban/plus0.png",
-        "+9": "../town_v1/weapons/song_dao_co_ban/plus9.png",
-        "+10": "../town_v1/weapons/song_dao_co_ban/plus10.png",
-        "+11": "../town_v1/weapons/song_dao_co_ban/plus11.png"
+        "+0": "../town_v1/weapons/song_dao_co_ban/plus0.webp",
+        "+9": "../town_v1/weapons/song_dao_co_ban/plus9.webp",
+        "+10": "../town_v1/weapons/song_dao_co_ban/plus10.webp",
+        "+11": "../town_v1/weapons/song_dao_co_ban/plus11.webp"
       }
     },
     {
@@ -598,10 +598,10 @@
         45
       ],
       "variants": {
-        "+0": "../town_v1/weapons/song_chuy/plus0.png",
-        "+9": "../town_v1/weapons/song_chuy/plus9.png",
-        "+10": "../town_v1/weapons/song_chuy/plus10.png",
-        "+11": "../town_v1/weapons/song_chuy/plus11.png"
+        "+0": "../town_v1/weapons/song_chuy/plus0.webp",
+        "+9": "../town_v1/weapons/song_chuy/plus9.webp",
+        "+10": "../town_v1/weapons/song_chuy/plus10.webp",
+        "+11": "../town_v1/weapons/song_chuy/plus11.webp"
       }
     },
     {
@@ -615,10 +615,10 @@
         45
       ],
       "variants": {
-        "+0": "../town_v1/weapons/song_hoa_dao/plus0.png",
-        "+9": "../town_v1/weapons/song_hoa_dao/plus9.png",
-        "+10": "../town_v1/weapons/song_hoa_dao/plus10.png",
-        "+11": "../town_v1/weapons/song_hoa_dao/plus11.png"
+        "+0": "../town_v1/weapons/song_hoa_dao/plus0.webp",
+        "+9": "../town_v1/weapons/song_hoa_dao/plus9.webp",
+        "+10": "../town_v1/weapons/song_hoa_dao/plus10.webp",
+        "+11": "../town_v1/weapons/song_hoa_dao/plus11.webp"
       }
     },
     {
@@ -632,10 +632,10 @@
         45
       ],
       "variants": {
-        "+0": "../town_v1/weapons/song_kiem_dien/plus0.png",
-        "+9": "../town_v1/weapons/song_kiem_dien/plus9.png",
-        "+10": "../town_v1/weapons/song_kiem_dien/plus10.png",
-        "+11": "../town_v1/weapons/song_kiem_dien/plus11.png"
+        "+0": "../town_v1/weapons/song_kiem_dien/plus0.webp",
+        "+9": "../town_v1/weapons/song_kiem_dien/plus9.webp",
+        "+10": "../town_v1/weapons/song_kiem_dien/plus10.webp",
+        "+11": "../town_v1/weapons/song_kiem_dien/plus11.webp"
       }
     },
     {
@@ -649,10 +649,10 @@
         45
       ],
       "variants": {
-        "+0": "../town_v1/weapons/loi_phong_dao/plus0.png",
-        "+9": "../town_v1/weapons/loi_phong_dao/plus9.png",
-        "+10": "../town_v1/weapons/loi_phong_dao/plus10.png",
-        "+11": "../town_v1/weapons/loi_phong_dao/plus11.png"
+        "+0": "../town_v1/weapons/loi_phong_dao/plus0.webp",
+        "+9": "../town_v1/weapons/loi_phong_dao/plus9.webp",
+        "+10": "../town_v1/weapons/loi_phong_dao/plus10.webp",
+        "+11": "../town_v1/weapons/loi_phong_dao/plus11.webp"
       }
     },
     {
@@ -666,10 +666,10 @@
         45
       ],
       "variants": {
-        "+0": "../town_v1/weapons/ao_anh_dao/plus0.png",
-        "+9": "../town_v1/weapons/ao_anh_dao/plus9.png",
-        "+10": "../town_v1/weapons/ao_anh_dao/plus10.png",
-        "+11": "../town_v1/weapons/ao_anh_dao/plus11.png"
+        "+0": "../town_v1/weapons/ao_anh_dao/plus0.webp",
+        "+9": "../town_v1/weapons/ao_anh_dao/plus9.webp",
+        "+10": "../town_v1/weapons/ao_anh_dao/plus10.webp",
+        "+11": "../town_v1/weapons/ao_anh_dao/plus11.webp"
       }
     },
     {
@@ -683,10 +683,10 @@
         45
       ],
       "variants": {
-        "+0": "../town_v1/weapons/hoa_tinh_kiem/plus0.png",
-        "+9": "../town_v1/weapons/hoa_tinh_kiem/plus9.png",
-        "+10": "../town_v1/weapons/hoa_tinh_kiem/plus10.png",
-        "+11": "../town_v1/weapons/hoa_tinh_kiem/plus11.png"
+        "+0": "../town_v1/weapons/hoa_tinh_kiem/plus0.webp",
+        "+9": "../town_v1/weapons/hoa_tinh_kiem/plus9.webp",
+        "+10": "../town_v1/weapons/hoa_tinh_kiem/plus10.webp",
+        "+11": "../town_v1/weapons/hoa_tinh_kiem/plus11.webp"
       }
     }
   ],

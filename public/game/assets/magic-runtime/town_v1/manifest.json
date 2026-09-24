@@ -58,9 +58,9 @@
     "wing_clasp"
   ],
   "bodyBase": {
-    "idle": "../body_base/idle-8dir-8frame.png",
-    "walk": "../body_base/walk-8dir-8frame.png",
-    "run": "../body_base/run-8dir-8frame.png"
+    "idle": "../body_base/idle-8dir-8frame.webp",
+    "walk": "../body_base/walk-8dir-8frame.webp",
+    "run": "../body_base/run-8dir-8frame.webp"
   },
   "armors": [
     {
@@ -69,25 +69,25 @@
       "name": "Vải thô",
       "states": {
         "idle": {
-          "head": "armor/vai_tho/idle/head.png",
-          "chest": "armor/vai_tho/idle/chest.png",
-          "gloves": "armor/vai_tho/idle/gloves.png",
-          "pants": "armor/vai_tho/idle/pants.png",
-          "boots": "armor/vai_tho/idle/boots.png"
+          "head": "armor/vai_tho/idle/head.webp",
+          "chest": "armor/vai_tho/idle/chest.webp",
+          "gloves": "armor/vai_tho/idle/gloves.webp",
+          "pants": "armor/vai_tho/idle/pants.webp",
+          "boots": "armor/vai_tho/idle/boots.webp"
         },
         "walk": {
-          "head": "armor/vai_tho/walk/head.png",
-          "chest": "armor/vai_tho/walk/chest.png",
-          "gloves": "armor/vai_tho/walk/gloves.png",
-          "pants": "armor/vai_tho/walk/pants.png",
-          "boots": "armor/vai_tho/walk/boots.png"
+          "head": "armor/vai_tho/walk/head.webp",
+          "chest": "armor/vai_tho/walk/chest.webp",
+          "gloves": "armor/vai_tho/walk/gloves.webp",
+          "pants": "armor/vai_tho/walk/pants.webp",
+          "boots": "armor/vai_tho/walk/boots.webp"
         },
         "run": {
-          "head": "armor/vai_tho/run/head.png",
-          "chest": "armor/vai_tho/run/chest.png",
-          "gloves": "armor/vai_tho/run/gloves.png",
-          "pants": "armor/vai_tho/run/pants.png",
-          "boots": "armor/vai_tho/run/boots.png"
+          "head": "armor/vai_tho/run/head.webp",
+          "chest": "armor/vai_tho/run/chest.webp",
+          "gloves": "armor/vai_tho/run/gloves.webp",
+          "pants": "armor/vai_tho/run/pants.webp",
+          "boots": "armor/vai_tho/run/boots.webp"
         }
       }
     },
@@ -97,25 +97,25 @@
       "name": "Trâu xanh",
       "states": {
         "idle": {
-          "head": "armor/trau_xanh/idle/head.png",
-          "chest": "armor/trau_xanh/idle/chest.png",
-          "gloves": "armor/trau_xanh/idle/gloves.png",
-          "pants": "armor/trau_xanh/idle/pants.png",
-          "boots": "armor/trau_xanh/idle/boots.png"
+          "head": "armor/trau_xanh/idle/head.webp",
+          "chest": "armor/trau_xanh/idle/chest.webp",
+          "gloves": "armor/trau_xanh/idle/gloves.webp",
+          "pants": "armor/trau_xanh/idle/pants.webp",
+          "boots": "armor/trau_xanh/idle/boots.webp"
         },
         "walk": {
-          "head": "armor/trau_xanh/walk/head.png",
-          "chest": "armor/trau_xanh/walk/chest.png",
-          "gloves": "armor/trau_xanh/walk/gloves.png",
-          "pants": "armor/trau_xanh/walk/pants.png",
-          "boots": "armor/trau_xanh/walk/boots.png"
+          "head": "armor/trau_xanh/walk/head.webp",
+          "chest": "armor/trau_xanh/walk/chest.webp",
+          "gloves": "armor/trau_xanh/walk/gloves.webp",
+          "pants": "armor/trau_xanh/walk/pants.webp",
+          "boots": "armor/trau_xanh/walk/boots.webp"
         },
         "run": {
-          "head": "armor/trau_xanh/run/head.png",
-          "chest": "armor/trau_xanh/run/chest.png",
-          "gloves": "armor/trau_xanh/run/gloves.png",
-          "pants": "armor/trau_xanh/run/pants.png",
-          "boots": "armor/trau_xanh/run/boots.png"
+          "head": "armor/trau_xanh/run/head.webp",
+          "chest": "armor/trau_xanh/run/chest.webp",
+          "gloves": "armor/trau_xanh/run/gloves.webp",
+          "pants": "armor/trau_xanh/run/pants.webp",
+          "boots": "armor/trau_xanh/run/boots.webp"
         }
       }
     },
@@ -125,25 +125,25 @@
       "name": "Đồ đồng",
       "states": {
         "idle": {
-          "head": "armor/do_dong/idle/head.png",
-          "chest": "armor/do_dong/idle/chest.png",
-          "gloves": "armor/do_dong/idle/gloves.png",
-          "pants": "armor/do_dong/idle/pants.png",
-          "boots": "armor/do_dong/idle/boots.png"
+          "head": "armor/do_dong/idle/head.webp",
+          "chest": "armor/do_dong/idle/chest.webp",
+          "gloves": "armor/do_dong/idle/gloves.webp",
+          "pants": "armor/do_dong/idle/pants.webp",
+          "boots": "armor/do_dong/idle/boots.webp"
         },
         "walk": {
-          "head": "armor/do_dong/walk/head.png",
-          "chest": "armor/do_dong/walk/chest.png",
-          "gloves": "armor/do_dong/walk/gloves.png",
-          "pants": "armor/do_dong/walk/pants.png",
-          "boots": "armor/do_dong/walk/boots.png"
+          "head": "armor/do_dong/walk/head.webp",
+          "chest": "armor/do_dong/walk/chest.webp",
+          "gloves": "armor/do_dong/walk/gloves.webp",
+          "pants": "armor/do_dong/walk/pants.webp",
+          "boots": "armor/do_dong/walk/boots.webp"
         },
         "run": {
-          "head": "armor/do_dong/run/head.png",
-          "chest": "armor/do_dong/run/chest.png",
-          "gloves": "armor/do_dong/run/gloves.png",
-          "pants": "armor/do_dong/run/pants.png",
-          "boots": "armor/do_dong/run/boots.png"
+          "head": "armor/do_dong/run/head.webp",
+          "chest": "armor/do_dong/run/chest.webp",
+          "gloves": "armor/do_dong/run/gloves.webp",
+          "pants": "armor/do_dong/run/pants.webp",
+          "boots": "armor/do_dong/run/boots.webp"
         }
       }
     },
@@ -153,25 +153,25 @@
       "name": "Ma Thuật",
       "states": {
         "idle": {
-          "head": "armor/ma_thuat/idle/head.png",
-          "chest": "armor/ma_thuat/idle/chest.png",
-          "gloves": "armor/ma_thuat/idle/gloves.png",
-          "pants": "armor/ma_thuat/idle/pants.png",
-          "boots": "armor/ma_thuat/idle/boots.png"
+          "head": "armor/ma_thuat/idle/head.webp",
+          "chest": "armor/ma_thuat/idle/chest.webp",
+          "gloves": "armor/ma_thuat/idle/gloves.webp",
+          "pants": "armor/ma_thuat/idle/pants.webp",
+          "boots": "armor/ma_thuat/idle/boots.webp"
         },
         "walk": {
-          "head": "armor/ma_thuat/walk/head.png",
-          "chest": "armor/ma_thuat/walk/chest.png",
-          "gloves": "armor/ma_thuat/walk/gloves.png",
-          "pants": "armor/ma_thuat/walk/pants.png",
-          "boots": "armor/ma_thuat/walk/boots.png"
+          "head": "armor/ma_thuat/walk/head.webp",
+          "chest": "armor/ma_thuat/walk/chest.webp",
+          "gloves": "armor/ma_thuat/walk/gloves.webp",
+          "pants": "armor/ma_thuat/walk/pants.webp",
+          "boots": "armor/ma_thuat/walk/boots.webp"
         },
         "run": {
-          "head": "armor/ma_thuat/run/head.png",
-          "chest": "armor/ma_thuat/run/chest.png",
-          "gloves": "armor/ma_thuat/run/gloves.png",
-          "pants": "armor/ma_thuat/run/pants.png",
-          "boots": "armor/ma_thuat/run/boots.png"
+          "head": "armor/ma_thuat/run/head.webp",
+          "chest": "armor/ma_thuat/run/chest.webp",
+          "gloves": "armor/ma_thuat/run/gloves.webp",
+          "pants": "armor/ma_thuat/run/pants.webp",
+          "boots": "armor/ma_thuat/run/boots.webp"
         }
       }
     },
@@ -181,25 +181,25 @@
       "name": "Phong Vũ",
       "states": {
         "idle": {
-          "head": "armor/phong_vu/idle/head.png",
-          "chest": "armor/phong_vu/idle/chest.png",
-          "gloves": "armor/phong_vu/idle/gloves.png",
-          "pants": "armor/phong_vu/idle/pants.png",
-          "boots": "armor/phong_vu/idle/boots.png"
+          "head": "armor/phong_vu/idle/head.webp",
+          "chest": "armor/phong_vu/idle/chest.webp",
+          "gloves": "armor/phong_vu/idle/gloves.webp",
+          "pants": "armor/phong_vu/idle/pants.webp",
+          "boots": "armor/phong_vu/idle/boots.webp"
         },
         "walk": {
-          "head": "armor/phong_vu/walk/head.png",
-          "chest": "armor/phong_vu/walk/chest.png",
-          "gloves": "armor/phong_vu/walk/gloves.png",
-          "pants": "armor/phong_vu/walk/pants.png",
-          "boots": "armor/phong_vu/walk/boots.png"
+          "head": "armor/phong_vu/walk/head.webp",
+          "chest": "armor/phong_vu/walk/chest.webp",
+          "gloves": "armor/phong_vu/walk/gloves.webp",
+          "pants": "armor/phong_vu/walk/pants.webp",
+          "boots": "armor/phong_vu/walk/boots.webp"
         },
         "run": {
-          "head": "armor/phong_vu/run/head.png",
-          "chest": "armor/phong_vu/run/chest.png",
-          "gloves": "armor/phong_vu/run/gloves.png",
-          "pants": "armor/phong_vu/run/pants.png",
-          "boots": "armor/phong_vu/run/boots.png"
+          "head": "armor/phong_vu/run/head.webp",
+          "chest": "armor/phong_vu/run/chest.webp",
+          "gloves": "armor/phong_vu/run/gloves.webp",
+          "pants": "armor/phong_vu/run/pants.webp",
+          "boots": "armor/phong_vu/run/boots.webp"
         }
       }
     },
@@ -209,25 +209,25 @@
       "name": "Lôi Phong",
       "states": {
         "idle": {
-          "head": "armor/loi_phong/idle/head.png",
-          "chest": "armor/loi_phong/idle/chest.png",
-          "gloves": "armor/loi_phong/idle/gloves.png",
-          "pants": "armor/loi_phong/idle/pants.png",
-          "boots": "armor/loi_phong/idle/boots.png"
+          "head": "armor/loi_phong/idle/head.webp",
+          "chest": "armor/loi_phong/idle/chest.webp",
+          "gloves": "armor/loi_phong/idle/gloves.webp",
+          "pants": "armor/loi_phong/idle/pants.webp",
+          "boots": "armor/loi_phong/idle/boots.webp"
         },
         "walk": {
-          "head": "armor/loi_phong/walk/head.png",
-          "chest": "armor/loi_phong/walk/chest.png",
-          "gloves": "armor/loi_phong/walk/gloves.png",
-          "pants": "armor/loi_phong/walk/pants.png",
-          "boots": "armor/loi_phong/walk/boots.png"
+          "head": "armor/loi_phong/walk/head.webp",
+          "chest": "armor/loi_phong/walk/chest.webp",
+          "gloves": "armor/loi_phong/walk/gloves.webp",
+          "pants": "armor/loi_phong/walk/pants.webp",
+          "boots": "armor/loi_phong/walk/boots.webp"
         },
         "run": {
-          "head": "armor/loi_phong/run/head.png",
-          "chest": "armor/loi_phong/run/chest.png",
-          "gloves": "armor/loi_phong/run/gloves.png",
-          "pants": "armor/loi_phong/run/pants.png",
-          "boots": "armor/loi_phong/run/boots.png"
+          "head": "armor/loi_phong/run/head.webp",
+          "chest": "armor/loi_phong/run/chest.webp",
+          "gloves": "armor/loi_phong/run/gloves.webp",
+          "pants": "armor/loi_phong/run/pants.webp",
+          "boots": "armor/loi_phong/run/boots.webp"
         }
       }
     },
@@ -237,25 +237,25 @@
       "name": "Cuồng Phong",
       "states": {
         "idle": {
-          "head": "armor/cuong_phong/idle/head.png",
-          "chest": "armor/cuong_phong/idle/chest.png",
-          "gloves": "armor/cuong_phong/idle/gloves.png",
-          "pants": "armor/cuong_phong/idle/pants.png",
-          "boots": "armor/cuong_phong/idle/boots.png"
+          "head": "armor/cuong_phong/idle/head.webp",
+          "chest": "armor/cuong_phong/idle/chest.webp",
+          "gloves": "armor/cuong_phong/idle/gloves.webp",
+          "pants": "armor/cuong_phong/idle/pants.webp",
+          "boots": "armor/cuong_phong/idle/boots.webp"
         },
         "walk": {
-          "head": "armor/cuong_phong/walk/head.png",
-          "chest": "armor/cuong_phong/walk/chest.png",
-          "gloves": "armor/cuong_phong/walk/gloves.png",
-          "pants": "armor/cuong_phong/walk/pants.png",
-          "boots": "armor/cuong_phong/walk/boots.png"
+          "head": "armor/cuong_phong/walk/head.webp",
+          "chest": "armor/cuong_phong/walk/chest.webp",
+          "gloves": "armor/cuong_phong/walk/gloves.webp",
+          "pants": "armor/cuong_phong/walk/pants.webp",
+          "boots": "armor/cuong_phong/walk/boots.webp"
         },
         "run": {
-          "head": "armor/cuong_phong/run/head.png",
-          "chest": "armor/cuong_phong/run/chest.png",
-          "gloves": "armor/cuong_phong/run/gloves.png",
-          "pants": "armor/cuong_phong/run/pants.png",
-          "boots": "armor/cuong_phong/run/boots.png"
+          "head": "armor/cuong_phong/run/head.webp",
+          "chest": "armor/cuong_phong/run/chest.webp",
+          "gloves": "armor/cuong_phong/run/gloves.webp",
+          "pants": "armor/cuong_phong/run/pants.webp",
+          "boots": "armor/cuong_phong/run/boots.webp"
         }
       }
     }
@@ -272,10 +272,10 @@
         45
       ],
       "variants": {
-        "+0": "weapons/song_dao_co_ban/plus0.png",
-        "+9": "weapons/song_dao_co_ban/plus9.png",
-        "+10": "weapons/song_dao_co_ban/plus10.png",
-        "+11": "weapons/song_dao_co_ban/plus11.png"
+        "+0": "weapons/song_dao_co_ban/plus0.webp",
+        "+9": "weapons/song_dao_co_ban/plus9.webp",
+        "+10": "weapons/song_dao_co_ban/plus10.webp",
+        "+11": "weapons/song_dao_co_ban/plus11.webp"
       }
     },
     {
@@ -289,10 +289,10 @@
         45
       ],
       "variants": {
-        "+0": "weapons/song_chuy/plus0.png",
-        "+9": "weapons/song_chuy/plus9.png",
-        "+10": "weapons/song_chuy/plus10.png",
-        "+11": "weapons/song_chuy/plus11.png"
+        "+0": "weapons/song_chuy/plus0.webp",
+        "+9": "weapons/song_chuy/plus9.webp",
+        "+10": "weapons/song_chuy/plus10.webp",
+        "+11": "weapons/song_chuy/plus11.webp"
       }
     },
     {
@@ -306,10 +306,10 @@
         45
       ],
       "variants": {
-        "+0": "weapons/song_hoa_dao/plus0.png",
-        "+9": "weapons/song_hoa_dao/plus9.png",
-        "+10": "weapons/song_hoa_dao/plus10.png",
-        "+11": "weapons/song_hoa_dao/plus11.png"
+        "+0": "weapons/song_hoa_dao/plus0.webp",
+        "+9": "weapons/song_hoa_dao/plus9.webp",
+        "+10": "weapons/song_hoa_dao/plus10.webp",
+        "+11": "weapons/song_hoa_dao/plus11.webp"
       }
     },
     {
@@ -323,10 +323,10 @@
         45
       ],
       "variants": {
-        "+0": "weapons/song_kiem_dien/plus0.png",
-        "+9": "weapons/song_kiem_dien/plus9.png",
-        "+10": "weapons/song_kiem_dien/plus10.png",
-        "+11": "weapons/song_kiem_dien/plus11.png"
+        "+0": "weapons/song_kiem_dien/plus0.webp",
+        "+9": "weapons/song_kiem_dien/plus9.webp",
+        "+10": "weapons/song_kiem_dien/plus10.webp",
+        "+11": "weapons/song_kiem_dien/plus11.webp"
       }
     },
     {
@@ -340,10 +340,10 @@
         45
       ],
       "variants": {
-        "+0": "weapons/loi_phong_dao/plus0.png",
-        "+9": "weapons/loi_phong_dao/plus9.png",
-        "+10": "weapons/loi_phong_dao/plus10.png",
-        "+11": "weapons/loi_phong_dao/plus11.png"
+        "+0": "weapons/loi_phong_dao/plus0.webp",
+        "+9": "weapons/loi_phong_dao/plus9.webp",
+        "+10": "weapons/loi_phong_dao/plus10.webp",
+        "+11": "weapons/loi_phong_dao/plus11.webp"
       }
     },
     {
@@ -357,10 +357,10 @@
         45
       ],
       "variants": {
-        "+0": "weapons/ao_anh_dao/plus0.png",
-        "+9": "weapons/ao_anh_dao/plus9.png",
-        "+10": "weapons/ao_anh_dao/plus10.png",
-        "+11": "weapons/ao_anh_dao/plus11.png"
+        "+0": "weapons/ao_anh_dao/plus0.webp",
+        "+9": "weapons/ao_anh_dao/plus9.webp",
+        "+10": "weapons/ao_anh_dao/plus10.webp",
+        "+11": "weapons/ao_anh_dao/plus11.webp"
       }
     },
     {
@@ -374,64 +374,64 @@
         45
       ],
       "variants": {
-        "+0": "weapons/hoa_tinh_kiem/plus0.png",
-        "+9": "weapons/hoa_tinh_kiem/plus9.png",
-        "+10": "weapons/hoa_tinh_kiem/plus10.png",
-        "+11": "weapons/hoa_tinh_kiem/plus11.png"
+        "+0": "weapons/hoa_tinh_kiem/plus0.webp",
+        "+9": "weapons/hoa_tinh_kiem/plus9.webp",
+        "+10": "weapons/hoa_tinh_kiem/plus10.webp",
+        "+11": "weapons/hoa_tinh_kiem/plus11.webp"
       }
     }
   ],
   "weaponBackPreviewPlus11": {
     "song_dao_co_ban": {
-      "idle": "weapon_back/song_dao_co_ban/idle.png",
-      "walk": "weapon_back/song_dao_co_ban/walk.png",
-      "run": "weapon_back/song_dao_co_ban/run.png"
+      "idle": "weapon_back/song_dao_co_ban/idle.webp",
+      "walk": "weapon_back/song_dao_co_ban/walk.webp",
+      "run": "weapon_back/song_dao_co_ban/run.webp"
     },
     "song_chuy": {
-      "idle": "weapon_back/song_chuy/idle.png",
-      "walk": "weapon_back/song_chuy/walk.png",
-      "run": "weapon_back/song_chuy/run.png"
+      "idle": "weapon_back/song_chuy/idle.webp",
+      "walk": "weapon_back/song_chuy/walk.webp",
+      "run": "weapon_back/song_chuy/run.webp"
     },
     "song_hoa_dao": {
-      "idle": "weapon_back/song_hoa_dao/idle.png",
-      "walk": "weapon_back/song_hoa_dao/walk.png",
-      "run": "weapon_back/song_hoa_dao/run.png"
+      "idle": "weapon_back/song_hoa_dao/idle.webp",
+      "walk": "weapon_back/song_hoa_dao/walk.webp",
+      "run": "weapon_back/song_hoa_dao/run.webp"
     },
     "song_kiem_dien": {
-      "idle": "weapon_back/song_kiem_dien/idle.png",
-      "walk": "weapon_back/song_kiem_dien/walk.png",
-      "run": "weapon_back/song_kiem_dien/run.png"
+      "idle": "weapon_back/song_kiem_dien/idle.webp",
+      "walk": "weapon_back/song_kiem_dien/walk.webp",
+      "run": "weapon_back/song_kiem_dien/run.webp"
     },
     "loi_phong_dao": {
-      "idle": "weapon_back/loi_phong_dao/idle.png",
-      "walk": "weapon_back/loi_phong_dao/walk.png",
-      "run": "weapon_back/loi_phong_dao/run.png"
+      "idle": "weapon_back/loi_phong_dao/idle.webp",
+      "walk": "weapon_back/loi_phong_dao/walk.webp",
+      "run": "weapon_back/loi_phong_dao/run.webp"
     },
     "ao_anh_dao": {
-      "idle": "weapon_back/ao_anh_dao/idle.png",
-      "walk": "weapon_back/ao_anh_dao/walk.png",
-      "run": "weapon_back/ao_anh_dao/run.png"
+      "idle": "weapon_back/ao_anh_dao/idle.webp",
+      "walk": "weapon_back/ao_anh_dao/walk.webp",
+      "run": "weapon_back/ao_anh_dao/run.webp"
     },
     "hoa_tinh_kiem": {
-      "idle": "weapon_back/hoa_tinh_kiem/idle.png",
-      "walk": "weapon_back/hoa_tinh_kiem/walk.png",
-      "run": "weapon_back/hoa_tinh_kiem/run.png"
+      "idle": "weapon_back/hoa_tinh_kiem/idle.webp",
+      "walk": "weapon_back/hoa_tinh_kiem/walk.webp",
+      "run": "weapon_back/hoa_tinh_kiem/run.webp"
     }
   },
   "wing": {
     "id": "wing_mg_default",
     "states": {
       "idle": {
-        "far": "wing/idle-far.png",
-        "clasp": "wing/idle-clasp.png"
+        "far": "wing/idle-far.webp",
+        "clasp": "wing/idle-clasp.webp"
       },
       "walk": {
-        "far": "wing/walk-far.png",
-        "clasp": "wing/walk-clasp.png"
+        "far": "wing/walk-far.webp",
+        "clasp": "wing/walk-clasp.webp"
       },
       "run": {
-        "far": "wing/run-far.png",
-        "clasp": "wing/run-clasp.png"
+        "far": "wing/run-far.webp",
+        "clasp": "wing/run-clasp.webp"
       }
     }
   },

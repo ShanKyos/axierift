@@ -5552,6 +5552,37 @@ vết sẹo `ISO_NEO`.*
 Bên lề: nhờ ① mà dải nướng của Dark Wizard được cập nhật lần đầu kể từ khi lớp ấy đổi sang `dwsl1`
 — nó đang là ảnh chụp của một bộ art đã gỡ.
 
+### 🗄 ART CỦA GÓI LÀ **WEBP THƯỜNG TRONG GIT** — không PNG, không Git LFS (chủ dự án chốt 2026-09-24)
+
+Nhánh `codex/spellblade-field-package-v2` (gói Thành `town_v1` + gói Ngoài map `field_v2`) đẩy
+art bằng **Git LFS**: thêm `.gitattributes` `*.png filter=lfs` và biến luôn **47 tấm đang chạy**
+thành con trỏ. Production là VPS `git reset --hard` **không có `git-lfs`** ⇒ trên đĩa là tệp văn
+bản 130 byte, nginx phục vụ đúng cái văn bản ấy, **Spellblade mất sạch hình, không lỗi nào báo**.
+CI và sandbox cũng không có `git-lfs`.
+
+⇒ **`python3 tools/magic/sang_webp.py`** — chạy SAU MỖI LẦN `scripts/build_magic_*` nướng ra PNG:
+- chọn **theo từng tệp** bản nhỏ hơn giữa lossless và q90 + `alpha_quality=100`. Không định dạng
+  nào thắng mọi tệp: `town_v1/weapon_back/*` nén q90 **to hơn PNG (107%)**, lossless còn 6%;
+- **giải mã lại rồi so alpha** với bản gốc — lệch một điểm là dừng. Mép, socket, kiểm lem mép
+  vì thế không đổi; màu lệch TB ~3/255;
+- sửa đuôi trong mọi manifest rồi kiểm NGƯỢC mọi đường dẫn có tệp thật.
+
+Đo được: **510 tệp, 352,4 MB → 121,2 MB (34%)** · 395 q90 · 114 lossless · 1 GIF → WebP động.
+
+⚠ **ẢNH GIỐNG NHAU CÓ CHUNG MỘT OID LFS.** Bảy mươi tấm `head.png` là cùng một tấm trong suốt
+(Spellblade không đội mũ), nên bộ kéo LFS đầu tiên của tôi — ánh xạ `oid → một đường dẫn` — chỉ
+ghi một chỗ và để **62 con trỏ** lại. Cửa "còn con trỏ thì dừng" của `sang_webp.py` bắt được.
+
+⚠ **Nướng thử NGOÀI repo.** Mỗi lần commit lại một tấm là thêm một bản đầy đủ vào lịch sử git,
+vĩnh viễn — đó là cái giá của phương án này.
+
+⚠ Mục `winged8Direction` trỏ vào `flight_8dir/manifest.json` **không có trong nhánh** ⇒ đã gỡ.
+Hai gói `town_v1`/`field_v2` **chưa được `game.js` đọc** — nối chúng là đợt việc riêng.
+
+Gác: **`tests/test_khonglfs.js`** (không cần trình duyệt) — ① không tệp nào là con trỏ LFS · ②
+không `.gitattributes` nào bật LFS · ③ gói chỉ có WebP · ④⑤ mọi đường dẫn trong mọi manifest có
+tệp thật. Thử ngược trên nhánh codex nguyên bản: **đỏ 5 FAIL**.
+
 ### Gác
 
 `tests/test_khungchay.js` — ② suy bộ/số khung từ `mrDung()` + `MR_COT`; **③ nay gác chính tính

@@ -46,10 +46,10 @@
   },
   "armorMode": "appearance-replacement",
   "bodyBase": {
-    "idle": "body_base/idle-8dir-8frame.png",
-    "walk": "body_base/walk-8dir-8frame.png",
-    "run": "body_base/run-8dir-8frame.png",
-    "attack": "body_base/attack-8dir-8frame.png"
+    "idle": "body_base/idle-8dir-8frame.webp",
+    "walk": "body_base/walk-8dir-8frame.webp",
+    "run": "body_base/run-8dir-8frame.webp",
+    "attack": "body_base/attack-8dir-8frame.webp"
   },
   "armors": [
     {
@@ -57,10 +57,10 @@
       "id": "vai_tho",
       "name": "Vải thô",
       "states": {
-        "idle": "armor/vai_tho/idle-8dir-8frame.png",
-        "walk": "armor/vai_tho/walk-8dir-8frame.png",
-        "run": "armor/vai_tho/run-8dir-8frame.png",
-        "attack": "armor/vai_tho/attack-8dir-8frame.png"
+        "idle": "armor/vai_tho/idle-8dir-8frame.webp",
+        "walk": "armor/vai_tho/walk-8dir-8frame.webp",
+        "run": "armor/vai_tho/run-8dir-8frame.webp",
+        "attack": "armor/vai_tho/attack-8dir-8frame.webp"
       }
     },
     {
@@ -68,10 +68,10 @@
       "id": "trau_xanh",
       "name": "Trâu xanh",
       "states": {
-        "idle": "armor/trau_xanh/idle-8dir-8frame.png",
-        "walk": "armor/trau_xanh/walk-8dir-8frame.png",
-        "run": "armor/trau_xanh/run-8dir-8frame.png",
-        "attack": "armor/trau_xanh/attack-8dir-8frame.png"
+        "idle": "armor/trau_xanh/idle-8dir-8frame.webp",
+        "walk": "armor/trau_xanh/walk-8dir-8frame.webp",
+        "run": "armor/trau_xanh/run-8dir-8frame.webp",
+        "attack": "armor/trau_xanh/attack-8dir-8frame.webp"
       }
     },
     {
@@ -79,10 +79,10 @@
       "id": "do_dong",
       "name": "Đồ đồng",
       "states": {
-        "idle": "armor/do_dong/idle-8dir-8frame.png",
-        "walk": "armor/do_dong/walk-8dir-8frame.png",
-        "run": "armor/do_dong/run-8dir-8frame.png",
-        "attack": "armor/do_dong/attack-8dir-8frame.png"
+        "idle": "armor/do_dong/idle-8dir-8frame.webp",
+        "walk": "armor/do_dong/walk-8dir-8frame.webp",
+        "run": "armor/do_dong/run-8dir-8frame.webp",
+        "attack": "armor/do_dong/attack-8dir-8frame.webp"
       }
     },
     {
@@ -90,10 +90,10 @@
       "id": "ma_thuat",
       "name": "Ma Thuật",
       "states": {
-        "idle": "armor/ma_thuat/idle-8dir-8frame.png",
-        "walk": "armor/ma_thuat/walk-8dir-8frame.png",
-        "run": "armor/ma_thuat/run-8dir-8frame.png",
-        "attack": "armor/ma_thuat/attack-8dir-8frame.png"
+        "idle": "armor/ma_thuat/idle-8dir-8frame.webp",
+        "walk": "armor/ma_thuat/walk-8dir-8frame.webp",
+        "run": "armor/ma_thuat/run-8dir-8frame.webp",
+        "attack": "armor/ma_thuat/attack-8dir-8frame.webp"
       }
     },
     {
@@ -101,10 +101,10 @@
       "id": "phong_vu",
       "name": "Phong Vũ",
       "states": {
-        "idle": "armor/phong_vu/idle-8dir-8frame.png",
-        "walk": "armor/phong_vu/walk-8dir-8frame.png",
-        "run": "armor/phong_vu/run-8dir-8frame.png",
-        "attack": "armor/phong_vu/attack-8dir-8frame.png"
+        "idle": "armor/phong_vu/idle-8dir-8frame.webp",
+        "walk": "armor/phong_vu/walk-8dir-8frame.webp",
+        "run": "armor/phong_vu/run-8dir-8frame.webp",
+        "attack": "armor/phong_vu/attack-8dir-8frame.webp"
       }
     },
     {
@@ -112,10 +112,10 @@
       "id": "loi_phong",
       "name": "Lôi Phong",
       "states": {
-        "idle": "armor/loi_phong/idle-8dir-8frame.png",
-        "walk": "armor/loi_phong/walk-8dir-8frame.png",
-        "run": "armor/loi_phong/run-8dir-8frame.png",
-        "attack": "armor/loi_phong/attack-8dir-8frame.png"
+        "idle": "armor/loi_phong/idle-8dir-8frame.webp",
+        "walk": "armor/loi_phong/walk-8dir-8frame.webp",
+        "run": "armor/loi_phong/run-8dir-8frame.webp",
+        "attack": "armor/loi_phong/attack-8dir-8frame.webp"
       }
     },
     {
@@ -123,10 +123,10 @@
       "id": "cuong_phong",
       "name": "Cuồng Phong",
       "states": {
-        "idle": "armor/cuong_phong/idle-8dir-8frame.png",
-        "walk": "armor/cuong_phong/walk-8dir-8frame.png",
-        "run": "armor/cuong_phong/run-8dir-8frame.png",
-        "attack": "armor/cuong_phong/attack-8dir-8frame.png"
+        "idle": "armor/cuong_phong/idle-8dir-8frame.webp",
+        "walk": "armor/cuong_phong/walk-8dir-8frame.webp",
+        "run": "armor/cuong_phong/run-8dir-8frame.webp",
+        "attack": "armor/cuong_phong/attack-8dir-8frame.webp"
       }
     }
   ],
@@ -135,7 +135,7 @@
       "tier": 1,
       "id": "song_dao_co_ban",
       "name": "Song đao cơ bản",
-      "master": "weapons/song_dao_co_ban-master.png",
+      "master": "weapons/song_dao_co_ban-master.webp",
       "displayPx": 72,
       "gripRatio": 0.12,
       "dualWield": true
@@ -144,7 +144,7 @@
       "tier": 2,
       "id": "song_chuy",
       "name": "Song chùy",
-      "master": "weapons/song_chuy-master.png",
+      "master": "weapons/song_chuy-master.webp",
       "displayPx": 78,
       "gripRatio": 0.12,
       "dualWield": true
@@ -153,7 +153,7 @@
       "tier": 3,
       "id": "song_hoa_dao",
       "name": "Song hỏa đao",
-      "master": "weapons/song_hoa_dao-master.png",
+      "master": "weapons/song_hoa_dao-master.webp",
       "displayPx": 86,
       "gripRatio": 0.12,
       "dualWield": true
@@ -162,7 +162,7 @@
       "tier": 4,
       "id": "song_kiem_dien",
       "name": "Song kiếm điện",
-      "master": "weapons/song_kiem_dien-master.png",
+      "master": "weapons/song_kiem_dien-master.webp",
       "displayPx": 94,
       "gripRatio": 0.12,
       "dualWield": true
@@ -171,7 +171,7 @@
       "tier": 5,
       "id": "loi_phong_dao",
       "name": "Lôi phong đao",
-      "master": "weapons/loi_phong_dao-master.png",
+      "master": "weapons/loi_phong_dao-master.webp",
       "displayPx": 104,
       "gripRatio": 0.12,
       "dualWield": true
@@ -180,7 +180,7 @@
       "tier": 6,
       "id": "ao_anh_dao",
       "name": "Ảo ảnh đao",
-      "master": "weapons/ao_anh_dao-master.png",
+      "master": "weapons/ao_anh_dao-master.webp",
       "displayPx": 116,
       "gripRatio": 0.12,
       "dualWield": true
@@ -189,7 +189,7 @@
       "tier": 7,
       "id": "hoa_tinh_kiem",
       "name": "Hỏa tinh kiếm",
-      "master": "weapons/hoa_tinh_kiem-master.png",
+      "master": "weapons/hoa_tinh_kiem-master.webp",
       "displayPx": 128,
       "gripRatio": 0.12,
       "dualWield": true
@@ -215,19 +215,8 @@
       "wing_dw_tier1",
       "wing_mg_tier1"
     ],
-    "weaponLayer": "weapon-dual-ao-anh-fire-slash-se-8frame.png",
-    "vfxLayer": "vfx-fire-slash-se-8frame.png"
-  },
-  "winged8Direction": {
-    "manifest": "flight_8dir/manifest.json",
-    "wingAlwaysEquipped": true,
-    "states": [
-      "safeWalk",
-      "fly",
-      "flyMove",
-      "flyAttack"
-    ],
-    "safeZoneWeaponPolicy": "crossed_back"
+    "weaponLayer": "weapon-dual-ao-anh-fire-slash-se-8frame.webp",
+    "vfxLayer": "vfx-fire-slash-se-8frame.webp"
   },
   "townPackage": {
     "manifest": "town_v1/manifest.json",
