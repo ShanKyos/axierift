@@ -59,6 +59,9 @@ function trFrag(s) {
 
 /* ---- EXACT dictionary: full-string VI -> EN ---- */
 const EXACT = {
+  'Thành an toàn · bấm để về': 'Safe town · click to return',
+  'Bạn đang ở trong thành': 'You are in town',
+  'Đang ở trong thành rồi': 'Already in town',
 
   /* ══ LỚP TỰ SỰ — NPC · nhiệm vụ · trùm · vật phẩm cốt truyện ═══════════════════════════
      Lớp lớp/chiêu/map đã Tây hoá từ đợt trước (Dark Knight · Werebear Woods · Poison Arrow),

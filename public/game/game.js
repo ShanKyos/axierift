@@ -31301,7 +31301,32 @@ function tgNhan(g, ten, phu, x, y, mauTen, mauPhu, dam){
 // đĩa của ta lên là xoá đúng thứ vừa quyết định giữ. Ta chỉ thêm **vòng sáng quanh nó** và
 // **nhãn bên dưới** — tức trang trí lại thứ hoạ sĩ vẽ sẵn, không thay nó.
 const TG_DAU_R = 0.047;           // bán kính con dấu, tính theo tỉ lệ art
+// ── NGÔI NHÀ GIỮA TẤM BẢN ĐỒ = THÀNH AN TOÀN ─────────────────────────────────────────────
+// Chủ dự án chốt: *"cái nhà ở giữa là thành an toàn để có thể teleport về được"*. Toạ độ ĐO
+// trên chính tấm art (tâm khối nhà, hệ u/v của tranh), không phải toạ độ khung — phóng/kẹp
+// thì nó vẫn bám đúng mái nhà. Bấm là về thẳng thành, không cần vào vùng trước.
+const TG_THANH = { id:'ardhaven', dau:[.503, .452], r:.058 };
+function tgVeThanh(g){
+  const md = MAPS[TG_THANH.id]; if (!md) return;
+  const p = tgXY(TG_THANH.dau[0], TG_THANH.dau[1]);
+  const R = TG_THANH.r * (p.co * 1320);
+  const hv = _tgHover === '<thanh>', cur = curMap === TG_THANH.id;
+  const t = performance.now() / 1000, nh = 0.5 + 0.5 * Math.sin(t * 2.4);
+  g.save();
+  const qg = g.createRadialGradient(p.x, p.y, R * 0.6, p.x, p.y, R * 1.9);
+  qg.addColorStop(0, `rgba(255,222,140,${hv ? .38 : .20 + nh * .08})`);
+  qg.addColorStop(1, 'rgba(255,222,140,0)');
+  g.fillStyle = qg; g.beginPath(); g.arc(p.x, p.y, R * 1.9, 0, 7); g.fill();
+  g.beginPath(); g.arc(p.x, p.y, R, 0, 7);
+  g.lineWidth = hv ? 3.2 : 2.4;
+  g.strokeStyle = cur ? 'rgba(142,240,160,.95)' : hv ? '#fff4d2' : 'rgba(255,214,120,.92)';
+  g.stroke();
+  g.restore();
+  tgNhan(g, '⌂ ' + md.name, cur ? 'Bạn đang ở trong thành' : 'Thành an toàn · bấm để về',
+         p.x, p.y + R + 14, cur ? '#8ef0a0' : '#ffe19a', 'rgba(255,230,170,.85)', true);
+}
 function tgVeMucVung(g){
+  tgVeThanh(g);
   const cvung = tgVungCua(curMap);
   const t = performance.now() / 1000;
   for (const v of TG_VUNG){
@@ -31489,6 +31514,8 @@ function tgTaiDiem(mx, my){
     }
     return tot;
   }
+  { const p = tgXY(TG_THANH.dau[0], TG_THANH.dau[1]);
+    if (MAPS[TG_THANH.id] && Math.hypot(mx - p.x, my - p.y) < TG_THANH.r * (p.co * 1320) * 1.1) return '<thanh>'; }
   let tot = null, totD = 1e9;
   for (const vv of TG_VUNG){
     const p = tgXY(vv.dau[0], vv.dau[1]), d = Math.hypot(mx - p.x, my - p.y);
@@ -31693,6 +31720,10 @@ window.tgReBanDo = function(ev){
 // trong danh sách. ⚠ `id` mang NGHĨA KHÁC NHAU theo mức đang xem — xem `tgTaiDiem`.
 window.tgChon = function(id){
   if (id === '<lui>'){ window.tgVaoVung(null); return; }
+  if (id === '<thanh>'){
+    if (curMap === TG_THANH.id){ addFloat(player.x, player.y - 40, 'Đang ở trong thành rồi', '#8ef0a0', 12); return; }
+    closePanels(); travelTo(TG_THANH.id); return;
+  }
   if (!_tgVung){
     // đang ở mức thế giới: `id` có thể là một VÙNG (bấm trên tranh) hoặc một MAP (bấm trong
     // danh sách bên phải). Danh sách vẫn liệt kê từng map nên phải nhận cả hai.
