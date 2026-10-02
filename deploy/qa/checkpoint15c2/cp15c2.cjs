@@ -1,0 +1,28 @@
+const { chromium } = require('playwright'); const fs=require('fs');
+const OUT=process.argv[2]; const Q=process.argv[3]||'?test=1&magicRebuild=1';
+(async()=>{const br=await chromium.launch(); const pg=await br.newPage({viewport:{width:1280,height:800}});
+ const loi=[]; pg.on('pageerror',e=>loi.push(String(e)));
+ await pg.goto('http://localhost:8865/index.html'+Q); await pg.waitForFunction(()=>window.__gameReady,null,{timeout:60000});
+ await pg.evaluate(async()=>{window.TEST_MODE=true; startGame('minhgiao',null); applyTestBoost();
+   for(let i=0;i<200&&!(window.MagicRebuild&&(!window.MagicRebuild.enabled||window.MagicRebuild.ready));i++)await new Promise(r=>setTimeout(r,50));
+   player.reflect=0; window.__mau=[]; window.__lay=true;
+   const tick=()=>{ if(window.__lay){const r=window.__magicRebuildRender; window.__mau.push(r?{st:r.state,row:r.row,f:r.frame,am:r.attackMode,air:r.air,map:curMap,dead:!!dead}:{st:null,map:curMap}); window.__magicRebuildRender=null;} requestAnimationFrame(tick);}; requestAnimationFrame(tick);});
+ const lay=async(ten,fn,ms=1500)=>{await pg.evaluate(()=>{window.__mau=[];}); await pg.evaluate(fn); await pg.waitForTimeout(ms);
+   const m=await pg.evaluate(()=>window.__mau.slice()); const dem={}; for(const x of m){const k=x.st===null?'(không vẽ native)':`${x.st}|${x.am}|air=${x.air}`; dem[k]=(dem[k]||0)+1;}
+   const shot=await pg.screenshot({clip:{x:440,y:200,width:400,height:400}}); fs.writeFileSync(`${OUT}/c2_${ten}.png`,shot);
+   const rows=[...new Set(m.filter(x=>x.st).map(x=>x.row))];
+   return {ten,map:m.length?m[m.length-1].map:null,mau:m.length,dem,rows};};
+ const kq=[];
+ kq.push(await lay('thanh_dung',()=>{travelTo('ardhaven'); moveTarget=null;}));
+ kq.push(await lay('thanh_di',()=>{moveTarget={x:player.x+600,y:player.y+40};},1200));
+ kq.push(await lay('ngoai_bay',()=>{moveTarget=null; travelTo('corran');}));
+ kq.push(await lay('ngoai_bay_di',()=>{moveTarget={x:player.x+500,y:player.y-200};},1000));
+ kq.push(await lay('ngoai_danh_bay',()=>{moveTarget=null; const m=mobs.find(m=>m.hp>0); if(m){player.x=m.x-60;player.y=m.y;} for(let i=0;i<3;i++)setTimeout(()=>{player.atkCd=0;doBasic&&doBasic();},i*300);},1200));
+ kq.push(await lay('ngoai_chieu_bay',()=>{player.qi=1e6; Object.keys(player.cds||{}).forEach(k=>player.cds[k]=0); try{castSkill(1)}catch(e){window.__e=String(e)} },900));
+ kq.push(await lay('khong_canh_dung',()=>{const c=player.equip.canh; window.__canh=c; player.equip.canh=null; calcDerived();},1000));
+ kq.push(await lay('khong_canh_danh',()=>{const m=mobs.find(m=>m.hp>0); if(m){player.x=m.x-60;player.y=m.y;} for(let i=0;i<3;i++)setTimeout(()=>{player.atkCd=0;doBasic&&doBasic();},i*300);},1200));
+ kq.push(await lay('doi_do_giua_clip',()=>{player.equip.canh=window.__canh; calcDerived(); player.atkCd=0; doBasic&&doBasic(); setTimeout(()=>{const a=player.equip.ao; window.__aoCu=a&&a.def; },60);},900));
+ kq.push(await lay('chet',()=>{for(const m of mobs) m.x=m.y=-9999; player.traitRevive=false; player.reviveUsed=true; player.vhReviveCd=999; player.hp=0; try{onDeath()}catch(e){window.__e2=String(e)} window.__deadSau=dead;},1500));
+ kq.push(await lay('hoi_sinh',()=>{try{(window.respawn||respawn)()}catch(e){window.__e3=String(e)}},1500));
+ const err=await pg.evaluate(()=>[window.__e,window.__e2,window.__e3,window.__deadSau,typeof doBasic]);
+ console.log(JSON.stringify({Q,kq,err,loi},null,1)); await br.close();})();

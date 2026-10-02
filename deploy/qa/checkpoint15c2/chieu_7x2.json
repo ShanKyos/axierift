@@ -1,0 +1,126 @@
+{
+ "kq": {
+  "bar": [
+   "a",
+   "tp",
+   "mg_battlefury",
+   "mg_powerslash"
+  ],
+  "out": {
+   "canh a": {
+    "ms": "fireDashSlash",
+    "seen": {
+     "fireDashSlash|air": 7,
+     "flyIdle|null": 7
+    }
+   },
+   "canh tp": {
+    "ms": "lightStorm",
+    "seen": {
+     "lightStorm|air": 12,
+     "flyIdle|null": 10
+    }
+   },
+   "canh mg_powerslash": {
+    "ms": "horizontalSlash",
+    "seen": {
+     "horizontalSlash|air": 13,
+     "flyIdle|null": 10
+    }
+   },
+   "canh mg_powerwave": {
+    "ms": "thrust",
+    "seen": {
+     "thrust|air": 13,
+     "flyIdle|null": 10
+    }
+   },
+   "canh mg_twistingslash": {
+    "ms": "spinSlash",
+    "seen": {
+     "spinSlash|air": 16,
+     "flyIdle|null": 1
+    }
+   },
+   "canh mg_giganticstorm": {
+    "ms": "lightStorm",
+    "seen": {
+     "lightStorm|air": 13,
+     "flyIdle|null": 4
+    }
+   },
+   "canh mg_fireball": {
+    "ms": "risingSlash",
+    "seen": {
+     "risingSlash|air": 11,
+     "flyIdle|null": 9
+    }
+   },
+   "canh mg_battlefury": {
+    "ms": "dualSlash",
+    "seen": {
+     "dualSlash|air": 11,
+     "flyIdle|null": 8,
+     "idle|null": 1
+    }
+   },
+   "khongcanh a": {
+    "ms": "fireDashSlash",
+    "seen": {
+     "fireDashSlash|ground": 13,
+     "idle|null": 4
+    }
+   },
+   "khongcanh tp": {
+    "ms": "lightStorm",
+    "seen": {
+     "lightStorm|ground": 10,
+     "idle|null": 9
+    }
+   },
+   "khongcanh mg_powerslash": {
+    "ms": "horizontalSlash",
+    "seen": {
+     "horizontalSlash|ground": 15,
+     "idle|null": 5
+    }
+   },
+   "khongcanh mg_powerwave": {
+    "ms": "thrust",
+    "seen": {
+     "thrust|ground": 15,
+     "idle|null": 10
+    }
+   },
+   "khongcanh mg_twistingslash": {
+    "ms": "spinSlash",
+    "seen": {
+     "spinSlash|ground": 14,
+     "idle|null": 14
+    }
+   },
+   "khongcanh mg_giganticstorm": {
+    "ms": "lightStorm",
+    "seen": {
+     "lightStorm|ground": 15,
+     "idle|null": 15
+    }
+   },
+   "khongcanh mg_fireball": {
+    "ms": "risingSlash",
+    "seen": {
+     "risingSlash|ground": 14,
+     "idle|null": 12
+    }
+   },
+   "khongcanh mg_battlefury": {
+    "ms": "dualSlash",
+    "seen": {
+     "dualSlash|ground": 13,
+     "idle|null": 13
+    }
+   }
+  }
+ },
+ "loi": []
+}

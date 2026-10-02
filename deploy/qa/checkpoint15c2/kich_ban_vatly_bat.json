@@ -1,0 +1,153 @@
+{
+ "Q": "?test=1&magicRebuild=1&magicPhysics=1",
+ "kq": [
+  {
+   "ten": "thanh_dung",
+   "map": "ardhaven",
+   "mau": 61,
+   "dem": {
+    "idle|null|air=false": 61
+   },
+   "rows": [
+    6
+   ]
+  },
+  {
+   "ten": "thanh_di",
+   "map": "ardhaven",
+   "mau": 39,
+   "dem": {
+    "idle|null|air=false": 1,
+    "run|null|air=false": 38
+   },
+   "rows": [
+    6
+   ]
+  },
+  {
+   "ten": "ngoai_bay",
+   "map": "corran",
+   "mau": 44,
+   "dem": {
+    "run|null|air=false": 1,
+    "flyIdle|null|air=true": 43
+   },
+   "rows": [
+    6
+   ]
+  },
+  {
+   "ten": "ngoai_bay_di",
+   "map": "corran",
+   "mau": 28,
+   "dem": {
+    "flyIdle|null|air=true": 1,
+    "flyMove|null|air=true": 27
+   },
+   "rows": [
+    6
+   ]
+  },
+  {
+   "ten": "ngoai_danh_bay",
+   "map": "corran",
+   "mau": 24,
+   "dem": {
+    "flyMove|null|air=true": 1,
+    "hit|null|air=true": 15,
+    "flyIdle|null|air=true": 3,
+    "dualSlash|air|air=true": 5
+   },
+   "rows": [
+    6,
+    2
+   ]
+  },
+  {
+   "ten": "ngoai_chieu_bay",
+   "map": "corran",
+   "mau": 20,
+   "dem": {
+    "flyIdle|null|air=true": 20
+   },
+   "rows": [
+    2
+   ]
+  },
+  {
+   "ten": "khong_canh_dung",
+   "map": "corran",
+   "mau": 26,
+   "dem": {
+    "flyIdle|null|air=true": 1,
+    "idle|null|air=false": 19,
+    "hit|null|air=true": 6
+   },
+   "rows": [
+    2
+   ]
+  },
+  {
+   "ten": "khong_canh_danh",
+   "map": "corran",
+   "mau": 36,
+   "dem": {
+    "idle|null|air=false": 19,
+    "horizontalSlash|ground|air=false": 8,
+    "dualSlash|ground|air=false": 9
+   },
+   "rows": [
+    2,
+    5,
+    6
+   ]
+  },
+  {
+   "ten": "doi_do_giua_clip",
+   "map": "corran",
+   "mau": 23,
+   "dem": {
+    "idle|null|air=false": 1,
+    "horizontalSlash|air|air=true": 6,
+    "flyIdle|null|air=true": 11,
+    "hit|null|air=true": 5
+   },
+   "rows": [
+    6,
+    5
+   ]
+  },
+  {
+   "ten": "chet",
+   "map": "corran",
+   "mau": 46,
+   "dem": {
+    "flyIdle|null|air=true": 1,
+    "death|null|air=false": 45
+   },
+   "rows": [
+    5
+   ]
+  },
+  {
+   "ten": "hoi_sinh",
+   "map": "corran",
+   "mau": 61,
+   "dem": {
+    "death|null|air=false": 1,
+    "flyIdle|null|air=true": 60
+   },
+   "rows": [
+    5
+   ]
+  }
+ ],
+ "err": [
+  null,
+  null,
+  null,
+  true,
+  "function"
+ ],
+ "loi": []
+}
