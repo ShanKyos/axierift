@@ -1,0 +1,1018 @@
+{
+  "id": "magic_rebuild_v1",
+  "status": "complete_coverage_for_integration_qa",
+  "productionReady": false,
+  "cell": 256,
+  "frames": 8,
+  "pivot": [
+    128,
+    213.6
+  ],
+  "rowOrder": [
+    "south",
+    "southwest",
+    "west",
+    "northwest",
+    "north",
+    "northeast",
+    "east",
+    "southeast"
+  ],
+  "states": [
+    "idle",
+    "walk",
+    "run",
+    "flyIdle",
+    "flyMove",
+    "hit",
+    "death",
+    "dualSlash",
+    "horizontalSlash",
+    "spinSlash",
+    "thrust",
+    "risingSlash",
+    "fireDashSlash",
+    "lightStorm"
+  ],
+  "armors": [
+    "vai_tho",
+    "trau_xanh",
+    "do_dong",
+    "ma_thuat",
+    "phong_vu",
+    "loi_phong",
+    "cuong_phong"
+  ],
+  "weapons": [
+    "song_dao_co_ban",
+    "song_chuy",
+    "song_hoa_dao",
+    "song_kiem_dien",
+    "loi_phong_dao",
+    "ao_anh_dao",
+    "hoa_tinh_kiem"
+  ],
+  "wings": [
+    "dw_1",
+    "magic_2"
+  ],
+  "enhancements": [
+    0,
+    9,
+    10,
+    11
+  ],
+  "art": {
+    "body": "source/body-base.png",
+    "vai_tho": "source/body-base.png",
+    "ma_thuat": "source/armor-red.png",
+    "phong_vu": "source/armor-black-gold.png",
+    "trau_xanh": "source/armor-blue-ox.png",
+    "do_dong": "source/armor-bronze.png",
+    "loi_phong": "source/armor-thunder.png",
+    "cuong_phong": "source/armor-hurricane.png"
+  },
+  "camera": {
+    "scale": 0.72,
+    "offset": [
+      35.84,
+      48
+    ]
+  },
+  "limitations": [
+    "articulated cutout rig, not a dynamics simulation",
+    "authoring QA required before production use",
+    "pants map to boots equipment in current game inventory unless dedicated pants slot supplied"
+  ],
+  "weaponsArt": "source/weapons.png",
+  "weaponGripRatio": [
+    [
+      0.44,
+      0.84
+    ],
+    [
+      0.5,
+      0.84
+    ],
+    [
+      0.49,
+      0.84
+    ],
+    [
+      0.5,
+      0.86
+    ],
+    [
+      0.51,
+      0.85
+    ],
+    [
+      0.5,
+      0.86
+    ],
+    [
+      0.5,
+      0.88
+    ]
+  ],
+  "wingsArt": "source/wings.png",
+  "effectsArt": "source/effects.png",
+  "assetCoverageComplete": true,
+  "bindLandmarks": [
+    {
+      "neck": [
+        128,
+        79
+      ],
+      "head": [
+        128,
+        56
+      ],
+      "spine": [
+        128,
+        114
+      ],
+      "pelvis": [
+        128,
+        151
+      ],
+      "hipEnd": [
+        128,
+        165
+      ],
+      "shoulderL": [
+        108,
+        88
+      ],
+      "shoulderR": [
+        148,
+        88
+      ],
+      "elbowL": [
+        98,
+        118
+      ],
+      "elbowR": [
+        158,
+        118
+      ],
+      "wristL": [
+        84,
+        149
+      ],
+      "wristR": [
+        172,
+        149
+      ],
+      "hipL": [
+        117,
+        151
+      ],
+      "hipR": [
+        139,
+        151
+      ],
+      "kneeL": [
+        110,
+        184
+      ],
+      "kneeR": [
+        146,
+        184
+      ],
+      "ankleL": [
+        106,
+        222
+      ],
+      "ankleR": [
+        150,
+        222
+      ],
+      "toeL": [
+        102,
+        230
+      ],
+      "toeR": [
+        154,
+        230
+      ]
+    },
+    {
+      "neck": [
+        128,
+        79
+      ],
+      "head": [
+        128,
+        56
+      ],
+      "spine": [
+        128,
+        114
+      ],
+      "pelvis": [
+        128,
+        151
+      ],
+      "hipEnd": [
+        128,
+        165
+      ],
+      "shoulderL": [
+        117,
+        88
+      ],
+      "shoulderR": [
+        146,
+        89
+      ],
+      "elbowL": [
+        105,
+        118
+      ],
+      "elbowR": [
+        154,
+        117
+      ],
+      "wristL": [
+        96,
+        149
+      ],
+      "wristR": [
+        158,
+        149
+      ],
+      "hipL": [
+        122,
+        151
+      ],
+      "hipR": [
+        137,
+        151
+      ],
+      "kneeL": [
+        112,
+        183
+      ],
+      "kneeR": [
+        145,
+        184
+      ],
+      "ankleL": [
+        106,
+        220
+      ],
+      "ankleR": [
+        150,
+        222
+      ],
+      "toeL": [
+        99,
+        228
+      ],
+      "toeR": [
+        154,
+        230
+      ]
+    },
+    {
+      "neck": [
+        128,
+        79
+      ],
+      "head": [
+        129,
+        56
+      ],
+      "spine": [
+        128,
+        114
+      ],
+      "pelvis": [
+        128,
+        151
+      ],
+      "hipEnd": [
+        128,
+        165
+      ],
+      "shoulderL": [
+        130,
+        88
+      ],
+      "shoulderR": [
+        121,
+        89
+      ],
+      "elbowL": [
+        124,
+        118
+      ],
+      "elbowR": [
+        116,
+        117
+      ],
+      "wristL": [
+        117,
+        149
+      ],
+      "wristR": [
+        109,
+        146
+      ],
+      "hipL": [
+        134,
+        151
+      ],
+      "hipR": [
+        120,
+        151
+      ],
+      "kneeL": [
+        136,
+        184
+      ],
+      "kneeR": [
+        125,
+        181
+      ],
+      "ankleL": [
+        138,
+        222
+      ],
+      "ankleR": [
+        126,
+        213
+      ],
+      "toeL": [
+        127,
+        230
+      ],
+      "toeR": [
+        115,
+        220
+      ]
+    },
+    {
+      "neck": [
+        128,
+        79
+      ],
+      "head": [
+        128,
+        56
+      ],
+      "spine": [
+        128,
+        114
+      ],
+      "pelvis": [
+        128,
+        151
+      ],
+      "hipEnd": [
+        128,
+        165
+      ],
+      "shoulderL": [
+        146,
+        89
+      ],
+      "shoulderR": [
+        117,
+        88
+      ],
+      "elbowL": [
+        154,
+        117
+      ],
+      "elbowR": [
+        105,
+        118
+      ],
+      "wristL": [
+        158,
+        149
+      ],
+      "wristR": [
+        96,
+        149
+      ],
+      "hipL": [
+        137,
+        151
+      ],
+      "hipR": [
+        122,
+        151
+      ],
+      "kneeL": [
+        145,
+        184
+      ],
+      "kneeR": [
+        112,
+        183
+      ],
+      "ankleL": [
+        150,
+        222
+      ],
+      "ankleR": [
+        106,
+        220
+      ],
+      "toeL": [
+        154,
+        230
+      ],
+      "toeR": [
+        99,
+        228
+      ]
+    },
+    {
+      "neck": [
+        128,
+        79
+      ],
+      "head": [
+        128,
+        56
+      ],
+      "spine": [
+        128,
+        114
+      ],
+      "pelvis": [
+        128,
+        151
+      ],
+      "hipEnd": [
+        128,
+        165
+      ],
+      "shoulderL": [
+        148,
+        88
+      ],
+      "shoulderR": [
+        108,
+        88
+      ],
+      "elbowL": [
+        158,
+        118
+      ],
+      "elbowR": [
+        98,
+        118
+      ],
+      "wristL": [
+        172,
+        149
+      ],
+      "wristR": [
+        84,
+        149
+      ],
+      "hipL": [
+        139,
+        151
+      ],
+      "hipR": [
+        117,
+        151
+      ],
+      "kneeL": [
+        146,
+        184
+      ],
+      "kneeR": [
+        110,
+        184
+      ],
+      "ankleL": [
+        150,
+        222
+      ],
+      "ankleR": [
+        106,
+        222
+      ],
+      "toeL": [
+        154,
+        230
+      ],
+      "toeR": [
+        102,
+        230
+      ]
+    },
+    {
+      "neck": [
+        128,
+        79
+      ],
+      "head": [
+        128,
+        56
+      ],
+      "spine": [
+        128,
+        114
+      ],
+      "pelvis": [
+        128,
+        151
+      ],
+      "hipEnd": [
+        128,
+        165
+      ],
+      "shoulderL": [
+        139,
+        88
+      ],
+      "shoulderR": [
+        110,
+        89
+      ],
+      "elbowL": [
+        151,
+        118
+      ],
+      "elbowR": [
+        102,
+        117
+      ],
+      "wristL": [
+        160,
+        149
+      ],
+      "wristR": [
+        98,
+        149
+      ],
+      "hipL": [
+        134,
+        151
+      ],
+      "hipR": [
+        119,
+        151
+      ],
+      "kneeL": [
+        144,
+        183
+      ],
+      "kneeR": [
+        111,
+        184
+      ],
+      "ankleL": [
+        150,
+        220
+      ],
+      "ankleR": [
+        106,
+        222
+      ],
+      "toeL": [
+        157,
+        228
+      ],
+      "toeR": [
+        102,
+        230
+      ]
+    },
+    {
+      "neck": [
+        128,
+        79
+      ],
+      "head": [
+        127,
+        56
+      ],
+      "spine": [
+        128,
+        114
+      ],
+      "pelvis": [
+        128,
+        151
+      ],
+      "hipEnd": [
+        128,
+        165
+      ],
+      "shoulderL": [
+        135,
+        89
+      ],
+      "shoulderR": [
+        126,
+        88
+      ],
+      "elbowL": [
+        140,
+        117
+      ],
+      "elbowR": [
+        132,
+        118
+      ],
+      "wristL": [
+        147,
+        146
+      ],
+      "wristR": [
+        139,
+        149
+      ],
+      "hipL": [
+        136,
+        151
+      ],
+      "hipR": [
+        122,
+        151
+      ],
+      "kneeL": [
+        131,
+        181
+      ],
+      "kneeR": [
+        120,
+        184
+      ],
+      "ankleL": [
+        130,
+        213
+      ],
+      "ankleR": [
+        118,
+        222
+      ],
+      "toeL": [
+        141,
+        220
+      ],
+      "toeR": [
+        129,
+        230
+      ]
+    },
+    {
+      "neck": [
+        128,
+        79
+      ],
+      "head": [
+        128,
+        56
+      ],
+      "spine": [
+        128,
+        114
+      ],
+      "pelvis": [
+        128,
+        151
+      ],
+      "hipEnd": [
+        128,
+        165
+      ],
+      "shoulderL": [
+        110,
+        89
+      ],
+      "shoulderR": [
+        139,
+        88
+      ],
+      "elbowL": [
+        102,
+        117
+      ],
+      "elbowR": [
+        151,
+        118
+      ],
+      "wristL": [
+        98,
+        149
+      ],
+      "wristR": [
+        160,
+        149
+      ],
+      "hipL": [
+        119,
+        151
+      ],
+      "hipR": [
+        134,
+        151
+      ],
+      "kneeL": [
+        111,
+        184
+      ],
+      "kneeR": [
+        144,
+        183
+      ],
+      "ankleL": [
+        106,
+        222
+      ],
+      "ankleR": [
+        150,
+        220
+      ],
+      "toeL": [
+        102,
+        230
+      ],
+      "toeR": [
+        157,
+        228
+      ]
+    }
+  ],
+  "boneDefinitions": [
+    [
+      "torsoUpper",
+      "neck",
+      "spine",
+      "chest",
+      19
+    ],
+    [
+      "torsoLower",
+      "spine",
+      "pelvis",
+      "chest",
+      19
+    ],
+    [
+      "hip",
+      "pelvis",
+      "hipEnd",
+      "pants",
+      21
+    ],
+    [
+      "head",
+      "neck",
+      "head",
+      "body",
+      19
+    ],
+    [
+      "upperL",
+      "shoulderL",
+      "elbowL",
+      "chest",
+      9
+    ],
+    [
+      "lowerL",
+      "elbowL",
+      "wristL",
+      "gloves",
+      8
+    ],
+    [
+      "thighL",
+      "hipL",
+      "kneeL",
+      "pants",
+      11
+    ],
+    [
+      "shinL",
+      "kneeL",
+      "ankleL",
+      "boots",
+      9
+    ],
+    [
+      "footL",
+      "ankleL",
+      "toeL",
+      "boots",
+      9
+    ],
+    [
+      "upperR",
+      "shoulderR",
+      "elbowR",
+      "chest",
+      9
+    ],
+    [
+      "lowerR",
+      "elbowR",
+      "wristR",
+      "gloves",
+      8
+    ],
+    [
+      "thighR",
+      "hipR",
+      "kneeR",
+      "pants",
+      11
+    ],
+    [
+      "shinR",
+      "kneeR",
+      "ankleR",
+      "boots",
+      9
+    ],
+    [
+      "footR",
+      "ankleR",
+      "toeR",
+      "boots",
+      9
+    ]
+  ],
+  "version": 3,
+  "jointUnderpaint": {
+    "source": "source/joint-underpaint.png",
+    "columns": 3,
+    "rows": 2,
+    "patches": [
+      {
+        "joint": "shoulder",
+        "cell": 0,
+        "size": [
+          12,
+          14
+        ]
+      },
+      {
+        "joint": "elbow",
+        "cell": 1,
+        "size": [
+          9,
+          11
+        ]
+      },
+      {
+        "joint": "wrist",
+        "cell": 2,
+        "size": [
+          6,
+          7
+        ]
+      },
+      {
+        "joint": "hip",
+        "cell": 3,
+        "size": [
+          13,
+          14
+        ]
+      },
+      {
+        "joint": "knee",
+        "cell": 4,
+        "size": [
+          10,
+          12
+        ]
+      },
+      {
+        "joint": "ankle",
+        "cell": 5,
+        "size": [
+          6,
+          8
+        ]
+      }
+    ]
+  },
+  "concealedArt": {
+    "sources": {
+      "vai_tho": "source/concealed-vai_tho.png",
+      "trau_xanh": "source/concealed-trau_xanh.png",
+      "do_dong": "source/concealed-do_dong.png",
+      "ma_thuat": "source/concealed-ma_thuat.png",
+      "phong_vu": "source/concealed-phong_vu.png",
+      "loi_phong": "source/concealed-loi_phong.png",
+      "cuong_phong": "source/concealed-cuong_phong.png"
+    },
+    "columns": 4,
+    "rows": 4,
+    "surfaceOrder": [
+      "chest",
+      "upperArm",
+      "forearmHand",
+      "hip",
+      "thigh",
+      "shin",
+      "foot",
+      "shoulder"
+    ],
+    "cameraPolicy": "front for S/SW/W/E/SE; back for NW/N/NE; projected beneath original eight-view art",
+    "bones": {
+      "torsoUpper": {
+        "cell": 0,
+        "width": 14,
+        "overlap": 3,
+        "region": [
+          0,
+          0,
+          1,
+          0.53
+        ]
+      },
+      "torsoLower": {
+        "cell": 0,
+        "width": 14,
+        "overlap": 3,
+        "region": [
+          0,
+          0.45,
+          1,
+          0.55
+        ]
+      },
+      "hip": {
+        "cell": 3,
+        "width": 18,
+        "overlap": 3
+      },
+      "upperL": {
+        "cell": 1,
+        "width": 7,
+        "overlap": 3,
+        "region": [
+          0,
+          0,
+          1,
+          0.68
+        ]
+      },
+      "lowerL": {
+        "cell": 2,
+        "width": 7,
+        "overlap": 3
+      },
+      "thighL": {
+        "cell": 4,
+        "width": 9,
+        "overlap": 3
+      },
+      "shinL": {
+        "cell": 5,
+        "width": 8,
+        "overlap": 3
+      },
+      "footL": {
+        "cell": 6,
+        "width": 8,
+        "overlap": 3
+      },
+      "upperR": {
+        "cell": 1,
+        "width": 7,
+        "overlap": 3,
+        "region": [
+          0,
+          0,
+          1,
+          0.68
+        ]
+      },
+      "lowerR": {
+        "cell": 2,
+        "width": 7,
+        "overlap": 3
+      },
+      "thighR": {
+        "cell": 4,
+        "width": 9,
+        "overlap": 3
+      },
+      "shinR": {
+        "cell": 5,
+        "width": 8,
+        "overlap": 3
+      },
+      "footR": {
+        "cell": 6,
+        "width": 8,
+        "overlap": 3
+      }
+    }
+  }
+}

@@ -15294,6 +15294,8 @@ function gearVisual(p){
     oLop: nvLopCuaEquip(p),
     // Gói `magic-runtime`: bộ giáp và cây vũ khí hiện ra do DÒNG của món quyết định, không do
     // giai. `null` khi không mặc món nào của gói ⇒ `mrVe` lui về chọn theo giai như cũ.
+    mrRebuild: magicRebuildGear(p),
+    mrAttack: p.castT > 0 ? p._magicCastState : (p.nhat2 ? 'horizontalSlash' : 'dualSlash'),
     mrGiap: mrGiapDong(p.equip),
     mrVk: (itemDef(w) || {}).mr || null,
     // Gói `town_v1`/`field_v2` là `piece_layers`: TỪNG Ô vẽ lớp của bộ đang đeo ở ô đó, nên
@@ -16081,6 +16083,7 @@ function heroGearSig(gv){
   // (bốn ô, cùng giai, khác bộ) — thiếu dòng này là đổi mũ mà đầu vẫn cái mũ cũ.
   const l = gv.oLop ? Object.keys(gv.oLop).sort().map(k => k + gv.oLop[k]).join('') : '';
   // DÒNG giáp của gói cũng vậy: bảy dòng cùng giai cho cùng `t`, chỉ khác bộ hiện lên người.
+  if (gv.mrRebuild) return 'rebuild:' + JSON.stringify(gv.mrRebuild);
   // Và TỪNG Ô của gói piece_layers: đổi mỗi cái quần mà chữ ký không đổi là quần cũ nằm lại.
   const mo = gv.mrO ? Object.keys(gv.mrO).sort().map(k => k + '=' + gv.mrO[k]).join(',') : '';
   return `${Math.round(gv.t*10)}_${gv.n}_${gv.rarity}_${Math.round(gv.plus)}_${gv.setColor||''}_${w}_${l}_${gv.mrGiap||''}_${mo}`;
@@ -16790,7 +16793,154 @@ function mrXinBay(F){
     mrTai(F._goc + F.sheets[k]);
   }
 }
+
+function magicRebuildOn(sectKey){
+  return !!(window.MagicRebuild && window.MagicRebuild.enabled && MR_LOP[sectKey]);
+}
+function magicRebuildGear(p){
+  const M = window.MagicRebuild;
+  if (!M || !M.enabled || !M.ready || !MR_LOP[p.sect]) return null;
+  const eq = p.equip || {}, gear = { levels: {} };
+  for (const [slot,key] of [['chest','ao'],['gloves','tay'],['pants',eq.quan ? 'quan' : 'chan'],['boots','chan']]){
+    const item = eq[key], id = (itemDef(item) || {}).mr;
+    gear[slot] = item ? (M.spec.armors.includes(id) ? id : M.spec.armors[clamp((item.tier || 1) - 1, 0, 6)]) : null;
+    gear.levels[slot] = item ? (item.plus || 0) : 0;
+  }
+  const weapon = eq.vukhi, id = (itemDef(weapon) || {}).mr;
+  gear.weapon = weapon ? Math.max(0, M.spec.weapons.includes(id) ? M.spec.weapons.indexOf(id) : clamp((weapon.tier || 1) - 1, 0, 6)) : null;
+  gear.level = weapon ? (weapon.plus || 0) : 0;
+  gear.wing = eq.canh ? clamp(wingBac(eq.canh) - 1, 0, 1) : null;
+  return gear;
+}
+// Distance-based visual state stays outside player/save/network payloads.
+const magicGaitStates = new WeakMap();
+const magicContactStates = new WeakMap();
+const magicDeathHeights = new WeakMap();
+// Each live actor owns a reusable render surface. World contact still resolves
+// every draw; only the allocation/readback work is removed.
+const magicRenderSurfaces = new WeakMap();
+function magicRebuildContactFilter(motion){
+  return P=>{
+    const {actor,origin,scale,time,map}=motion,locomotion=['idle','walk','run'].includes(P.state);
+    let S=magicContactStates.get(actor);
+    const reset=!S||S.map!==map||S.scale!==scale||Math.hypot(S.origin.x-origin.x,S.origin.y-origin.y)>96||S.air!==P.air||(!locomotion&&(S.state!==P.state||P.frame<S.frame));
+    if(reset)S={map,scale,air:P.air,anchors:{},origin,state:P.state,frame:P.frame,lastScreen:null,contacts:{}};
+    if(locomotion&&S.state!==P.state&&S.lastScreen){S.blend={from:structuredClone(S.lastScreen),contacts:{...S.contacts},time};}
+    if(!locomotion)S.blend=null;
+    if(S.blend){
+      const t=clamp((time-S.blend.time)/140,0,1),u=t*t*(3-2*t);
+      for(const [key,at] of Object.entries(P.screen))if(S.blend.from[key])for(let i=0;i<3;i++)at[i]=S.blend.from[key][i]+(at[i]-S.blend.from[key][i])*u;
+      for(const side of ['L','R'])if(!S.blend.contacts[side]&&t<1)P.joints['contact'+side]=false;
+      if(t===1)S.blend=null;
+    }
+    const M=window.MagicRebuild,pivot=M.spec.pivot.map((v,i)=>(v-M.spec.camera.offset[i])/M.spec.camera.scale);
+    const planted=[];
+    for(const side of ['L','R']){
+      const at=P.screen['ankle'+side],contact=!P.air&&P.joints['contact'+side];
+      if(!contact){delete S.anchors[side];continue;}
+      if(!S.anchors[side]){S.anchors[side]=at.slice(0,2).map((v,i)=>(i?origin.y:origin.x)+(v-pivot[i])*scale);planted.push(side);}
+      const target=S.anchors[side].map((v,i)=>pivot[i]+(v-(i?origin.y:origin.x))/scale),delta=target.map((v,i)=>v-at[i]);
+      for(const [joint,weight] of [['ankle',1],['toe',1],['knee',.5]])for(let i=0;i<2;i++)P.screen[joint+side][i]+=delta[i]*weight;
+    }
+    if(P.state==='death'){
+      if(P.frame<4||!S.dropOrigin)S.dropOrigin={...origin};
+      if(P.frame>=4)P.weaponShift=[(S.dropOrigin.x-origin.x)/scale,(S.dropOrigin.y-origin.y)/scale];
+    }else S.dropOrigin=null;
+    S.state=P.state;S.frame=P.frame;S.origin={...origin};S.lastScreen=structuredClone(P.screen);S.contacts=Object.fromEntries(['L','R'].map(side=>[side,P.joints['contact'+side]]));magicContactStates.set(actor,S);
+    P.contactSpace='game_world';P.planted=planted;
+  };
+}
+function magicRebuildGait(p, blk, bodyScale=1){
+  const M=window.MagicRebuild, active=blk==='w'||blk==='r';
+  const previous=magicGaitStates.get(p), heading=Number.isFinite(p.face)?p.face:0;
+  const dx=previous?p.x-previous.x:0,dy=previous?p.y-previous.y:0,distance=Math.hypot(dx,dy);
+  let phase=previous?.phase||0;
+  // A change of map, clip or heading starts a fresh contact; don't spend teleport distance.
+  const same=previous&&((previous.blk==='w'||previous.blk==='r')&&active)&&previous.bodyScale===bodyScale&&previous.map===curMap;
+  if(active&&same&&distance<=96){
+    const state=blk==='r'?'run':'walk';
+    const cycle=M.gait.stride[state]/M.gait.stance[state]*M.gait.groundScale*(159/184)*(NV_CAO/HERO_H)*bodyScale;
+    phase=(phase+distance/cycle*8)%8;
+  }else if(active&&!same)phase=0;
+  magicGaitStates.set(p,{x:p.x,y:p.y,heading,blk,bodyScale,map:curMap,phase});
+  return {frame:Math.round(phase*64)/64%8,heading};
+}
+function magicRebuildFrame(gv, blk, idx, huong){
+  const M = window.MagicRebuild;
+  if (!M || !M.ready) return null;
+  const state = ({i:'idle',w:'walk',r:'run',f:'flyIdle',m:'flyMove',h:'hit',d:'death'})[blk]
+             || (gv && gv.mrAttack) || ({spin:'spinSlash',thrust:'thrust',raise:'lightStorm',point:'fireDashSlash',guard:'horizontalSlash'})[gv && gv.mrAct] || 'dualSlash';
+  const direction = MR_TEN_HUONG[((huong | 0) % 8 + 8) % 8];
+  const row = M.spec.rowOrder.indexOf(direction), frame = (blk==='w'||blk==='r') ? ((Number(idx)%8)+8)%8 : clamp(idx | 0, 0, 7);
+  const actor=gv?.mrMotion?.actor;
+  let cv=actor&&magicRenderSurfaces.get(actor);
+  if(!cv){cv=document.createElement('canvas');cv.width=320;cv.height=360;if(actor)magicRenderSurfaces.set(actor,cv);}
+  const g = cv.getContext('2d'), scale = 159 / (184 * M.spec.camera.scale);
+  g.setTransform(1,0,0,1,0,0);g.clearRect(0,0,cv.width,cv.height);g.save();
+  // Bound transformed painted rectangles, without reading pixel memory. The
+  // conservative one-pixel margin keeps antialiasing and contact deformation.
+  const drawImage=g.drawImage,bounds=[cv.width,cv.height,0,0];
+  if(actor)g.drawImage=function(image,...args){
+    const rect=args.length===2?[...args,image.width,image.height]:args.length===4?args:args.slice(4);
+    const [x,y,w,h]=rect,m=g.getTransform();
+    for(const [px,py] of [[x,y],[x+w,y],[x,y+h],[x+w,y+h]]){const X=m.a*px+m.c*py+m.e,Y=m.b*px+m.d*py+m.f;bounds[0]=Math.min(bounds[0],X);bounds[1]=Math.min(bounds[1],Y);bounds[2]=Math.max(bounds[2],X);bounds[3]=Math.max(bounds[3],Y);}
+    return drawImage.call(g,image,...args);
+  };
+  g.translate(160 - M.spec.pivot[0] * scale, HS_PAD + HERO_GOT - M.spec.pivot[1] * scale);
+  g.scale(scale, scale);
+  const gear = (window.TEST_MODE && window.__magicRebuildEquip) || (gv && gv.mrRebuild) || {armor:'ma_thuat',weapon:2,wing:1};
+  const P = M.render(g, state, row, frame, gear, {wingPhase:M.wingPhase(performance.now()),vfx:false,gaitHeading:gv?.mrGaitHeading,poseFilter:gv?.mrMotion?(window.MagicPhysicsRig?.enabled?window.MagicPhysicsRig.filter(gv.mrMotion,gear):magicRebuildContactFilter(gv.mrMotion)):undefined});
+  g.restore();
+  g.drawImage=drawImage;
+  if(actor)cv._magicBounds=[Math.max(0,Math.floor(bounds[0])-1),Math.max(0,Math.floor(bounds[1])-1),Math.min(cv.width,Math.ceil(bounds[2])+1),Math.min(cv.height,Math.ceil(bounds[3])+1)];
+  if(actor)cv._magicRevision=(cv._magicRevision||0)+1;
+  cv._magicState = P.state;
+  cv._magicPhysics = P.physics;
+  cv._magicAttackMode = P.attackMode;
+  if(window.TEST_MODE)cv._magicWeapons=Object.fromEntries(['L','R'].map(side=>[side,{grounded:P.weapons[side].grounded,xy:[80+(P.weapons[side].xy[0]-M.spec.pivot[0])*scale,HERO_GOT+(P.weapons[side].xy[1]-M.spec.pivot[1])*scale]}]));
+  // Planted events drive production dust too; debug-only points stay optional.
+  cv._magicFeet={frame,state,planted:P.planted||[],contacts:{L:P.joints.contactL,R:P.joints.contactR}};
+  if(window.TEST_MODE)cv._magicFeet.points=Object.fromEntries(['L','R'].map(side=>[side,[80+(M.spec.camera.offset[0]+P.screen['ankle'+side][0]*M.spec.camera.scale-M.spec.pivot[0])*scale,HERO_GOT+(M.spec.camera.offset[1]+P.screen['ankle'+side][1]*M.spec.camera.scale-M.spec.pivot[1])*scale]]));
+  if (window.TEST_MODE) window.__magicRebuildRender = {state,row,frame,attackMode:P.attackMode,air:P.air,feet:{L:P.screen.ankleL,R:P.screen.ankleR},contacts:{L:P.joints.contactL,R:P.joints.contactR},handSockets:P.handSockets,wingSocket:P.wingSocket};
+  return cv;
+}
+function magicRebuildSprite(gv, blk, idx, huong, act){
+  const phase = Math.floor(performance.now()/250) % 8;
+  const key = `new-rig|${heroGearSig(gv)}|${blk}|${idx}|${huong}|${act}|${gv && gv.mrAttack}|${gv?.mrGaitHeading}|${phase}`;
+  if (!gv?.mrMotion && _hsCache.has(key)) return _hsCache.get(key);
+  const full = magicRebuildFrame({...gv,mrAct:act}, blk, idx, huong);
+  if (!full) return null;
+  if(gv?.mrMotion){
+    // Reuse a tightly bounded presentation surface. Unlike a full transparent
+    // canvas it keeps both outline dilation and world blits small.
+    const [x0,y0,x1,y1]=full._magicBounds,width=x1-x0,height=y1-y0;
+    if(width<=0||height<=0)return null;
+    const cv=full._magicCrop||(full._magicCrop=document.createElement('canvas'));
+    const w=Math.ceil(width/16)*16,h=Math.ceil(height/16)*16;
+    if(cv.width!==w||cv.height!==h){cv.width=w;cv.height=h;}
+    const g=cv.getContext('2d');g.clearRect(0,0,w,h);g.drawImage(full,x0,y0,width,height,0,0,width,height);
+    cv._ox=x0-80;cv._oy=y0-HS_PAD;cv._ow=w;cv._oh=h;
+    cv._magicRevision=full._magicRevision;cv._magicState=full._magicState;cv._magicFeet=full._magicFeet;cv._magicWeapons=full._magicWeapons;
+    return cv;
+  }
+  const g = full.getContext('2d'), d = g.getImageData(0,0,full.width,full.height).data;
+  let x0=full.width,y0=full.height,x1=-1,y1=-1;
+  for(let y=0;y<full.height;y++)for(let x=0;x<full.width;x++)if(d[(y*full.width+x)*4+3]){
+    x0=Math.min(x0,x);y0=Math.min(y0,y);x1=Math.max(x1,x);y1=Math.max(y1,y);
+  }
+  if(x1<0)return null;
+  const cv=document.createElement('canvas');cv.width=x1-x0+1;cv.height=y1-y0+1;
+  cv.getContext('2d').drawImage(full,x0,y0,cv.width,cv.height,0,0,cv.width,cv.height);
+  cv._ox=x0-80;cv._oy=y0-HS_PAD;cv._ow=cv.width;cv._oh=cv.height;
+  cv._magicState=full._magicState;
+  cv._magicFeet=full._magicFeet;
+  cv._magicWeapons=full._magicWeapons;
+  if(!gv?.mrMotion)_hsCache.set(key,cv);if(_hsCache.size>HS_CAP)_hsCache.delete(_hsCache.keys().next().value);
+  return cv;
+}
+
 function mrDung(sectKey){
+  if (magicRebuildOn(sectKey)) return !!window.MagicRebuild.ready;
   if (!MR_LOP[sectKey]) return false;
   mrNapDL();
   return !!(MR_DL && MR_SOCKET);
@@ -16975,6 +17125,7 @@ function mrVeBay(sectKey, blk, idx, gv){
 // Trả `null` khi art chưa về. Chỗ gọi phải KHÔNG NHỚ khung đó lại, đúng vết sẹo `_choArt`: một
 // khung dựng lúc art chưa tới mà nằm lại trong bộ nhớ đệm là một nhân vật sai nằm đó cả phiên.
 function mrVe(sectKey, tier, gv, blk, idx, huong){
+  if (magicRebuildOn(sectKey)) return magicRebuildFrame(gv, blk, idx, huong);
   if (!mrDung(sectKey)) return null;
   // Hai gói piece_layers đi TRƯỚC: có đủ thì dùng, thiếu thì rơi về đường cũ bên dưới.
   if (MR_NGOAI_ST[blk]){ if (mrCoNgoai(sectKey)) return mrVeNgoai(sectKey, gv, blk, idx, huong); }
@@ -17219,6 +17370,7 @@ window.mrGiap = mrGiap; window.mrVuKhi = mrVuKhi; window.mrNhipBay = mrNhipBay;
 function heroSprite(sectKey, tier, gv, kind, idx, act, back, sw, blk, hw, huong){
   sw = sw || 0;
   blk = blk || kind;
+  if (magicRebuildOn(sectKey)) return magicRebuildSprite(gv, blk, idx, huong, act);
   hw = hw || '';
   // ⚠ `huong` THÊM SAU CÙNG, đúng quy ước đã ghi cho `heroPose`: mọi lời gọi 10 tham số cũ
   // (thẻ nhân vật · màn chờ · banner Khế Ước · thân người từ xa) vẫn chạy và rơi về `south`,
@@ -17362,7 +17514,10 @@ function heroSprite(sectKey, tier, gv, kind, idx, act, back, sw, blk, hw, huong)
   }
   return cv;
 }
-function heroBlit(g, spr){ g.drawImage(spr, spr._ox, spr._oy, spr._ow, spr._oh); }
+function heroBlit(g, spr){
+  if(window.TEST_MODE&&spr._magicFeet){const m=g.getTransform(),F=spr._magicFeet;window.__magicWorldFeet={frame:F.frame,state:F.state,contacts:F.contacts,planted:F.planted,points:Object.fromEntries(Object.entries(F.points).map(([side,p])=>[side,[m.a*p[0]+m.c*p[1]+m.e,m.b*p[0]+m.d*p[1]+m.f]]))};}
+  if(window.TEST_MODE&&spr._magicWeapons){const m=g.getTransform();window.__magicWorldWeapons=Object.fromEntries(Object.entries(spr._magicWeapons).map(([side,W])=>[side,{grounded:W.grounded,xy:[m.a*W.xy[0]+m.c*W.xy[1]+m.e,m.b*W.xy[0]+m.d*W.xy[1]+m.f]}]));}
+  g.drawImage(spr, spr._ox, spr._oy, spr._ow, spr._oh); }
 /* Vẽ thân, có hoà hình nếu vừa đổi trạng thái di chuyển. Khung CŨ vẽ đục hoàn toàn trước, rồi
    chồng khung MỚI với alpha tăng dần — thứ tự này bắt buộc. Làm ngược lại (cũ mờ dần đè lên
    mới) thì giữa chừng độ phủ chỉ còn 1-t(1-t), tức nhân vật hở nền tới 25% ở khoảng giữa. */
@@ -17371,6 +17526,14 @@ function _veThanHoa(g, p, spr, now, tier, gv, act, ps, sw){
   // trúng đòn bọc lời gọi trong một phép xoay quanh gót: để ngoài là vành đứng yên trong khi
   // thân ngửa ra sau. Vẽ đúng MỘT lần cho tấm đang hiện, không vẽ cho khung cũ đang hoà lẫn
   // cho vệt pha sau — hai cái đó là bóng mờ, viền quanh chúng thành ra bốn lớp viền chồng nhau.
+  if(spr._magicFeet&&p.moving&&['walk','run'].includes(spr._magicFeet.state)){
+    const S=magicContactStates.get(p),planted=spr._magicFeet.planted||[];
+    for(const side of planted){
+      const at=S?.anchors[side];
+      if(at&&!SETTINGS.lowFx)addEffect({type:'ink',x:at[0],y:at[1]+2,color:'rgba(150,135,105,.5)'});
+    }
+    if(window.TEST_MODE)window.__magicPlanted={state:spr._magicFeet.state,feet:planted};
+  }
   heroVienVe(g, spr);
   const t = p._nhoaT0 ? Math.min(1, (now - p._nhoaT0) / NHOA_MS) : 1;
   if (t < 1 && p._nhoaBlk){
@@ -18871,11 +19034,12 @@ const VIEN_TOI  = 'rgba(10,7,4,.55)';
 const _vienCache = new WeakMap();
 // Một DẢI mép: in bóng ở 12 hướng quanh tâm để nở ra, tô đặc một màu, rồi trừ đi bóng gốc.
 // 12 hướng chứ không 4 — in bốn hướng thì bốn góc chéo hở ra thành răng cưa.
-function _vienDai(spr, r, mau, pad){
+function _vienDai(spr, r, mau, pad, target=null){
   const W = spr.width + pad * 2, H = spr.height + pad * 2;
-  const c = document.createElement('canvas');
-  c.width = W; c.height = H;
+  const c = target || document.createElement('canvas');
+  if(c.width!==W||c.height!==H){c.width=W;c.height=H;}
   const g = c.getContext('2d');
+  g.setTransform(1,0,0,1,0,0);g.globalAlpha=1;g.globalCompositeOperation='source-over';g.clearRect(0,0,W,H);
   for (let i = 0; i < 12; i++){
     const a = i / 12 * Math.PI * 2;
     g.drawImage(spr, pad + Math.cos(a) * r, pad + Math.sin(a) * r);
@@ -18891,13 +19055,16 @@ function _vienDai(spr, r, mau, pad){
 // sprite (LRU) nhả tấm nào ra thì vành của nó được thu hồi theo, không phải dọn tay.
 function heroVienCanvas(spr){
   let cv = _vienCache.get(spr);
-  if (cv) return cv;
+  if (cv && (!spr._magicRevision || cv._magicRevision===spr._magicRevision)) return cv;
   const d = VIEN_SPR, pad = Math.ceil(d) + 1;
-  cv = document.createElement('canvas');
-  cv.width = spr.width + pad * 2; cv.height = spr.height + pad * 2;
+  if(!cv){cv=document.createElement('canvas');cv.width=spr.width+pad*2;cv.height=spr.height+pad*2;}
+  if(cv.width!==spr.width+pad*2||cv.height!==spr.height+pad*2){cv.width=spr.width+pad*2;cv.height=spr.height+pad*2;}
   const g = cv.getContext('2d');
-  g.drawImage(_vienDai(spr, d, VIEN_SANG, pad), 0, 0);        // sáng, dày, ngoài cùng
-  g.drawImage(_vienDai(spr, d * 0.45, VIEN_TOI, pad), 0, 0);  // tối, mỏng, sát bóng
+  g.clearRect(0,0,cv.width,cv.height);
+  if(spr._magicRevision&&!cv._magicBands)cv._magicBands=[document.createElement('canvas'),document.createElement('canvas')];
+  g.drawImage(_vienDai(spr, d, VIEN_SANG, pad,cv._magicBands?.[0]), 0, 0);        // sáng, dày, ngoài cùng
+  g.drawImage(_vienDai(spr, d * 0.45, VIEN_TOI, pad,cv._magicBands?.[1]), 0, 0);  // tối, mỏng, sát bóng
+  cv._magicRevision=spr._magicRevision;
   // HS_SCALE = 1 nên 1px canvas = 1 đơn vị hệ 160×220; lề nở ra bao nhiêu thì lùi bấy nhiêu.
   cv._ox = spr._ox - pad; cv._oy = spr._oy - pad;
   cv._ow = spr._ow + pad * 2; cv._oh = spr._oh + pad * 2;
@@ -19497,10 +19664,11 @@ function drawPlayer(p){
   // vật ĐI BỘ, cánh vẫn đeo, vũ khí bắt chéo sau lưng. Nên trong thành lớp MR KHÔNG bay, kể cả
   // khi ô cánh có đồ (cánh vẽ bằng lớp của gói, không nhấc người lên). Cửa "trong thành" là
   // `avaTrongThanh()` — cửa DUY NHẤT đã có (map an toàn KHÔNG có bãi quái).
+  const _magicNew = magicRebuildOn(p.sect);
   const _mrThanh = !!MR_LOP[p.sect] && avaTrongThanh();
-  const _bayLuon = !!MR_LOP[p.sect] && !_mrThanh;
-  const _bayDich = _mrThanh ? 0
-                 : (_canhIt || _bayLuon) ? BAY_CAO[clamp(wingBac(_canhIt), 1, 3) - 1] : 0;
+  const _magicTown = _magicNew && _mrThanh;
+  const _bayLuon = !!MR_LOP[p.sect] && !_mrThanh && (!_magicNew || !!_canhIt);
+  const _bayDich = _mrThanh ? 0 : (_canhIt || _bayLuon) ? BAY_CAO[clamp(wingBac(_canhIt), 1, 3) - 1] : 0;
   // Xấp xỉ hàm mũ theo KHUNG HÌNH: giá trị chỉ dùng để vẽ, lệch vài phần trăm giữa 60 và
   // 144 Hz không ai thấy được, mà đổi lại không phải luồn dt xuống tận đây.
   const _bayK0 = veKhoa(p);
@@ -19509,7 +19677,12 @@ function drawPlayer(p){
   // Lớp luôn bay thì KHÔNG cất cánh: không có mặt đất nào để mà rời. Để nó nội suy từ 0 là mỗi
   // lần vào game / sang map lại đứng đất nửa giây trên khung ĐỨNG của gói (khối 'j' ⇒ idle).
   if (_bayLuon || Math.abs(_bayDich - bayCao) < 0.05) bayCao = _bayDich;
+  if (_magicTown || (_magicNew && !_canhIt && !_chet)) bayCao = 0;
   _bayCao.set(_bayK0, bayCao);
+  if(_magicNew&&_chet){
+    if(!magicDeathHeights.has(p))magicDeathHeights.set(p,bayCao);
+    bayCao=magicDeathHeights.get(p)*(window.MagicPhysicsRig?.enabled?1:Math.max(0,1-(p.deadT||0)/.3));
+  }else magicDeathHeights.delete(p);
   const bayK = bayCao / Math.max(1, BAY_CAO[2]);        // 0 = chạm đất, 1 = bay cao nhất
   // ĐÃ LÊN TỚI ĐỘ CAO CỦA CHÍNH ĐÔI CÁNH NÀY — cửa DUY NHẤT hỏi "đang bay hẳn chưa".
   // Hai chỗ đọc nó (`_bayBo` để tắt cánh vẽ rời, `_bay` để chọn khối vẽ) phải cùng một
@@ -19529,7 +19702,7 @@ function drawPlayer(p){
   let yOff = -bayCao;
   // Nhịp bước chân chỉ có nghĩa khi chân còn chạm đất. Đang bay mà vẫn nhún như đang chạy bộ
   // là thứ phá cảm giác bay nhanh nhất.
-  if (p.moving) yOff -= Math.abs(Math.sin(now/95)) * 2.4 * (1 - bayK); // nhịp bước chân khi chạy
+  if (p.moving && !_magicNew) yOff -= Math.abs(Math.sin(now/95)) * 2.4 * (1 - bayK); // nhịp bước chân khi chạy
   // ── LỚP ĐẤT (không theo nhảy/cưỡi): bóng đổ ──
   const _shI = gameTimeInfo(), _shDx = (_shI.frac - 0.5) * 22, _shAl = 1 - skyDarkness()*0.35; // bóng xoay theo quỹ đạo mặt trời (Gói C)
   // Bóng đổ THEO NHỊP NHÚN: người bổng lên thì bóng co lại và nhạt đi. Bóng đứng
@@ -19560,7 +19733,7 @@ function drawPlayer(p){
   // Bụi gót chân: nổ ĐÚNG LÚC bàn chân chạm đất, không phải rắc ngẫu nhiên 8% số khung.
   // Bàn chân chạm khi sải chân mở hết cỡ — tức cos(pha) đổi dấu. Bắt đúng lần đổi dấu
   // đó thì tiếng bước và bụi trùng nhau, chân mới có cảm giác BÁM đất.
-  if (!SETTINGS.lowFx && p.moving && bayKNen < 0.3){   // chân không chạm đất thì không có bụi gót
+  if (!_magicNew && !SETTINGS.lowFx && p.moving && bayKNen < 0.3){   // chân không chạm đất thì không có bụi gót
     const _c = Math.cos(p.walkPh || 0);
     if (p._lastCos !== undefined && (_c <= 0) !== (p._lastCos <= 0)){
       const _sd = _c <= 0 ? 1 : -1;                    // chân nào vừa chạm
@@ -19617,7 +19790,7 @@ function drawPlayer(p){
   // ngay lúc LẤY ĐÀ rồi lùi dần trong lúc lưỡi bổ xuống. Trọng tâm đi ngược chiều đòn đánh —
   // đúng thứ làm cú chém "nhẹ hều". hSwing(1-atkK) cho thân dồn tới đúng lúc lưỡi chạm.
   const lungeK = Math.max(0, hSwing(1 - Math.min(1, atkK)));
-  const pulse = 1 + castK*0.12 + (p.moving ? Math.sin(wph*2)*0.025 : Math.sin(wph)*0.015);
+  const pulse = _magicNew ? 1 : 1 + castK*0.12 + (p.moving ? Math.sin(wph*2)*0.025 : Math.sin(wph)*0.015);
   // Nhân vật dựng bằng khớp xương.
   // Nhân vật dựng bằng khớp xương.
   const sh = NV_CAO;
@@ -19752,7 +19925,7 @@ function drawPlayer(p){
   // ⚠ KHỐI BAY CỦA BỘ NÀY ĐÃ NƯỚNG SẴN ĐÔI CÁNH. Bật `veCanh()` cùng lúc là HAI đôi cánh trên
   // màn — cùng một kiểu hỏng với hai cây vũ khí ở `_boCoVk`. Khai sớm ở đây vì chỗ vẽ cánh nằm
   // TRÊN chỗ chọn khối vẽ.
-  const _bayBo = _bayDat && (_mrLop ? mrCoBay(p.sect)
+  const _bayBo = _magicNew ? !_magicTown : _bayDat && (_mrLop ? mrCoBay(p.sect)
                                    : !!NV_BO_CO_BAY[nvBoGoc(p.sect, _tier, _gv) || '']);
   // ⚠⚠ ĐÃ NHẬP VÀO AXIE THÌ VŨ KHÍ VẪN PHẢI HIỆN — chủ dự án chốt (2026-09-17), nguyên văn:
   // *"khi Axie ra chiêu thì sẽ hiện cây vũ khí… nhân vật có thể không hiện nhưng vũ khí sẽ
@@ -19812,7 +19985,7 @@ function drawPlayer(p){
     // (Cái giá, nói thẳng: ngoài thành người chơi KHÔNG thấy đôi cánh mình mua nữa. Đó là hệ
     //  quả thẳng của việc nhập vào, không phải một lỗi — chỗ khoe cánh nay là trong thành.)
     // Gói Thành vẽ đôi cánh bằng lớp riêng (wing_far/wing_clasp) ⇒ tắt cánh vẽ rời, kẻo hai đôi.
-    const _canhRoi = !!wingIt && !_nhap && !_bayBo && !(_mrThanh && mrCoThanh(p.sect));
+    const _canhRoi = !!wingIt && !_nhap && !_bayBo && !(_mrThanh && mrCoThanh(p.sect)) && !_magicNew;
     if (window.TEST_MODE) (window.__mrCanhRoi || (window.__mrCanhRoi = {}))[veKhoa(p)] = _canhRoi;
     if (window.TEST_MODE) window.__veCanhRoi = _canhRoi;   // bài kiểm hỏi QUYẾT ĐỊNH, không đếm điểm ảnh
     if (_canhRoi) veCanh(ctx, wingIt, p.x, p.y + CANH_CHAN_MAN, p.sway || 0, p.swayDir || 0,
@@ -19967,7 +20140,11 @@ function drawPlayer(p){
     // Gói NGOÀI (field_v2) có đủ bảy state bay ⇒ lớp MR tách thêm bay-đi · trúng đòn · chết và
     // ba đòn trên không (đòn thường = Light Slash · niệm chiêu = Fire Slash · chiêu lướt = Dash).
     const _mrNgoai = _bayBo && _mrLop && mrCoNgoai(p.sect);
-    const _blk = _mrNgoai ? (_chet ? 'fd'
+    const _blk = _magicNew ? ((_kind === 'h' || _kind === 'd') ? _kind
+               : (_kind === 'a' || _kind === 'c') ? 'g'
+               : (_magicTown || !_canhIt) ? ((_kind === 'w' || _kind === 'r') ? _kind : 'i')
+               : (p.moving ? 'm' : 'f'))
+               : _mrNgoai ? (_chet ? 'fd'
                              : _lopHien ? (_kind === 'c' ? (p.castAct === 'thrust' ? 'gd' : 'g') : 'gl')
                              : (p.hurtT > 0) ? 'fh'
                              // ⚠ `p.moving`, KHÔNG `_kind` cũng KHÔNG `_diBo`: đang bay thì `_kind`
@@ -19990,7 +20167,17 @@ function drawPlayer(p){
     const _TAU = Math.PI * 2;
     // ⚠ NHỊP VỖ CÁNH LẤY TỪ MANIFEST CỦA GÓI (175 ms), đừng dùng `BAY_NHIP` 95 ms cho nó:
     // gói ghi rõ *"a deliberately slow wing beat"*, chạy ở 95 là vỗ nhanh gấp đôi ý art.
-    const _idx = (_mrNgoai && (_blk === 'f' || _blk === 'fm')) ? ((now / (1000 / mrNgoaiFps(_blk))) | 0) % _n
+    const _gait = _magicNew ? magicRebuildGait(p,_blk,_lopCo) : null;
+    if (_gait){
+      _gv.mrGaitHeading = _gait.heading;
+      _gv.mrMotion={actor:p,map:curMap,time:now,scale:(159/184)*(NV_CAO/HERO_H)*_lopCo,
+        physicsHeight:bayCao/(.95*(159/184)*(NV_CAO/HERO_H)*_lopCo),
+        origin:{x:p.x+_avaDx+Math.cos(p.face)*lungeK*7,y:p.y-NV_LECH_Y+_avaDy+_lopChan+Math.sin(p.face)*lungeK*3+yOff+(HERO_GOT-HERO_H/2)*(NV_CAO/HERO_H)*_lopCo}};
+    }
+    const _idx = _magicNew && (_blk==='w'||_blk==='r') ? _gait.frame
+               : _magicNew && ['i','f','m'].includes(_blk)
+               ? Math.floor(now * (_blk === 'r' ? 11 : _blk === 'w' ? 7 : _blk === 'i' ? 5 : 6) / 1000) % 8
+               : (_mrNgoai && (_blk === 'f' || _blk === 'fm')) ? ((now / (1000 / mrNgoaiFps(_blk))) | 0) % _n
                : _blk === 'fh' ? clamp((((NV_GIAT_GIAY - (p.hurtT || 0)) / NV_GIAT_GIAY) * _n) | 0, 0, _n - 1)
                : _blk === 'fd' ? clamp((((p.deadT || 0) / 1.2) * _n) | 0, 0, _n - 1)
                : _blk === 'f' ? ((now / (_mrLop ? mrNhipBay() : BAY_NHIP)) | 0) % _n
@@ -20012,9 +20199,10 @@ function drawPlayer(p){
     // khối 'c'. Đổi khối vẽ mà GIỮ NGUYÊN `_kind` semantics: chỉ số khung vẫn tính theo atkK,
     // chỉ có tấm khung đọc từ chỗ khác. Gán thẳng _kind='c' thì chỉ số rơi về nhánh castK — mà
     // castK = 0 lúc đánh thường — nên khung đứng im ở 0.
-    _spr = heroSprite(p.sect, _tier, _gv, _kind, clamp(_idx, 0, _n - 1), _act, _ps.back, _sw, _blk, p._hw, p._mrH);
+    _spr = heroSprite(p.sect, _tier, _gv, _kind, (_magicNew&&(_blk==='w'||_blk==='r')?_idx:clamp(_idx, 0, _n - 1)), _act, _ps.back, _sw, _blk, p._hw, p._mrH);
     window.__khoiVe = _blk;   // bài kiểm đọc cờ này
     if (window.TEST_MODE && _mrLop) window.__mrKhoi = { thanh: _mrThanh, blk: _blk, idx: _idx, bay: bayCao };
+    if (window.TEST_MODE && _magicNew) window.__magicRebuildPrimary = _spr && _spr._magicState;
     // Chỉ số KHUNG đang vẽ — bài kiểm đếm nó để biết khối có CHẠY hay đứng hình. Đo điểm
     // ảnh thay cho việc này là đo cả nền trôi lẫn hào quang đập; xem vết sẹo `test_dongbodo`.
     if (window.TEST_MODE) window.__khungVe = _blk + ':' + clamp(_idx, 0, _n - 1);
@@ -20032,7 +20220,7 @@ function drawPlayer(p){
     // 126 px/giây (xem dangChay): ở 90 px/s nó ra 27 khung/giây trên màn 60 Hz, tức mỗi khung
     // bảng đứng yên hơn hai lượt vẽ liền — nhìn ra nấc ngay. Pha khung lấp đúng chỗ đó, và
     // vì cả hai khung đều nằm sẵn trong bộ nhớ đệm sprite nên chỉ tốn thêm một nhát blit.
-    if ((_kind === 'r' || _kind === 'w') && !_bay){
+    if (!_magicNew && (_kind === 'r' || _kind === 'w') && !_bay){
       const _fx = (((wph % _TAU) + _TAU) % _TAU) / _TAU * _n;
       p._phaLe  = _fx - Math.floor(_fx);
       p._phaSau = heroSprite(p.sect, _tier, _gv, _kind, (Math.floor(_fx) + 1) % _n,
@@ -20051,7 +20239,7 @@ function drawPlayer(p){
     // đánh: đòn đã vào-ra liên tục sẵn qua atkK 0→1, hoà thêm là nhoè mất khung chạm. Càng
     // không hoà lúc trúng đòn hay chết — phản hồi đó phải đọc được NGAY.
     if (p._veBlk !== _blk){
-      p._nhoaT0 = (NHOA_DUOC[p._veBlk] && NHOA_DUOC[_blk]) ? now : 0;
+      p._nhoaT0 = !_magicNew && (NHOA_DUOC[p._veBlk] && NHOA_DUOC[_blk]) ? now : 0;
       p._nhoaBlk = p._veBlk; p._nhoaKind = p._veKind; p._nhoaIdx = p._veIdx;
       p._veBlk = _blk; p._veKind = _kind;
     }
@@ -20122,7 +20310,7 @@ function drawPlayer(p){
   }
   // Khai Quang: vũ khí +9 rực sáng, +11 lôi quang cuốn quanh
   const wpn = p.equip && p.equip.vukhi;
-  if (wpn && wpn.plus >= 9){
+  if (wpn && wpn.plus >= 9 && !_magicNew){
     const gx = p.x + Math.cos(p.face)*14, gy = p.y - 16 + Math.sin(p.face)*8;
     const g2 = ctx.createRadialGradient(gx, gy, 0, gx, gy, 16);
     g2.addColorStop(0, wpn.plus >= 11 ? 'rgba(255,177,92,.85)' : 'rgba(126,203,255,.55)');
@@ -28245,6 +28433,11 @@ function castSkill(id){
   player.castT = NV_CHU_GIAY; // animation tung tuyệt chiêu
   player._castSeq = (player._castSeq || 0) + 1;   // xem ghi chú ở `_atkSeq`
   player.castAct = heroCastAct(id, d);           // tư thế phải khớp VFX của chiêu
+  if (magicRebuildOn(player.sect)) player._magicCastState = ({
+    a:'fireDashSlash', tp:'lightStorm', mg_powerslash:'horizontalSlash',
+    mg_powerwave:'thrust', mg_twistingslash:'spinSlash', mg_giganticstorm:'lightStorm',
+    mg_fireball:'risingSlash',
+  })[id] || 'dualSlash';
   const sect = SECTS[player.sect];
   let sfxTag = 'skill'; // per-class override set in the sectTP/sectA branches below
   // Móc 'pre' chạy TRƯỚC mọi thứ khác vì nó có thể dời chỗ đứng người chơi (Xung Phong), và
