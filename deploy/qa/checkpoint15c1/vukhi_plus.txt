@@ -1,0 +1,24 @@
+idle
+   song_dao_co_ban  px   281 +9 đổi   92 +11 đổi 128
+   song_chuy        px   440 +9 đổi   80 +11 đổi 104
+   song_hoa_dao     px   415 +9 đổi  268 +11 đổi 300
+   song_kiem_dien   px   310 +9 đổi  132 +11 đổi 153
+   loi_phong_dao    px   366 +9 đổi  172 +11 đổi 196
+   ao_anh_dao       px   296 +9 đổi  180 +11 đổi 215
+   hoa_tinh_kiem    px   326 +9 đổi  155 +11 đổi 178
+dualSlash
+   song_dao_co_ban  px   211 +9 đổi   84 +11 đổi 103
+   song_chuy        px   332 +9 đổi   54 +11 đổi 70
+   song_hoa_dao     px   314 +9 đổi  195 +11 đổi 217
+   song_kiem_dien   px   234 +9 đổi   94 +11 đổi 126
+   loi_phong_dao    px   267 +9 đổi  120 +11 đổi 143
+   ao_anh_dao       px   224 +9 đổi  116 +11 đổi 143
+   hoa_tinh_kiem    px   246 +9 đổi  130 +11 đổi 146
+fireDashSlash
+   song_dao_co_ban  px   272 +9 đổi   95 +11 đổi 137
+   song_chuy        px   427 +9 đổi   76 +11 đổi 98
+   song_hoa_dao     px   401 +9 đổi  244 +11 đổi 279
+   song_kiem_dien   px   307 +9 đổi  126 +11 đổi 146
+   loi_phong_dao    px   348 +9 đổi  154 +11 đổi 178
+   ao_anh_dao       px   284 +9 đổi  159 +11 đổi 191
+   hoa_tinh_kiem    px   317 +9 đổi  150 +11 đổi 175

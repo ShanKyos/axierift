@@ -1,0 +1,12 @@
+PASS (trống) → rebuild false · physics false
+PASS ?magicRebuild=1 → rebuild true · physics false
+PASS ?magicRebuild → rebuild true · physics false
+PASS ?magicRebuild=1&magicPhysics=1 → rebuild true · physics true
+PASS ?magicRebuild=1&magicPhysics → rebuild true · physics true
+PASS ?magicRebuild=1&magicPhysics=0 → rebuild true · physics false
+PASS ?magicRebuild=1&magicPhysics=false → rebuild true · physics false
+PASS ?magicRebuild=1&magicPhysics=OFF → rebuild true · physics false
+PASS ?magicRebuild=0&magicPhysics=1 → rebuild false · physics true
+PASS ?magicRebuild=no → rebuild false · physics false
+
+TẤT CẢ PASS

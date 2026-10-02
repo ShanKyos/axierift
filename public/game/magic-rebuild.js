@@ -3,7 +3,11 @@
   'use strict';
   const ROOT = 'assets/magic-rebuild-v1/';
   const TAU = Math.PI * 2;
-  const M = {ready:false, enabled:new URLSearchParams(location.search).has('magicRebuild')};
+  // Cờ URL: có mặt mà giá trị là 0/false/off/no thì là TẮT. `has()` trơn coi `?magicPhysics=0`
+  // là bật. Một cửa cho cả ba cờ (magicRebuild · magicAuthor · magicPhysics); physics-rig đọc lại.
+  const magicCo = name => { const q = new URLSearchParams(location.search); if (!q.has(name)) return false; return !/^(0|false|off|no)$/i.test(q.get(name).trim()); };
+  window.magicCo = magicCo;
+  const M = {ready:false, enabled:magicCo('magicRebuild')};
   const parts = {}, images = {}, props = {}, concealedArt = {}, highlight = new Map();
   let spec, promise;
   const bones = [
@@ -182,7 +186,7 @@
         for(const view of spec.bindLandmarks)for(const [,a,b] of bones)for(const key of [a,b])if(!view[key]?.every(Number.isFinite))throw Error('Invalid bind landmark '+key);
       }
       const compiled=await fetch(ROOT+'compiled.json').then(r=>r.ok?r.json():null).catch(()=>null);
-      if(compiled&&!new URLSearchParams(location.search).has('magicAuthor')){
+      if(compiled&&!magicCo('magicAuthor')){
         for(const [key,views] of Object.entries(compiled.parts)){
           const atlas=await loadImage(compiled.atlases[key]),visible=compiled.visibleAtlases?.[key]?await loadImage(compiled.visibleAtlases[key]):null;parts[key]=views.map((view,row)=>Object.fromEntries(Object.entries(view).map(([name,item])=>{
             const image=canvas(item.rect[2],item.rect[3]);image.getContext('2d').drawImage(atlas,...item.rect,0,0,item.rect[2],item.rect[3]);const original=visible&&item.visibleRect?canvas(item.visibleRect[2],item.visibleRect[3]):null;if(original)original.getContext('2d').drawImage(visible,...item.visibleRect,0,0,item.visibleRect[2],item.visibleRect[3]);return [name,{image,offset:item.offset,slot:item.slot,bind:landmarks(row),visibleImage:original,visibleOffset:item.visibleOffset,completed:!!original}];
@@ -192,7 +196,7 @@
       if(spec.concealedArt){
         for(const [asset,file] of Object.entries(spec.concealedArt.sources)){
           const im=await loadImage(file);concealedArt[asset]=Array.from({length:16},(_,cell)=>extractProp(im,cell%4,Math.floor(cell/4),4,4));
-          if(!compiled||new URLSearchParams(location.search).has('magicAuthor'))parts[asset]=parts[asset].map((view,row)=>Object.fromEntries(Object.entries(view).map(([name,p])=>{
+          if(!compiled||magicCo('magicAuthor'))parts[asset]=parts[asset].map((view,row)=>Object.fromEntries(Object.entries(view).map(([name,p])=>{
             const back=row>=3&&row<=5,masters=concealedArt[asset].slice(back?8:0,back?16:8);return [name,completePart(p,bones.find(b=>b[0]===name),masters)];
           })));
         }

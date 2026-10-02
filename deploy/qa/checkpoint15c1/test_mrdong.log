@@ -1,0 +1,11 @@
+PASS 7 dòng giáp trùng manifest: vai_tho · trau_xanh · do_dong · ma_thuat · phong_vu · loi_phong · cuong_phong
+PASS 7 dòng vũ khí trùng manifest
+PASS giai 4 rơi đủ 7 dòng áo + 7 dòng vũ khí (245 giáp · 49 vũ khí)
+PASS hình theo DÒNG: cùng dòng khác giai lệch 0 px · khác dòng cùng giai lệch 4565 px
+PASS slice bay đổi vũ khí theo dòng (448 px) · tay không thì không có cây nào (479 px)
+PASS id cũ tự đổi: Giáp Ma Thuật IV · Hoàn Hảo Hỏa Tinh Kiếm VII
+PASS luôn bay: đứng [f] · đi [fm,f] · đánh có 'g'
+PASS đối chứng: Dark Knight không cánh vẫn đi bộ [j,r]
+PASS cánh cấp 1 phát đúng một lần, đúng lớp
+PASS thẻ nhân vật vẽ bằng art gói và đổi theo dòng giáp
+PASS

@@ -80,9 +80,9 @@
     ]
   },
   "limitations": [
-    "articulated cutout rig, not a dynamics simulation",
+    "articulated cutout rig; poses are keyframe-driven. Optional XPBD props/ragdoll in magic-physics.js + magic-physics-rig.js, opt-in via ?magicPhysics=1 (productionReady stays false)",
     "authoring QA required before production use",
-    "pants map to boots equipment in current game inventory unless dedicated pants slot supplied"
+    "pants read the dedicated 'quan' equipment slot; boots ('chan') is only a fallback for saves without a pants item (magicRebuildGear in game.js)"
   ],
   "weaponsArt": "source/weapons.png",
   "weaponGripRatio": [

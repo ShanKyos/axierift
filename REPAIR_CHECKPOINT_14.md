@@ -2,6 +2,8 @@
 
 Ngày 02/10/2026, giờ Việt Nam. **Đã chốt checkpoint 14 cho tích hợp thử; chưa đủ điều kiện production.** Ba mốc 14-A / 14-B / 14-C có QA và dữ liệu phục hồi. Không push GitHub, merge main hoặc deploy.
 
+> **Ghi chú checkpoint 15-A:** câu trên viết TRƯỚC phiên publish. Nhánh `codex/magic-native-checkpoint14-20261002` nay đã có trên GitHub; main và production vẫn chưa nhận. Trạng thái hiện hành đọc ở `DEPLOY_CHECKPOINT_14_STATUS.md` và các tệp `CHECKPOINT_15_*.md`.
+
 ## Các sửa đổi đã hoàn thành
 
 **Collision tốc độ cao:** bộ giải có conservative advancement để quét sphere/segment chuyển động với capsule chuyển động, tìm thời điểm tiếp xúc rồi giữ ràng buộc contact trong vòng lặp solver. Kiếm có collider đoạn liên tục cho hai nửa blade; không còn chỉ kiểm các nút hilt/mid/tip. Cánh bổ sung collider cạnh ngoài tip–top. AABB loại các cặp xa trước khi tìm điểm gần nhất. Phản lực và friction ở contact đoạn phân bố theo trọng số trên hai đầu đoạn và hai đầu capsule.

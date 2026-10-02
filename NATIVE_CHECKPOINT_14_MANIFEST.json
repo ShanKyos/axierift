@@ -101,9 +101,9 @@
     },
     {
       "path": "public/game/assets/magic-rebuild-v1/rig.json",
-      "bytes": 14183,
-      "gitSha": "ee88e72fabc000de99c448d540bcc07e90cdf6df",
-      "sha256": "774c0311e011beac5afd5e00c8a8f49d0243a91def585abac567d5cda2c4fdc0"
+      "bytes": 14364,
+      "gitSha": "f1409955eedf59dfeab30a1af6bf814d30473c70",
+      "sha256": "5a370ddfe06e1d02113ea7f886bb170a188e4fc8fe0ff2ded7645a78fa75949b"
     },
     {
       "path": "public/game/assets/magic-rebuild-v1/source/armor-black-gold.png",
@@ -215,9 +215,9 @@
     },
     {
       "path": "public/game/magic-rebuild.js",
-      "bytes": 33923,
-      "gitSha": "b057e1cd7044f76444fa3b74751464961aae11a7",
-      "sha256": "a89ae96ed41e441620ebfdf9ba5d867fe2defee923436bef1b19546432aec7bf"
+      "bytes": 34248,
+      "gitSha": "164944d6b313bb92f4f62eb633ec49fab89d9aca",
+      "sha256": "236f2117b8abef3f1537a098b87500e5c6d3c8393e03200a3954eefbcfa8d79b"
     },
     {
       "path": "public/game/magic-physics.js",
@@ -227,9 +227,9 @@
     },
     {
       "path": "public/game/magic-physics-rig.js",
-      "bytes": 7532,
-      "gitSha": "0ba5ef6bdf7da95012198285ffc1e99c42a4b249",
-      "sha256": "72a7e62d5ea805f2c96502389272c2e1566f9dc606007a13f2cc851a40bc4cfd"
+      "bytes": 7510,
+      "gitSha": "2ad996994b61fa9fb7c63dc713bf528bf9dee63f",
+      "sha256": "bd74d08c9933a1d88aff5bc33d603c395e12f089a6623de8a73148cca6cea469"
     },
     {
       "path": "public/game/magic_physics.html",
@@ -251,9 +251,9 @@
     },
     {
       "path": "REPAIR_CHECKPOINT_14.md",
-      "bytes": 8705,
-      "gitSha": "068450ae829eab6b00f0689c85b2d79415c7a1c0",
-      "sha256": "995a646261f3fa33574c8a898b2c8cb144a957d2d3b3d287094286d3dfe052e5"
+      "bytes": 9006,
+      "gitSha": "e97caf39afb912262966b0e4ae1f587e34455798",
+      "sha256": "02c6ca3bbfb18c0d64b874692c6ace0d7c0be0943444b55c77eb38f18f9fc391"
     },
     {
       "path": "REPAIR_CHECKPOINT_14.json",

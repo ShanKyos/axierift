@@ -1,0 +1,49 @@
+{
+ "g0": {
+  "levels": {
+   "chest": 11,
+   "gloves": 11,
+   "pants": 11,
+   "boots": 11
+  },
+  "chest": "cuong_phong",
+  "gloves": "cuong_phong",
+  "pants": "cuong_phong",
+  "boots": "cuong_phong",
+  "weapon": 5,
+  "level": 11,
+  "wing": 1
+ },
+ "plusEquip": {
+  "vukhi": 11,
+  "non": 11,
+  "ao": 11,
+  "tay": 11,
+  "quan": 11,
+  "chan": 11,
+  "daychuyen": 11,
+  "nhan1": 11,
+  "nhan2": 11,
+  "canh": 0,
+  "pet": null,
+  "vukhi2": 11
+ },
+ "giap": {
+  "0": 0,
+  "9": 1718,
+  "10": 2085,
+  "11": 2261
+ },
+ "vk": {
+  "0": 0,
+  "9": 1,
+  "10": 2,
+  "11": 3
+ },
+ "lai": 0,
+ "reqTruoc": 28,
+ "reqSau": 28,
+ "reqMoi": [],
+ "bad": [],
+ "loi": []
+}

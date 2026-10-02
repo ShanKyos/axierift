@@ -57,5 +57,5 @@
    P.physics=world.metrics();P.physics.dynamic=true;P.physics.deathKick=S.deathKick;P.physics.release=Object.fromEntries(Object.entries(props.weapons).map(([side,w])=>[side,w.released]));
   };
  }
- window.MagicPhysicsRig={filter,actors,enabled:new URLSearchParams(location.search).has('magicPhysics'),reset:actor=>actors.delete(actor),impulse(actor,name,impulse){const S=actors.get(actor);if(S?.nodes[name])S.world.impulse(S.nodes[name],impulse);}};
+ window.MagicPhysicsRig={filter,actors,enabled:!!window.magicCo?.('magicPhysics'),reset:actor=>actors.delete(actor),impulse(actor,name,impulse){const S=actors.get(actor);if(S?.nodes[name])S.world.impulse(S.nodes[name],impulse);}};
 })();

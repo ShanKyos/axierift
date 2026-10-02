@@ -1,0 +1,18 @@
+① trong thành: {"tt":true,"k":{"thanh":true,"blk":"i","idx":0,"bay":0},"goi":"thanh","canhRoi":false}
+PASS ① trong thành: gói town_v1 · đi bộ · cánh của gói, không bay
+② ngoài thành: {"k":{"thanh":false,"blk":"f","idx":5,"bay":11},"goi":"ngoai","tt":false,"danh":"gl","khiDi":["fm"]}
+PASS ② ngoài thành: gói field_v2 · bay đứng f / bay đi fm · đòn thường = Light Slash
+③ thành: {"quanNguc":0,"quanChan":968,"aoNguc":2925,"thaoQuan":1127}
+PASS ③④ thành: đổi/tháo từng ô chỉ đổi đúng phần thân của ô đó
+③ ngoài: {"quanNguc":0,"quanChan":292,"aoNguc":2298,"thaoQuan":243}
+PASS ③④ ngoài: đổi/tháo từng ô chỉ đổi đúng phần thân của ô đó
+⑤ rèn: {"lech":1729,"ban0":"../town_v1/weapons/song_dao_co_ban/plus0.webp","ban11":"../town_v1/weapons/song_dao_co_ban/plus11.webp"}
+PASS ⑤ vũ khí +0 → +11 đổi vật liệu (1729 điểm ảnh)
+⑥ tám hướng: {"trung":0}
+PASS ⑥ tám hướng bay là tám tư thế khác nhau
+⑦ đồ phát sẵn: {"max":["cuong_phong","cuong_phong","cuong_phong","cuong_phong","cuong_phong"]}
+PASS ⑦ đồ phát sẵn là một bộ trọn (max: cuong_phong)
+⑧ gói Thành: {"body":0,"xin":40,"tron":true}
+PASS ⑧ gói Thành chỉ vẽ lớp giáp, không chồng thân trần lệch hướng
+
+TẤT CẢ XANH
