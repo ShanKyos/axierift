@@ -1,0 +1,22 @@
+  ô-4 từng lớp:
+    baidasan   (ô 4 cố ý để trống — chờ chủ dự án điền)
+    thieulam   Flame Cyclone    aoe  tier trung mult  2.2 cd  0 · phủ 90792 px² · 2 hiệu ứng
+    toanchan   Penetration      proj tier cao   mult  2.4 cd  7 · phủ xuyên hàng · 2 hiệu ứng
+    minhgiao   Power Slash      cone tier trung mult  2.2 cd  6 · phủ 55545 px² · 3 hiệu ứng
+    bug        Earthquake       aoe  tier cao   mult  2.6 cd  9 · phủ 113411 px² · 4 hiệu ứng
+PASS cả 5 chiêu ô-4 đều mang ít nhất một hiệu ứng
+PASS không ô-4 nào còn ở bậc 'so'
+PASS mult ô-4 chênh 1.18× (≤ 1,5×)
+PASS vùng phủ ô-4 chênh 2.0× (≤ 6,0×)
+    Dark Knight    ST  82060 · mạng  35 · chết 0 · atk 132
+    Sylvan Ranger  ST  51640 · mạng   8 · chết 5 · atk 188
+    Dark Wizard    ST  21954 · mạng   1 · chết 8 · atk 138
+    Spellblade     ST  38834 · mạng   7 · chết 5 · atk 170
+    Dark Lord      ST  23961 · mạng   0 · chết 5 · atk 75
+PASS cả 5 lớp đều vượt sàn 12000 ST
+FAIL chênh ST cao/thấp 3.74× > trần 3.6× (Dark Knight vs Dark Wizard)
+  [chẩn đoán] mạng 35/8/1/7/0 · chênh 35.0× · chết 0/5/8/5/5
+  [chẩn đoán] chênh số mạng còn lớn hơn chênh ST nhiều — nợ đã biết, xem đầu tệp.
+errors: []
+
+1 MỤC ĐỎ

@@ -1,0 +1,203 @@
+[
+ {
+  "map": "daohoa",
+  "ten": "Plant Tribe Glade",
+  "loai": "pk",
+  "dinh": 46,
+  "san": 84.5,
+  "loi": [],
+  "soQuai": 119,
+  "soNpc": 1,
+  "soCong": 3,
+  "hinh": "dongtrong",
+  "khungDuoi": 3600,
+  "quaiRaNgoai": 0
+ },
+ {
+  "map": "ardhaven",
+  "ten": "Sapidae Chiefdom",
+  "loai": "safe",
+  "dinh": 68,
+  "san": 82.2,
+  "loi": [],
+  "soQuai": 0,
+  "soNpc": 28,
+  "soCong": 7,
+  "hinh": "dongtrong"
+ },
+ {
+  "map": "ngoai",
+  "ten": "Beast Herd Camp",
+  "loai": "safe",
+  "dinh": 47,
+  "san": 78.3,
+  "loi": [],
+  "soQuai": 109,
+  "soNpc": 1,
+  "soCong": 1,
+  "hinh": "dongtrong",
+  "khungDuoi": 3600,
+  "quaiRaNgoai": 0
+ },
+ {
+  "map": "chungnam",
+  "ten": "Werebear Woods",
+  "loai": "pk",
+  "dinh": 45,
+  "san": 78.5,
+  "loi": [],
+  "soQuai": 118,
+  "soNpc": 2,
+  "soCong": 3,
+  "hinh": "dongtrong",
+  "khungDuoi": 3600,
+  "quaiRaNgoai": 0
+ },
+ {
+  "map": "loimon",
+  "ten": "Lối Mòn Corran",
+  "loai": "pk",
+  "dinh": 66,
+  "san": 33.9,
+  "loi": [],
+  "soQuai": 53,
+  "soNpc": 0,
+  "soCong": 1,
+  "hinh": "hanhlang",
+  "hepNhat": 368,
+  "hepTaiX": 1880,
+  "khungDuoi": 3600,
+  "quaiRaNgoai": 0
+ },
+ {
+  "map": "corran",
+  "ten": "Rẻo Rừng Corran",
+  "loai": "safe",
+  "dinh": 68,
+  "san": 80.7,
+  "loi": [],
+  "soQuai": 102,
+  "soNpc": 3,
+  "soCong": 1,
+  "hinh": "dongtrong",
+  "khungDuoi": 3600,
+  "quaiRaNgoai": 0
+ },
+ {
+  "map": "trungnut",
+  "ten": "Trũng Nứt Corran",
+  "loai": "freepk",
+  "dinh": 48,
+  "san": 76.5,
+  "loi": [],
+  "soQuai": 66,
+  "soNpc": 0,
+  "soCong": 2,
+  "hinh": "dongtrong",
+  "khungDuoi": 3600,
+  "quaiRaNgoai": 0
+ },
+ {
+  "map": "comoc",
+  "ten": "Bug Tribe Tunnels",
+  "loai": "pk",
+  "dinh": 54,
+  "san": 79.3,
+  "loi": [],
+  "soQuai": 120,
+  "soNpc": 1,
+  "soCong": 4,
+  "hinh": "dongtrong",
+  "khungDuoi": 3600,
+  "quaiRaNgoai": 0
+ },
+ {
+  "map": "caungam",
+  "ten": "Aquatic Tribe Causeway",
+  "loai": "pk",
+  "dinh": 133,
+  "san": 30.5,
+  "loi": [],
+  "soQuai": 64,
+  "soNpc": 0,
+  "soCong": 2,
+  "hinh": "hanhlang",
+  "hepNhat": 376,
+  "hepTaiX": 1720,
+  "khungDuoi": 3600,
+  "quaiRaNgoai": 0
+ },
+ {
+  "map": "tuyettinh",
+  "ten": "Bird Tribe Heights",
+  "loai": "pk",
+  "dinh": 49,
+  "san": 83.3,
+  "loi": [
+   "sau 3600 khung đuổi, 1 con nằm ngoài sàn: Axie Lang Thang(2905,2528) — nhánh di chuyển nào đó thiếu collideObstacles"
+  ],
+  "soQuai": 117,
+  "soNpc": 2,
+  "soCong": 2,
+  "hinh": "dongtrong",
+  "khungDuoi": 3600,
+  "quaiRaNgoai": 1
+ },
+ {
+  "map": "mongco",
+  "ten": "Reptile Sunstone Flats",
+  "loai": "pk",
+  "dinh": 66,
+  "san": 81.2,
+  "loi": [],
+  "soQuai": 134,
+  "soNpc": 1,
+  "soCong": 2,
+  "hinh": "dongtrong",
+  "khungDuoi": 3600,
+  "quaiRaNgoai": 0
+ },
+ {
+  "map": "nhanmon",
+  "ten": "Dusk Marsh",
+  "loai": "freepk",
+  "dinh": 55,
+  "san": 85.1,
+  "loi": [],
+  "soQuai": 130,
+  "soNpc": 2,
+  "soCong": 1,
+  "hinh": "dongtrong",
+  "khungDuoi": 3600,
+  "quaiRaNgoai": 0
+ },
+ {
+  "map": "pvp",
+  "ten": "Sàn Đấu Ardhaven",
+  "loai": "freepk",
+  "dinh": 16,
+  "san": 57.6,
+  "loi": [],
+  "soQuai": 0,
+  "soNpc": 0,
+  "soCong": 1,
+  "hinh": "dongtrong",
+  "khungDuoi": 3600,
+  "quaiRaNgoai": 0
+ }
+]
+PASS [daohoa] Plant Tribe Glade — sàn 84.5% · 46 đỉnh · 1 NPC · 3 cổng · 119 quái đều đứng trên đất, kể cả sau 3600 khung đuổi
+PASS [ardhaven] Sapidae Chiefdom — sàn 82.2% · 68 đỉnh · 28 NPC · 7 cổng · 0 quái đều đứng trên đất
+PASS [ngoai] Beast Herd Camp — sàn 78.3% · 47 đỉnh · 1 NPC · 1 cổng · 109 quái đều đứng trên đất, kể cả sau 3600 khung đuổi
+PASS [chungnam] Werebear Woods — sàn 78.5% · 45 đỉnh · 2 NPC · 3 cổng · 118 quái đều đứng trên đất, kể cả sau 3600 khung đuổi
+PASS [loimon] Lối Mòn Corran — sàn 33.9% · 66 đỉnh · 0 NPC · 1 cổng · 53 quái đều đứng trên đất, kể cả sau 3600 khung đuổi
+PASS [corran] Rẻo Rừng Corran — sàn 80.7% · 68 đỉnh · 3 NPC · 1 cổng · 102 quái đều đứng trên đất, kể cả sau 3600 khung đuổi
+PASS [trungnut] Trũng Nứt Corran — sàn 76.5% · 48 đỉnh · 0 NPC · 2 cổng · 66 quái đều đứng trên đất, kể cả sau 3600 khung đuổi
+PASS [comoc] Bug Tribe Tunnels — sàn 79.3% · 54 đỉnh · 1 NPC · 4 cổng · 120 quái đều đứng trên đất, kể cả sau 3600 khung đuổi
+PASS [caungam] Aquatic Tribe Causeway — sàn 30.5% · 133 đỉnh · 0 NPC · 2 cổng · 64 quái đều đứng trên đất, kể cả sau 3600 khung đuổi
+FAIL [tuyettinh] sau 3600 khung đuổi, 1 con nằm ngoài sàn: Axie Lang Thang(2905,2528) — nhánh di chuyển nào đó thiếu collideObstacles
+PASS [mongco] Reptile Sunstone Flats — sàn 81.2% · 66 đỉnh · 1 NPC · 2 cổng · 134 quái đều đứng trên đất, kể cả sau 3600 khung đuổi
+PASS [nhanmon] Dusk Marsh — sàn 85.1% · 55 đỉnh · 2 NPC · 1 cổng · 130 quái đều đứng trên đất, kể cả sau 3600 khung đuổi
+PASS [pvp] Sàn Đấu Ardhaven — sàn 57.6% · 16 đỉnh · 0 NPC · 1 cổng · 0 quái đều đứng trên đất, kể cả sau 3600 khung đuổi
+errors: []
+FAIL(1)

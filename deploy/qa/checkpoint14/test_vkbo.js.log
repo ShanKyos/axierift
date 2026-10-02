@@ -1,0 +1,29 @@
+{
+ "raDon": {
+  "co": true,
+  "hien": true,
+  "nhap": false,
+  "nhapTk": false,
+  "vkLop": false,
+  "lopHien": true
+ },
+ "dungYen": {
+  "co": true,
+  "hien": true,
+  "nhap": false,
+  "nhapTk": false,
+  "vkLop": false,
+  "lopHien": false
+ },
+ "bang": [],
+ "khac": {
+  "co": true,
+  "hien": true,
+  "nhap": false,
+  "nhapTk": false,
+  "vkLop": false,
+  "lopHien": false
+ }
+}
+FAIL dựng cảnh sai: đang vẽ bộ "undefined", không nằm trong NV_BO_CO_VK []
+FAIL

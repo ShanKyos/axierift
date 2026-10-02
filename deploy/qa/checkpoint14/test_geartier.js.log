@@ -1,0 +1,19 @@
+% pixel đổi khi lên một giai:
+lớp             →2     →3     →4     →5     →6     →7     →8     →9    →10
+thieulam    18.97% 18.69% 18.96% 18.78%    19%  18.9%
+baidasan    28.17% 28.25%  28.2% 28.08% 28.23%    28%
+toanchan     7.08%  4.95% 10.51% 10.53%  10.5% 10.34%
+minhgiao    13.83% 13.86% 13.82% 13.74% 13.91% 13.86%
+bug         16.61%  17.1% 17.08% 17.02% 16.07% 17.11%
+PASS thieulam: cả 6 nấc lên giai đều thấy được (thấp nhất 18.69%)
+PASS baidasan: cả 6 nấc lên giai đều thấy được (thấp nhất 28%)
+FAIL toanchan: giai 3 (4.95%) không nhìn thấy khác biệt
+PASS minhgiao: cả 6 nấc lên giai đều thấy được (thấp nhất 13.74%)
+PASS bug: cả 6 nấc lên giai đều thấy được (thấp nhất 16.07%)
+PASS thieulam: 7 bộ giáp, MỖI GIAI MỘT BỘ — Thiết Phiến → Giáp Đồng → Ngân Giáp → Vảy Rồng → Bạo Long → Lôi Đình → Long Vương
+PASS baidasan: 7 bộ giáp, MỖI GIAI MỘT BỘ — Vải Thô → Nhân Sư → Triệu Hồn → Thần Ma → Quỷ Vương → Tinh Vân → Hư Vô
+PASS toanchan: 7 bộ giáp, MỖI GIAI MỘT BỘ — Da Rừng → Lá Thép → Gai Rừng → Lông Cú → Sương Mai → Nguyệt Quế → Bạch Phượng
+PASS minhgiao: 7 bộ giáp, MỖI GIAI MỘT BỘ — Bán Giáp → Da Nung → Tro Tàn → Lửa Dữ → Dung Nham → Long Diễm → Viêm Đế
+PASS bug: 7 bộ giáp, MỖI GIAI MỘT BỘ — Lệnh Giáp → Thân Vệ → Kim Miện → Bạo Chúa → Ngai Đen → Hắc Đế → Đế Vương
+errors: []
+FAIL(1)

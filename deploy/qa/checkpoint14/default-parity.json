@@ -1,0 +1,81 @@
+{
+  "baseline": "6d11da07d4cdb90bc546892f3bfb47438c41d2ec",
+  "candidate": "f9c891b87436231f3cdf33b989b58014b2850c06",
+  "cases": [
+    {
+      "sect": "thieulam",
+      "town": true,
+      "hash": "ba3aa2fe3e025cd1420acdc4bd4d494645756cd7cfa2996e8544089f0aeaaecb",
+      "physics": false,
+      "rebuild": false
+    },
+    {
+      "sect": "thieulam",
+      "town": false,
+      "hash": "5a8127542b9064c941b15457f920d6a2118f2ff1ccf6b1e7afe53dff947dce1b",
+      "physics": false,
+      "rebuild": false
+    },
+    {
+      "sect": "toanchan",
+      "town": true,
+      "hash": "de407cb6dee12c386cc54efd727dcb3b3fc6952cbf435406ff09a5a2ceedba2f",
+      "physics": false,
+      "rebuild": false
+    },
+    {
+      "sect": "toanchan",
+      "town": false,
+      "hash": "de407cb6dee12c386cc54efd727dcb3b3fc6952cbf435406ff09a5a2ceedba2f",
+      "physics": false,
+      "rebuild": false
+    },
+    {
+      "sect": "baidasan",
+      "town": true,
+      "hash": "65bdd4dd512f35e82fd59dffa3cba2a0a9cf7a228729f778bd1ae92ea2d17c0b",
+      "physics": false,
+      "rebuild": false
+    },
+    {
+      "sect": "baidasan",
+      "town": false,
+      "hash": "65bdd4dd512f35e82fd59dffa3cba2a0a9cf7a228729f778bd1ae92ea2d17c0b",
+      "physics": false,
+      "rebuild": false
+    },
+    {
+      "sect": "minhgiao",
+      "town": true,
+      "hash": "d935b025356e12edcccebcc1df280df9b5187d7579907532405d6c6e079b5e1d",
+      "physics": false,
+      "rebuild": false
+    },
+    {
+      "sect": "minhgiao",
+      "town": false,
+      "hash": "9ba6d6ff44539fe1596e7e2aebf34143219413fcedbd7fcabdc2223831818331",
+      "physics": false,
+      "rebuild": false
+    },
+    {
+      "sect": "bug",
+      "town": true,
+      "hash": "36f0fddbdbf0bc089084d977c04487b1145b54346781ee0b85df19c6cee4ba66",
+      "physics": false,
+      "rebuild": false
+    },
+    {
+      "sect": "bug",
+      "town": false,
+      "hash": "f450e773301ec3cbd3439f3ef1285f010da39f4ddaf9b2c0a5f49d855379fa04",
+      "physics": false,
+      "rebuild": false
+    }
+  ],
+  "mismatches": [],
+  "errors": [
+    [],
+    []
+  ]
+}

@@ -1,0 +1,18 @@
+1) canvas: {"co":true,"w":1100,"h":760,"manHien":true}
+2) chuyển động: {"tong":836000,"khac":14116} → 2% điểm ảnh đổi
+3) sau khi vào game: {"manAn":true,"khac":0}
+4) art nền: {"hong":[],"trong":[],"phuDac":0}
+5) sân khấu · một nhân vật: {"an":false,"cot":[0,1422,1711,265,0],"lop":"thieulam","axie":["emberjaw","cinderbeak","tidewarden","netherfang","mossback"]}
+6) sân khấu · tài khoản trống: {"an":false,"cot":[700,2086,2164,2146,568],"lop":null,"axie":["emberjaw","cinderbeak","tidewarden","netherfang","mossback"]}
+node:internal/process/promises:394
+    triggerUncaughtException(err, true /* fromPromise */);
+    ^
+
+page.evaluate: TypeError: Cannot read properties of null (reading 'than')
+    at eval (eval at evaluate (:290:30), <anonymous>:20:57)
+    at Array.map (<anonymous>)
+    at eval (eval at evaluate (:290:30), <anonymous>:20:23)
+    at async <anonymous>:316:30
+    at /tmp/magic-deploy-final-reg-3/src/test_titlefx.js:165:22
+
+Node.js v24.19.0

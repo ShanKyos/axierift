@@ -1,0 +1,20 @@
+1) bảng lớp: {"lop":["h:non","t1:tay","c:chan","a:ao","vk:vukhi","t2:tay","n:non"],"bo":[],"so":[]}
+PASS NV_LOP trùng khít bảng LOP của bộ nướng (7 lớp): h:non · t1:tay · c:chan · a:ao · vk:vukhi · t2:tay · n:non
+FAIL chưa bộ nào có lớp rời
+2) tệp lớp: 0 tấm · hỏng 0 · lệch 0
+PASS cả 0 tấm lớp tải được
+PASS mọi hộp cắt khớp đúng kích thước tệp — lớp dán đúng chỗ
+3) hai đường: {"bang":{},"giai1":null,"giai7":null}
+PASS bộ có lớp rời không đi đường đổi cả tấm thân
+FAIL bộ KHÔNG có lớp rời phải giữ đường cũ, đang trả null
+FAIL không lớp nào còn dùng bộ có lớp rời — mục 4 hết chỗ đo
+4) đo trên lớp: null
+4) từng ô: null
+/tmp/magic-deploy-final-reg-2/src/test_lopdo.js:199
+  else pass(`bỏ một ô khỏi bộ đủ → đổi ${r4.duVsThieu} điểm ảnh`);
+                                            ^
+
+TypeError: Cannot read properties of null (reading 'duVsThieu')
+    at /tmp/magic-deploy-final-reg-2/src/test_lopdo.js:199:45
+
+Node.js v24.19.0

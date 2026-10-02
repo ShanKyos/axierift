@@ -1,0 +1,15 @@
+1. {"bang1":null,"bang2":null,"soKhoi":16,"khoiBang2":11}
+FAIL bảng MỘT không nạp được
+OK   16 khối, 11 khối ở bảng hai
+2. {"bo":"","boQua":["f","g"],"mot":{"n":96,"rieng":96,"dinh":95,"o":0},"hai":{"n":84,"rieng":84,"dinh":83,"o":0}}
+FAIL bảng MỘT: không đo được cỡ bảng thật
+FAIL bảng HAI: không đo được cỡ bảng thật
+3. {"đứng":"i","trúng đòn":"h","chém nhát 1":"a","chém nhát 2":"s","tay không":"p","dính độc":"t","bắt chuyện":"n","nhảy múa":"e","chết":"d"}
+4. {"bang":{"thieulam":1,"minhgiao":1},"coDK":true,"coSB":true,"coDW":false,"coELF":false}
+OK   nhát hai đúng hai lớp cầm kiếm
+5. {"thieulam":"sprite","baidasan":"sprite","toanchan":"sprite","minhgiao":"sprite","bug":"sprite"}
+OK   cả 5 lớp vẽ bằng bảng khung art
+6. {"bos":[],"ra":[]}
+FAIL NV_BO_CO_BAY rỗng — không bộ nào có khối bay, mục 6 không gác gì
+errors: []
+FAIL(4)

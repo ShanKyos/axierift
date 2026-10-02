@@ -1,0 +1,13 @@
+node:internal/process/promises:394
+    triggerUncaughtException(err, true /* fromPromise */);
+    ^
+
+page.evaluate: TypeError: Failed to execute 'drawImage' on 'CanvasRenderingContext2D': The provided value is not of type '(CSSImageValue or HTMLCanvasElement or HTMLImageElement or HTMLVideoElement or ImageBitmap or OffscreenCanvas or SVGImageElement or VideoFrame)'.
+    at nvVeKhung (http://localhost:49667/game.js:16557:5)
+    at shot (eval at evaluate (:290:30), <anonymous>:22:7)
+    at eval (eval at evaluate (:290:30), <anonymous>:34:16)
+    at UtilityScript.evaluate (<anonymous>:292:16)
+    at UtilityScript.<anonymous> (<anonymous>:1:44)
+    at /tmp/magic-deploy-final-reg-4/src/test_plusglow.js:19:21
+
+Node.js v24.19.0

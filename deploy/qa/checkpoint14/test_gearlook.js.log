@@ -1,0 +1,11 @@
+node:internal/process/promises:394
+    triggerUncaughtException(err, true /* fromPromise */);
+    ^
+
+page.evaluate: TypeError: Cannot read properties of null (reading 'data')
+    at eval (eval at evaluate (:290:30), <anonymous>:39:29)
+    at UtilityScript.evaluate (<anonymous>:292:16)
+    at UtilityScript.<anonymous> (<anonymous>:1:44)
+    at /tmp/magic-deploy-final-reg-4/src/test_gearlook.js:35:23
+
+Node.js v24.19.0

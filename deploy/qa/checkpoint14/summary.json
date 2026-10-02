@@ -1,0 +1,1417 @@
+{
+  "productionDeployed": false,
+  "candidateCommit": "f9c891b87436231f3cdf33b989b58014b2850c06",
+  "candidateTree": "c80bde219a6845e8d53e03c5184849f358c67acc",
+  "mainBase": "6d11da07d4cdb90bc546892f3bfb47438c41d2ec",
+  "lint": {
+    "exit": 0,
+    "warnings": 1
+  },
+  "typecheck": {
+    "exit": 0
+  },
+  "unit": {
+    "exit": 0,
+    "passed": 7
+  },
+  "build": {
+    "exit": 0
+  },
+  "regression": {
+    "total": 250,
+    "passed": 231,
+    "failed": 19,
+    "tests": [
+      {
+        "test": "test_5class.js",
+        "exit": 0,
+        "shard": 1
+      },
+      {
+        "test": "test_audio_vfx.js",
+        "exit": 0,
+        "shard": 1
+      },
+      {
+        "test": "test_autofix2_dungeon.js",
+        "exit": 0,
+        "shard": 1
+      },
+      {
+        "test": "test_avaphanung.js",
+        "exit": 0,
+        "shard": 1
+      },
+      {
+        "test": "test_axie_regions.js",
+        "exit": 0,
+        "shard": 1
+      },
+      {
+        "test": "test_bandonho.js",
+        "exit": 1,
+        "shard": 1,
+        "baseline": {
+          "test": "test_bandonho.js",
+          "baselineExit": 1,
+          "seconds": 4.4
+        },
+        "candidateRetry": null
+      },
+      {
+        "test": "test_baydat.js",
+        "exit": 0,
+        "shard": 1
+      },
+      {
+        "test": "test_bonho.js",
+        "exit": 0,
+        "shard": 1
+      },
+      {
+        "test": "test_bossimgs.js",
+        "exit": 0,
+        "shard": 1
+      },
+      {
+        "test": "test_bossmoves2.js",
+        "exit": 0,
+        "shard": 1
+      },
+      {
+        "test": "test_bugfixes.js",
+        "exit": 0,
+        "shard": 1
+      },
+      {
+        "test": "test_cayky.js",
+        "exit": 0,
+        "shard": 1
+      },
+      {
+        "test": "test_chat.js",
+        "exit": 0,
+        "shard": 1
+      },
+      {
+        "test": "test_choithu.js",
+        "exit": 0,
+        "shard": 1
+      },
+      {
+        "test": "test_cl4.js",
+        "exit": 0,
+        "shard": 1
+      },
+      {
+        "test": "test_compass.js",
+        "exit": 0,
+        "shard": 1
+      },
+      {
+        "test": "test_cotgobo.js",
+        "exit": 0,
+        "shard": 1
+      },
+      {
+        "test": "test_cultremoval.js",
+        "exit": 0,
+        "shard": 1
+      },
+      {
+        "test": "test_deepfix.js",
+        "exit": 0,
+        "shard": 1
+      },
+      {
+        "test": "test_dgnhud.js",
+        "exit": 0,
+        "shard": 1
+      },
+      {
+        "test": "test_dmgnum.js",
+        "exit": 0,
+        "shard": 1
+      },
+      {
+        "test": "test_dot4.js",
+        "exit": 0,
+        "shard": 1
+      },
+      {
+        "test": "test_dungeontimer.js",
+        "exit": 0,
+        "shard": 1
+      },
+      {
+        "test": "test_eqdoll.js",
+        "exit": 0,
+        "shard": 1
+      },
+      {
+        "test": "test_forge911.js",
+        "exit": 0,
+        "shard": 1
+      },
+      {
+        "test": "test_geartier.js",
+        "exit": 1,
+        "shard": 1,
+        "baseline": {
+          "test": "test_geartier.js",
+          "baselineExit": 0,
+          "seconds": 2.9
+        },
+        "candidateRetry": {
+          "exit": 0,
+          "seconds": 2.9
+        }
+      },
+      {
+        "test": "test_goimr.js",
+        "exit": 0,
+        "shard": 1
+      },
+      {
+        "test": "test_herbfix.js",
+        "exit": 0,
+        "shard": 1
+      },
+      {
+        "test": "test_hethong.js",
+        "exit": 0,
+        "shard": 1
+      },
+      {
+        "test": "test_hud.js",
+        "exit": 0,
+        "shard": 1
+      },
+      {
+        "test": "test_huongnhin.js",
+        "exit": 1,
+        "shard": 1,
+        "baseline": {
+          "test": "test_huongnhin.js",
+          "baselineExit": 1,
+          "seconds": 5.5
+        },
+        "candidateRetry": null
+      },
+      {
+        "test": "test_itemdb.js",
+        "exit": 0,
+        "shard": 1
+      },
+      {
+        "test": "test_kho.js",
+        "exit": 0,
+        "shard": 1
+      },
+      {
+        "test": "test_khungchay.js",
+        "exit": 1,
+        "shard": 1,
+        "baseline": {
+          "test": "test_khungchay.js",
+          "baselineExit": 1,
+          "seconds": 15.8
+        },
+        "candidateRetry": null
+      },
+      {
+        "test": "test_kubanner.js",
+        "exit": 1,
+        "shard": 1,
+        "baseline": {
+          "test": "test_kubanner.js",
+          "baselineExit": 1,
+          "seconds": 90.0
+        },
+        "candidateRetry": null
+      },
+      {
+        "test": "test_lokhac.js",
+        "exit": 0,
+        "shard": 1
+      },
+      {
+        "test": "test_mastery.js",
+        "exit": 0,
+        "shard": 1
+      },
+      {
+        "test": "test_moblevels.js",
+        "exit": 0,
+        "shard": 1
+      },
+      {
+        "test": "test_mrdong.js",
+        "exit": 0,
+        "shard": 1
+      },
+      {
+        "test": "test_narrow.js",
+        "exit": 0,
+        "shard": 1
+      },
+      {
+        "test": "test_nhacnen.js",
+        "exit": 0,
+        "shard": 1
+      },
+      {
+        "test": "test_nhipcap.js",
+        "exit": 0,
+        "shard": 1
+      },
+      {
+        "test": "test_nopet.js",
+        "exit": 0,
+        "shard": 1
+      },
+      {
+        "test": "test_npcclick2.js",
+        "exit": 0,
+        "shard": 1
+      },
+      {
+        "test": "test_pconly.js",
+        "exit": 0,
+        "shard": 1
+      },
+      {
+        "test": "test_points.js",
+        "exit": 0,
+        "shard": 1
+      },
+      {
+        "test": "test_regionlore.js",
+        "exit": 0,
+        "shard": 1
+      },
+      {
+        "test": "test_reset.js",
+        "exit": 0,
+        "shard": 1
+      },
+      {
+        "test": "test_ruiro.js",
+        "exit": 0,
+        "shard": 1
+      },
+      {
+        "test": "test_sets.js",
+        "exit": 0,
+        "shard": 1
+      },
+      {
+        "test": "test_skill3.js",
+        "exit": 0,
+        "shard": 1
+      },
+      {
+        "test": "test_spawnvfx_shot.js",
+        "exit": 0,
+        "shard": 1
+      },
+      {
+        "test": "test_statrework.js",
+        "exit": 0,
+        "shard": 1
+      },
+      {
+        "test": "test_taitro.js",
+        "exit": 0,
+        "shard": 1
+      },
+      {
+        "test": "test_tanthu.js",
+        "exit": 0,
+        "shard": 1
+      },
+      {
+        "test": "test_thanhcum.js",
+        "exit": 0,
+        "shard": 1
+      },
+      {
+        "test": "test_tiemnang.js",
+        "exit": 0,
+        "shard": 1
+      },
+      {
+        "test": "test_uidot5.js",
+        "exit": 0,
+        "shard": 1
+      },
+      {
+        "test": "test_vatcan.js",
+        "exit": 0,
+        "shard": 1
+      },
+      {
+        "test": "test_vklop.js",
+        "exit": 1,
+        "shard": 1,
+        "baseline": {
+          "test": "test_vklop.js",
+          "baselineExit": 1,
+          "seconds": 7.9
+        },
+        "candidateRetry": null
+      },
+      {
+        "test": "test_vukhitren.js",
+        "exit": 0,
+        "shard": 1
+      },
+      {
+        "test": "test_waypoint.js",
+        "exit": 0,
+        "shard": 1
+      },
+      {
+        "test": "test_wsnho.js",
+        "exit": 0,
+        "shard": 1
+      },
+      {
+        "test": "test_amthanh.js",
+        "exit": 0,
+        "shard": 2
+      },
+      {
+        "test": "test_auditfix2.js",
+        "exit": 0,
+        "shard": 2
+      },
+      {
+        "test": "test_autopack.js",
+        "exit": 0,
+        "shard": 2
+      },
+      {
+        "test": "test_avatar.js",
+        "exit": 0,
+        "shard": 2
+      },
+      {
+        "test": "test_axiedanh.js",
+        "exit": 0,
+        "shard": 2
+      },
+      {
+        "test": "test_bangsukien.js",
+        "exit": 0,
+        "shard": 2
+      },
+      {
+        "test": "test_bayquai.js",
+        "exit": 0,
+        "shard": 2
+      },
+      {
+        "test": "test_bophan.js",
+        "exit": 1,
+        "shard": 2,
+        "baseline": {
+          "test": "test_bophan.js",
+          "baselineExit": 0,
+          "seconds": 4.6
+        },
+        "candidateRetry": {
+          "exit": 0,
+          "seconds": 4.2
+        }
+      },
+      {
+        "test": "test_bossmechanic.js",
+        "exit": 0,
+        "shard": 2
+      },
+      {
+        "test": "test_bossplace.js",
+        "exit": 0,
+        "shard": 2
+      },
+      {
+        "test": "test_canbanglop.js",
+        "exit": 1,
+        "shard": 2,
+        "baseline": {
+          "test": "test_canbanglop.js",
+          "baselineExit": 0,
+          "seconds": 17.6
+        },
+        "candidateRetry": {
+          "exit": 1,
+          "seconds": 16.0
+        }
+      },
+      {
+        "test": "test_chaos.js",
+        "exit": 0,
+        "shard": 2
+      },
+      {
+        "test": "test_cheat_tientrinh.js",
+        "exit": 0,
+        "shard": 2
+      },
+      {
+        "test": "test_chuoinv.js",
+        "exit": 0,
+        "shard": 2
+      },
+      {
+        "test": "test_classbalance.js",
+        "exit": 0,
+        "shard": 2
+      },
+      {
+        "test": "test_cong.js",
+        "exit": 0,
+        "shard": 2
+      },
+      {
+        "test": "test_cothu.js",
+        "exit": 0,
+        "shard": 2
+      },
+      {
+        "test": "test_danthu.js",
+        "exit": 0,
+        "shard": 2
+      },
+      {
+        "test": "test_defaultlang.js",
+        "exit": 0,
+        "shard": 2
+      },
+      {
+        "test": "test_diahinh.js",
+        "exit": 0,
+        "shard": 2
+      },
+      {
+        "test": "test_docduoc.js",
+        "exit": 0,
+        "shard": 2
+      },
+      {
+        "test": "test_dotphacleanup.js",
+        "exit": 0,
+        "shard": 2
+      },
+      {
+        "test": "test_earlygame.js",
+        "exit": 0,
+        "shard": 2
+      },
+      {
+        "test": "test_evopath.js",
+        "exit": 0,
+        "shard": 2
+      },
+      {
+        "test": "test_forgenpc.js",
+        "exit": 0,
+        "shard": 2
+      },
+      {
+        "test": "test_giapicon.js",
+        "exit": 1,
+        "shard": 2,
+        "baseline": {
+          "test": "test_giapicon.js",
+          "baselineExit": 1,
+          "seconds": 62.5
+        },
+        "candidateRetry": null
+      },
+      {
+        "test": "test_golden.js",
+        "exit": 0,
+        "shard": 2
+      },
+      {
+        "test": "test_herbfix2.js",
+        "exit": 0,
+        "shard": 2
+      },
+      {
+        "test": "test_hethu.js",
+        "exit": 0,
+        "shard": 2
+      },
+      {
+        "test": "test_hud2.js",
+        "exit": 0,
+        "shard": 2
+      },
+      {
+        "test": "test_inv.js",
+        "exit": 0,
+        "shard": 2
+      },
+      {
+        "test": "test_itemtip.js",
+        "exit": 0,
+        "shard": 2
+      },
+      {
+        "test": "test_khoihinh.js",
+        "exit": 1,
+        "shard": 2,
+        "baseline": {
+          "test": "test_khoihinh.js",
+          "baselineExit": 1,
+          "seconds": 18.6
+        },
+        "candidateRetry": null
+      },
+      {
+        "test": "test_khungdoc.js",
+        "exit": 0,
+        "shard": 2
+      },
+      {
+        "test": "test_kuphim.js",
+        "exit": 0,
+        "shard": 2
+      },
+      {
+        "test": "test_lopdo.js",
+        "exit": 1,
+        "shard": 2,
+        "baseline": {
+          "test": "test_lopdo.js",
+          "baselineExit": 1,
+          "seconds": 2.1
+        },
+        "candidateRetry": null
+      },
+      {
+        "test": "test_maxop.js",
+        "exit": 0,
+        "shard": 2
+      },
+      {
+        "test": "test_mobspread.js",
+        "exit": 0,
+        "shard": 2
+      },
+      {
+        "test": "test_muctieu.js",
+        "exit": 0,
+        "shard": 2
+      },
+      {
+        "test": "test_netma.js",
+        "exit": 0,
+        "shard": 2
+      },
+      {
+        "test": "test_nhanchong.js",
+        "exit": 0,
+        "shard": 2
+      },
+      {
+        "test": "test_noVoice.js",
+        "exit": 0,
+        "shard": 2
+      },
+      {
+        "test": "test_nowuxia2.js",
+        "exit": 0,
+        "shard": 2
+      },
+      {
+        "test": "test_npcclick3.js",
+        "exit": 0,
+        "shard": 2
+      },
+      {
+        "test": "test_phutdau.js",
+        "exit": 0,
+        "shard": 2
+      },
+      {
+        "test": "test_pvp.js",
+        "exit": 0,
+        "shard": 2
+      },
+      {
+        "test": "test_remove4.js",
+        "exit": 0,
+        "shard": 2
+      },
+      {
+        "test": "test_resscale.js",
+        "exit": 0,
+        "shard": 2
+      },
+      {
+        "test": "test_ruong.js",
+        "exit": 0,
+        "shard": 2
+      },
+      {
+        "test": "test_shop.js",
+        "exit": 0,
+        "shard": 2
+      },
+      {
+        "test": "test_skill_nosect.js",
+        "exit": 0,
+        "shard": 2
+      },
+      {
+        "test": "test_stage.js",
+        "exit": 0,
+        "shard": 2
+      },
+      {
+        "test": "test_statwired.js",
+        "exit": 0,
+        "shard": 2
+      },
+      {
+        "test": "test_tamdac.js",
+        "exit": 0,
+        "shard": 2
+      },
+      {
+        "test": "test_taytuy.js",
+        "exit": 0,
+        "shard": 2
+      },
+      {
+        "test": "test_thanhtg.js",
+        "exit": 0,
+        "shard": 2
+      },
+      {
+        "test": "test_tiente.js",
+        "exit": 0,
+        "shard": 2
+      },
+      {
+        "test": "test_uifix.js",
+        "exit": 0,
+        "shard": 2
+      },
+      {
+        "test": "test_vfxchieu.js",
+        "exit": 0,
+        "shard": 2
+      },
+      {
+        "test": "test_vohoc5.js",
+        "exit": 0,
+        "shard": 2
+      },
+      {
+        "test": "test_vung.js",
+        "exit": 0,
+        "shard": 2
+      },
+      {
+        "test": "test_westernize.js",
+        "exit": 0,
+        "shard": 2
+      },
+      {
+        "test": "test_xoayvfx.js",
+        "exit": 0,
+        "shard": 2
+      },
+      {
+        "test": "test_anhquai.js",
+        "exit": 0,
+        "shard": 3
+      },
+      {
+        "test": "test_autofix.js",
+        "exit": 0,
+        "shard": 3
+      },
+      {
+        "test": "test_autosay.js",
+        "exit": 0,
+        "shard": 3
+      },
+      {
+        "test": "test_axie_classes.js",
+        "exit": 0,
+        "shard": 3
+      },
+      {
+        "test": "test_baifarm.js",
+        "exit": 0,
+        "shard": 3
+      },
+      {
+        "test": "test_bansac.js",
+        "exit": 0,
+        "shard": 3
+      },
+      {
+        "test": "test_bidongchiso.js",
+        "exit": 0,
+        "shard": 3
+      },
+      {
+        "test": "test_bossauto.js",
+        "exit": 0,
+        "shard": 3
+      },
+      {
+        "test": "test_bossmechanic2.js",
+        "exit": 0,
+        "shard": 3
+      },
+      {
+        "test": "test_boxrule.js",
+        "exit": 0,
+        "shard": 3
+      },
+      {
+        "test": "test_canh3bac.js",
+        "exit": 0,
+        "shard": 3
+      },
+      {
+        "test": "test_chaosanim.js",
+        "exit": 0,
+        "shard": 3
+      },
+      {
+        "test": "test_chianh.js",
+        "exit": 0,
+        "shard": 3
+      },
+      {
+        "test": "test_cl2.js",
+        "exit": 0,
+        "shard": 3
+      },
+      {
+        "test": "test_classvfx_range.js",
+        "exit": 0,
+        "shard": 3
+      },
+      {
+        "test": "test_console.js",
+        "exit": 0,
+        "shard": 3
+      },
+      {
+        "test": "test_cottruyen.js",
+        "exit": 0,
+        "shard": 3
+      },
+      {
+        "test": "test_daochoi.js",
+        "exit": 0,
+        "shard": 3
+      },
+      {
+        "test": "test_demodo.js",
+        "exit": 1,
+        "shard": 3,
+        "baseline": {
+          "test": "test_demodo.js",
+          "baselineExit": 1,
+          "seconds": 4.8
+        },
+        "candidateRetry": null
+      },
+      {
+        "test": "test_dibien.js",
+        "exit": 0,
+        "shard": 3
+      },
+      {
+        "test": "test_domap.js",
+        "exit": 0,
+        "shard": 3
+      },
+      {
+        "test": "test_droprate.js",
+        "exit": 0,
+        "shard": 3
+      },
+      {
+        "test": "test_elem.js",
+        "exit": 0,
+        "shard": 3
+      },
+      {
+        "test": "test_feel.js",
+        "exit": 0,
+        "shard": 3
+      },
+      {
+        "test": "test_ganchieu.js",
+        "exit": 0,
+        "shard": 3
+      },
+      {
+        "test": "test_giapvp.js",
+        "exit": 0,
+        "shard": 3
+      },
+      {
+        "test": "test_goloi.js",
+        "exit": 0,
+        "shard": 3
+      },
+      {
+        "test": "test_hero.js",
+        "exit": 0,
+        "shard": 3
+      },
+      {
+        "test": "test_hoanlai.js",
+        "exit": 0,
+        "shard": 3
+      },
+      {
+        "test": "test_hudv.js",
+        "exit": 0,
+        "shard": 3
+      },
+      {
+        "test": "test_isoneo.js",
+        "exit": 0,
+        "shard": 3
+      },
+      {
+        "test": "test_khacthan.js",
+        "exit": 0,
+        "shard": 3
+      },
+      {
+        "test": "test_khonglfs.js",
+        "exit": 0,
+        "shard": 3
+      },
+      {
+        "test": "test_khungquai.js",
+        "exit": 0,
+        "shard": 3
+      },
+      {
+        "test": "test_kynang5lop.js",
+        "exit": 0,
+        "shard": 3
+      },
+      {
+        "test": "test_lucchien.js",
+        "exit": 0,
+        "shard": 3
+      },
+      {
+        "test": "test_migration.js",
+        "exit": 0,
+        "shard": 3
+      },
+      {
+        "test": "test_mobwander.js",
+        "exit": 0,
+        "shard": 3
+      },
+      {
+        "test": "test_muigio.js",
+        "exit": 0,
+        "shard": 3
+      },
+      {
+        "test": "test_ngamchuot.js",
+        "exit": 0,
+        "shard": 3
+      },
+      {
+        "test": "test_nhanvat5.js",
+        "exit": 0,
+        "shard": 3
+      },
+      {
+        "test": "test_noimap.js",
+        "exit": 0,
+        "shard": 3
+      },
+      {
+        "test": "test_npcclean.js",
+        "exit": 0,
+        "shard": 3
+      },
+      {
+        "test": "test_npckhung.js",
+        "exit": 0,
+        "shard": 3
+      },
+      {
+        "test": "test_phutuyen.js",
+        "exit": 0,
+        "shard": 3
+      },
+      {
+        "test": "test_qablock.js",
+        "exit": 0,
+        "shard": 3
+      },
+      {
+        "test": "test_removebonds.js",
+        "exit": 0,
+        "shard": 3
+      },
+      {
+        "test": "test_rift.js",
+        "exit": 0,
+        "shard": 3
+      },
+      {
+        "test": "test_sandat.js",
+        "exit": 1,
+        "shard": 3,
+        "baseline": {
+          "test": "test_sandat.js",
+          "baselineExit": 0,
+          "seconds": 44.8
+        },
+        "candidateRetry": {
+          "exit": 0,
+          "seconds": 43.2
+        }
+      },
+      {
+        "test": "test_shots.js",
+        "exit": 0,
+        "shard": 3
+      },
+      {
+        "test": "test_skillpanel.js",
+        "exit": 0,
+        "shard": 3
+      },
+      {
+        "test": "test_stage2.js",
+        "exit": 0,
+        "shard": 3
+      },
+      {
+        "test": "test_story.js",
+        "exit": 0,
+        "shard": 3
+      },
+      {
+        "test": "test_tamgiac.js",
+        "exit": 0,
+        "shard": 3
+      },
+      {
+        "test": "test_taytuy_reload.js",
+        "exit": 0,
+        "shard": 3
+      },
+      {
+        "test": "test_thegioi.js",
+        "exit": 0,
+        "shard": 3
+      },
+      {
+        "test": "test_titlefx.js",
+        "exit": 1,
+        "shard": 3,
+        "baseline": {
+          "test": "test_titlefx.js",
+          "baselineExit": 1,
+          "seconds": 16.2
+        },
+        "candidateRetry": null
+      },
+      {
+        "test": "test_uigothic.js",
+        "exit": 0,
+        "shard": 3
+      },
+      {
+        "test": "test_viacot.js",
+        "exit": 0,
+        "shard": 3
+      },
+      {
+        "test": "test_vongkiem.js",
+        "exit": 0,
+        "shard": 3
+      },
+      {
+        "test": "test_vutdo.js",
+        "exit": 0,
+        "shard": 3
+      },
+      {
+        "test": "test_westernize2.js",
+        "exit": 0,
+        "shard": 3
+      },
+      {
+        "test": "test_anim.js",
+        "exit": 0,
+        "shard": 4
+      },
+      {
+        "test": "test_autofix2.js",
+        "exit": 0,
+        "shard": 4
+      },
+      {
+        "test": "test_avachon.js",
+        "exit": 0,
+        "shard": 4
+      },
+      {
+        "test": "test_axie_i18n.js",
+        "exit": 0,
+        "shard": 4
+      },
+      {
+        "test": "test_banbe.js",
+        "exit": 0,
+        "shard": 4
+      },
+      {
+        "test": "test_baycanh.js",
+        "exit": 1,
+        "shard": 4,
+        "baseline": {
+          "test": "test_baycanh.js",
+          "baselineExit": 1,
+          "seconds": 25.1
+        },
+        "candidateRetry": {
+          "exit": 1,
+          "seconds": 23.2
+        }
+      },
+      {
+        "test": "test_bongnguoi.js",
+        "exit": 0,
+        "shard": 4
+      },
+      {
+        "test": "test_bosshunt.js",
+        "exit": 0,
+        "shard": 4
+      },
+      {
+        "test": "test_bossmoves.js",
+        "exit": 0,
+        "shard": 4
+      },
+      {
+        "test": "test_boxthrow.js",
+        "exit": 0,
+        "shard": 4
+      },
+      {
+        "test": "test_capnha.js",
+        "exit": 0,
+        "shard": 4
+      },
+      {
+        "test": "test_chaosmachine.js",
+        "exit": 0,
+        "shard": 4
+      },
+      {
+        "test": "test_chiso4.js",
+        "exit": 0,
+        "shard": 4
+      },
+      {
+        "test": "test_cl3.js",
+        "exit": 0,
+        "shard": 4
+      },
+      {
+        "test": "test_combatlog.js",
+        "exit": 0,
+        "shard": 4
+      },
+      {
+        "test": "test_consumicon.js",
+        "exit": 0,
+        "shard": 4
+      },
+      {
+        "test": "test_create.js",
+        "exit": 0,
+        "shard": 4
+      },
+      {
+        "test": "test_daythan.js",
+        "exit": 0,
+        "shard": 4
+      },
+      {
+        "test": "test_depthua.js",
+        "exit": 0,
+        "shard": 4
+      },
+      {
+        "test": "test_dichen.js",
+        "exit": 0,
+        "shard": 4
+      },
+      {
+        "test": "test_dongbodo.js",
+        "exit": 0,
+        "shard": 4
+      },
+      {
+        "test": "test_dungeon2.js",
+        "exit": 0,
+        "shard": 4
+      },
+      {
+        "test": "test_epngoc.js",
+        "exit": 0,
+        "shard": 4
+      },
+      {
+        "test": "test_flinch.js",
+        "exit": 0,
+        "shard": 4
+      },
+      {
+        "test": "test_gearlook.js",
+        "exit": 1,
+        "shard": 4,
+        "baseline": {
+          "test": "test_gearlook.js",
+          "baselineExit": 1,
+          "seconds": 31.7
+        },
+        "candidateRetry": null
+      },
+      {
+        "test": "test_gohe6.js",
+        "exit": 0,
+        "shard": 4
+      },
+      {
+        "test": "test_groundloot.js",
+        "exit": 0,
+        "shard": 4
+      },
+      {
+        "test": "test_herosprite.js",
+        "exit": 1,
+        "shard": 4,
+        "baseline": {
+          "test": "test_herosprite.js",
+          "baselineExit": 1,
+          "seconds": 6.6
+        },
+        "candidateRetry": null
+      },
+      {
+        "test": "test_hopve.js",
+        "exit": 0,
+        "shard": 4
+      },
+      {
+        "test": "test_huongdan.js",
+        "exit": 0,
+        "shard": 4
+      },
+      {
+        "test": "test_itemcompare.js",
+        "exit": 0,
+        "shard": 4
+      },
+      {
+        "test": "test_kheuoc.js",
+        "exit": 0,
+        "shard": 4
+      },
+      {
+        "test": "test_khungbang.js",
+        "exit": 0,
+        "shard": 4
+      },
+      {
+        "test": "test_killrewards.js",
+        "exit": 0,
+        "shard": 4
+      },
+      {
+        "test": "test_loira.js",
+        "exit": 0,
+        "shard": 4
+      },
+      {
+        "test": "test_lvpower.js",
+        "exit": 0,
+        "shard": 4
+      },
+      {
+        "test": "test_mobbalance.js",
+        "exit": 0,
+        "shard": 4
+      },
+      {
+        "test": "test_motiffx.js",
+        "exit": 0,
+        "shard": 4
+      },
+      {
+        "test": "test_muothinh.js",
+        "exit": 0,
+        "shard": 4
+      },
+      {
+        "test": "test_ngoccanh.js",
+        "exit": 0,
+        "shard": 4
+      },
+      {
+        "test": "test_nhiemvu.js",
+        "exit": 0,
+        "shard": 4
+      },
+      {
+        "test": "test_nomove.js",
+        "exit": 0,
+        "shard": 4
+      },
+      {
+        "test": "test_npcclick.js",
+        "exit": 0,
+        "shard": 4
+      },
+      {
+        "test": "test_obstacles.js",
+        "exit": 0,
+        "shard": 4
+      },
+      {
+        "test": "test_plusglow.js",
+        "exit": 1,
+        "shard": 4,
+        "baseline": {
+          "test": "test_plusglow.js",
+          "baselineExit": 1,
+          "seconds": 31.7
+        },
+        "candidateRetry": null
+      },
+      {
+        "test": "test_quickstat.js",
+        "exit": 0,
+        "shard": 4
+      },
+      {
+        "test": "test_renxit.js",
+        "exit": 0,
+        "shard": 4
+      },
+      {
+        "test": "test_rollrules.js",
+        "exit": 0,
+        "shard": 4
+      },
+      {
+        "test": "test_savever.js",
+        "exit": 0,
+        "shard": 4
+      },
+      {
+        "test": "test_sidequests_after.js",
+        "exit": 0,
+        "shard": 4
+      },
+      {
+        "test": "test_skillvfx.js",
+        "exit": 0,
+        "shard": 4
+      },
+      {
+        "test": "test_stage2b.js",
+        "exit": 0,
+        "shard": 4
+      },
+      {
+        "test": "test_tabnaming.js",
+        "exit": 0,
+        "shard": 4
+      },
+      {
+        "test": "test_tamphap.js",
+        "exit": 0,
+        "shard": 4
+      },
+      {
+        "test": "test_thanhchien.js",
+        "exit": 0,
+        "shard": 4
+      },
+      {
+        "test": "test_thucung.js",
+        "exit": 0,
+        "shard": 4
+      },
+      {
+        "test": "test_tuyetchieu.js",
+        "exit": 0,
+        "shard": 4
+      },
+      {
+        "test": "test_uxdo.js",
+        "exit": 0,
+        "shard": 4
+      },
+      {
+        "test": "test_vkbo.js",
+        "exit": 1,
+        "shard": 4,
+        "baseline": {
+          "test": "test_vkbo.js",
+          "baselineExit": 1,
+          "seconds": 5.7
+        },
+        "candidateRetry": null
+      },
+      {
+        "test": "test_vukhihien.js",
+        "exit": 0,
+        "shard": 4
+      },
+      {
+        "test": "test_walkrun.js",
+        "exit": 0,
+        "shard": 4
+      },
+      {
+        "test": "test_wipe.js",
+        "exit": 0,
+        "shard": 4
+      }
+    ]
+  },
+  "nativePhysicsQA": {
+    "finiteFrames": 240,
+    "pageErrors": 0
+  },
+  "defaultPixelParity": {
+    "cases": 10,
+    "mismatches": 0,
+    "pageErrors": 0
+  },
+  "physicsEnabledByDefault": false,
+  "completeFlatArchive": false
+}

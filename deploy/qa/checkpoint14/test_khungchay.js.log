@@ -1,0 +1,24 @@
+① bảng khung: {"co":true,"dwsc1r":16,"dkcw1r":16,"elfar1r":16,"dlcm1r":16,"boLa":16,"dwvt1r":16,"khongTen":16,"dwsc1w":32,"boLaW":32,"dwsc1i":16,"boLaI":16,"moc":80}
+PASS có nvSoKhung() dùng chung
+FAIL bốn bộ đã nướng lại phải 32 khung chạy, đang [16,16,16,16]
+PASS bộ lạ · dwvt1 · không rõ tên → giữ 16 khung
+PASS khối đi và đứng vẫn dùng chung số khung
+PASS mốc khối chạy vẫn ở ô 80, hai đời không lệch mốc
+② bộ thân của từng lớp: {"thieulam":{"n":16},"toanchan":{"n":16},"baidasan":{"n":16},"minhgiao":{"bo":"magic-runtime","n":8,"mr":true},"bug":{"n":16}}
+②ⓐ thieulam (undefined, khai 16): rỗng=0 · khác nhau=16
+PASS thieulam/undefined: 16/16 khung chạy đều có hình và khác nhau
+②ⓐ toanchan (undefined, khai 16): rỗng=0 · khác nhau=16
+PASS toanchan/undefined: 16/16 khung chạy đều có hình và khác nhau
+②ⓐ baidasan (undefined, khai 16): rỗng=0 · khác nhau=16
+PASS baidasan/undefined: 16/16 khung chạy đều có hình và khác nhau
+②ⓐ minhgiao (magic-runtime, khai 8): rỗng=0 · khác nhau=8
+PASS minhgiao/magic-runtime: 8/8 khung chạy đều có hình và khác nhau
+②ⓐ bug (undefined, khai 16): rỗng=0 · khác nhau=16
+PASS bug/undefined: 16/16 khung chạy đều có hình và khác nhau
+FAIL không lớp nào còn khai ≥32 khung chạy — mệnh đề "nửa sau phải mới" hết chỗ đo
+③ minhgiao (magic-runtime): rỗng=0/8 · hướng khác nhau=8/8
+PASS ③ minhgiao: 8 hướng ra 8 tư thế khác nhau
+④ thân 32 khung + ô áo từ dwvt1 (16 khung): nửa trước -1 điểm ảnh · nửa sau -1 · tỉ lệ 0.000
+FAIL dwvt1 không còn trong NV_LOP_HOP — bài kiểm dựng sai, không đo được ca trộn
+lỗi trang: []
+FAIL(3)

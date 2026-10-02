@@ -1,0 +1,19 @@
+  ① 16 con · cùng nhóm 0–6/6 · TB 3.25 ⇒ sắc TB 1.019
+PASS 16 con khai đủ sáu bộ phận, trải 0–6/6, sắc trung bình 1.019
+PASS độ thuần không đi theo số sao: thuần nhất gồm ironshell, hexmite
+  ② kỳ vọng trên 9 lớp: 1.006666667 … 1.006666667 (lệch 2.22e-16)
+PASS kỳ vọng trên cả 9 lớp quái bằng nhau chính xác cho cả 16 con (lệch 2.2e-16)
+  ③ 11 vùng · chênh vùng-dễ/vùng-ngặt — thuần 36.3% (4 con) · tạp 16.5% (5 con)
+     ironshell   Reptile  6/6 → 39.0%
+     hexmite     Bug      6/6 → 39.0%
+     aurelion    Dawn     5/6 → 33.7%
+     inkmane     Dusk     1/6 → 14.6%
+     coghound    Mech     0/6 → 10.3%
+PASS con thuần dao động 2.21× con tạp khi đi qua 11 vùng thật
+  ④ {"loiSac":{"mat":298805,"sac":1.5,"he":"Aquatic","ket":1},"loiTap":{"mat":307775,"sac":0.8,"he":"Aquatic","ket":1},"haiSac":{"mat":416542,"sac":1.5,"he":"Beast","ket":-1},"haiTap":{"mat":360326,"sac":0.8,"he":"Beast","ket":-1}}
+FAIL ④ nhánh CÓ LỢI: con sắc hơn phải mất ít máu hơn — 298805 vs 307775
+PASS cả 16 con: đổi Axie vẫn đổi đúng 0 điểm chỉ số (cấu tạo là QUAN HỆ, không phải nấc thang)
+  ⑥ {"nvCoCauTao":true,"nvCoHang":true,"dsMoDuoc":true,"dsCoHang":true,"dsChepCung":false}
+PASS cả bảng Nhân Vật lẫn danh sách Axie đều nói ra cấu tạo, và không còn con số chép cứng
+errors: []
+FAIL(1)

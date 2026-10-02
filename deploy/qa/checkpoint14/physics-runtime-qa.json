@@ -1,0 +1,682 @@
+{
+  "enabled": true,
+  "maxError": 0.6244026497604906,
+  "finiteFrames": 240,
+  "traces": [
+    {
+      "steps": 1,
+      "time": 0.008333333333333333,
+      "discardedTime": 0,
+      "ccdHits": 0,
+      "particles": 32,
+      "constraints": 45,
+      "contacts": [],
+      "maxLengthError": 0.009057613633643768,
+      "dynamic": true,
+      "release": {
+        "L": false,
+        "R": false
+      }
+    },
+    {
+      "steps": 121,
+      "time": 1.0083333333333322,
+      "discardedTime": 0,
+      "ccdHits": 0,
+      "particles": 32,
+      "constraints": 45,
+      "contacts": [],
+      "maxLengthError": 0.22276227075308697,
+      "dynamic": true,
+      "release": {
+        "L": false,
+        "R": false
+      }
+    },
+    {
+      "steps": 241,
+      "time": 2.008333333333329,
+      "discardedTime": 0,
+      "ccdHits": 0,
+      "particles": 32,
+      "constraints": 45,
+      "contacts": [],
+      "maxLengthError": 0.1115677413971099,
+      "dynamic": true,
+      "release": {
+        "L": false,
+        "R": false
+      }
+    },
+    {
+      "steps": 361,
+      "time": 3.0083333333333253,
+      "discardedTime": 0,
+      "ccdHits": 0,
+      "particles": 32,
+      "constraints": 45,
+      "contacts": [],
+      "maxLengthError": 0.2227594641888615,
+      "dynamic": true,
+      "release": {
+        "L": false,
+        "R": false
+      }
+    }
+  ],
+  "impulseDisplacement": 1.7811421073049578,
+  "death": {
+    "metrics": {
+      "steps": 841,
+      "time": 7.008333333333471,
+      "discardedTime": 0,
+      "ccdHits": 5,
+      "particles": 32,
+      "constraints": 43,
+      "contacts": [
+        {
+          "particle": "pelvis",
+          "kind": "floor",
+          "normal": [
+            0,
+            1,
+            0
+          ],
+          "normalImpulse": 98.10000000000001,
+          "depth": 0.0024842539022316146
+        },
+        {
+          "particle": "hipEnd",
+          "kind": "floor",
+          "normal": [
+            0,
+            1,
+            0
+          ],
+          "normalImpulse": 32.7,
+          "depth": 0.06812564837523505
+        },
+        {
+          "particle": "spine",
+          "kind": "floor",
+          "normal": [
+            0,
+            1,
+            0
+          ],
+          "normalImpulse": 130.8,
+          "depth": 0.0017565920189390738
+        },
+        {
+          "particle": "neck",
+          "kind": "floor",
+          "normal": [
+            0,
+            1,
+            0
+          ],
+          "normalImpulse": 9.809727567490809,
+          "depth": 0.01262381544836444
+        },
+        {
+          "particle": "head",
+          "kind": "floor",
+          "normal": [
+            0,
+            1,
+            0
+          ],
+          "normalImpulse": 40.875024871213355,
+          "depth": 0.0000202873737702447
+        },
+        {
+          "particle": "wing",
+          "kind": "floor",
+          "normal": [
+            0,
+            1,
+            0
+          ],
+          "normalImpulse": 9.81,
+          "depth": 0.0000012677243743652866
+        },
+        {
+          "particle": "elbowL",
+          "kind": "floor",
+          "normal": [
+            0,
+            1,
+            0
+          ],
+          "normalImpulse": 20.43739933272948,
+          "depth": 0.00024960762589953944
+        },
+        {
+          "particle": "wristL",
+          "kind": "floor",
+          "normal": [
+            0,
+            1,
+            0
+          ],
+          "normalImpulse": 9.81,
+          "depth": 0.06812434313644022
+        },
+        {
+          "particle": "ankleL",
+          "kind": "floor",
+          "normal": [
+            0,
+            1,
+            0
+          ],
+          "normalImpulse": 9.810012679759323,
+          "depth": 0.0000384988597099678
+        },
+        {
+          "particle": "kneeL",
+          "kind": "floor",
+          "normal": [
+            0,
+            1,
+            0
+          ],
+          "normalImpulse": 40.873530277791,
+          "depth": 0.00001792667801847614
+        },
+        {
+          "particle": "toeL",
+          "kind": "floor",
+          "normal": [
+            0,
+            1,
+            0
+          ],
+          "normalImpulse": 9.81,
+          "depth": 0.00006266946232491577
+        },
+        {
+          "particle": "shoulderR",
+          "kind": "floor",
+          "normal": [
+            0,
+            1,
+            0
+          ],
+          "normalImpulse": 9.81,
+          "depth": 0.03463074306818159
+        },
+        {
+          "particle": "elbowR",
+          "kind": "floor",
+          "normal": [
+            0,
+            1,
+            0
+          ],
+          "normalImpulse": 20.4375,
+          "depth": 1.2028005480502202e-7
+        },
+        {
+          "particle": "wristR",
+          "kind": "floor",
+          "normal": [
+            0,
+            1,
+            0
+          ],
+          "normalImpulse": 9.810000000000128,
+          "depth": 0.06812499999830024
+        },
+        {
+          "particle": "ankleR",
+          "kind": "floor",
+          "normal": [
+            0,
+            1,
+            0
+          ],
+          "normalImpulse": 9.81,
+          "depth": 0.00009638538801848284
+        },
+        {
+          "particle": "kneeR",
+          "kind": "floor",
+          "normal": [
+            0,
+            1,
+            0
+          ],
+          "normalImpulse": 40.875,
+          "depth": 0.0001486403612620535
+        },
+        {
+          "particle": "toeR",
+          "kind": "floor",
+          "normal": [
+            0,
+            1,
+            0
+          ],
+          "normalImpulse": 9.809998991317455,
+          "depth": 0.000006848626822542059
+        },
+        {
+          "particle": "weaponL0",
+          "kind": "floor",
+          "normal": [
+            0,
+            1,
+            0
+          ],
+          "normalImpulse": 4.0875,
+          "depth": 0.06812499999999999
+        },
+        {
+          "particle": "weaponL1",
+          "kind": "floor",
+          "normal": [
+            0,
+            1,
+            0
+          ],
+          "normalImpulse": 16.35,
+          "depth": 0.06812499999999999
+        },
+        {
+          "particle": "weaponL2",
+          "kind": "floor",
+          "normal": [
+            0,
+            1,
+            0
+          ],
+          "normalImpulse": 4.0875,
+          "depth": 0.06812499999999999
+        },
+        {
+          "particle": "wingL1",
+          "kind": "floor",
+          "normal": [
+            0,
+            1,
+            0
+          ],
+          "normalImpulse": 8.992500000000001,
+          "depth": 4.0568992254463865e-7
+        },
+        {
+          "particle": "wingL2",
+          "kind": "floor",
+          "normal": [
+            0,
+            1,
+            0
+          ],
+          "normalImpulse": 4.904999813386939,
+          "depth": 0.0000040319113709941234
+        },
+        {
+          "particle": "weaponR0",
+          "kind": "floor",
+          "normal": [
+            0,
+            1,
+            0
+          ],
+          "normalImpulse": 4.0875,
+          "depth": 0.06812499999999999
+        },
+        {
+          "particle": "weaponR1",
+          "kind": "floor",
+          "normal": [
+            0,
+            1,
+            0
+          ],
+          "normalImpulse": 16.35,
+          "depth": 0.06812499999999999
+        },
+        {
+          "particle": "weaponR2",
+          "kind": "floor",
+          "normal": [
+            0,
+            1,
+            0
+          ],
+          "normalImpulse": 4.0875,
+          "depth": 0.06812499999999999
+        },
+        {
+          "particle": "wingR1",
+          "kind": "floor",
+          "normal": [
+            0,
+            1,
+            0
+          ],
+          "normalImpulse": 8.992499696933885,
+          "depth": 2.4655891905922545e-7
+        },
+        {
+          "particle": "wingR2",
+          "kind": "floor",
+          "normal": [
+            0,
+            1,
+            0
+          ],
+          "normalImpulse": 4.905,
+          "depth": 4.066247911715948e-7
+        }
+      ],
+      "maxLengthError": 0.17274506117882282,
+      "dynamic": true,
+      "deathKick": {
+        "netLinearImpulse": [
+          2.2737367544323206e-13,
+          -4.574118861455645e-14,
+          0
+        ],
+        "angularSpeed": 2.2
+      },
+      "release": {
+        "L": true,
+        "R": true
+      }
+    },
+    "weaponBefore": [
+      -46.45722141298369,
+      101.684933290719,
+      16.07196532255239
+    ],
+    "weaponAfter": [
+      10.079299393077152,
+      2,
+      16.014718677272786
+    ],
+    "pelvisY": 9,
+    "weaponFloorMin": 0
+  },
+  "game": {
+    "locomotion": [
+      {
+        "wing": null,
+        "state": "run",
+        "dynamic": true,
+        "particles": 26,
+        "maxLengthError": 0.1808805314716153,
+        "steps": 179
+      },
+      {
+        "wing": 1,
+        "state": "run",
+        "dynamic": true,
+        "particles": 32,
+        "maxLengthError": 0.14801570798118746,
+        "steps": 179
+      }
+    ],
+    "attacks": [
+      {
+        "state": "dualSlash",
+        "wing": null,
+        "direction": 0,
+        "dynamic": true,
+        "mode": "air",
+        "error": 0.231265401098959
+      },
+      {
+        "state": "dualSlash",
+        "wing": null,
+        "direction": 2,
+        "dynamic": true,
+        "mode": "air",
+        "error": 0.23130553405766108
+      },
+      {
+        "state": "dualSlash",
+        "wing": null,
+        "direction": 4,
+        "dynamic": true,
+        "mode": "air",
+        "error": 0.23150967826560276
+      },
+      {
+        "state": "dualSlash",
+        "wing": null,
+        "direction": 6,
+        "dynamic": true,
+        "mode": "air",
+        "error": 0.23132302726233434
+      },
+      {
+        "state": "spinSlash",
+        "wing": null,
+        "direction": 0,
+        "dynamic": true,
+        "mode": "air",
+        "error": 0.8626313679552453
+      },
+      {
+        "state": "spinSlash",
+        "wing": null,
+        "direction": 2,
+        "dynamic": true,
+        "mode": "air",
+        "error": 0.853482243450479
+      },
+      {
+        "state": "spinSlash",
+        "wing": null,
+        "direction": 4,
+        "dynamic": true,
+        "mode": "air",
+        "error": 0.8692115385102781
+      },
+      {
+        "state": "spinSlash",
+        "wing": null,
+        "direction": 6,
+        "dynamic": true,
+        "mode": "air",
+        "error": 0.8741422152501599
+      },
+      {
+        "state": "fireDashSlash",
+        "wing": null,
+        "direction": 0,
+        "dynamic": true,
+        "mode": "air",
+        "error": 0.23263493280899894
+      },
+      {
+        "state": "fireDashSlash",
+        "wing": null,
+        "direction": 2,
+        "dynamic": true,
+        "mode": "air",
+        "error": 0.23291703710061995
+      },
+      {
+        "state": "fireDashSlash",
+        "wing": null,
+        "direction": 4,
+        "dynamic": true,
+        "mode": "air",
+        "error": 0.23296472088408393
+      },
+      {
+        "state": "fireDashSlash",
+        "wing": null,
+        "direction": 6,
+        "dynamic": true,
+        "mode": "air",
+        "error": 0.2326522848332928
+      },
+      {
+        "state": "lightStorm",
+        "wing": null,
+        "direction": 0,
+        "dynamic": true,
+        "mode": "air",
+        "error": 0.21429173748631314
+      },
+      {
+        "state": "lightStorm",
+        "wing": null,
+        "direction": 2,
+        "dynamic": true,
+        "mode": "air",
+        "error": 0.21412514768699253
+      },
+      {
+        "state": "lightStorm",
+        "wing": null,
+        "direction": 4,
+        "dynamic": true,
+        "mode": "air",
+        "error": 0.21410639522071762
+      },
+      {
+        "state": "lightStorm",
+        "wing": null,
+        "direction": 6,
+        "dynamic": true,
+        "mode": "air",
+        "error": 0.21429377223695667
+      },
+      {
+        "state": "dualSlash",
+        "wing": 1,
+        "direction": 0,
+        "dynamic": true,
+        "mode": "air",
+        "error": 0.23130553405764687
+      },
+      {
+        "state": "dualSlash",
+        "wing": 1,
+        "direction": 2,
+        "dynamic": true,
+        "mode": "air",
+        "error": 0.23150967826560276
+      },
+      {
+        "state": "dualSlash",
+        "wing": 1,
+        "direction": 4,
+        "dynamic": true,
+        "mode": "air",
+        "error": 0.23132302726234144
+      },
+      {
+        "state": "dualSlash",
+        "wing": 1,
+        "direction": 6,
+        "dynamic": true,
+        "mode": "air",
+        "error": 0.2312648228180194
+      },
+      {
+        "state": "spinSlash",
+        "wing": 1,
+        "direction": 0,
+        "dynamic": true,
+        "mode": "air",
+        "error": 0.853482243450479
+      },
+      {
+        "state": "spinSlash",
+        "wing": 1,
+        "direction": 2,
+        "dynamic": true,
+        "mode": "air",
+        "error": 0.8692115385103136
+      },
+      {
+        "state": "spinSlash",
+        "wing": 1,
+        "direction": 4,
+        "dynamic": true,
+        "mode": "air",
+        "error": 0.8741422152501528
+      },
+      {
+        "state": "spinSlash",
+        "wing": 1,
+        "direction": 6,
+        "dynamic": true,
+        "mode": "air",
+        "error": 0.8628153959866793
+      },
+      {
+        "state": "fireDashSlash",
+        "wing": 1,
+        "direction": 0,
+        "dynamic": true,
+        "mode": "air",
+        "error": 0.23291703710062706
+      },
+      {
+        "state": "fireDashSlash",
+        "wing": 1,
+        "direction": 2,
+        "dynamic": true,
+        "mode": "air",
+        "error": 0.23296472088409814
+      },
+      {
+        "state": "fireDashSlash",
+        "wing": 1,
+        "direction": 4,
+        "dynamic": true,
+        "mode": "air",
+        "error": 0.2326522848332857
+      },
+      {
+        "state": "fireDashSlash",
+        "wing": 1,
+        "direction": 6,
+        "dynamic": true,
+        "mode": "air",
+        "error": 0.23265155695980866
+      },
+      {
+        "state": "lightStorm",
+        "wing": 1,
+        "direction": 0,
+        "dynamic": true,
+        "mode": "air",
+        "error": 0.21412514768697832
+      },
+      {
+        "state": "lightStorm",
+        "wing": 1,
+        "direction": 2,
+        "dynamic": true,
+        "mode": "air",
+        "error": 0.21410639522073893
+      },
+      {
+        "state": "lightStorm",
+        "wing": 1,
+        "direction": 4,
+        "dynamic": true,
+        "mode": "air",
+        "error": 0.21429377223694956
+      },
+      {
+        "state": "lightStorm",
+        "wing": 1,
+        "direction": 6,
+        "dynamic": true,
+        "mode": "air",
+        "error": 0.2142575904746522
+      }
+    ]
+  },
+  "errors": []
+}

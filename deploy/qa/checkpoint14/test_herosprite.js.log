@@ -1,0 +1,19 @@
+1. lệch so với vẽ thẳng: [{"f":"i0","pct":0},{"f":"w3","pct":0},{"f":"a4","pct":0},{"f":"c4","pct":0}] coArt=false
+PASS chưa có art ⇒ sprite trùng khít bản vẽ thẳng
+2. {"mepDuc":53,"le":40,"w":110,"h":185,"ox":35,"oy":35}
+PASS sprite không bị cắt (hộp bao cách mép canvas dựng 40px)
+3. {"lopKhac":true,"doKhac":true,"boKhac":false,"bacTranGiongNhau":false}
+FAIL bộ nhớ đệm rò giữa lớp / bộ đồ / bộ giáp: {"lopKhac":true,"doKhac":true,"boKhac":false,"bacTranGiongNhau":false}
+FAIL thân TRẦN mà đổi giai lại ra hình khác — nghi rơi về đường vẽ vector ở một giai nào đó
+4. {"khiTrungDon":10,"khiBinhThuong":10}
+PASS trúng đòn vẫn giữ art nướng, bình thường cũng vậy
+4b. lượt dùng sprite theo mức: {"muc2":12,"muc1":12,"muc0":12}
+PASS cả ba mức hiệu ứng đều dùng sprite
+4b2. lượt dùng sprite lúc tung chiêu: 10
+PASS đang tung chiêu vẫn dùng sprite
+4c. {"sprite":10.3,"veThang":9.6,"soKhung":32}
+PASS nhịp giật sprite 10.3% ≈ vẽ thẳng 9.6% (32 khung đi)
+5. cỡ bộ nhớ đệm sau 400 lượt: 420
+PASS LRU giữ bộ nhớ đệm ở 420 mục (trần 420)
+errors: []
+FAIL(2)

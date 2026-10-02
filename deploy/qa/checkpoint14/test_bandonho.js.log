@@ -1,0 +1,13 @@
+  ✓ ① 1920×1080: vừa cột (180px trong 190px)
+  ✓ ① 1440×900: vừa cột (180px trong 190px)
+  ✓ ① 1280×720: vừa cột (180px trong 190px)
+② {"nha":2073,"pho":2020,"tong":16200,"khoi":16,"duong":8,"dinh":68}
+  ✓ ② vẽ ra hình cái thành: 2073 px khối nhà · 2020 px phố
+③ {"chucNangCan":9,"chucNangDat":7,"tongNhan":8,"ten":["Chuồng","Truy Nã","Quán Trọ","Vực Thẳm","Tiệm Thuốc","Cầu May","Vũ Khí"],"khung":[180,90]}
+FAIL ③ 7/9 người có chức năng được gọi tên — thiếu: ai không có tên thì với người chơi là không tồn tại
+④ {"ten":"Sapidae Chiefdom","canLe":"left","x":6,"rong":81,"khung":180}
+  ✓ ④ tên map đủ chữ: "Sapidae Chiefdom" (81px trong 180px)
+⑤ [{"talk":"forge","mau":"#ffb15c","mini":4,"lon":83},{"talk":"shop","mau":"#ffd76a","mini":42,"lon":439},{"talk":"stable","mau":"#9ad45e","mini":6,"lon":102},{"talk":"trunya","mau":"#ff9a4d","mini":10,"lon":121},{"talk":"vanduyen","mau":"#c07fe0","mini":55,"lon":294},{"talk":"tenui","mau":"#7fb8c4","mini":16,"lon":125}]
+  ✓ ⑤ cả 6 hạng chức năng cùng bảng màu ở hai bản đồ
+
+1 LỖI

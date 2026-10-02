@@ -1,0 +1,25 @@
+FAIL dải icon dwsm1_icon.webp không tải được
+1) icon từng ô: {"non":false,"non_html":true,"ao":false,"ao_html":true,"tay":false,"tay_html":true,"quan":false,"quan_html":true,"chan":false,"chan_html":true}
+FAIL ô non không lấy được icon art
+FAIL ô ao không lấy được icon art
+FAIL ô tay không lấy được icon art
+FAIL ô chan không lấy được icon art
+PASS ô Quần về icon dựng sẵn, đúng như thiết kế
+2) bốn ô khác nhau: {"soKhac":1,"so":4}
+FAIL bốn ô chỉ ra 1 ảnh khác nhau — đang cắt trùng ô
+3) giai chưa có art: {"coArt":false,"coHtml":true}
+PASS giai chưa có art về đường cũ, vẫn có icon
+4) /gen 1 +11: {"soMon":6,"giai":1,"plus":11,"canh":false,"gvPlus":11}
+PASS /gen 1 +11 mặc đủ 6 ô, đúng giai 1 mức +11, không cánh
+PASS gearVisual đọc đúng +11 ⇒ hào quang lên mốc cao nhất
+5) /gen 3 +9 4 2: {"canh":true,"bac":2,"lop":"baidasan","giai":3}
+PASS /gen đeo đúng cánh bậc 2 của lớp đang chơi
+FAIL bảng khung thân dwsm1.webp không tải được
+6) thân trần ↔ bộ giáp: {"giaiTran":1,"giaiArt":1}
+FAIL mặc đủ bộ giai 1 mà vẫn dùng "undefined", mong dwsm1
+7) đường vũ khí nướng sẵn vs thần khí: {"con":false,"tk":"staff"}
+PASS đường vũ khí nướng sẵn đã gỡ, thần khí lo cây "staff"
+8) chữ ký đổi theo vũ khí: {"a":"10_5_4_0__baidasan_quyentruong_0:1:0___","b":"10_5_4_0__baidasan_quyentruong_0:8:0___"}
+PASS heroGearSig() có vũ khí trong chữ ký
+errors: []
+FAIL(8)

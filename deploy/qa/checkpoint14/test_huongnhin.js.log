@@ -1,0 +1,11 @@
+PASS NV_HUONG đủ 8 hướng
+PASS 8 hướng gom về 5 bản vẽ: (nghiêng) · nd · n · bd · b
+PASS 8 hướng là 8 tổ hợp (bản vẽ × lật) khác nhau
+PASS 720/720 góc trùng khít luật cũ — bật tầng hướng không đổi một điểm ảnh
+FAIL khai 'b' rồi mà đi lên Bắc vẫn lấy bản nghiêng — tầng hướng không chạy theo dữ liệu
+PASS hướng Đông không bị ảnh hưởng
+PASS Tây-Bắc chưa có bản riêng ⇒ lui về nghiêng·lật
+PASS tháo khai báo ⇒ về đúng hiện trạng
+PASS bộ chưa có art — mục 4 bỏ qua
+
+1 LỖI

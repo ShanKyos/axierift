@@ -1,0 +1,10 @@
+PASS cảnh dựng: save đời trước cao nhất giai 3 (< 7)
+PASS ① năm ô đều giai 7
+FAIL ② lớp vũ khí CẦM TAY vẫn tắt sau khi di trú — đúng cái người chơi kêu
+FAIL ② bộ giáp lớp rời chưa nhận ra được sau di trú
+PASS ③ đồ cũ vào túi (1 → 6)
+PASS ④ nạp lần hai không phát thêm
+PASS ⑤ TEST_MODE không phát (giai vẫn 3)
+FAIL ⑥ save chưa qua đổi giai: đúng giai nhưng lớp vũ khí cầm tay vẫn tắt
+
+3 FAIL

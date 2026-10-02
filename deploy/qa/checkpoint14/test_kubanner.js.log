@@ -1,0 +1,15 @@
+① {"n":2,"bn":["gk","cx"],"co":[[414,207],[414,207]],"ve":[67795,65312],"tong":[85698,85698]}
+FAIL ① art banner không sẵn sau 12 giây — mục ③④ bên dưới đo trên khung trống
+② {"giong":true}
+PASS ② `player` không suy suyển một ký tự
+③ {"cu":"toanchan","khac":"thieulam","boCu":"Bạch Phượng","boMoi":"Long Vương","tpCu":"⚔ Trấn Phái Ngũ Tiễn","tpMoi":"⚔ Trấn Phái Death Stab","lechMau":0,"mau":5724}
+FAIL ③ dựng cảnh hỏng — art của lớp mới không tải được, phép so vô nghĩa
+④ {"thieulam":{"san":false,"tier":7,"bo":null,"nuong":false,"mr":false,"tp":"Death Stab","atlas":"death_stab"},"toanchan":{"san":false,"tier":7,"bo":null,"nuong":false,"mr":false,"tp":"Ngũ Tiễn","atlas":"five_arrow"},"baidasan":{"san":false,"tier":7,"bo":null,"nuong":false,"mr":false,"tp":"Meteorite","atlas":"meteor_rain"},"minhgiao":{"san":true,"tier":7,"bo":"magic-runtime","nuong":true,"mr":true,"tp":"Flame Strike","atlas":null},"bug":{"san":false,"tier":7,"bo":null,"nuong":false,"mr":false,"tp":"Bão Quạ","atlas":"raven_storm"}}
+④b (chặn art giáp) {"ve":0,"o":18600,"san":false}
+FAIL ④ thieulam · toanchan · baidasan · bug: chưa có art giáp nướng ở giai 7 — banner sẽ rơi về hình dựng bằng ĐƯỜNG, tức "nhân vật fake" mà Quy tắc số 3 cấm
+⑥ {"khongTranh":["minhgiao"],"lop":"minhgiao","ve":65758,"tong":85698}
+PASS ⑥ minhgiao chưa có tranh Trấn Phái, banner vẫn dựng (phủ 77%)
+⑤ {"van":true,"sauDong":0}
+PASS ⑤ đóng bảng thì vòng vẽ tự tắt
+
+✖ 3 lỗi
