@@ -1,0 +1,277 @@
+{
+  "sourceCheckpointCommit": "cc406ab9b8e0112b4171816db2da78707b20f6b9",
+  "productionPhysicsEnabledByDefault": false,
+  "completeFlatArchive": false,
+  "files": [
+    {
+      "path": "public/game/assets/magic-rebuild-v1/compiled.json",
+      "bytes": 120000,
+      "gitSha": "64f382338fd98bc603f3ff7d663518f74d3342fd",
+      "sha256": "5993128477523d82d7f7871e082b73470c607b4685aff7fd3772e42db38e493a"
+    },
+    {
+      "path": "public/game/assets/magic-rebuild-v1/parts/body.png",
+      "bytes": 251397,
+      "gitSha": "000559213f930d89d35dbac873176f91fc0dd3bf",
+      "sha256": "3c384fbdfdf459c0c018f0b369caac446a485f30353fe04c97ebb9eaa6c67162"
+    },
+    {
+      "path": "public/game/assets/magic-rebuild-v1/parts/cuong_phong.png",
+      "bytes": 361664,
+      "gitSha": "fe9a68373f9fd4219753b891a3d704c82857a3ce",
+      "sha256": "8c6699b0cc2771e28cd2ca0eb2a66e1af5e4cd8d82912b9a805530947f1b1dda"
+    },
+    {
+      "path": "public/game/assets/magic-rebuild-v1/parts/cuong_phong_visible.png",
+      "bytes": 310647,
+      "gitSha": "ef44487883cf6f2e08e1ce99fbaeeffc35c34233",
+      "sha256": "41d6125a06b7f22eb03a4437782808c7895800104beb3b4ca95f4d19aae97f32"
+    },
+    {
+      "path": "public/game/assets/magic-rebuild-v1/parts/do_dong.png",
+      "bytes": 341050,
+      "gitSha": "3ed3f2a218b887592eed5ea3c923f48d6afdd6bf",
+      "sha256": "e7e85ea5c79995986a30f112ef24e0c26d04db7644d909da96deb6327447e9a6"
+    },
+    {
+      "path": "public/game/assets/magic-rebuild-v1/parts/do_dong_visible.png",
+      "bytes": 292253,
+      "gitSha": "efa897461a5b34953785f6fe02d8edb1dc1aa4fc",
+      "sha256": "7775259765f73f5f9906e4dbb0ad98ea54000c263d1ae446535c783c59627aba"
+    },
+    {
+      "path": "public/game/assets/magic-rebuild-v1/parts/loi_phong.png",
+      "bytes": 358152,
+      "gitSha": "fd45019e72a95fbf73c5cb36c8faf999e19b779b",
+      "sha256": "3e53c273fba31bde5004169d107b232abd22a8bb41ea587e6ee5c1b304cc0f22"
+    },
+    {
+      "path": "public/game/assets/magic-rebuild-v1/parts/loi_phong_visible.png",
+      "bytes": 303550,
+      "gitSha": "21554d54a668bcb6eea36a1a0936ac5669a7c686",
+      "sha256": "5ba620fabb7a3588e0fdc634afa71c37c0fc3f57d31040f7d8663af2ff6f708d"
+    },
+    {
+      "path": "public/game/assets/magic-rebuild-v1/parts/ma_thuat.png",
+      "bytes": 342920,
+      "gitSha": "d0bbb892b80f882f858b3b5e8cecc96f6791fcde",
+      "sha256": "63ff9a310f57db478fe157a77bfb737427f7114daa4d896de40b4a4a61ed6a59"
+    },
+    {
+      "path": "public/game/assets/magic-rebuild-v1/parts/ma_thuat_visible.png",
+      "bytes": 293958,
+      "gitSha": "97574f7cb4ae8f3d19d9d0b37d68db9ee0d16770",
+      "sha256": "3f61c76c2ef3a9344eb131355e39ee56bd3535c6b7c116ae2ba4d245883632a4"
+    },
+    {
+      "path": "public/game/assets/magic-rebuild-v1/parts/phong_vu.png",
+      "bytes": 327058,
+      "gitSha": "1de82ccb612e173a38197bfcb2cd397e77bfcdb3",
+      "sha256": "a34c685de818b3a0e16a9f6549516c9dee8d9df2de03a8f2fa5d775737fae37b"
+    },
+    {
+      "path": "public/game/assets/magic-rebuild-v1/parts/phong_vu_visible.png",
+      "bytes": 268951,
+      "gitSha": "5a4a0168bb68fa8282995a93ec7db71755b51a4c",
+      "sha256": "b80ea7115832a9046988da493105baad89701f400c902ef636a3488865bc84dc"
+    },
+    {
+      "path": "public/game/assets/magic-rebuild-v1/parts/trau_xanh.png",
+      "bytes": 346304,
+      "gitSha": "a4cb111cbf71feff1850f04d4079f1c6ff177c7f",
+      "sha256": "a7f0723115a30ff3a66e51958fa1a43e53d0730ca5f33729f0af600b3e708c8b"
+    },
+    {
+      "path": "public/game/assets/magic-rebuild-v1/parts/trau_xanh_visible.png",
+      "bytes": 295298,
+      "gitSha": "41e674899f33205904f5254e5bdd76c29916dcc2",
+      "sha256": "2447fa0448e9367a0d08810777fc7b267f36d28f0e97cb75addfd62225caee36"
+    },
+    {
+      "path": "public/game/assets/magic-rebuild-v1/parts/vai_tho.png",
+      "bytes": 272589,
+      "gitSha": "37fe2a764bea8f206b3f85f19f4ff5c8aabd52b3",
+      "sha256": "de2792c501192d32894e732f7bc27a98f00287155038541a78e60feac8f4099a"
+    },
+    {
+      "path": "public/game/assets/magic-rebuild-v1/parts/vai_tho_visible.png",
+      "bytes": 225384,
+      "gitSha": "4c285c2b64199c03e955a1f47e55f9369262c842",
+      "sha256": "83fbd3860e6b30bdab90771be6b8b4b1d1893e45774e2eedc82f3f7bef151cc0"
+    },
+    {
+      "path": "public/game/assets/magic-rebuild-v1/rig.json",
+      "bytes": 14183,
+      "gitSha": "ee88e72fabc000de99c448d540bcc07e90cdf6df",
+      "sha256": "774c0311e011beac5afd5e00c8a8f49d0243a91def585abac567d5cda2c4fdc0"
+    },
+    {
+      "path": "public/game/assets/magic-rebuild-v1/source/armor-black-gold.png",
+      "bytes": 1060615,
+      "gitSha": "d2bb7c9cb4e195b2c0ed4ad9d6c38e75ca21e1a6",
+      "sha256": "bac6aa7618673a5c0c0e2af9bda8ed0cadf39242984cd67b0212ef6f8c20ad1a"
+    },
+    {
+      "path": "public/game/assets/magic-rebuild-v1/source/armor-blue-ox.png",
+      "bytes": 1169059,
+      "gitSha": "9daa39cd5bef05bae1dc49a5f61bacba216e269d",
+      "sha256": "bc849a1135b1b075ea64880c4172ecf323709151b9cce35fc566598b989010cf"
+    },
+    {
+      "path": "public/game/assets/magic-rebuild-v1/source/armor-bronze.png",
+      "bytes": 1134639,
+      "gitSha": "c67101f76bf9c966ccf3a12ea46f6586fedb17ae",
+      "sha256": "9327460999a84573bb7e52d123156e287ef3bb5420e65ce04a7b3d609a094bf6"
+    },
+    {
+      "path": "public/game/assets/magic-rebuild-v1/source/armor-hurricane.png",
+      "bytes": 1255611,
+      "gitSha": "cde63c4d9b138f40cfd882b2e8eb6d9095c43447",
+      "sha256": "60e81a99ece056b91bafdd21fe15fb956ed680009c6aff799ba0d697fd428167"
+    },
+    {
+      "path": "public/game/assets/magic-rebuild-v1/source/armor-red.png",
+      "bytes": 1149409,
+      "gitSha": "fa5593b1ca6599da8f46d52a3644ffc219822a8a",
+      "sha256": "99ce4f76262c2f28c9c41d0268338f0b53cacfdb4b309c0058b02fb23f31ca2a"
+    },
+    {
+      "path": "public/game/assets/magic-rebuild-v1/source/armor-thunder.png",
+      "bytes": 1206736,
+      "gitSha": "70e2a4946dac10861dc2957b123c890fd53f591c",
+      "sha256": "019c3f8018c4deb220b3d3fb24c79f029602acc3db4b3d7d6f74dc9d3e4dc94a"
+    },
+    {
+      "path": "public/game/assets/magic-rebuild-v1/source/body-base.png",
+      "bytes": 865973,
+      "gitSha": "6f1d5adc7ee6ed9d70fa40ef9a5f95ef272c7771",
+      "sha256": "e26cf7998438ee8e944da528e5cf6cf5f5f86df2013f904654b9c2c84c76f5b3"
+    },
+    {
+      "path": "public/game/assets/magic-rebuild-v1/source/concealed-cuong_phong.png",
+      "bytes": 1565490,
+      "gitSha": "a9a9bc7097544ec35a250d7ac39b6202246ebde7",
+      "sha256": "d35644f32daf08886d06e22a99a5356385c0a72742d9d89016b39afe20e327af"
+    },
+    {
+      "path": "public/game/assets/magic-rebuild-v1/source/concealed-do_dong.png",
+      "bytes": 1532166,
+      "gitSha": "d9b81dda5adf6c6e9693bb0415e00e4ff711112e",
+      "sha256": "374937dd288c932c2f90dddfaef99080a0d1d27179bf609f7cfa0af54c5350f5"
+    },
+    {
+      "path": "public/game/assets/magic-rebuild-v1/source/concealed-loi_phong.png",
+      "bytes": 1515681,
+      "gitSha": "11d979344924468c0fca1c93cf07cac7d718abd9",
+      "sha256": "9b16cc5d7ac443a7728d3afb71134a8dd6e657908e8f5079c19db0c6ce1647a0"
+    },
+    {
+      "path": "public/game/assets/magic-rebuild-v1/source/concealed-ma_thuat.png",
+      "bytes": 1465200,
+      "gitSha": "fbd6912f79048630b24d98b5e3d810ca0c6c0729",
+      "sha256": "3ab45dc26fff00890be24e1e08ac86e5d05c6d06d46c9642f08582a8218ec15a"
+    },
+    {
+      "path": "public/game/assets/magic-rebuild-v1/source/concealed-phong_vu.png",
+      "bytes": 1325449,
+      "gitSha": "c9f5bdd4d578d4155c78da67f6d6e2f4ffc70517",
+      "sha256": "ccdd4b4c7f30af850962eec702a06ead34af5ac8154fc6c8aa3166d93233da99"
+    },
+    {
+      "path": "public/game/assets/magic-rebuild-v1/source/concealed-trau_xanh.png",
+      "bytes": 1570439,
+      "gitSha": "f4ca453455052f7433891452ad64e9e250c88382",
+      "sha256": "5476fb3890eab981b36c917d323a911fd2778075d0d59163ff69be19f731bc57"
+    },
+    {
+      "path": "public/game/assets/magic-rebuild-v1/source/concealed-vai_tho.png",
+      "bytes": 1093928,
+      "gitSha": "d1d7894a0bfb0513bedff85a4734ff868731de05",
+      "sha256": "fe233b3fdfe46bb57c018ef0ea2a28bac42866bb1150c7ad65741fe39a1b7512"
+    },
+    {
+      "path": "public/game/assets/magic-rebuild-v1/source/effects.png",
+      "bytes": 1612612,
+      "gitSha": "71aba750ca635b08e877b2f754b8f57df71a20f2",
+      "sha256": "0c57222765911a79f8e54c61c0ada809af53a02ea950246265ab7cdcbf385138"
+    },
+    {
+      "path": "public/game/assets/magic-rebuild-v1/source/joint-underpaint.png",
+      "bytes": 1994135,
+      "gitSha": "5ad879253fc730ee95694d3c72edf1ec698fec5b",
+      "sha256": "fc80ba5641fff2699b927d79132fee17429b96ab9f254714f63fba4bc652e0a0"
+    },
+    {
+      "path": "public/game/assets/magic-rebuild-v1/source/weapons.png",
+      "bytes": 1167710,
+      "gitSha": "b6797f98f0cb7830d42e482e5f4c74c968d86914",
+      "sha256": "2015300f7666cb5883e004ec66ebc6e42f56df05d1bb50b7c3b91f9fbdf00d66"
+    },
+    {
+      "path": "public/game/assets/magic-rebuild-v1/source/wings.png",
+      "bytes": 2517486,
+      "gitSha": "395e2996abd3c6eb22ac017d666cadad8be99eb7",
+      "sha256": "b6d5035e0f2782a43bac3b07627b35197dd70b4438b25be18ed4b1126cc904fe"
+    },
+    {
+      "path": "public/game/magic-rebuild.js",
+      "bytes": 33923,
+      "gitSha": "b057e1cd7044f76444fa3b74751464961aae11a7",
+      "sha256": "a89ae96ed41e441620ebfdf9ba5d867fe2defee923436bef1b19546432aec7bf"
+    },
+    {
+      "path": "public/game/magic-physics.js",
+      "bytes": 8901,
+      "gitSha": "e6f7b928a7418c63dac272b0b7956a209dfdcb6c",
+      "sha256": "320183ded1e7dba932c7b938d49fdef9caf88c1521d3d79021f040633a713194"
+    },
+    {
+      "path": "public/game/magic-physics-rig.js",
+      "bytes": 7532,
+      "gitSha": "0ba5ef6bdf7da95012198285ffc1e99c42a4b249",
+      "sha256": "72a7e62d5ea805f2c96502389272c2e1566f9dc606007a13f2cc851a40bc4cfd"
+    },
+    {
+      "path": "public/game/magic_physics.html",
+      "bytes": 3341,
+      "gitSha": "3fc47cd7d30b4f4e38fc365e5db41faef7384f2a",
+      "sha256": "3bd20db1f284ea9c24ccc8e32200d394746d3d647fd59f465d6ad27a879519b3"
+    },
+    {
+      "path": "public/game/index.html",
+      "bytes": 29359,
+      "gitSha": "e139c54beee8e21c98ecbafa6f4fc82ac677891d",
+      "sha256": "adf9a3f1fb4bba3eb7b0ab29eb148a26a81f8d34a23b325a21f5283cfbb181c7"
+    },
+    {
+      "path": "public/game/game.js",
+      "bytes": 2461307,
+      "gitSha": "32d1d990110f6c5716d671fefde3079fd361f6c8",
+      "sha256": "e06b936ab709ba17abe1533b684f699bc51277f9d9f7083509ad0fe8ac7c0c21"
+    },
+    {
+      "path": "REPAIR_CHECKPOINT_14.md",
+      "bytes": 8705,
+      "gitSha": "068450ae829eab6b00f0689c85b2d79415c7a1c0",
+      "sha256": "995a646261f3fa33574c8a898b2c8cb144a957d2d3b3d287094286d3dfe052e5"
+    },
+    {
+      "path": "REPAIR_CHECKPOINT_14.json",
+      "bytes": 19948,
+      "gitSha": "3fb7fda4b8e8253d679261a55320e9445a4f6a5f",
+      "sha256": "4a7288fa8692cb0a61e4cbce74867773595488cb990cdf60c85ea535b1df1769"
+    },
+    {
+      "path": "public/game/assets/magic-rebuild-v1/.gitattributes",
+      "bytes": 1701,
+      "gitSha": "8e722aae9eeef4278a3b6adc2998f06fdbfd44b8",
+      "sha256": "68ec3bdb8705370f6618fa57e73ae06123a5a08597a28ad6c2d5a9c04b1a51a7"
+    },
+    {
+      "path": "NATIVE_CHECKPOINT_14_DEPLOY.md",
+      "bytes": 1415,
+      "gitSha": "a51082b44ce699f52028e42a32a61c7c8f72de27",
+      "sha256": "bbb77ff6d953f67e77f8bbfe578d40bfbf7a1bd9108ccc12ac44bb20bfd7349d"
+    }
+  ]
+}

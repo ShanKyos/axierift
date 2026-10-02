@@ -1,0 +1,719 @@
+{
+  "checkpoint": 14,
+  "date": "2026-10-02",
+  "productionReady": false,
+  "physicsReadyForTrial": true,
+  "baseCheckpoint": 13,
+  "flatExportCheckpoint": 11,
+  "checkpoints": {
+    "14-A": "CCD/shaft kernel QA passed; recovery saved",
+    "14-B": "rig/ragdoll and 21-clip sweep passed; recovery saved",
+    "14-C": "bounded review, performance and regression complete; final checkpoint saved"
+  },
+  "changes": [
+    "Conservative advancement sweep for moving sphere/segment vs moving capsule",
+    "Continuous segment collider along both blade halves and outer wing edge",
+    "AABB broad phase plus allocation-free distance constraint hot loop",
+    "Death angular impulse around centre of mass; net linear impulse zero",
+    "Death limb endpoint limits prevent compressed crouched ragdoll",
+    "Town weapon mount moved away from body collider",
+    "Preview CCD toggle and contact count"
+  ],
+  "qa": {
+    "kernel": {
+      "crossings": [
+        {
+          "speed": 12000,
+          "movingBody": false,
+          "on": {
+            "x": -10,
+            "capsuleX": 0,
+            "hits": 1
+          },
+          "off": {
+            "x": 49.87515605493134,
+            "capsuleX": 0,
+            "hits": 0
+          }
+        },
+        {
+          "speed": 12000,
+          "movingBody": true,
+          "on": {
+            "x": -18.299235720791824,
+            "capsuleX": -8.299235720791826,
+            "hits": 1
+          },
+          "off": {
+            "x": 49.87515605493134,
+            "capsuleX": -8.333322916679688,
+            "hits": 0
+          }
+        },
+        {
+          "speed": 24000,
+          "movingBody": false,
+          "on": {
+            "x": -10,
+            "capsuleX": 0,
+            "hits": 1
+          },
+          "off": {
+            "x": 149.75031210986268,
+            "capsuleX": 0,
+            "hits": 0
+          }
+        },
+        {
+          "speed": 24000,
+          "movingBody": true,
+          "on": {
+            "x": -18.24932309907522,
+            "capsuleX": -8.24932309907522,
+            "hits": 1
+          },
+          "off": {
+            "x": 149.75031210986268,
+            "capsuleX": -8.333322916679688,
+            "hits": 0
+          }
+        },
+        {
+          "speed": 60000,
+          "movingBody": false,
+          "on": {
+            "x": -10,
+            "capsuleX": 0,
+            "hits": 1
+          },
+          "off": {
+            "x": 449.3757802746567,
+            "capsuleX": 0,
+            "hits": 0
+          }
+        },
+        {
+          "speed": 60000,
+          "movingBody": true,
+          "on": {
+            "x": -18.099585233925396,
+            "capsuleX": -8.099585233925396,
+            "hits": 1
+          },
+          "off": {
+            "x": 449.3757802746567,
+            "capsuleX": -8.333322916679688,
+            "hits": 0
+          }
+        }
+      ],
+      "shaft": {
+        "on": {
+          "z": 10,
+          "hits": 0,
+          "length": 80
+        },
+        "off": {
+          "z": 1,
+          "hits": 0,
+          "length": 80
+        },
+        "sweptOn": {
+          "z": -10,
+          "hits": 1,
+          "length": 80
+        },
+        "sweptOff": {
+          "z": 49.87515605493134,
+          "hits": 0,
+          "length": 80
+        }
+      },
+      "passed": true
+    },
+    "sweep": {
+      "scenarios": 504,
+      "draws": 8064,
+      "maxLengthError": 0.9174508212189423,
+      "maxFloorPenetration": 0,
+      "maxPropPenetration": 2.5091994260151296e-08,
+      "passed": true
+    },
+    "ragdoll": {
+      "versions": {
+        "baseline": {
+          "rows": [
+            {
+              "row": 0,
+              "maxError": 0.1046167384250154,
+              "legEndpointDistance": 19.84833661297324,
+              "netDeathImpulse": null,
+              "pelvisY": 8.99997308810107,
+              "footFloor": -2.6911898929782296e-05,
+              "release": {
+                "L": true,
+                "R": true
+              },
+              "captureBounds": [
+                398,
+                367,
+                550,
+                435
+              ]
+            },
+            {
+              "row": 1,
+              "maxError": 0.10461673842497987,
+              "legEndpointDistance": 19.848336613022145,
+              "netDeathImpulse": null,
+              "pelvisY": 8.99997308810107,
+              "footFloor": -2.6911898929782296e-05,
+              "release": {
+                "L": true,
+                "R": true
+              },
+              "captureBounds": [
+                406,
+                358,
+                587,
+                440
+              ]
+            },
+            {
+              "row": 2,
+              "maxError": 0.10461673842489816,
+              "legEndpointDistance": 19.848336613061978,
+              "netDeathImpulse": null,
+              "pelvisY": 8.999973088101074,
+              "footFloor": -2.6911898926229583e-05,
+              "release": {
+                "L": true,
+                "R": true
+              },
+              "captureBounds": [
+                440,
+                366,
+                564,
+                451
+              ]
+            },
+            {
+              "row": 3,
+              "maxError": 0.10461673842473118,
+              "legEndpointDistance": 19.8483366132565,
+              "netDeathImpulse": null,
+              "pelvisY": 8.999973088101077,
+              "footFloor": -2.691189892267687e-05,
+              "release": {
+                "L": true,
+                "R": true
+              },
+              "captureBounds": [
+                409,
+                370,
+                585,
+                469
+              ]
+            },
+            {
+              "row": 4,
+              "maxError": 0.10461673842513974,
+              "legEndpointDistance": 19.84833661276466,
+              "netDeathImpulse": null,
+              "pelvisY": 8.999973088101065,
+              "footFloor": -2.6911898935111367e-05,
+              "release": {
+                "L": true,
+                "R": true
+              },
+              "captureBounds": [
+                406,
+                390,
+                558,
+                456
+              ]
+            },
+            {
+              "row": 5,
+              "maxError": 0.10461673842490526,
+              "legEndpointDistance": 19.848336613093473,
+              "netDeathImpulse": null,
+              "pelvisY": 8.999973088101072,
+              "footFloor": -2.691189892800594e-05,
+              "release": {
+                "L": true,
+                "R": true
+              },
+              "captureBounds": [
+                368,
+                376,
+                550,
+                466
+              ]
+            },
+            {
+              "row": 6,
+              "maxError": 0.10461673842487329,
+              "legEndpointDistance": 19.848336613107918,
+              "netDeathImpulse": null,
+              "pelvisY": 8.999973088101074,
+              "footFloor": -2.6911898926229583e-05,
+              "release": {
+                "L": true,
+                "R": true
+              },
+              "captureBounds": [
+                394,
+                371,
+                514,
+                453
+              ]
+            },
+            {
+              "row": 7,
+              "maxError": 0.10461673842477737,
+              "legEndpointDistance": 19.848336613148224,
+              "netDeathImpulse": null,
+              "pelvisY": 8.999973088101076,
+              "footFloor": -2.6911898924453226e-05,
+              "release": {
+                "L": true,
+                "R": true
+              },
+              "captureBounds": [
+                370,
+                355,
+                547,
+                436
+              ]
+            }
+          ]
+        },
+        "candidate": {
+          "rows": [
+            {
+              "row": 0,
+              "maxError": 0.17821183349619218,
+              "legEndpointDistance": 82.29505483413885,
+              "netDeathImpulse": [
+                -4.376943252282217e-12,
+                2.2737367544323206e-13,
+                0
+              ],
+              "pelvisY": 9,
+              "footFloor": 0,
+              "ccdHits": 6,
+              "release": {
+                "L": true,
+                "R": true
+              },
+              "captureBounds": [
+                397,
+                373,
+                613,
+                503
+              ]
+            },
+            {
+              "row": 1,
+              "maxError": 0.17821183349619218,
+              "legEndpointDistance": 82.29505483413752,
+              "netDeathImpulse": [
+                -3.296918293926865e-12,
+                0,
+                -2.8421709430404007e-12
+              ],
+              "pelvisY": 9,
+              "footFloor": 0,
+              "ccdHits": 6,
+              "release": {
+                "L": true,
+                "R": true
+              },
+              "captureBounds": [
+                321,
+                381,
+                590,
+                466
+              ]
+            },
+            {
+              "row": 2,
+              "maxError": 0.1782118334962064,
+              "legEndpointDistance": 82.2950548341437,
+              "netDeathImpulse": [
+                -3.076557530361946e-28,
+                -5.525191409789922e-17,
+                -4.376943252282217e-12
+              ],
+              "pelvisY": 9,
+              "footFloor": 0,
+              "ccdHits": 6,
+              "release": {
+                "L": true,
+                "R": true
+              },
+              "captureBounds": [
+                245,
+                368,
+                571,
+                469
+              ]
+            },
+            {
+              "row": 3,
+              "maxError": 0.1782118334962277,
+              "legEndpointDistance": 82.29505483414253,
+              "netDeathImpulse": [
+                2.7853275241795927e-12,
+                2.2737367544323206e-13,
+                -3.240074875066057e-12
+              ],
+              "pelvisY": 9,
+              "footFloor": 0,
+              "ccdHits": 6,
+              "release": {
+                "L": true,
+                "R": true
+              },
+              "captureBounds": [
+                325,
+                336,
+                549,
+                459
+              ]
+            },
+            {
+              "row": 4,
+              "maxError": 0.17821183349616376,
+              "legEndpointDistance": 82.2950548341329,
+              "netDeathImpulse": [
+                4.376943252282217e-12,
+                -1.1050382819579844e-16,
+                -6.153115060723892e-28
+              ],
+              "pelvisY": 9,
+              "footFloor": 0,
+              "ccdHits": 6,
+              "release": {
+                "L": true,
+                "R": true
+              },
+              "captureBounds": [
+                340,
+                321,
+                563,
+                451
+              ]
+            },
+            {
+              "row": 5,
+              "maxError": 0.1782118334962206,
+              "legEndpointDistance": 82.2950548341493,
+              "netDeathImpulse": [
+                3.154809746774845e-12,
+                1.148592332356202e-13,
+                2.7853275241795927e-12
+              ],
+              "pelvisY": 9,
+              "footFloor": 0,
+              "ccdHits": 6,
+              "release": {
+                "L": true,
+                "R": true
+              },
+              "captureBounds": [
+                365,
+                357,
+                635,
+                443
+              ]
+            },
+            {
+              "row": 6,
+              "maxError": 0.1782118334962064,
+              "legEndpointDistance": 82.29505483414272,
+              "netDeathImpulse": [
+                8.582806648804608e-28,
+                -1.6575574229369725e-16,
+                4.376943252282217e-12
+              ],
+              "pelvisY": 9,
+              "footFloor": 0,
+              "ccdHits": 6,
+              "release": {
+                "L": true,
+                "R": true
+              },
+              "captureBounds": [
+                384,
+                354,
+                704,
+                447
+              ]
+            },
+            {
+              "row": 7,
+              "maxError": 0.1782118334961993,
+              "legEndpointDistance": 82.29505483413642,
+              "netDeathImpulse": [
+                -2.6147972675971687e-12,
+                -1.1723955140041654e-15,
+                3.211653165635653e-12
+              ],
+              "pelvisY": 9,
+              "footFloor": 0,
+              "ccdHits": 6,
+              "release": {
+                "L": true,
+                "R": true
+              },
+              "captureBounds": [
+                405,
+                364,
+                631,
+                488
+              ]
+            }
+          ]
+        }
+      },
+      "errors": [],
+      "passed": true
+    },
+    "optimization": {
+      "p50BeforeMs": 0.5929840000000013,
+      "p50AfterMs": 0.14192400000001726,
+      "maxPositionDeltaCm": 1.2221335055073723e-12
+    },
+    "performance": {
+      "versions": {
+        "baseline": [
+          {
+            "count": 1,
+            "scope": "actor",
+            "samples": 40,
+            "p50Ms": 16.400000005960464,
+            "p95Ms": 19.600000001490116,
+            "maxMs": 32.100000001490116,
+            "mobs": 0,
+            "mobDraws": 0,
+            "physicsActors": 1,
+            "canvas": [
+              1280,
+              720
+            ]
+          },
+          {
+            "count": 8,
+            "scope": "actor",
+            "samples": 40,
+            "p50Ms": 72.89999999850988,
+            "p95Ms": 87.10000000149012,
+            "maxMs": 88.10000000149012,
+            "mobs": 0,
+            "mobDraws": 0,
+            "physicsActors": 8,
+            "canvas": [
+              1280,
+              720
+            ]
+          },
+          {
+            "count": 20,
+            "scope": "actor",
+            "samples": 40,
+            "p50Ms": 166.90000000596046,
+            "p95Ms": 190.29999999701977,
+            "maxMs": 191.39999999850988,
+            "mobs": 0,
+            "mobDraws": 0,
+            "physicsActors": 20,
+            "canvas": [
+              1280,
+              720
+            ]
+          },
+          {
+            "count": 1,
+            "scope": "scene",
+            "samples": 40,
+            "p50Ms": 27.900000005960464,
+            "p95Ms": 31.30000000447035,
+            "maxMs": 33,
+            "mobs": 102,
+            "mobDraws": 952,
+            "physicsActors": 1,
+            "canvas": [
+              1280,
+              720
+            ]
+          },
+          {
+            "count": 8,
+            "scope": "scene",
+            "samples": 40,
+            "p50Ms": 105.89999999850988,
+            "p95Ms": 116.5,
+            "maxMs": 136.29999999701977,
+            "mobs": 102,
+            "mobDraws": 952,
+            "physicsActors": 8,
+            "canvas": [
+              1280,
+              720
+            ]
+          }
+        ],
+        "candidate": [
+          {
+            "count": 1,
+            "scope": "actor",
+            "samples": 40,
+            "p50Ms": 15.700000002980232,
+            "p95Ms": 20.700000002980232,
+            "maxMs": 26,
+            "mobs": 0,
+            "mobDraws": 0,
+            "physicsActors": 1,
+            "canvas": [
+              1280,
+              720
+            ]
+          },
+          {
+            "count": 8,
+            "scope": "actor",
+            "samples": 40,
+            "p50Ms": 68.60000000149012,
+            "p95Ms": 86.89999999850988,
+            "maxMs": 93.5,
+            "mobs": 0,
+            "mobDraws": 0,
+            "physicsActors": 8,
+            "canvas": [
+              1280,
+              720
+            ]
+          },
+          {
+            "count": 20,
+            "scope": "actor",
+            "samples": 40,
+            "p50Ms": 147,
+            "p95Ms": 165.39999999850988,
+            "maxMs": 169.39999999850988,
+            "mobs": 0,
+            "mobDraws": 0,
+            "physicsActors": 20,
+            "canvas": [
+              1280,
+              720
+            ]
+          },
+          {
+            "count": 1,
+            "scope": "scene",
+            "samples": 40,
+            "p50Ms": 26.69999999552965,
+            "p95Ms": 29.399999998509884,
+            "maxMs": 31.299999997019768,
+            "mobs": 102,
+            "mobDraws": 952,
+            "physicsActors": 1,
+            "canvas": [
+              1280,
+              720
+            ]
+          },
+          {
+            "count": 8,
+            "scope": "scene",
+            "samples": 40,
+            "p50Ms": 104.30000000447035,
+            "p95Ms": 114.5,
+            "maxMs": 122.70000000298023,
+            "mobs": 102,
+            "mobDraws": 952,
+            "physicsActors": 8,
+            "canvas": [
+              1280,
+              720
+            ]
+          }
+        ]
+      },
+      "errors": [],
+      "scope": "Chromium headless SwiftShader, controlled time, includes target canvas synchronization. Full scene includes update/render, terrain, NPC/mobs/HUD; no real network, no target-device FPS guarantee.",
+      "productionBudgetMs": 16.666666666666668,
+      "candidateUnder60FPSBudget": false,
+      "passedExecution": true
+    },
+    "physicsOffRegression": {
+      "productionReady": false,
+      "issues": [],
+      "frames": 960,
+      "states": [
+        "idle",
+        "walk",
+        "run",
+        "flyIdle",
+        "flyMove",
+        "hit",
+        "death",
+        "fireDashSlash",
+        "lightStorm",
+        "horizontalSlash",
+        "thrust",
+        "spinSlash",
+        "risingSlash",
+        "dualSlash"
+      ],
+      "castMappings": {
+        "a": "fireDashSlash",
+        "tp": "lightStorm",
+        "mg_powerslash": "horizontalSlash",
+        "mg_powerwave": "thrust",
+        "mg_twistingslash": "spinSlash",
+        "mg_giganticstorm": "lightStorm",
+        "mg_fireball": "risingSlash"
+      },
+      "attackModeFrames": 1344,
+      "inventoryWingModes": {
+        "noWing": null
+      },
+      "actualTownState": "idle",
+      "actualTownWalk": "walk",
+      "actualTownRun": "run",
+      "actualFieldIdle": "flyIdle",
+      "actualFieldMove": "flyMove",
+      "worldDropPairs": 48,
+      "maxWorldDropSlip": 1.6200950831833977e-05,
+      "unequipWingFootSlip": 0,
+      "pageErrors": [],
+      "status": "passed_game_frames"
+    }
+  },
+  "productionGates": {
+    "testedSphereSegmentCCD": "passed bounded adversarial tests",
+    "testedColliderResiduals": "passed",
+    "ragdollCollapse": "fixed in tests; angle/twist and camera silhouette acceptance incomplete",
+    "allClipsDirections": "passed finite/art-presence sampled sweep; no full cartesian tier/mix/FPS visual acceptance",
+    "performance": "failed 60-FPS budget in headless SwiftShader; target devices not measured",
+    "wingSurfaceCollision": "outer edge only, membrane interior missing",
+    "terrainInterActorDamagePhysics": "not implemented",
+    "legacyStrictPixelParity": "checkpoint12 3-pixel discrepancy remains"
+  },
+  "next": [
+    "Profile whole scene render and shader-free outline/painted layer batching",
+    "Test on actual desktop/mobile before production decision",
+    "Add wing membrane collider and full angular/self collision limits",
+    "Complete continuous playback visual QA with 49 armor mix pairs and enhancement combinations",
+    "Audit contact dust and gameplay collision coupling"
+  ],
+  "sha256": {
+    "public/game/magic-physics.js": "320183ded1e7dba932c7b938d49fdef9caf88c1521d3d79021f040633a713194",
+    "public/game/magic-physics-rig.js": "72a7e62d5ea805f2c96502389272c2e1566f9dc606007a13f2cc851a40bc4cfd",
+    "public/game/magic_physics.html": "3bd20db1f284ea9c24ccc8e32200d394746d3d647fd59f465d6ad27a879519b3"
+  }
+}
