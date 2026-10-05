@@ -11,6 +11,7 @@ const MAU_VIEN := Color(0.62, 0.48, 0.24)
 const MAU_NEN := Color(0.07, 0.06, 0.08, 0.94)
 
 var nv: NhanVat
+var pet: PetAxie
 var npc: Npc = null                   # đang nói chuyện / giao dịch với ai
 var che_do := ""                      # "" · "mua" · "kho"
 
@@ -31,6 +32,9 @@ var _tui_giap: Button
 var _tui_chi_so: Label
 var _tui_lumen: Label
 var _tui_goi_y: Label
+var _axie: PanelContainer
+var _axie_luoi: GridContainer
+var _axie_dat: Label
 var _bao: Label
 var _bao_t := 0.0
 static var _icon := {}
@@ -45,12 +49,13 @@ func _ready() -> void:
 	_dung_tiem()
 	_dung_kho()
 	_dung_tui()
+	_dung_axie()
 	_bao = Label.new()
 	_bao.add_theme_color_override("font_color", Color(1, 0.9, 0.6))
 	_bao.add_theme_color_override("font_outline_color", Color(0, 0, 0))
 	_bao.add_theme_constant_override("outline_size", 2)
 	_bao.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	_bao.position = Vector2(0, 30)
+	_bao.position = Vector2(0, 18)
 	_bao.size = Vector2(640, 12)
 	_bao.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	add_child(_bao)
@@ -236,9 +241,80 @@ func _dung_tui() -> void:
 	add_child(_tui)
 
 
+## Bảng chọn Axie (phím P): 16 con, mỗi ô nói ngay con đó ở ĐẤT ĐANG ĐỨNG thì thế nào — để người
+## chơi khỏi phải tự nhẩm tam giác trong đầu.
+func _dung_axie() -> void:
+	_axie = hop(316, 260)
+	_axie.position = Vector2(8, 30)
+	var v := VBoxContainer.new()
+	_axie.add_child(v)
+	v.add_child(nhan("Axie đi theo  (P) — 0 chỉ số, quyết định hệ phòng thủ", Color(1, 0.82, 0.38)))
+	_axie_dat = nhan("")
+	_axie_dat.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	_axie_dat.custom_minimum_size = Vector2(300, 20)
+	v.add_child(_axie_dat)
+	_axie_luoi = GridContainer.new()
+	_axie_luoi.columns = 4
+	_axie_luoi.add_theme_constant_override("h_separation", 2)
+	_axie_luoi.add_theme_constant_override("v_separation", 2)
+	v.add_child(_axie_luoi)
+	for id in Axie.ds():
+		var b := o_do(74, 46)
+		b.name = id
+		b.icon = Axie.icon(id)
+		b.text = Axie.lop(id)                     # tên con ở dòng gợi ý khi rê chuột; lớp mới là thứ phải so
+		b.add_theme_font_size_override("font_size", 8)
+		b.pressed.connect(_chon_axie.bind(id))
+		_axie_luoi.add_child(b)
+	var dong := nut("Đóng")
+	dong.pressed.connect(dong_het)
+	v.add_child(dong)
+	add_child(_axie)
+
+
+func bat_tat_axie() -> void:
+	if _axie.visible:
+		_axie.visible = false
+		return
+	dong_het()
+	_axie.visible = true
+	_ve_axie()
+
+
+func _chon_axie(id: String) -> void:
+	nv.axie = id
+	pet.doi(id)
+	bao("%s đi theo — hệ phòng thủ: %s" % [Axie.meta()[id]["ten"], Axie.lop(id)])
+	_ve_axie()
+
+
+func _ve_axie() -> void:
+	var he := nv.the_gioi.he_tai(nv.position)
+	if he == "":
+		_axie_dat.text = "Đang ở nơi an toàn — không có hệ trội. Ra ngoài thành, mỗi vòng quái một hệ."
+	else:
+		_axie_dat.text = "Đất này hệ %s · khắc lại nó: %s" % [he, " · ".join(Axie.khac_lai(he))]
+	for b: Button in _axie_luoi.get_children():
+		var id := String(b.name)
+		var mau := Color(0.92, 0.88, 0.8)
+		var ghi := ""
+		if he != "":
+			var k: int = Axie.phong_thu(he, Axie.lop(id))["ket"]
+			mau = [Color(1, 0.5, 0.4), Color(0.85, 0.82, 0.75), Color(0.5, 1, 0.7)][k + 1]
+			ghi = ["\nỞ đây: BỊ KHẮC (+12% đòn nhận)", "\nỞ đây: trung tính", "\nỞ đây: KHẮC (−10% đòn nhận)"][k + 1]
+		b.add_theme_color_override("font_color", mau)
+		b.add_theme_color_override("font_hover_color", mau)
+		var st: StyleBoxFlat = b.get_theme_stylebox("normal").duplicate()
+		st.border_color = Color(1, 0.85, 0.3) if id == nv.axie else Color(0.32, 0.26, 0.18)
+		st.set_border_width_all(2 if id == nv.axie else 1)
+		b.add_theme_stylebox_override("normal", st)
+		b.tooltip_text = "%s · %d★ · lớp %s%s%s" % [Axie.meta()[id]["ten"], Axie.meta()[id]["sao"], Axie.lop(id), ghi,
+			"\n(đang đi theo)" if id == nv.axie else "\nBấm để đổi"]
+
+
 # ── mở / đóng ───────────────────────────────────────────────────────────────
 func dang_mo() -> bool:
-	return _thoai.visible or _tiem.visible or _kho.visible or _tui.visible
+	return _thoai.visible or _tiem.visible or _kho.visible or _tui.visible or _axie.visible
 
 
 func mo_thoai(n: Npc) -> void:
@@ -314,6 +390,7 @@ func dong_het() -> void:
 	_tiem.visible = false
 	_kho.visible = false
 	_tui.visible = false
+	_axie.visible = false
 
 
 func bao(chu: String) -> void:

@@ -1,0 +1,626 @@
+{
+ "aurelion": {
+  "ten": "Aurelion",
+  "sao": 5,
+  "lop": "Dawn",
+  "o": [
+   38,
+   34
+  ],
+  "neo": [
+   19.0,
+   32.4
+  ],
+  "trang_thai": {
+   "idle": {
+    "hang": 0,
+    "khung": 16,
+    "fps": 9.0,
+    "lap": true
+   },
+   "run": {
+    "hang": 1,
+    "khung": 12,
+    "fps": 14.0,
+    "lap": true
+   },
+   "buff": {
+    "hang": 2,
+    "khung": 12,
+    "fps": 12.0,
+    "lap": false
+   },
+   "hit": {
+    "hang": 3,
+    "khung": 8,
+    "fps": 19.2,
+    "lap": false
+   }
+  }
+ },
+ "cinderbeak": {
+  "ten": "Cinderbeak",
+  "sao": 4,
+  "lop": "Bird",
+  "o": [
+   42,
+   34
+  ],
+  "neo": [
+   21.0,
+   32.1
+  ],
+  "trang_thai": {
+   "idle": {
+    "hang": 0,
+    "khung": 16,
+    "fps": 9.0,
+    "lap": true
+   },
+   "run": {
+    "hang": 1,
+    "khung": 12,
+    "fps": 14.0,
+    "lap": true
+   },
+   "buff": {
+    "hang": 2,
+    "khung": 12,
+    "fps": 12.0,
+    "lap": false
+   },
+   "hit": {
+    "hang": 3,
+    "khung": 8,
+    "fps": 19.2,
+    "lap": false
+   }
+  }
+ },
+ "coghound": {
+  "ten": "Coghound",
+  "sao": 4,
+  "lop": "Mech",
+  "o": [
+   36,
+   34
+  ],
+  "neo": [
+   18.0,
+   32.3
+  ],
+  "trang_thai": {
+   "idle": {
+    "hang": 0,
+    "khung": 16,
+    "fps": 9.0,
+    "lap": true
+   },
+   "run": {
+    "hang": 1,
+    "khung": 12,
+    "fps": 14.0,
+    "lap": true
+   },
+   "buff": {
+    "hang": 2,
+    "khung": 12,
+    "fps": 12.0,
+    "lap": false
+   },
+   "hit": {
+    "hang": 3,
+    "khung": 8,
+    "fps": 19.2,
+    "lap": false
+   }
+  }
+ },
+ "crimsonmaw": {
+  "ten": "Crimsonmaw",
+  "sao": 4,
+  "lop": "Beast",
+  "o": [
+   45,
+   34
+  ],
+  "neo": [
+   22.5,
+   32.1
+  ],
+  "trang_thai": {
+   "idle": {
+    "hang": 0,
+    "khung": 16,
+    "fps": 9.0,
+    "lap": true
+   },
+   "run": {
+    "hang": 1,
+    "khung": 12,
+    "fps": 14.0,
+    "lap": true
+   },
+   "buff": {
+    "hang": 2,
+    "khung": 12,
+    "fps": 12.0,
+    "lap": false
+   },
+   "hit": {
+    "hang": 3,
+    "khung": 8,
+    "fps": 19.2,
+    "lap": false
+   }
+  }
+ },
+ "emberjaw": {
+  "ten": "Emberjaw",
+  "sao": 5,
+  "lop": "Beast",
+  "o": [
+   44,
+   34
+  ],
+  "neo": [
+   22.0,
+   32.2
+  ],
+  "trang_thai": {
+   "idle": {
+    "hang": 0,
+    "khung": 16,
+    "fps": 9.0,
+    "lap": true
+   },
+   "run": {
+    "hang": 1,
+    "khung": 12,
+    "fps": 14.0,
+    "lap": true
+   },
+   "buff": {
+    "hang": 2,
+    "khung": 12,
+    "fps": 12.0,
+    "lap": false
+   },
+   "hit": {
+    "hang": 3,
+    "khung": 8,
+    "fps": 19.2,
+    "lap": false
+   }
+  }
+ },
+ "hexmite": {
+  "ten": "Hexmite",
+  "sao": 4,
+  "lop": "Bug",
+  "o": [
+   47,
+   34
+  ],
+  "neo": [
+   23.5,
+   32.1
+  ],
+  "trang_thai": {
+   "idle": {
+    "hang": 0,
+    "khung": 16,
+    "fps": 9.0,
+    "lap": true
+   },
+   "run": {
+    "hang": 1,
+    "khung": 12,
+    "fps": 14.0,
+    "lap": true
+   },
+   "buff": {
+    "hang": 2,
+    "khung": 12,
+    "fps": 12.0,
+    "lap": false
+   },
+   "hit": {
+    "hang": 3,
+    "khung": 8,
+    "fps": 19.2,
+    "lap": false
+   }
+  }
+ },
+ "inkmane": {
+  "ten": "Inkmane",
+  "sao": 4,
+  "lop": "Dusk",
+  "o": [
+   46,
+   35
+  ],
+  "neo": [
+   23.0,
+   33.1
+  ],
+  "trang_thai": {
+   "idle": {
+    "hang": 0,
+    "khung": 16,
+    "fps": 9.0,
+    "lap": true
+   },
+   "run": {
+    "hang": 1,
+    "khung": 12,
+    "fps": 14.0,
+    "lap": true
+   },
+   "buff": {
+    "hang": 2,
+    "khung": 12,
+    "fps": 12.0,
+    "lap": false
+   },
+   "hit": {
+    "hang": 3,
+    "khung": 8,
+    "fps": 19.2,
+    "lap": false
+   }
+  }
+ },
+ "ironshell": {
+  "ten": "Ironshell",
+  "sao": 5,
+  "lop": "Reptile",
+  "o": [
+   43,
+   38
+  ],
+  "neo": [
+   21.5,
+   32.5
+  ],
+  "trang_thai": {
+   "idle": {
+    "hang": 0,
+    "khung": 16,
+    "fps": 9.0,
+    "lap": true
+   },
+   "run": {
+    "hang": 1,
+    "khung": 12,
+    "fps": 14.0,
+    "lap": true
+   },
+   "buff": {
+    "hang": 2,
+    "khung": 12,
+    "fps": 12.0,
+    "lap": false
+   },
+   "hit": {
+    "hang": 3,
+    "khung": 8,
+    "fps": 19.2,
+    "lap": false
+   }
+  }
+ },
+ "mossback": {
+  "ten": "Mossback",
+  "sao": 4,
+  "lop": "Plant",
+  "o": [
+   42,
+   34
+  ],
+  "neo": [
+   21.0,
+   32.1
+  ],
+  "trang_thai": {
+   "idle": {
+    "hang": 0,
+    "khung": 16,
+    "fps": 9.0,
+    "lap": true
+   },
+   "run": {
+    "hang": 1,
+    "khung": 12,
+    "fps": 14.0,
+    "lap": true
+   },
+   "buff": {
+    "hang": 2,
+    "khung": 12,
+    "fps": 12.0,
+    "lap": false
+   },
+   "hit": {
+    "hang": 3,
+    "khung": 8,
+    "fps": 19.2,
+    "lap": false
+   }
+  }
+ },
+ "netherfang": {
+  "ten": "Netherfang",
+  "sao": 5,
+  "lop": "Dusk",
+  "o": [
+   45,
+   34
+  ],
+  "neo": [
+   22.5,
+   32.1
+  ],
+  "trang_thai": {
+   "idle": {
+    "hang": 0,
+    "khung": 16,
+    "fps": 9.0,
+    "lap": true
+   },
+   "run": {
+    "hang": 1,
+    "khung": 12,
+    "fps": 14.0,
+    "lap": true
+   },
+   "buff": {
+    "hang": 2,
+    "khung": 12,
+    "fps": 12.0,
+    "lap": false
+   },
+   "hit": {
+    "hang": 3,
+    "khung": 8,
+    "fps": 19.2,
+    "lap": false
+   }
+  }
+ },
+ "petalkin": {
+  "ten": "Petalkin",
+  "sao": 4,
+  "lop": "Plant",
+  "o": [
+   44,
+   34
+  ],
+  "neo": [
+   22.0,
+   32.1
+  ],
+  "trang_thai": {
+   "idle": {
+    "hang": 0,
+    "khung": 16,
+    "fps": 9.0,
+    "lap": true
+   },
+   "run": {
+    "hang": 1,
+    "khung": 12,
+    "fps": 14.0,
+    "lap": true
+   },
+   "buff": {
+    "hang": 2,
+    "khung": 12,
+    "fps": 12.0,
+    "lap": false
+   },
+   "hit": {
+    "hang": 3,
+    "khung": 8,
+    "fps": 19.2,
+    "lap": false
+   }
+  }
+ },
+ "ridgehorn": {
+  "ten": "Ridgehorn",
+  "sao": 4,
+  "lop": "Reptile",
+  "o": [
+   51,
+   34
+  ],
+  "neo": [
+   25.5,
+   32.1
+  ],
+  "trang_thai": {
+   "idle": {
+    "hang": 0,
+    "khung": 16,
+    "fps": 9.0,
+    "lap": true
+   },
+   "run": {
+    "hang": 1,
+    "khung": 12,
+    "fps": 14.0,
+    "lap": true
+   },
+   "buff": {
+    "hang": 2,
+    "khung": 12,
+    "fps": 12.0,
+    "lap": false
+   },
+   "hit": {
+    "hang": 3,
+    "khung": 8,
+    "fps": 19.2,
+    "lap": false
+   }
+  }
+ },
+ "sunspur": {
+  "ten": "Sunspur",
+  "sao": 4,
+  "lop": "Dawn",
+  "o": [
+   44,
+   35
+  ],
+  "neo": [
+   22.0,
+   32.9
+  ],
+  "trang_thai": {
+   "idle": {
+    "hang": 0,
+    "khung": 16,
+    "fps": 9.0,
+    "lap": true
+   },
+   "run": {
+    "hang": 1,
+    "khung": 12,
+    "fps": 14.0,
+    "lap": true
+   },
+   "buff": {
+    "hang": 2,
+    "khung": 12,
+    "fps": 12.0,
+    "lap": false
+   },
+   "hit": {
+    "hang": 3,
+    "khung": 8,
+    "fps": 19.2,
+    "lap": false
+   }
+  }
+ },
+ "thornpaw": {
+  "ten": "Thornpaw",
+  "sao": 4,
+  "lop": "Plant",
+  "o": [
+   45,
+   35
+  ],
+  "neo": [
+   22.5,
+   33.1
+  ],
+  "trang_thai": {
+   "idle": {
+    "hang": 0,
+    "khung": 16,
+    "fps": 9.0,
+    "lap": true
+   },
+   "run": {
+    "hang": 1,
+    "khung": 12,
+    "fps": 14.0,
+    "lap": true
+   },
+   "buff": {
+    "hang": 2,
+    "khung": 12,
+    "fps": 12.0,
+    "lap": false
+   },
+   "hit": {
+    "hang": 3,
+    "khung": 8,
+    "fps": 19.2,
+    "lap": false
+   }
+  }
+ },
+ "tidewarden": {
+  "ten": "Tidewarden",
+  "sao": 5,
+  "lop": "Aquatic",
+  "o": [
+   43,
+   34
+  ],
+  "neo": [
+   21.5,
+   32.1
+  ],
+  "trang_thai": {
+   "idle": {
+    "hang": 0,
+    "khung": 16,
+    "fps": 9.0,
+    "lap": true
+   },
+   "run": {
+    "hang": 1,
+    "khung": 12,
+    "fps": 14.0,
+    "lap": true
+   },
+   "buff": {
+    "hang": 2,
+    "khung": 12,
+    "fps": 12.0,
+    "lap": false
+   },
+   "hit": {
+    "hang": 3,
+    "khung": 8,
+    "fps": 19.2,
+    "lap": false
+   }
+  }
+ },
+ "voltcrest": {
+  "ten": "Voltcrest",
+  "sao": 5,
+  "lop": "Bird",
+  "o": [
+   46,
+   34
+  ],
+  "neo": [
+   23.0,
+   32.2
+  ],
+  "trang_thai": {
+   "idle": {
+    "hang": 0,
+    "khung": 16,
+    "fps": 9.0,
+    "lap": true
+   },
+   "run": {
+    "hang": 1,
+    "khung": 12,
+    "fps": 14.0,
+    "lap": true
+   },
+   "buff": {
+    "hang": 2,
+    "khung": 12,
+    "fps": 12.0,
+    "lap": false
+   },
+   "hit": {
+    "hang": 3,
+    "khung": 8,
+    "fps": 19.2,
+    "lap": false
+   }
+  }
+ }
+}

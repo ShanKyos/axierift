@@ -56,7 +56,7 @@ func _draw() -> void:
 		var tx := (w - tw) / 2.0
 		draw_rect(Rect2(tx - 1, 5, tw + 2, 8), Color(0.1, 0.08, 0.08))
 		draw_rect(Rect2(tx, 6, tw * q.hp / q.hp_max, 6), Color(0.75, 0.15, 0.12))
-		draw_string(f, Vector2(tx, 22), "%s  Cấp %d" % [q.ten_hien, q.cap], HORIZONTAL_ALIGNMENT_CENTER, tw, 8, Color(1, 0.95, 0.85))
+		draw_string(f, Vector2(tx - 40, 22), "%s  Cấp %d  · %s" % [q.ten_hien, q.cap, q.he], HORIZONTAL_ALIGNMENT_CENTER, tw + 80, 8, Color(1, 0.95, 0.85))
 	draw_string(f, Vector2(52, h - 25), "Q ×%d   W ×%d" % [nv.dem_do("binh_mau_nho") + nv.dem_do("binh_mau"),
 		nv.dem_do("binh_mana_nho") + nv.dem_do("binh_mana")], HORIZONTAL_ALIGNMENT_LEFT, -1, 8, Color(0.9, 0.85, 0.75))
 	if not nv.chieu_biet.is_empty():

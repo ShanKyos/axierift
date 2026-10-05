@@ -88,11 +88,13 @@ const SONG_RONG := 2.4
 ## Hồ phụ
 const HO := [[Vector2i(18, 26), 5.0], [Vector2i(30, 92), 3.5]]
 
-## Vùng quái theo khoảng cách (ô) từ tâm thành: [từ, tới, cấp thấp, cấp cao, số con, tên, màu]
+## Vùng quái theo khoảng cách (ô) từ tâm thành: [từ, tới, cấp thấp, cấp cao, số con, tên, màu, HỆ]
+## Hệ là lớp Axie của đàn quái trong vòng đó — ba vòng ba nhóm của tam giác, nên không con Axie nào
+## hợp cả ba vòng: đi càng xa càng có lý do đổi Axie (xem scripts/axie.gd).
 const VUNG_QUAI := [
-	[20, 30, 1, 3, 20, "Bọ Giáp", Color(1, 1, 1)],
-	[30, 41, 4, 7, 20, "Bọ Giáp Đỏ", Color(1.15, 0.70, 0.62)],
-	[41, 55, 8, 12, 18, "Bọ Giáp Đen", Color(0.62, 0.62, 0.72)],
+	[20, 30, 1, 3, 20, "Bọ Giáp", Color(1, 1, 1), "Bug"],
+	[30, 41, 4, 7, 20, "Bọ Giáp Đỏ", Color(1.15, 0.70, 0.62), "Reptile"],
+	[41, 55, 8, 12, 18, "Bọ Giáp Đen", Color(0.62, 0.62, 0.72), "Dawn"],
 ]
 
 ## Rừng: nhiễu theo hạt cố định; ô có nhiễu > NGUONG_RUNG thì mọc cây (ngoài đường, ngoài thành)

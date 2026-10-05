@@ -4,7 +4,7 @@ extends Node2D
 ##
 ## Điều khiển kiểu MU: chuột trái vào đất để đi (giữ thì đi theo con trỏ), vào quái để đánh, vào
 ## NPC để nói chuyện, vào ngôi nhà có cửa để đi vào. Chuột phải: tung chiêu. Q / W: uống máu / mana.
-## I: túi đồ. Esc: đóng bảng.
+## I: túi đồ · P: chọn Axie đi theo · Esc: đóng bảng.
 ##
 ## Vào nhà KHÔNG phá thế giới ngoài trời: nó chỉ bị ẩn và đóng băng (quái đứng nguyên chỗ, đồ dưới
 ## đất còn nguyên), nhân vật dời sang phòng. Ra nhà là thả lại đúng chỗ trước cửa.
@@ -14,6 +14,7 @@ const HOI_QUAI := 8.0
 var ngoai: TheGioi                     # thế giới ngoài trời, sống suốt phiên
 var the_gioi: TheGioi                  # thế giới đang đứng (ngoài trời hoặc một phòng)
 var nv: NhanVat
+var pet: PetAxie
 var hud: Hud
 var gd: GiaoDien
 var cam: Camera2D
@@ -22,6 +23,7 @@ var _nhip_giu := 0.0
 var _cho_hoi := []           # [thời điểm, vị trí nhà, cấp, tên, màu]
 var _cua_ra := {}            # cửa vừa đi vào (để ra đúng chỗ)
 var _cho_cua := false        # đã bấm vào nhà: tới ô cửa thì vào
+var _he_dat := ""            # hệ của đất vừa đứng — đổi vòng quái thì báo một lần
 
 
 func _ready() -> void:
@@ -37,6 +39,14 @@ func _ready() -> void:
 	ngoai.thuc_the.add_child(nv)
 	nv.da_chet.connect(_nv_chet)
 	nv.toi_npc.connect(func(n): gd.mo_thoai(n))
+	pet = PetAxie.new()
+	pet.name = "PetAxie"
+	pet.chu = nv
+	pet.id = nv.axie
+	ngoai.thuc_the.add_child(pet)
+	pet.bam_ngay()
+	nv.bi_danh.connect(pet.giat)
+	nv.tung.connect(pet.gong)
 	cam = Camera2D.new()
 	nv.add_child(cam)
 	cam.make_current()
@@ -48,6 +58,7 @@ func _ready() -> void:
 	lop.add_child(hud)
 	gd = GiaoDien.new()
 	gd.nv = nv
+	gd.pet = pet
 	lop.add_child(gd)
 	_rai_quai()
 
@@ -80,13 +91,14 @@ func _rai_quai() -> void:
 			var kc := ngoai.kc_thanh(c)
 			if kc < v[0] or kc >= v[1] or not ngoai.di_duoc(ngoai.tam_o(c)):
 				continue
-			_sinh_quai(ngoai.tam_o(c), r.randi_range(v[2], v[3]), v[5], v[6])
+			_sinh_quai(ngoai.tam_o(c), r.randi_range(v[2], v[3]), v[5], v[6], v[7])
 			n += 1
 
 
-func _sinh_quai(p: Vector2, cap: int, ten := "Bọ Giáp", mau := Color.WHITE) -> void:
+func _sinh_quai(p: Vector2, cap: int, ten := "Bọ Giáp", mau := Color.WHITE, he := "Bug") -> void:
 	var q := Quai.new()
 	q.ten_hien = ten
+	q.he = he
 	q.modulate = mau
 	q.the_gioi = ngoai
 	q.nguoi = nv
@@ -106,7 +118,7 @@ func _quai_chet(q: Quai) -> void:
 		d.so_luong = randi_range(4, 10) * q.cap
 		d.position = q.position
 		ngoai.thuc_the.add_child(d)
-	_cho_hoi.append([Time.get_ticks_msec() / 1000.0 + HOI_QUAI, q.nha, q.cap, q.ten_hien, q.modulate])
+	_cho_hoi.append([Time.get_ticks_msec() / 1000.0 + HOI_QUAI, q.nha, q.cap, q.ten_hien, q.modulate, q.he])
 	var t := create_tween()
 	t.tween_interval(1.5)
 	t.tween_property(q, "modulate:a", 0.0, 0.6)
@@ -150,12 +162,14 @@ func _doi_the_gioi(moi: TheGioi, o: Vector2i) -> void:
 	cu.visible = false
 	cu.process_mode = Node.PROCESS_MODE_DISABLED
 	nv.reparent(moi.thuc_the, false)
+	pet.reparent(moi.thuc_the, false)
 	nv.process_mode = Node.PROCESS_MODE_INHERIT
 	moi.visible = true
 	moi.process_mode = Node.PROCESS_MODE_INHERIT
 	the_gioi = moi
 	nv.the_gioi = moi
 	nv.position = moi.tam_o(o)
+	pet.bam_ngay()
 	_dat_gioi_han_cam()
 
 
@@ -163,7 +177,7 @@ func _process(dt: float) -> void:
 	var bay_gio := Time.get_ticks_msec() / 1000.0
 	for i in range(_cho_hoi.size() - 1, -1, -1):
 		if bay_gio >= _cho_hoi[i][0]:
-			_sinh_quai(_cho_hoi[i][1], _cho_hoi[i][2], _cho_hoi[i][3], Color(_cho_hoi[i][4], 1.0))
+			_sinh_quai(_cho_hoi[i][1], _cho_hoi[i][2], _cho_hoi[i][3], Color(_cho_hoi[i][4], 1.0), _cho_hoi[i][5])
 			_cho_hoi.remove_at(i)
 	if not nv.chet:
 		var c := the_gioi.o_cua(nv.position)
@@ -173,6 +187,14 @@ func _process(dt: float) -> void:
 				vao_nha(cu)
 		elif c == the_gioi.o_ra:
 			ra_nha()
+	# bước sang vòng quái khác hệ: nói một lần nên mang Axie nào (băng-rôn, khác số bay mỗi đòn)
+	var he := the_gioi.he_tai(nv.position)
+	if he != _he_dat:
+		_he_dat = he
+		if he != "":
+			var kq := Axie.phong_thu(he, Axie.lop(nv.axie))
+			var ket: String = {-1: "đang BỊ KHẮC — ăn đòn nặng hơn", 0: "trung tính", 1: "đang KHẮC — ăn đòn nhẹ hơn"}[kq["ket"]]
+			gd.bao("Đất hệ %s · Axie %s %s · nên mang %s (phím P)" % [he, Axie.lop(nv.axie), ket, " · ".join(Axie.khac_lai(he))])
 	if _giu_chuot:
 		_nhip_giu -= dt
 		if _nhip_giu <= 0.0:
@@ -193,6 +215,7 @@ func _unhandled_input(e: InputEvent) -> void:
 			KEY_Q: nv.uong("hp")
 			KEY_W: nv.uong("mp")
 			KEY_I: gd.bat_tat_tui()
+			KEY_P: gd.bat_tat_axie()
 			KEY_ESCAPE: gd.dong_het()
 
 

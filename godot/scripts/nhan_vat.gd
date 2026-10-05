@@ -8,6 +8,8 @@ extends ThanThe
 signal doi_chi_so
 signal toi_npc(npc)          # đã tới đủ gần NPC vừa bấm — mở hội thoại
 signal doi_do                # túi / trang bị / kho đổi
+signal bi_danh               # vừa ăn một đòn (pet giật theo)
+signal tung                  # vừa tung chiêu (pet gồng theo)
 
 var cap := 1
 var kinh_nghiem := 0
@@ -28,6 +30,8 @@ var trang_bi := {"vu_khi": "", "giap": ""}
 var kho := []
 var kho_lumen := 0
 var chieu_biet := {}
+var axie := Axie.MAC_DINH            # con Axie đang đi theo — quyết định HỆ PHÒNG THỦ, 0 chỉ số
+var _he_bay_ms := -INF               # mốc hồi của số bay khắc hệ (−∞: đòn ĐẦU TIÊN luôn nói ra)
 var _chieu := ""                     # chiêu đang tung trong nhát chém hiện tại (rỗng = đòn thường)
 var _hoi_chieu := 0.0
 var _da_trung := false
@@ -79,9 +83,22 @@ func phong_thu() -> int:
 	return int(VatPham.lay(trang_bi["giap"]).get("thu", 0)) + nhanh_nhen / 10
 
 
-## Giáp trừ thẳng nửa phòng thủ, đòn nào cũng còn ít nhất 1.
+## Giáp trừ thẳng nửa phòng thủ, đòn nào cũng còn ít nhất 1. Rồi tới hệ phòng thủ của con Axie.
 func nhan_sat_thuong(n: float, tu: Node2D) -> void:
-	super.nhan_sat_thuong(maxf(1.0, n - phong_thu() * 0.5), tu)
+	if chet:
+		return
+	var m := maxf(1.0, n - phong_thu() * 0.5)
+	if tu is Quai:
+		var kq := Axie.phong_thu(tu.he, Axie.lop(axie))
+		m *= kq["he_so"]
+		var bay_gio := Time.get_ticks_msec()
+		if kq["ket"] != 0 and bay_gio - _he_bay_ms > 2600:      # có hồi, không thì tràn chữ giữa trận đông
+			_he_bay_ms = bay_gio
+			var chu := ("⚠ %s khắc %s" % [tu.he, Axie.lop(axie)]) if kq["ket"] < 0 else ("✦ %s chặn %s" % [Axie.lop(axie), tu.he])
+			SoBay.tao(the_gioi.thuc_the, global_position + Vector2(0, -78), chu,
+				Color(1, 0.45, 0.35) if kq["ket"] < 0 else Color(0.5, 0.95, 0.75))
+	super.nhan_sat_thuong(m, tu)
+	bi_danh.emit()
 
 
 # ── túi đồ ──────────────────────────────────────────────────────────────────
@@ -199,6 +216,7 @@ func tung_chieu(dich: Vector2) -> void:
 	mp -= c["mp"]
 	_hoi_chieu = c["hoi"]
 	_chieu = id
+	tung.emit()
 	duong.clear()
 	_quay(Iso.huong(dich - position, huong))
 	_da_trung = false

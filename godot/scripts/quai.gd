@@ -4,6 +4,7 @@ extends ThanThe
 
 @export var ten_hien := "Bọ Giáp"
 @export var cap := 1
+@export var he := "Bug"                # lớp Axie của con quái — so với Axie của người chơi khi đánh
 var nha := Vector2.ZERO
 var nguoi: NhanVat
 var tam_thay := 90.0

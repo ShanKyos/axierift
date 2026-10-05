@@ -17,6 +17,7 @@ MMORPG pixel art lấy cảm hứng từ **MU Online**, có thêm lớp Axie. B�
 | Chuột phải | tung chiêu đã học (Chém Xoáy — mua sách ở Tháp Pháp Sư, cần cấp 5) |
 | Q / W | uống bình máu / bình mana |
 | I | túi đồ · Esc: đóng mọi bảng |
+| P | chọn con Axie đi theo (16 con) |
 | Đi qua đồng Lumen | nhặt |
 
 ## Đã có ở M0
@@ -29,6 +30,14 @@ MMORPG pixel art lấy cảm hứng từ **MU Online**, có thêm lớp Axie. B�
   - 7 dân làng đi lại, 4 lính gác ở cổng; ai cũng nói chuyện được.
 - **Vào nhà:** bốn nhà trên có phòng riêng (sàn gỗ, tường, đồ đạc theo nghề, NPC đứng sau quầy).
   Vào nhà thì thế giới ngoài trời chỉ bị ẩn và đóng băng, không bị dựng lại — ra là về đúng chỗ.
+- **Axie đi theo:** 16 con Axie chính chủ, pixel hoá cùng kiểu với mọi sprite khác, đứng ngang hông
+  nhân vật, chạy theo, giật khi chủ ăn đòn, gồng khi chủ tung chiêu, theo vào cả trong nhà.
+  - **0 chỉ số.** Thứ nó quyết định là **hệ phòng thủ**, theo tam giác chín lớp Axie:
+    ① Beast·Bug·Mech ▶ ② Plant·Reptile·Dusk ▶ ③ Aquatic·Bird·Dawn ▶ ①.
+    Quái khắc Axie ⇒ ăn đòn ×1,12; Axie khắc quái ⇒ ×0,90; cùng nhóm ⇒ ×1.
+  - Ba vòng quái quanh thành mang ba nhóm khác nhau (Bug · Reptile · Dawn), nên không con nào hợp
+    cả ba — đi xa hơn là có lý do đổi Axie. Bước sang vòng khác thì băng-rôn nói nên mang con nào;
+    mỗi đòn khắc/bị khắc hiện chữ trên đầu (có hồi 2,6 giây). Bảng P tô màu từng con theo đất đang đứng.
 - **Đồ:** túi 32 ô, kho 40 ô, ô vũ khí + giáp có yêu cầu Sức Mạnh, thuốc xếp chồng, sách học chiêu.
 - **Map Ardhaven:** isometric 112×112 ô.
   - Thành đá có tường, tháp góc, 4 cổng.
@@ -81,7 +90,7 @@ Công trình to (nhà, cổng, đài phun nước) được **cắt thành dải
 - **Mạng:** online qua Nakama trên VPS.
 - **Hệ đồ:** túi đồ, trang bị tách lớp (paper-doll), Tinh Xảo / Cổ Vật, ngọc, rèn +N.
 - **Nội dung:** lớp nhân vật thứ hai trở đi, kỹ năng, map khác.
-- **Lớp Axie:** pet đi theo và hệ phòng thủ tam giác.
+- **Lớp Axie:** trục thứ hai (sáu bộ phận → độ sắc), gacha Khế Ước, chọn Axie ở màn tạo nhân vật.
 - **Art thật:** hình hiện tại là bản tạm sinh bằng máy (xem dưới). Hoạ sĩ, hoặc PixelLab + chỉnh tay, sẽ vẽ đè lên đúng các khung này.
 
 ## Art: render 3D → pixel art, có số đo vật lý
@@ -95,6 +104,7 @@ python3 godot/tools/sprites/render.py do_vat     # nội thất + đồ phố: q
 python3 godot/tools/sprites/render.py npc_tho_ren   # NPC: npc_tho_ren · npc_co_gai · npc_phap_su · npc_thu_kho · npc_dan_a/b/c
 python3 godot/tools/sprites/render.py icon_do    # icon túi đồ 32×32
 python3 godot/tools/sprites/o_dat.py             # ô đất 64×32 (kể cả sàn gỗ, thảm cửa)
+python3 godot/tools/sprites/axie_pixel.py        # 16 Axie: lấy tranh Spine đã nướng của bản web → pixel art
 ```
 
 Cần `pip install bpy==4.2.0 pillow numpy`. Trên Linux không có màn hình thì cần thêm `libegl1`.
@@ -114,6 +124,7 @@ Cỡ: ô 96×96, người cao khoảng 56 px. Màn vẽ nội bộ 640×360, ph�
 ```
 godot --headless --path godot -s tests/test_chan.gd                                   # cổng vật lý, thoát 1 nếu đỏ
 godot --headless --path godot -s tests/test_thanh.gd                                  # cổng thành: nhà, NPC, tiệm, kho, chiêu
+godot --headless --path godot -s tests/test_axie.gd                                   # cổng Axie: tam giác, 0 chỉ số, hệ số đòn, pet
 xvfb-run godot --rendering-driver opengl3 --path godot -s tests/chup.gd               # chụp 3 ảnh vào godot/tmp_chup/
 xvfb-run godot --rendering-driver opengl3 --path godot -s tests/chup_thanh.gd         # chụp thành, 4 phòng, các bảng
 ```
@@ -131,5 +142,14 @@ mua/bán ở tiệm rèn, gửi/rút ở kho, học Chém Xoáy, uống thuốc,
 trúng quái ngoài vòng, ra nhà đúng chỗ và không bị hút vào lại. Kiểm luôn bố cục: công trình không
 chồng nhau, không chặn đại lộ, cửa nào cũng đi tới được. Thử ngược: tắt lệnh vào nhà ⇒ đỏ 4 nhà;
 bỏ bán kính chiêu ⇒ đỏ "quái ngoài vòng".
+
+`test_axie.gd` (18 mệnh đề): đủ 16 con × bốn khối · tam giác đúng hình · đổi qua cả 16 con thì chỉ
+số không đổi một điểm · đòn THẬT qua `nhan_sat_thuong` nhân đúng ×1,12 / ×0,90 · pet bám sau, nhảy
+tới khi xa, lật đúng mặt, theo vào nhà · bảng P nói đúng hệ đất. Thử ngược: bỏ hệ số · cho pet
+không theo vào nhà · lật ngược mặt ⇒ cả ba đỏ đúng mục.
+
+**Axie chỉ có hai hướng** (rig Spine vẽ nhìn ngang), lật gương theo hướng ngang khi đi. Đó là chủ
+ý: giữ nét vẽ chính chủ để người chơi nhận ra con Axie của mình, thay vì dựng lại bằng 3D cho đủ 8
+hướng.
 
 **Giới hạn biết trước:** giữa hai khung liền nhau, sprite đứng yên trong khi thân vẫn trôi, nên có một "răng cưa" 3,4 px khi đi và 6,3 px khi chạy. Đây là giới hạn của hoạt ảnh theo khung, không phải lỗi trượt chân. Muốn giảm thì thêm khung.

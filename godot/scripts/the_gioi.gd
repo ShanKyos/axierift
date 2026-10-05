@@ -411,6 +411,17 @@ func an_toan(p: Vector2) -> bool:
 	return vung_an_toan.has_point(o_cua(p))
 
 
+## Hệ của đất đang đứng: hệ của vòng quái chứa điểm p. Trong thành / trong nhà thì rỗng.
+func he_tai(p: Vector2) -> String:
+	if nha != "" or an_toan(p):
+		return ""
+	var kc := kc_thanh(o_cua(p))
+	for v in BD.VUNG_QUAI:
+		if kc >= v[0] and kc < v[1]:
+			return v[7]
+	return ""
+
+
 ## Khoảng cách (ô) từ tâm thành — vùng quái đọc số này.
 func kc_thanh(c: Vector2i) -> float:
 	return Vector2(c).distance_to(Vector2(tam_thanh))
