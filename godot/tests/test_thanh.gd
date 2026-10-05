@@ -259,6 +259,7 @@ func _kiem_chieu(ngoai: TheGioi) -> void:
 	xa.position = p + Iso.nen(Vector2(160, 0))
 	xa.hp = xa.hp_max
 	nv.mp = nv.mp_max
+	nv._hoi = 0.0                       # ⚠ đặt lại đồng hồ hồi mana mỗi giây: rơi đúng nhịp đo là +3% mana, đỏ vì tải máy
 	var mp0 := nv.mp
 	nv.tung_chieu(p + Vector2(30, 0))
 	nv.hinh.frame = nv.bo.khung_trung("attack")
@@ -269,4 +270,4 @@ func _kiem_chieu(ngoai: TheGioi) -> void:
 			trung += 1
 	_ok(trung == 3, "Chém Xoáy trúng cả 3 quái trong vòng (%d/3)" % trung)
 	_ok(xa.hp == xa.hp_max, "quái ngoài vòng không mất máu")
-	_ok(absf(mp0 - nv.mp - VatPham.CHIEU["chem_xoay"]["mp"]) < 0.01, "trừ đúng mana")
+	_ok(absf(mp0 - nv.mp - VatPham.CHIEU["chem_xoay"]["mp"]) < 0.01, "trừ đúng mana (%.3f → %.3f, giá %s)" % [mp0, nv.mp, VatPham.CHIEU["chem_xoay"]["mp"]])

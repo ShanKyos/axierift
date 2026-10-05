@@ -272,6 +272,7 @@ func _dung_axie() -> void:
 		var b := o_do(74, 46)
 		b.name = id
 		b.icon = Axie.icon(id)
+		b.expand_icon = true                       # khung HD to hơn ô nút — co cho vừa
 		b.text = Axie.lop(id)                     # tên con ở dòng gợi ý khi rê chuột; lớp mới là thứ phải so
 		b.add_theme_font_size_override("font_size", 8)
 		b.pressed.connect(_chon_axie.bind(id))

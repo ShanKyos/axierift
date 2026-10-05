@@ -33,6 +33,7 @@ func _ready() -> void:
 	hinh = AnimatedSprite2D.new()
 	hinh.sprite_frames = bo.frames
 	hinh.offset = bo.lech_ve()
+	hinh.scale = Vector2.ONE * bo.ty
 	hinh.animation_finished.connect(func(): _anim_xong = true)
 	add_child(hinh)
 	_vao("idle")
@@ -109,7 +110,7 @@ func nhan_sat_thuong(n: float, _tu: Node2D) -> void:
 	hp = maxf(0.0, hp - n)
 	if the_gioi:
 		var mau := Color(1, 0.35, 0.3) if self is NhanVat else Color(1, 0.9, 0.4)
-		SoBay.tao(the_gioi.thuc_the, global_position + Vector2(0, -bo.neo.y + 18), str(int(round(n))), mau)
+		SoBay.tao(the_gioi.thuc_the, global_position + Vector2(0, bo.dinh()), str(int(round(n))), mau)
 	if hp <= 0.0:
 		chet = true
 		duong.clear()

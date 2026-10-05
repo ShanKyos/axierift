@@ -18,6 +18,11 @@ func _init() -> void:
 
 
 func _chay() -> void:
+	# ⚠ BÀI NÀY GÁC BỘ PIXEL (nướng từ 3D, có số đo bàn chân chính xác lúc render) — tắt HD.
+	# Bộ HD hiện tại là tranh AI vẽ sẵn, KHÔNG khoá bàn chân vào đất: chân chống tự trôi vài px
+	# giữa các khung, và ở góc nghiêng hai chân chéo nhau nên đo từ ảnh không tách được chân nào
+	# đang chống (đo ra trượt 20-39 px). Không sửa được bằng mã — cần art HD nướng có số đo chân.
+	SpriteBo.HD = false
 	await process_frame                # cây cảnh sẵn sàng thì `_ready` của node mới chạy
 	_kiem_xuyen_dat("hiep_si", ["walk", "run", "idle", "attack", "hit", "death"])
 	_kiem_xuyen_dat("bo_giap", ["walk", "idle", "attack", "hit", "death"])

@@ -178,11 +178,7 @@ func _draw() -> void:
 	_khung9(Rect2(4, 4, 136, 42))
 	var cd := Rect2(10, 10, 30, 30)
 	draw_rect(cd, Color(0.06, 0.05, 0.07))
-	var ic := Axie.icon(nv.axie)
-	var iw := ic.get_width()
-	var ih := ic.get_height()
-	var vung := Rect2(maxf(0, iw - 30), maxf(0, ih - 30) * 0.3, minf(30, iw), minf(30, ih))   # lấy phần đầu (tranh quay mặt sang phải)
-	draw_texture_rect_region(ic, Rect2(cd.position + (cd.size - vung.size) / 2.0, vung.size), vung)
+	Axie.ve_dau(self, nv.axie, cd)
 	draw_rect(cd, Color(0.62, 0.48, 0.24), false, 1.0)
 	_chu(Vector2(44, 16), "Dark Knight", MAU_VANG)
 	_chu(Vector2(44, 16), "LV.%d" % nv.cap, MAU_CHU, HORIZONTAL_ALIGNMENT_RIGHT, 90)
@@ -260,9 +256,7 @@ func _ve_o(o: Dictionary) -> void:
 		"mp": tex = _ic["binh_mana_nho"]; so = nv.dem_do("binh_mana_nho") + nv.dem_do("binh_mana")
 		"chieu": tex = _ic["chieu_chem_xoay"]; mo = nv.chieu_biet.is_empty()
 	if o["ten"] == "axie":
-		var ic := Axie.icon(nv.axie)
-		var v := Rect2(maxf(0, ic.get_width() - O), 4, minf(O, ic.get_width()), O - 2)
-		draw_texture_rect_region(ic, Rect2(r.position + Vector2((O - v.size.x) / 2.0, 1), v.size), v)
+		Axie.ve_dau(self, nv.axie, r.grow(-1))
 	elif tex:
 		draw_texture_rect_region(tex, r, Rect2(4, 4, O, O), Color(1, 1, 1, 0.35) if mo or so == 0 else Color.WHITE)
 	if o["ten"] == "chieu" and not nv.chieu_biet.is_empty() and nv._hoi_chieu > 0.0:

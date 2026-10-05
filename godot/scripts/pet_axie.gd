@@ -40,9 +40,10 @@ func doi(moi: String) -> void:
 	id = moi
 	if hinh == null:
 		return
-	var m: Dictionary = Axie.meta()[id]
+	var m := Axie.hinh(id)
 	hinh.sprite_frames = Axie.frames(id)
-	hinh.offset = Vector2(m["o"][0] / 2.0 - m["neo"][0], m["o"][1] / 2.0 - m["neo"][1])
+	hinh.offset = m["o"] / 2.0 - m["neo"]
+	hinh.scale = Vector2.ONE * float(m["ty"])
 	_phan_ung = false
 	hinh.play("idle")
 

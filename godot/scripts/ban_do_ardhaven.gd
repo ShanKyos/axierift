@@ -74,9 +74,9 @@ const NPC := [
 	["Lính Gác", Vector2i(58, 42), "hiep_si", "linh_gac", false],
 	["Bà Lena", Vector2i(54, 52), "npc_dan_a", "dan", true],
 	["Ông Toma", Vector2i(58, 53), "npc_dan_b", "dan", true],
-	["Cô Nell", Vector2i(61, 58), "npc_dan_c", "dan", true],
+	["Cô Nell", Vector2i(61, 58), "npc_dan_a", "dan", true],
 	["Gã Corr", Vector2i(52, 58), "npc_dan_b", "dan", true],
-	["Lão Ben", Vector2i(63, 63), "npc_dan_a", "dan", true],
+	["Lão Ben", Vector2i(63, 63), "npc_dan_c", "dan", true],
 	["Bé Pip", Vector2i(57, 60), "npc_dan_c", "dan", true],
 	["Cô Mae", Vector2i(46, 56), "npc_dan_a", "dan", true],
 ]

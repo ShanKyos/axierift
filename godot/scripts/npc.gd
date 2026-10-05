@@ -26,7 +26,7 @@ func _ready() -> void:
 	_nhan.add_theme_constant_override("outline_size", 2)
 	_nhan.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	_nhan.size = Vector2(96, 10)
-	_nhan.position = Vector2(-48, -bo.neo.y + 18 - 12)
+	_nhan.position = Vector2(-48, bo.dinh() - 12)
 	add_child(_nhan)
 
 

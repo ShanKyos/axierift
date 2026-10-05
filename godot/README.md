@@ -6,6 +6,14 @@ MMORPG 2D lấy cảm hứng từ **MU Online**, có thêm lớp Axie. Chơi b�
 > **Hướng art: 2D HD** — tranh vẽ tay dark fantasy, sinh từ Meowa, thay dần cho pixel art hiện tại.
 > Phần mã (map nhìn chéo, quái, đánh, rơi đồ, NPC, vào nhà, Axie đi theo, HUD, radar) giữ nguyên.
 >
+> **Đã chuyển sang HD (bản xem thử):** mặt đất, nhà, cây, đá, người chơi, NPC, quái, Axie dùng
+> tranh HD lấy từ kho của bản web, đóng gói bằng `python3 godot/tools/hd/chuan_bi_hd.py` vào
+> `assets/hd/`. Game vẫn chạy ở toạ độ logic 640×360 (ô 64×32); tranh HD vẽ thu theo `ty`, cửa sổ
+> vẽ ở độ phân giải thật nên đủ nét. Tắt HD: `SpriteBo.HD = false`.
+> Còn PIXEL: tường thành, tháp góc, đèn đường, đồ đạc trong nhà, icon vật phẩm, bản đồ góc.
+> Người chơi tạm dùng thân Spellblade HD (bộ Cuồng Phong) — chưa có Dark Knight HD. Nợ art HD:
+> chưa có tư thế trúng đòn / ngã (đang dựng tạm từ khung đứng) và bàn chân chưa khoá vào đất.
+>
 > Lịch sử: bản này là bản pixel ở commit `5e9bb26`, khôi phục lại sau khi thử hướng 3D. Bản 3D
 > (mốc 3D-0 + 3D-1: camera MU, Ardhaven 3D theo tranh tổng quan, bản đồ Tab chụp từ map) nằm ở
 > commit `3bf6804` nếu cần tra lại.

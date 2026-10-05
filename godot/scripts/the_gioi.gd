@@ -20,7 +20,9 @@ const BO_THANH := ["tuong", "thap", "cong", "nha_a", "nha_b", "nha_c", "thap_pha
 var nha := ""                         # rỗng = ngoài trời; khác rỗng = trong nhà (khoá NoiThat.NHA)
 var CO: Vector2i = BD.CO
 var ten_map := "Ardhaven"
-var nen: TileMapLayer
+var nen: TileMapLayer                 # lưới ô LOGIC 64×32 — mọi phép đổi toạ độ đi qua nó
+var nen_hd: TileMapLayer              # bản HD: viên 256×128 vẽ ở scale 0,25 — chỉ để nhìn
+var _canh_hd := {}                    # bảng tranh HD: công trình, cây, đá (tools/hd/chuan_bi_hd.py)
 var thuc_the: Node2D                  # cha của mọi thứ đứng trên đất, tự xếp theo y
 var astar := AStarGrid2D.new()
 var dac := {}                         # ô bị chặn: Vector2i → true
@@ -64,10 +66,37 @@ func _dung_lop() -> void:
 	nen.tile_set = ts
 	nen.name = "Nen"
 	add_child(nen)
+	if SpriteBo.HD and FileAccess.file_exists("res://assets/hd/dat/o_dat_hd.json"):
+		_dung_nen_hd()
 	thuc_the = Node2D.new()
 	thuc_the.name = "ThucThe"
 	thuc_the.y_sort_enabled = true
 	add_child(thuc_the)
+
+
+## Bản HD: một lớp ô thứ hai, viên 256×128 (gấp 4 ô logic) thu về 0,25 ⇒ trùng khít từng ô với
+## lớp logic. Lớp logic vẫn giữ để đổi toạ độ; nó chỉ bị ẩn đi.
+func _dung_nen_hd() -> void:
+	texture_filter = CanvasItem.TEXTURE_FILTER_LINEAR_WITH_MIPMAPS     # con cháu thừa hưởng
+	var info: Dictionary = JSON.parse_string(FileAccess.get_file_as_string("res://assets/hd/dat/o_dat_hd.json"))
+	var ts := TileSet.new()
+	ts.tile_shape = TileSet.TILE_SHAPE_ISOMETRIC
+	ts.tile_layout = TileSet.TILE_LAYOUT_DIAMOND_DOWN
+	ts.tile_size = Vector2i(256, 128)
+	var src := TileSetAtlasSource.new()
+	src.texture = load("res://assets/hd/dat/o_dat_hd.png")
+	src.texture_region_size = Vector2i(256, 128)
+	for i in (info["loai"] as Array).size():
+		for k in int(info["bien"]):
+			src.create_tile(Vector2i(i, k))
+	ts.add_source(src, 0)
+	nen_hd = TileMapLayer.new()
+	nen_hd.tile_set = ts
+	nen_hd.name = "NenHD"
+	nen_hd.scale = Vector2.ONE * float(info["ty"])
+	add_child(nen_hd)
+	nen.visible = false
+	_canh_hd = JSON.parse_string(FileAccess.get_file_as_string("res://assets/hd/canh/canh_hd.json"))
 
 
 # ── mặt đất: cỏ theo nhiễu, nước, bờ cát, đường, cầu ─────────────────────────
@@ -140,6 +169,8 @@ func _ve_doan_nuoc(a: Vector2i, b: Vector2i, r: float) -> void:
 func _ghi_nen() -> void:
 	for c in _o_loai:
 		nen.set_cell(c, 0, Vector2i(_loai.find(_o_loai[c]), 0))
+		if nen_hd:                                 # biến thể viên theo hạt cố định của ô
+			nen_hd.set_cell(c, 0, Vector2i(_loai.find(_o_loai[c]), posmod(c.x * 7349 + c.y * 3011 + (c.x * c.y) % 13, 4)))
 
 
 # ── thành: tường, tháp, cổng, công trình, NPC ───────────────────────────────
@@ -183,7 +214,8 @@ func _dung_thanh() -> void:
 	for ct in BD.CONG_TRINH:
 		var ten: String = ct[0]
 		var co := kich(ten, ct[2])
-		_dat(ten, ct[1], co, ct[2])
+		var khoa_hd: String = ct[3] if ct.size() > 3 and _canh_hd.get("cong_trinh", {}).has(ct[3]) else ten
+		_dat(ten, ct[1], co, ct[2], true, khoa_hd)
 		if ct.size() > 3:
 			_dat_cua(ct[3], ten, ct[1], co, ct[2])
 	var cay: Texture2D = load("res://assets/sprites/canh/cay.png")
@@ -240,7 +272,11 @@ func cua_o(c: Vector2i) -> Dictionary:
 
 ## Đặt một công trình chiếm khối ô [goc, goc+co). Công trình to được CẮT DẢI DỌC, mỗi dải xếp lớp
 ## theo mép trước của chân đế ngay dưới nó — nhân vật đứng cạnh hông nhà mới che/bị che đúng.
-func _dat(ten: String, goc: Vector2i, co: Vector2i, xoay: int, chan := true) -> void:
+func _dat(ten: String, goc: Vector2i, co: Vector2i, xoay: int, chan := true, khoa_hd := "") -> void:
+	var k_hd := khoa_hd if khoa_hd != "" else ten
+	if _canh_hd.get("cong_trinh", {}).has(k_hd):
+		_dat_hd(_canh_hd["cong_trinh"][k_hd], ten, goc, co, chan)
+		return
 	var cuoi := goc + co - Vector2i.ONE
 	var tam := (nen.map_to_local(goc) + nen.map_to_local(cuoi)) / 2.0
 	var bo_ten := "thanh" if ten in BO_THANH else "do_vat"
@@ -272,6 +308,65 @@ func _dat(ten: String, goc: Vector2i, co: Vector2i, xoay: int, chan := true) -> 
 				dac[Vector2i(x, y)] = true
 
 
+## Bản HD của một công trình: một tấm tranh iso, thu cho BỀ NGANG nội dung bằng bề ngang hình thoi
+## chân đế, đáy nội dung đặt ở đỉnh trước của chân đế. Vẫn cắt dải dọc như bản pixel — mỗi dải
+## xếp lớp theo mép trước ngay dưới nó, nên đứng cạnh hông nhà vẫn che/bị che đúng.
+## ⚠ Tranh HD chỉ có MỘT hướng: `xoay` của dữ liệu không đổi được hình (cửa vẽ trong tranh có thể
+## không nằm đúng mặt có cửa thật). Lối vào nhà vẫn theo dữ liệu.
+func _dat_hd(d: Dictionary, ten: String, goc: Vector2i, co: Vector2i, chan: bool) -> void:
+	var cuoi := goc + co - Vector2i.ONE
+	var tex: Texture2D = load("res://assets/hd/canh/%s.png" % d["tep"])
+	var h: Array = d["hop"]
+	var trai := nen.map_to_local(Vector2i(goc.x, cuoi.y)) + Vector2(-32, 0)
+	var phai := nen.map_to_local(Vector2i(cuoi.x, goc.y)) + Vector2(32, 0)
+	var day := nen.map_to_local(cuoi) + Vector2(0, 16)
+	var rong_tex := float(h[2] - h[0])
+	var cao_tex := float(h[3] - h[1])
+	var ty := (phai.x - trai.x) * 1.04 / rong_tex
+	var dinh := day.y + 3.0 - cao_tex * ty                  # mép trên của tranh (px logic)
+	var nhom := Node2D.new()
+	nhom.name = "%s_%d_%d" % [ten, goc.x, goc.y]
+	nhom.y_sort_enabled = true
+	thuc_the.add_child(nhom)
+	var dai_tex := DAI / ty
+	var n := int(ceil(rong_tex / dai_tex))
+	var x0 := (trai.x + phai.x) / 2.0 - rong_tex * ty / 2.0
+	for i in n:
+		var w := minf(dai_tex, rong_tex - i * dai_tex)
+		var x_man := x0 + (i * dai_tex + w / 2.0) * ty
+		var y_sau := _mep_truoc(x_man, trai, day, phai)
+		var s := Sprite2D.new()
+		var at := AtlasTexture.new()
+		at.atlas = tex
+		at.region = Rect2(h[0] + i * dai_tex, h[1], w, cao_tex)
+		s.texture = at
+		s.scale = Vector2.ONE * ty
+		s.position = Vector2(x_man, y_sau)
+		s.offset = Vector2(0, (dinh + cao_tex * ty / 2.0 - y_sau) / ty)
+		nhom.add_child(s)
+	if chan:
+		for y in range(goc.y, cuoi.y + 1):
+			for x in range(goc.x, cuoi.x + 1):
+				dac[Vector2i(x, y)] = true
+
+
+## Cây/đá HD: tấm tranh có điểm chân (`neo`, px texture) — neo vào tâm ô, thu theo chiều cao đích.
+func _vat_hd(loai: String, bien_the: int, c: Vector2i, cao: float) -> bool:
+	var ds: Array = _canh_hd.get(loai, [])
+	if ds.is_empty():
+		return false
+	var d: Dictionary = ds[bien_the % ds.size()]
+	var s := Sprite2D.new()
+	s.texture = load("res://assets/hd/canh/%s.png" % d["tep"])
+	s.centered = false
+	var ty := cao / float(d["hop"][3] - d["hop"][1])
+	s.scale = Vector2.ONE * ty
+	s.offset = -Vector2(d["neo"][0], d["neo"][1])
+	s.position = nen.map_to_local(c)
+	thuc_the.add_child(s)
+	return true
+
+
 func _mep_truoc(x: float, trai: Vector2, day: Vector2, phai: Vector2) -> float:
 	if x <= trai.x:
 		return trai.y
@@ -285,13 +380,16 @@ func _mep_truoc(x: float, trai: Vector2, day: Vector2, phai: Vector2) -> float:
 func dat_npc(ten: String, c: Vector2i, bo: String, vai: String, lang_thang := false, huong_nhin := 0) -> Npc:
 	var t := Npc.new()
 	t.ten_bo = bo
+	var gac_hd := bo == "hiep_si" and SpriteBo.co_hd("hiep_si_gac")
+	if gac_hd:
+		t.ten_bo = "hiep_si_gac"                  # bản HD: lính gác có tranh riêng, không mượn thân người chơi
 	t.ten_hien = ten
 	t.vai = vai
 	t.lang_thang = lang_thang
 	t.the_gioi = self
 	t.position = nen.map_to_local(c)
 	t.huong = huong_nhin
-	if bo == "hiep_si":
+	if bo == "hiep_si" and not gac_hd:
 		t.modulate = Color(0.75, 0.9, 1.2)
 	t.name = "NPC_%s_%d_%d" % [ten, c.x, c.y]
 	thuc_the.add_child(t)
@@ -301,6 +399,9 @@ func dat_npc(ten: String, c: Vector2i, bo: String, vai: String, lang_thang := fa
 
 
 func _dat_cay(cay: Texture2D, c: Vector2i, bien_the: int) -> void:
+	if _vat_hd("cay", bien_the, c, 96.0):
+		dac[c] = true
+		return
 	var s := Sprite2D.new()
 	var at := AtlasTexture.new()
 	at.atlas = cay
@@ -362,6 +463,10 @@ func _rai_rung() -> void:
 			if r.randf() >= mat:
 				continue
 			var la_cay := r.randf() < (0.92 if n > BD.NGUONG_RUNG else 0.55)
+			var bien := r.randi_range(0, 11)
+			if _vat_hd("cay" if la_cay else "da", bien, c, r.randf_range(86.0, 108.0) if la_cay else r.randf_range(16.0, 26.0)):
+				dac[c] = true
+				continue
 			var s := Sprite2D.new()
 			var at := AtlasTexture.new()
 			at.atlas = cay if la_cay else da
