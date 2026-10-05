@@ -16,9 +16,11 @@ MMORPG pixel art lấy cảm hứng từ **MU Online**, có thêm lớp Axie. B�
 
 ## Đã có ở M0
 
-- **Map:** isometric 48×48 ô.
-  - Quảng trường đá lát là khu an toàn: quái không đuổi vào, hồi máu nhanh gấp 3.
-  - Có lối mòn, hồ nước, cây và đá chắn đường.
+- **Map Ardhaven:** isometric 96×96 ô.
+  - Thành đá có tường, tháp góc, 4 cổng; trong thành có nhà, đài phun nước, đèn, 4 NPC đứng chờ.
+  - Ngoài thành có đường lát đá từ cổng ra, sông có cầu, hồ, rừng dày.
+  - Quái mạnh dần theo 3 vòng quanh thành: cấp 1-3, 4-7, 8-12.
+  - Trong thành là khu an toàn: quái không đuổi vào, hồi máu nhanh gấp 3.
   - Tìm đường bằng A* quanh vật cản.
 - **Dark Knight:**
   - 8 hướng; 6 trạng thái: đứng, đi, chạy, chém, trúng đòn, chết.
@@ -28,6 +30,26 @@ MMORPG pixel art lấy cảm hứng từ **MU Online**, có thêm lớp Axie. B�
   - Bị đánh thì khựng; chết thì rơi đồ, rồi sinh lại.
 - **HUD kiểu MU:** quả cầu máu và mana, thanh kinh nghiệm, thanh máu mục tiêu.
 - **Đồ rơi:** nằm dưới đất, nảy một vòng cung rồi nằm yên, đi qua thì nhặt.
+
+## Map Ardhaven — sửa thế nào
+
+Bố cục nằm ở **`scripts/ban_do_ardhaven.gd`**, chỉ là dữ liệu. Sửa số là map đổi, không cần đụng code:
+
+| Hằng | Việc |
+|---|---|
+| `THANH` | vị trí và cỡ thành (ô); viền tự thành tường, góc thành tháp |
+| `CONG` | những cạnh có cổng (`x+` `x-` `y+` `y-`); đường tự chạy từ cổng ra mép map |
+| `CONG_TRINH` | nhà, đài phun nước, đèn: `[tên, ô góc, xoay 0-3]` |
+| `NPC` | tên và chỗ đứng |
+| `SONG`, `HO` | đường sông (chuỗi điểm) và hồ; chỗ đường cắt sông tự thành cầu |
+| `VUNG_QUAI` | vòng khoảng cách quanh thành: cấp, số con, tên, màu |
+| `NGUONG_RUNG` | rừng dày hay thưa |
+
+**Tìm toạ độ ô:** chạy game, giữ **Alt**. Góc trái màn hình hiện ô dưới con trỏ và loại đất ở đó.
+
+**Trục ô:** x đi xuống-phải trên màn hình, y đi xuống-trái.
+
+Công trình to (nhà, cổng, đài phun nước) được **cắt thành dải dọc 16 px**. Mỗi dải xếp lớp theo mép trước của chân đế ngay dưới nó, nên người đứng trước mặt hông nhà thì đè lên nhà, đứng sau nhà thì bị che. `tests/chup_che.gd` chụp bốn tư thế này để kiểm.
 
 ## Chưa có (các mốc sau)
 
@@ -43,6 +65,7 @@ MMORPG pixel art lấy cảm hứng từ **MU Online**, có thêm lớp Axie. B�
 python3 godot/tools/sprites/render.py hiep_si    # Dark Knight
 python3 godot/tools/sprites/render.py bo_giap    # Bọ Giáp
 python3 godot/tools/sprites/render.py canh       # cây, đá
+python3 godot/tools/sprites/render.py thanh      # tường, tháp, cổng, nhà, đài phun nước, đèn
 python3 godot/tools/sprites/o_dat.py             # ô đất 64×32
 ```
 

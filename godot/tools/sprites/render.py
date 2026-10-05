@@ -117,8 +117,13 @@ def thap_nhat(ten=False):
 
 
 def main(ten):
+    global O
     rig.xoa_canh()
     mod = __import__(ten)
+    O = getattr(mod, 'O', 96)                    # công trình to cần ô to hơn nhân vật
+    # Nhân vật xoay theo 8 hướng màn hình. Công trình thì PHẢI thẳng lưới ô đất, nên chỉ xoay
+    # bội 90° (mô hình khai XOAY riêng; số hàng của bảng = số góc).
+    xoay = getattr(mod, 'XOAY', GOC_XOAY)
     J = mod.dung(None)
     cai_render()
     NEO = getattr(mod, 'NEO', NEO_MAC_DINH)
@@ -130,10 +135,10 @@ def main(ten):
     tmp = tempfile.mkdtemp()
     meta = {'o': O, 'neo': list(NEO), 'px_m': PX_M, 'huong': HUONG, 'trang_thai': {}}
     for tt, (n, giay, lap) in mod.TRANG_THAI.items():
-        bang = Image.new('RGBA', (O * n, O * 8), (0, 0, 0, 0))
+        bang = Image.new('RGBA', (O * n, O * len(xoay)), (0, 0, 0, 0))
         chan_meta = []
-        for d in range(8):
-            J['goc'].rotation_euler = (0, 0, GOC_XOAY[d])
+        for d in range(len(xoay)):
+            J['goc'].rotation_euler = (0, 0, xoay[d])
             dong = []
             for k in range(n):
                 chan = mod.dat_tu_the(J, tt, k, n)
@@ -160,7 +165,7 @@ def main(ten):
                 z_, ai_ = thap_nhat(True)
                 kq['thap'] = round(z_, 4)
                 if z_ < -0.005:
-                    print('  XUYÊN ĐẤT', tt, HUONG[d], k, ai_, round(z_, 3))
+                    print('  XUYÊN ĐẤT', tt, d, k, ai_, round(z_, 3))
                 dong.append(kq)
             chan_meta.append(dong)
         bang.save(os.path.join(ra, f'{tt}.png'), optimize=True)

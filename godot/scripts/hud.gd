@@ -57,5 +57,8 @@ func _draw() -> void:
 		draw_rect(Rect2(tx - 1, 5, tw + 2, 8), Color(0.1, 0.08, 0.08))
 		draw_rect(Rect2(tx, 6, tw * q.hp / q.hp_max, 6), Color(0.75, 0.15, 0.12))
 		draw_string(f, Vector2(tx, 22), "%s  Cấp %d" % [q.ten_hien, q.cap], HORIZONTAL_ALIGNMENT_CENTER, tw, 8, Color(1, 0.95, 0.85))
+	if Input.is_key_pressed(KEY_ALT) and nv.the_gioi:
+		var c := nv.the_gioi.o_cua(nv.get_global_mouse_position())
+		draw_string(f, Vector2(4, 12), "ô (%d, %d)  %s" % [c.x, c.y, nv.the_gioi.loai_o(c)], HORIZONTAL_ALIGNMENT_LEFT, -1, 8, Color(1, 1, 0.6))
 	if nv.chet:
 		draw_string(f, Vector2(0, h / 2.0), "Ngươi đã gục — hồi sinh ở thành sau 3 giây", HORIZONTAL_ALIGNMENT_CENTER, w, 8, Color(1, 0.7, 0.6))

@@ -32,13 +32,13 @@ func _chay() -> void:
 		if gan == null or nv.position.distance_to(q.position) < nv.position.distance_to(gan.position):
 			gan = q
 	nv.tan_cong(gan)
-	for i in 600:
+	for i in 3000:
 		await process_frame
 		if nv.trang_thai == "attack":
 			break
 	await _cho(4)
 	await _chup("2_danh")
-	for i in 900:
+	for i in 2000:
 		await process_frame
 		if gan.chet:
 			break

@@ -4,7 +4,6 @@ extends Node2D
 ## Điều khiển kiểu MU: bấm chuột trái vào đất để đi (giữ chuột thì đi theo con trỏ), bấm vào quái
 ## để đánh. Đồ rơi nằm dưới đất, đi qua là nhặt.
 
-const SO_QUAI := 14
 const HOI_QUAI := 8.0
 
 var the_gioi: TheGioi
@@ -23,7 +22,7 @@ func _ready() -> void:
 	nv = NhanVat.new()
 	nv.name = "NhanVat"
 	nv.the_gioi = the_gioi
-	nv.position = the_gioi.tam_o(Vector2i(24, 24))
+	nv.position = the_gioi.tam_o(the_gioi.tam_thanh + Vector2i(0, 2))
 	the_gioi.thuc_the.add_child(nv)
 	nv.da_chet.connect(_nv_chet)
 	cam = Camera2D.new()
@@ -39,27 +38,37 @@ func _ready() -> void:
 	hud = Hud.new()
 	hud.nv = nv
 	lop.add_child(hud)
+	_rai_quai()
+
+
+## Rải quái theo VÙNG khoảng cách từ thành (BanDoArdhaven.VUNG_QUAI): gần thành yếu, xa thành mạnh.
+func _rai_quai() -> void:
 	var r := RandomNumberGenerator.new()
 	r.seed = 7
-	var n := 0
-	while n < SO_QUAI:
-		var c := Vector2i(r.randi_range(4, 44), r.randi_range(4, 44))
-		var p := the_gioi.tam_o(c)
-		if not the_gioi.di_duoc(p) or the_gioi.vung_an_toan.grow(4).has_point(c):
-			continue
-		_sinh_quai(p, 1 + n % 3)
-		n += 1
+	for v in BanDoArdhaven.VUNG_QUAI:
+		var n := 0
+		var thu := 0
+		while n < v[4] and thu < 5000:
+			thu += 1
+			var c := Vector2i(r.randi_range(2, the_gioi.CO.x - 3), r.randi_range(2, the_gioi.CO.y - 3))
+			var kc := the_gioi.kc_thanh(c)
+			if kc < v[0] or kc >= v[1] or not the_gioi.di_duoc(the_gioi.tam_o(c)):
+				continue
+			_sinh_quai(the_gioi.tam_o(c), r.randi_range(v[2], v[3]), v[5], v[6])
+			n += 1
 
 
-func _sinh_quai(p: Vector2, cap: int) -> void:
+func _sinh_quai(p: Vector2, cap: int, ten := "Bọ Giáp", mau := Color.WHITE) -> void:
 	var q := Quai.new()
+	q.ten_hien = ten
+	q.modulate = mau
 	q.the_gioi = the_gioi
 	q.nguoi = nv
 	q.cap = cap
 	q.position = p
 	q.nha = p
-	q.exp_thuong = 10 + cap * 6
-	q.sat_thuong = Vector2(2 + cap, 4 + cap * 2)
+	q.exp_thuong = 10 + cap * 8
+	q.sat_thuong = Vector2(2 + cap * 1.6, 4 + cap * 2.4)
 	q.da_chet.connect(_quai_chet)
 	the_gioi.thuc_the.add_child(q)
 
@@ -71,7 +80,7 @@ func _quai_chet(q: Quai) -> void:
 		d.so_luong = randi_range(4, 10) * q.cap
 		d.position = q.position
 		the_gioi.thuc_the.add_child(d)
-	_cho_hoi.append([Time.get_ticks_msec() / 1000.0 + HOI_QUAI, q.nha, q.cap])
+	_cho_hoi.append([Time.get_ticks_msec() / 1000.0 + HOI_QUAI, q.nha, q.cap, q.ten_hien, q.modulate])
 	var t := create_tween()
 	t.tween_interval(1.5)
 	t.tween_property(q, "modulate:a", 0.0, 0.6)
@@ -80,14 +89,14 @@ func _quai_chet(q: Quai) -> void:
 
 func _nv_chet(_ai) -> void:
 	await get_tree().create_timer(3.0).timeout
-	nv.hoi_sinh(the_gioi.tam_o(Vector2i(24, 24)))
+	nv.hoi_sinh(the_gioi.tam_o(the_gioi.tam_thanh + Vector2i(0, 2)))
 
 
 func _process(dt: float) -> void:
 	var bay_gio := Time.get_ticks_msec() / 1000.0
 	for i in range(_cho_hoi.size() - 1, -1, -1):
 		if bay_gio >= _cho_hoi[i][0]:
-			_sinh_quai(_cho_hoi[i][1], _cho_hoi[i][2])
+			_sinh_quai(_cho_hoi[i][1], _cho_hoi[i][2], _cho_hoi[i][3], Color(_cho_hoi[i][4], 1.0))
 			_cho_hoi.remove_at(i)
 	if _giu_chuot:
 		_nhip_giu -= dt
