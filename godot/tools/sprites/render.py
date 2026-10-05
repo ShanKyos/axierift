@@ -28,10 +28,10 @@ HUONG = ['S', 'SW', 'W', 'NW', 'N', 'NE', 'E', 'SE']
 GOC_XOAY = [math.radians(-135 - 45 * d) for d in range(8)]   # mặt nhân vật (+Y) quay theo hướng màn hình
 
 
-def dung_camera(NEO):
+def dung_camera(NEO, px_m=None):
     cam_data = bpy.data.cameras.new('cam')
     cam_data.type = 'ORTHO'
-    cam_data.ortho_scale = O / PX_M
+    cam_data.ortho_scale = O / (px_m or PX_M)
     cam = bpy.data.objects.new('cam', cam_data)
     bpy.context.collection.objects.link(cam)
     cam.rotation_euler = (math.pi / 2 - GOC_NANG, 0, math.radians(45))
@@ -127,13 +127,14 @@ def main(ten):
     J = mod.dung(None)
     cai_render()
     NEO = getattr(mod, 'NEO', NEO_MAC_DINH)
-    cam = dung_camera(NEO)
+    px_m = getattr(mod, 'PX_M', PX_M)            # icon túi đồ phóng to hơn thước của thế giới
+    cam = dung_camera(NEO, px_m)
     sc = bpy.context.scene
     pal = bang_mau(bpy.data.materials)
     ra = os.path.join(os.path.dirname(__file__), '..', '..', 'assets', 'sprites', ten)
     os.makedirs(ra, exist_ok=True)
     tmp = tempfile.mkdtemp()
-    meta = {'o': O, 'neo': list(NEO), 'px_m': PX_M, 'huong': HUONG, 'trang_thai': {}}
+    meta = {'o': O, 'neo': list(NEO), 'px_m': px_m, 'huong': HUONG, 'trang_thai': {}}
     for tt, (n, giay, lap) in mod.TRANG_THAI.items():
         bang = Image.new('RGBA', (O * n, O * len(xoay)), (0, 0, 0, 0))
         chan_meta = []

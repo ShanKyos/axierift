@@ -25,17 +25,24 @@ LOAI = {
     'duong': [(120, 104, 84), (138, 120, 98), (156, 138, 112), (96, 82, 66)],   # đường lát đá ngoài thành
     'cau': [(112, 74, 42), (134, 92, 54), (152, 108, 64), (70, 44, 24)],         # ván cầu gỗ
     'cat': [(176, 158, 112), (190, 172, 124), (204, 188, 140), (160, 142, 100)],  # bờ cát quanh nước
+    'san_go': [(112, 76, 44), (128, 88, 52), (144, 100, 60), (78, 52, 30)],       # sàn ván trong nhà
+    'tham': [(120, 28, 30), (140, 36, 36), (156, 46, 42), (200, 160, 70)],        # thảm cửa: lối ra
 }
 TY_LE = {'co1': (.30, .40, .22, .08), 'co2': (.28, .42, .22, .08), 'co3': (.30, .40, .24, .06),
          'co4': (.34, .40, .20, .06), 'dat': (.25, .40, .25, .10), 'da_lat': (.20, .42, .30, .08),
          'nuoc': (.30, .40, .25, .05), 'duong': (.22, .44, .26, .08), 'cau': (.25, .45, .25, .05),
-         'cat': (.30, .40, .25, .05)}
+         'cat': (.30, .40, .25, .05), 'san_go': (.25, .45, .25, .05), 'tham': (.30, .45, .25, .0)}
 
 
 def trong_thoi(x, y):
     """Điểm (x,y) có nằm trong hình thoi 64×32 theo luật mép 2:1 không."""
     cx, cy = W / 2, H / 2
     return abs(x + 0.5 - cx) / (W / 2) + abs(y + 0.5 - cy) / (H / 2) <= 1.0
+
+
+def trong_thoi_le(x, y, le):
+    cx, cy = W / 2, H / 2
+    return abs(x + 0.5 - cx) / (W / 2 - le) + abs(y + 0.5 - cy) / (H / 2 - le / 2) <= 1.0
 
 
 def ve(ten, hat):
@@ -67,6 +74,10 @@ def ve(ten, hat):
                     c = pal[3]
             if ten == 'cau' and (x / 2 + y) % 6 < 1.0:          # khe giữa hai tấm ván
                 c = pal[3]
+            if ten == 'san_go' and ((x / 2 - y) % 8 < 1.0 or ((x / 2 + y) % 24 < 0.8 and (x / 2 - y) % 16 < 8)):
+                c = pal[3]                                   # khe ván + mạch nối so le
+            if ten == 'tham' and not trong_thoi_le(x, y, 6):
+                c = pal[3]                                   # viền vàng quanh thảm
             px[x, y] = (*c, 255)
     return im
 

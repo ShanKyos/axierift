@@ -57,6 +57,13 @@ func _draw() -> void:
 		draw_rect(Rect2(tx - 1, 5, tw + 2, 8), Color(0.1, 0.08, 0.08))
 		draw_rect(Rect2(tx, 6, tw * q.hp / q.hp_max, 6), Color(0.75, 0.15, 0.12))
 		draw_string(f, Vector2(tx, 22), "%s  Cấp %d" % [q.ten_hien, q.cap], HORIZONTAL_ALIGNMENT_CENTER, tw, 8, Color(1, 0.95, 0.85))
+	draw_string(f, Vector2(52, h - 25), "Q ×%d   W ×%d" % [nv.dem_do("binh_mau_nho") + nv.dem_do("binh_mau"),
+		nv.dem_do("binh_mana_nho") + nv.dem_do("binh_mana")], HORIZONTAL_ALIGNMENT_LEFT, -1, 8, Color(0.9, 0.85, 0.75))
+	if not nv.chieu_biet.is_empty():
+		draw_string(f, Vector2(52, h - 25), "Chuột phải: %s (%d mana)" % [VatPham.CHIEU["chem_xoay"]["ten"], VatPham.CHIEU["chem_xoay"]["mp"]],
+			HORIZONTAL_ALIGNMENT_RIGHT, w - 104, 8, Color(0.7, 0.85, 1))
+	if nv.the_gioi:
+		draw_string(f, Vector2(4, 24 if Input.is_key_pressed(KEY_ALT) else 12), nv.the_gioi.ten_map, HORIZONTAL_ALIGNMENT_LEFT, -1, 8, Color(1, 0.86, 0.5))
 	if Input.is_key_pressed(KEY_ALT) and nv.the_gioi:
 		var c := nv.the_gioi.o_cua(nv.get_global_mouse_position())
 		draw_string(f, Vector2(4, 12), "ô (%d, %d)  %s" % [c.x, c.y, nv.the_gioi.loai_o(c)], HORIZONTAL_ALIGNMENT_LEFT, -1, 8, Color(1, 1, 0.6))

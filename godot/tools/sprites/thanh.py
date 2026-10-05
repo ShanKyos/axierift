@@ -15,7 +15,7 @@ O = 256
 NEO = (128, 176)
 XOAY = [0.0, math.pi / 2, math.pi, 3 * math.pi / 2]
 TOC_DO, KHUNG_TRUNG = {}, {}
-CONG_TRINH = ['tuong', 'thap', 'cong', 'nha_a', 'nha_b', 'dai_phun', 'den']
+CONG_TRINH = ['tuong', 'thap', 'cong', 'nha_a', 'nha_b', 'dai_phun', 'den', 'nha_c', 'thap_phap']
 TRANG_THAI = {t: (1, 1.0, False) for t in CONG_TRINH}
 BAM_DAT = {}
 _G = {}
@@ -80,6 +80,34 @@ def dung(_):
     khoi('b_cua', b, (0.08, 0.9, 1.4), (bx / 2 + 0.02, 0, 0.7), M['vua'])
     mai_hai(b, 'b_mai', bx + 0.45, by + 0.45, 1.4, (0, 0, 2.0), M['mai_lam'])
 
+    # ── nhà C — quán rượu 4×3 ô: hai tầng, tầng trên khung gỗ chìa ra, biển treo ở cửa
+    q = khop('nha_c', goc); J['nha_c'] = q
+    cx, cy = 4 * S - 0.4, 3 * S - 0.4
+    khoi('q_tuong', q, (cx, cy, 2.0), (0, 0, 1.0), M['da'], vat=0.03)
+    khoi('q_tang2', q, (cx + 0.3, cy + 0.3, 1.4), (0, 0, 2.7), M['vua'], vat=0.02)
+    khoi('q_dam', q, (cx + 0.35, cy + 0.35, 0.16), (0, 0, 2.02), M['go'])
+    for x in (-1, -0.33, 0.33, 1):
+        khoi(f'q_kh{x}', q, (0.14, cy + 0.32, 1.4), (x * (cx + 0.3) / 2, 0, 2.7), M['go'])
+    khoi('q_cua', q, (1.0, 0.08, 1.5), (0, -cy / 2 - 0.02, 0.75), M['go'])
+    for x in (-1.6, 1.6):
+        khoi(f'q_so{x}', q, (0.7, 0.06, 0.55), (x, -cy / 2 - 0.02, 1.3), M['den'])
+        khoi(f'q_so2{x}', q, (0.6, 0.06, 0.5), (x, -cy / 2 - 0.17, 2.8), M['da2'])
+    khoi('q_bien_can', q, (0.06, 0.7, 0.06), (0.9, -cy / 2 - 0.35, 1.95), M['go'])
+    khoi('q_bien', q, (0.6, 0.05, 0.4), (0.9, -cy / 2 - 0.65, 1.68), M['vang'])
+    khoi('q_ong', q, (0.5, 0.5, 1.2), (cx / 2 - 0.6, cy / 4, 4.3), M['da2'])
+    mai_hai(q, 'q_mai', cx + 0.8, cy + 0.8, 1.5, (0, 0, 3.4), M['mai_do'], ngang=True)
+
+    # ── tháp pháp sư 2×2 ô: thân tròn, mái chóp lam, cửa vòm, ô cửa sáng
+    p = khop('thap_phap', goc); J['thap_phap'] = p
+    khoi('p_de', p, (2 * S - 0.1, 2 * S - 0.1, 0.4), (0, 0, 0.2), M['da2'], dang='cyl')
+    khoi('p_than', p, (2 * S - 0.4, 2 * S - 0.4, 3.6), (0, 0, 2.0), M['da'], dang='cyl')
+    khoi('p_vanh', p, (2 * S - 0.1, 2 * S - 0.1, 0.25), (0, 0, 3.85), M['da2'], dang='cyl')
+    khoi('p_cua', p, (0.8, 0.12, 1.4), (0, -(S - 0.18), 0.9), M['go'])
+    for z in (2.2, 3.2):
+        khoi(f'p_so{z}', p, (0.35, 0.12, 0.45), (0, -(S - 0.2), z), M['den'])
+    bpy_cone(p, 'p_mai', S * 1.08, 1.9, (0, 0, 4.9), M['mai_lam'], dinh=12)
+    khoi('p_ngoc', p, (0.25, 0.25, 0.25), (0, 0, 5.95), M['vang'], dang='sphere')
+
     # ── đài phun nước: 2×2 ô
     d = khop('dai_phun', goc); J['dai_phun'] = d
     khoi('d_be', d, (2 * S - 0.1, 2 * S - 0.1, 0.55), (0, 0, 0.275), M['da'], dang='cyl')
@@ -98,21 +126,23 @@ def dung(_):
     return J
 
 
-def bpy_cone(cha, ten, r, cao, vi_tri, mat):
+def bpy_cone(cha, ten, r, cao, vi_tri, mat, dinh=4):
     import bpy
-    bpy.ops.mesh.primitive_cone_add(vertices=4, radius1=r, depth=cao)
+    bpy.ops.mesh.primitive_cone_add(vertices=dinh, radius1=r, depth=cao)
     o = bpy.context.active_object
     o.name = ten
     o.location = vi_tri
-    o.rotation_euler = (0, 0, math.pi / 4)
+    o.rotation_euler = (0, 0, math.pi / 4 if dinh == 4 else 0)
     o.parent = cha
     o.data.materials.append(mat)
 
 
-def mai_hai(cha, ten, dai_x, dai_y, cao, vi_tri, mat):
-    """Mái hai mái: lăng trụ tam giác, sống mái chạy theo trục Y."""
+def mai_hai(cha, ten, dai_x, dai_y, cao, vi_tri, mat, ngang=False):
+    """Mái hai mái: lăng trụ tam giác, sống mái chạy theo trục Y (ngang=True: theo trục X)."""
     import bpy
     import bmesh
+    if ngang:
+        dai_x, dai_y = dai_y, dai_x
     me = bpy.data.meshes.new(ten)
     bm = bmesh.new()
     hx, hy = dai_x / 2, dai_y / 2
@@ -125,6 +155,8 @@ def mai_hai(cha, ten, dai_x, dai_y, cao, vi_tri, mat):
     o = bpy.data.objects.new(ten, me)
     bpy.context.collection.objects.link(o)
     o.location = vi_tri
+    if ngang:
+        o.rotation_euler = (0, 0, math.pi / 2)
     o.parent = cha
     o.data.materials.append(mat)
 

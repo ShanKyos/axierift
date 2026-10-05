@@ -2,14 +2,24 @@ class_name TheGioi
 extends Node2D
 ## Một bản đồ: nền ô isometric, vật cản, tìm đường, và lớp thực thể xếp theo chiều sâu.
 ##
-## Bố cục đọc từ `BanDoArdhaven` (tệp dữ liệu, sửa số là map đổi). Mọi ngẫu nhiên đều theo HẠT
-## CỐ ĐỊNH — vào lại map là đúng map cũ, người chơi học thuộc được địa hình.
+## Hai kiểu: NGOÀI TRỜI (bố cục đọc từ `BanDoArdhaven`) và TRONG NHÀ (đặt `nha` = khoá trong
+## `NoiThat.NHA` trước khi add_child). Mọi ngẫu nhiên đều theo HẠT CỐ ĐỊNH — vào lại map là đúng
+## map cũ, người chơi học thuộc được địa hình.
 
 const O_DAT := Vector2i(64, 32)
 const DAI := 16                       # bề ngang một dải khi cắt công trình to (px)
 const BD := preload("res://scripts/ban_do_ardhaven.gd")
+const NT := preload("res://scripts/noi_that.gd")
+## Cỡ chân đế (ô) khi xoay 0. Xoay 1/3 thì đổi rộng ↔ sâu. Không có tên ở đây = 1×1.
+const KICH := {"nha_a": Vector2i(3, 3), "nha_b": Vector2i(2, 3), "nha_c": Vector2i(4, 3),
+	"thap_phap": Vector2i(2, 2), "dai_phun": Vector2i(2, 2), "quay": Vector2i(2, 1), "sap_cho": Vector2i(2, 1)}
+## Mặt có cửa khi xoay 0, theo trục Ô (x+ xuống-phải, y+ xuống-trái).
+const MAT_CUA := {"nha_a": Vector2i(0, 1), "nha_c": Vector2i(0, 1), "thap_phap": Vector2i(0, 1), "nha_b": Vector2i(1, 0)}
+const BO_THANH := ["tuong", "thap", "cong", "nha_a", "nha_b", "nha_c", "thap_phap", "dai_phun", "den"]
 
-const CO := BD.CO
+var nha := ""                         # rỗng = ngoài trời; khác rỗng = trong nhà (khoá NoiThat.NHA)
+var CO: Vector2i = BD.CO
+var ten_map := "Ardhaven"
 var nen: TileMapLayer
 var thuc_the: Node2D                  # cha của mọi thứ đứng trên đất, tự xếp theo y
 var astar := AStarGrid2D.new()
@@ -18,17 +28,21 @@ var vung_an_toan: Rect2i
 var tam_thanh: Vector2i
 var _loai: Array = []
 var _o_loai := {}                     # Vector2i → tên loại ô
-var _bo_thanh: SpriteBo
+var cua := []                         # cửa nhà ngoài trời: {nha, chan: Rect2i, o_vao, o_ngoai, ten}
+var o_ra := Vector2i(-1, -1)          # trong nhà: ô thảm cửa — bước lên là ra
+var o_vao := Vector2i.ZERO            # trong nhà: chỗ hiện ra khi vừa bước vào
 
 
 func _ready() -> void:
-	vung_an_toan = BD.THANH
-	tam_thanh = BD.THANH.position + BD.THANH.size / 2
-	_bo_thanh = SpriteBo.tai("thanh")
 	_dung_lop()
-	_ve_dia_hinh()
-	_dung_thanh()
-	_rai_rung()
+	if nha != "":
+		_dung_noi_that()
+	else:
+		vung_an_toan = BD.THANH
+		tam_thanh = BD.THANH.position + BD.THANH.size / 2
+		_ve_dia_hinh()
+		_dung_thanh()
+		_rai_rung()
 	_ghi_nen()
 	_dung_astar()
 
@@ -96,10 +110,15 @@ func _ve_dia_hinh() -> void:
 			while p.x >= 0 and p.y >= 0 and p.x < CO.x and p.y < CO.y:
 				_o_loai[p] = "cau" if _o_loai[p] == "nuoc" or _o_loai[p] == "cau" else "duong"
 				p += huong
-	# trong thành: đá lát
+	# trong thành: đá lát, hai đại lộ chữ thập nối bốn cổng, quảng trường tròn ở giữa
+	var gx := BD.THANH.position.x + BD.THANH.size.x / 2 - 1
+	var gy := BD.THANH.position.y + BD.THANH.size.y / 2 - 1
+	var tam_qt := Vector2(gx + 0.5, gy + 0.5)
 	for y in range(BD.THANH.position.y, BD.THANH.end.y):
 		for x in range(BD.THANH.position.x, BD.THANH.end.x):
-			_o_loai[Vector2i(x, y)] = "da_lat"
+			var dai_lo := x == gx or x == gx + 1 or y == gy or y == gy + 1
+			var qt := Vector2(x, y).distance_to(tam_qt) <= BD.QUANG_TRUONG
+			_o_loai[Vector2i(x, y)] = "duong" if dai_lo and not qt else "da_lat"
 	for c in _o_loai:
 		if _o_loai[c] == "nuoc":
 			dac[c] = true
@@ -163,12 +182,60 @@ func _dung_thanh() -> void:
 		_dat("cong", o[0], Vector2i(2, 1) if dai_x else Vector2i(1, 2), 0 if dai_x else 1, false)
 	for ct in BD.CONG_TRINH:
 		var ten: String = ct[0]
-		var co := {"nha_a": Vector2i(3, 3), "nha_b": Vector2i(2, 3), "dai_phun": Vector2i(2, 2), "den": Vector2i.ONE}[ten] as Vector2i
-		if ct[2] % 2 == 1:
-			co = Vector2i(co.y, co.x)
+		var co := kich(ten, ct[2])
 		_dat(ten, ct[1], co, ct[2])
+		if ct.size() > 3:
+			_dat_cua(ct[3], ten, ct[1], co, ct[2])
+	var cay: Texture2D = load("res://assets/sprites/canh/cay.png")
+	for i in BD.CAY.size():
+		_dat_cay(cay, BD.CAY[i], i % 8)
 	for npc in BD.NPC:
-		_dat_npc(npc[0], npc[1])
+		dat_npc(npc[0], npc[1], npc[2], npc[3], npc[4])
+
+
+static func kich(ten: String, xoay: int) -> Vector2i:
+	var co: Vector2i = KICH.get(ten, Vector2i.ONE)
+	return Vector2i(co.y, co.x) if xoay % 2 == 1 else co
+
+
+## Hướng cửa (trục ô) của một công trình sau khi xoay `xoay` lần 90°.
+static func huong_cua(ten: String, xoay: int) -> Vector2i:
+	var d: Vector2i = MAT_CUA.get(ten, Vector2i(0, 1))
+	for i in xoay:
+		d = Vector2i(d.y, -d.x)       # xoay 90° ngược chiều kim đồng hồ trong hệ thế giới = (x,y)→(y,−x) trên trục ô
+	return d
+
+
+## Cửa một nhà vào được: ô chân đế ngay sau cánh cửa thành ô ĐI ĐƯỢC — bước vào đó là vào nhà.
+## Ra nhà thì hiện ở ô ngay trước cửa (không phải ô cửa), nên không bị hút vào lại.
+func _dat_cua(nha_id: String, ten: String, goc: Vector2i, co: Vector2i, xoay: int) -> void:
+	var d := huong_cua(ten, xoay)
+	var cuoi := goc + co - Vector2i.ONE
+	var vao: Vector2i
+	if d.y != 0:
+		vao = Vector2i(goc.x + co.x / 2, cuoi.y if d.y > 0 else goc.y)
+	else:
+		vao = Vector2i(cuoi.x if d.x > 0 else goc.x, goc.y + co.y / 2)
+	dac.erase(vao)
+	cua.append({"nha": nha_id, "chan": Rect2i(goc, co), "o_vao": vao, "o_ngoai": vao + d,
+		"ten": NT.NHA[nha_id]["ten"]})
+
+
+## Cửa nào có điểm màn hình `p` nằm trên hình ngôi nhà (chân đế hoặc tường/mái phía trên nó).
+func cua_tai(p: Vector2) -> Dictionary:
+	for k in 7:
+		var c := o_cua(p + Vector2(0, k * 16))
+		for cu in cua:
+			if (cu["chan"] as Rect2i).has_point(c):
+				return cu
+	return {}
+
+
+func cua_o(c: Vector2i) -> Dictionary:
+	for cu in cua:
+		if cu["o_vao"] == c:
+			return cu
+	return {}
 
 
 ## Đặt một công trình chiếm khối ô [goc, goc+co). Công trình to được CẮT DẢI DỌC, mỗi dải xếp lớp
@@ -176,9 +243,11 @@ func _dung_thanh() -> void:
 func _dat(ten: String, goc: Vector2i, co: Vector2i, xoay: int, chan := true) -> void:
 	var cuoi := goc + co - Vector2i.ONE
 	var tam := (nen.map_to_local(goc) + nen.map_to_local(cuoi)) / 2.0
-	var tex: Texture2D = load("res://assets/sprites/thanh/%s.png" % ten)
-	var o := _bo_thanh.o
-	var neo := _bo_thanh.neo
+	var bo_ten := "thanh" if ten in BO_THANH else "do_vat"
+	var bo := SpriteBo.tai(bo_ten)
+	var tex: Texture2D = load("res://assets/sprites/%s/%s.png" % [bo_ten, ten])
+	var o := bo.o
+	var neo := bo.neo
 	var trai := nen.map_to_local(Vector2i(goc.x, cuoi.y)) + Vector2(-32, 0)
 	var phai := nen.map_to_local(Vector2i(cuoi.x, goc.y)) + Vector2(32, 0)
 	var day := nen.map_to_local(cuoi) + Vector2(0, 16)
@@ -213,24 +282,60 @@ func _mep_truoc(x: float, trai: Vector2, day: Vector2, phai: Vector2) -> float:
 	return lerpf(day.y, phai.y, (x - day.x) / maxf(1.0, phai.x - day.x))
 
 
-func _dat_npc(ten: String, c: Vector2i) -> void:
-	var t := ThanThe.new()
-	t.ten_bo = "hiep_si"
+func dat_npc(ten: String, c: Vector2i, bo: String, vai: String, lang_thang := false, huong_nhin := 0) -> Npc:
+	var t := Npc.new()
+	t.ten_bo = bo
+	t.ten_hien = ten
+	t.vai = vai
+	t.lang_thang = lang_thang
+	t.the_gioi = self
 	t.position = nen.map_to_local(c)
-	t.modulate = Color(0.75, 0.9, 1.2)
-	t.name = "NPC_" + ten
+	t.huong = huong_nhin
+	if bo == "hiep_si":
+		t.modulate = Color(0.75, 0.9, 1.2)
+	t.name = "NPC_%s_%d_%d" % [ten, c.x, c.y]
 	thuc_the.add_child(t)
-	var l := Label.new()
-	l.text = ten
-	l.add_theme_font_size_override("font_size", 8)
-	l.add_theme_color_override("font_color", Color(0.75, 1, 0.75))
-	l.add_theme_color_override("font_outline_color", Color(0.05, 0.08, 0.05))
-	l.add_theme_constant_override("outline_size", 2)
-	l.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	l.size = Vector2(90, 10)
-	l.position = Vector2(-45, -70)
-	t.add_child(l)
+	if not lang_thang:
+		dac[c] = true
+	return t
+
+
+func _dat_cay(cay: Texture2D, c: Vector2i, bien_the: int) -> void:
+	var s := Sprite2D.new()
+	var at := AtlasTexture.new()
+	at.atlas = cay
+	at.region = Rect2(0, bien_the * 96, 96, 96)
+	s.texture = at
+	s.offset = Vector2(48, 48) - Vector2(48, 88)
+	s.position = nen.map_to_local(c)
+	thuc_the.add_child(s)
 	dac[c] = true
+
+
+# ── trong nhà ───────────────────────────────────────────────────────────────
+func _dung_noi_that() -> void:
+	var d: Dictionary = NT.NHA[nha]
+	var rong: int = d["rong"]
+	var sau: int = d["sau"]
+	ten_map = d["ten"]
+	CO = Vector2i(rong + 1, sau + 1)
+	vung_an_toan = Rect2i(Vector2i.ZERO, CO)
+	tam_thanh = CO / 2
+	o_ra = d["cua"]
+	o_vao = d["vao"]
+	for y in CO.y:
+		for x in CO.x:
+			_o_loai[Vector2i(x, y)] = "san_go"
+	_o_loai[o_ra] = "tham"
+	_dat("cot_goc", Vector2i.ZERO, Vector2i.ONE, 0)
+	for x in range(1, rong + 1):
+		_dat("tuong_so" if x in d["so"] else "tuong_trong", Vector2i(x, 0), Vector2i.ONE, 0)
+	for y in range(1, sau + 1):
+		_dat("tuong_trong", Vector2i(0, y), Vector2i.ONE, 1)
+	for dv in d["do"]:
+		_dat(dv[0], dv[1], kich(dv[0], dv[2]), dv[2])
+	for n in d["npc"]:
+		dat_npc(n[0], n[1], n[2], n[3], false, n[4])
 
 
 # ── rừng & đá ngoài thành ───────────────────────────────────────────────────
