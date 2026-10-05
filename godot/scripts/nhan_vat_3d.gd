@@ -50,6 +50,7 @@ func _ready() -> void:
 		ap.get_animation(HOAT[k]).loop_mode = Animation.LOOP_LINEAR
 	for m: MeshInstance3D in mo_hinh.find_children("*", "MeshInstance3D", true, false):
 		m.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_ON
+		m.layers = 2                         # lớp vẽ 2: camera chụp bản đồ Tab không chụp nhân vật
 	if _toc_do.is_empty():
 		_toc_do["di"] = do_toc_do(HOAT["di"])
 		_toc_do["chay"] = do_toc_do(HOAT["chay"])

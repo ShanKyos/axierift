@@ -1,9 +1,10 @@
 extends Node3D
-## Mốc 3D-0: sân thử, một Dark Knight, camera kiểu MU, ánh sáng và bóng đổ.
-## Chuột trái lên đất: đi tới (giữ chuột: đi theo con trỏ). Chuột trái lên cọc tập: chạy tới chém.
-## Con lăn: kéo gần / đẩy xa camera.
+## Mốc 3D-1: Ardhaven 3D, một Dark Knight, camera kiểu MU, bản đồ Tab.
+## Chuột trái lên đất: đi tới (giữ chuột: đi theo con trỏ). Chuột trái lên bia tập: chạy tới chém.
+## Con lăn: kéo gần / đẩy xa camera. Tab: bản đồ tổng quan — bấm lên đó để chạy tới.
 
-var san: SanThu
+var tg: TheGioi3D
+var ban_do: BanDoTab
 var nv: NhanVat3D
 var cam: CameraMU
 var _giu := false
@@ -12,10 +13,10 @@ var _nhip := 0.0
 
 func _ready() -> void:
 	_dung_moi_truong()
-	san = SanThu.new()
-	add_child(san)
+	tg = TheGioi3D.new()
+	add_child(tg)
 	nv = NhanVat3D.new()
-	nv.position = Vector3(0, 0, 4)
+	nv.position = Ardhaven3D.XUAT_PHAT
 	add_child(nv)
 	nv.ra_don.connect(_trung_don)
 	cam = CameraMU.new()
@@ -23,7 +24,7 @@ func _ready() -> void:
 	add_child(cam)
 	cam.make_current()
 	var huong := Label.new()
-	huong.text = "Chuột trái: đi / chém cọc tập · giữ chuột: đi theo con trỏ · con lăn: gần / xa"
+	huong.text = "Chuột trái: đi / chém bia tập · giữ chuột: đi theo con trỏ · con lăn: gần / xa · Tab: bản đồ"
 	huong.position = Vector2(12, 10)
 	huong.add_theme_font_size_override("font_size", 16)
 	huong.add_theme_color_override("font_outline_color", Color(0, 0, 0))
@@ -31,6 +32,10 @@ func _ready() -> void:
 	var lop := CanvasLayer.new()
 	add_child(lop)
 	lop.add_child(huong)
+	ban_do = BanDoTab.new(tg, nv)
+	add_child(ban_do)
+	ban_do.bam_dat.connect(di_toi)
+	ban_do.chup.call_deferred()
 
 
 func _dung_moi_truong() -> void:
@@ -70,7 +75,7 @@ func _dung_moi_truong() -> void:
 	mt.light_color = Color(1.0, 0.86, 0.7)
 	mt.light_energy = 1.05
 	mt.shadow_enabled = true
-	mt.directional_shadow_max_distance = 60.0
+	mt.directional_shadow_max_distance = 70.0
 	mt.shadow_blur = 1.2
 	add_child(mt)
 
@@ -88,7 +93,7 @@ func diem_dat(man: Vector2) -> Variant:
 func muc_tieu_tai(man: Vector2) -> Node3D:
 	var tot: Node3D = null
 	var kc_tot := 48.0                                   # px trên màn
-	for m in san.muc_tieu_thu:
+	for m in tg.muc_tieu_thu:
 		var p := cam.unproject_position(m.global_position + Vector3(0, 0.5, 0))
 		var kc := p.distance_to(man)
 		if kc < kc_tot:
@@ -107,7 +112,11 @@ func _bam(man: Vector2, chon: bool) -> void:
 	var p = diem_dat(man)
 	if p == null:
 		return
-	nv.di_toi(san.tim_duong(nv.global_position, p))
+	di_toi(p)
+
+
+func di_toi(p: Vector3) -> void:
+	nv.di_toi(tg.tim_duong(nv.global_position, p))
 
 
 func _trung_don(m: Node3D) -> void:
@@ -141,6 +150,15 @@ func _process(dt: float) -> void:
 
 
 func _unhandled_input(e: InputEvent) -> void:
+	if e is InputEventKey and e.pressed and not e.echo:
+		if e.keycode == KEY_TAB:
+			ban_do.bat_tat()
+			_giu = false
+			get_viewport().set_input_as_handled()
+			return
+		if e.keycode == KEY_ESCAPE and ban_do.visible:
+			ban_do.bat_tat(false)
+			return
 	if e is InputEventMouseButton and e.button_index == MOUSE_BUTTON_LEFT:
 		_giu = e.pressed
 		if e.pressed:

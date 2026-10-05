@@ -1,6 +1,7 @@
 extends SceneTree
-## CỔNG LỐI CHƠI 3D-0: bấm đất thì đi tới đúng chỗ bấm · đường đi không xuyên vật cản · bấm cọc tập
-## thì chạy tới chém và nhát chém trúng · camera bám nhân vật.
+## CỔNG LỐI CHƠI 3D-0 (chạy trên Ardhaven 3D từ mốc 3D-1): bấm đất thì đi tới đúng chỗ bấm · đường
+## đi không xuyên vật cản (giếng quảng trường) · bấm bia tập thì chạy tới chém và nhát chém trúng ·
+## camera bám nhân vật.
 ##
 ##     godot --headless --path godot -s tests/test_3d0.gd      (thoát 1 nếu đỏ)
 ##
@@ -38,7 +39,7 @@ func _chay() -> void:
 	for i in 3:
 		await process_frame
 	var nv: NhanVat3D = main.nv
-	var san: SanThu = main.san
+	var san: TheGioi3D = main.tg
 	var cam: CameraMU = main.cam
 	nv.set_process(false)
 	cam.set_process(false)
@@ -46,19 +47,20 @@ func _chay() -> void:
 	cam.bam_ngay()
 
 	# ① bấm một điểm đất trên màn ⇒ nhân vật tới đúng điểm đó (sai số < 0,3 m)
-	var dich := Vector3(-3.5, 0, 6.0)
+	var dich := nv.global_position + Vector3(3.0, 0, 3.0)
 	var man := cam.unproject_position(dich)
 	main._bam(man, true)
 	var toi := _buoc(900, func(): return nv.duong.is_empty())
 	var lech := Vector2(nv.global_position.x - dich.x, nv.global_position.z - dich.z).length()
 	_ok(toi and lech < 0.3, "bấm đất: tới đúng chỗ bấm (lệch %.2f m)" % lech)
 
-	# ② đường đi vòng cột. ⚠ Đo bằng HỘP BAO THẬT của mô hình cột, không đo bằng lưới đi bộ của game:
-	# hỏi lại chính lưới thì lưới hỏng là cả game lẫn que dò cùng hỏng, bài vẫn xanh (đã thử ngược).
-	var ab: AABB = san._hop(san.cot[0])
+	# ② đường đi vòng giếng quảng trường. ⚠ Đo bằng HỘP BAO THẬT của mô hình, không đo bằng lưới đi
+	# bộ của game: hỏi lại chính lưới thì lưới hỏng là cả game lẫn que dò cùng hỏng, bài vẫn xanh.
+	var ab: AABB = san.hop(san.vat_can_thu)
 	var tam_cot := ab.get_center()
-	nv.global_position = Vector3(tam_cot.x, 0, tam_cot.z - 3.0)
-	nv.di_toi(san.tim_duong(nv.global_position, Vector3(tam_cot.x, 0, tam_cot.z + 3.0)))
+	var cach := ab.size.z * 0.5 + 2.0
+	nv.global_position = Vector3(tam_cot.x, 0, tam_cot.z - cach)
+	nv.di_toi(san.tim_duong(nv.global_position, Vector3(tam_cot.x, 0, tam_cot.z + cach)))
 	# ⚠ đếm vào MẢNG: lambda GDScript chép biến cục bộ THEO GIÁ TRỊ, nên `xuyen += 1` trong lambda không
 	# bao giờ đổi biến ngoài — bộ đếm luôn ra 0 và mệnh đề xanh vĩnh viễn (thử ngược đã lộ ra)
 	var dem := [0]
@@ -68,10 +70,10 @@ func _chay() -> void:
 			dem[0] += 1
 		return nv.duong.is_empty())
 	var xuyen: int = dem[0]
-	_ok(xuyen == 0 and Vector2(nv.global_position.x - tam_cot.x, nv.global_position.z - tam_cot.z - 3.0).length() < 0.3,
-		"đi vòng cột: tới nơi mà không lọt vào hộp bao của cột (%d nhịp trong cột)" % xuyen)
+	_ok(xuyen == 0 and Vector2(nv.global_position.x - tam_cot.x, nv.global_position.z - tam_cot.z - cach).length() < 0.3,
+		"đi vòng giếng: tới nơi mà không lọt vào hộp bao của giếng (%d nhịp trong giếng)" % xuyen)
 
-	# ③ bấm cọc tập trên màn ⇒ chạy tới, chém, nhát chém trúng đúng cọc
+	# ③ bấm bia tập trên màn ⇒ chạy tới, chém, nhát chém trúng đúng cọc
 	var coc: Node3D = san.muc_tieu_thu[0]
 	nv.global_position = coc.global_position + Vector3(4, 0, 4)
 	cam.bam_ngay()
@@ -91,7 +93,7 @@ func _chay() -> void:
 	# ④ camera bám: sau khi chạy xa, nhân vật nằm gần giữa màn VÀ camera giữ nguyên góc + tầm xa.
 	# ⚠ Chỉ đo "nằm giữa màn" thì mù: camera đứng yên mà xoay đầu nhìn theo cũng ra giữa màn (đã thử ngược).
 	nv.muc_tieu = null
-	nv.di_toi(san.tim_duong(nv.global_position, Vector3(8, 0, 8)))
+	nv.di_toi(san.tim_duong(nv.global_position, Ardhaven3D.XUAT_PHAT))
 	_buoc(900, func(): return nv.duong.is_empty())
 	_buoc(120)
 	var p := cam.unproject_position(nv.global_position + Vector3(0, 1, 0))
