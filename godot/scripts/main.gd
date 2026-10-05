@@ -1,165 +1,264 @@
-extends Node3D
-## Mốc 3D-1: Ardhaven 3D, một Dark Knight, camera kiểu MU, bản đồ Tab.
-## Chuột trái lên đất: đi tới (giữ chuột: đi theo con trỏ). Chuột trái lên bia tập: chạy tới chém.
-## Con lăn: kéo gần / đẩy xa camera. Tab: bản đồ tổng quan — bấm lên đó để chạy tới.
+extends Node2D
+## Cảnh chính: Ardhaven + các phòng trong nhà, một Dark Knight, đàn Bọ Giáp. Chơi một mình — mạng
+## là mốc sau.
+##
+## Điều khiển kiểu MU: chuột trái vào đất để đi (giữ thì đi theo con trỏ), vào quái để đánh, vào
+## NPC để nói chuyện, vào ngôi nhà có cửa để đi vào. Chuột phải hoặc phím 1: tung chiêu. Q / W: uống máu / mana.
+## I: túi đồ · P: chọn Axie đi theo · M: bật/tắt radar (bấm lên radar là đi tới đó) · Esc: đóng bảng.
+##
+## Vào nhà KHÔNG phá thế giới ngoài trời: nó chỉ bị ẩn và đóng băng (quái đứng nguyên chỗ, đồ dưới
+## đất còn nguyên), nhân vật dời sang phòng. Ra nhà là thả lại đúng chỗ trước cửa.
 
-var tg: TheGioi3D
-var ban_do: BanDoTab
-var nv: NhanVat3D
-var cam: CameraMU
-var _giu := false
-var _nhip := 0.0
+const HOI_QUAI := 8.0
+
+var ngoai: TheGioi                     # thế giới ngoài trời, sống suốt phiên
+var the_gioi: TheGioi                  # thế giới đang đứng (ngoài trời hoặc một phòng)
+var nv: NhanVat
+var pet: PetAxie
+var hud: Hud
+var gd: GiaoDien
+var cam: Camera2D
+var _giu_chuot := false
+var _nhip_giu := 0.0
+var _cho_hoi := []           # [thời điểm, vị trí nhà, cấp, tên, màu]
+var _cua_ra := {}            # cửa vừa đi vào (để ra đúng chỗ)
+var _cho_cua := false        # đã bấm vào nhà: tới ô cửa thì vào
+var _he_dat := ""            # hệ của đất vừa đứng — đổi vòng quái thì báo một lần
 
 
 func _ready() -> void:
-	_dung_moi_truong()
-	tg = TheGioi3D.new()
-	add_child(tg)
-	nv = NhanVat3D.new()
-	nv.position = Ardhaven3D.XUAT_PHAT
-	add_child(nv)
-	nv.ra_don.connect(_trung_don)
-	cam = CameraMU.new()
-	cam.muc_tieu = nv
-	add_child(cam)
+	RenderingServer.set_default_clear_color(Color(0.02, 0.02, 0.03))
+	ngoai = TheGioi.new()
+	ngoai.name = "Ngoai"
+	add_child(ngoai)
+	the_gioi = ngoai
+	nv = NhanVat.new()
+	nv.name = "NhanVat"
+	nv.the_gioi = ngoai
+	nv.position = ngoai.tam_o(ngoai.tam_thanh + Vector2i(0, 3))
+	ngoai.thuc_the.add_child(nv)
+	nv.da_chet.connect(_nv_chet)
+	nv.toi_npc.connect(func(n): gd.mo_thoai(n))
+	pet = PetAxie.new()
+	pet.name = "PetAxie"
+	pet.chu = nv
+	pet.id = nv.axie
+	ngoai.thuc_the.add_child(pet)
+	pet.bam_ngay()
+	nv.bi_danh.connect(pet.giat)
+	nv.tung.connect(pet.gong)
+	cam = Camera2D.new()
+	nv.add_child(cam)
 	cam.make_current()
-	var huong := Label.new()
-	huong.text = "Chuột trái: đi / chém bia tập · giữ chuột: đi theo con trỏ · con lăn: gần / xa · Tab: bản đồ"
-	huong.position = Vector2(12, 10)
-	huong.add_theme_font_size_override("font_size", 16)
-	huong.add_theme_color_override("font_outline_color", Color(0, 0, 0))
-	huong.add_theme_constant_override("outline_size", 4)
+	_dat_gioi_han_cam()
 	var lop := CanvasLayer.new()
 	add_child(lop)
-	lop.add_child(huong)
-	ban_do = BanDoTab.new(tg, nv)
-	add_child(ban_do)
-	ban_do.bam_dat.connect(di_toi)
-	ban_do.chup.call_deferred()
+	hud = Hud.new()
+	lop.add_child(hud)
+	gd = GiaoDien.new()
+	gd.nv = nv
+	gd.pet = pet
+	lop.add_child(gd)
+	hud.dat(nv, pet, gd)
+	hud.bam_di.connect(func(p): nv.di_toi(p))
+	nv.nhat_ky.connect(hud.ghi)
+	_rai_quai()
 
 
-func _dung_moi_truong() -> void:
-	var env := Environment.new()
-	var troi := ProceduralSkyMaterial.new()
-	troi.sky_top_color = Color(0.18, 0.24, 0.38)
-	troi.sky_horizon_color = Color(0.55, 0.52, 0.5)
-	troi.ground_bottom_color = Color(0.1, 0.09, 0.08)
-	troi.ground_horizon_color = Color(0.4, 0.36, 0.32)
-	var sky := Sky.new()
-	sky.sky_material = troi
-	env.background_mode = Environment.BG_SKY
-	env.sky = sky
-	env.ambient_light_source = Environment.AMBIENT_SOURCE_SKY
-	env.ambient_light_energy = 0.32
-	env.tonemap_mode = Environment.TONE_MAPPER_ACES
-	env.tonemap_exposure = 1.0
-	env.ssao_enabled = true
-	env.ssao_radius = 1.2
-	env.ssao_intensity = 1.6
-	env.glow_enabled = true
-	env.glow_intensity = 0.5
-	env.glow_bloom = 0.05
-	env.adjustment_enabled = true
-	env.adjustment_saturation = 0.92
-	env.adjustment_contrast = 1.12
-	env.adjustment_brightness = 0.92
-	env.fog_enabled = true                                # sương mỏng ở xa: đọc ra chiều sâu, kiểu MU
-	env.fog_light_color = Color(0.32, 0.33, 0.38)
-	env.fog_density = 0.012
-	env.fog_sky_affect = 0.0
-	var we := WorldEnvironment.new()
-	we.environment = env
-	add_child(we)
-	var mt := DirectionalLight3D.new()
-	mt.rotation_degrees = Vector3(-42, -30, 0)          # nắng chiều xiên: bóng dài, mặt đá có khối
-	mt.light_color = Color(1.0, 0.86, 0.7)
-	mt.light_energy = 1.05
-	mt.shadow_enabled = true
-	mt.directional_shadow_max_distance = 70.0
-	mt.shadow_blur = 1.2
-	add_child(mt)
+func _dat_gioi_han_cam() -> void:
+	if the_gioi == ngoai:
+		var gh := the_gioi.gioi_han_man()
+		cam.limit_left = int(gh.position.x)
+		cam.limit_top = int(gh.position.y)
+		cam.limit_right = int(gh.end.x)
+		cam.limit_bottom = int(gh.end.y)
+	else:
+		cam.limit_left = -100000
+		cam.limit_top = -100000
+		cam.limit_right = 100000
+		cam.limit_bottom = 100000
+	cam.reset_smoothing()
 
 
-## Điểm trên mặt đất (y = 0) dưới con trỏ.
-func diem_dat(man: Vector2) -> Variant:
-	var o := cam.project_ray_origin(man)
-	var h := cam.project_ray_normal(man)
-	if absf(h.y) < 0.0001:
-		return null
-	var t := -o.y / h.y
-	return o + h * t if t > 0 else null
+## Rải quái theo VÙNG khoảng cách từ thành (BanDoArdhaven.VUNG_QUAI): gần thành yếu, xa thành mạnh.
+func _rai_quai() -> void:
+	var r := RandomNumberGenerator.new()
+	r.seed = 7
+	for v in BanDoArdhaven.VUNG_QUAI:
+		var n := 0
+		var thu := 0
+		while n < v[4] and thu < 5000:
+			thu += 1
+			var c := Vector2i(r.randi_range(2, ngoai.CO.x - 3), r.randi_range(2, ngoai.CO.y - 3))
+			var kc := ngoai.kc_thanh(c)
+			if kc < v[0] or kc >= v[1] or not ngoai.di_duoc(ngoai.tam_o(c)):
+				continue
+			_sinh_quai(ngoai.tam_o(c), r.randi_range(v[2], v[3]), v[5], v[6], v[7])
+			n += 1
 
 
-func muc_tieu_tai(man: Vector2) -> Node3D:
-	var tot: Node3D = null
-	var kc_tot := 48.0                                   # px trên màn
-	for m in tg.muc_tieu_thu:
-		var p := cam.unproject_position(m.global_position + Vector3(0, 0.5, 0))
-		var kc := p.distance_to(man)
-		if kc < kc_tot:
-			kc_tot = kc
-			tot = m
-	return tot
+func _sinh_quai(p: Vector2, cap: int, ten := "Bọ Giáp", mau := Color.WHITE, he := "Bug") -> void:
+	var q := Quai.new()
+	q.ten_hien = ten
+	q.he = he
+	q.modulate = mau
+	q.the_gioi = ngoai
+	q.nguoi = nv
+	q.cap = cap
+	q.position = p
+	q.nha = p
+	q.exp_thuong = 10 + cap * 8
+	q.sat_thuong = Vector2(2 + cap * 1.6, 4 + cap * 2.4)
+	q.da_chet.connect(_quai_chet)
+	ngoai.thuc_the.add_child(q)
 
 
-func _bam(man: Vector2, chon: bool) -> void:
-	if chon:
-		var m := muc_tieu_tai(man)
-		if m:
-			nv.danh(m)
-			_giu = false
-			return
-	var p = diem_dat(man)
-	if p == null:
-		return
-	di_toi(p)
+func _quai_chet(q: Quai) -> void:
+	hud.ghi("Hạ %s — +%d EXP" % [q.ten_hien, q.exp_thuong])
+	nv.nhan_exp(q.exp_thuong)
+	if randf() < 0.7:
+		var d := RoiDo.new()
+		d.so_luong = randi_range(4, 10) * q.cap
+		d.position = q.position
+		ngoai.thuc_the.add_child(d)
+	_cho_hoi.append([Time.get_ticks_msec() / 1000.0 + HOI_QUAI, q.nha, q.cap, q.ten_hien, q.modulate, q.he])
+	var t := create_tween()
+	t.tween_interval(1.5)
+	t.tween_property(q, "modulate:a", 0.0, 0.6)
+	t.tween_callback(q.queue_free)
 
 
-func di_toi(p: Vector3) -> void:
-	nv.di_toi(tg.tim_duong(nv.global_position, p))
+func _nv_chet(_ai) -> void:
+	await get_tree().create_timer(3.0).timeout
+	if the_gioi != ngoai:
+		_doi_the_gioi(ngoai, ngoai.tam_thanh + Vector2i(0, 3))
+	nv.hoi_sinh(ngoai.tam_o(ngoai.tam_thanh + Vector2i(0, 3)))
 
 
-func _trung_don(m: Node3D) -> void:
-	if m == null or not is_instance_valid(m):
-		return
-	var t := create_tween()                              # cọc tập lắc khi trúng
-	var goc := m.rotation
-	t.tween_property(m, "rotation", goc + Vector3(0.18, 0, 0.1), 0.06)
-	t.tween_property(m, "rotation", goc, 0.18)
-	var so := Label3D.new()
-	so.text = str(randi_range(18, 31))
-	so.font_size = 64
-	so.outline_size = 12
-	so.modulate = Color(1, 0.9, 0.4)
-	so.billboard = BaseMaterial3D.BILLBOARD_ENABLED
-	so.no_depth_test = true
-	so.position = m.global_position + Vector3(0, 1.4, 0)
-	add_child(so)
-	var t2 := create_tween()
-	t2.tween_property(so, "position:y", so.position.y + 1.2, 0.8)
-	t2.parallel().tween_property(so, "modulate:a", 0.0, 0.8)
-	t2.tween_callback(so.queue_free)
+# ── vào / ra nhà ────────────────────────────────────────────────────────────
+func vao_nha(cu: Dictionary) -> void:
+	var phong := TheGioi.new()
+	phong.nha = cu["nha"]
+	phong.name = "Phong_" + cu["nha"]
+	add_child(phong)
+	_cua_ra = cu
+	_doi_the_gioi(phong, phong.o_vao)
+	nv.huong = 4                                    # bước vào là đang nhìn vào trong (hướng N)
+
+
+func ra_nha() -> void:
+	var cu := _cua_ra
+	var phong := the_gioi
+	_doi_the_gioi(ngoai, cu["o_ngoai"])
+	nv.huong = 0
+	phong.queue_free()
+
+
+func _doi_the_gioi(moi: TheGioi, o: Vector2i) -> void:
+	gd.dong_het()
+	gd.xoa_bao()                                    # câu báo của chỗ cũ ("Đất hệ Bug…") đừng theo vào nhà
+	_giu_chuot = false
+	_cho_cua = false
+	nv.duong.clear()
+	nv.muc_tieu = null
+	nv.muc_npc = null
+	var cu := the_gioi
+	cu.visible = false
+	cu.process_mode = Node.PROCESS_MODE_DISABLED
+	nv.reparent(moi.thuc_the, false)
+	pet.reparent(moi.thuc_the, false)
+	nv.process_mode = Node.PROCESS_MODE_INHERIT
+	moi.visible = true
+	moi.process_mode = Node.PROCESS_MODE_INHERIT
+	the_gioi = moi
+	nv.the_gioi = moi
+	nv.position = moi.tam_o(o)
+	pet.bam_ngay()
+	_dat_gioi_han_cam()
 
 
 func _process(dt: float) -> void:
-	if _giu:
-		_nhip -= dt
-		if _nhip <= 0.0:
-			_nhip = 0.12
-			_bam(get_viewport().get_mouse_position(), false)
+	var bay_gio := Time.get_ticks_msec() / 1000.0
+	for i in range(_cho_hoi.size() - 1, -1, -1):
+		if bay_gio >= _cho_hoi[i][0]:
+			_sinh_quai(_cho_hoi[i][1], _cho_hoi[i][2], _cho_hoi[i][3], Color(_cho_hoi[i][4], 1.0), _cho_hoi[i][5])
+			_cho_hoi.remove_at(i)
+	if not nv.chet:
+		var c := the_gioi.o_cua(nv.position)
+		if the_gioi == ngoai:
+			var cu := ngoai.cua_o(c)
+			if not cu.is_empty():
+				vao_nha(cu)
+		elif c == the_gioi.o_ra:
+			ra_nha()
+	# bước sang vòng quái khác hệ: nói một lần nên mang Axie nào (băng-rôn, khác số bay mỗi đòn)
+	var he := the_gioi.he_tai(nv.position)
+	if he != _he_dat:
+		_he_dat = he
+		if he != "":
+			var kq := Axie.phong_thu(he, Axie.lop(nv.axie))
+			var ket: String = {-1: "đang BỊ KHẮC — ăn đòn nặng hơn", 0: "trung tính", 1: "đang KHẮC — ăn đòn nhẹ hơn"}[kq["ket"]]
+			gd.bao("Đất hệ %s · Axie %s %s · nên mang %s (phím P)" % [he, Axie.lop(nv.axie), ket, " · ".join(Axie.khac_lai(he))])
+	if _giu_chuot:
+		_nhip_giu -= dt
+		if _nhip_giu <= 0.0:
+			_nhip_giu = 0.15
+			_bam(get_global_mouse_position(), false)
 
 
 func _unhandled_input(e: InputEvent) -> void:
-	if e is InputEventKey and e.pressed and not e.echo:
-		if e.keycode == KEY_TAB:
-			ban_do.bat_tat()
-			_giu = false
-			get_viewport().set_input_as_handled()
+	if e is InputEventMouseButton:
+		if e.button_index == MOUSE_BUTTON_LEFT:
+			_giu_chuot = e.pressed
+			if e.pressed:
+				_bam(get_global_mouse_position(), true)
+		elif e.button_index == MOUSE_BUTTON_RIGHT and e.pressed:
+			nv.tung_chieu(get_global_mouse_position())
+	elif e is InputEventKey and e.pressed and not e.echo:
+		match e.keycode:
+			KEY_Q: nv.uong("hp")
+			KEY_W: nv.uong("mp")
+			KEY_I: gd.bat_tat_tui()
+			KEY_P: gd.bat_tat_axie()
+			KEY_M: hud.bat_tat_radar()
+			KEY_1: nv.tung_chieu(get_global_mouse_position())
+			KEY_ESCAPE: gd.dong_het()
+
+
+## Một cú bấm: trúng quái thì đánh, trúng NPC thì nói chuyện, trúng nhà có cửa thì đi vào,
+## không thì đi tới đó.
+func _bam(p: Vector2, chon: bool) -> void:
+	if chon:
+		var gan: ThanThe = null
+		var tot := 22.0
+		for q: Quai in get_tree().get_nodes_in_group("quai"):
+			if q.the_gioi != the_gioi or q.chet:
+				continue
+			var kc: float = (q.position + Vector2(0, -12)).distance_to(p)
+			if kc < tot:
+				tot = kc
+				gan = q
+		for n: Npc in get_tree().get_nodes_in_group("npc"):
+			if n.the_gioi != the_gioi:
+				continue
+			var kc: float = (n.position + Vector2(0, -22)).distance_to(p)
+			if kc < tot:
+				tot = kc
+				gan = n
+		if gan is Quai:
+			nv.tan_cong(gan)
 			return
-		if e.keycode == KEY_ESCAPE and ban_do.visible:
-			ban_do.bat_tat(false)
+		if gan is Npc:
+			nv.noi_voi(gan)
+			_giu_chuot = false
 			return
-	if e is InputEventMouseButton and e.button_index == MOUSE_BUTTON_LEFT:
-		_giu = e.pressed
-		if e.pressed:
-			_bam(e.position, true)
+		if the_gioi == ngoai:
+			var cu := ngoai.cua_tai(p)
+			if not cu.is_empty():
+				nv.di_toi(ngoai.tam_o(cu["o_vao"]))
+				_giu_chuot = false                # giữ chuột thì đừng kéo nhân vật lệch khỏi cửa
+				gd.bao("→ " + cu["ten"])
+				return
+	if (nv.muc_tieu or nv.muc_npc) and not chon:
+		return
+	nv.di_toi(p)
