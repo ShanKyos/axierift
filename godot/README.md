@@ -14,10 +14,11 @@ MMORPG pixel art lấy cảm hứng từ **MU Online**, có thêm lớp Axie. B�
 | Bấm chuột trái lên quái | chạy tới và chém liên tục |
 | Bấm chuột trái lên NPC | đi tới và nói chuyện (thợ rèn, cô bán rượu, pháp sư: Mua bán · thủ kho: Mở kho) |
 | Bấm lên ngôi nhà có cửa | đi tới cửa rồi vào nhà; bước lên thảm đỏ trong nhà là ra |
-| Chuột phải | tung chiêu đã học (Chém Xoáy — mua sách ở Tháp Pháp Sư, cần cấp 5) |
+| Chuột phải / phím 1 | tung chiêu đã học (Chém Xoáy — mua sách ở Tháp Pháp Sư, cần cấp 5), quét về phía con trỏ |
 | Q / W | uống bình máu / bình mana |
 | I | túi đồ · Esc: đóng mọi bảng |
 | P | chọn con Axie đi theo (16 con) |
+| M | bật/tắt radar · bấm lên radar là đi tới chỗ đó |
 | Đi qua đồng Lumen | nhặt |
 
 ## Đã có ở M0
@@ -51,7 +52,13 @@ MMORPG pixel art lấy cảm hứng từ **MU Online**, có thêm lớp Axie. B�
 - **Bọ Giáp (quái):**
   - Lang thang quanh chỗ sinh; thấy người thì đuổi, xa chỗ sinh quá thì quay về.
   - Bị đánh thì khựng; chết thì rơi đồ, rồi sinh lại.
-- **HUD kiểu MU:** quả cầu máu và mana, thanh kinh nghiệm, thanh máu mục tiêu.
+- **HUD theo bố cục bản web Axie Rift** (vẽ ở 640×360, đúng nửa bản web):
+  - trái trên: chân dung (con Axie đang theo) + thanh máu/mana bằng art của bản web; ô Lực Chiến;
+  - giữa trên: tên vùng + nhãn (An Toàn / Vùng <hệ>), thanh máu mục tiêu kèm hệ của quái;
+  - phải trên: ví Lumen + **radar** (lưới ô thật của map, cùng phép chiếu iso; chấm quái đỏ, NPC có
+    việc vàng, dân xanh, cửa nhà vàng đậm; trong nhà tự phóng to để thấy cả phòng);
+  - giữa dưới: Túi · Axie · Radar │ chiêu │ bình máu Q · bình mana W (có số lượng), dải EXP ngay dưới;
+  - phải dưới: nhật ký (hạ quái, nhặt Lumen, lên cấp), tự mờ.
 - **Đồ rơi:** nằm dưới đất, nảy một vòng cung rồi nằm yên, đi qua thì nhặt.
 
 ## Map Ardhaven — sửa thế nào
@@ -105,6 +112,7 @@ python3 godot/tools/sprites/render.py npc_tho_ren   # NPC: npc_tho_ren · npc_co
 python3 godot/tools/sprites/render.py icon_do    # icon túi đồ 32×32
 python3 godot/tools/sprites/o_dat.py             # ô đất 64×32 (kể cả sàn gỗ, thảm cửa)
 python3 godot/tools/sprites/axie_pixel.py        # 16 Axie: lấy tranh Spine đã nướng của bản web → pixel art
+python3 godot/tools/ui/ui_pixel.py               # khung gothic + thanh máu/mana + xu của bản web → pixel art
 ```
 
 Cần `pip install bpy==4.2.0 pillow numpy`. Trên Linux không có màn hình thì cần thêm `libegl1`.
@@ -125,6 +133,7 @@ Cỡ: ô 96×96, người cao khoảng 56 px. Màn vẽ nội bộ 640×360, ph�
 godot --headless --path godot -s tests/test_chan.gd                                   # cổng vật lý, thoát 1 nếu đỏ
 godot --headless --path godot -s tests/test_thanh.gd                                  # cổng thành: nhà, NPC, tiệm, kho, chiêu
 godot --headless --path godot -s tests/test_axie.gd                                   # cổng Axie: tam giác, 0 chỉ số, hệ số đòn, pet
+godot --headless --path godot -s tests/test_hud.gd                                    # cổng HUD: radar đúng toạ độ, nút, phím 1, nhật ký
 xvfb-run godot --rendering-driver opengl3 --path godot -s tests/chup.gd               # chụp 3 ảnh vào godot/tmp_chup/
 xvfb-run godot --rendering-driver opengl3 --path godot -s tests/chup_thanh.gd         # chụp thành, 4 phòng, các bảng
 ```

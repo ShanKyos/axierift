@@ -55,8 +55,18 @@ func _ready() -> void:
 	_bao.add_theme_color_override("font_outline_color", Color(0, 0, 0))
 	_bao.add_theme_constant_override("outline_size", 2)
 	_bao.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	_bao.position = Vector2(0, 18)
+	_bao.position = Vector2(0, 58)
 	_bao.size = Vector2(640, 12)
+	var nen := StyleBoxFlat.new()                   # nền tối sau chữ: chữ vàng trên đồng cỏ sáng thì chìm
+	nen.bg_color = Color(0.04, 0.03, 0.05, 0.78)
+	nen.border_color = Color(0.45, 0.35, 0.18)
+	nen.set_border_width_all(1)
+	nen.content_margin_left = 6
+	nen.content_margin_right = 6
+	nen.content_margin_top = 1
+	nen.content_margin_bottom = 1
+	_bao.add_theme_stylebox_override("normal", nen)
+	_bao.modulate.a = 0.0                           # chưa có câu nào: nền tối KHÔNG được hiện thành một dải trống
 	_bao.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	add_child(_bao)
 	nv.doi_do.connect(ve_lai)
@@ -146,7 +156,7 @@ static func icon(id: String) -> Texture2D:
 
 func _dung_thoai() -> void:
 	_thoai = hop(330, 70)
-	_thoai.position = Vector2((640 - 330) / 2.0, 360 - 22 - 82)
+	_thoai.position = Vector2((640 - 330) / 2.0, 320 - 78)          # ngay trên thanh dưới của HUD
 	var v := VBoxContainer.new()
 	_thoai.add_child(v)
 	_thoai_ten = nhan("", Color(1, 0.82, 0.38))
@@ -163,7 +173,7 @@ func _dung_thoai() -> void:
 
 func _dung_tiem() -> void:
 	_tiem = hop(300, 140)
-	_tiem.position = Vector2(8, 34)
+	_tiem.position = Vector2(8, 50)
 	var v := VBoxContainer.new()
 	_tiem.add_child(v)
 	_tiem_tieu = nhan("", Color(1, 0.82, 0.38))
@@ -180,7 +190,7 @@ func _dung_tiem() -> void:
 
 func _dung_kho() -> void:
 	_kho = hop(300, 240)
-	_kho.position = Vector2(8, 34)
+	_kho.position = Vector2(8, 50)
 	var v := VBoxContainer.new()
 	_kho.add_child(v)
 	v.add_child(nhan("Kho Đồ", Color(1, 0.82, 0.38)))
@@ -209,7 +219,7 @@ func _dung_kho() -> void:
 
 func _dung_tui() -> void:
 	_tui = hop(300, 250)
-	_tui.position = Vector2(640 - 308, 34)
+	_tui.position = Vector2(640 - 308, 50)
 	var v := VBoxContainer.new()
 	_tui.add_child(v)
 	v.add_child(nhan("Túi Đồ  (I)", Color(1, 0.82, 0.38)))
@@ -245,7 +255,7 @@ func _dung_tui() -> void:
 ## chơi khỏi phải tự nhẩm tam giác trong đầu.
 func _dung_axie() -> void:
 	_axie = hop(316, 260)
-	_axie.position = Vector2(8, 30)
+	_axie.position = Vector2(8, 50)
 	var v := VBoxContainer.new()
 	_axie.add_child(v)
 	v.add_child(nhan("Axie đi theo  (P) — 0 chỉ số, quyết định hệ phòng thủ", Color(1, 0.82, 0.38)))
@@ -397,8 +407,15 @@ func bao(chu: String) -> void:
 	if chu == "":
 		return
 	_bao.text = chu
-	_bao_t = 2.5
+	_bao.reset_size()                               # co khung nền theo đúng bề ngang câu chữ, canh giữa màn
+	_bao.position.x = floorf((640 - _bao.size.x) / 2.0)
+	_bao_t = 3.5
 	_bao.modulate.a = 1.0
+
+
+func xoa_bao() -> void:
+	_bao_t = 0.0
+	_bao.modulate.a = 0.0
 
 
 func _process(dt: float) -> void:

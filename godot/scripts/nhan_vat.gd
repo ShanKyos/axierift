@@ -10,6 +10,7 @@ signal toi_npc(npc)          # đã tới đủ gần NPC vừa bấm — mở h
 signal doi_do                # túi / trang bị / kho đổi
 signal bi_danh               # vừa ăn một đòn (pet giật theo)
 signal tung                  # vừa tung chiêu (pet gồng theo)
+signal nhat_ky(chu, mau)     # một dòng cho nhật ký góc màn
 
 var cap := 1
 var kinh_nghiem := 0
@@ -248,6 +249,7 @@ func nhan_exp(n: int) -> void:
 		nang_luong += 1
 		tinh_chi_so(true)
 		SoBay.tao(the_gioi.thuc_the, global_position + Vector2(0, -70), "LÊN CẤP %d" % cap, Color(1, 0.85, 0.3))
+		nhat_ky.emit("Lên cấp %d!" % cap, Color(1, 0.85, 0.3))
 	doi_chi_so.emit()
 
 
@@ -328,6 +330,7 @@ func _nhat_do() -> void:
 		if d.get_parent() == get_parent() and Iso.kc_dat(position, d.position) < 22.0:
 			lumen += d.so_luong
 			SoBay.tao(the_gioi.thuc_the, d.position + Vector2(0, -12), "+%d Lumen" % d.so_luong, Color(1, 0.86, 0.35))
+			nhat_ky.emit("Nhặt %d Lumen" % d.so_luong, Color(1, 0.86, 0.35))
 			d.queue_free()
 			doi_chi_so.emit()
 

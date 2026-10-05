@@ -3,8 +3,8 @@ extends Node2D
 ## là mốc sau.
 ##
 ## Điều khiển kiểu MU: chuột trái vào đất để đi (giữ thì đi theo con trỏ), vào quái để đánh, vào
-## NPC để nói chuyện, vào ngôi nhà có cửa để đi vào. Chuột phải: tung chiêu. Q / W: uống máu / mana.
-## I: túi đồ · P: chọn Axie đi theo · Esc: đóng bảng.
+## NPC để nói chuyện, vào ngôi nhà có cửa để đi vào. Chuột phải hoặc phím 1: tung chiêu. Q / W: uống máu / mana.
+## I: túi đồ · P: chọn Axie đi theo · M: bật/tắt radar (bấm lên radar là đi tới đó) · Esc: đóng bảng.
 ##
 ## Vào nhà KHÔNG phá thế giới ngoài trời: nó chỉ bị ẩn và đóng băng (quái đứng nguyên chỗ, đồ dưới
 ## đất còn nguyên), nhân vật dời sang phòng. Ra nhà là thả lại đúng chỗ trước cửa.
@@ -54,12 +54,14 @@ func _ready() -> void:
 	var lop := CanvasLayer.new()
 	add_child(lop)
 	hud = Hud.new()
-	hud.nv = nv
 	lop.add_child(hud)
 	gd = GiaoDien.new()
 	gd.nv = nv
 	gd.pet = pet
 	lop.add_child(gd)
+	hud.dat(nv, pet, gd)
+	hud.bam_di.connect(func(p): nv.di_toi(p))
+	nv.nhat_ky.connect(hud.ghi)
 	_rai_quai()
 
 
@@ -112,6 +114,7 @@ func _sinh_quai(p: Vector2, cap: int, ten := "Bọ Giáp", mau := Color.WHITE, h
 
 
 func _quai_chet(q: Quai) -> void:
+	hud.ghi("Hạ %s — +%d EXP" % [q.ten_hien, q.exp_thuong])
 	nv.nhan_exp(q.exp_thuong)
 	if randf() < 0.7:
 		var d := RoiDo.new()
@@ -153,6 +156,7 @@ func ra_nha() -> void:
 
 func _doi_the_gioi(moi: TheGioi, o: Vector2i) -> void:
 	gd.dong_het()
+	gd.xoa_bao()                                    # câu báo của chỗ cũ ("Đất hệ Bug…") đừng theo vào nhà
 	_giu_chuot = false
 	_cho_cua = false
 	nv.duong.clear()
@@ -216,6 +220,8 @@ func _unhandled_input(e: InputEvent) -> void:
 			KEY_W: nv.uong("mp")
 			KEY_I: gd.bat_tat_tui()
 			KEY_P: gd.bat_tat_axie()
+			KEY_M: hud.bat_tat_radar()
+			KEY_1: nv.tung_chieu(get_global_mouse_position())
 			KEY_ESCAPE: gd.dong_het()
 
 

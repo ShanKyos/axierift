@@ -14,7 +14,8 @@ PX_M = 64
 XOAY = [0.0]
 TOC_DO, KHUNG_TRUNG = {}, {}
 DO = ['kiem_ngan', 'kiem_dai', 'dai_kiem', 'giap_da', 'giap_xich', 'giap_tam',
-      'binh_mau_nho', 'binh_mau', 'binh_mana_nho', 'binh_mana', 'sach_chieu']
+      'binh_mau_nho', 'binh_mau', 'binh_mana_nho', 'binh_mana', 'sach_chieu',
+      'tui', 'ban_do', 'chieu_chem_xoay']
 TRANG_THAI = {t: (1, 1.0, False) for t in DO}
 BAM_DAT = {t: t for t in DO}           # icon đặt chạm đáy ô, không lún, không lơ lửng
 
@@ -64,6 +65,27 @@ def dung(_):
     khoi('sc_bia', t, (0.18, 0.07, 0.24), (0, 0, 0.12), M['tim'])
     khoi('sc_giay', t, (0.17, 0.075, 0.22), (0.012, 0, 0.12), M['giay'])
     khoi('sc_ngoc', t, (0.06, 0.02, 0.06), (0, -0.04, 0.13), M['ngoc'])
+    # ── icon HUD: túi đồ, bản đồ, chiêu Chém Xoáy
+    t = nhom('tui')
+    khoi('tu_than', t, (0.30, 0.22, 0.26), (0, 0, 0.13), M['da'], dang='sphere')
+    khoi('tu_co', t, (0.12, 0.10, 0.08), (0, 0, 0.27), M['da2'], dang='cyl')
+    khoi('tu_day', t, (0.16, 0.12, 0.03), (0, 0, 0.25), M['vang'], dang='cyl')
+    khoi('tu_mieng', t, (0.18, 0.15, 0.05), (0, 0, 0.32), M['da'], dang='cyl')
+    t = nhom('ban_do')
+    khoi('bd_giay', t, (0.34, 0.02, 0.24), (0, 0, 0.14), M['giay'])
+    for x in (-1, 1):
+        khoi(f'bd_cuon{x}', t, (0.05, 0.05, 0.27), (x * 0.18, 0, 0.14), M['nut'], dang='cyl')
+    khoi('bd_song', t, (0.04, 0.025, 0.20), (-0.05, -0.005, 0.14), M['lam'], xoay=(0, 0.4, 0))
+    khoi('bd_dau', t, (0.05, 0.025, 0.05), (0.07, -0.005, 0.17), M['do'])
+    t = nhom('chieu_chem_xoay', math.radians(-35))
+    khoi('cx_l', t, (0.045, 0.015, 0.24), (0, 0, 0.22), M['sat2'])
+    khoi('cx_g', t, (0.13, 0.03, 0.03), (0, 0, 0.10), M['vang'])
+    khoi('cx_c', t, (0.03, 0.03, 0.07), (0, 0, 0.055), M['da2'])
+    for i in range(16):                                  # vòng thép xoáy quanh lưỡi, sáng dần về đầu vệt
+        g = i / 16 * 5.2
+        r = 0.13 + 0.04 * i / 16
+        khoi(f'cx_v{i}', t, (0.06, 0.03, 0.035), (r * math.cos(g), 0, 0.20 + r * math.sin(g)),
+             M['kinh'] if i > 10 else (M['vang'] if i > 4 else M['do']), xoay=(0, -g, 0))
     return J
 
 
