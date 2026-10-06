@@ -13,6 +13,10 @@ extends RefCounted
 ## game (đi, đánh, xếp lớp, bài kiểm chân không trượt) không phải biết hình là pixel hay HD.
 
 static var HD := true
+## Thân người chơi, thử theo thứ tự: bộ nào có tệp thì dùng bộ đó. `hd_dark_wizard` là nhân vật 3D
+## nướng 8 hướng (tools/hd/nuong_3d.py), `hd_dark_knight` là gói Meowa 13 khung + vật lý thân,
+## `hd_nguoi` là thân Spellblade cũ. Bài kiểm muốn ghim một bộ thì gán mảng này trước khi nạp cảnh.
+static var THAN_NGUOI := ["hd_dark_wizard", "hd_dark_knight", "hd_nguoi"]
 
 var ten: String
 var meta: Dictionary
@@ -41,8 +45,10 @@ static func co_hd(ten_bo: String) -> bool:
 
 static func _ten_hd(ten_bo: String) -> String:
 	if ten_bo == "hiep_si":
-		# người chơi là Dark Knight: dùng gói Meowa DK nếu có, không thì lui về thân Spellblade
-		return "hd_dark_knight" if FileAccess.file_exists("res://assets/hd/hd_dark_knight/hd_dark_knight.json") else "hd_nguoi"
+		for t in THAN_NGUOI:
+			if FileAccess.file_exists("res://assets/hd/%s/%s.json" % [t, t]):
+				return t
+		return "hd_nguoi"
 	return "hd_" + ten_bo
 
 

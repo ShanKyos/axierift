@@ -19,6 +19,7 @@ var nv: NhanVat
 
 
 func _init() -> void:
+	SpriteBo.THAN_NGUOI = ["hd_dark_knight"]        # bài này gác thân VẬT LÝ, ghim đúng bộ đó
 	main = load("res://scenes/main.tscn").instantiate()
 	root.add_child(main)
 	_chay()

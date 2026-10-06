@@ -1,14 +1,13 @@
 extends SceneTree
-## Chụp từng pha vật lý của Dark Knight, game chạy THẬT (không lái tay từng nhịp):
-## đứng · vừa xuất phát · đang chạy · vừa dừng · lấy đà · lao chém · trúng đòn · đang đổ · nằm.
-##     xvfb-run -a -s "-screen 0 1280x720x24" godot --path godot -s tests/chup_vatly.gd
+## Chụp nhân vật 3D nướng 8 hướng (hd_dark_wizard) trong game thật: đứng · đi · chạy · đánh · trúng đòn · ngã.
+##     xvfb-run -a -s "-screen 0 1280x720x24" godot --path godot -s tests/chup_than3d.gd
 
 var main: Node
 var nv: NhanVat
 
 
 func _init() -> void:
-	SpriteBo.THAN_NGUOI = ["hd_dark_knight"]
+	SpriteBo.THAN_NGUOI = ["hd_dark_wizard"]
 	main = load("res://scenes/main.tscn").instantiate()
 	root.add_child(main)
 	_chay()
@@ -20,8 +19,8 @@ func _chup(ten: String) -> void:
 	# cắt cận quanh bàn chân nhân vật (toạ độ khung nhìn → điểm ảnh cửa sổ)
 	var o := nv.get_global_transform_with_canvas().origin * (float(im.get_width()) / 640.0)
 	var r := Rect2i(int(o.x) - 150, int(o.y) - 230, 300, 280)
-	im.get_region(r).save_png("res://tmp_chup/vl_%s.png" % ten)
-	print("CHUP ", ten, "  th=%.3f p=%s" % [nv.vl.th, nv.vl.p])
+	im.get_region(r).save_png("res://tmp_chup/t3d_%s.png" % ten)
+	print("CHUP ", ten, " ", nv.trang_thai, " huong ", nv.huong)
 
 
 func _cho(giay: float) -> void:
@@ -52,6 +51,14 @@ func _chay() -> void:
 		await process_frame
 	await _cho(0.06)
 	await _chup("4_dung_lai")
+	# chạy lần lượt về 8 hướng, chụp giữa đường
+	for d in 8:
+		var tu := nv.position
+		nv.duong = PackedVector2Array([tu + Iso.vector_huong(d) * 160.0])
+		await _cho(0.3)
+		await _chup("h%d_%s" % [d, Iso.HUONG[d]])
+		while not nv.duong.is_empty():
+			await process_frame
 	await _cho(1.0)
 	var q: Quai = ds[0]
 	q.position = nv.position + Vector2(34, 2)
@@ -59,10 +66,10 @@ func _chay() -> void:
 	q.hp = 99999.0
 	q.hp_max = 99999.0
 	nv.tan_cong(q)
-	while not (nv.trang_thai == "attack" and nv.vl._danh_t > 0.16):
+	while not (nv.trang_thai == "attack" and nv.hinh.frame >= 3):
 		await process_frame
 	await _chup("5_lay_da")
-	while not nv.vl._danh_lao:
+	while not (nv.trang_thai == "attack" and nv.hinh.frame >= nv.bo.khung_trung("attack")):
 		await process_frame
 	await _cho(0.05)
 	await _chup("6_lao_chem")
