@@ -11,7 +11,13 @@ MMORPG 2D lấy cảm hứng từ **MU Online**, có thêm lớp Axie. Chơi b�
 > `assets/hd/`. Game vẫn chạy ở toạ độ logic 640×360 (ô 64×32); tranh HD vẽ thu theo `ty`, cửa sổ
 > vẽ ở độ phân giải thật nên đủ nét. Tắt HD: `SpriteBo.HD = false`.
 > Còn PIXEL: tường thành, tháp góc, đèn đường, đồ đạc trong nhà, icon vật phẩm, bản đồ góc.
-> Người chơi là **Dark Knight HD** từ gói Meowa "Godot 4 sprite export" (`hd_dark_knight`, đóng
+> **Thân người chơi hiện là Dark Wizard dựng từ 3D** (`hd_dark_wizard`): mô hình Tripo + khung xương
+> Mixamo + 6 động tác, nướng ra 8 hướng thật bằng `python3 godot/tools/hd/nuong_3d.py <glb> <tên>`
+> (cần `pip install bpy==4.2.0`, ~10 phút). Công cụ tự bọc da lại vì lớp da Auto Rig của Tripo hỏng,
+> trừ độ lệch hông của động tác chạy, đo tốc độ từ bàn chân chống đất. Gác: `tests/test_than3d.gd`.
+> Thứ tự chọn thân: `SpriteBo.THAN_NGUOI` (3D → Dark Knight vật lý → Spellblade cũ).
+>
+> Thân **Dark Knight HD** từ gói Meowa "Godot 4 sprite export" (`hd_dark_knight`, đóng
 > gói bằng `python3 godot/tools/hd/dk_meowa.py <spritesheet>`). Gói đó **không phải Spine**: chỉ 13
 > khung thở, một hướng nhìn. Mọi chuyển động còn lại là **vật lý tính trong Godot**
 > (`scripts/vat_ly_than.gd`, bật bằng `"vat_ly": true`): con lắc ngược neo ở bàn chân (nghiêng vào

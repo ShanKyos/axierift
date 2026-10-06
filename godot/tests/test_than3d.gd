@@ -66,15 +66,19 @@ func _chay() -> void:
 					cat += 1
 	_ok(trong == 0, "② không khung nào trống (%d/%d)" % [trong, tong])
 	_ok(cat == 0, "⑤ không khung nào chạm mép ô (%d/%d)" % [cat, tong])
-	# ③ chân: đáy hình ở khung đứng phải sát neo (cho phép đế giày ± vài px do góc nhìn)
 	var lech := []
 	for d in 8:
 		var h := _hop(bo, "idle", d, 0)
 		lech.append(h.end.y - bo.neo_tex.y)
-	var max_lech := 0.0
+	# ⚠ đáy hình KHÔNG trùng neo, và đúng ra phải thế: nhìn chéo 30° thì mũi giày ở gần camera hơn
+	# gốc chân nên hiện THẤP hơn — mũi giày trước gốc d mét ⇒ thấp hơn 0,5·d·(px_m/ty) px. Gác hai đầu:
+	# không lơ lửng (đáy ≥ neo − 2) và không lún (đáy ≤ neo + mũi giày 0,35 m).
+	var tren := 0.5 * 0.35 * bo.px_m / bo.ty
+	var hong := 0
 	for x in lech:
-		max_lech = maxf(max_lech, absf(x))
-	_ok(max_lech <= 14.0, "③ bàn chân đứng đúng neo ở 8 hướng (lệch %s px texture)" % str(lech))
+		if x < -2.0 or x > tren:
+			hong += 1
+	_ok(hong == 0, "③ bàn chân chạm đúng mặt đất ở 8 hướng (đáy − neo = %s px, cho phép −2…%.0f)" % [str(lech), tren])
 	# ④ 8 hướng khác nhau: so hộp + một phép băm điểm ảnh của khung đứng
 	var vet := {}
 	for d in 8:
