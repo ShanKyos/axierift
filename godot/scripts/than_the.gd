@@ -22,6 +22,7 @@ var hp := 100.0
 var hp_max := 100.0
 var chet := false
 var _anim_xong := true
+var vl: VatLyThan                    # chỉ có ở bộ art khai "vat_ly" (thân chỉ có khung thở)
 
 
 func _ready() -> void:
@@ -36,6 +37,8 @@ func _ready() -> void:
 	hinh.scale = Vector2.ONE * bo.ty
 	hinh.animation_finished.connect(func(): _anim_xong = true)
 	add_child(hinh)
+	if bo.meta.get("vat_ly", false):
+		vl = VatLyThan.gan(self)
 	_vao("idle")
 
 
@@ -47,6 +50,8 @@ func _vao(tt: String, ep := false) -> void:
 		return
 	trang_thai = tt
 	_anim_xong = false
+	if vl:
+		vl.vao(tt)
 	var ten := "%s_%d" % [tt, huong]
 	if tt == "walk" or tt == "run":
 		hinh.animation = ten
@@ -104,16 +109,20 @@ func buoc_di(dt: float, tt: String) -> bool:
 	return duong.is_empty()
 
 
-func nhan_sat_thuong(n: float, _tu: Node2D) -> void:
+func nhan_sat_thuong(n: float, tu: Node2D) -> void:
 	if chet:
 		return
 	hp = maxf(0.0, hp - n)
 	if the_gioi:
 		var mau := Color(1, 0.35, 0.3) if self is NhanVat else Color(1, 0.9, 0.4)
 		SoBay.tao(the_gioi.thuc_the, global_position + Vector2(0, bo.dinh()), str(int(round(n))), mau)
+	if vl:
+		vl.trung(tu, n / maxf(1.0, hp_max) * 6.0)
 	if hp <= 0.0:
 		chet = true
 		duong.clear()
+		if vl:
+			vl.nga(tu)
 		_vao("death", true)
 		da_chet.emit(self)
 	elif not khong_bi_ngat():

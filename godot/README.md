@@ -11,8 +11,14 @@ MMORPG 2D lấy cảm hứng từ **MU Online**, có thêm lớp Axie. Chơi b�
 > `assets/hd/`. Game vẫn chạy ở toạ độ logic 640×360 (ô 64×32); tranh HD vẽ thu theo `ty`, cửa sổ
 > vẽ ở độ phân giải thật nên đủ nét. Tắt HD: `SpriteBo.HD = false`.
 > Còn PIXEL: tường thành, tháp góc, đèn đường, đồ đạc trong nhà, icon vật phẩm, bản đồ góc.
-> Người chơi tạm dùng thân Spellblade HD (bộ Cuồng Phong) — chưa có Dark Knight HD. Nợ art HD:
-> chưa có tư thế trúng đòn / ngã (đang dựng tạm từ khung đứng) và bàn chân chưa khoá vào đất.
+> Người chơi là **Dark Knight HD** từ gói Meowa "Godot 4 sprite export" (`hd_dark_knight`, đóng
+> gói bằng `python3 godot/tools/hd/dk_meowa.py <spritesheet>`). Gói đó **không phải Spine**: chỉ 13
+> khung thở, một hướng nhìn. Mọi chuyển động còn lại là **vật lý tính trong Godot**
+> (`scripts/vat_ly_than.gd`, bật bằng `"vat_ly": true`): con lắc ngược neo ở bàn chân (nghiêng vào
+> chiều chạy, quán tính lúc xuất phát/phanh, đổ theo `(g/L)·sin θ` khi chết, nảy khi chạm đất),
+> lò xo nén–giãn theo bước chân, lò xo vị trí cho cú lao chém và cú giật lùi. Gác: `tests/test_vatly.gd`.
+> Nợ art: chân KHÔNG bước (thân trượt, nhún che bớt) và không có mặt sau/mặt nghiêng — cần gói có
+> khung đi/đánh 8 hướng. Thân Spellblade cũ (`hd_nguoi`) vẫn còn, là đường lui khi thiếu gói DK.
 >
 > Lịch sử: bản này là bản pixel ở commit `5e9bb26`, khôi phục lại sau khi thử hướng 3D. Bản 3D
 > (mốc 3D-0 + 3D-1: camera MU, Ardhaven 3D theo tranh tổng quan, bản đồ Tab chụp từ map) nằm ở

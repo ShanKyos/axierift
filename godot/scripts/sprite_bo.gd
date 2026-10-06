@@ -40,7 +40,10 @@ static func co_hd(ten_bo: String) -> bool:
 
 
 static func _ten_hd(ten_bo: String) -> String:
-	return "hd_nguoi" if ten_bo == "hiep_si" else "hd_" + ten_bo
+	if ten_bo == "hiep_si":
+		# người chơi là Dark Knight: dùng gói Meowa DK nếu có, không thì lui về thân Spellblade
+		return "hd_dark_knight" if FileAccess.file_exists("res://assets/hd/hd_dark_knight/hd_dark_knight.json") else "hd_nguoi"
+	return "hd_" + ten_bo
 
 
 func _tai(ten_bo: String) -> void:
@@ -61,7 +64,9 @@ func _tai(ten_bo: String) -> void:
 	frames.remove_animation("default")
 	for tt in meta["trang_thai"]:
 		var m: Dictionary = meta["trang_thai"][tt]
-		var tex: Texture2D = load(goc + tt + duoi)
+		# `tep` + `chi_so`: trạng thái MƯỢN khung của một tấm khác (bộ chỉ có một hoạt ảnh gốc)
+		var tex: Texture2D = load(goc + str(m.get("tep", tt)) + duoi)
+		var chi_so: Array = m.get("chi_so", [])
 		for d in 8:
 			var ten_anim := "%s_%d" % [tt, d]
 			frames.add_animation(ten_anim)
@@ -70,7 +75,8 @@ func _tai(ten_bo: String) -> void:
 			for k in int(m["khung"]):
 				var at := AtlasTexture.new()
 				at.atlas = tex
-				at.region = Rect2(k * o, d * o, o, o)
+				var c: int = int(chi_so[k]) if k < chi_so.size() else k
+				at.region = Rect2(c * o, d * o, o, o)
 				frames.add_frame(ten_anim, at)
 
 
